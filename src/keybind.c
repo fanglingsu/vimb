@@ -76,6 +76,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     for (tmp = keys; tmp != NULL; tmp = tmp->next) {
         struct _keybind_key* keybind = (struct _keybind_key*)tmp->data;
 
+        /* handle key presses */
         if (gdk_keyval_to_lower(event->keyval) == keybind->keyval
             && (event->state & keybind->modmask) == keybind->modmask
             && keybind->modkey == vp.state.modkey

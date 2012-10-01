@@ -1,11 +1,15 @@
 #include "config.h"
 #include "main.h"
 #include "command.h"
-#include "callback.h"
 #include "keybind.h"
 
 /* variables */
 VpCore vp;
+
+/* callbacks */
+void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec);
+void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window);
+gboolean vp_frame_scrollbar_policy_changed_cb(void);
 
 /* functions */
 static void vp_print_version(void);
@@ -13,6 +17,34 @@ static void vp_init(void);
 static void vp_init_gui(void);
 static void vp_setup_signals(void);
 
+
+void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec)
+{
+    Gui* gui        = &vp.gui;
+    const char* uri = webkit_web_view_get_uri(gui->webview);
+
+    switch (webkit_web_view_get_load_status(gui->webview)) {
+        case WEBKIT_LOAD_COMMITTED:
+            vp_update_urlbar(uri);
+            break;
+
+        case WEBKIT_LOAD_FINISHED:
+            break;
+
+        default:
+            break;
+    }
+}
+
+void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window)
+{
+    vp_close_browser(0);
+}
+
+gboolean vp_frame_scrollbar_policy_changed_cb(void)
+{
+    return TRUE;
+}
 
 gboolean vp_load_uri(const Arg* arg)
 {
@@ -104,7 +136,7 @@ static void vp_init(void)
     keybind_init();
 
     /*command_parse_line("quit", NULL);*/
-    keybind_add(VP_MODE_NORMAL, GDK_g, 0, GDK_f, "source");
+    keybind_add(VP_MODE_NORMAL, GDK_g, 0, GDK_s, "source");
     keybind_add(VP_MODE_NORMAL, 0,     0, GDK_d, "quit");
 }
 
@@ -188,9 +220,9 @@ static void vp_setup_signals(void)
 
     /* Set up callbacks so that if either the main window or the browser
      * instance is closed, the program will exit */
-    g_signal_connect(gui->window, "destroy", G_CALLBACK(destroy_window_cb), NULL);
-    g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(dummy_cb), NULL);
-    g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(webview_load_status_cb), NULL);
+    g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
+    g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(vp_frame_scrollbar_policy_changed_cb), NULL);
+    g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
 }
 
 int main(int argc, char* argv[])
