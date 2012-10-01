@@ -6,9 +6,6 @@ static CommandInfo cmd_list[] = {
     {"source",   view_source},
 };
 
-static void command_sharg_append(GArray* a, const gchar* str);
-
-
 void command_init()
 {
     guint i;
@@ -19,7 +16,7 @@ void command_init()
     }
 }
 
-void command_parse_line(const gchar* line, GString* result)
+void command_parse_line(const gchar* line)
 {
     gchar* string = g_strdup(line);
 
@@ -29,12 +26,12 @@ void command_parse_line(const gchar* line, GString* result)
     if (strcmp(string, "")) {
         /* ignore comment lines */
         if ((string[0] != '#')) {
-            GArray* a = g_array_new(TRUE, FALSE, sizeof(gchar*));
+            Arg* a = NULL;
             const CommandInfo* c = command_parse_parts(string, a);
             if (c) {
-                command_run_command(c, a, result);
+                command_run_command(c, a);
             }
-            g_array_free(a, TRUE);
+            g_free(a->s);
         }
     }
 
@@ -42,7 +39,7 @@ void command_parse_line(const gchar* line, GString* result)
 }
 
 /* static? */
-const CommandInfo* command_parse_parts(const gchar* line, GArray* a)
+const CommandInfo* command_parse_parts(const gchar* line, Arg* arg)
 {
     CommandInfo* c = NULL;
 
@@ -56,32 +53,23 @@ const CommandInfo* command_parse_parts(const gchar* line, GArray* a)
         return NULL;
     }
 
-    gchar* p = g_strdup(tokens[1]);
-    command_sharg_append(a, p);
-
+    arg->s = g_strdup(tokens[2]);
     g_strfreev(tokens);
-    g_free(p);
 
     return c;
 }
 
-void command_run_command(const CommandInfo* c, GArray* a, GString* result)
+void command_run_command(const CommandInfo* c, Arg* arg)
 {
-    c->function(a, result);
+    c->function(arg);
 }
 
-static void command_sharg_append(GArray* a, const gchar* str)
-{
-    const gchar* s = (str ? str : "");
-    g_array_append_val(a, s);
-}
-
-void quit(GArray* argv, GString* result)
+void quit(Arg* arg)
 {
     vp_close_browser(); 
 }
 
-void view_source(GArray* argv, GString* result)
+void view_source(Arg* arg)
 {
     gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
     webkit_web_view_set_view_source_mode(vp.gui.webview, !mode);

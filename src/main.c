@@ -49,7 +49,7 @@ gboolean vp_frame_scrollbar_policy_changed_cb(void)
 gboolean vp_load_uri(const Arg* arg)
 {
     char* u;
-    const char* uri = arg->c;
+    const char* uri = arg->s;
 
     if (strcmp(uri, "") == 0) {
         return FALSE;
@@ -250,12 +250,12 @@ int main(int argc, char* argv[])
     /* command line argument: URL */
     Arg arg;
     if (argc > 1) {
-        arg.c = g_strdup(argv[argc - 1]);
+        arg.s = g_strdup(argv[argc - 1]);
     } else {
-        arg.c = g_strdup(START_PAGE);
+        arg.s = g_strdup(START_PAGE);
     }
     vp_load_uri(&arg);
-    g_free(arg.c);
+    g_free(arg.s);
 
     /* Run the main GTK+ event loop */
     gtk_main();

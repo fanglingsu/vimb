@@ -42,7 +42,7 @@ enum {
 /* structs */
 typedef struct {
     gint  i;
-    char* c;
+    char* s;
 } Arg;
 
 /* statusbar */
