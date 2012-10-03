@@ -53,8 +53,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
             /* switch to normal mode */
             vp.state.mode = VP_MODE_NORMAL;
             /* remove current modkey and set count back to 0 */
-            vp.state.modkey = 0;
-            vp.state.count  = 0;
+            vp.state.modkey = vp.state.count  = 0;
             vp_update_statusbar();
 
             return TRUE;
@@ -77,15 +76,15 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
         struct _keybind_key* keybind = (struct _keybind_key*)tmp->data;
 
         /* handle key presses */
-        if (gdk_keyval_to_lower(event->keyval) == keybind->keyval
-            && (event->state & keybind->modmask) == keybind->modmask
+        if (keybind->modmask == (CLEAN(event->state) & ~irrelevant)
             && keybind->modkey == vp.state.modkey
+            && keybind->keyval == keyval
             && keybind->command
         ) {
             command_run(keybind->command);
 
             /* if key binding used, remove the modkey */
-            vp.state.modkey = 0;
+            vp.state.modkey = vp.state.count = 0;
             vp_update_statusbar();
 
             return TRUE;

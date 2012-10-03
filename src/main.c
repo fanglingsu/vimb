@@ -75,19 +75,53 @@ gboolean vp_load_uri(const Arg* arg)
     return TRUE;
 }
 
-void vp_navigate(const Arg *arg)
+void vp_navigate(const Arg* arg)
 {
-    if (arg->i <= NAVIG_FORWARD) {
+    if (arg->i <= VP_NAVIG_FORWARD) {
         /* TODO allow to set a count for the navigation */
         webkit_web_view_go_back_or_forward(
-            vp.gui.webview, (arg->i == NAVIG_BACK ? -1 : 1)
+            vp.gui.webview, (arg->i == VP_NAVIG_BACK ? -1 : 1)
         );
-    } else if (arg->i == NAVIG_RELOAD) {
+    } else if (arg->i == VP_NAVIG_RELOAD) {
         webkit_web_view_reload(vp.gui.webview);
-    } else if (arg->i == NAVIG_RELOAD_FORCE) {
+    } else if (arg->i == VP_NAVIG_RELOAD_FORCE) {
         webkit_web_view_reload_bypass_cache(vp.gui.webview);
     } else {
         webkit_web_view_stop_loading(vp.gui.webview);
+    }
+}
+
+void vp_scroll(const Arg* arg)
+{
+    GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? vp.gui.adjust_h : vp.gui.adjust_v;
+
+    gint max        = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
+    gdouble percent = gtk_adjustment_get_value(adjust) / max * 100;
+    gint direction  = (arg->i & (1 << 2)) ? 1 : -1;
+
+    /* skip if no further scrolling is possible */
+    if ((direction == 1 && percent == 100) || (direction == -1 && percent == 0)) {
+        return;
+    }
+    /* type scroll */
+    if (arg->i & VP_SCROLL_TYPE_SCROLL) {
+        gdouble value;
+        gint count = vp.state.count ? vp.state.count : 1;
+        if (arg->i & VP_SCROLL_UNIT_LINE) {
+            value = SCROLLSTEP;
+        } else if (arg->i & VP_SCROLL_UNIT_HALFPAGE) {
+            value = gtk_adjustment_get_page_size(adjust) / 2;
+        } else {
+            value = gtk_adjustment_get_page_size(adjust);
+        }
+
+        gtk_adjustment_set_value(adjust, gtk_adjustment_get_value(adjust) + direction * value * count);
+    } else if (direction == 1) {
+        /* jump to top */
+        gtk_adjustment_set_value(adjust, gtk_adjustment_get_upper(adjust));
+    } else {
+        /* jump to bottom */
+        gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
     }
 }
 
@@ -121,14 +155,27 @@ void vp_update_statusbar(void)
     GString* status = g_string_new("");
     gchar*   markup;
 
-    /* TODO show modekeys count */
-    /* at the moment we have only one modkey available */
-    /* http://current_uri.tld   34% */
+    /* show current count */
     g_string_append_printf(status, "%.0d", vp.state.count);
+    /* show current modkey */
     if (vp.state.modkey) {
         g_string_append_c(status, vp.state.modkey);
     }
-    g_string_append_printf(status, " %.0d%%", 46);
+
+    /* show the scroll status */
+    gint max = gtk_adjustment_get_upper(vp.gui.adjust_v) - gtk_adjustment_get_page_size(vp.gui.adjust_v);
+    gint val = (int)(gtk_adjustment_get_value(vp.gui.adjust_v) / max * 100);
+
+    if (max == 0) {
+        g_string_append(status, " All");
+    } else if (val == 0) {
+        g_string_append(status, " Top");
+    } else if (val >= 100) {
+        g_string_append(status, " Bot");
+    } else {
+        g_string_append_printf(status, " %d%%", val);
+    }
+
     markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", STATUS_BAR_FONT, status->str);
     gtk_label_set_markup(GTK_LABEL(vp.gui.statusbar.right), markup);
     g_free(markup);
@@ -148,19 +195,36 @@ static void vp_init(void)
     /* initialize the keybindings */
     keybind_init();
 
-    keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_f, "source");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_d, "quit");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_o, "back");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_i, "forward");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_r, "reload");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_R, "reload!");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_c, "stop");
+    keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_f,      "source");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_d,      "quit");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_o,      "back");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_i,      "forward");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_r,      "reload");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_R,      "reload!");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_c,      "stop");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_f,      "pagedown");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_b,      "pageup");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_d,      "halfpagedown");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_u,      "halfpageup");
+    keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_g,      "jumptop");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_G,      "jumpbottom");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_0,      "jumpleft");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_dollar, "jumpright");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_h,      "scrollleft");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_l,      "scrollright");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_k,      "scrollup");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_j,      "scrolldown");
 }
 
 static void vp_init_gui(void)
 {
     Gui* gui = &vp.gui;
     GdkColor bg, fg;
+
+    gui->sb_h = GTK_SCROLLBAR(gtk_hscrollbar_new(NULL));
+    gui->sb_v = GTK_SCROLLBAR(gtk_vscrollbar_new(NULL));
+    gui->adjust_h = gtk_range_get_adjustment(GTK_RANGE(gui->sb_h));
+    gui->adjust_v = gtk_range_get_adjustment(GTK_RANGE(gui->sb_v));
 
     GdkGeometry hints = {10, 10};
     gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -173,7 +237,7 @@ static void vp_init_gui(void)
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
 
     /* Create a scrollable area */
-    gui->viewport = gtk_scrolled_window_new(NULL, NULL);
+    gui->viewport = gtk_scrolled_window_new(gui->adjust_h, gui->adjust_v);
     gtk_scrolled_window_set_policy(
         GTK_SCROLLED_WINDOW(gui->viewport),
         GTK_POLICY_NEVER, GTK_POLICY_NEVER

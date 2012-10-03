@@ -8,4 +8,6 @@
 #define STATUS_BAR_FONT "monospace bold 8"
 #define URL_BOX_FONT    "monospace 8"
 
+#define SCROLLSTEP (40) /* cursor difference in pixel for scrolling */
+
 #endif /* end of include guard: CONFIG_H */

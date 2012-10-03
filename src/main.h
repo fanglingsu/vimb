@@ -32,11 +32,35 @@ typedef enum _vp_mode {
 } Mode;
 
 enum {
-    NAVIG_BACK,
-    NAVIG_FORWARD,
-    NAVIG_RELOAD,
-    NAVIG_RELOAD_FORCE,
-    NAVIG_STOP_LOADING
+    VP_NAVIG_BACK,
+    VP_NAVIG_FORWARD,
+    VP_NAVIG_RELOAD,
+    VP_NAVIG_RELOAD_FORCE,
+    VP_NAVIG_STOP_LOADING
+};
+
+/*
+1 << 0:  0 = jump,              1 = scroll
+1 << 1:  0 = vertical,          1 = horizontal
+1 << 2:  0 = top/left,          1 = down/right
+1 << 3:  0 = paging/halfpage,   1 = line
+1 << 4:  0 = paging,            1 = halfpage
+*/
+enum {VP_SCROLL_TYPE_JUMP, VP_SCROLL_TYPE_SCROLL};
+enum {
+    VP_SCROLL_AXIS_V,
+    VP_SCROLL_AXIS_H = (1 << 1)
+};
+enum {
+    VP_SCROLL_DIRECTION_TOP,
+    VP_SCROLL_DIRECTION_DOWN  = (1 << 2),
+    VP_SCROLL_DIRECTION_LEFT  = VP_SCROLL_AXIS_H,
+    VP_SCROLL_DIRECTION_RIGHT = VP_SCROLL_AXIS_H | (1 << 2)
+};
+enum {
+    VP_SCROLL_UNIT_PAGE,
+    VP_SCROLL_UNIT_LINE     = (1 << 3),
+    VP_SCROLL_UNIT_HALFPAGE = (1 << 4)
 };
 
 /* structs */
@@ -61,6 +85,10 @@ typedef struct {
     GtkWidget*     eventbox;
     GtkWidget*     inputbox;
     StatusBar      statusbar;
+    GtkScrollbar*  sb_h;
+    GtkScrollbar*  sb_v;
+    GtkAdjustment* adjust_h;
+    GtkAdjustment* adjust_v;
 } Gui;
 
 /* state */
@@ -97,6 +125,7 @@ void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 gboolean vp_load_uri(const Arg* arg);
 void vp_navigate(const Arg* arg);
+void vp_scroll(const Arg* arg);
 void vp_close_browser(const Arg* arg);
 void vp_view_source(const Arg* arg);
 
