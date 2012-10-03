@@ -96,7 +96,8 @@ extern VpCore vp;
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 gboolean vp_load_uri(const Arg* arg);
-gboolean vp_navigate(const Arg* arg);
-void vp_close_browser();
+void vp_navigate(const Arg* arg);
+void vp_close_browser(const Arg* arg);
+void vp_view_source(const Arg* arg);
 
 #endif /* end of include guard: MAIN_H */

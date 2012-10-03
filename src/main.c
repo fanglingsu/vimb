@@ -7,9 +7,10 @@
 VpCore vp;
 
 /* callbacks */
-void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec);
-void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window);
-gboolean vp_frame_scrollbar_policy_changed_cb(void);
+static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data);
+static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame *frame, gpointer user_data);
+static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
+static gboolean vp_frame_scrollbar_policy_changed_cb(void);
 
 /* functions */
 static void vp_print_version(void);
@@ -18,7 +19,7 @@ static void vp_init_gui(void);
 static void vp_setup_signals(void);
 
 
-void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec)
+static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
 {
     Gui* gui        = &vp.gui;
     const char* uri = webkit_web_view_get_uri(gui->webview);
@@ -36,12 +37,19 @@ void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec)
     }
 }
 
-void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window)
+static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame *frame, gpointer user_data)
+{
+    /* unset possible set modkey and counts if loading a new page */
+    vp.state.modkey = vp.state.count = 0;
+    vp_update_statusbar();
+}
+
+static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data)
 {
     vp_close_browser(0);
 }
 
-gboolean vp_frame_scrollbar_policy_changed_cb(void)
+static gboolean vp_frame_scrollbar_policy_changed_cb(void)
 {
     return TRUE;
 }
@@ -67,7 +75,7 @@ gboolean vp_load_uri(const Arg* arg)
     return TRUE;
 }
 
-gboolean vp_navigate(const Arg *arg)
+void vp_navigate(const Arg *arg)
 {
     if (arg->i <= NAVIG_FORWARD) {
         /* TODO allow to set a count for the navigation */
@@ -81,17 +89,22 @@ gboolean vp_navigate(const Arg *arg)
     } else {
         webkit_web_view_stop_loading(vp.gui.webview);
     }
-
-    return TRUE;
 }
 
-void vp_close_browser()
+void vp_close_browser(const Arg* arg)
 {
     if (vp.behave.commands) {
         g_hash_table_destroy(vp.behave.commands);
         vp.behave.commands = NULL;
     }
     gtk_main_quit();
+}
+
+void vp_view_source(const Arg* arg)
+{
+    gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
+    webkit_web_view_set_view_source_mode(vp.gui.webview, !mode);
+    webkit_web_view_reload(vp.gui.webview);
 }
 
 void vp_update_urlbar(const gchar* uri)
@@ -135,8 +148,13 @@ static void vp_init(void)
     /* initialize the keybindings */
     keybind_init();
 
-    keybind_add(VP_MODE_NORMAL, GDK_g, 0, GDK_f, "source");
-    keybind_add(VP_MODE_NORMAL, 0,     0, GDK_d, "quit");
+    keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_f, "source");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_d, "quit");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_o, "back");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_i, "forward");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_r, "reload");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_R, "reload!");
+    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_c, "stop");
 }
 
 static void vp_init_gui(void)
@@ -222,6 +240,7 @@ static void vp_setup_signals(void)
     g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(vp_frame_scrollbar_policy_changed_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
+    g_signal_connect(G_OBJECT(gui->webview), "load-committed", G_CALLBACK(vp_webview_load_commited_cb), NULL);
 }
 
 int main(int argc, char* argv[])

@@ -1,9 +1,15 @@
 #include "command.h"
+#include "main.h"
 
 static CommandInfo cmd_list[] = {
-    /* command   function     arg */
-    {"quit",     quit,        {0}},
-    {"source",   view_source, {0}},
+    /* command          function          arg */
+    {"quit",            vp_close_browser, {0}},
+    {"source",          vp_view_source,   {0}},
+    {"back",            vp_navigate,      {NAVIG_BACK}},
+    {"forward",         vp_navigate,      {NAVIG_FORWARD}},
+    {"reload",          vp_navigate,      {NAVIG_RELOAD}},
+    {"reload!",         vp_navigate,      {NAVIG_RELOAD_FORCE}},
+    {"stop",            vp_navigate,      {NAVIG_STOP_LOADING}},
 };
 
 void command_init()
@@ -28,16 +34,4 @@ void command_run(const gchar* name)
     a.s = g_strdup(c->arg.s);
     c->function(&a);
     g_free(a.s);
-}
-
-void quit(Arg* arg)
-{
-    vp_close_browser();
-}
-
-void view_source(Arg* arg)
-{
-    gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
-    webkit_web_view_set_view_source_mode(vp.gui.webview, !mode);
-    webkit_web_view_reload(vp.gui.webview);
 }
