@@ -1,9 +1,9 @@
 #include "command.h"
 
 static CommandInfo cmd_list[] = {
-    /* command   function */
-    {"quit",     quit},
-    {"source",   view_source},
+    /* command   function     arg */
+    {"quit",     quit,        {0}},
+    {"source",   view_source, {0}},
 };
 
 void command_init()
@@ -16,57 +16,23 @@ void command_init()
     }
 }
 
-void command_parse_line(const gchar* line)
-{
-    gchar* string = g_strdup(line);
-
-    /* strip trailing newline, and any other whitespace from left */
-    g_strstrip(string);
-
-    if (strcmp(string, "")) {
-        /* ignore comment lines */
-        if ((string[0] != '#')) {
-            Arg* a = NULL;
-            const CommandInfo* c = command_parse_parts(string, a);
-            if (c) {
-                command_run_command(c, a);
-            }
-            g_free(a->s);
-        }
-    }
-
-    g_free(string);
-}
-
-/* static? */
-const CommandInfo* command_parse_parts(const gchar* line, Arg* arg)
+void command_run(const gchar* name)
 {
     CommandInfo* c = NULL;
-
-    /* split the line into the command and its parameters */
-    gchar **tokens = g_strsplit(line, " ", 2);
-
-    /* look up the command */
-    c = g_hash_table_lookup(vp.behave.commands, tokens[0]);
+    Arg a;
+    c = g_hash_table_lookup(vp.behave.commands, name);
     if (!c) {
-        g_strfreev(tokens);
-        return NULL;
+        return;
     }
-
-    arg->s = g_strdup(tokens[2]);
-    g_strfreev(tokens);
-
-    return c;
-}
-
-void command_run_command(const CommandInfo* c, Arg* arg)
-{
-    c->function(arg);
+    a.i = c->arg.i;
+    a.s = g_strdup(c->arg.s);
+    c->function(&a);
+    g_free(a.s);
 }
 
 void quit(Arg* arg)
 {
-    vp_close_browser(); 
+    vp_close_browser();
 }
 
 void view_source(Arg* arg)

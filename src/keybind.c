@@ -82,12 +82,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
             && keybind->modkey == vp.state.modkey
             && keybind->command
         ) {
-            Arg* a = NULL;
-            const CommandInfo* c = command_parse_parts(keybind->command, a);
-            if (c) {
-                command_run_command(c, a);
-            }
-            g_free(a->s);
+            command_run(keybind->command);
 
             /* if key binding used, remove the modkey */
             vp.state.modkey = 0;

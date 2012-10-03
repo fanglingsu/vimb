@@ -9,13 +9,12 @@ typedef void (*Command)(Arg* arg);
 typedef struct {
     const gchar* name;
     Command      function;
+    const Arg    arg;
 } CommandInfo;
 
 
 void command_init(void);
-void command_parse_line(const gchar* line);
-const CommandInfo* command_parse_parts(const gchar* line, Arg* arg);
-void command_run_command(const CommandInfo* c, Arg* arg);
+void command_run(const gchar* name);
 
 void quit(Arg* arg);
 void view_source(Arg* arg);

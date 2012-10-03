@@ -135,8 +135,7 @@ static void vp_init(void)
     /* initialize the keybindings */
     keybind_init();
 
-    /*command_parse_line("quit", NULL);*/
-    keybind_add(VP_MODE_NORMAL, GDK_g, 0, GDK_s, "source");
+    keybind_add(VP_MODE_NORMAL, GDK_g, 0, GDK_f, "source");
     keybind_add(VP_MODE_NORMAL, 0,     0, GDK_d, "quit");
 }
 
