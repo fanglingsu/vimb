@@ -16,6 +16,7 @@ static gboolean vp_frame_scrollbar_policy_changed_cb(void);
 static void vp_print_version(void);
 static void vp_init(void);
 static void vp_init_gui(void);
+static void vp_setup_settings(void);
 static void vp_setup_signals(void);
 
 
@@ -236,6 +237,8 @@ static void vp_init_gui(void)
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
 
+    vp_setup_settings();
+
     /* Create a scrollable area */
     gui->viewport = gtk_scrolled_window_new(gui->adjust_h, gui->adjust_v);
     gtk_scrolled_window_set_policy(
@@ -293,6 +296,17 @@ static void vp_init_gui(void)
     /* Make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
 }
+
+static void vp_setup_settings(void)
+{
+    WebKitWebSettings *settings = webkit_web_view_get_settings(vp.gui.webview);
+
+    g_object_set(G_OBJECT(settings), "user-agent", SETTING_USER_AGENT, NULL);
+    g_object_set(G_OBJECT(settings), "max-conns", SETTING_MAX_CONNS, NULL);
+    g_object_set(G_OBJECT(settings), "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
+    webkit_web_view_set_settings(vp.gui.webview, settings);
+}
+
 
 static void vp_setup_signals(void)
 {

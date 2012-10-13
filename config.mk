@@ -1,7 +1,7 @@
 #----------------user/install options----------------
 VERSION = 0.1.0
 
-PROJECT = vimprobable
+PROJECT = vimp
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin/
 MANDIR ?= $(PREFIX)/share/man/

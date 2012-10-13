@@ -8,6 +8,11 @@
 #define STATUS_BAR_FONT "monospace bold 8"
 #define URL_BOX_FONT    "monospace 8"
 
+#define SETTING_DEFAUL_FONT_SIZE    12
+#define SETTING_USER_AGENT          PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"
+#define SETTING_MAX_CONNS           25
+#define SETTING_MAX_CONNS_PER_HOST  5
+
 #define SCROLLSTEP (40) /* cursor difference in pixel for scrolling */
 
 #endif /* end of include guard: CONFIG_H */
