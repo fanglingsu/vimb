@@ -10,8 +10,7 @@
 /* remove unused bits, numlock symbol and buttons from keymask */
 #define CLEAN(mask) (mask & (GDK_MODIFIER_MASK) & ~(CLEAN_MOD_NUMLOCK_MASK) & ~(CLEAN_MOD_BUTTON_MASK))
 #define IS_ESCAPE(event) (IS_ESCAPE_KEY(CLEAN(event->state), event->keyval))
-#define IS_ESCAPE_KEY(s, k) ((s == 0 && k == GDK_Escape) || \
-        (s == GDK_CONTROL_MASK && k == GDK_bracketleft))
+#define IS_ESCAPE_KEY(s, k) ((s == 0 && k == GDK_Escape) || (s == GDK_CONTROL_MASK && k == GDK_c))
 
 struct _keybind_key {
     int    mode;        /* mode maks for allowed browser modes */

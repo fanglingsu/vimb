@@ -6,7 +6,12 @@
 #define STATUS_BG_COLOR "#000000"           /* background color for status bar */
 #define STATUS_FG_COLOR "#ffffff"           /* foreground color for status bar */
 #define STATUS_BAR_FONT "monospace bold 8"
-#define URL_BOX_FONT    "monospace 8"
+
+                                    /* normal                error */
+static const char *inputbox_font[] = { "monospace normal 8", "monospace bold 8"};
+static const char *inputbox_fg[]   = { "#000000",            "#000000" };
+static const char *inputbox_bg[]   = { "#ffffff",            "#ff0000" };
+
 
 #define SETTING_DEFAUL_FONT_SIZE    12
 #define SETTING_USER_AGENT          PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"

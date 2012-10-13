@@ -3,6 +3,8 @@
 
 static CommandInfo cmd_list[] = {
     /* command          function          arg */
+    {"normal",          vp_set_mode,      {VP_MODE_NORMAL, ""}},
+    {"input",           vp_input,         {0, ":"}},
     {"quit",            vp_close_browser, {0}},
     {"source",          vp_view_source,   {0}},
     {"back",            vp_navigate,      {VP_NAVIG_BACK}},
@@ -34,16 +36,18 @@ void command_init()
     }
 }
 
-void command_run(const gchar* name)
+gboolean command_run(const gchar* name)
 {
     CommandInfo* c = NULL;
     Arg a;
     c = g_hash_table_lookup(vp.behave.commands, name);
     if (!c) {
-        return;
+        return FALSE;
     }
     a.i = c->arg.i;
     a.s = g_strdup(c->arg.s);
     c->function(&a);
     g_free(a.s);
+
+    return TRUE;
 }

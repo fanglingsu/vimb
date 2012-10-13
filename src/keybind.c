@@ -11,7 +11,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
 void keybind_init(void)
 {
     modkeys = g_string_new("");
-    g_signal_connect(G_OBJECT(vp.gui.webview), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
+    g_signal_connect(G_OBJECT(vp.gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
 }
 
 void keybind_add(int mode, guint modkey, guint modmask, guint keyval, const gchar* command)
@@ -49,38 +49,41 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     /* check for escape or modkeys or counts */
     if ((CLEAN(event->state) & ~irrelevant) == 0) {
         if (IS_ESCAPE(event)) {
-            /* TODO add function to main.c to switch the mode */
-            /* switch to normal mode */
-            vp.state.mode = VP_MODE_NORMAL;
-            /* remove current modkey and set count back to 0 */
-            vp.state.modkey = vp.state.count  = 0;
-            vp_update_statusbar();
-
-            return TRUE;
-        } else if (vp.state.modkey == 0 && ((event->keyval >= GDK_1 && event->keyval <= GDK_9)
-                || (event->keyval == GDK_0 && vp.state.count))) {
-            /* append the new entered count to previous one */
-            vp.state.count = (vp.state.count ? vp.state.count * 10 : 0) + (event->keyval - GDK_0);
-            vp_update_statusbar();
-
-            return TRUE;
-        } else if (strchr(modkeys->str, event->keyval) && vp.state.modkey != event->keyval) {
-            vp.state.modkey = (gchar)event->keyval;
-            vp_update_statusbar();
+            /* switch to normal mode and clear the input box */
+            Arg a = {VP_MODE_NORMAL, ""};
+            vp_set_mode(&a);
 
             return TRUE;
         }
+        /* allow mode keys and counts only in normal mode */
+        if (VP_MODE_NORMAL == vp.state.mode) {
+            if (vp.state.modkey == 0 && ((event->keyval >= GDK_1 && event->keyval <= GDK_9)
+                    || (event->keyval == GDK_0 && vp.state.count))) {
+                /* append the new entered count to previous one */
+                vp.state.count = (vp.state.count ? vp.state.count * 10 : 0) + (event->keyval - GDK_0);
+                vp_update_statusbar();
+
+                return TRUE;
+            }
+            if (strchr(modkeys->str, event->keyval) && vp.state.modkey != event->keyval) {
+                vp.state.modkey = (gchar)event->keyval;
+                vp_update_statusbar();
+
+                return TRUE;
+            }
+        }
     }
+    /* TODO move to own function */
     /* check for keybinding */
     for (tmp = keys; tmp != NULL; tmp = tmp->next) {
         struct _keybind_key* keybind = (struct _keybind_key*)tmp->data;
 
         /* handle key presses */
-        if (keybind->modmask == (CLEAN(event->state) & ~irrelevant)
-            && keybind->modkey == vp.state.modkey
-            && keybind->keyval == keyval
-            && keybind->command
-        ) {
+        if (keybind->mode == vp.state.mode
+                && keybind->modmask == (CLEAN(event->state) & ~irrelevant)
+                && keybind->modkey == vp.state.modkey
+                && keybind->keyval == keyval
+                && keybind->command) {
             command_run(keybind->command);
 
             /* if key binding used, remove the modkey */

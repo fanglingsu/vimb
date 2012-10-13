@@ -26,9 +26,10 @@
 
 /* enums */
 typedef enum _vp_mode {
-    VP_MODE_NORMAL       = (1 << 0),
-    VP_MODE_PATH_THROUGH = (1 << 1),
-    VP_MODE_INSERT       = (1 << 2),
+    VP_MODE_NORMAL,
+    VP_MODE_COMMAND,
+    VP_MODE_PATH_THROUGH,
+    VP_MODE_INSERT,
 } Mode;
 
 enum {
@@ -62,6 +63,10 @@ enum {
     VP_SCROLL_UNIT_LINE     = (1 << 3),
     VP_SCROLL_UNIT_HALFPAGE = (1 << 4)
 };
+typedef enum {
+    VP_MSG_NORMAL,
+    VP_MSG_ERROR
+} MessageType;
 
 /* structs */
 typedef struct {
@@ -123,10 +128,13 @@ extern VpCore vp;
 /* functions */
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
+void vp_echo(const MessageType type, const gchar *message);
 gboolean vp_load_uri(const Arg* arg);
 void vp_navigate(const Arg* arg);
 void vp_scroll(const Arg* arg);
 void vp_close_browser(const Arg* arg);
 void vp_view_source(const Arg* arg);
+void vp_set_mode(const Arg* arg);
+void vp_input(const Arg* arg);
 
 #endif /* end of include guard: MAIN_H */

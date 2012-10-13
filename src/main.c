@@ -8,17 +8,21 @@ VpCore vp;
 
 /* callbacks */
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data);
-static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame *frame, gpointer user_data);
+static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame* frame, gpointer user_data);
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
 static gboolean vp_frame_scrollbar_policy_changed_cb(void);
+static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
+static gboolean vp_inputbox_keypress_cb(GtkEntry* entry, GdkEventKey* event);
+static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
 
 /* functions */
+static gboolean vp_process_input(const char* input);
 static void vp_print_version(void);
 static void vp_init(void);
 static void vp_init_gui(void);
+static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
 static void vp_setup_settings(void);
 static void vp_setup_signals(void);
-
 
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
 {
@@ -53,6 +57,68 @@ static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer 
 static gboolean vp_frame_scrollbar_policy_changed_cb(void)
 {
     return TRUE;
+}
+
+static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
+{
+    gboolean success = FALSE;
+    const gchar *text;
+    guint16 length = gtk_entry_get_text_length(entry);
+    Gui* gui = &vp.gui;
+
+    if (0 == length) {
+        return;
+    }
+
+    gtk_widget_grab_focus(GTK_WIDGET(gui->webview));
+
+    /* do not free or modify text */
+    text = gtk_entry_get_text(entry);
+
+    if (1 < length && ':' == text[0]) {
+        success = vp_process_input((text + 1));
+        if (!success) {
+            /* print error message */
+            gchar* message = g_strdup_printf("Command '%s' not found", (text + 1));
+            vp_echo(VP_MSG_ERROR, message);
+            g_free(message);
+
+            /* switch to normal mode after running command */
+            Arg a = {VP_MODE_NORMAL};
+            vp_set_mode(&a);
+        } else {
+            /* switch to normal mode after running command and clean input */
+            Arg a = {VP_MODE_NORMAL, ""};
+            vp_set_mode(&a);
+        }
+    }
+}
+
+static gboolean vp_inputbox_keypress_cb(GtkEntry *entry, GdkEventKey *event)
+{
+    return FALSE;
+}
+
+static gboolean vp_inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event)
+{
+    return FALSE;
+}
+
+static gboolean vp_process_input(const char* input)
+{
+    gboolean success;
+    gchar* command = g_strdup(input);
+
+    g_strstrip(command);
+    size_t length = strlen(command);
+    if (0 == length) {
+        return FALSE;
+    }
+
+    success = command_run(command);
+    g_free(command);
+
+    return success;
 }
 
 gboolean vp_load_uri(const Arg* arg)
@@ -142,6 +208,55 @@ void vp_view_source(const Arg* arg)
     webkit_web_view_reload(vp.gui.webview);
 }
 
+void vp_set_mode(const Arg* arg)
+{
+    vp.state.mode = arg->i;
+    vp.state.modkey = vp.state.count  = 0;
+
+    switch (arg->i) {
+        case VP_MODE_NORMAL:
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            break;
+
+        case VP_MODE_COMMAND:
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.inputbox));
+            break;
+
+        case VP_MODE_INSERT:
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            break;
+
+        case VP_MODE_PATH_THROUGH:
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            break;
+    }
+
+    /* echo message if given */
+    if (arg->s) {
+        vp_echo(VP_MSG_NORMAL, arg->s);
+    }
+
+    vp_update_statusbar();
+}
+
+void vp_input(const Arg* arg)
+{
+    gint pos = 0;
+
+    /* reset the colors and fonts to defalts */
+    vp_set_widget_font(vp.gui.inputbox, inputbox_font[0], inputbox_bg[0], inputbox_fg[0]);
+
+    /* remove content from input box */
+    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
+
+    /* insert text */
+    gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), arg->s, -1, &pos);
+    gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
+
+    Arg a = {VP_MODE_COMMAND};
+    vp_set_mode(&a);
+}
+
 void vp_update_urlbar(const gchar* uri)
 {
     gchar* markup;
@@ -182,6 +297,19 @@ void vp_update_statusbar(void)
     g_free(markup);
 }
 
+void vp_echo(const MessageType type, const gchar *message)
+{
+    /* don't print message if the input is focussed */
+    if (gtk_widget_is_focus(GTK_WIDGET(vp.gui.inputbox))) {
+        return;
+    }
+
+    /* set the collors according to message type */
+    vp_set_widget_font(vp.gui.inputbox, inputbox_font[type], inputbox_bg[type], inputbox_fg[type]);
+    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
+}
+
+
 static void vp_print_version(void)
 {
     fprintf(stderr, "%s/%s (build %s %s)\n", VERSION, PROJECT, __DATE__, __TIME__);
@@ -197,6 +325,7 @@ static void vp_init(void)
     keybind_init();
 
     keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_f,      "source");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_colon,  "input");
     keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_d,      "quit");
     keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_o,      "back");
     keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_i,      "forward");
@@ -253,9 +382,7 @@ static void vp_init_gui(void)
     gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
     g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", FALSE, NULL);
 
-    PangoFontDescription* font = pango_font_description_from_string(URL_BOX_FONT);
-    gtk_widget_modify_font(GTK_WIDGET(gui->inputbox), font);
-    pango_font_description_free(font);
+    vp_set_widget_font(gui->inputbox, inputbox_font[0], inputbox_bg[0], inputbox_fg[0]);
 
     /* Prepare the statusbar */
     gui->statusbar.box   = GTK_BOX(gtk_hbox_new(FALSE, 0));
@@ -297,6 +424,26 @@ static void vp_init_gui(void)
     gtk_widget_show_all(gui->window);
 }
 
+static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color)
+{
+    GdkColor fg, bg;
+    PangoFontDescription *font;
+
+    font = pango_font_description_from_string(font_definition);
+    gtk_widget_modify_font(widget, font);
+    pango_font_description_free(font);
+
+    if (fg_color) {
+        gdk_color_parse(fg_color, &fg);
+    }
+    if (bg_color) {
+        gdk_color_parse(bg_color, &bg);
+    }
+
+    gtk_widget_modify_text(widget, GTK_STATE_NORMAL, fg_color ? &fg : NULL);
+    gtk_widget_modify_base(widget, GTK_STATE_NORMAL, bg_color ? &bg : NULL);
+}
+
 static void vp_setup_settings(void)
 {
     WebKitWebSettings *settings = webkit_web_view_get_settings(vp.gui.webview);
@@ -319,6 +466,15 @@ static void vp_setup_signals(void)
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(vp_frame_scrollbar_policy_changed_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "load-committed", G_CALLBACK(vp_webview_load_commited_cb), NULL);
+
+    g_object_connect(
+        G_OBJECT(gui->inputbox),
+        "signal::activate",          G_CALLBACK(vp_inputbox_activate_cb),   NULL,
+        "signal::key-press-event",   G_CALLBACK(vp_inputbox_keypress_cb),   NULL,
+        "signal::key-release-event", G_CALLBACK(vp_inputbox_keyrelease_cb), NULL,
+        NULL
+    );
+
 }
 
 int main(int argc, char* argv[])
