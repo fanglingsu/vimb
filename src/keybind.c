@@ -25,7 +25,7 @@ void keybind_add(int mode, guint modkey, guint modmask, guint keyval, const gcha
     keybind->keyval  = keyval;
     keybind->command = g_strdup(command);
 
-    keys = g_slist_append(keys, keybind);
+    keys = g_slist_prepend(keys, keybind);
 
      /* save the modkey also in the modkey string */
     if (modkey) {
@@ -48,10 +48,10 @@ GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
     for (link = keys; link != NULL; link = link->next) {
         Keybind* keybind = (Keybind*)link->data;
 
-        if (keybind->mode == mode
+        if (keybind->keyval == keyval
                 && keybind->modmask == modmask
                 && keybind->modkey == modkey
-                && keybind->keyval == keyval) {
+                && keybind->mode == mode) {
             return link;
         }
     }
