@@ -136,8 +136,8 @@ gboolean vp_load_uri(const Arg* arg)
     g_free(u);
 
     /* change state to normal mode */
-    vp.state.mode = VP_MODE_NORMAL;
-    vp_update_statusbar();
+    Arg a = {VP_MODE_NORMAL};
+    vp_set_mode(&a);
 
     return TRUE;
 }
@@ -324,6 +324,7 @@ static void vp_init(void)
     /* initialize the keybindings */
     keybind_init();
 
+    /* TODO read the key bindings from config file */
     keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_f,      "source");
     keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_colon,  "input");
     keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_d,      "quit");

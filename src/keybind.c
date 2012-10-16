@@ -5,6 +5,7 @@
 static GSList* keys = NULL;
 static GString* modkeys = NULL;
 
+static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval);
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
 
 
@@ -16,7 +17,7 @@ void keybind_init(void)
 
 void keybind_add(int mode, guint modkey, guint modmask, guint keyval, const gchar* command)
 {
-    struct _keybind_key* keybind = g_new0(struct _keybind_key, 1);
+    Keybind* keybind = g_new0(Keybind, 1);
 
     keybind->mode    = mode;
     keybind->modkey  = modkey;
@@ -32,9 +33,34 @@ void keybind_add(int mode, guint modkey, guint modmask, guint keyval, const gcha
     }
 }
 
+void keybind_remove(int mode, guint modkey, guint modmask, guint keyval)
+{
+    GSList* link = keybind_find(mode, modkey, modmask, keyval);
+    if (link) {
+        keys = g_slist_delete_link(keys, link);
+    }
+    /* TODO remove eventually no more used modkeys */
+}
+
+GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
+{
+    GSList* link;
+    for (link = keys; link != NULL; link = link->next) {
+        Keybind* keybind = (Keybind*)link->data;
+
+        if (keybind->mode == mode
+                && keybind->modmask == modmask
+                && keybind->modkey == modkey
+                && keybind->keyval == keyval) {
+            return link;
+        }
+    }
+
+    return NULL;
+}
+
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
 {
-    GSList* tmp;
     GdkModifierType irrelevant;
     guint keyval;
     static GdkKeymap *keymap;
@@ -73,25 +99,20 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
             }
         }
     }
-    /* TODO move to own function */
+
     /* check for keybinding */
-    for (tmp = keys; tmp != NULL; tmp = tmp->next) {
-        struct _keybind_key* keybind = (struct _keybind_key*)tmp->data;
+    GSList* link = keybind_find(vp.state.mode, vp.state.modkey,
+            (CLEAN(event->state) & ~irrelevant), keyval);
 
-        /* handle key presses */
-        if (keybind->mode == vp.state.mode
-                && keybind->modmask == (CLEAN(event->state) & ~irrelevant)
-                && keybind->modkey == vp.state.modkey
-                && keybind->keyval == keyval
-                && keybind->command) {
-            command_run(keybind->command);
+    if (link) {
+        Keybind* keybind = (Keybind*)link->data;
+        command_run(keybind->command);
 
-            /* if key binding used, remove the modkey */
-            vp.state.modkey = vp.state.count = 0;
-            vp_update_statusbar();
+        /* if key binding used, remove the modkey */
+        vp.state.modkey = vp.state.count = 0;
+        vp_update_statusbar();
 
-            return TRUE;
-        }
+        return TRUE;
     }
 
     return FALSE;

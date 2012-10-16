@@ -12,15 +12,16 @@
 #define IS_ESCAPE(event) (IS_ESCAPE_KEY(CLEAN(event->state), event->keyval))
 #define IS_ESCAPE_KEY(s, k) ((s == 0 && k == GDK_Escape) || (s == GDK_CONTROL_MASK && k == GDK_c))
 
-struct _keybind_key {
+typedef struct {
     int    mode;        /* mode maks for allowed browser modes */
     guint  modkey;
     guint  modmask;     /* modemask for the kayval */
     guint  keyval;
     gchar* command;     /* command to run */
-};
+} Keybind;
 
 void keybind_init(void);
 void keybind_add(int mode, guint modkey, guint modmask, guint keyval, const gchar* command);
+void keybind_remove(int mode, guint modkey, guint modmask, guint keyval);
 
 #endif /* end of include guard: KEYBIND_H */
