@@ -23,6 +23,7 @@ static void vp_init_gui(void);
 static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
 static void vp_setup_settings(void);
 static void vp_setup_signals(void);
+static gboolean vp_load_uri(const Arg* arg);
 
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
 {
@@ -107,33 +108,48 @@ static gboolean vp_inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event)
 static gboolean vp_process_input(const char* input)
 {
     gboolean success;
-    gchar* command = g_strdup(input);
+    gchar* line = g_strdup(input);
+    gchar** token;
 
-    g_strstrip(command);
-    size_t length = strlen(command);
-    if (0 == length) {
+    if (!input || !strlen(input)) {
         return FALSE;
     }
 
-    success = command_run(command);
-    g_free(command);
+    g_strstrip(line);
+
+    /* split the input string into command and parameter part */
+    token = g_strsplit(line, " ", 2);
+    g_free(line);
+
+    if (!token[0]) {
+        g_strfreev(token);
+        return FALSE;
+    }
+    success = command_run(token[0], token[1] ? token[1] : NULL);
+    g_strfreev(token);
 
     return success;
 }
 
-gboolean vp_load_uri(const Arg* arg)
+static gboolean vp_load_uri(const Arg* arg)
 {
-    char* u;
-    const char* uri = arg->s;
+    char* uri;
+    char* line = arg->s;
 
-    if (strcmp(uri, "") == 0) {
+    if (!line) {
         return FALSE;
     }
-    u = g_strrstr(uri, "://") ? g_strdup(uri) : g_strdup_printf("http://%s", uri);
+
+    g_strstrip(line);
+    if (!strlen(line)) {
+        return FALSE;
+    }
+
+    uri = g_strrstr(line, "://") ? g_strdup(line) : g_strdup_printf("http://%s", line);
 
     /* Load a web page into the browser instance */
-    webkit_web_view_load_uri(vp.gui.webview, u);
-    g_free(u);
+    webkit_web_view_load_uri(vp.gui.webview, uri);
+    g_free(uri);
 
     /* change state to normal mode */
     Arg a = {VP_MODE_NORMAL};
@@ -242,6 +258,7 @@ void vp_set_mode(const Arg* arg)
 void vp_input(const Arg* arg)
 {
     gint pos = 0;
+    const gchar* url;
 
     /* reset the colors and fonts to defalts */
     vp_set_widget_font(vp.gui.inputbox, inputbox_font[0], inputbox_bg[0], inputbox_fg[0]);
@@ -249,12 +266,24 @@ void vp_input(const Arg* arg)
     /* remove content from input box */
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
 
-    /* insert text */
+    /* insert string from arg */
     gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), arg->s, -1, &pos);
+
+    /* add current url if requested */
+    if (VP_INPUT_CURRENT_URI == arg->i
+            && (url = webkit_web_view_get_uri(vp.gui.webview))) {
+        gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), url, -1, &pos);
+    }
+
     gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
 
     Arg a = {VP_MODE_COMMAND};
     vp_set_mode(&a);
+}
+
+void vp_open(const Arg* arg)
+{
+    vp_load_uri(arg);
 }
 
 void vp_update_urlbar(const gchar* uri)
@@ -309,7 +338,6 @@ void vp_echo(const MessageType type, const gchar *message)
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
 }
 
-
 static void vp_print_version(void)
 {
     fprintf(stderr, "%s/%s (build %s %s)\n", VERSION, PROJECT, __DATE__, __TIME__);
@@ -327,6 +355,8 @@ static void vp_init(void)
     /* TODO read the key bindings from config file */
     keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_f,      "source");
     keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_colon,  "input");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_o,      "inputopen");
+    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_O,      "inputopencurrent");
     keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_d,      "quit");
     keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_o,      "back");
     keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_i,      "forward");

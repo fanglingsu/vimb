@@ -106,7 +106,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
 
     if (link) {
         Keybind* keybind = (Keybind*)link->data;
-        command_run(keybind->command);
+        command_run(keybind->command, NULL);
 
         /* if key binding used, remove the modkey */
         vp.state.modkey = vp.state.count = 0;

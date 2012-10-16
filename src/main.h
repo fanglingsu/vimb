@@ -40,6 +40,10 @@ enum {
     VP_NAVIG_STOP_LOADING
 };
 
+enum {
+    VP_INPUT_CURRENT_URI = 1
+};
+
 /*
 1 << 0:  0 = jump,              1 = scroll
 1 << 1:  0 = vertical,          1 = horizontal
@@ -129,12 +133,12 @@ extern VpCore vp;
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 void vp_echo(const MessageType type, const gchar *message);
-gboolean vp_load_uri(const Arg* arg);
 void vp_navigate(const Arg* arg);
 void vp_scroll(const Arg* arg);
 void vp_close_browser(const Arg* arg);
 void vp_view_source(const Arg* arg);
 void vp_set_mode(const Arg* arg);
 void vp_input(const Arg* arg);
+void vp_open(const Arg* arg);
 
 #endif /* end of include guard: MAIN_H */
