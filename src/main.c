@@ -109,6 +109,7 @@ static gboolean vp_process_input(const char* input)
 {
     gboolean success;
     gchar* line = g_strdup(input);
+    gchar* command = NULL;
     gchar** token;
 
     if (!input || !strlen(input)) {
@@ -117,8 +118,11 @@ static gboolean vp_process_input(const char* input)
 
     g_strstrip(line);
 
+    /* get a possible command count */
+    vp.state.count = g_ascii_strtoll(line, &command, 10);
+
     /* split the input string into command and parameter part */
-    token = g_strsplit(line, " ", 2);
+    token = g_strsplit(command, " ", 2);
     g_free(line);
 
     if (!token[0]) {

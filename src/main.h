@@ -104,7 +104,7 @@ typedef struct {
 typedef struct {
     Mode          mode;
     gchar         modkey;
-    int           count;
+    guint         count;
 } State;
 
 /* behaviour */

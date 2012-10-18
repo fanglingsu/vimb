@@ -52,5 +52,9 @@ gboolean command_run(const gchar* name, const gchar* param)
     c->function(&a);
     g_free(a.s);
 
+    /* if command was run, remove the modkey and count */
+    vp.state.modkey = vp.state.count = 0;
+    vp_update_statusbar();
+
     return TRUE;
 }

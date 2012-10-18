@@ -27,7 +27,7 @@ void keybind_add(int mode, guint modkey, guint modmask, guint keyval, const gcha
 
     keys = g_slist_prepend(keys, keybind);
 
-     /* save the modkey also in the modkey string */
+    /* save the modkey also in the modkey string */
     if (modkey) {
         g_string_append_c(modkeys, modkey);
     }
@@ -107,10 +107,6 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     if (link) {
         Keybind* keybind = (Keybind*)link->data;
         command_run(keybind->command, NULL);
-
-        /* if key binding used, remove the modkey */
-        vp.state.modkey = vp.state.count = 0;
-        vp_update_statusbar();
 
         return TRUE;
     }
