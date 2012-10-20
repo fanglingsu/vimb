@@ -14,6 +14,7 @@ typedef struct {
 
 
 void command_init(void);
+gboolean command_exists(const gchar* name);
 gboolean command_run(const gchar* name, const gchar* param);
 
 #endif /* end of include guard: COMMAND_H */

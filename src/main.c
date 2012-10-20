@@ -1,5 +1,6 @@
 #include "config.h"
 #include "main.h"
+#include "util.h"
 #include "command.h"
 #include "keybind.h"
 
@@ -20,6 +21,7 @@ static gboolean vp_process_input(const char* input);
 static void vp_print_version(void);
 static void vp_init(void);
 static void vp_init_gui(void);
+static void vp_init_files(void);
 static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
 static void vp_setup_settings(void);
 static void vp_setup_signals(void);
@@ -211,11 +213,19 @@ void vp_scroll(const Arg* arg)
 
 void vp_close_browser(const Arg* arg)
 {
+    vp_clean_up();
+    gtk_main_quit();
+}
+
+void vp_clean_up(void)
+{
     if (vp.behave.commands) {
         g_hash_table_destroy(vp.behave.commands);
         vp.behave.commands = NULL;
     }
-    gtk_main_quit();
+    for (int i = FILES_FIRST; i < FILES_LAST; i++) {
+        g_free(vp.files[i]);
+    }
 }
 
 void vp_view_source(const Arg* arg)
@@ -350,32 +360,34 @@ static void vp_init(void)
     vp_init_gui();
     /* initialize the commands hash map */
     command_init();
+    /* initialize the config files */
+    vp_init_files();
     /* initialize the keybindings */
     keybind_init();
 
     /* TODO read the key bindings from config file */
-    keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_f,      "source");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_colon,  "input");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_o,      "inputopen");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_O,      "inputopencurrent");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_d,      "quit");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_o,      "back");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_i,      "forward");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_r,      "reload");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_R,      "reload!");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_c,      "stop");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_f,      "pagedown");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_b,      "pageup");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_d,      "halfpagedown");
-    keybind_add(VP_MODE_NORMAL, 0,     GDK_CONTROL_MASK, GDK_u,      "halfpageup");
-    keybind_add(VP_MODE_NORMAL, GDK_g, 0,                GDK_g,      "jumptop");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_G,      "jumpbottom");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_0,      "jumpleft");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_dollar, "jumpright");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_h,      "scrollleft");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_l,      "scrollright");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_k,      "scrollup");
-    keybind_add(VP_MODE_NORMAL, 0,     0,                GDK_j,      "scrolldown");
+    keybind_add_from_string("gf source", VP_MODE_NORMAL);
+    keybind_add_from_string(": input", VP_MODE_NORMAL);
+    keybind_add_from_string("o inputopen", VP_MODE_NORMAL);
+    keybind_add_from_string("O inputopencurrent", VP_MODE_NORMAL);
+    keybind_add_from_string("d quit", VP_MODE_NORMAL);
+    keybind_add_from_string("<ctrl>o back", VP_MODE_NORMAL);
+    keybind_add_from_string("<ctrl>i forward", VP_MODE_NORMAL);
+    keybind_add_from_string("r reload", VP_MODE_NORMAL);
+    keybind_add_from_string("R reload!", VP_MODE_NORMAL);
+    keybind_add_from_string("<ctrl>c stop", VP_MODE_NORMAL);
+    keybind_add_from_string("<ctrl>f pagedown", VP_MODE_NORMAL);
+    keybind_add_from_string("<ctrl>b pageup", VP_MODE_NORMAL);
+    keybind_add_from_string("<ctrl>d halfpagedown", VP_MODE_NORMAL);
+    keybind_add_from_string("<ctrl>u halfpageup", VP_MODE_NORMAL);
+    keybind_add_from_string("gg jumptop", VP_MODE_NORMAL);
+    keybind_add_from_string("G jumpbottom", VP_MODE_NORMAL);
+    keybind_add_from_string("0 jumpleft", VP_MODE_NORMAL);
+    keybind_add_from_string("$ jumpright", VP_MODE_NORMAL);
+    keybind_add_from_string("h scrollleft", VP_MODE_NORMAL);
+    keybind_add_from_string("l scrollright", VP_MODE_NORMAL);
+    keybind_add_from_string("k scrollup", VP_MODE_NORMAL);
+    keybind_add_from_string("j scrolldown", VP_MODE_NORMAL);
 }
 
 static void vp_init_gui(void)
@@ -454,6 +466,16 @@ static void vp_init_gui(void)
 
     /* Make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
+}
+
+static void vp_init_files(void)
+{
+    gchar* path = util_get_config_dir();
+
+    vp.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
+    util_create_file_if_not_exists(vp.files[FILES_CONFIG]);
+
+    g_free(path);
 }
 
 static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color)

@@ -72,6 +72,12 @@ typedef enum {
     VP_MSG_ERROR
 } MessageType;
 
+enum {
+    FILES_FIRST = 0,
+    FILES_CONFIG = 0,
+    FILES_LAST
+};
+
 /* structs */
 typedef struct {
     gint  i;
@@ -118,6 +124,7 @@ typedef struct {
     Gui           gui;
     State         state;
     Behaviour     behave;
+    gchar*        files[FILES_LAST];
 #if 0
     Network       net;
     Ssl           ssl;
@@ -136,6 +143,7 @@ void vp_echo(const MessageType type, const gchar *message);
 void vp_navigate(const Arg* arg);
 void vp_scroll(const Arg* arg);
 void vp_close_browser(const Arg* arg);
+void vp_clean_up(void);
 void vp_view_source(const Arg* arg);
 void vp_set_mode(const Arg* arg);
 void vp_input(const Arg* arg);

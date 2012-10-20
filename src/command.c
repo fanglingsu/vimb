@@ -39,6 +39,11 @@ void command_init()
     }
 }
 
+gboolean command_exists(const gchar* name)
+{
+    return g_hash_table_contains(vp.behave.commands, name);
+}
+
 gboolean command_run(const gchar* name, const gchar* param)
 {
     CommandInfo* c = NULL;
