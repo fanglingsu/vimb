@@ -20,6 +20,7 @@ static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
 static gboolean vp_process_input(const char* input);
 static void vp_print_version(void);
 static void vp_init(void);
+static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
 static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
@@ -358,36 +359,58 @@ static void vp_init(void)
 {
     /* initialize the gui elements and event callbacks */
     vp_init_gui();
+
     /* initialize the commands hash map */
     command_init();
+
     /* initialize the config files */
     vp_init_files();
+
     /* initialize the keybindings */
     keybind_init();
 
-    /* TODO read the key bindings from config file */
-    keybind_add_from_string("gf source", VP_MODE_NORMAL);
-    keybind_add_from_string(": input", VP_MODE_NORMAL);
-    keybind_add_from_string("o inputopen", VP_MODE_NORMAL);
-    keybind_add_from_string("O inputopencurrent", VP_MODE_NORMAL);
-    keybind_add_from_string("d quit", VP_MODE_NORMAL);
-    keybind_add_from_string("<ctrl>o back", VP_MODE_NORMAL);
-    keybind_add_from_string("<ctrl>i forward", VP_MODE_NORMAL);
-    keybind_add_from_string("r reload", VP_MODE_NORMAL);
-    keybind_add_from_string("R reload!", VP_MODE_NORMAL);
-    keybind_add_from_string("<ctrl>c stop", VP_MODE_NORMAL);
-    keybind_add_from_string("<ctrl>f pagedown", VP_MODE_NORMAL);
-    keybind_add_from_string("<ctrl>b pageup", VP_MODE_NORMAL);
-    keybind_add_from_string("<ctrl>d halfpagedown", VP_MODE_NORMAL);
-    keybind_add_from_string("<ctrl>u halfpageup", VP_MODE_NORMAL);
-    keybind_add_from_string("gg jumptop", VP_MODE_NORMAL);
-    keybind_add_from_string("G jumpbottom", VP_MODE_NORMAL);
-    keybind_add_from_string("0 jumpleft", VP_MODE_NORMAL);
-    keybind_add_from_string("$ jumpright", VP_MODE_NORMAL);
-    keybind_add_from_string("h scrollleft", VP_MODE_NORMAL);
-    keybind_add_from_string("l scrollright", VP_MODE_NORMAL);
-    keybind_add_from_string("k scrollup", VP_MODE_NORMAL);
-    keybind_add_from_string("j scrolldown", VP_MODE_NORMAL);
+    vp_read_config();
+}
+
+static void vp_read_config(void)
+{
+    FILE* fp;
+    gchar line[255];
+    gchar** string = NULL;
+
+    if (access(vp.files[FILES_CONFIG], F_OK) != 0) {
+        fprintf(stderr, "Could not find config file");
+        return;
+    }
+    fp = fopen(vp.files[FILES_CONFIG], "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Could not read config file");
+        return;
+    }
+    while (fgets(line, 254, fp)) {
+        if (!g_ascii_isalpha(line[0])) {
+            continue;
+        }
+        g_strstrip(line);
+
+        /* split into command and params */
+        string = g_strsplit(line, " ", 2);
+        if (g_strv_length(string) != 2) {
+            g_strfreev(string);
+            continue;
+        }
+
+        /* delegate the different commands */
+        if (g_ascii_strcasecmp(string[0], "nmap") == 0) {
+            keybind_add_from_string(string[1], VP_MODE_NORMAL);
+        } else if (g_ascii_strcasecmp(string[0], "unmap") == 0) {
+            keybind_remove_from_string(string[1], VP_MODE_NORMAL);
+        }
+
+        g_strfreev(string);
+    }
+
+    fclose(fp);
 }
 
 static void vp_init_gui(void)

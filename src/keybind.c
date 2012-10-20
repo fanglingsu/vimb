@@ -120,10 +120,10 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
 
 static guint keybind_str_to_modmask(const gchar* str)
 {
-    if (!g_ascii_strcasecmp(str, "ctrl")) {
+    if (g_ascii_strcasecmp(str, "ctrl") == 0) {
         return GDK_CONTROL_MASK;
     }
-    if (!g_ascii_strcasecmp(str, "shift")) {
+    if (g_ascii_strcasecmp(str, "shift") == 0) {
         return GDK_SHIFT_MASK;
     }
 
