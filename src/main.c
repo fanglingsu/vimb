@@ -182,14 +182,8 @@ void vp_scroll(const Arg* arg)
 {
     GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? vp.gui.adjust_h : vp.gui.adjust_v;
 
-    gint max        = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-    gdouble percent = gtk_adjustment_get_value(adjust) / max * 100;
     gint direction  = (arg->i & (1 << 2)) ? 1 : -1;
 
-    /* skip if no further scrolling is possible */
-    if ((direction == 1 && percent == 100) || (direction == -1 && percent == 0)) {
-        return;
-    }
     /* type scroll */
     if (arg->i & VP_SCROLL_TYPE_SCROLL) {
         gdouble value;
@@ -201,8 +195,11 @@ void vp_scroll(const Arg* arg)
         } else {
             value = gtk_adjustment_get_page_size(adjust);
         }
-
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_value(adjust) + direction * value * count);
+    } else if (vp.state.count) {
+        /* jump - if count is set to count% of page */
+        gdouble max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
+        gtk_adjustment_set_value(adjust, max * vp.state.count / 100);
     } else if (direction == 1) {
         /* jump to top */
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_upper(adjust));
@@ -484,11 +481,8 @@ static void vp_setup_settings(void)
     WebKitWebSettings *settings = webkit_web_view_get_settings(vp.gui.webview);
 
     g_object_set(G_OBJECT(settings), "user-agent", SETTING_USER_AGENT, NULL);
-    g_object_set(G_OBJECT(settings), "max-conns", SETTING_MAX_CONNS, NULL);
-    g_object_set(G_OBJECT(settings), "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     webkit_web_view_set_settings(vp.gui.webview, settings);
 }
-
 
 static void vp_setup_signals(void)
 {
