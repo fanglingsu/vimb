@@ -145,6 +145,8 @@ void vp_scroll(const Arg* arg);
 void vp_close_browser(const Arg* arg);
 void vp_clean_up(void);
 void vp_view_source(const Arg* arg);
+void vp_map(const Arg* arg);
+void vp_unmap(const Arg* arg);
 void vp_set_mode(const Arg* arg);
 void vp_input(const Arg* arg);
 void vp_open(const Arg* arg);

@@ -48,9 +48,8 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
 
 static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame *frame, gpointer user_data)
 {
-    /* unset possible set modkey and counts if loading a new page */
-    vp.state.modkey = vp.state.count = 0;
-    vp_update_statusbar();
+    Arg a = {VP_MODE_NORMAL};
+    vp_set_mode(&a);
 }
 
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data)
@@ -236,6 +235,16 @@ void vp_view_source(const Arg* arg)
     webkit_web_view_reload(vp.gui.webview);
 }
 
+void vp_map(const Arg* arg)
+{
+    keybind_add_from_string(arg->s, arg->i);
+}
+
+void vp_unmap(const Arg* arg)
+{
+    keybind_remove_from_string(arg->s, arg->i);
+}
+
 void vp_set_mode(const Arg* arg)
 {
     vp.state.mode = arg->i;
@@ -376,7 +385,6 @@ static void vp_read_config(void)
 {
     FILE* fp;
     gchar line[255];
-    gchar** string = NULL;
 
     if (access(vp.files[FILES_CONFIG], F_OK) != 0) {
         fprintf(stderr, "Could not find config file");
@@ -391,23 +399,7 @@ static void vp_read_config(void)
         if (!g_ascii_isalpha(line[0])) {
             continue;
         }
-        g_strstrip(line);
-
-        /* split into command and params */
-        string = g_strsplit(line, " ", 2);
-        if (g_strv_length(string) != 2) {
-            g_strfreev(string);
-            continue;
-        }
-
-        /* delegate the different commands */
-        if (g_ascii_strcasecmp(string[0], "nmap") == 0) {
-            keybind_add_from_string(string[1], VP_MODE_NORMAL);
-        } else if (g_ascii_strcasecmp(string[0], "unmap") == 0) {
-            keybind_remove_from_string(string[1], VP_MODE_NORMAL);
-        }
-
-        g_strfreev(string);
+        vp_process_input(line);
     }
 
     fclose(fp);

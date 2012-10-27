@@ -27,6 +27,12 @@ static CommandInfo cmd_list[] = {
     {"scrollright",      vp_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_RIGHT | VP_SCROLL_UNIT_LINE}},
     {"scrollup",         vp_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_LINE}},
     {"scrolldown",       vp_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_LINE}},
+    {"nmap",             vp_map,           {VP_MODE_NORMAL}},
+    {"imap",             vp_map,           {VP_MODE_INSERT}},
+    {"cmap",             vp_map,           {VP_MODE_COMMAND}},
+    {"nunmap",           vp_unmap,         {VP_MODE_NORMAL}},
+    {"iunmap",           vp_unmap,         {VP_MODE_INSERT}},
+    {"cunmap",           vp_unmap,         {VP_MODE_COMMAND}},
 };
 
 void command_init()
