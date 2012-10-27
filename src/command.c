@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "command.h"
 #include "main.h"
+#include "command.h"
 
 static CommandInfo cmd_list[] = {
     /* command           function          arg */

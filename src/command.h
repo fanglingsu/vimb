@@ -20,9 +20,6 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-#include "main.h"
-#include <webkit/webkit.h>
-
 typedef gboolean (*Command)(const Arg* arg);
 
 typedef struct {

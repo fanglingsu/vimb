@@ -94,6 +94,7 @@ typedef enum {
 enum {
     FILES_FIRST = 0,
     FILES_CONFIG = 0,
+    FILES_COOKIE,
     FILES_LAST
 };
 
@@ -138,14 +139,26 @@ typedef struct {
     GHashTable* commands;
 } Behaviour;
 
+typedef struct {
+    SoupSession*    soup_session;
+    SoupCookieJar*  cookie_jar;
+} Network;
+
+typedef struct {
+    time_t cookie_timeout;
+} Config;
+
 /* core struct */
 typedef struct {
     Gui           gui;
     State         state;
     Behaviour     behave;
     gchar*        files[FILES_LAST];
-#if 0
+#ifdef FEATURE_COOKIE
     Network       net;
+#endif
+    Config        config;
+#if 0
     Ssl           ssl;
     Communication comm;
     Info          info;

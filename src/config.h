@@ -22,6 +22,9 @@
 
 #include "stdlib.h"
 
+/* features */
+#define FEATURE_COOKIE
+
 #define START_PAGE      "http://sourceforge.net/apps/trac/vimprobable"
 
 #define STATUS_BG_COLOR "#000000"           /* background color for status bar */

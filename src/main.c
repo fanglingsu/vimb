@@ -34,6 +34,10 @@ static gboolean vp_frame_scrollbar_policy_changed_cb(void);
 static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
 static gboolean vp_inputbox_keypress_cb(GtkEntry* entry, GdkEventKey* event);
 static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
+#ifdef FEATURE_COOKIE
+static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data);
+static void vp_gotheaders_cb(SoupMessage* message, gpointer data);
+#endif
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -46,6 +50,10 @@ static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, 
 static void vp_setup_settings(void);
 static void vp_setup_signals(void);
 static gboolean vp_load_uri(const Arg* arg);
+#ifdef FEATURE_COOKIE
+static void vp_set_cookie(SoupCookie* cookie);
+static const gchar* vp_get_cookies(SoupURI *uri);
+#endif
 static void vp_clean_up(void);
 
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
@@ -127,6 +135,33 @@ static gboolean vp_inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event)
     return FALSE;
 }
 
+#ifdef FEATURE_COOKIE
+static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data)
+{
+    SoupMessageHeaders* header = message->request_headers;
+    SoupURI* uri;
+    const gchar* cookie;
+
+    soup_message_headers_remove(header, "Cookie");
+    uri = soup_message_get_uri(message);
+    if ((cookie = vp_get_cookies(uri))) {
+        soup_message_headers_append(header, "Cookie", cookie);
+    }
+    g_signal_connect_after(G_OBJECT(message), "got-headers", G_CALLBACK(vp_gotheaders_cb), NULL);
+}
+
+static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
+{
+    GSList* list = NULL;
+    GSList* p = NULL;
+
+    for(p = list = soup_cookies_from_response(message); p; p = g_slist_next(p)) {
+        vp_set_cookie((SoupCookie *)p->data);
+    }
+    soup_cookies_free(list);
+}
+#endif
+
 static gboolean vp_process_input(const char* input)
 {
     gboolean success;
@@ -183,6 +218,33 @@ static gboolean vp_load_uri(const Arg* arg)
 
     return TRUE;
 }
+
+#ifdef FEATURE_COOKIE
+static void vp_set_cookie(SoupCookie* cookie)
+{
+    SoupDate* date;
+
+    SoupCookieJar* jar = soup_cookie_jar_text_new(vp.files[FILES_COOKIE], FALSE);
+    cookie = soup_cookie_copy(cookie);
+    if (cookie->expires == NULL && vp.config.cookie_timeout) {
+        date = soup_date_new_from_time_t(time(NULL) + vp.config.cookie_timeout);
+        soup_cookie_set_expires(cookie, date);
+    }
+    soup_cookie_jar_add_cookie(jar, cookie);
+    g_object_unref(jar);
+}
+
+static const gchar* vp_get_cookies(SoupURI *uri)
+{
+    const gchar* cookie;
+
+    SoupCookieJar* jar = soup_cookie_jar_text_new(vp.files[FILES_COOKIE], TRUE);
+    cookie = soup_cookie_jar_get_cookies(jar, uri, TRUE);
+    g_object_unref(jar);
+
+    return cookie;
+}
+#endif
 
 gboolean vp_navigate(const Arg* arg)
 {
@@ -409,6 +471,8 @@ static void vp_init(void)
     keybind_init();
 
     vp_read_config();
+
+    vp.config.cookie_timeout = 4800;
 }
 
 static void vp_read_config(void)
@@ -462,6 +526,13 @@ static void vp_init_gui(void)
 
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
+
+    /* init soup session */
+#ifdef FEATURE_COOKIE
+    vp.net.soup_session = webkit_get_default_session();
+    soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_get_type());
+    soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_jar_get_type());
+#endif
 
     vp_setup_settings();
 
@@ -528,6 +599,9 @@ static void vp_init_files(void)
     vp.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
     util_create_file_if_not_exists(vp.files[FILES_CONFIG]);
 
+    vp.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
+    util_create_file_if_not_exists(vp.files[FILES_COOKIE]);
+
     g_free(path);
 }
 
@@ -570,6 +644,8 @@ static void vp_setup_signals(void)
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(vp_frame_scrollbar_policy_changed_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "load-committed", G_CALLBACK(vp_webview_load_commited_cb), NULL);
+    g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
 
     g_object_connect(
         G_OBJECT(gui->inputbox),
@@ -578,7 +654,9 @@ static void vp_setup_signals(void)
         "signal::key-release-event", G_CALLBACK(vp_inputbox_keyrelease_cb), NULL,
         NULL
     );
-
+#ifdef FEATURE_COOKIE
+    g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
+#endif
 }
 
 int main(int argc, char* argv[])
