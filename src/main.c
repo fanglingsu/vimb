@@ -416,6 +416,12 @@ static void vp_read_config(void)
     FILE* fp;
     gchar line[255];
 
+    /* load default config */
+    for (guint i = 0; default_config[i].command != NULL; i++) {
+        vp_process_input(default_config[i].command);
+    }
+
+    /* read config from config files */
     if (access(vp.files[FILES_CONFIG], F_OK) != 0) {
         fprintf(stderr, "Could not find config file");
         return;
