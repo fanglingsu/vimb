@@ -140,15 +140,14 @@ extern VpCore vp;
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 void vp_echo(const MessageType type, const gchar *message);
-void vp_navigate(const Arg* arg);
-void vp_scroll(const Arg* arg);
-void vp_close_browser(const Arg* arg);
-void vp_clean_up(void);
-void vp_view_source(const Arg* arg);
-void vp_map(const Arg* arg);
-void vp_unmap(const Arg* arg);
-void vp_set_mode(const Arg* arg);
-void vp_input(const Arg* arg);
-void vp_open(const Arg* arg);
+gboolean vp_navigate(const Arg* arg);
+gboolean vp_scroll(const Arg* arg);
+gboolean vp_close_browser(const Arg* arg);
+gboolean vp_view_source(const Arg* arg);
+gboolean vp_map(const Arg* arg);
+gboolean vp_unmap(const Arg* arg);
+gboolean vp_set_mode(const Arg* arg);
+gboolean vp_input(const Arg* arg);
+gboolean vp_open(const Arg* arg);
 
 #endif /* end of include guard: MAIN_H */

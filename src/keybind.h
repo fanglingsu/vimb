@@ -21,7 +21,7 @@ typedef struct {
 } Keybind;
 
 void keybind_init(void);
-void keybind_add_from_string(const gchar* str, const Mode mode);
-void keybind_remove_from_string(const gchar* str, const Mode mode);
+gboolean keybind_add_from_string(const gchar* str, const Mode mode);
+gboolean keybind_remove_from_string(const gchar* str, const Mode mode);
 
 #endif /* end of include guard: KEYBIND_H */

@@ -17,11 +17,12 @@ void keybind_init(void)
     g_signal_connect(G_OBJECT(vp.gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
 }
 
-void keybind_add_from_string(const gchar* str, const Mode mode)
+gboolean keybind_add_from_string(const gchar* str, const Mode mode)
 {
     if (str == NULL || *str == '\0') {
-        return;
+        return FALSE;
     }
+    gboolean result;
     gchar* line = g_strdup(str);
     g_strstrip(line);
 
@@ -43,21 +44,24 @@ void keybind_add_from_string(const gchar* str, const Mode mode)
         if (keybind->modkey) {
             g_string_append_c(modkeys, keybind->modkey);
         }
+        result = TRUE;
     } else {
-        fprintf(stderr, "could not add keybind from '%s'", line);
+        result = FALSE;
     }
 
     g_strfreev(string);
     g_free(line);
+
+    return result;
 }
 
-void keybind_remove_from_string(const gchar* str, const Mode mode)
+gboolean keybind_remove_from_string(const gchar* str, const Mode mode)
 {
     gchar* line = NULL;
     Keybind keybind = {0};
 
     if (str == NULL || *str == '\0') {
-        return;
+        return FALSE;
     }
     line = g_strdup(str);
     g_strstrip(line);
@@ -70,6 +74,7 @@ void keybind_remove_from_string(const gchar* str, const Mode mode)
         keys = g_slist_delete_link(keys, link);
     }
     /* TODO remove eventually no more used modkeys */
+    return TRUE;
 }
 
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)

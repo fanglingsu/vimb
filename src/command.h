@@ -4,7 +4,7 @@
 #include "main.h"
 #include <webkit/webkit.h>
 
-typedef void (*Command)(const Arg* arg);
+typedef gboolean (*Command)(const Arg* arg);
 
 typedef struct {
     const gchar* name;

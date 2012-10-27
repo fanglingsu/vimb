@@ -27,6 +27,7 @@ static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, 
 static void vp_setup_settings(void);
 static void vp_setup_signals(void);
 static gboolean vp_load_uri(const Arg* arg);
+static void vp_clean_up(void);
 
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
 {
@@ -164,7 +165,7 @@ static gboolean vp_load_uri(const Arg* arg)
     return TRUE;
 }
 
-void vp_navigate(const Arg* arg)
+gboolean vp_navigate(const Arg* arg)
 {
     if (arg->i <= VP_NAVIG_FORWARD) {
         /* TODO allow to set a count for the navigation */
@@ -178,9 +179,11 @@ void vp_navigate(const Arg* arg)
     } else {
         webkit_web_view_stop_loading(vp.gui.webview);
     }
+
+    return TRUE;
 }
 
-void vp_scroll(const Arg* arg)
+gboolean vp_scroll(const Arg* arg)
 {
     GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? vp.gui.adjust_h : vp.gui.adjust_v;
 
@@ -209,15 +212,19 @@ void vp_scroll(const Arg* arg)
         /* jump to bottom */
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
     }
+
+    return TRUE;
 }
 
-void vp_close_browser(const Arg* arg)
+gboolean vp_close_browser(const Arg* arg)
 {
     vp_clean_up();
     gtk_main_quit();
+
+    return TRUE;
 }
 
-void vp_clean_up(void)
+static void vp_clean_up(void)
 {
     if (vp.behave.commands) {
         g_hash_table_destroy(vp.behave.commands);
@@ -228,24 +235,26 @@ void vp_clean_up(void)
     }
 }
 
-void vp_view_source(const Arg* arg)
+gboolean vp_view_source(const Arg* arg)
 {
     gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
     webkit_web_view_set_view_source_mode(vp.gui.webview, !mode);
     webkit_web_view_reload(vp.gui.webview);
+
+    return TRUE;
 }
 
-void vp_map(const Arg* arg)
+gboolean vp_map(const Arg* arg)
 {
-    keybind_add_from_string(arg->s, arg->i);
+    return keybind_add_from_string(arg->s, arg->i);
 }
 
-void vp_unmap(const Arg* arg)
+gboolean vp_unmap(const Arg* arg)
 {
-    keybind_remove_from_string(arg->s, arg->i);
+    return keybind_remove_from_string(arg->s, arg->i);
 }
 
-void vp_set_mode(const Arg* arg)
+gboolean vp_set_mode(const Arg* arg)
 {
     vp.state.mode = arg->i;
     vp.state.modkey = vp.state.count  = 0;
@@ -274,9 +283,11 @@ void vp_set_mode(const Arg* arg)
     }
 
     vp_update_statusbar();
+
+    return TRUE;
 }
 
-void vp_input(const Arg* arg)
+gboolean vp_input(const Arg* arg)
 {
     gint pos = 0;
     const gchar* url;
@@ -299,12 +310,12 @@ void vp_input(const Arg* arg)
     gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
 
     Arg a = {VP_MODE_COMMAND};
-    vp_set_mode(&a);
+    return vp_set_mode(&a);
 }
 
-void vp_open(const Arg* arg)
+gboolean vp_open(const Arg* arg)
 {
-    vp_load_uri(arg);
+    return vp_load_uri(arg);
 }
 
 void vp_update_urlbar(const gchar* uri)
