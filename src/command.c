@@ -1,3 +1,22 @@
+/**
+ * vimp - a webkit based vim like browser.
+ *
+ * Copyright (C) 2012 Daniel Carl
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ */
+
 #include "command.h"
 #include "main.h"
 
@@ -53,6 +72,7 @@ gboolean command_exists(const gchar* name)
 gboolean command_run(const gchar* name, const gchar* param)
 {
     CommandInfo* c = NULL;
+    gboolean result;
     Arg a;
     c = g_hash_table_lookup(vp.behave.commands, name);
     if (!c) {
@@ -60,12 +80,12 @@ gboolean command_run(const gchar* name, const gchar* param)
     }
     a.i = c->arg.i;
     a.s = g_strdup(param ? param : c->arg.s);
-    c->function(&a);
+    result = c->function(&a);
     g_free(a.s);
 
     /* if command was run, remove the modkey and count */
     vp.state.modkey = vp.state.count = 0;
     vp_update_statusbar();
 
-    return TRUE;
+    return result;
 }
