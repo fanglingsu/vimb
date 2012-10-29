@@ -17,15 +17,22 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef SETTING_H
+#define SETTING_H
 
-#include <glib.h>
+#include "main.h"
 
-gchar* util_get_config_dir(void);
-gchar* util_get_cache_dir(void);
-void util_create_dir_if_not_exists(const gchar* dirpath);
-void util_create_file_if_not_exists(const gchar* filename);
-gboolean util_atob(const gchar* str);
+typedef struct _Setting Setting;
+typedef gboolean (*SettingFunc)(const Setting*);
 
-#endif /* end of include guard: UTIL_H */
+struct _Setting {
+    gchar*      name;
+    Type        type;
+    SettingFunc func;
+    Arg         arg;
+};
+
+void setting_init(void);
+gboolean setting_run(const gchar* name, const gchar* param);
+
+#endif /* end of include guard: SETTING_H */

@@ -52,6 +52,7 @@ static CommandInfo cmd_list[] = {
     {"nunmap",           vp_unmap,         {VP_MODE_NORMAL}},
     {"iunmap",           vp_unmap,         {VP_MODE_INSERT}},
     {"cunmap",           vp_unmap,         {VP_MODE_COMMAND}},
+    {"set",              vp_set,           {0}},
 };
 
 void command_init()

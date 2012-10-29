@@ -19,19 +19,18 @@
 
 #include "util.h"
 #include <stdio.h>
-#include <glib.h>
 
-char* util_get_config_dir(void)
+gchar* util_get_config_dir(void)
 {
-    char *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
+    gchar *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
     util_create_dir_if_not_exists(path);
 
     return path;
 }
 
-char* util_get_cache_dir(void)
+gchar* util_get_cache_dir(void)
 {
-    char *path = g_build_filename(g_get_user_cache_dir(), PROJECT, NULL);
+    gchar *path = g_build_filename(g_get_user_cache_dir(), PROJECT, NULL);
     util_create_dir_if_not_exists(path);
 
     return path;
@@ -49,4 +48,14 @@ void util_create_file_if_not_exists(const char* filename) {
         FILE* f = fopen(filename, "a");
         fclose(f);
     }
+}
+
+gboolean util_atob(const gchar* str)
+{
+    if (str == NULL) {
+        return FALSE;
+    }
+
+    return g_ascii_strncasecmp(str, "true", 4) == 0
+        || g_ascii_strncasecmp(str, "on", 2) == 0;
 }

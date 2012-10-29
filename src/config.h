@@ -22,9 +22,6 @@
 
 #include "stdlib.h"
 
-/* features */
-#define FEATURE_COOKIE
-
 #define START_PAGE      "http://sourceforge.net/apps/trac/vimprobable"
 
 #define STATUS_BG_COLOR "#000000"           /* background color for status bar */
@@ -44,7 +41,7 @@ static const char *inputbox_bg[]   = { "#ffffff",            "#ff0000" };
 #define SCROLLSTEP (40) /* cursor difference in pixel for scrolling */
 
 const struct {
-    char *command;
+    char* command;
 } default_config[] = {
     {"nmap o inputopen"},
     {"nmap O inputopencurrent"},

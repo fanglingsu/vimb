@@ -98,10 +98,18 @@ enum {
     FILES_LAST
 };
 
+typedef enum {
+    TYPE_CHAR,
+    TYPE_BOOLEAN,
+    TYPE_INTEGER,
+    TYPE_DOUBLE,
+    TYPE_COLOR,
+} Type;
+
 /* structs */
 typedef struct {
-    gint  i;
-    char* s;
+    gint     i;
+    gchar*   s;
 } Arg;
 
 /* statusbar */
@@ -181,5 +189,6 @@ gboolean vp_unmap(const Arg* arg);
 gboolean vp_set_mode(const Arg* arg);
 gboolean vp_input(const Arg* arg);
 gboolean vp_open(const Arg* arg);
+gboolean vp_set(const Arg* arg);
 
 #endif /* end of include guard: MAIN_H */

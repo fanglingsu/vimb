@@ -17,11 +17,12 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
 #include "main.h"
+#include "config.h"
 #include "util.h"
 #include "command.h"
 #include "keybind.h"
+#include "setting.h"
 
 /* variables */
 VpCore vp;
@@ -47,7 +48,6 @@ static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
 static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
-static void vp_setup_settings(void);
 static void vp_setup_signals(void);
 static gboolean vp_load_uri(const Arg* arg);
 #ifdef FEATURE_COOKIE
@@ -165,7 +165,7 @@ static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
 static gboolean vp_process_input(const char* input)
 {
     gboolean success;
-    gchar* line = g_strdup(input);
+    gchar* line = NULL;
     gchar* command = NULL;
     gchar** token;
 
@@ -173,6 +173,7 @@ static gboolean vp_process_input(const char* input)
         return FALSE;
     }
 
+    line = g_strdup(input);
     g_strstrip(line);
 
     /* get a possible command count */
@@ -399,6 +400,34 @@ gboolean vp_open(const Arg* arg)
     return vp_load_uri(arg);
 }
 
+gboolean vp_set(const Arg* arg)
+{
+    gboolean success;
+    gchar* line = NULL;
+    gchar** token;
+
+    if (!arg->s || !strlen(arg->s)) {
+        return FALSE;
+    }
+
+    line = g_strdup(arg->s);
+    g_strstrip(line);
+
+    /* split the input string into paramete and value part */
+    token = g_strsplit(line, "=", 2);
+    g_free(line);
+
+    if (!token[0]) {
+        /* TODO display current value */
+        g_strfreev(token);
+        return FALSE;
+    }
+    success = setting_run(token[0], token[1] ? token[1] : NULL);
+    g_strfreev(token);
+
+    return success;
+}
+
 void vp_update_urlbar(const gchar* uri)
 {
     gchar* markup;
@@ -470,6 +499,9 @@ static void vp_init(void)
     /* initialize the keybindings */
     keybind_init();
 
+    /* initialize settings */
+    setting_init();
+
     vp_read_config();
 
     vp.config.cookie_timeout = 4800;
@@ -533,8 +565,6 @@ static void vp_init_gui(void)
     soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_get_type());
     soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_jar_get_type());
 #endif
-
-    vp_setup_settings();
 
     /* Create a scrollable area */
     gui->viewport = gtk_scrolled_window_new(gui->adjust_h, gui->adjust_v);
@@ -623,14 +653,6 @@ static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, 
 
     gtk_widget_modify_text(widget, GTK_STATE_NORMAL, fg_color ? &fg : NULL);
     gtk_widget_modify_base(widget, GTK_STATE_NORMAL, bg_color ? &bg : NULL);
-}
-
-static void vp_setup_settings(void)
-{
-    WebKitWebSettings *settings = webkit_web_view_get_settings(vp.gui.webview);
-
-    g_object_set(G_OBJECT(settings), "user-agent", SETTING_USER_AGENT, NULL);
-    webkit_web_view_set_settings(vp.gui.webview, settings);
 }
 
 static void vp_setup_signals(void)
