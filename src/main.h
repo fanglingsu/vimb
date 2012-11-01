@@ -154,6 +154,7 @@ typedef struct {
 
 typedef struct {
     time_t cookie_timeout;
+    gint   scrollstep;
 } Config;
 
 /* core struct */

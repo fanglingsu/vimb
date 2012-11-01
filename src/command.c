@@ -181,8 +181,7 @@ gboolean command_scroll(const Arg* arg)
         gdouble value;
         gint count = vp.state.count ? vp.state.count : 1;
         if (arg->i & VP_SCROLL_UNIT_LINE) {
-            /* make scroll step configurable */
-            value = 40;
+            value = vp.config.scrollstep;
         } else if (arg->i & VP_SCROLL_UNIT_HALFPAGE) {
             value = gtk_adjustment_get_page_size(adjust) / 2;
         } else {

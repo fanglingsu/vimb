@@ -22,6 +22,7 @@
 
 static gboolean setting_webkit(const Setting* s);
 static gboolean setting_cookie_timeout(const Setting* s);
+static gboolean setting_scrollstep(const Setting* s);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -71,6 +72,7 @@ static Setting default_settings[] = {
     {"zoom-step", TYPE_DOUBLE, setting_webkit, {.i = 100}},
     /* internal variables */
     {"cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
+    {"scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
 };
 
 static GHashTable* settings = NULL;
@@ -168,6 +170,13 @@ static gboolean setting_webkit(const Setting* s)
 static gboolean setting_cookie_timeout(const Setting* s)
 {
     vp.config.cookie_timeout = s->arg.i;
+
+    return TRUE;
+}
+
+static gboolean setting_scrollstep(const Setting* s)
+{
+    vp.config.scrollstep = s->arg.i;
 
     return TRUE;
 }
