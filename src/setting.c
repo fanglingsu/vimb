@@ -21,8 +21,10 @@
 #include "util.h"
 
 static gboolean setting_webkit(const Setting* s);
+static gboolean setting_cookie_timeout(const Setting* s);
 
 static Setting default_settings[] = {
+    /* webkit settings */
     {"auto-load-images", TYPE_BOOLEAN, setting_webkit, {.i = 1}},
     {"auto-shrink-images", TYPE_BOOLEAN, setting_webkit, {.i = 1}},
     {"cursive-font-family", TYPE_CHAR, setting_webkit, {.s = "serif"}},
@@ -67,6 +69,8 @@ static Setting default_settings[] = {
     {"user-agent", TYPE_CHAR, setting_webkit, {.s = PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}},
     {"user-stylesheet-uri", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {"zoom-step", TYPE_DOUBLE, setting_webkit, {.i = 100}},
+    /* internal variables */
+    {"cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
 };
 
 static GHashTable* settings = NULL;
@@ -151,5 +155,12 @@ static gboolean setting_webkit(const Setting* s)
             g_object_set(G_OBJECT(web_setting), s->name, s->arg.s, NULL);
             break;
     }
+    return TRUE;
+}
+
+static gboolean setting_cookie_timeout(const Setting* s)
+{
+    vp.config.cookie_timeout = s->arg.i;
+
     return TRUE;
 }

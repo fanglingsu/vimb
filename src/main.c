@@ -521,8 +521,6 @@ static void vp_init(void)
     setting_init();
 
     vp_read_config();
-
-    vp.config.cookie_timeout = 4800;
 }
 
 static void vp_read_config(void)
