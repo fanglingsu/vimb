@@ -77,6 +77,7 @@ gboolean command_run(const gchar* name, const gchar* param)
     Arg a;
     c = g_hash_table_lookup(vp.behave.commands, name);
     if (!c) {
+        vp_echo(VP_MSG_ERROR, "Command '%s' not found", name);
         return FALSE;
     }
     a.i = c->arg.i;

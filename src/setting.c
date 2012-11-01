@@ -92,6 +92,7 @@ gboolean setting_run(const gchar* name, const gchar* param)
     gboolean result = FALSE;
     Setting* s      = g_hash_table_lookup(settings, name);
     if (!s) {
+        vp_echo(VP_MSG_ERROR, "Config '%s' not found", name);
         return FALSE;
     }
 

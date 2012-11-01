@@ -55,6 +55,7 @@ static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
 #endif
 static void vp_clean_up(void);
+static gboolean vp_hide_message(void);
 
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
 {
@@ -109,9 +110,6 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
     if (1 < length && ':' == text[0]) {
         success = vp_process_input((text + 1));
         if (!success) {
-            /* print error message */
-            vp_echo(VP_MSG_ERROR, "Command '%s' not found", (text + 1));
-
             /* switch to normal mode after running command */
             Arg a = {VP_MODE_NORMAL};
             vp_set_mode(&a);
@@ -315,6 +313,19 @@ static void vp_clean_up(void)
     }
 }
 
+static gboolean vp_hide_message(void)
+{
+    /* do not clean in command mode */
+    if (vp.state.mode == VP_MODE_COMMAND) {
+        return FALSE;
+    }
+    const MessageType type = VP_MSG_NORMAL;
+    vp_set_widget_font(vp.gui.inputbox, inputbox_font[type], inputbox_bg[type], inputbox_fg[type]);
+    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
+
+    return FALSE;
+}
+
 gboolean vp_view_source(const Arg* arg)
 {
     gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
@@ -415,9 +426,10 @@ gboolean vp_set(const Arg* arg)
     token = g_strsplit(line, "=", 2);
     g_free(line);
 
-    if (!token[0]) {
+    if (!token[1]) {
         /* TODO display current value */
         g_strfreev(token);
+        vp_echo(VP_MSG_ERROR, "No param given");
         return FALSE;
     }
     success = setting_run(token[0], token[1] ? token[1] : NULL);
@@ -483,6 +495,7 @@ void vp_echo(const MessageType type, const char *error, ...)
     /* set the collors according to message type */
     vp_set_widget_font(vp.gui.inputbox, inputbox_font[type], inputbox_bg[type], inputbox_fg[type]);
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
+    g_timeout_add_seconds(2, (GSourceFunc)vp_hide_message, NULL);
 }
 
 static void vp_print_version(void)
