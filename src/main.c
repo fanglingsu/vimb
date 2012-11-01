@@ -304,7 +304,7 @@ void vp_update_urlbar(const gchar* uri)
 {
     gchar* markup;
 
-    markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", STATUS_BAR_FONT, uri);
+    markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", vp.config.status_font, uri);
     gtk_label_set_markup(GTK_LABEL(vp.gui.statusbar.left), markup);
     g_free(markup);
 }
@@ -335,7 +335,7 @@ void vp_update_statusbar(void)
         g_string_append_printf(status, " %d%%", val);
     }
 
-    markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", STATUS_BAR_FONT, status->str);
+    markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", vp.config.status_font, status->str);
     gtk_label_set_markup(GTK_LABEL(vp.gui.statusbar.right), markup);
     g_free(markup);
 }
@@ -420,7 +420,6 @@ static void vp_read_config(void)
 static void vp_init_gui(void)
 {
     Gui* gui = &vp.gui;
-    GdkColor bg, fg;
 
     gui->sb_h = GTK_SCROLLBAR(gtk_hscrollbar_new(NULL));
     gui->sb_v = GTK_SCROLLBAR(gtk_vscrollbar_new(NULL));
@@ -467,10 +466,6 @@ static void vp_init_gui(void)
 
     /* Prepare the event box */
     gui->eventbox = gtk_event_box_new();
-    gdk_color_parse(STATUS_BG_COLOR, &bg);
-    gdk_color_parse(STATUS_FG_COLOR, &fg);
-    gtk_widget_modify_bg(gui->eventbox, GTK_STATE_NORMAL, &bg);
-    gtk_widget_modify_fg(gui->eventbox, GTK_STATE_NORMAL, &fg);
 
     vp_setup_signals();
 
@@ -482,10 +477,6 @@ static void vp_init_gui(void)
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.right), 1.0, 0.0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, TRUE, TRUE, 2);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, FALSE, FALSE, 2);
-    gtk_widget_modify_bg(GTK_WIDGET(gui->statusbar.left), GTK_STATE_NORMAL, &bg);
-    gtk_widget_modify_fg(GTK_WIDGET(gui->statusbar.left), GTK_STATE_NORMAL, &fg);
-    gtk_widget_modify_bg(GTK_WIDGET(gui->statusbar.right), GTK_STATE_NORMAL, &bg);
-    gtk_widget_modify_fg(GTK_WIDGET(gui->statusbar.right), GTK_STATE_NORMAL, &fg);
 
     gtk_box_pack_start(gui->box, gui->viewport, TRUE, TRUE, 0);
     gtk_box_pack_start(gui->box, gui->eventbox, FALSE, FALSE, 0);

@@ -137,8 +137,8 @@ gboolean command_input(const Arg* arg)
 
 gboolean command_close(const Arg* arg)
 {
-    vp_clean_up();
     gtk_main_quit();
+    vp_clean_up();
 
     return TRUE;
 }

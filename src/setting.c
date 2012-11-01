@@ -23,6 +23,9 @@
 static gboolean setting_webkit(const Setting* s);
 static gboolean setting_cookie_timeout(const Setting* s);
 static gboolean setting_scrollstep(const Setting* s);
+static gboolean setting_status_color_bg(const Setting* s);
+static gboolean setting_status_color_fg(const Setting* s);
+static gboolean setting_status_font(const Setting* s);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -73,6 +76,9 @@ static Setting default_settings[] = {
     /* internal variables */
     {"cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
     {"scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
+    {"status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
+    {"status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
+    {"status-font", TYPE_CHAR, setting_status_font, {.s = "monospace bold 8"}},
 };
 
 static GHashTable* settings = NULL;
@@ -166,8 +172,45 @@ static gboolean setting_cookie_timeout(const Setting* s)
 
 static gboolean setting_scrollstep(const Setting* s)
 {
-    PRINT_DEBUG("Set scrollstep to %d", s->arg.i);
     vp.config.scrollstep = s->arg.i;
+
+    return TRUE;
+}
+
+static gboolean setting_status_color_bg(const Setting* s)
+{
+    GdkColor color;
+
+    gdk_color_parse(s->arg.s, &color);
+    gtk_widget_modify_bg(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_bg(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_bg(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
+
+    return TRUE;
+}
+
+static gboolean setting_status_color_fg(const Setting* s)
+{
+    GdkColor color;
+
+    gdk_color_parse(s->arg.s, &color);
+    gtk_widget_modify_fg(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_fg(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_fg(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
+
+    return TRUE;
+}
+
+static gboolean setting_status_font(const Setting* s)
+{
+    if (vp.config.status_font) {
+        g_free(vp.config.status_font);
+    }
+    vp.config.status_font = g_strdup(s->arg.s);
+
+    /* update status bar to apply changed settings */
+    vp_update_statusbar();
+    vp_update_urlbar();
 
     return TRUE;
 }

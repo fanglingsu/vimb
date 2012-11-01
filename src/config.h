@@ -24,10 +24,6 @@
 
 #define START_PAGE      "http://sourceforge.net/apps/trac/vimprobable"
 
-#define STATUS_BG_COLOR "#000000"           /* background color for status bar */
-#define STATUS_FG_COLOR "#ffffff"           /* foreground color for status bar */
-#define STATUS_BAR_FONT "monospace bold 8"
-
                                     /* normal                error */
 const char *inputbox_font[2] = { "monospace normal 8", "monospace bold 8"};
 const char *inputbox_fg[2]   = { "#000000",            "#000000" };
