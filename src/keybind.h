@@ -40,6 +40,7 @@ typedef struct {
 } Keybind;
 
 void keybind_init(void);
+void keybind_cleanup(void);
 gboolean keybind_add_from_string(const gchar* str, const Mode mode);
 gboolean keybind_remove_from_string(const gchar* str, const Mode mode);
 

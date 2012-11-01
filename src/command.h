@@ -30,7 +30,18 @@ typedef struct {
 
 
 void command_init(void);
+void command_cleanup(void);
 gboolean command_exists(const gchar* name);
 gboolean command_run(const gchar* name, const gchar* param);
+
+gboolean command_open(const Arg* arg);
+gboolean command_input(const Arg* arg);
+gboolean command_close(const Arg* arg);
+gboolean command_view_source(const Arg* arg);
+gboolean command_navigate(const Arg* arg);
+gboolean command_scroll(const Arg* arg);
+gboolean command_map(const Arg* arg);
+gboolean command_unmap(const Arg* arg);
+gboolean command_set(const Arg* arg);
 
 #endif /* end of include guard: COMMAND_H */

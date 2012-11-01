@@ -18,11 +18,11 @@
  */
 
 #include "main.h"
-#include "config.h"
 #include "util.h"
 #include "command.h"
 #include "keybind.h"
 #include "setting.h"
+#include "config.h"
 
 /* variables */
 VpCore vp;
@@ -47,14 +47,11 @@ static void vp_init(void);
 static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
-static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
 static void vp_setup_signals(void);
-static gboolean vp_load_uri(const Arg* arg);
 #ifdef FEATURE_COOKIE
 static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
 #endif
-static void vp_clean_up(void);
 static gboolean vp_hide_message(void);
 
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
@@ -83,7 +80,7 @@ static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame *
 
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data)
 {
-    vp_close_browser(0);
+    command_close(0);
 }
 
 static gboolean vp_frame_scrollbar_policy_changed_cb(void)
@@ -189,7 +186,7 @@ static gboolean vp_process_input(const char* input)
     return success;
 }
 
-static gboolean vp_load_uri(const Arg* arg)
+gboolean vp_load_uri(const Arg* arg)
 {
     char* uri;
     char* line = arg->s;
@@ -243,66 +240,7 @@ static const gchar* vp_get_cookies(SoupURI *uri)
 }
 #endif
 
-gboolean vp_navigate(const Arg* arg)
-{
-    if (arg->i <= VP_NAVIG_FORWARD) {
-        /* TODO allow to set a count for the navigation */
-        webkit_web_view_go_back_or_forward(
-            vp.gui.webview, (arg->i == VP_NAVIG_BACK ? -1 : 1)
-        );
-    } else if (arg->i == VP_NAVIG_RELOAD) {
-        webkit_web_view_reload(vp.gui.webview);
-    } else if (arg->i == VP_NAVIG_RELOAD_FORCE) {
-        webkit_web_view_reload_bypass_cache(vp.gui.webview);
-    } else {
-        webkit_web_view_stop_loading(vp.gui.webview);
-    }
-
-    return TRUE;
-}
-
-gboolean vp_scroll(const Arg* arg)
-{
-    GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? vp.gui.adjust_h : vp.gui.adjust_v;
-
-    gint direction  = (arg->i & (1 << 2)) ? 1 : -1;
-
-    /* type scroll */
-    if (arg->i & VP_SCROLL_TYPE_SCROLL) {
-        gdouble value;
-        gint count = vp.state.count ? vp.state.count : 1;
-        if (arg->i & VP_SCROLL_UNIT_LINE) {
-            value = SCROLLSTEP;
-        } else if (arg->i & VP_SCROLL_UNIT_HALFPAGE) {
-            value = gtk_adjustment_get_page_size(adjust) / 2;
-        } else {
-            value = gtk_adjustment_get_page_size(adjust);
-        }
-        gtk_adjustment_set_value(adjust, gtk_adjustment_get_value(adjust) + direction * value * count);
-    } else if (vp.state.count) {
-        /* jump - if count is set to count% of page */
-        gdouble max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-        gtk_adjustment_set_value(adjust, max * vp.state.count / 100);
-    } else if (direction == 1) {
-        /* jump to top */
-        gtk_adjustment_set_value(adjust, gtk_adjustment_get_upper(adjust));
-    } else {
-        /* jump to bottom */
-        gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
-    }
-
-    return TRUE;
-}
-
-gboolean vp_close_browser(const Arg* arg)
-{
-    vp_clean_up();
-    gtk_main_quit();
-
-    return TRUE;
-}
-
-static void vp_clean_up(void)
+void vp_clean_up(void)
 {
     if (vp.behave.commands) {
         g_hash_table_destroy(vp.behave.commands);
@@ -311,6 +249,9 @@ static void vp_clean_up(void)
     for (int i = FILES_FIRST; i < FILES_LAST; i++) {
         g_free(vp.files[i]);
     }
+    command_cleanup();
+    setting_cleanup();
+    keybind_cleanup();
 }
 
 static gboolean vp_hide_message(void)
@@ -324,25 +265,6 @@ static gboolean vp_hide_message(void)
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
 
     return FALSE;
-}
-
-gboolean vp_view_source(const Arg* arg)
-{
-    gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
-    webkit_web_view_set_view_source_mode(vp.gui.webview, !mode);
-    webkit_web_view_reload(vp.gui.webview);
-
-    return TRUE;
-}
-
-gboolean vp_map(const Arg* arg)
-{
-    return keybind_add_from_string(arg->s, arg->i);
-}
-
-gboolean vp_unmap(const Arg* arg)
-{
-    return keybind_remove_from_string(arg->s, arg->i);
 }
 
 gboolean vp_set_mode(const Arg* arg)
@@ -376,66 +298,6 @@ gboolean vp_set_mode(const Arg* arg)
     vp_update_statusbar();
 
     return TRUE;
-}
-
-gboolean vp_input(const Arg* arg)
-{
-    gint pos = 0;
-    const gchar* url;
-
-    /* reset the colors and fonts to defalts */
-    vp_set_widget_font(vp.gui.inputbox, inputbox_font[0], inputbox_bg[0], inputbox_fg[0]);
-
-    /* remove content from input box */
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
-
-    /* insert string from arg */
-    gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), arg->s, -1, &pos);
-
-    /* add current url if requested */
-    if (VP_INPUT_CURRENT_URI == arg->i
-            && (url = webkit_web_view_get_uri(vp.gui.webview))) {
-        gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), url, -1, &pos);
-    }
-
-    gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
-
-    Arg a = {VP_MODE_COMMAND};
-    return vp_set_mode(&a);
-}
-
-gboolean vp_open(const Arg* arg)
-{
-    return vp_load_uri(arg);
-}
-
-gboolean vp_set(const Arg* arg)
-{
-    gboolean success;
-    gchar* line = NULL;
-    gchar** token;
-
-    if (!arg->s || !strlen(arg->s)) {
-        return FALSE;
-    }
-
-    line = g_strdup(arg->s);
-    g_strstrip(line);
-
-    /* split the input string into paramete and value part */
-    token = g_strsplit(line, "=", 2);
-    g_free(line);
-
-    if (!token[1]) {
-        /* TODO display current value */
-        g_strfreev(token);
-        vp_echo(VP_MSG_ERROR, "No param given");
-        return FALSE;
-    }
-    success = setting_run(token[0], token[1] ? token[1] : NULL);
-    g_strfreev(token);
-
-    return success;
 }
 
 void vp_update_urlbar(const gchar* uri)
@@ -651,7 +513,7 @@ static void vp_init_files(void)
     g_free(path);
 }
 
-static void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color)
+void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color)
 {
     GdkColor fg, bg;
     PangoFontDescription *font;

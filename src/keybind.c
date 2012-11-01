@@ -36,6 +36,16 @@ void keybind_init(void)
     g_signal_connect(G_OBJECT(vp.gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
 }
 
+void keybind_cleanup(void)
+{
+    if (keys) {
+        g_slist_free(keys);
+    }
+    if (modkeys) {
+        g_string_free(modkeys, TRUE);
+    }
+}
+
 gboolean keybind_add_from_string(const gchar* str, const Mode mode)
 {
     if (str == NULL || *str == '\0') {

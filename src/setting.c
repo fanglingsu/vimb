@@ -91,6 +91,13 @@ void setting_init(void)
     }
 }
 
+void setting_cleanup(void)
+{
+    if (settings) {
+        g_hash_table_destroy(settings);
+    }
+}
+
 gboolean setting_run(const gchar* name, const gchar* param)
 {
     gboolean result = FALSE;

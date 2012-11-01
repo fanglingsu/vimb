@@ -33,6 +33,7 @@ struct _Setting {
 };
 
 void setting_init(void);
+void setting_cleanup(void);
 gboolean setting_run(const gchar* name, const gchar* param);
 
 #endif /* end of include guard: SETTING_H */

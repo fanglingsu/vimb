@@ -180,15 +180,9 @@ extern VpCore vp;
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 void vp_echo(const MessageType type, const char *error, ...);
-gboolean vp_navigate(const Arg* arg);
-gboolean vp_scroll(const Arg* arg);
-gboolean vp_close_browser(const Arg* arg);
-gboolean vp_view_source(const Arg* arg);
-gboolean vp_map(const Arg* arg);
-gboolean vp_unmap(const Arg* arg);
 gboolean vp_set_mode(const Arg* arg);
-gboolean vp_input(const Arg* arg);
-gboolean vp_open(const Arg* arg);
-gboolean vp_set(const Arg* arg);
+void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
+gboolean vp_load_uri(const Arg* arg);
+void vp_clean_up(void);
 
 #endif /* end of include guard: MAIN_H */
