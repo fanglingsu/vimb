@@ -338,6 +338,7 @@ void vp_update_statusbar(void)
     markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", vp.config.status_font, status->str);
     gtk_label_set_markup(GTK_LABEL(vp.gui.statusbar.right), markup);
     g_free(markup);
+    g_string_free(status, TRUE);
 }
 
 void vp_echo(const MessageType type, const char *error, ...)
