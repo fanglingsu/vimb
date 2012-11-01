@@ -110,9 +110,7 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
         success = vp_process_input((text + 1));
         if (!success) {
             /* print error message */
-            gchar* message = g_strdup_printf("Command '%s' not found", (text + 1));
-            vp_echo(VP_MSG_ERROR, message);
-            g_free(message);
+            vp_echo(VP_MSG_ERROR, "Command '%s' not found", (text + 1));
 
             /* switch to normal mode after running command */
             Arg a = {VP_MODE_NORMAL};
@@ -468,8 +466,15 @@ void vp_update_statusbar(void)
     g_free(markup);
 }
 
-void vp_echo(const MessageType type, const gchar *message)
+void vp_echo(const MessageType type, const char *error, ...)
 {
+    va_list arg_list;
+
+    va_start(arg_list, error);
+    char message[255];
+    vsnprintf(message, 255, error, arg_list);
+    va_end(arg_list);
+
     /* don't print message if the input is focussed */
     if (gtk_widget_is_focus(GTK_WIDGET(vp.gui.inputbox))) {
         return;

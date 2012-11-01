@@ -179,7 +179,7 @@ extern VpCore vp;
 /* functions */
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
-void vp_echo(const MessageType type, const gchar *message);
+void vp_echo(const MessageType type, const char *error, ...);
 gboolean vp_navigate(const Arg* arg);
 gboolean vp_scroll(const Arg* arg);
 gboolean vp_close_browser(const Arg* arg);
