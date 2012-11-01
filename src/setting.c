@@ -210,7 +210,7 @@ static gboolean setting_status_font(const Setting* s)
 
     /* update status bar to apply changed settings */
     vp_update_statusbar();
-    vp_update_urlbar();
+    vp_update_urlbar(webkit_web_view_get_uri(vp.gui.webview));
 
     return TRUE;
 }
