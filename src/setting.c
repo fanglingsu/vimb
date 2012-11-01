@@ -102,6 +102,7 @@ void setting_cleanup(void)
 
 gboolean setting_run(const gchar* name, const gchar* param)
 {
+    Arg* a = NULL;
     gboolean result = FALSE;
     Setting* s      = g_hash_table_lookup(settings, name);
     if (!s) {
@@ -115,29 +116,18 @@ gboolean setting_run(const gchar* name, const gchar* param)
 
     /* if string param is given convert it to the required data type and set
      * it to the arg of the setting */
-    switch (s->type) {
-        case TYPE_BOOLEAN:
-            s->arg.i = util_atob(param) ? 1 : 0;
-            result = s->func(s);
-            break;
-
-        case TYPE_INTEGER:
-            s->arg.i = g_ascii_strtoull(param, (gchar**)NULL, 10);
-            result = s->func(s);
-            break;
-
-        case TYPE_DOUBLE:
-            s->arg.i = (1000 * g_ascii_strtod(param, (gchar**)NULL));
-            result = s->func(s);
-            break;
-
-        case TYPE_CHAR:
-        case TYPE_COLOR:
-            s->arg.s = g_strdup(param);
-            result = s->func(s);
-            g_free(s->arg.s);
-            break;
+    a = util_char_to_arg(param, s->type);
+    if (a == NULL) {
+        vp_echo(VP_MSG_ERROR, "No valid value");
+        return FALSE; 
     }
+
+    s->arg = *a;
+    result = s->func(s);
+    if (a->s) {
+        g_free(a->s);
+    }
+    g_free(a);
 
     return result;
 }
@@ -176,6 +166,7 @@ static gboolean setting_cookie_timeout(const Setting* s)
 
 static gboolean setting_scrollstep(const Setting* s)
 {
+    PRINT_DEBUG("Set scrollstep to %d", s->arg.i);
     vp.config.scrollstep = s->arg.i;
 
     return TRUE;

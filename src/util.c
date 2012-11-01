@@ -50,12 +50,41 @@ void util_create_file_if_not_exists(const char* filename) {
     }
 }
 
-gboolean util_atob(const gchar* str)
+Arg* util_char_to_arg(const gchar* str, Type type)
 {
-    if (str == NULL) {
-        return FALSE;
+    Arg* arg = util_new_arg();
+
+    if (!str) {
+        return NULL;
+    }
+    switch (type) {
+        case TYPE_BOOLEAN:
+            arg->i = g_ascii_strncasecmp(str, "true", 4) == 0
+                || g_ascii_strncasecmp(str, "on", 2) == 0 ? 1 : 0;
+            break;
+
+        case TYPE_INTEGER:
+            arg->i = g_ascii_strtoull(str, (gchar**)NULL, 10);
+            break;
+
+        case TYPE_DOUBLE:
+            arg->i = (1000 * g_ascii_strtod(str, (gchar**)NULL));
+            break;
+
+        case TYPE_CHAR:
+        case TYPE_COLOR:
+            arg->s = g_strdup(str);
+            break;
     }
 
-    return g_ascii_strncasecmp(str, "true", 4) == 0
-        || g_ascii_strncasecmp(str, "on", 2) == 0;
+    return arg;
+}
+
+Arg* util_new_arg(void)
+{
+    Arg* arg = g_new0(Arg, 1);
+    arg->i = 0;
+    arg->s = NULL;
+
+    return arg;
 }
