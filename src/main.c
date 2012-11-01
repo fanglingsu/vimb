@@ -536,8 +536,6 @@ static void vp_setup_signals(void)
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(vp_frame_scrollbar_policy_changed_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "load-committed", G_CALLBACK(vp_webview_load_commited_cb), NULL);
-    g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
 
     g_object_connect(
         G_OBJECT(gui->inputbox),
@@ -547,6 +545,8 @@ static void vp_setup_signals(void)
         NULL
     );
 #ifdef FEATURE_COOKIE
+    g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
 #endif
 }

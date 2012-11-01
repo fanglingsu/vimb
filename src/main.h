@@ -153,7 +153,9 @@ typedef struct {
 } Network;
 
 typedef struct {
+#ifdef FEATURE_COOKIE
     time_t cookie_timeout;
+#endif
     gint   scrollstep;
     gchar* status_color_bg;
     gchar* status_color_fg;

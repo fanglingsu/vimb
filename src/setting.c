@@ -21,7 +21,9 @@
 #include "util.h"
 
 static gboolean setting_webkit(const Setting* s);
+#ifdef FEATURE_COOKIE
 static gboolean setting_cookie_timeout(const Setting* s);
+#endif
 static gboolean setting_scrollstep(const Setting* s);
 static gboolean setting_status_color_bg(const Setting* s);
 static gboolean setting_status_color_fg(const Setting* s);
@@ -74,7 +76,9 @@ static Setting default_settings[] = {
     {"user-stylesheet-uri", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {"zoom-step", TYPE_DOUBLE, setting_webkit, {.i = 100}},
     /* internal variables */
+#ifdef FEATURE_COOKIE
     {"cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
+#endif
     {"scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
     {"status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
     {"status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
@@ -163,12 +167,14 @@ static gboolean setting_webkit(const Setting* s)
     return TRUE;
 }
 
+#ifdef FEATURE_COOKIE
 static gboolean setting_cookie_timeout(const Setting* s)
 {
     vp.config.cookie_timeout = s->arg.i;
 
     return TRUE;
 }
+#endif
 
 static gboolean setting_scrollstep(const Setting* s)
 {
