@@ -149,7 +149,6 @@ typedef struct {
 
 typedef struct {
     SoupSession*    soup_session;
-    SoupCookieJar*  cookie_jar;
 } Network;
 
 typedef struct {
