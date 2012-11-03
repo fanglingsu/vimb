@@ -7,7 +7,7 @@ BINDIR ?= $(PREFIX)/bin/
 MANDIR ?= $(PREFIX)/share/man/
 
 #----------------compile options---------------------
-LIBS = gtk+-2.0 webkit-1.0
+LIBS = gtk+-2.0 webkit-1.0 libsoup-2.4
 
 CFLAGS += $(shell pkg-config --cflags $(LIBS))
 CFLAGS += -Wall

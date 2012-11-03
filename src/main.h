@@ -45,10 +45,12 @@
 
 /* enums */
 typedef enum _vp_mode {
-    VP_MODE_NORMAL,
-    VP_MODE_COMMAND,
-    VP_MODE_PATH_THROUGH,
-    VP_MODE_INSERT,
+    VP_MODE_NORMAL        = 1<<0,
+    VP_MODE_COMMAND       = 1<<1,
+    VP_MODE_PATH_THROUGH  = 1<<2,
+    VP_MODE_INSERT        = 1<<3,
+    VP_MODE_COMPLETE      = 1<<4,
+    VP_MODE_SEARCH        = 1<<5,
 } Mode;
 
 enum {
@@ -127,6 +129,7 @@ typedef struct {
     GtkBox*        box;
     GtkWidget*     eventbox;
     GtkWidget*     inputbox;
+    GtkWidget*     compbox;
     StatusBar      statusbar;
     GtkScrollbar*  sb_h;
     GtkScrollbar*  sb_v;
@@ -161,6 +164,11 @@ typedef struct {
     gchar* status_font;
 } Config;
 
+typedef struct {
+    GList* completions;
+    GList* active;
+} Completions;
+
 /* core struct */
 typedef struct {
     Gui           gui;
@@ -171,6 +179,7 @@ typedef struct {
     Network       net;
 #endif
     Config        config;
+    Completions   comps;
 #if 0
     Ssl           ssl;
     Communication comm;

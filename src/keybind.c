@@ -20,6 +20,7 @@
 #include "main.h"
 #include "keybind.h"
 #include "command.h"
+#include "completion.h"
 
 static GSList* keys = NULL;
 static GString* modkeys = NULL;
@@ -180,6 +181,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     /* check for escape or modkeys or counts */
     if ((CLEAN(event->state) & ~irrelevant) == 0) {
         if (IS_ESCAPE(event)) {
+            completion_clean();
             /* switch to normal mode and clear the input box */
             Arg a = {VP_MODE_NORMAL, ""};
             vp_set_mode(&a);
@@ -203,6 +205,12 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
                 return TRUE;
             }
         }
+    }
+
+    /* TODO should we use a command for that too? */
+    if (event->keyval == GDK_Tab || event->keyval == GDK_ISO_Left_Tab) {
+        completion_complete(COMPLETE_COMMAND, event->keyval == GDK_ISO_Left_Tab);
+        return TRUE;
     }
 
     /* check for keybinding */

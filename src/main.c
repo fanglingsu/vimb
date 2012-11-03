@@ -33,7 +33,6 @@ static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame* 
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
 static gboolean vp_frame_scrollbar_policy_changed_cb(void);
 static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
-static gboolean vp_inputbox_keypress_cb(GtkEntry* entry, GdkEventKey* event);
 static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
 #ifdef FEATURE_COOKIE
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data);
@@ -118,12 +117,7 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
     }
 }
 
-static gboolean vp_inputbox_keypress_cb(GtkEntry *entry, GdkEventKey *event)
-{
-    return FALSE;
-}
-
-static gboolean vp_inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event)
+static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event)
 {
     return FALSE;
 }
@@ -267,6 +261,10 @@ static gboolean vp_hide_message(void)
     return FALSE;
 }
 
+/**
+ * Set the base modes. All other mode flags like completion can be set directly
+ * to vp.state.mode.
+ */
 gboolean vp_set_mode(const Arg* arg)
 {
     vp.state.mode = arg->i;
@@ -540,7 +538,6 @@ static void vp_setup_signals(void)
     g_object_connect(
         G_OBJECT(gui->inputbox),
         "signal::activate",          G_CALLBACK(vp_inputbox_activate_cb),   NULL,
-        "signal::key-press-event",   G_CALLBACK(vp_inputbox_keypress_cb),   NULL,
         "signal::key-release-event", G_CALLBACK(vp_inputbox_keyrelease_cb), NULL,
         NULL
     );
