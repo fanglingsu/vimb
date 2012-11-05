@@ -172,6 +172,7 @@ typedef struct {
 typedef struct {
     GList* completions;
     GList* active;
+    gint   count;
 } Completions;
 
 typedef struct {

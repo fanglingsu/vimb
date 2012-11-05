@@ -91,10 +91,10 @@ static Setting default_settings[] = {
     {"input-fg-error", TYPE_CHAR, setting_input_style, {.s = "#000"}},
     {"input-font-normal", TYPE_CHAR, setting_input_style, {.s = "monospace normal 8"}},
     {"input-font-error", TYPE_CHAR, setting_input_style, {.s = "monospace bold 8"}},
-    {"completion-font-normal", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 8"}},
-    {"completion-font-active", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 8"}},
+    {"completion-font-normal", TYPE_CHAR, setting_completion_style, {.s = "monospace normal 8"}},
+    {"completion-font-active", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 10"}},
     {"completion-fg-normal", TYPE_CHAR, setting_completion_style, {.s = "#f6f3e8"}},
-    {"completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#f6f3e8"}},
+    {"completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#0f0"}},
     {"completion-bg-normal", TYPE_CHAR, setting_completion_style, {.s = "#656565"}},
     {"completion-bg-active", TYPE_CHAR, setting_completion_style, {.s = "#777777"}},
 };

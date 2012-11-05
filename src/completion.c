@@ -27,7 +27,7 @@ typedef struct {
 static GList* completion_init_completion(GList* target, GList* source);
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
-static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg);
+static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font);
 static void completion_set_entry_text(Completion* completion);
 static Completion* completion_get_new(const gchar* label);
 
@@ -84,6 +84,7 @@ void completion_clean(void)
     }
     vp.comps.completions = NULL;
     vp.comps.active = NULL;
+    vp.comps.count = 0;
 
     /* remove completion flag from mode */
     vp.state.mode &= ~VP_MODE_COMPLETE;
@@ -92,6 +93,7 @@ void completion_clean(void)
 static GList* completion_init_completion(GList* target, GList* source)
 {
     const gchar* input = gtk_entry_get_text(GTK_ENTRY(vp.gui.inputbox));
+    gchar* command = NULL;
     gchar* data = NULL;
     gboolean match;
     gchar **token = NULL;
@@ -99,12 +101,16 @@ static GList* completion_init_completion(GList* target, GList* source)
     if (input && input[0] == ':') {
         input++;
     }
-    token = g_strsplit(input, " ", -1);
+
+    /* remove counts before command and save it to print it later in inputbox */
+    vp.comps.count = g_ascii_strtoll(input, &command, 10);
+
+    token = g_strsplit(command, " ", -1);
 
     for (GList* l = source; l; l = l->next) {
         data = l->data;
         match = FALSE;
-        if (*input == 0) {
+        if (*command == 0) {
             match = TRUE;
         } else {
             for (gint i = 0; token[i]; i++) {
@@ -186,12 +192,14 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
     completion_set_color(
         old->data,
         &vp.style.comp_fg[VP_COMP_NORMAL],
-        &vp.style.comp_bg[VP_COMP_NORMAL]
+        &vp.style.comp_bg[VP_COMP_NORMAL],
+        vp.style.comp_font[VP_COMP_NORMAL]
     );
     completion_set_color(
         new->data,
         &vp.style.comp_fg[VP_COMP_ACTIVE],
-        &vp.style.comp_bg[VP_COMP_ACTIVE]
+        &vp.style.comp_bg[VP_COMP_ACTIVE],
+        vp.style.comp_font[VP_COMP_ACTIVE]
     );
 
     active = new;
@@ -220,29 +228,37 @@ static void completion_show(gboolean back)
         completion_set_color(
             vp.comps.active->data,
             &vp.style.comp_fg[VP_COMP_ACTIVE],
-            &vp.style.comp_bg[VP_COMP_ACTIVE]
+            &vp.style.comp_bg[VP_COMP_ACTIVE],
+            vp.style.comp_font[VP_COMP_ACTIVE]
         );
         completion_set_entry_text(vp.comps.active->data);
         gtk_widget_show(vp.gui.compbox);
     }
 }
 
-static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg)
+static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font)
 {
-    gtk_widget_modify_fg(completion->event, GTK_STATE_NORMAL, fg);
+    gtk_widget_modify_fg(completion->label, GTK_STATE_NORMAL, fg);
     gtk_widget_modify_bg(completion->event, GTK_STATE_NORMAL, bg);
+    gtk_widget_modify_font(completion->label, font);
 }
 
 static void completion_set_entry_text(Completion* completion)
 {
+    GString* string = g_string_new(":");
     const gchar* text;
-    const gchar* pre = ":";
-    gint len = strlen(pre);
 
     text = gtk_label_get_text(GTK_LABEL(completion->label));
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), pre);
-    gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), text, -1, &len);
+
+    /* print the previous typed command count into inputbox too */
+    if (vp.comps.count) {
+        g_string_append_printf(string, "%d", vp.comps.count);
+    }
+    g_string_append(string, text);
+    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), string->str);
     gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
+
+    g_string_free(string, TRUE);
 }
 
 static Completion* completion_get_new(const gchar* label)
@@ -268,7 +284,8 @@ static Completion* completion_get_new(const gchar* label)
     completion_set_color(
         c,
         &vp.style.comp_fg[VP_COMP_NORMAL],
-        &vp.style.comp_bg[VP_COMP_NORMAL]
+        &vp.style.comp_bg[VP_COMP_NORMAL],
+        vp.style.comp_font[VP_COMP_NORMAL]
     );
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
