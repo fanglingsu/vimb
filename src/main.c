@@ -23,6 +23,7 @@
 #include "keybind.h"
 #include "setting.h"
 #include "config.h"
+#include "completion.h"
 
 /* variables */
 VpCore vp;
@@ -104,6 +105,7 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
     text = gtk_entry_get_text(entry);
 
     if (1 < length && ':' == text[0]) {
+        completion_clean();
         success = vp_process_input((text + 1));
         if (!success) {
             /* switch to normal mode after running command */

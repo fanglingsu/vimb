@@ -28,7 +28,8 @@ static gboolean setting_scrollstep(const Setting* s);
 static gboolean setting_status_color_bg(const Setting* s);
 static gboolean setting_status_color_fg(const Setting* s);
 static gboolean setting_status_font(const Setting* s);
-static gboolean setting_style(const Setting* s);
+static gboolean setting_input_style(const Setting* s);
+static gboolean setting_completion_style(const Setting* s);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -84,12 +85,18 @@ static Setting default_settings[] = {
     {"status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
     {"status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
     {"status-font", TYPE_CHAR, setting_status_font, {.s = "monospace bold 8"}},
-    {"input-bg-normal", TYPE_CHAR, setting_style, {.s = "#fff"}},
-    {"input-bg-error", TYPE_CHAR, setting_style, {.s = "#f00"}},
-    {"input-fg-normal", TYPE_CHAR, setting_style, {.s = "#000"}},
-    {"input-fg-error", TYPE_CHAR, setting_style, {.s = "#000"}},
-    {"input-font-normal", TYPE_CHAR, setting_style, {.s = "monospace normal 8"}},
-    {"input-font-error", TYPE_CHAR, setting_style, {.s = "monospace bold 8"}},
+    {"input-bg-normal", TYPE_CHAR, setting_input_style, {.s = "#fff"}},
+    {"input-bg-error", TYPE_CHAR, setting_input_style, {.s = "#f00"}},
+    {"input-fg-normal", TYPE_CHAR, setting_input_style, {.s = "#000"}},
+    {"input-fg-error", TYPE_CHAR, setting_input_style, {.s = "#000"}},
+    {"input-font-normal", TYPE_CHAR, setting_input_style, {.s = "monospace normal 8"}},
+    {"input-font-error", TYPE_CHAR, setting_input_style, {.s = "monospace bold 8"}},
+    {"completion-font-normal", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 8"}},
+    {"completion-font-active", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 8"}},
+    {"completion-fg-normal", TYPE_CHAR, setting_completion_style, {.s = "#f6f3e8"}},
+    {"completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#f6f3e8"}},
+    {"completion-bg-normal", TYPE_CHAR, setting_completion_style, {.s = "#656565"}},
+    {"completion-bg-active", TYPE_CHAR, setting_completion_style, {.s = "#777777"}},
 };
 
 static GHashTable* settings = NULL;
@@ -228,11 +235,10 @@ static gboolean setting_status_font(const Setting* s)
     return TRUE;
 }
 
-static gboolean setting_style(const Setting* s)
+static gboolean setting_input_style(const Setting* s)
 {
     Style* style = &vp.style;
-
-    MessageType type = g_str_has_suffix(s->name, "error") ? VP_MSG_ERROR : VP_MSG_NORMAL;
+    MessageType type = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
 
     if (g_str_has_prefix(s->name, "input-bg")) {
         gdk_color_parse(s->arg.s, &style->input_bg[type]);
@@ -243,6 +249,25 @@ static gboolean setting_style(const Setting* s)
             pango_font_description_free(style->input_font[type]);
         }
         style->input_font[type] = pango_font_description_from_string(s->arg.s);
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_completion_style(const Setting* s)
+{
+    Style* style = &vp.style;
+    CompletionStyle type = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
+
+    if (g_str_has_prefix(s->name, "completion-bg")) {
+        gdk_color_parse(s->arg.s, &style->comp_bg[type]);
+    } else if (g_str_has_prefix(s->name, "completion-fg")) {
+        gdk_color_parse(s->name, &style->comp_fg[type]);
+    } else if (g_str_has_prefix(s->arg.s, "completion-font")) {
+        if (style->comp_font[type]) {
+            pango_font_description_free(style->comp_font[type]);
+        }
+        style->comp_font[type] = pango_font_description_from_string(s->arg.s);
     }
 
     return TRUE;

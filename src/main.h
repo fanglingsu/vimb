@@ -88,11 +88,18 @@ enum {
     VP_SCROLL_UNIT_LINE     = (1 << 3),
     VP_SCROLL_UNIT_HALFPAGE = (1 << 4)
 };
+
 typedef enum {
     VP_MSG_NORMAL,
     VP_MSG_ERROR,
     VP_MSG_LAST
 } MessageType;
+
+typedef enum {
+    VP_COMP_NORMAL,
+    VP_COMP_ACTIVE,
+    VP_COMP_LAST
+} CompletionStyle;
 
 enum {
     FILES_FIRST = 0,
@@ -171,6 +178,9 @@ typedef struct {
     GdkColor              input_fg[VP_MSG_LAST];
     GdkColor              input_bg[VP_MSG_LAST];
     PangoFontDescription* input_font[VP_MSG_LAST];
+    GdkColor              comp_fg[VP_COMP_LAST];
+    GdkColor              comp_bg[VP_COMP_LAST];
+    PangoFontDescription* comp_font[VP_COMP_LAST];
 } Style;
 
 /* core struct */

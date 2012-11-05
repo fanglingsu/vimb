@@ -27,7 +27,7 @@ typedef struct {
 static GList* completion_init_completion(GList* target, GList* source);
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
-static void completion_set_color(Completion* completion, gchar* fg, gchar* bg);
+static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg);
 static void completion_set_entry_text(Completion* completion);
 static Completion* completion_get_new(const gchar* label);
 
@@ -183,10 +183,16 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
         }
     }
 
-    gchar* fg = "#77ff77";
-    gchar* bg = "#333333";
-    completion_set_color(old->data, fg, bg);
-    completion_set_color(new->data, fg, bg);
+    completion_set_color(
+        old->data,
+        &vp.style.comp_fg[VP_COMP_NORMAL],
+        &vp.style.comp_bg[VP_COMP_NORMAL]
+    );
+    completion_set_color(
+        new->data,
+        &vp.style.comp_fg[VP_COMP_ACTIVE],
+        &vp.style.comp_bg[VP_COMP_ACTIVE]
+    );
 
     active = new;
     completion_set_entry_text(active->data);
@@ -211,21 +217,20 @@ static void completion_show(gboolean back)
         }
     }
     if (vp.comps.active != NULL) {
-        gchar* fg = "#77ff77";
-        gchar* bg = "#333333";
-        completion_set_color(vp.comps.active->data, fg, bg);
+        completion_set_color(
+            vp.comps.active->data,
+            &vp.style.comp_fg[VP_COMP_ACTIVE],
+            &vp.style.comp_bg[VP_COMP_ACTIVE]
+        );
         completion_set_entry_text(vp.comps.active->data);
         gtk_widget_show(vp.gui.compbox);
     }
 }
 
-static void completion_set_color(Completion* completion, gchar* fg, gchar* bg)
+static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg)
 {
-    GdkColor color;
-    gdk_color_parse(fg, &color);
-    gtk_widget_modify_fg(completion->label, GTK_STATE_NORMAL, &color);
-    gdk_color_parse(bg, &color);
-    gtk_widget_modify_bg(completion->label, GTK_STATE_NORMAL, &color);
+    gtk_widget_modify_fg(completion->event, GTK_STATE_NORMAL, fg);
+    gtk_widget_modify_bg(completion->event, GTK_STATE_NORMAL, bg);
 }
 
 static void completion_set_entry_text(Completion* completion)
@@ -260,9 +265,11 @@ static Completion* completion_get_new(const gchar* label)
     gtk_label_set_ellipsize(GTK_LABEL(c->label), PANGO_ELLIPSIZE_MIDDLE);
     gtk_misc_set_alignment(GTK_MISC(c->label), 0.0, 0.5);
 
-    gchar* fg = "#77ff77";
-    gchar* bg = "#333333";
-    completion_set_color(c, fg, bg);
+    completion_set_color(
+        c,
+        &vp.style.comp_fg[VP_COMP_NORMAL],
+        &vp.style.comp_bg[VP_COMP_NORMAL]
+    );
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
     gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
