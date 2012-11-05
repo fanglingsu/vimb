@@ -216,14 +216,14 @@ static gboolean setting_status_color_fg(const Setting* s)
 
 static gboolean setting_status_font(const Setting* s)
 {
-    if (vp.config.status_font) {
-        g_free(vp.config.status_font);
-    }
-    vp.config.status_font = g_strdup(s->arg.s);
+    PangoFontDescription* font;
+    font = pango_font_description_from_string(s->arg.s);
 
-    /* update status bar to apply changed settings */
-    vp_update_statusbar();
-    vp_update_urlbar(webkit_web_view_get_uri(vp.gui.webview));
+    gtk_widget_modify_font(vp.gui.eventbox, font);
+    gtk_widget_modify_font(GTK_WIDGET(vp.gui.statusbar.left), font);
+    gtk_widget_modify_font(GTK_WIDGET(vp.gui.statusbar.right), font);
+
+    pango_font_description_free(font);
 
     return TRUE;
 }
@@ -235,13 +235,10 @@ static gboolean setting_style(const Setting* s)
     MessageType type = g_str_has_suffix(s->name, "error") ? VP_MSG_ERROR : VP_MSG_NORMAL;
 
     if (g_str_has_prefix(s->name, "input-bg")) {
-        PRINT_DEBUG("Set style %s -> %s", s->name, s->arg.s);
         gdk_color_parse(s->arg.s, &style->input_bg[type]);
     } else if (g_str_has_prefix(s->name, "input-fg")) {
-        PRINT_DEBUG("Set style %s -> %s", s->name, s->arg.s);
         gdk_color_parse(s->name, &style->input_fg[type]);
     } else if (g_str_has_prefix(s->arg.s, "input-font")) {
-        PRINT_DEBUG("Set style %s -> %s", s->name, s->arg.s);
         if (style->input_font[type]) {
             pango_font_description_free(style->input_font[type]);
         }

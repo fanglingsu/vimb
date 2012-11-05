@@ -306,17 +306,12 @@ gboolean vp_set_mode(const Arg* arg)
 
 void vp_update_urlbar(const gchar* uri)
 {
-    gchar* markup;
-
-    markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", vp.config.status_font, uri);
-    gtk_label_set_markup(GTK_LABEL(vp.gui.statusbar.left), markup);
-    g_free(markup);
+    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), uri);
 }
 
 void vp_update_statusbar(void)
 {
     GString* status = g_string_new("");
-    gchar*   markup;
 
     /* show current count */
     g_string_append_printf(status, "%.0d", vp.state.count);
@@ -339,9 +334,7 @@ void vp_update_statusbar(void)
         g_string_append_printf(status, " %d%%", val);
     }
 
-    markup = g_markup_printf_escaped("<span font=\"%s\">%s</span>", vp.config.status_font, status->str);
-    gtk_label_set_markup(GTK_LABEL(vp.gui.statusbar.right), markup);
-    g_free(markup);
+    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.right), status->str);
     g_string_free(status, TRUE);
 }
 

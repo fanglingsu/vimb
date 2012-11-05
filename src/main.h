@@ -160,9 +160,6 @@ typedef struct {
     time_t cookie_timeout;
 #endif
     gint   scrollstep;
-    gchar* status_color_bg;
-    gchar* status_color_fg;
-    gchar* status_font;
 } Config;
 
 typedef struct {
