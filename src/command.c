@@ -115,7 +115,12 @@ gboolean command_input(const Arg* arg)
     const gchar* url;
 
     /* reset the colors and fonts to defalts */
-    vp_set_widget_font(vp.gui.inputbox, inputbox_font[0], inputbox_bg[0], inputbox_fg[0]);
+    vp_set_widget_font(
+        vp.gui.inputbox,
+        &vp.style.input_fg[VP_MSG_NORMAL],
+        &vp.style.input_bg[VP_MSG_NORMAL],
+        vp.style.input_font[VP_MSG_NORMAL]
+    );
 
     /* remove content from input box */
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");

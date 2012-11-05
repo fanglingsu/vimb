@@ -28,6 +28,7 @@ static gboolean setting_scrollstep(const Setting* s);
 static gboolean setting_status_color_bg(const Setting* s);
 static gboolean setting_status_color_fg(const Setting* s);
 static gboolean setting_status_font(const Setting* s);
+static gboolean setting_style(const Setting* s);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -83,6 +84,12 @@ static Setting default_settings[] = {
     {"status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
     {"status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
     {"status-font", TYPE_CHAR, setting_status_font, {.s = "monospace bold 8"}},
+    {"input-bg-normal", TYPE_CHAR, setting_style, {.s = "#fff"}},
+    {"input-bg-error", TYPE_CHAR, setting_style, {.s = "#f00"}},
+    {"input-fg-normal", TYPE_CHAR, setting_style, {.s = "#000"}},
+    {"input-fg-error", TYPE_CHAR, setting_style, {.s = "#000"}},
+    {"input-font-normal", TYPE_CHAR, setting_style, {.s = "monospace normal 8"}},
+    {"input-font-error", TYPE_CHAR, setting_style, {.s = "monospace bold 8"}},
 };
 
 static GHashTable* settings = NULL;
@@ -129,7 +136,7 @@ gboolean setting_run(const gchar* name, const gchar* param)
     a = util_char_to_arg(param, s->type);
     if (a == NULL) {
         vp_echo(VP_MSG_ERROR, "No valid value");
-        return FALSE; 
+        return FALSE;
     }
 
     s->arg = *a;
@@ -217,6 +224,29 @@ static gboolean setting_status_font(const Setting* s)
     /* update status bar to apply changed settings */
     vp_update_statusbar();
     vp_update_urlbar(webkit_web_view_get_uri(vp.gui.webview));
+
+    return TRUE;
+}
+
+static gboolean setting_style(const Setting* s)
+{
+    Style* style = &vp.style;
+
+    MessageType type = g_str_has_suffix(s->name, "error") ? VP_MSG_ERROR : VP_MSG_NORMAL;
+
+    if (g_str_has_prefix(s->name, "input-bg")) {
+        PRINT_DEBUG("Set style %s -> %s", s->name, s->arg.s);
+        gdk_color_parse(s->arg.s, &style->input_bg[type]);
+    } else if (g_str_has_prefix(s->name, "input-fg")) {
+        PRINT_DEBUG("Set style %s -> %s", s->name, s->arg.s);
+        gdk_color_parse(s->name, &style->input_fg[type]);
+    } else if (g_str_has_prefix(s->arg.s, "input-font")) {
+        PRINT_DEBUG("Set style %s -> %s", s->name, s->arg.s);
+        if (style->input_font[type]) {
+            pango_font_description_free(style->input_font[type]);
+        }
+        style->input_font[type] = pango_font_description_from_string(s->arg.s);
+    }
 
     return TRUE;
 }

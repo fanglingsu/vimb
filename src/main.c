@@ -254,8 +254,14 @@ static gboolean vp_hide_message(void)
     if (vp.state.mode == VP_MODE_COMMAND) {
         return FALSE;
     }
-    const MessageType type = VP_MSG_NORMAL;
-    vp_set_widget_font(vp.gui.inputbox, inputbox_font[type], inputbox_bg[type], inputbox_fg[type]);
+
+    vp_set_widget_font(
+        vp.gui.inputbox,
+        &vp.style.input_fg[VP_MSG_NORMAL],
+        &vp.style.input_bg[VP_MSG_NORMAL],
+        vp.style.input_font[VP_MSG_NORMAL]
+    );
+
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
 
     return FALSE;
@@ -354,7 +360,12 @@ void vp_echo(const MessageType type, const char *error, ...)
     }
 
     /* set the collors according to message type */
-    vp_set_widget_font(vp.gui.inputbox, inputbox_font[type], inputbox_bg[type], inputbox_fg[type]);
+    vp_set_widget_font(
+        vp.gui.inputbox,
+        &vp.style.input_fg[type],
+        &vp.style.input_bg[type],
+        vp.style.input_font[type]
+    );
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
     g_timeout_add_seconds(2, (GSourceFunc)vp_hide_message, NULL);
 }
@@ -456,8 +467,6 @@ static void vp_init_gui(void)
     gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
     g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", FALSE, NULL);
 
-    vp_set_widget_font(gui->inputbox, inputbox_font[0], inputbox_bg[0], inputbox_fg[0]);
-
     /* Prepare the statusbar */
     gui->statusbar.box   = GTK_BOX(gtk_hbox_new(FALSE, 0));
     gui->statusbar.left  = gtk_label_new(NULL);
@@ -503,24 +512,11 @@ static void vp_init_files(void)
     g_free(path);
 }
 
-void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color)
+void vp_set_widget_font(GtkWidget* widget, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font)
 {
-    GdkColor fg, bg;
-    PangoFontDescription *font;
-
-    font = pango_font_description_from_string(font_definition);
     gtk_widget_modify_font(widget, font);
-    pango_font_description_free(font);
-
-    if (fg_color) {
-        gdk_color_parse(fg_color, &fg);
-    }
-    if (bg_color) {
-        gdk_color_parse(bg_color, &bg);
-    }
-
-    gtk_widget_modify_text(widget, GTK_STATE_NORMAL, fg_color ? &fg : NULL);
-    gtk_widget_modify_base(widget, GTK_STATE_NORMAL, bg_color ? &bg : NULL);
+    gtk_widget_modify_text(widget, GTK_STATE_NORMAL, fg);
+    gtk_widget_modify_base(widget, GTK_STATE_NORMAL, bg);
 }
 
 static void vp_setup_signals(void)

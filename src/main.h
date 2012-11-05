@@ -90,7 +90,8 @@ enum {
 };
 typedef enum {
     VP_MSG_NORMAL,
-    VP_MSG_ERROR
+    VP_MSG_ERROR,
+    VP_MSG_LAST
 } MessageType;
 
 enum {
@@ -169,6 +170,12 @@ typedef struct {
     GList* active;
 } Completions;
 
+typedef struct {
+    GdkColor              input_fg[VP_MSG_LAST];
+    GdkColor              input_bg[VP_MSG_LAST];
+    PangoFontDescription* input_font[VP_MSG_LAST];
+} Style;
+
 /* core struct */
 typedef struct {
     Gui           gui;
@@ -180,6 +187,7 @@ typedef struct {
 #endif
     Config        config;
     Completions   comps;
+    Style         style;
 #if 0
     Ssl           ssl;
     Communication comm;
@@ -193,9 +201,9 @@ extern VpCore vp;
 /* functions */
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
-void vp_echo(const MessageType type, const char *error, ...);
+void vp_echo(const MessageType type, const char* error, ...);
 gboolean vp_set_mode(const Arg* arg);
-void vp_set_widget_font(GtkWidget* widget, const gchar* font_definition, const gchar* bg_color, const gchar* fg_color);
+void vp_set_widget_font(GtkWidget* widget, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font);
 gboolean vp_load_uri(const Arg* arg);
 void vp_clean_up(void);
 

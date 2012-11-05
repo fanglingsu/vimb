@@ -24,11 +24,6 @@
 
 #define START_PAGE      "http://sourceforge.net/apps/trac/vimprobable"
 
-                                    /* normal                error */
-const char *inputbox_font[2] = { "monospace normal 8", "monospace bold 8"};
-const char *inputbox_fg[2]   = { "#000000",            "#000000" };
-const char *inputbox_bg[2]   = { "#ffffff",            "#ff0000" };
-
 #define SETTING_DEFAUL_FONT_SIZE    12
 #define SETTING_USER_AGENT          PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"
 #define SETTING_MAX_CONNS           25
