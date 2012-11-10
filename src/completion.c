@@ -81,6 +81,7 @@ void completion_clean(void)
 
     if (vp.gui.compbox) {
         gtk_widget_destroy(vp.gui.compbox);
+        vp.gui.compbox = NULL;
     }
     vp.comps.completions = NULL;
     vp.comps.active = NULL;
