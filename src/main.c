@@ -161,6 +161,10 @@ static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
 }
 #endif
 
+/**
+ * Processed input from input box without trailing : or ? /, input from config
+ * file and default config.
+ */
 static gboolean vp_process_input(const char* input)
 {
     gboolean success;
@@ -264,7 +268,8 @@ void vp_clean_up(void)
 static gboolean vp_hide_message(void)
 {
     /* do not clean in command mode */
-    if (vp.state.mode == VP_MODE_COMMAND) {
+    /* TODO add a CLEAN_MODE macro to get only the main modes */
+    if (vp.state.mode & VP_MODE_COMMAND) {
         return FALSE;
     }
 

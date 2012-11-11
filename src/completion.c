@@ -22,17 +22,19 @@
 typedef struct {
     GtkWidget* label;
     GtkWidget* event;
+    gchar*     prefix;
 } Completion;
 
-static GList* completion_init_completion(GList* target, GList* source);
+static GList* completion_init_completion(GList* target, GList* source, const gchar* prefix);
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
 static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font);
 static void completion_set_entry_text(Completion* completion);
-static Completion* completion_get_new(const gchar* label);
+static Completion* completion_get_new(const gchar* label, const gchar* prefix);
 
-gboolean completion_complete(const CompletionType type, gboolean back)
+gboolean completion_complete(gboolean back)
 {
+    const gchar* input = NULL;
     GList* source = NULL;
 
     if (vp.comps.completions
@@ -44,14 +46,8 @@ gboolean completion_complete(const CompletionType type, gboolean back)
 
         return TRUE;
     }
-    /* create new completion */
-    switch (type) {
-        case COMPLETE_COMMAND:
-            source = g_hash_table_get_keys(vp.behave.commands);
-            source = g_list_sort(source, (GCompareFunc)g_strcmp0);
-            break;
-    }
 
+    /* create new completion */
 #if _HAS_GTK3
     vp.gui.compbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_box_set_homogeneous(GTK_BOX(vp.gui.compbox), TRUE);
@@ -60,7 +56,17 @@ gboolean completion_complete(const CompletionType type, gboolean back)
 #endif
     gtk_box_pack_start(GTK_BOX(vp.gui.box), vp.gui.compbox, FALSE, FALSE, 0);
 
-    vp.comps.completions = completion_init_completion(vp.comps.completions, source);
+    input = GET_TEXT();
+    /* TODO move these decision to a more generic place */
+    if (g_str_has_prefix(input, ":set ")) {
+        source = g_hash_table_get_keys(vp.settings);
+        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
+        vp.comps.completions = completion_init_completion(vp.comps.completions, source, ":set ");
+    } else {
+        source = g_hash_table_get_keys(vp.behave.commands);
+        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
+        vp.comps.completions = completion_init_completion(vp.comps.completions, source, ":");
+    }
 
     if (!vp.comps.completions) {
         return FALSE;
@@ -91,20 +97,20 @@ void completion_clean(void)
     vp.state.mode &= ~VP_MODE_COMPLETE;
 }
 
-static GList* completion_init_completion(GList* target, GList* source)
+static GList* completion_init_completion(GList* target, GList* source, const gchar* prefix)
 {
-    const gchar* input = gtk_entry_get_text(GTK_ENTRY(vp.gui.inputbox));
+    const gchar* input = GET_TEXT();
     gchar* command = NULL;
     gchar* data = NULL;
     gboolean match;
     gchar **token = NULL;
 
-    if (input && input[0] == ':') {
-        input++;
-    }
-
     /* remove counts before command and save it to print it later in inputbox */
     vp.comps.count = g_ascii_strtoll(input, &command, 10);
+
+    if (g_str_has_prefix(command, prefix)) {
+        command = command + strlen(prefix);
+    }
 
     token = g_strsplit(command, " ", -1);
 
@@ -124,7 +130,7 @@ static GList* completion_init_completion(GList* target, GList* source)
             }
         }
         if (match) {
-            Completion* c = completion_get_new(data);
+            Completion* c = completion_get_new(data, prefix);
             gtk_box_pack_start(GTK_BOX(vp.gui.compbox), c->event, FALSE, FALSE, 0);
             target = g_list_append(target, c);
         }
@@ -246,7 +252,7 @@ static void completion_set_color(Completion* completion, const GdkColor* fg, con
 
 static void completion_set_entry_text(Completion* completion)
 {
-    GString* string = g_string_new(":");
+    GString* string = g_string_new(completion->prefix);
     const gchar* text;
 
     text = gtk_label_get_text(GTK_LABEL(completion->label));
@@ -262,14 +268,15 @@ static void completion_set_entry_text(Completion* completion)
     g_string_free(string, TRUE);
 }
 
-static Completion* completion_get_new(const gchar* label)
+static Completion* completion_get_new(const gchar* label, const gchar* prefix)
 {
     /* TODO make this configurable */
     const gint padding = 2;
     Completion* c = g_new0(Completion, 1);
 
-    c->label = gtk_label_new(label);
-    c->event = gtk_event_box_new();
+    c->label  = gtk_label_new(label);
+    c->event  = gtk_event_box_new();
+    c->prefix = g_strdup(prefix);
 
 #if _HAS_GTK3
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);

@@ -99,18 +99,16 @@ static Setting default_settings[] = {
     {"completion-bg-active", TYPE_CHAR, setting_completion_style, {.s = "#777777"}},
 };
 
-static GHashTable* settings = NULL;
-
 
 void setting_init(void)
 {
     Setting* s;
     guint i;
-    settings = g_hash_table_new(g_str_hash, g_str_equal);
+    vp.settings = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < LENGTH(default_settings); i++) {
         s = &default_settings[i];
-        g_hash_table_insert(settings, (gpointer)s->name, s);
+        g_hash_table_insert(vp.settings, (gpointer)s->name, s);
 
         /* set the default settings */
         s->func(s);
@@ -119,8 +117,8 @@ void setting_init(void)
 
 void setting_cleanup(void)
 {
-    if (settings) {
-        g_hash_table_destroy(settings);
+    if (vp.settings) {
+        g_hash_table_destroy(vp.settings);
     }
 }
 
@@ -128,7 +126,7 @@ gboolean setting_run(const gchar* name, const gchar* param)
 {
     Arg* a = NULL;
     gboolean result = FALSE;
-    Setting* s      = g_hash_table_lookup(settings, name);
+    Setting* s      = g_hash_table_lookup(vp.settings, name);
     if (!s) {
         vp_echo(VP_MSG_ERROR, "Config '%s' not found", name);
         return FALSE;

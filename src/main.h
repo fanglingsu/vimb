@@ -43,6 +43,8 @@
 #define TIMER_END
 #endif
 
+#define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vp.gui.inputbox)))
+
 /* enums */
 typedef enum _vp_mode {
     VP_MODE_NORMAL        = 1<<0,
@@ -196,6 +198,7 @@ typedef struct {
     Config        config;
     Completions   comps;
     Style         style;
+    GHashTable*   settings;
 #if 0
     Ssl           ssl;
     Communication comm;

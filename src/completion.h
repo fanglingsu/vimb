@@ -22,11 +22,7 @@
 
 #include "main.h"
 
-typedef enum {
-    COMPLETE_COMMAND
-} CompletionType;
-
 void completion_clean(void);
-gboolean completion_complete(const CompletionType type, gboolean back);
+gboolean completion_complete(gboolean back);
 
 #endif /* end of include guard: COMPLETION_H */
