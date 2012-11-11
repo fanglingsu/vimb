@@ -30,11 +30,11 @@ VpCore vp;
 
 /* callbacks */
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data);
-static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame* frame, gpointer user_data);
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
 static gboolean vp_frame_scrollbar_policy_changed_cb(void);
 static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
 static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
+static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data);
 #ifdef FEATURE_COOKIE
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data);
 static void vp_gotheaders_cb(SoupMessage* message, gpointer data);
@@ -60,22 +60,27 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
     const char* uri = webkit_web_view_get_uri(gui->webview);
 
     switch (webkit_web_view_get_load_status(gui->webview)) {
+        case WEBKIT_LOAD_PROVISIONAL:
+            break;
+
         case WEBKIT_LOAD_COMMITTED:
+            {
+                Arg a = {VP_MODE_NORMAL};
+                vp_set_mode(&a);
+            }
+            /* status bar is updated by vp_set_mode */
             vp_update_urlbar(uri);
+            break;
+
+        case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
             break;
 
         case WEBKIT_LOAD_FINISHED:
             break;
 
-        default:
+        case WEBKIT_LOAD_FAILED:
             break;
     }
-}
-
-static void vp_webview_load_commited_cb(WebKitWebView *webview, WebKitWebFrame *frame, gpointer user_data)
-{
-    Arg a = {VP_MODE_NORMAL};
-    vp_set_mode(&a);
 }
 
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data)
@@ -123,6 +128,11 @@ static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event)
 {
     return FALSE;
 }
+
+static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data)
+{       
+    vp_update_statusbar();
+} 
 
 #ifdef FEATURE_COOKIE
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data)
@@ -438,6 +448,7 @@ static void vp_init_gui(void)
     gtk_window_set_default_size(GTK_WINDOW(gui->window), 640, 480);
     gtk_window_set_title(GTK_WINDOW(gui->window), PROJECT);
     gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
+    gtk_window_set_icon(GTK_WINDOW(gui->window), NULL);
 
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
@@ -524,7 +535,6 @@ static void vp_setup_signals(void)
     g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(vp_frame_scrollbar_policy_changed_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
-    g_signal_connect(G_OBJECT(gui->webview), "load-committed", G_CALLBACK(vp_webview_load_commited_cb), NULL);
 
     g_object_connect(
         G_OBJECT(gui->inputbox),
@@ -532,6 +542,12 @@ static void vp_setup_signals(void)
         "signal::key-release-event", G_CALLBACK(vp_inputbox_keyrelease_cb), NULL,
         NULL
     );
+    /* webview adjustment */
+    g_object_connect(G_OBJECT(vp.gui.adjust_v),
+        "signal::value-changed",     G_CALLBACK(vp_scroll_cb),              NULL,
+        NULL
+    );
+
 #ifdef FEATURE_COOKIE
     g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
     g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
