@@ -248,6 +248,7 @@ void vp_clean_up(void)
     command_cleanup();
     setting_cleanup();
     keybind_cleanup();
+    completion_clean();
 }
 
 static gboolean vp_hide_message(void)
@@ -444,7 +445,6 @@ static void vp_init_gui(void)
     /* init soup session */
 #ifdef FEATURE_COOKIE
     vp.net.soup_session = webkit_get_default_session();
-    soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_get_type());
     soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_jar_get_type());
 #endif
 
