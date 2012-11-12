@@ -128,7 +128,7 @@ gboolean setting_run(const gchar* name, const gchar* param)
     gboolean result = FALSE;
     Setting* s      = g_hash_table_lookup(vp.settings, name);
     if (!s) {
-        vp_echo(VP_MSG_ERROR, "Config '%s' not found", name);
+        vp_echo(VP_MSG_ERROR, TRUE, "Config '%s' not found", name);
         return FALSE;
     }
 
@@ -140,7 +140,7 @@ gboolean setting_run(const gchar* name, const gchar* param)
      * it to the arg of the setting */
     a = util_char_to_arg(param, s->type);
     if (a == NULL) {
-        vp_echo(VP_MSG_ERROR, "No valid value");
+        vp_echo(VP_MSG_ERROR, TRUE, "No valid value");
         return FALSE;
     }
 

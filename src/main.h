@@ -214,7 +214,7 @@ extern VpCore vp;
 /* functions */
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
-void vp_echo(const MessageType type, const char* error, ...);
+void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
 gboolean vp_set_mode(const Arg* arg);
 void vp_set_widget_font(GtkWidget* widget, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font);
 gboolean vp_load_uri(const Arg* arg);

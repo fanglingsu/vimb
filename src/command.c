@@ -89,7 +89,7 @@ gboolean command_run(const gchar* name, const gchar* param)
     Arg a;
     c = g_hash_table_lookup(vp.behave.commands, name);
     if (!c) {
-        vp_echo(VP_MSG_ERROR, "Command '%s' not found", name);
+        vp_echo(VP_MSG_ERROR, TRUE, "Command '%s' not found", name);
         return FALSE;
     }
     a.i = c->arg.i;
@@ -239,7 +239,7 @@ gboolean command_set(const Arg* arg)
     if (!token[1]) {
         /* TODO display current value */
         g_strfreev(token);
-        vp_echo(VP_MSG_ERROR, "No param given");
+        vp_echo(VP_MSG_ERROR, TRUE, "No param given");
         return FALSE;
     }
     success = setting_run(token[0], token[1] ? token[1] : NULL);

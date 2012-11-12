@@ -265,19 +265,7 @@ void vp_clean_up(void)
 
 static gboolean vp_hide_message(void)
 {
-    /* do not clean in command mode */
-    if (CLEAN_MODE(vp.state.mode) == VP_MODE_COMMAND) {
-        return FALSE;
-    }
-
-    vp_set_widget_font(
-        vp.gui.inputbox,
-        &vp.style.input_fg[VP_MSG_NORMAL],
-        &vp.style.input_bg[VP_MSG_NORMAL],
-        vp.style.input_font[VP_MSG_NORMAL]
-    );
-
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
+    vp_echo(VP_MSG_NORMAL, FALSE, "");
 
     return FALSE;
 }
@@ -311,7 +299,7 @@ gboolean vp_set_mode(const Arg* arg)
 
     /* echo message if given */
     if (arg->s) {
-        vp_echo(VP_MSG_NORMAL, arg->s);
+        vp_echo(VP_MSG_NORMAL, FALSE, arg->s);
     }
 
     vp_update_statusbar();
@@ -353,7 +341,7 @@ void vp_update_statusbar(void)
     g_string_free(status, TRUE);
 }
 
-void vp_echo(const MessageType type, const char *error, ...)
+void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
 {
     va_list arg_list;
 
