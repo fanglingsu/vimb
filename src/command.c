@@ -27,37 +27,37 @@ extern const char *inputbox_fg[2];
 extern const char *inputbox_bg[2];
 
 static CommandInfo cmd_list[] = {
-    /* command           function               arg */
-    {"open",             command_open,          {VP_MODE_NORMAL, ""}},
-    {"input",            command_input,         {0, ":"}},
-    {"inputopen",        command_input,         {0, ":open "}},
-    {"inputopencurrent", command_input,         {VP_INPUT_CURRENT_URI, ":open "}},
-    {"quit",             command_close,         {0}},
-    {"source",           command_view_source,   {0}},
-    {"back",             command_navigate,      {VP_NAVIG_BACK}},
-    {"forward",          command_navigate,      {VP_NAVIG_FORWARD}},
-    {"reload",           command_navigate,      {VP_NAVIG_RELOAD}},
-    {"reload!",          command_navigate,      {VP_NAVIG_RELOAD_FORCE}},
-    {"stop",             command_navigate,      {VP_NAVIG_STOP_LOADING}},
-    {"jumpleft",         command_scroll,        {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_LEFT}},
-    {"jumpright",        command_scroll,        {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_RIGHT}},
-    {"jumptop",          command_scroll,        {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_TOP}},
-    {"jumpbottom",       command_scroll,        {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_DOWN}},
-    {"pageup",           command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_PAGE}},
-    {"pagedown",         command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_PAGE}},
-    {"halfpageup",       command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_HALFPAGE}},
-    {"halfpagedown",     command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_HALFPAGE}},
-    {"scrollleft",       command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_LEFT | VP_SCROLL_UNIT_LINE}},
-    {"scrollright",      command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_RIGHT | VP_SCROLL_UNIT_LINE}},
-    {"scrollup",         command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_LINE}},
-    {"scrolldown",       command_scroll,        {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_LINE}},
-    {"nmap",             command_map,           {VP_MODE_NORMAL}},
-    {"imap",             command_map,           {VP_MODE_INSERT}},
-    {"cmap",             command_map,           {VP_MODE_COMMAND}},
-    {"nunmap",           command_unmap,         {VP_MODE_NORMAL}},
-    {"iunmap",           command_unmap,         {VP_MODE_INSERT}},
-    {"cunmap",           command_unmap,         {VP_MODE_COMMAND}},
-    {"set",              command_set,           {0}},
+    /* command           function             arg                                                                           mode */
+    {"open",             command_open,        {VP_MODE_NORMAL, ""},                                                         VP_MODE_NORMAL},
+    {"input",            command_input,       {0, ":"},                                                                     VP_MODE_COMMAND},
+    {"inputopen",        command_input,       {0, ":open "},                                                                VP_MODE_COMMAND},
+    {"inputopencurrent", command_input,       {VP_INPUT_CURRENT_URI, ":open "},                                             VP_MODE_NORMAL},
+    {"quit",             command_close,       {0},                                                                          VP_MODE_NORMAL},
+    {"source",           command_view_source, {0},                                                                          VP_MODE_NORMAL},
+    {"back",             command_navigate,    {VP_NAVIG_BACK},                                                              VP_MODE_NORMAL},
+    {"forward",          command_navigate,    {VP_NAVIG_FORWARD},                                                           VP_MODE_NORMAL},
+    {"reload",           command_navigate,    {VP_NAVIG_RELOAD},                                                            VP_MODE_NORMAL},
+    {"reload!",          command_navigate,    {VP_NAVIG_RELOAD_FORCE},                                                      VP_MODE_NORMAL},
+    {"stop",             command_navigate,    {VP_NAVIG_STOP_LOADING},                                                      VP_MODE_NORMAL},
+    {"jumpleft",         command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_LEFT},                             VP_MODE_NORMAL},
+    {"jumpright",        command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_RIGHT},                            VP_MODE_NORMAL},
+    {"jumptop",          command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_TOP},                              VP_MODE_NORMAL},
+    {"jumpbottom",       command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_DOWN},                             VP_MODE_NORMAL},
+    {"pageup",           command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_PAGE},      VP_MODE_NORMAL},
+    {"pagedown",         command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_PAGE},     VP_MODE_NORMAL},
+    {"halfpageup",       command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_HALFPAGE},  VP_MODE_NORMAL},
+    {"halfpagedown",     command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_HALFPAGE}, VP_MODE_NORMAL},
+    {"scrollleft",       command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_LEFT | VP_SCROLL_UNIT_LINE},     VP_MODE_NORMAL},
+    {"scrollright",      command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_RIGHT | VP_SCROLL_UNIT_LINE},    VP_MODE_NORMAL},
+    {"scrollup",         command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_LINE},      VP_MODE_NORMAL},
+    {"scrolldown",       command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_LINE},     VP_MODE_NORMAL},
+    {"nmap",             command_map,         {VP_MODE_NORMAL},                                                             VP_MODE_NORMAL},
+    {"imap",             command_map,         {VP_MODE_INSERT},                                                             VP_MODE_NORMAL},
+    {"cmap",             command_map,         {VP_MODE_COMMAND},                                                            VP_MODE_NORMAL},
+    {"nunmap",           command_unmap,       {VP_MODE_NORMAL},                                                             VP_MODE_NORMAL},
+    {"iunmap",           command_unmap,       {VP_MODE_INSERT},                                                             VP_MODE_NORMAL},
+    {"cunmap",           command_unmap,       {VP_MODE_COMMAND},                                                            VP_MODE_NORMAL},
+    {"set",              command_set,         {0},                                                                          VP_MODE_NORMAL},
 };
 
 void command_init(void)
@@ -99,6 +99,7 @@ gboolean command_run(const gchar* name, const gchar* param)
 
     /* if command was run, remove the modkey and count */
     vp.state.modkey = vp.state.count = 0;
+    vp.state.mode = c->mode;
     vp_update_statusbar();
 
     return result;

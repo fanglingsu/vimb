@@ -113,12 +113,10 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
         completion_clean();
         success = vp_process_input((text + 1));
         if (!success) {
-            /* switch to normal mode after running command */
+            /* switch to normal mode after running command without success the
+             * mode after success is set by command_run to the value defined
+             * for the command */
             Arg a = {VP_MODE_NORMAL};
-            vp_set_mode(&a);
-        } else {
-            /* switch to normal mode after running command and clean input */
-            Arg a = {VP_MODE_NORMAL, ""};
             vp_set_mode(&a);
         }
     }

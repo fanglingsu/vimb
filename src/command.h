@@ -25,7 +25,8 @@ typedef gboolean (*Command)(const Arg* arg);
 typedef struct {
     const gchar* name;
     Command      function;
-    const Arg    arg;
+    const Arg    arg;       /* arguments to call the command with */
+    const Mode   mode;      /* mode to set after running the command */
 } CommandInfo;
 
 

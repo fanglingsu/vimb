@@ -45,6 +45,7 @@
 
 #define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vp.gui.inputbox)))
 #define CLEAN_MODE(mode) ((mode) & ~(VP_MODE_COMPLETE))
+#define CLEAR_INPUT() (vp_echo(VP_MSG_NORMAL, ""))
 
 /* enums */
 typedef enum _vp_mode {
