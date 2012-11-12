@@ -28,6 +28,7 @@ static GString* modkeys = NULL;
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval);
 static void keybind_str_to_keybind(gchar* str, Keybind* key);
 static guint keybind_str_to_modmask(const gchar* str);
+static guint keybind_str_to_value(const gchar* str);
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
 
 
@@ -124,6 +125,9 @@ static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
     return NULL;
 }
 
+/**
+ * Configures the given keybind by also given string.
+ */
 static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
 {
     gchar** string = NULL;
@@ -134,23 +138,43 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
     }
     g_strstrip(str);
 
-    /* [modkey[<modmask>]]keyval */
-    string = g_strsplit_set(str, "<>", 3);
-    len = g_strv_length(string);
-
-    if (len == 1) { /* no modmask set */
-        if (strlen(string[0]) == 2) {
-            keybind->modkey = string[0][0];
-            keybind->keyval = string[0][1];
-        } else {
-            keybind->keyval = string[0][0];
+    /* [modkey]keyval
+     * - modkey is a single char
+     * - keval can be a single char, <tab> , <ctrl-tab>, <shift-a> */
+    keybind->modkey = 0;
+    if (strlen(str) == 1) {
+        /* only a single simple key set like "q" */
+        keybind->keyval = str[0];
+    } else if (strlen(str) == 2) {
+        /* modkey with simple key given like "gf" */
+        keybind->modkey = str[0];
+        keybind->keyval = str[1];
+    } else {
+        /* special handling for shift tab */
+        /* TODO find a better solution for such cases */
+        if (g_ascii_strcasecmp(str, "<shift-tab>") == 0) {
+            keybind->keyval = GDK_ISO_Left_Tab;
+            return;
         }
-    } else { /* contains modmask */
-        keybind->modkey  = (string[0][0] != '\0') ? string[0][0] : 0;
-        keybind->modmask = keybind_str_to_modmask(string[1]);
-        keybind->keyval  = string[2][0];
+        /* keybind has keys like "<tab>" or <ctrl-a> */
+        if (str[0] == '<') {
+            /* no modkey set */
+            string = g_strsplit_set(str, "<->", 4);
+        } else {
+            keybind->modkey = str[0];
+            string = g_strsplit_set(str + 1, "<->", 4);
+        }
+        len = g_strv_length(string);
+        if (len == 4) {
+            /* key with modmask like <ctrl-tab> */
+            keybind->modmask = keybind_str_to_modmask(string[1]);
+            keybind->keyval = keybind_str_to_value(string[2]);
+        } else if (len == 3) {
+            /* key without modmask like <tab> */
+            keybind->keyval = keybind_str_to_value(string[1]);
+        }
+        g_strfreev(string);
     }
-    g_strfreev(string);
 }
 
 static guint keybind_str_to_modmask(const gchar* str)
@@ -163,6 +187,15 @@ static guint keybind_str_to_modmask(const gchar* str)
     }
 
     return 0;
+}
+
+static guint keybind_str_to_value(const gchar* str)
+{
+    if (g_ascii_strcasecmp(str, "tab") == 0) {
+        return GDK_Tab;
+    }
+
+    return str[0];
 }
 
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
@@ -207,6 +240,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
         }
     }
 
+#if 0
     /* TODO should we use a command for that too? */
     if (CLEAN_MODE(vp.state.mode) == VP_MODE_COMMAND
         && (event->keyval == GDK_Tab || event->keyval == GDK_ISO_Left_Tab)
@@ -214,6 +248,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
         completion_complete(event->keyval == GDK_ISO_Left_Tab);
         return TRUE;
     }
+#endif
 
     /* check for keybinding */
     GSList* link = keybind_find(CLEAN_MODE(vp.state.mode), vp.state.modkey,
