@@ -21,6 +21,7 @@
 #include "command.h"
 #include "keybind.h"
 #include "setting.h"
+#include "completion.h"
 
 extern const char *inputbox_font[2];
 extern const char *inputbox_fg[2];
@@ -58,6 +59,8 @@ static CommandInfo cmd_list[] = {
     {"iunmap",           command_unmap,       {VP_MODE_INSERT},                                                             VP_MODE_NORMAL},
     {"cunmap",           command_unmap,       {VP_MODE_COMMAND},                                                            VP_MODE_NORMAL},
     {"set",              command_set,         {0},                                                                          VP_MODE_NORMAL},
+    {"complete",         command_complete,    {0},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
+    {"complete-back",    command_complete,    {1},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
 };
 
 void command_init(void)
@@ -246,4 +249,11 @@ gboolean command_set(const Arg* arg)
     g_strfreev(token);
 
     return success;
+}
+
+gboolean command_complete(const Arg* arg)
+{
+    completion_complete(arg->i ? TRUE : FALSE);
+
+    return TRUE;
 }

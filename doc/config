@@ -21,3 +21,5 @@ nmap h scrollleft
 nmap l scrollright
 nmap k scrollup
 nmap j scrolldown
+cmap <tab> complete
+cmap <shift-tab> complete-back
