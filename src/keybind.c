@@ -208,13 +208,15 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     }
 
     /* TODO should we use a command for that too? */
-    if (event->keyval == GDK_Tab || event->keyval == GDK_ISO_Left_Tab) {
+    if (CLEAN_MODE(vp.state.mode) == VP_MODE_COMMAND
+        && (event->keyval == GDK_Tab || event->keyval == GDK_ISO_Left_Tab)
+    ) {
         completion_complete(event->keyval == GDK_ISO_Left_Tab);
         return TRUE;
     }
 
     /* check for keybinding */
-    GSList* link = keybind_find(vp.state.mode, vp.state.modkey,
+    GSList* link = keybind_find(CLEAN_MODE(vp.state.mode), vp.state.modkey,
             (CLEAN(event->state) & ~irrelevant), keyval);
 
     if (link) {

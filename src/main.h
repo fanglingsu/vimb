@@ -44,6 +44,7 @@
 #endif
 
 #define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vp.gui.inputbox)))
+#define CLEAN_MODE(mode) ((mode) & ~(VP_MODE_COMPLETE))
 
 /* enums */
 typedef enum _vp_mode {
@@ -51,8 +52,8 @@ typedef enum _vp_mode {
     VP_MODE_COMMAND       = 1<<1,
     VP_MODE_PATH_THROUGH  = 1<<2,
     VP_MODE_INSERT        = 1<<3,
-    VP_MODE_COMPLETE      = 1<<4,
-    VP_MODE_SEARCH        = 1<<5,
+    VP_MODE_SEARCH        = 1<<4,
+    VP_MODE_COMPLETE      = 1<<5,
 } Mode;
 
 enum {

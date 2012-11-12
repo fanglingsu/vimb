@@ -268,8 +268,7 @@ void vp_clean_up(void)
 static gboolean vp_hide_message(void)
 {
     /* do not clean in command mode */
-    /* TODO add a CLEAN_MODE macro to get only the main modes */
-    if (vp.state.mode & VP_MODE_COMMAND) {
+    if (CLEAN_MODE(vp.state.mode) == VP_MODE_COMMAND) {
         return FALSE;
     }
 
@@ -294,7 +293,7 @@ gboolean vp_set_mode(const Arg* arg)
     vp.state.mode = arg->i;
     vp.state.modkey = vp.state.count  = 0;
 
-    switch (arg->i) {
+    switch (CLEAN_MODE(arg->i)) {
         case VP_MODE_NORMAL:
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
             break;
