@@ -1,6 +1,6 @@
 # default config
 nmap gf source
-nmap : input
+nmap <shift-:> input
 nmap o inputopen
 nmap O inputopencurrent
 nmap d quit

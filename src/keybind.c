@@ -113,7 +113,6 @@ static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
     GSList* link;
     for (link = keys; link != NULL; link = link->next) {
         Keybind* keybind = (Keybind*)link->data;
-
         if (keybind->keyval == keyval
                 && keybind->modmask == modmask
                 && keybind->modkey == modkey
@@ -150,12 +149,6 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
         keybind->modkey = str[0];
         keybind->keyval = str[1];
     } else {
-        /* special handling for shift tab */
-        /* TODO find a better solution for such cases */
-        if (g_ascii_strcasecmp(str, "<shift-tab>") == 0) {
-            keybind->keyval = GDK_ISO_Left_Tab;
-            return;
-        }
         /* keybind has keys like "<tab>" or <ctrl-a> */
         if (str[0] == '<') {
             /* no modkey set */
@@ -174,6 +167,12 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
             keybind->keyval = keybind_str_to_value(string[1]);
         }
         g_strfreev(string);
+    }
+
+    /* post process the keybinding */
+    /* special handling for shift tab */
+    if (keybind->keyval == GDK_Tab && keybind->modmask == GDK_SHIFT_MASK) {
+        keybind->keyval = GDK_ISO_Left_Tab;
     }
 }
 
@@ -200,59 +199,40 @@ static guint keybind_str_to_value(const gchar* str)
 
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
 {
-    GdkModifierType irrelevant;
-    guint keyval;
-    static GdkKeymap *keymap;
-
-    keymap = gdk_keymap_get_default();
-
-    /* Get a mask of modifiers that shouldn't be considered for this event.
-     * E.g.: It shouldn't matter whether ';' is shifted or not. */
-    gdk_keymap_translate_keyboard_state(keymap, event->hardware_keycode,
-            event->state, event->group, &keyval, NULL, NULL, &irrelevant);
+    static GdkModifierType modifiers;
+    modifiers    = gtk_accelerator_get_default_mod_mask();
+    guint keyval = event->keyval;
+    guint state  = (event->state & modifiers);
 
     /* check for escape or modkeys or counts */
-    if ((CLEAN(event->state) & ~irrelevant) == 0) {
-        if (IS_ESCAPE(event)) {
-            completion_clean();
-            /* switch to normal mode and clear the input box */
-            Arg a = {VP_MODE_NORMAL, ""};
-            vp_set_mode(&a);
+    if (keyval == GDK_Escape && state == 0) {
+        completion_clean();
+        /* switch to normal mode and clear the input box */
+        Arg a = {VP_MODE_NORMAL, ""};
+        vp_set_mode(&a);
+
+        return TRUE;
+    }
+    /* allow mode keys and counts only in normal mode */
+    if (VP_MODE_NORMAL == vp.state.mode) {
+        if (vp.state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
+                || (keyval == GDK_0 && vp.state.count))) {
+            /* append the new entered count to previous one */
+            vp.state.count = (vp.state.count ? vp.state.count * 10 : 0) + (keyval - GDK_0);
+            vp_update_statusbar();
 
             return TRUE;
         }
-        /* allow mode keys and counts only in normal mode */
-        if (VP_MODE_NORMAL == vp.state.mode) {
-            if (vp.state.modkey == 0 && ((event->keyval >= GDK_1 && event->keyval <= GDK_9)
-                    || (event->keyval == GDK_0 && vp.state.count))) {
-                /* append the new entered count to previous one */
-                vp.state.count = (vp.state.count ? vp.state.count * 10 : 0) + (event->keyval - GDK_0);
-                vp_update_statusbar();
+        if (strchr(modkeys->str, keyval) && vp.state.modkey != keyval) {
+            vp.state.modkey = (gchar)keyval;
+            vp_update_statusbar();
 
-                return TRUE;
-            }
-            if (strchr(modkeys->str, event->keyval) && vp.state.modkey != event->keyval) {
-                vp.state.modkey = (gchar)event->keyval;
-                vp_update_statusbar();
-
-                return TRUE;
-            }
+            return TRUE;
         }
     }
 
-#if 0
-    /* TODO should we use a command for that too? */
-    if (CLEAN_MODE(vp.state.mode) == VP_MODE_COMMAND
-        && (event->keyval == GDK_Tab || event->keyval == GDK_ISO_Left_Tab)
-    ) {
-        completion_complete(event->keyval == GDK_ISO_Left_Tab);
-        return TRUE;
-    }
-#endif
-
     /* check for keybinding */
-    GSList* link = keybind_find(CLEAN_MODE(vp.state.mode), vp.state.modkey,
-            (CLEAN(event->state) & ~irrelevant), keyval);
+    GSList* link = keybind_find(CLEAN_MODE(vp.state.mode), vp.state.modkey, state, keyval);
 
     if (link) {
         Keybind* keybind = (Keybind*)link->data;

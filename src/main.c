@@ -31,7 +31,6 @@ VpCore vp;
 /* callbacks */
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data);
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
-static gboolean vp_frame_scrollbar_policy_changed_cb(void);
 static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
 static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
 static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data);
@@ -88,11 +87,6 @@ static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer 
     command_close(0);
 }
 
-static gboolean vp_frame_scrollbar_policy_changed_cb(void)
-{
-    return TRUE;
-}
-
 static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
 {
     gboolean success = FALSE;
@@ -128,9 +122,9 @@ static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event)
 }
 
 static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data)
-{       
+{
     vp_update_statusbar();
-} 
+}
 
 #ifdef FEATURE_COOKIE
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data)
@@ -427,11 +421,6 @@ static void vp_init_gui(void)
 {
     Gui* gui = &vp.gui;
 
-    gui->sb_h = GTK_SCROLLBAR(gtk_hscrollbar_new(NULL));
-    gui->sb_v = GTK_SCROLLBAR(gtk_vscrollbar_new(NULL));
-    gui->adjust_h = gtk_range_get_adjustment(GTK_RANGE(gui->sb_h));
-    gui->adjust_v = gtk_range_get_adjustment(GTK_RANGE(gui->sb_v));
-
     GdkGeometry hints = {10, 10};
     gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT);
@@ -439,6 +428,7 @@ static void vp_init_gui(void)
     gtk_window_set_title(GTK_WINDOW(gui->window), PROJECT);
     gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
     gtk_window_set_icon(GTK_WINDOW(gui->window), NULL);
+    gtk_widget_set_name(GTK_WIDGET(gui->window), PROJECT);
 
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
@@ -450,21 +440,22 @@ static void vp_init_gui(void)
 #endif
 
     /* Create a scrollable area */
-    gui->viewport = gtk_scrolled_window_new(gui->adjust_h, gui->adjust_v);
-    gtk_scrolled_window_set_policy(
-        GTK_SCROLLED_WINDOW(gui->viewport),
-        GTK_POLICY_NEVER, GTK_POLICY_NEVER
-    );
-
-    gui->box = GTK_BOX(gtk_vbox_new(FALSE, 0));
+    gui->viewport = gtk_scrolled_window_new(NULL, NULL);
+    gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->viewport));
+    gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->viewport));
 
     /* Prepare the imputbox */
     gui->inputbox = gtk_entry_new();
     gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
     g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", FALSE, NULL);
 
-    /* Prepare the statusbar */
+#ifdef HAS_GTK3
+    gui->box             = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
+    gui->statusbar.box   = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+#else
+    gui->box             = GTK_BOX(gtk_vbox_new(FALSE, 0));
     gui->statusbar.box   = GTK_BOX(gtk_hbox_new(FALSE, 0));
+#endif
     gui->statusbar.left  = gtk_label_new(NULL);
     gui->statusbar.right = gtk_label_new(NULL);
 
@@ -508,22 +499,20 @@ static void vp_init_files(void)
     g_free(path);
 }
 
-void vp_set_widget_font(GtkWidget* widget, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font)
+void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
 {
-    gtk_widget_modify_font(widget, font);
-    gtk_widget_modify_text(widget, GTK_STATE_NORMAL, fg);
-    gtk_widget_modify_base(widget, GTK_STATE_NORMAL, bg);
+    VP_WIDGET_OVERRIDE_FONT(widget, font);
+    VP_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
+    VP_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
 }
 
 static void vp_setup_signals(void)
 {
     Gui* gui              = &vp.gui;
-    WebKitWebFrame *frame = webkit_web_view_get_main_frame(gui->webview);
 
     /* Set up callbacks so that if either the main window or the browser
      * instance is closed, the program will exit */
     g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
-    g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(vp_frame_scrollbar_policy_changed_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
 
     g_object_connect(

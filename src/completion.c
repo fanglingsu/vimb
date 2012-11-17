@@ -28,7 +28,7 @@ typedef struct {
 static GList* completion_init_completion(GList* target, GList* source, const gchar* prefix);
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
-static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font);
+static void completion_set_color(Completion* completion, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
 static void completion_set_entry_text(Completion* completion);
 static Completion* completion_get_new(const gchar* label, const gchar* prefix);
 
@@ -48,7 +48,7 @@ gboolean completion_complete(gboolean back)
     }
 
     /* create new completion */
-#if _HAS_GTK3
+#ifdef HAS_GTK3
     vp.gui.compbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_box_set_homogeneous(GTK_BOX(vp.gui.compbox), TRUE);
 #else
@@ -243,11 +243,11 @@ static void completion_show(gboolean back)
     }
 }
 
-static void completion_set_color(Completion* completion, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font)
+static void completion_set_color(Completion* completion, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
 {
-    gtk_widget_modify_fg(completion->label, GTK_STATE_NORMAL, fg);
-    gtk_widget_modify_bg(completion->event, GTK_STATE_NORMAL, bg);
-    gtk_widget_modify_font(completion->label, font);
+    VP_WIDGET_OVERRIDE_COLOR(completion->label, GTK_STATE_NORMAL, fg);
+    VP_WIDGET_OVERRIDE_BACKGROUND(completion->event, GTK_STATE_NORMAL, bg);
+    VP_WIDGET_OVERRIDE_FONT(completion->label, font);
 }
 
 static void completion_set_entry_text(Completion* completion)
@@ -278,7 +278,7 @@ static Completion* completion_get_new(const gchar* label, const gchar* prefix)
     c->event  = gtk_event_box_new();
     c->prefix = g_strdup(prefix);
 
-#if _HAS_GTK3
+#ifdef HAS_GTK3
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_box_set_homogeneous(GTK_BOX(hbox), TRUE);
 #else

@@ -197,24 +197,24 @@ static gboolean setting_scrollstep(const Setting* s)
 
 static gboolean setting_status_color_bg(const Setting* s)
 {
-    GdkColor color;
+    VpColor color;
 
-    gdk_color_parse(s->arg.s, &color);
-    gtk_widget_modify_bg(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_bg(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_bg(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
+    VP_COLOR_PARSE(&color, s->arg.s);
+    VP_WIDGET_OVERRIDE_BACKGROUND(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
+    VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
+    VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
 
     return TRUE;
 }
 
 static gboolean setting_status_color_fg(const Setting* s)
 {
-    GdkColor color;
+    VpColor color;
 
-    gdk_color_parse(s->arg.s, &color);
-    gtk_widget_modify_fg(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_fg(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
-    gtk_widget_modify_fg(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
+    VP_COLOR_PARSE(&color, s->arg.s);
+    VP_WIDGET_OVERRIDE_COLOR(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
+    VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
+    VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
 
     return TRUE;
 }
@@ -224,9 +224,9 @@ static gboolean setting_status_font(const Setting* s)
     PangoFontDescription* font;
     font = pango_font_description_from_string(s->arg.s);
 
-    gtk_widget_modify_font(vp.gui.eventbox, font);
-    gtk_widget_modify_font(GTK_WIDGET(vp.gui.statusbar.left), font);
-    gtk_widget_modify_font(GTK_WIDGET(vp.gui.statusbar.right), font);
+    VP_WIDGET_OVERRIDE_FONT(vp.gui.eventbox, font);
+    VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.left), font);
+    VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.right), font);
 
     pango_font_description_free(font);
 
@@ -239,9 +239,9 @@ static gboolean setting_input_style(const Setting* s)
     MessageType type = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
 
     if (g_str_has_prefix(s->name, "input-bg")) {
-        gdk_color_parse(s->arg.s, &style->input_bg[type]);
+        VP_COLOR_PARSE(&style->input_bg[type], s->arg.s);
     } else if (g_str_has_prefix(s->name, "input-fg")) {
-        gdk_color_parse(s->name, &style->input_fg[type]);
+        VP_COLOR_PARSE(&style->input_fg[type], s->arg.s);
     } else if (g_str_has_prefix(s->arg.s, "input-font")) {
         if (style->input_font[type]) {
             pango_font_description_free(style->input_font[type]);
@@ -258,9 +258,9 @@ static gboolean setting_completion_style(const Setting* s)
     CompletionStyle type = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
 
     if (g_str_has_prefix(s->name, "completion-bg")) {
-        gdk_color_parse(s->arg.s, &style->comp_bg[type]);
+        VP_COLOR_PARSE(&style->comp_bg[type], s->arg.s);
     } else if (g_str_has_prefix(s->name, "completion-fg")) {
-        gdk_color_parse(s->name, &style->comp_fg[type]);
+        VP_COLOR_PARSE(&style->comp_fg[type], s->arg.s);
     } else if (g_str_has_prefix(s->arg.s, "completion-font")) {
         if (style->comp_font[type]) {
             pango_font_description_free(style->comp_font[type]);

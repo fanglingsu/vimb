@@ -47,6 +47,24 @@
 #define CLEAN_MODE(mode) ((mode) & ~(VP_MODE_COMPLETE))
 #define CLEAR_INPUT() (vp_echo(VP_MSG_NORMAL, ""))
 
+#ifdef HAS_GTK3
+#define VpColor GdkRGBA
+#define VP_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
+#define VP_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_override_background_color
+#define VP_WIDGET_OVERRIDE_BASE         gtk_widget_override_background_color
+#define VP_WIDGET_OVERRIDE_COLOR        gtk_widget_override_color
+#define VP_WIDGET_OVERRIDE_TEXT         gtk_widget_override_color
+#define VP_WIDGET_OVERRIDE_FONT         gtk_widget_override_font
+#else
+#define VpColor GdkColor
+#define VP_COLOR_PARSE(color, string)   (gdk_color_parse(string, color))
+#define VP_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_modify_bg
+#define VP_WIDGET_OVERRIDE_BASE         gtk_widget_modify_base
+#define VP_WIDGET_OVERRIDE_COLOR        gtk_widget_modify_fg
+#define VP_WIDGET_OVERRIDE_TEXT         gtk_widget_modify_text
+#define VP_WIDGET_OVERRIDE_FONT         gtk_widget_modify_font
+#endif
+
 /* enums */
 typedef enum _vp_mode {
     VP_MODE_NORMAL        = 1<<0,
@@ -180,11 +198,11 @@ typedef struct {
 } Completions;
 
 typedef struct {
-    GdkColor              input_fg[VP_MSG_LAST];
-    GdkColor              input_bg[VP_MSG_LAST];
+    VpColor              input_fg[VP_MSG_LAST];
+    VpColor              input_bg[VP_MSG_LAST];
     PangoFontDescription* input_font[VP_MSG_LAST];
-    GdkColor              comp_fg[VP_COMP_LAST];
-    GdkColor              comp_bg[VP_COMP_LAST];
+    VpColor              comp_fg[VP_COMP_LAST];
+    VpColor              comp_bg[VP_COMP_LAST];
     PangoFontDescription* comp_font[VP_COMP_LAST];
 } Style;
 
@@ -216,7 +234,7 @@ void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
 gboolean vp_set_mode(const Arg* arg);
-void vp_set_widget_font(GtkWidget* widget, const GdkColor* fg, const GdkColor* bg, PangoFontDescription* font);
+void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
 gboolean vp_load_uri(const Arg* arg);
 void vp_clean_up(void);
 
