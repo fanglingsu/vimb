@@ -92,9 +92,9 @@ static Setting default_settings[] = {
     {"input-font-normal", TYPE_CHAR, setting_input_style, {.s = "monospace normal 8"}},
     {"input-font-error", TYPE_CHAR, setting_input_style, {.s = "monospace bold 8"}},
     {"completion-font-normal", TYPE_CHAR, setting_completion_style, {.s = "monospace normal 8"}},
-    {"completion-font-active", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 10"}},
+    {"completion-font-active", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 8"}},
     {"completion-fg-normal", TYPE_CHAR, setting_completion_style, {.s = "#f6f3e8"}},
-    {"completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#0f0"}},
+    {"completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#fff"}},
     {"completion-bg-normal", TYPE_CHAR, setting_completion_style, {.s = "#656565"}},
     {"completion-bg-active", TYPE_CHAR, setting_completion_style, {.s = "#777777"}},
 };
@@ -242,7 +242,7 @@ static gboolean setting_input_style(const Setting* s)
         VP_COLOR_PARSE(&style->input_bg[type], s->arg.s);
     } else if (g_str_has_prefix(s->name, "input-fg")) {
         VP_COLOR_PARSE(&style->input_fg[type], s->arg.s);
-    } else if (g_str_has_prefix(s->arg.s, "input-font")) {
+    } else if (g_str_has_prefix(s->name, "input-font")) {
         if (style->input_font[type]) {
             pango_font_description_free(style->input_font[type]);
         }
@@ -261,7 +261,7 @@ static gboolean setting_completion_style(const Setting* s)
         VP_COLOR_PARSE(&style->comp_bg[type], s->arg.s);
     } else if (g_str_has_prefix(s->name, "completion-fg")) {
         VP_COLOR_PARSE(&style->comp_fg[type], s->arg.s);
-    } else if (g_str_has_prefix(s->arg.s, "completion-font")) {
+    } else if (g_str_has_prefix(s->name, "completion-font")) {
         if (style->comp_font[type]) {
             pango_font_description_free(style->comp_font[type]);
         }

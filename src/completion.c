@@ -132,7 +132,7 @@ static GList* completion_init_completion(GList* target, GList* source, const gch
         }
         if (match) {
             Completion* c = completion_get_new(data, prefix);
-            gtk_box_pack_start(GTK_BOX(vp.gui.compbox), c->event, FALSE, FALSE, 0);
+            gtk_box_pack_start(GTK_BOX(vp.gui.compbox), c->event, TRUE, TRUE, 0);
             target = g_list_append(target, c);
         }
     }
