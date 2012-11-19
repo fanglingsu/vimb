@@ -105,12 +105,13 @@ static GList* completion_init_completion(GList* target, GList* source, const gch
     gboolean match;
     gchar **token = NULL;
 
+    /* skip prefix for completion */
+    if (g_str_has_prefix(input, prefix)) {
+        input = input + strlen(prefix);
+    }
+
     /* remove counts before command and save it to print it later in inputbox */
     vp.comps.count = g_ascii_strtoll(input, &command, 10);
-
-    if (g_str_has_prefix(command, prefix)) {
-        command = command + strlen(prefix);
-    }
 
     token = g_strsplit(command, " ", -1);
 
