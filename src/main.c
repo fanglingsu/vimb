@@ -24,6 +24,7 @@
 #include "setting.h"
 #include "config.h"
 #include "completion.h"
+#include "dom.h"
 
 /* variables */
 VpCore vp;
@@ -47,6 +48,7 @@ static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
 static void vp_setup_signals(void);
+static gboolean vp_notify_event_cb(GtkWidget* widget, GdkEvent* event, gpointer data);
 #ifdef FEATURE_COOKIE
 static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
@@ -75,6 +77,7 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
             break;
 
         case WEBKIT_LOAD_FINISHED:
+            dom_check_auto_insert();
             break;
 
         case WEBKIT_LOAD_FAILED:
@@ -284,6 +287,7 @@ gboolean vp_set_mode(const Arg* arg)
 
         case VP_MODE_INSERT:
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            vp_echo(VP_MSG_NORMAL, FALSE, "-- INPUT --");
             break;
 
         case VP_MODE_PATH_THROUGH:
@@ -516,6 +520,11 @@ static void vp_setup_signals(void)
      * instance is closed, the program will exit */
     g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
+    g_object_connect(
+        G_OBJECT(gui->webview),
+        "signal::event", G_CALLBACK(vp_notify_event_cb), NULL,
+        NULL
+    );
 
     g_object_connect(
         G_OBJECT(gui->inputbox),
@@ -534,6 +543,24 @@ static void vp_setup_signals(void)
     g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
 #endif
+}
+
+static gboolean vp_notify_event_cb(GtkWidget* widget, GdkEvent* event, gpointer data)
+{
+    WebKitHitTestResult *result = NULL;
+    WebKitHitTestResultContext context;
+    if (CLEAN_MODE(vp.state.mode) == VP_MODE_NORMAL
+        && event->type == GDK_BUTTON_RELEASE
+    ) {
+        result = webkit_web_view_get_hit_test_result(vp.gui.webview, (GdkEventButton*)event);
+        g_object_get(result, "context", &context, NULL);
+        if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+            Arg a = {VP_MODE_INSERT};
+            vp_set_mode(&a);
+        }
+    }
+
+    return FALSE;
 }
 
 int main(int argc, char* argv[])
