@@ -357,7 +357,9 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
         vp.style.input_font[type]
     );
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
-    g_timeout_add_seconds(2, (GSourceFunc)vp_hide_message, NULL);
+    if (hide) {
+        g_timeout_add_seconds(2, (GSourceFunc)vp_hide_message, NULL);
+    }
 }
 
 static void vp_print_version(void)
