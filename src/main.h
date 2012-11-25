@@ -45,6 +45,7 @@
 
 #define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vp.gui.inputbox)))
 #define CLEAN_MODE(mode) ((mode) & ~(VP_MODE_COMPLETE))
+#define GET_CLEAN_MODE() (CLEAN_MODE(vp.state.mode))
 #define CLEAR_INPUT() (vp_echo(VP_MSG_NORMAL, ""))
 
 #ifdef HAS_GTK3

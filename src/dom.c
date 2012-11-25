@@ -55,7 +55,7 @@ static gboolean dom_editable_focus_cb(WebKitDOMElement* element, WebKitDOMEvent*
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true
     );
-    if (CLEAN_MODE(vp.state.mode) != VP_MODE_INSERT) {
+    if (GET_CLEAN_MODE() != VP_MODE_INSERT) {
         WebKitDOMEventTarget* target = webkit_dom_event_get_target(event);
         dom_auto_insert((void*)target);
     }

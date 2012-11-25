@@ -547,7 +547,7 @@ static gboolean vp_notify_event_cb(GtkWidget* widget, GdkEvent* event, gpointer 
 {
     WebKitHitTestResult *result = NULL;
     WebKitHitTestResultContext context;
-    if (CLEAN_MODE(vp.state.mode) == VP_MODE_NORMAL
+    if (GET_CLEAN_MODE() == VP_MODE_NORMAL
         && event->type == GDK_BUTTON_RELEASE
     ) {
         result = webkit_web_view_get_hit_test_result(vp.gui.webview, (GdkEventButton*)event);

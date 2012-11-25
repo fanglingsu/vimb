@@ -230,7 +230,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     }
 
     /* check for keybinding */
-    GSList* link = keybind_find(CLEAN_MODE(vp.state.mode), vp.state.modkey, state, keyval);
+    GSList* link = keybind_find(GET_CLEAN_MODE(), vp.state.modkey, state, keyval);
 
     if (link) {
         Keybind* keybind = (Keybind*)link->data;
