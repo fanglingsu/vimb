@@ -206,10 +206,8 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
 
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
-        completion_clean();
         /* switch to normal mode and clear the input box */
-        Arg a = {VP_MODE_NORMAL, ""};
-        vp_set_mode(&a);
+        vp_set_mode(VP_MODE_NORMAL, TRUE);
 
         return TRUE;
     }

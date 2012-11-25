@@ -65,11 +65,8 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
             break;
 
         case WEBKIT_LOAD_COMMITTED:
-            {
-                Arg a = {VP_MODE_NORMAL};
-                vp_set_mode(&a);
-            }
             /* status bar is updated by vp_set_mode */
+            vp_set_mode(VP_MODE_NORMAL , FALSE);
             vp_update_urlbar(uri);
             break;
 
@@ -113,8 +110,7 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
             /* switch to normal mode after running command without success the
              * mode after success is set by command_run to the value defined
              * for the command */
-            Arg a = {VP_MODE_NORMAL};
-            vp_set_mode(&a);
+            vp_set_mode(VP_MODE_NORMAL , FALSE);
         }
     }
 }
@@ -212,8 +208,7 @@ gboolean vp_load_uri(const Arg* arg)
     g_free(uri);
 
     /* change state to normal mode */
-    Arg a = {VP_MODE_NORMAL};
-    vp_set_mode(&a);
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
@@ -271,12 +266,15 @@ static gboolean vp_hide_message(void)
  * Set the base modes. All other mode flags like completion can be set directly
  * to vp.state.mode.
  */
-gboolean vp_set_mode(const Arg* arg)
+gboolean vp_set_mode(Mode mode, gboolean clean)
 {
-    vp.state.mode = arg->i;
+    if (vp.state.mode & VP_MODE_COMPLETE) {
+        completion_clean();
+    }
+    vp.state.mode = mode;
     vp.state.modkey = vp.state.count  = 0;
 
-    switch (CLEAN_MODE(arg->i)) {
+    switch (CLEAN_MODE(mode)) {
         case VP_MODE_NORMAL:
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
             break;
@@ -296,8 +294,8 @@ gboolean vp_set_mode(const Arg* arg)
     }
 
     /* echo message if given */
-    if (arg->s) {
-        vp_echo(VP_MSG_NORMAL, FALSE, arg->s);
+    if (clean) {
+        vp_echo(VP_MSG_NORMAL, FALSE, "");
     }
 
     vp_update_statusbar();
@@ -555,8 +553,7 @@ static gboolean vp_notify_event_cb(GtkWidget* widget, GdkEvent* event, gpointer 
         result = webkit_web_view_get_hit_test_result(vp.gui.webview, (GdkEventButton*)event);
         g_object_get(result, "context", &context, NULL);
         if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-            Arg a = {VP_MODE_INSERT};
-            vp_set_mode(&a);
+            vp_set_mode(VP_MODE_INSERT, FALSE);
         }
     }
 

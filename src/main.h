@@ -233,7 +233,7 @@ extern VpCore vp;
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
-gboolean vp_set_mode(const Arg* arg);
+gboolean vp_set_mode(Mode mode, gboolean clean);
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
 gboolean vp_load_uri(const Arg* arg);
 void vp_clean_up(void);

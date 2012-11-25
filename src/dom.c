@@ -44,8 +44,7 @@ void dom_check_auto_insert(void)
 static gboolean dom_auto_insert(WebKitDOMElement* element)
 {
     if (dom_is_editable(element)) {
-        Arg a = {VP_MODE_INSERT};
-        vp_set_mode(&a);
+        vp_set_mode(VP_MODE_INSERT, FALSE);
         return TRUE;
     }
     return FALSE;

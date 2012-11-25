@@ -140,8 +140,7 @@ gboolean command_input(const Arg* arg)
 
     gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
 
-    Arg a = {VP_MODE_COMMAND};
-    return vp_set_mode(&a);
+    return vp_set_mode(VP_MODE_COMMAND, FALSE);
 }
 
 gboolean command_close(const Arg* arg)
