@@ -248,6 +248,8 @@ static gboolean setting_input_style(const Setting* s)
         }
         style->input_font[type] = pango_font_description_from_string(s->arg.s);
     }
+    /* echo already visible input text to apply the new style to input box */
+    vp_echo(VP_MSG_NORMAL, FALSE, GET_TEXT());
 
     return TRUE;
 }
