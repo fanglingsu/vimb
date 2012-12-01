@@ -41,6 +41,22 @@ void dom_check_auto_insert(void)
     }
 }
 
+void dom_element_set_style(WebKitDOMElement* element, const gchar* style)
+{
+    WebKitDOMCSSStyleDeclaration* css = webkit_dom_element_get_style(element);
+    if (css) {
+        webkit_dom_css_style_declaration_set_css_text(css, style, NULL);
+    }
+}
+
+void dom_element_style_set_property(WebKitDOMElement* element, const gchar* property, const gchar* style)
+{
+    WebKitDOMCSSStyleDeclaration* css = webkit_dom_element_get_style(element);
+    if (css) {
+        webkit_dom_css_style_declaration_set_property(css, property, style, "", NULL);
+    }
+}
+
 static gboolean dom_auto_insert(WebKitDOMElement* element)
 {
     if (dom_is_editable(element)) {
@@ -101,4 +117,3 @@ static WebKitDOMElement* dom_get_active_element(WebKitDOMDocument* doc)
     }
     return active;
 }
-

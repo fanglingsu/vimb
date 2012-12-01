@@ -22,6 +22,7 @@
 #include "keybind.h"
 #include "setting.h"
 #include "completion.h"
+#include "hints.h"
 
 extern const char *inputbox_font[2];
 extern const char *inputbox_fg[2];
@@ -55,13 +56,18 @@ static CommandInfo cmd_list[] = {
     {"nmap",             command_map,         {VP_MODE_NORMAL},                                                             VP_MODE_NORMAL},
     {"imap",             command_map,         {VP_MODE_INSERT},                                                             VP_MODE_NORMAL},
     {"cmap",             command_map,         {VP_MODE_COMMAND},                                                            VP_MODE_NORMAL},
+    {"hmap",             command_map,         {VP_MODE_HINTING},                                                            VP_MODE_NORMAL},
     {"nunmap",           command_unmap,       {VP_MODE_NORMAL},                                                             VP_MODE_NORMAL},
     {"iunmap",           command_unmap,       {VP_MODE_INSERT},                                                             VP_MODE_NORMAL},
     {"cunmap",           command_unmap,       {VP_MODE_COMMAND},                                                            VP_MODE_NORMAL},
+    {"hunmap",           command_unmap,       {VP_MODE_HINTING},                                                            VP_MODE_NORMAL},
     {"set",              command_set,         {0},                                                                          VP_MODE_NORMAL},
     {"complete",         command_complete,    {0},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"complete-back",    command_complete,    {1},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"inspect",          command_inspect,     {0},                                                                          VP_MODE_NORMAL},
+    {"hint-link",        command_hints,       {0},                                                                          VP_MODE_HINTING},
+    {"hint-focus-next",  command_hints_focus, {0},                                                                          VP_MODE_HINTING},
+    {"hint-focus-prev",  command_hints_focus, {1},                                                                          VP_MODE_HINTING},
 };
 
 void command_init(void)
@@ -272,4 +278,18 @@ gboolean command_inspect(const Arg* arg)
         vp_echo(VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");
         return FALSE;
     }
+}
+
+gboolean command_hints(const Arg* arg)
+{
+    hints_create(NULL, arg->i);
+
+    return TRUE;
+}
+
+gboolean command_hints_focus(const Arg* arg)
+{
+    hints_focus_next(arg->i ? TRUE : FALSE);
+
+    return TRUE;
 }

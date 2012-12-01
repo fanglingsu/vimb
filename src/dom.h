@@ -20,6 +20,10 @@
 #ifndef DOM_H
 #define DOM_H
 
+#include <webkit/webkit.h>
+
 void dom_check_auto_insert(void);
+void dom_element_set_style(WebKitDOMElement* element, const gchar* style);
+void dom_element_style_set_property(WebKitDOMElement* element, const gchar* property, const gchar* style);
 
 #endif /* end of include guard: DOM_H */

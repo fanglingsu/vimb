@@ -25,6 +25,7 @@
 #include "config.h"
 #include "completion.h"
 #include "dom.h"
+#include "hints.h"
 
 /* variables */
 VpCore vp;
@@ -291,11 +292,12 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
     if (vp.state.mode & VP_MODE_COMPLETE) {
         completion_clean();
     }
-    vp.state.mode = mode;
-    vp.state.modkey = vp.state.count  = 0;
-
     switch (CLEAN_MODE(mode)) {
         case VP_MODE_NORMAL:
+            /* if previous mode was hinting clear the hints */
+            if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
+                hints_clear();
+            }
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
             break;
 
@@ -312,6 +314,9 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
             break;
     }
+
+    vp.state.mode = mode;
+    vp.state.modkey = vp.state.count  = 0;
 
     /* echo message if given */
     if (clean) {

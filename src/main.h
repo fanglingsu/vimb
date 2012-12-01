@@ -74,6 +74,7 @@ typedef enum _vp_mode {
     VP_MODE_INSERT        = 1<<3,
     VP_MODE_SEARCH        = 1<<4,
     VP_MODE_COMPLETE      = 1<<5,
+    VP_MODE_HINTING       = 1<<6,
 } Mode;
 
 enum {
