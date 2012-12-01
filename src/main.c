@@ -39,6 +39,7 @@ static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data);
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data);
 static void vp_gotheaders_cb(SoupMessage* message, gpointer data);
 #endif
+static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* web_view);
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -151,6 +152,25 @@ static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
     soup_cookies_free(list);
 }
 #endif
+
+static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* web_view)
+{
+    gchar*     title = NULL;
+    GtkWidget* window;
+    GtkWidget* view;
+
+    title  = g_strdup_printf("Inspect page - %s", webkit_web_view_get_uri(web_view));
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_wmclass(GTK_WINDOW(window), PROJECT, PROJECT);
+    gtk_window_set_title(GTK_WINDOW(window), title);
+    g_free(title);
+
+    view = webkit_web_view_new();
+    gtk_container_add(GTK_CONTAINER(window), view);
+    gtk_widget_show_all(window);
+
+    return WEBKIT_WEB_VIEW(view);
+}
 
 /**
  * Processed input from input box without trailing : or ? /, input from config
@@ -436,6 +456,7 @@ static void vp_init_gui(void)
 
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
+    gui->inspector = webkit_web_view_get_inspector(gui->webview);
 
     /* init soup session */
 #ifdef FEATURE_COOKIE
@@ -541,6 +562,14 @@ static void vp_setup_signals(void)
     g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
 #endif
+    
+    /* inspector */
+    g_signal_connect(
+        G_OBJECT(vp.gui.inspector),
+        "inspect-web-view",
+        G_CALLBACK(vp_inspect_web_view_cb),
+        NULL
+    );
 }
 
 static gboolean vp_notify_event_cb(GtkWidget* widget, GdkEvent* event, gpointer data)
