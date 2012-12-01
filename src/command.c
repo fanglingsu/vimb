@@ -61,6 +61,7 @@ static CommandInfo cmd_list[] = {
     {"set",              command_set,         {0},                                                                          VP_MODE_NORMAL},
     {"complete",         command_complete,    {0},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"complete-back",    command_complete,    {1},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
+    {"inspect",          command_inspect,     {0},                                                                          VP_MODE_NORMAL},
 };
 
 void command_init(void)
@@ -255,4 +256,20 @@ gboolean command_complete(const Arg* arg)
     completion_complete(arg->i ? TRUE : FALSE);
 
     return TRUE;
+}
+
+gboolean command_inspect(const Arg* arg)
+{
+    gboolean enabled;
+    WebKitWebSettings* settings = NULL;
+
+    settings = webkit_web_view_get_settings(vp.gui.webview);
+    g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
+    if (enabled) {
+        webkit_web_inspector_show(vp.gui.inspector);
+        return TRUE;
+    } else {
+        vp_echo(VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");
+        return FALSE;
+    }
 }

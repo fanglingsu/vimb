@@ -45,5 +45,6 @@ gboolean command_map(const Arg* arg);
 gboolean command_unmap(const Arg* arg);
 gboolean command_set(const Arg* arg);
 gboolean command_complete(const Arg* arg);
+gboolean command_inspect(const Arg* arg);
 
 #endif /* end of include guard: COMMAND_H */
