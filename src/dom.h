@@ -22,8 +22,17 @@
 
 #include <webkit/webkit.h>
 
+typedef struct {
+    gulong left;
+    gulong right;
+    gulong top;
+    gulong bottom;
+} DomBoundingRect;
+
 void dom_check_auto_insert(void);
 void dom_element_set_style(WebKitDOMElement* element, const gchar* style);
 void dom_element_style_set_property(WebKitDOMElement* element, const gchar* property, const gchar* style);
+gboolean dom_element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* element);
+DomBoundingRect dom_elemen_get_bounding_rect(WebKitDOMElement* element);
 
 #endif /* end of include guard: DOM_H */

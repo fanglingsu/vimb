@@ -57,6 +57,34 @@ void dom_element_style_set_property(WebKitDOMElement* element, const gchar* prop
     }
 }
 
+gboolean dom_element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* element)
+{
+    gchar* value = NULL;
+
+    WebKitDOMCSSStyleDeclaration* style = webkit_dom_dom_window_get_computed_style(win, element, "");
+    value = webkit_dom_css_style_declaration_get_property_value(style, "visibility");
+    if (value && g_ascii_strcasecmp(value, "hidden") == 0) {
+        return FALSE;
+    }
+    value = webkit_dom_css_style_declaration_get_property_value(style, "display");
+    if (value && g_ascii_strcasecmp(value, "none") == 0) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+DomBoundingRect dom_elemen_get_bounding_rect(WebKitDOMElement* element)
+{
+    DomBoundingRect rect;
+    rect.left   = webkit_dom_element_get_offset_left(element);
+    rect.top    = webkit_dom_element_get_offset_top(element);
+    rect.right  = rect.left + webkit_dom_element_get_offset_width(element);
+    rect.bottom = rect.top + webkit_dom_element_get_offset_height(element);
+
+    return rect;
+}
+
 static gboolean dom_auto_insert(WebKitDOMElement* element)
 {
     if (dom_is_editable(element)) {
