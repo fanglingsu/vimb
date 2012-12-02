@@ -199,10 +199,8 @@ static guint keybind_str_to_value(const gchar* str)
 
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
 {
-    static GdkModifierType modifiers;
-    modifiers    = gtk_accelerator_get_default_mod_mask();
     guint keyval = event->keyval;
-    guint state  = (event->state & modifiers);
+    guint state  = CLEAN_STATE(event);
 
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {

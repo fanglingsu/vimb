@@ -21,6 +21,8 @@
 #define KEYBIND_H
 
 #define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
+#define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))
+#define CLEAN_STATE(e)            ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_CONTROL_MASK))
 
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
