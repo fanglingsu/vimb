@@ -26,6 +26,7 @@ typedef struct _Setting Setting;
 typedef gboolean (*SettingFunc)(const Setting*);
 
 struct _Setting {
+    gchar*      alias;
     gchar*      name;
     Type        type;
     SettingFunc func;
