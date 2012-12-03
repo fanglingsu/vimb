@@ -169,6 +169,12 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
         g_strfreev(string);
     }
 
+    /* set the shift mask for uppercase keys like 'G' */
+    guint32 ukval = gdk_keyval_to_unicode(keybind->keyval);
+    if (g_unichar_isgraph(ukval) && gdk_keyval_is_upper(keybind->keyval)) {
+        keybind->modmask = GDK_SHIFT_MASK;
+    }
+
     /* post process the keybinding */
     /* special handling for shift tab */
     if (keybind->keyval == GDK_Tab && keybind->modmask == GDK_SHIFT_MASK) {
@@ -200,7 +206,7 @@ static guint keybind_str_to_value(const gchar* str)
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
 {
     guint keyval = event->keyval;
-    guint state  = CLEAN_STATE(event);
+    guint state  = CLEAN_STATE_WITH_SHIFT(event);
 
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
