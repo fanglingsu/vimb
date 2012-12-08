@@ -44,14 +44,14 @@
 
 typedef struct {
     gulong num;
-    WebKitDOMElement* elem;                 /* hinted element */
-    gchar*            elemColor;            /* element color */
-    gchar*            elemBackgroundColor;  /* element background color */
-    WebKitDOMElement* hint;                 /* numbered hint element */
+    Element* elem;                 /* hinted element */
+    gchar*   elemColor;            /* element color */
+    gchar*   elemBackgroundColor;  /* element background color */
+    Element* hint;                 /* numbered hint element */
 } Hint;
 
 static void hints_create_for_window(
-    const gchar* input, WebKitDOMDOMWindow* win, gulong top_width,
+    const gchar* input, Window* win, gulong top_width,
     gulong top_height, gulong offsetX, gulong offsetY);
 static void hints_focus(const gulong num);
 static Hint* hints_get_hint_by_number(const gulong num);
@@ -62,7 +62,7 @@ static GList* hints = NULL;
 static gulong currentFocusNum = 0;
 static gulong hintCount = 0;
 static HintMode currentMode = HINTS_MODE_LINK;
-static WebKitDOMElement* hintContainer = NULL;
+static Element* hintContainer = NULL;
 
 void hints_clear(void)
 {
@@ -83,7 +83,7 @@ void hints_clear(void)
     }
     /* remove the hint container */
     if (hintContainer) {
-        WebKitDOMNode* parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(hintContainer));
+        Node* parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(hintContainer));
         webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(hintContainer), NULL);
         hintContainer = NULL;
     }
@@ -91,8 +91,8 @@ void hints_clear(void)
 
 void hints_create(const gchar* input, HintMode mode)
 {
-    WebKitDOMDocument* doc;
-    WebKitDOMDOMWindow* win;
+    Document* doc;
+    Window* win;
     gulong top_width, top_height, offsetX, offsetY;
 
     hints_clear();
@@ -154,18 +154,18 @@ void hints_focus_next(const gboolean back)
 
 static void hints_create_for_window(
     const gchar* input,
-    WebKitDOMDOMWindow* win,
+    Window* win,
     gulong top_width,
     gulong top_height,
     gulong offsetX,
     gulong offsetY)
 {
-    WebKitDOMDocument* doc = webkit_dom_dom_window_get_document(win);
-    WebKitDOMNodeList* list = webkit_dom_document_get_elements_by_tag_name(doc, "body");
+    Document* doc = webkit_dom_dom_window_get_document(win);
+    NodeList* list = webkit_dom_document_get_elements_by_tag_name(doc, "body");
     if (!list) {
         return;
     }
-    WebKitDOMNode* body = webkit_dom_node_list_item(list, 0);
+    Node* body = webkit_dom_node_list_item(list, 0);
 
     WebKitDOMXPathNSResolver* ns_resolver = webkit_dom_document_create_ns_resolver(doc, body);
     if (!ns_resolver) {
@@ -200,7 +200,7 @@ static void hints_create_for_window(
     gulong snapshot_length = webkit_dom_xpath_result_get_snapshot_length(result, NULL);
 
     for (gulong i = 0; i < snapshot_length && hintCount < MAX_HINTS; i++) {
-        WebKitDOMNode* node = webkit_dom_xpath_result_snapshot_item(result, i, NULL);
+        Node* node = webkit_dom_xpath_result_snapshot_item(result, i, NULL);
         if (!dom_element_is_visible(win, WEBKIT_DOM_ELEMENT(node))) {
             continue;
         }
@@ -212,8 +212,8 @@ static void hints_create_for_window(
         hintCount++;
 
         /* create the hint element */
-        WebKitDOMElement* hint = webkit_dom_document_create_element(doc, "span", NULL);
-        WebKitDOMCSSStyleDeclaration* css_style = webkit_dom_element_get_style(WEBKIT_DOM_ELEMENT(node));
+        Element* hint = webkit_dom_document_create_element(doc, "span", NULL);
+        CssDeclaration* css_style = webkit_dom_element_get_style(WEBKIT_DOM_ELEMENT(node));
 
         Hint* newHint = g_new0(Hint, 1);
         newHint->num                 = hintCount;
@@ -225,9 +225,7 @@ static void hints_create_for_window(
 
         gulong left = rect.left - 3;
         gulong top  = rect.top - 3;
-        gchar* hint_style = g_strdup_printf(HINT_STYLE, left, top);
-        dom_element_set_style(hint, hint_style);
-        g_free(hint_style);
+        dom_element_set_style(hint, HINT_STYLE, left, top);
 
         gchar* num = g_strdup_printf("%li", newHint->num);
         webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(hint), num, NULL);

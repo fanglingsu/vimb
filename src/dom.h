@@ -22,6 +22,23 @@
 
 #include <webkit/webkit.h>
 
+// Types
+#define Document       WebKitDOMDocument
+#define Body           WebKitDOMHTMLBodyElement
+#define Head           WebKitDOMHTMLHeadElement
+#define Window         WebKitDOMDOMWindow
+#define NodeList       WebKitDOMNodeList
+#define Node           WebKitDOMNode
+#define Style          WebKitDOMCSSStyleDeclaration
+#define HtmlElement    WebKitDOMHTMLElement
+#define Element        WebKitDOMElement
+#define CssDeclaration WebKitDOMCSSStyleDeclaration
+#define Event          WebKitDOMEvent
+#define EventTarget    WebKitDOMEventTarget
+
+// style 
+#define style_compare_property(style, name, value)    (!strcmp(webkit_dom_css_style_declaration_get_property_value(style, name), value))
+
 typedef struct {
     gulong left;
     gulong right;
@@ -30,9 +47,9 @@ typedef struct {
 } DomBoundingRect;
 
 void dom_check_auto_insert(void);
-void dom_element_set_style(WebKitDOMElement* element, const gchar* style);
-void dom_element_style_set_property(WebKitDOMElement* element, const gchar* property, const gchar* style);
-gboolean dom_element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* element);
-DomBoundingRect dom_elemen_get_bounding_rect(WebKitDOMElement* element);
+void dom_element_set_style(Element* element, const gchar* format, ...);
+void dom_element_style_set_property(Element* element, const gchar* property, const gchar* style);
+gboolean dom_element_is_visible(Window* win, Element* element);
+DomBoundingRect dom_elemen_get_bounding_rect(Element* element);
 
 #endif /* end of include guard: DOM_H */
