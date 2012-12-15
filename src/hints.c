@@ -17,6 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <gdk/gdkkeysyms.h>
+#include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
 #include "dom.h"
 
@@ -57,10 +59,16 @@ static void hints_focus(const gulong num);
 static Hint* hints_get_hint_by_number(const gulong num);
 static GList* hints_get_hint_list_by_number(const gulong num);
 static gchar* hints_get_xpath(const gchar* input);
+static void hints_observe_input(gboolean observe);
+static gboolean hints_changed_callback(GtkEditable *entry, gpointer data);
+static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
+static gboolean hints_num_has_prefix(gulong num, gulong prefix);
 
+/* variables */
 static GList* hints = NULL;
 static gulong currentFocusNum = 0;
 static gulong hintCount = 0;
+static gulong hintNum = 0;
 static HintMode currentMode = HINTS_MODE_LINK;
 static Element* hintContainer = NULL;
 
@@ -75,11 +83,13 @@ void hints_clear(void)
             /* reset the previous color of the hinted elements */
             dom_element_style_set_property(hint->elem, "color", hint->elemColor);
             dom_element_style_set_property(hint->elem, "background-color", hint->elemBackgroundColor);
+            g_free(hint);
         }
 
         g_list_free(hints);
         hints = NULL;
         hintCount = 0;
+        hintNum = 0;
     }
     /* remove the hint container */
     if (hintContainer) {
@@ -87,6 +97,8 @@ void hints_clear(void)
         webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(hintContainer), NULL);
         hintContainer = NULL;
     }
+
+    hints_observe_input(FALSE);
 }
 
 void hints_create(const gchar* input, HintMode mode)
@@ -95,14 +107,21 @@ void hints_create(const gchar* input, HintMode mode)
     Window* win;
     gulong top_width, top_height, offsetX, offsetY;
 
-    hints_clear();
+    /* set the current mode only if this was given */
+    if (mode) {
+        currentMode = mode;
+    }
 
-    currentMode = mode;
+    hints_clear();
 
     doc = webkit_web_view_get_dom_document(WEBKIT_WEB_VIEW(vp.gui.webview));
     if (!doc) {
         return;
     }
+
+    /* add event hanlder for inputbox */
+    hints_observe_input(TRUE);
+
     win        = webkit_dom_document_get_default_view(doc);
     top_width  = webkit_dom_dom_window_get_inner_width(win);
     top_height = webkit_dom_dom_window_get_inner_height(win);
@@ -123,12 +142,43 @@ void hints_create(const gchar* input, HintMode mode)
 
 void hints_update(const gulong num)
 {
+    Hint* hint = NULL;
+    GList* next = NULL;
+    GList* link = hints;
 
+    if (num == 0) {
+        /* recreate the hints */
+        hints_create(NULL, 0);
+        return;
+    }
+
+    while (link != NULL) {
+        hint = (Hint*)link->data;
+        if (!hints_num_has_prefix(hint->num, num)) {
+            /* reset the previous color of the hinted elements */
+            dom_element_style_set_property(hint->elem, "color", hint->elemColor);
+            dom_element_style_set_property(hint->elem, "background-color", hint->elemBackgroundColor);
+            webkit_dom_node_remove_child(WEBKIT_DOM_NODE(hintContainer), WEBKIT_DOM_NODE(hint->hint), NULL);
+            g_free(hint);
+
+            /* store next element before remove current */
+            next = g_list_next(link);
+            hints = g_list_remove_link(hints, link);
+            link = next;
+        } else {
+            link = g_list_next(link);
+        }
+    }
+    if (g_list_length(hints) == 1) {
+        hints_fire(num);
+    } else {
+        hints_focus(num);
+    }
 }
 
 void hints_fire(const gulong num)
 {
-    PRINT_DEBUG("fire hint %li", num);
+    PRINT_DEBUG("fire hint %lu", num);
 }
 
 void hints_clear_focus(void)
@@ -320,4 +370,71 @@ static gchar* hints_get_xpath(const gchar* input)
     }
 
     return xpath;
+}
+
+static void hints_observe_input(gboolean observe)
+{
+    static gulong changeHandler   = 0;
+    static gulong keypressHandler = 0;
+
+    if (observe) {
+        changeHandler = g_signal_connect(
+            G_OBJECT(vp.gui.inputbox), "changed", G_CALLBACK(hints_changed_callback), NULL
+        );
+        keypressHandler = g_signal_connect(
+            G_OBJECT(vp.gui.inputbox), "key-press-event", G_CALLBACK(hints_keypress_callback), NULL
+        );
+    } else if (changeHandler && keypressHandler) {
+        g_signal_handler_disconnect(G_OBJECT(vp.gui.inputbox), changeHandler);
+        g_signal_handler_disconnect(G_OBJECT(vp.gui.inputbox), keypressHandler);
+        changeHandler = 0;
+        keypressHandler = 0;
+    }
+}
+
+static gboolean hints_changed_callback(GtkEditable *entry, gpointer data)
+{
+    const gchar* text = GET_TEXT();
+
+    if (text[0] == '.' || text[0] == ',') {
+        hints_create(text + 1, currentMode);
+    }
+
+    return TRUE;
+}
+
+static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
+{
+    gint numval;
+    guint keyval = event->keyval;
+    guint state  = CLEAN_STATE_WITH_SHIFT(event);
+
+    if (keyval == GDK_BackSpace && (state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {
+        hintNum /= 10;
+        hints_update(hintNum);
+
+        return TRUE;
+    }
+    numval = g_unichar_digit_value((gunichar)gdk_keyval_to_unicode(keyval));
+    if ((numval >= 1 && numval <= 9) || (numval == 0 && hintNum)) {
+        /* allow a zero as non-first number */
+        hintNum = (hintNum ? hintNum * 10 : 0) + numval;
+        hints_update(hintNum);
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static gboolean hints_num_has_prefix(gulong num, gulong prefix)
+{
+    if (prefix == num) {
+        return TRUE;
+    }
+    if (num >= 10) {
+        return hints_num_has_prefix(prefix, num / 10);
+    }
+
+    return FALSE;
 }

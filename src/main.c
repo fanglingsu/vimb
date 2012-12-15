@@ -302,6 +302,7 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
             break;
 
         case VP_MODE_COMMAND:
+        case VP_MODE_HINTING:
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.inputbox));
             break;
 
