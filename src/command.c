@@ -70,6 +70,9 @@ static CommandInfo cmd_list[] = {
     {"hint-focus-prev",  command_hints_focus, {1},                                                                          VP_MODE_HINTING},
 };
 
+static void command_write_input(const gchar* str);
+
+
 void command_init(void)
 {
     guint i;
@@ -107,10 +110,8 @@ gboolean command_run(const gchar* name, const gchar* param)
     result = c->function(&a);
     g_free(a.s);
 
-    /* if command was run, remove the modkey and count */
-    vp.state.modkey = vp.state.count = 0;
-    vp.state.mode = c->mode;
-    vp_update_statusbar();
+    /* set the new mode */
+    vp_set_mode(c->mode, FALSE);
 
     return result;
 }
@@ -122,30 +123,20 @@ gboolean command_open(const Arg* arg)
 
 gboolean command_input(const Arg* arg)
 {
-    gint pos = 0;
     const gchar* url;
-
-    /* reset the colors and fonts to defalts */
-    vp_set_widget_font(
-        vp.gui.inputbox,
-        &vp.style.input_fg[VP_MSG_NORMAL],
-        &vp.style.input_bg[VP_MSG_NORMAL],
-        vp.style.input_font[VP_MSG_NORMAL]
-    );
-
-    /* remove content from input box */
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
-
-    /* insert string from arg */
-    gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), arg->s, -1, &pos);
+    gchar* input = NULL;
 
     /* add current url if requested */
     if (VP_INPUT_CURRENT_URI == arg->i
-            && (url = webkit_web_view_get_uri(vp.gui.webview))) {
-        gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), url, -1, &pos);
+        && (url = webkit_web_view_get_uri(vp.gui.webview))
+    ) {
+        /* append the crrent url to the input message */
+        input = g_strconcat(arg->s, url, NULL);
+        command_write_input(input);
+        g_free(input);
+    } else {
+        command_write_input(arg->s);
     }
-
-    gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
 
     return vp_set_mode(VP_MODE_COMMAND, FALSE);
 }
@@ -292,4 +283,23 @@ gboolean command_hints_focus(const Arg* arg)
     hints_focus_next(arg->i ? TRUE : FALSE);
 
     return TRUE;
+}
+
+static void command_write_input(const gchar* str)
+{
+    gint pos = 0;
+    /* reset the colors and fonts to defalts */
+    vp_set_widget_font(
+        vp.gui.inputbox,
+        &vp.style.input_fg[VP_MSG_NORMAL],
+        &vp.style.input_bg[VP_MSG_NORMAL],
+        vp.style.input_font[VP_MSG_NORMAL]
+    );
+
+    /* remove content from input box */
+    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
+
+    /* insert string from arg */
+    gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), str, -1, &pos);
+    gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
 }
