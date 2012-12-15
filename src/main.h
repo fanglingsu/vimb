@@ -48,6 +48,10 @@
 #define GET_CLEAN_MODE() (CLEAN_MODE(vp.state.mode))
 #define CLEAR_INPUT() (vp_echo(VP_MSG_NORMAL, ""))
 
+#define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
+#define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))
+#define CLEAN_STATE(e)            ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_CONTROL_MASK))
+
 #ifdef HAS_GTK3
 #define VpColor GdkRGBA
 #define VP_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
