@@ -65,7 +65,7 @@ static CommandInfo cmd_list[] = {
     {"complete",         command_complete,    {0},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"complete-back",    command_complete,    {1},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"inspect",          command_inspect,     {0},                                                                          VP_MODE_NORMAL},
-    {"hint-link",        command_hints,       {0},                                                                          VP_MODE_HINTING},
+    {"hint-link",        command_hints,       {0, "."},                                                                     VP_MODE_HINTING},
     {"hint-focus-next",  command_hints_focus, {0},                                                                          VP_MODE_HINTING},
     {"hint-focus-prev",  command_hints_focus, {1},                                                                          VP_MODE_HINTING},
 };
@@ -273,6 +273,7 @@ gboolean command_inspect(const Arg* arg)
 
 gboolean command_hints(const Arg* arg)
 {
+    command_write_input(arg->s);
     hints_create(NULL, arg->i);
 
     return TRUE;
