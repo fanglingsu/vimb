@@ -409,6 +409,10 @@ static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* eve
     guint keyval = event->keyval;
     guint state  = CLEAN_STATE_WITH_SHIFT(event);
 
+    if (keyval == GDK_Return) {
+        hints_fire(currentFocusNum);
+        return TRUE;
+    }
     if (keyval == GDK_BackSpace && (state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {
         hintNum /= 10;
         hints_update(hintNum);
