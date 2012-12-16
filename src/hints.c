@@ -310,19 +310,14 @@ static void hints_fire(const gulong num)
 {
     Hint* hint = hints_get_hint_by_number(num);
     if (hint) {
-        Element* element = hint->elem;
         /* TODO
          * if the elemt has a target attribute - remove it temporary
          * fire mousedown and click events on the element
-         * if it is an form element focus it and return
-         * get the src or href attribute and call vp_fired_hint */
-
-        Arg a;
-        a.i = currentMode;
-        a.s = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(element));
-        vp_fired_hint(&a);
-
+         * if it is an form element focus it and return */
+        Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
+        dom_dispatch_mouse_event(doc, hint->elem, "click", 0);
         hints_clear();
+        vp_clean_input();
     }
 }
 

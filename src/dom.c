@@ -93,6 +93,24 @@ DomBoundingRect dom_elemen_get_bounding_rect(Element* element)
     return rect;
 }
 
+void dom_dispatch_mouse_event(Document* doc, Element* element, gchar* type, gushort button)
+{
+    Event* event = webkit_dom_document_create_event(doc, "MouseEvents", NULL);
+    webkit_dom_mouse_event_init_mouse_event(
+        WEBKIT_DOM_MOUSE_EVENT(event),
+        type,
+        TRUE,
+        TRUE,
+        webkit_dom_document_get_default_view(doc),
+        1, 0, 0, 0, 0,
+        FALSE, FALSE, FALSE, FALSE,
+        button,
+        WEBKIT_DOM_EVENT_TARGET(element)
+    );
+
+    webkit_dom_node_dispatch_event(WEBKIT_DOM_NODE(element), event, NULL);
+}
+
 static gboolean dom_auto_insert(Element* element)
 {
     if (dom_is_editable(element)) {
