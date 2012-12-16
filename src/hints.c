@@ -291,16 +291,23 @@ static void hints_create_for_window(
 
 static void hints_focus(const gulong num)
 {
+    /* TODO use the document the hinted element belongs to */
+    Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
     Hint* hint = hints_get_hint_by_number(currentFocusNum);
     if (hint) {
         /* reset previous focused element */
         dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND);
+
+        dom_dispatch_mouse_event(doc, hint->elem, "mouseout", 0);
     }
 
     hint = hints_get_hint_by_number(num);
     if (hint) {
         /* mark new hint as focused */
         dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND_FOCUS);
+
+        dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);
+        webkit_dom_element_focus(hint->elem);
     }
 
     currentFocusNum = num;
