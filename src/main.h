@@ -240,6 +240,7 @@ extern VpCore vp;
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
+void vp_fired_hint(const Arg* arg);
 gboolean vp_set_mode(Mode mode, gboolean clean);
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
 gboolean vp_load_uri(const Arg* arg);

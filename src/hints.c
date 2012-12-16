@@ -21,6 +21,7 @@
 #include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
 #include "dom.h"
+#include "main.h"
 
 #define MAX_HINTS 200
 #define HINT_CONTAINER_ID "__hint_container"
@@ -56,6 +57,7 @@ static void hints_create_for_window(
     const gchar* input, Window* win, gulong top_width,
     gulong top_height, gulong offsetX, gulong offsetY);
 static void hints_focus(const gulong num);
+static void hints_fire(const gulong num);
 static Hint* hints_get_hint_by_number(const gulong num);
 static GList* hints_get_hint_list_by_number(const gulong num);
 static gchar* hints_get_xpath(const gchar* input);
@@ -174,11 +176,6 @@ void hints_update(const gulong num)
     } else {
         hints_focus(num);
     }
-}
-
-void hints_fire(const gulong num)
-{
-    PRINT_DEBUG("fire hint %lu", num);
 }
 
 void hints_clear_focus(void)
@@ -307,6 +304,26 @@ static void hints_focus(const gulong num)
     }
 
     currentFocusNum = num;
+}
+
+static void hints_fire(const gulong num)
+{
+    Hint* hint = hints_get_hint_by_number(num);
+    if (hint) {
+        Element* element = hint->elem;
+        /* TODO
+         * if the elemt has a target attribute - remove it temporary
+         * fire mousedown and click events on the element
+         * if it is an form element focus it and return
+         * get the src or href attribute and call vp_fired_hint */
+
+        Arg a;
+        a.i = currentMode;
+        a.s = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(element));
+        vp_fired_hint(&a);
+
+        hints_clear();
+    }
 }
 
 static Hint* hints_get_hint_by_number(const gulong num)

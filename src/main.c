@@ -229,7 +229,7 @@ gboolean vp_load_uri(const Arg* arg)
     g_free(uri);
 
     /* change state to normal mode */
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(VP_MODE_NORMAL, TRUE);
 
     return TRUE;
 }
@@ -388,6 +388,11 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
     if (hide) {
         g_timeout_add_seconds(2, (GSourceFunc)vp_hide_message, NULL);
     }
+}
+
+void vp_fired_hint(const Arg* arg)
+{
+    vp_load_uri(arg);
 }
 
 static void vp_print_version(void)
