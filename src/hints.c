@@ -456,7 +456,7 @@ static gboolean hints_num_has_prefix(gulong num, gulong prefix)
         return TRUE;
     }
     if (num >= 10) {
-        return hints_num_has_prefix(prefix, num / 10);
+        return hints_num_has_prefix(num / 10, prefix);
     }
 
     return FALSE;
