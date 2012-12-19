@@ -30,7 +30,7 @@ extern const char *inputbox_bg[2];
 
 static CommandInfo cmd_list[] = {
     /* command           function             arg                                                                           mode */
-    {"open",             command_open,        {VP_MODE_NORMAL, ""},                                                         VP_MODE_NORMAL},
+    {"open",             command_open,        {VP_TARGET_CURRENT, ""},                                                      VP_MODE_NORMAL},
     {"input",            command_input,       {0, ":"},                                                                     VP_MODE_COMMAND},
     {"inputopen",        command_input,       {0, ":open "},                                                                VP_MODE_COMMAND},
     {"inputopencurrent", command_input,       {VP_INPUT_CURRENT_URI, ":open "},                                             VP_MODE_NORMAL},
