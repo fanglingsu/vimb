@@ -305,6 +305,10 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
             if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
                 hints_clear();
             }
+            /* clean the input if current mode is insert to remove -- INPUT -- */
+            if (GET_CLEAN_MODE() == VP_MODE_INSERT) {
+                clean = TRUE;
+            }
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
             break;
 
