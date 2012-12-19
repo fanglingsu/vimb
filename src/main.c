@@ -28,6 +28,7 @@
 #include "hints.h"
 
 /* variables */
+static gchar **args;
 VpCore vp;
 
 /* callbacks */
@@ -41,6 +42,12 @@ static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpoint
 static void vp_gotheaders_cb(SoupMessage* message, gpointer data);
 #endif
 static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* web_view);
+static gboolean vp_button_relase_cb(WebKitWebView *webview, GdkEventButton* event, gpointer data);
+static gboolean vp_new_window_policy_cb(
+    WebKitWebView* view, WebKitWebFrame* frame, WebKitNetworkRequest* request,
+    WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, gpointer data);
+static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data);
+static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec);
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -50,7 +57,6 @@ static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
 static void vp_setup_signals(void);
-static gboolean vp_notify_event_cb(WebKitWebView *webview, GdkEventButton* event, gpointer data);
 #ifdef FEATURE_COOKIE
 static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
@@ -223,13 +229,22 @@ gboolean vp_load_uri(const Arg* arg)
     }
 
     uri = g_strrstr(line, "://") ? g_strdup(line) : g_strdup_printf("http://%s", line);
+    if (arg->i == VP_TARGET_NEW) {
+        gchar *argv[64];
+        argv[0] = *args;
+        argv[1] = uri;
+        argv[2] = NULL;
 
-    /* Load a web page into the browser instance */
-    webkit_web_view_load_uri(vp.gui.webview, uri);
+        /* spawn a new browser instance */
+        g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+    } else {
+        /* Load a web page into the browser instance */
+        webkit_web_view_load_uri(vp.gui.webview, uri);
+
+        /* change state to normal mode */
+        vp_set_mode(VP_MODE_NORMAL, FALSE);
+    }
     g_free(uri);
-
-    /* change state to normal mode */
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
@@ -558,7 +573,9 @@ static void vp_setup_signals(void)
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
     g_object_connect(
         G_OBJECT(gui->webview),
-        "signal::button-release-event", G_CALLBACK(vp_notify_event_cb), NULL,
+        "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), NULL,
+        "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), NULL,
+        "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), NULL,
         NULL
     );
 
@@ -579,7 +596,7 @@ static void vp_setup_signals(void)
     g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
 #endif
-    
+
     /* inspector */
     g_signal_connect(
         G_OBJECT(vp.gui.inspector),
@@ -589,19 +606,59 @@ static void vp_setup_signals(void)
     );
 }
 
-static gboolean vp_notify_event_cb(WebKitWebView* webview, GdkEventButton* event, gpointer data)
+static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, gpointer data)
 {
-    if (GET_CLEAN_MODE() == VP_MODE_NORMAL) {
-        return FALSE;
-    }
-    WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
     WebKitHitTestResultContext context;
+    Mode mode = GET_CLEAN_MODE();
+    WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
+
     g_object_get(result, "context", &context, NULL);
-    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+    if (mode == VP_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
         vp_set_mode(VP_MODE_INSERT, FALSE);
         return TRUE;
     }
+    /* middle mouse click onto link */
+    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
+        Arg a = {VP_TARGET_NEW};
+        g_object_get(result, "link-uri", &a.s, NULL);
+        vp_load_uri(&a);
+        return TRUE;
+    }
     return FALSE;
+}
+
+static gboolean vp_new_window_policy_cb(
+    WebKitWebView* view, WebKitWebFrame* frame, WebKitNetworkRequest* request,
+    WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, gpointer data)
+{
+    if (webkit_web_navigation_action_get_reason(navig) == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
+        /* open in a new window */
+        Arg a = {VP_TARGET_NEW, (gchar*)webkit_network_request_get_uri(request)};
+        vp_load_uri(&a);
+        webkit_web_policy_decision_ignore(policy);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data)
+{
+    /* create only a temporary webview */
+    WebKitWebView* view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+
+    /* wait until the new webview receives its new URI */
+    g_object_connect(view, "signal::notify::uri", G_CALLBACK(vp_create_new_webview_uri_cb), NULL, NULL);
+    return view;
+}
+
+static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec)
+{
+    Arg a = {VP_TARGET_NEW, (gchar*)webkit_web_view_get_uri(view)};
+    /* clean up */
+    webkit_web_view_stop_loading(view);
+    gtk_widget_destroy(GTK_WIDGET(view));
+    /* open the requested window */
+    vp_load_uri(&a);
 }
 
 int main(int argc, char* argv[])
@@ -624,10 +681,14 @@ int main(int argc, char* argv[])
         vp_print_version();
         return EXIT_SUCCESS;
     }
+
+    /* save arguments */
+    args = argv;
+
     vp_init();
 
     /* command line argument: URL */
-    Arg arg;
+    Arg arg = {VP_TARGET_CURRENT};
     if (argc > 1) {
         arg.s = g_strdup(argv[argc - 1]);
     } else {

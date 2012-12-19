@@ -316,22 +316,32 @@ static void hints_fire(const gulong num)
 {
     Hint* hint = hints_get_hint_by_number(num);
     if (hint) {
-        /* TODO
-         * if the elemt has a target attribute - remove it temporary
-         * fire mousedown and click events on the element
-         * if it is an form element focus it and return */
-
         if (dom_is_editable(hint->elem)) {
             webkit_dom_element_focus(hint->elem);
             vp_set_mode(VP_MODE_INSERT, FALSE);
         } else {
-            /* remove possible target attribute */
-            gchar* type = webkit_dom_element_get_attribute(hint->elem, "target");
-            if (g_strcmp0(type, "_blank") == 0) {
+            /* TODO I don't get the mouse click event dispatched here to
+             * invoce the gtk events for button press wich might be the better
+             * way hanlding to open new windows that setting temporary target
+             * attribute here */
+            gchar* target = webkit_dom_element_get_attribute(hint->elem, "target");
+            if (currentMode == HINTS_MODE_LINK_NEW) {       /* open in new window */
+                webkit_dom_element_set_attribute(hint->elem, "target", "_blank", NULL);
+            } else if (g_strcmp0(target, "_blank") == 0) {  /* remove possible target attribute */
                 webkit_dom_element_remove_attribute(hint->elem, "target");
             }
+
+            /* dispatch click event */
             Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
             dom_dispatch_mouse_event(doc, hint->elem, "click", 0);
+
+            /* reset previous target attribute */
+            if (target && strlen(target)) {
+                webkit_dom_element_set_attribute(hint->elem, "target", target, NULL);
+            } else {
+                webkit_dom_element_remove_attribute(hint->elem, "target");
+            }
+
             /* remove the hint filter input */
             vp_clean_input();
         }
@@ -376,6 +386,7 @@ static gchar* hints_get_xpath(const gchar* input)
 
     switch (currentMode) {
         case HINTS_MODE_LINK:
+        case HINTS_MODE_LINK_NEW:
             if (input == NULL) {
                 xpath = g_strdup(
                     "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @ role='link'] | "

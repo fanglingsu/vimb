@@ -23,8 +23,9 @@
 #include "main.h"
 
 typedef enum {
-    HINTS_MODE_LINK,
-    HINTS_MODE_IMAGE,
+    HINTS_MODE_LINK     = 1,
+    HINTS_MODE_LINK_NEW = 2,
+    HINTS_MODE_IMAGE    = 3,
 } HintMode;
 
 void hints_create(const gchar* input, HintMode mode);

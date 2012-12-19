@@ -90,6 +90,11 @@ enum {
 };
 
 enum {
+    VP_TARGET_CURRENT,
+    VP_TARGET_NEW
+};
+
+enum {
     VP_INPUT_CURRENT_URI = 1
 };
 

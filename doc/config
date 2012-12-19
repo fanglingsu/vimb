@@ -22,6 +22,7 @@ nmap l scrollright
 nmap k scrollup
 nmap j scrolldown
 nmap f hint-link
+nmap F hint-link-new
 cmap <tab> complete
 cmap <shift-tab> complete-back
 hmap <tab> hint-focus-next
