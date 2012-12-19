@@ -52,5 +52,6 @@ void dom_element_style_set_property(Element* element, const gchar* property, con
 gboolean dom_element_is_visible(Window* win, Element* element);
 DomBoundingRect dom_elemen_get_bounding_rect(Element* element);
 void dom_dispatch_mouse_event(Document* doc, Element* element, gchar* type, gushort button);
+gboolean dom_is_editable(Element* element);
 
 #endif /* end of include guard: DOM_H */

@@ -307,7 +307,6 @@ static void hints_focus(const gulong num)
         dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND_FOCUS);
 
         dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);
-        webkit_dom_element_focus(hint->elem);
     }
 
     currentFocusNum = num;
@@ -321,10 +320,22 @@ static void hints_fire(const gulong num)
          * if the elemt has a target attribute - remove it temporary
          * fire mousedown and click events on the element
          * if it is an form element focus it and return */
-        Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
-        dom_dispatch_mouse_event(doc, hint->elem, "click", 0);
+
+        if (dom_is_editable(hint->elem)) {
+            webkit_dom_element_focus(hint->elem);
+            vp_set_mode(VP_MODE_INSERT, FALSE);
+        } else {
+            /* remove possible target attribute */
+            gchar* type = webkit_dom_element_get_attribute(hint->elem, "target");
+            if (g_strcmp0(type, "_blank") == 0) {
+                webkit_dom_element_remove_attribute(hint->elem, "target");
+            }
+            Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
+            dom_dispatch_mouse_event(doc, hint->elem, "click", 0);
+            /* remove the hint filter input */
+            vp_clean_input();
+        }
         hints_clear();
-        vp_clean_input();
     }
 }
 
@@ -368,13 +379,23 @@ static gchar* hints_get_xpath(const gchar* input)
             if (input == NULL) {
                 xpath = g_strdup(
                     "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @ role='link'] | "
-                    "//a[@href]"
+                    "//a[@href] | "
+                    "//input[not(@type='hidden')] | "
+                    "//textarea | "
+                    "//button | "
+                    "//select | "
+                    "//area"
                 );
             } else {
                 xpath = g_strdup_printf(
                     "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link') and contains(., '%s')] | "
-                    "//a[@href and contains(., '%s')]",
-                    input, input
+                    "//a[@href and contains(., '%s')] | "
+                    "//input[not(@type='hidden') and contains(., '%s')] | "
+                    "//textarea[contains(., '%s')] | "
+                    "//button[contains(@value, '%s')] | "
+                    "//select[contains(., '%s')] | "
+                    "//area[contains(., '%s')]",
+                    input, input, input, input, input, input, input
                 );
             }
             break;

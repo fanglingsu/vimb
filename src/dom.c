@@ -22,8 +22,7 @@
 
 static gboolean dom_auto_insert(Element* element);
 static gboolean dom_editable_focus_cb(Element* element, Event* event);
-static gboolean dom_is_editable(Element* element);
-static WebKitDOMElement* dom_get_active_element(Document* doc);
+static Element* dom_get_active_element(Document* doc);
 
 
 void dom_check_auto_insert(void)
@@ -102,7 +101,7 @@ void dom_dispatch_mouse_event(Document* doc, Element* element, gchar* type, gush
         TRUE,
         TRUE,
         webkit_dom_document_get_default_view(doc),
-        1, 0, 0, 0, 0,
+        1, 1, 1, 0, 0,
         FALSE, FALSE, FALSE, FALSE,
         button,
         WEBKIT_DOM_EVENT_TARGET(element)
@@ -110,6 +109,31 @@ void dom_dispatch_mouse_event(Document* doc, Element* element, gchar* type, gush
 
     webkit_dom_node_dispatch_event(WEBKIT_DOM_NODE(element), event, NULL);
 }
+
+/**
+ * Indicates if the given dom element is an editable element like text input,
+ * password or textarea.
+ */
+gboolean dom_is_editable(Element* element)
+{
+    if (!element) {
+        return FALSE;
+    }
+
+    gchar* tagname = webkit_dom_element_get_tag_name(element);
+    if (!g_ascii_strcasecmp(tagname, "textarea")) {
+        return TRUE;
+    }
+    gchar *type = webkit_dom_element_get_attribute(element, "type");
+    if (!g_ascii_strcasecmp(tagname, "input")
+        || !g_ascii_strcasecmp(type, "text")
+        || !g_ascii_strcasecmp(type, "password")
+    ) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 
 static gboolean dom_auto_insert(Element* element)
 {
@@ -128,29 +152,6 @@ static gboolean dom_editable_focus_cb(Element* element, Event* event)
     if (GET_CLEAN_MODE() != VP_MODE_INSERT) {
         EventTarget* target = webkit_dom_event_get_target(event);
         dom_auto_insert((void*)target);
-    }
-    return FALSE;
-}
-
-/**
- * Indicates if the given dom element is an editable element like text input,
- * password or textarea.
- */
-static gboolean dom_is_editable(WebKitDOMElement* element)
-{
-    if (!element) {
-        return FALSE;
-    }
-
-    gchar* tagname = webkit_dom_node_get_node_name(WEBKIT_DOM_NODE(element));
-    if (!g_strcmp0(tagname, "TEXTAREA")) {
-        return TRUE;
-    }
-    if (!g_strcmp0(tagname, "INPUT")) {
-        gchar *type = webkit_dom_element_get_attribute((void*)element, "type");
-        if (!g_strcmp0(type, "text") || !g_strcmp0(type, "password")) {
-            return TRUE;
-        }
     }
     return FALSE;
 }
