@@ -50,7 +50,7 @@ static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
 static void vp_setup_signals(void);
-static gboolean vp_notify_event_cb(GtkWidget* widget, GdkEvent* event, gpointer data);
+static gboolean vp_notify_event_cb(WebKitWebView *webview, GdkEventButton* event, gpointer data);
 #ifdef FEATURE_COOKIE
 static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
@@ -558,7 +558,7 @@ static void vp_setup_signals(void)
     g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
     g_object_connect(
         G_OBJECT(gui->webview),
-        "signal::event", G_CALLBACK(vp_notify_event_cb), NULL,
+        "signal::button-release-event", G_CALLBACK(vp_notify_event_cb), NULL,
         NULL
     );
 
@@ -589,20 +589,18 @@ static void vp_setup_signals(void)
     );
 }
 
-static gboolean vp_notify_event_cb(GtkWidget* widget, GdkEvent* event, gpointer data)
+static gboolean vp_notify_event_cb(WebKitWebView* webview, GdkEventButton* event, gpointer data)
 {
-    WebKitHitTestResult *result = NULL;
-    WebKitHitTestResultContext context;
-    if (GET_CLEAN_MODE() == VP_MODE_NORMAL
-        && event->type == GDK_BUTTON_RELEASE
-    ) {
-        result = webkit_web_view_get_hit_test_result(vp.gui.webview, (GdkEventButton*)event);
-        g_object_get(result, "context", &context, NULL);
-        if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-            vp_set_mode(VP_MODE_INSERT, FALSE);
-        }
+    if (GET_CLEAN_MODE() == VP_MODE_NORMAL) {
+        return FALSE;
     }
-
+    WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
+    WebKitHitTestResultContext context;
+    g_object_get(result, "context", &context, NULL);
+    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+        vp_set_mode(VP_MODE_INSERT, FALSE);
+        return TRUE;
+    }
     return FALSE;
 }
 
