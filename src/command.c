@@ -24,10 +24,6 @@
 #include "completion.h"
 #include "hints.h"
 
-extern const char *inputbox_font[2];
-extern const char *inputbox_fg[2];
-extern const char *inputbox_bg[2];
-
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                           mode */
     {"open",                command_open,        {VP_TARGET_CURRENT, ""},                                                      VP_MODE_NORMAL},
