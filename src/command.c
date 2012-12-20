@@ -125,21 +125,20 @@ gboolean command_open(const Arg* arg)
 gboolean command_input(const Arg* arg)
 {
     const gchar* url;
-    gchar* input = NULL;
 
     /* add current url if requested */
     if (VP_INPUT_CURRENT_URI == arg->i
         && (url = webkit_web_view_get_uri(vp.gui.webview))
     ) {
-        /* append the crrent url to the input message */
-        input = g_strconcat(arg->s, url, NULL);
+        /* append the current url to the input message */
+        gchar* input = g_strconcat(arg->s, url, NULL);
         command_write_input(input);
         g_free(input);
     } else {
         command_write_input(arg->s);
     }
 
-    return vp_set_mode(VP_MODE_COMMAND, FALSE);
+    return TRUE;
 }
 
 gboolean command_close(const Arg* arg)
