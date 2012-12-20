@@ -608,23 +608,29 @@ static void vp_setup_signals(void)
 
 static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, gpointer data)
 {
+    gboolean propagate = FALSE;
     WebKitHitTestResultContext context;
     Mode mode = GET_CLEAN_MODE();
+
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
 
     g_object_get(result, "context", &context, NULL);
     if (mode == VP_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
         vp_set_mode(VP_MODE_INSERT, FALSE);
-        return TRUE;
+
+        propagate = TRUE;
     }
     /* middle mouse click onto link */
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
         Arg a = {VP_TARGET_NEW};
         g_object_get(result, "link-uri", &a.s, NULL);
         vp_load_uri(&a);
-        return TRUE;
+
+        propagate = TRUE;
     }
-    return FALSE;
+    g_object_unref(result);
+
+    return propagate;
 }
 
 static gboolean vp_new_window_policy_cb(

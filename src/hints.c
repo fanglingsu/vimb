@@ -247,11 +247,14 @@ static void hints_create_for_window(
     gulong snapshot_length = webkit_dom_xpath_result_get_snapshot_length(result, NULL);
 
     for (gulong i = 0; i < snapshot_length && hintCount < MAX_HINTS; i++) {
-        Node* node = webkit_dom_xpath_result_snapshot_item(result, i, NULL);
-        if (!dom_element_is_visible(win, WEBKIT_DOM_ELEMENT(node))) {
+        /* TODO this cast causes a bug if hinting is started after a link was
+         * opened into new window via middle mouse click or right click
+         * context menu */
+        Element* elem = WEBKIT_DOM_ELEMENT(webkit_dom_xpath_result_snapshot_item(result, i, NULL));
+        if (!dom_element_is_visible(win, elem)) {
             continue;
         }
-        DomBoundingRect rect = dom_elemen_get_bounding_rect(WEBKIT_DOM_ELEMENT(node));
+        DomBoundingRect rect = dom_elemen_get_bounding_rect(elem);
         if (rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
             continue;
         }
@@ -260,11 +263,11 @@ static void hints_create_for_window(
 
         /* create the hint element */
         Element* hint = webkit_dom_document_create_element(doc, "span", NULL);
-        CssDeclaration* css_style = webkit_dom_element_get_style(WEBKIT_DOM_ELEMENT(node));
+        CssDeclaration* css_style = webkit_dom_element_get_style(elem);
 
         Hint* newHint = g_new0(Hint, 1);
         newHint->num                 = hintCount;
-        newHint->elem                = WEBKIT_DOM_ELEMENT(node);
+        newHint->elem                = elem;
         newHint->elemColor           = webkit_dom_css_style_declaration_get_property_value(css_style, "color");
         newHint->elemBackgroundColor = webkit_dom_css_style_declaration_get_property_value(css_style, "background-color");
         newHint->hint                = hint;
