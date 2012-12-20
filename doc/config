@@ -2,7 +2,9 @@
 nmap gf source
 nmap <shift-:> input
 nmap o inputopen
+nmap t inputtabopen
 nmap O inputopencurrent
+nmap T inputtabopencurrent
 nmap d quit
 nmap <ctrl-o> back
 nmap <ctrl-i> forward

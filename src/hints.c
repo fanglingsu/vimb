@@ -342,8 +342,8 @@ static void hints_fire(const gulong num)
                 webkit_dom_element_remove_attribute(hint->elem, "target");
             }
 
-            /* remove the hint filter input */
-            vp_clean_input();
+            /* remove the hint filter input and witch to normal mode */
+            vp_set_mode(VP_MODE_NORMAL, TRUE);
         }
         hints_clear();
     }
