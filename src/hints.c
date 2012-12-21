@@ -71,7 +71,7 @@ static GList* hints = NULL;
 static gulong currentFocusNum = 0;
 static gulong hintCount = 0;
 static gulong hintNum = 0;
-static HintMode currentMode = HINTS_MODE_LINK;
+static guint currentMode = HINTS_TYPE_LINK;
 static Element* hintContainer = NULL;
 
 void hints_clear(void)
@@ -103,16 +103,13 @@ void hints_clear(void)
     hints_observe_input(FALSE);
 }
 
-void hints_create(const gchar* input, HintMode mode)
+void hints_create(const gchar* input, guint mode)
 {
     Document* doc;
     Window* win;
     gulong top_width, top_height, offsetX, offsetY;
 
-    /* set the current mode only if this was given */
-    if (mode) {
-        currentMode = mode;
-    }
+    currentMode = mode;
 
     hints_clear();
 
@@ -150,7 +147,7 @@ void hints_update(const gulong num)
 
     if (num == 0) {
         /* recreate the hints */
-        hints_create(NULL, 0);
+        hints_create(NULL, currentMode);
         return;
     }
 
@@ -318,17 +315,23 @@ static void hints_focus(const gulong num)
 static void hints_fire(const gulong num)
 {
     Hint* hint = hints_get_hint_by_number(num);
-    if (hint) {
-        if (dom_is_editable(hint->elem)) {
-            webkit_dom_element_focus(hint->elem);
-            vp_set_mode(VP_MODE_INSERT, FALSE);
+    if (!hint) {
+        return;
+    }
+    if (dom_is_editable(hint->elem)) {
+        webkit_dom_element_focus(hint->elem);
+        vp_set_mode(VP_MODE_INSERT, FALSE);
+    } else {
+        if (currentMode & HINTS_OPEN_USE) {
+            /* get the elements source or href attribute */
+
         } else {
             /* TODO I don't get the mouse click event dispatched here to
              * invoce the gtk events for button press wich might be the better
              * way hanlding to open new windows that setting temporary target
              * attribute here */
             gchar* target = webkit_dom_element_get_attribute(hint->elem, "target");
-            if (currentMode == HINTS_MODE_LINK_NEW) {       /* open in new window */
+            if (currentMode & HINTS_CLICK_BLANK) {          /* open in new window */
                 webkit_dom_element_set_attribute(hint->elem, "target", "_blank", NULL);
             } else if (g_strcmp0(target, "_blank") == 0) {  /* remove possible target attribute */
                 webkit_dom_element_remove_attribute(hint->elem, "target");
@@ -344,12 +347,12 @@ static void hints_fire(const gulong num)
             } else {
                 webkit_dom_element_remove_attribute(hint->elem, "target");
             }
-
-            /* remove the hint filter input and witch to normal mode */
-            vp_set_mode(VP_MODE_NORMAL, TRUE);
         }
-        hints_clear();
+
+        /* remove the hint filter input and witch to normal mode */
+        vp_set_mode(VP_MODE_NORMAL, TRUE);
     }
+    hints_clear();
 }
 
 static Hint* hints_get_hint_by_number(const gulong num)
@@ -387,9 +390,8 @@ static gchar* hints_get_xpath(const gchar* input)
 {
     gchar* xpath = NULL;
 
-    switch (currentMode) {
-        case HINTS_MODE_LINK:
-        case HINTS_MODE_LINK_NEW:
+    switch (CLEAN_HINTS_TYPE(currentMode)) {
+        case HINTS_TYPE_LINK:
             if (input == NULL) {
                 xpath = g_strdup(
                     "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @ role='link'] | "
@@ -414,7 +416,7 @@ static gchar* hints_get_xpath(const gchar* input)
             }
             break;
 
-        case HINTS_MODE_IMAGE:
+        case HINTS_TYPE_IMAGE:
             if (input == NULL) {
                 xpath = g_strdup("//img[@src]");
             } else {

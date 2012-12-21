@@ -22,13 +22,26 @@
 
 #include "main.h"
 
-typedef enum {
-    HINTS_MODE_LINK     = 1,
-    HINTS_MODE_LINK_NEW = 2,
-    HINTS_MODE_IMAGE    = 3,
-} HintMode;
+#define CLEAN_HINTS_TYPE(type) ((type) & ~(HINTS_OPEN_USE | HINTS_CLICK_BLANK))
 
-void hints_create(const gchar* input, HintMode mode);
+enum {
+    HINTS_TYPE_LINK,
+    HINTS_TYPE_IMAGE,
+    HINTS_TYPE_DEFAULT,
+    HINTS_TYPE_FORM
+} HintsType;
+
+enum {
+    HINTS_OPEN_CLICK,
+    HINTS_OPEN_USE = (1 << 2)
+};
+
+enum {
+    HINTS_CLICK_CURRENT,
+    HINTS_CLICK_BLANK = (1 << 3)
+};
+
+void hints_create(const gchar* input, guint mode);
 void hints_update(const gulong num);
 void hints_clear(void);
 void hints_clear_focus(void);

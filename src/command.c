@@ -64,8 +64,8 @@ static CommandInfo cmd_list[] = {
     {"complete",            command_complete,    {0},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"complete-back",       command_complete,    {1},                                                                          VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"inspect",             command_inspect,     {0},                                                                          VP_MODE_NORMAL},
-    {"hint-link",           command_hints,       {HINTS_MODE_LINK, "."},                                                       VP_MODE_HINTING},
-    {"hint-link-new",       command_hints,       {HINTS_MODE_LINK_NEW, ","},                                                   VP_MODE_HINTING},
+    {"hint-link",           command_hints,       {HINTS_TYPE_LINK, "."},                                                       VP_MODE_HINTING},
+    {"hint-link-new",       command_hints,       {HINTS_TYPE_LINK | HINTS_CLICK_BLANK, ","},                                   VP_MODE_HINTING},
     {"hint-focus-next",     command_hints_focus, {0},                                                                          VP_MODE_HINTING},
     {"hint-focus-prev",     command_hints_focus, {1},                                                                          VP_MODE_HINTING},
 };
