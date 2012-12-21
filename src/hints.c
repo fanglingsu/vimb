@@ -131,7 +131,6 @@ void hints_create(const gchar* input, guint mode)
     /* create the hints for the main window */
     hints_create_for_window(input, win, top_width, top_height, offsetX, offsetY);
 
-    hints_clear_focus();
     hints_focus(1);
 
     if (hintCount == 1) {
@@ -174,11 +173,6 @@ void hints_update(const gulong num)
     } else {
         hints_focus(num);
     }
-}
-
-void hints_clear_focus(void)
-{
-
 }
 
 void hints_focus_next(const gboolean back)
