@@ -311,7 +311,9 @@ static gboolean vp_hide_message(void)
  */
 gboolean vp_set_mode(Mode mode, gboolean clean)
 {
-    if (vp.state.mode & VP_MODE_COMPLETE) {
+    if ((vp.state.mode & VP_MODE_COMPLETE)
+        && !(mode & VP_MODE_COMPLETE)
+    ) {
         completion_clean();
     }
     switch (CLEAN_MODE(mode)) {

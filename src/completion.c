@@ -71,8 +71,6 @@ gboolean completion_complete(gboolean back)
     if (!vp.comps.completions) {
         return FALSE;
     }
-    /* set mode flag for complation */
-    vp.state.mode |= VP_MODE_COMPLETE;
     completion_show(back);
 
     return TRUE;
