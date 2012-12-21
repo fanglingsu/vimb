@@ -134,6 +134,20 @@ gboolean dom_is_editable(Element* element)
     return FALSE;
 }
 
+/**
+ * Retrieves the src or href attribute of the given element.
+ */
+gchar* dom_element_get_source(Element* elem)
+{
+    gchar* url = NULL;
+
+    url = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(elem));
+    if (!url) {
+        url = webkit_dom_html_image_element_get_src(WEBKIT_DOM_HTML_IMAGE_ELEMENT(elem));
+    }
+
+    return url;
+}
 
 static gboolean dom_auto_insert(Element* element)
 {

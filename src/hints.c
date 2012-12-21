@@ -21,7 +21,7 @@
 #include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
 #include "dom.h"
-#include "main.h"
+#include "command.h"
 
 #define MAX_HINTS 200
 #define HINT_CONTAINER_ID "__hint_container"
@@ -58,6 +58,8 @@ static void hints_create_for_window(
     gulong top_height, gulong offsetX, gulong offsetY);
 static void hints_focus(const gulong num);
 static void hints_fire(const gulong num);
+static void hints_click_fired_hint(guint mode, Element* elem);
+static void hints_process_fired_hint(guint mode, const gchar* uri);
 static Hint* hints_get_hint_by_number(const gulong num);
 static GList* hints_get_hint_list_by_number(const gulong num);
 static gchar* hints_get_xpath(const gchar* input);
@@ -110,7 +112,6 @@ void hints_create(const gchar* input, guint mode)
     gulong top_width, top_height, offsetX, offsetY;
 
     currentMode = mode;
-
     hints_clear();
 
     doc = webkit_web_view_get_dom_document(WEBKIT_WEB_VIEW(vp.gui.webview));
@@ -307,6 +308,7 @@ static void hints_focus(const gulong num)
         dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND_FOCUS);
 
         dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);
+        webkit_dom_element_blur(hint->elem);
     }
 
     currentFocusNum = num;
@@ -322,37 +324,66 @@ static void hints_fire(const gulong num)
         webkit_dom_element_focus(hint->elem);
         vp_set_mode(VP_MODE_INSERT, FALSE);
     } else {
-        if (currentMode & HINTS_OPEN_USE) {
-            /* get the elements source or href attribute */
-
+        if (currentMode & HINTS_PROCESS) {
+            hints_process_fired_hint(currentMode, dom_element_get_source(hint->elem));
         } else {
-            /* TODO I don't get the mouse click event dispatched here to
-             * invoce the gtk events for button press wich might be the better
-             * way hanlding to open new windows that setting temporary target
-             * attribute here */
-            gchar* target = webkit_dom_element_get_attribute(hint->elem, "target");
-            if (currentMode & HINTS_CLICK_BLANK) {          /* open in new window */
-                webkit_dom_element_set_attribute(hint->elem, "target", "_blank", NULL);
-            } else if (g_strcmp0(target, "_blank") == 0) {  /* remove possible target attribute */
-                webkit_dom_element_remove_attribute(hint->elem, "target");
-            }
+            hints_click_fired_hint(currentMode, hint->elem);
 
-            /* dispatch click event */
-            Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
-            dom_dispatch_mouse_event(doc, hint->elem, "click", 0);
-
-            /* reset previous target attribute */
-            if (target && strlen(target)) {
-                webkit_dom_element_set_attribute(hint->elem, "target", target, NULL);
-            } else {
-                webkit_dom_element_remove_attribute(hint->elem, "target");
-            }
+            /* remove the hint filter input and witch to normal mode */
+            vp_set_mode(VP_MODE_NORMAL, TRUE);
         }
-
-        /* remove the hint filter input and witch to normal mode */
-        vp_set_mode(VP_MODE_NORMAL, TRUE);
     }
     hints_clear();
+}
+
+/**
+ * Perform a mouse click to given element.
+ */
+static void hints_click_fired_hint(guint mode, Element* elem)
+{
+    /* TODO I don't get the mouse click event dispatched here to
+     * invoke the gtk events for button press wich might be the better
+     * way hanlding to open new windows than setting temporary target
+     * attribute here */
+    gchar* target = webkit_dom_element_get_attribute(elem, "target");
+    if (mode & HINTS_TARGET_BLANK) {                /* open in new window */
+        webkit_dom_element_set_attribute(elem, "target", "_blank", NULL);
+    } else if (g_strcmp0(target, "_blank") == 0) {  /* remove possible target attribute */
+        webkit_dom_element_remove_attribute(elem, "target");
+    }
+
+    /* dispatch click event */
+    /* TODO use document of the hint an not the default one, but this is only
+     * required if we hint also into frames and iframes */
+    Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
+    dom_dispatch_mouse_event(doc, elem, "click", 0);
+
+    /* reset previous target attribute */
+    if (target && strlen(target)) {
+        webkit_dom_element_set_attribute(elem, "target", target, NULL);
+    } else {
+        webkit_dom_element_remove_attribute(elem, "target");
+    }
+}
+
+/**
+ * Handle fired hints that are not opened via simulated mouse click.
+ */
+static void hints_process_fired_hint(guint mode, const gchar* uri)
+{
+    HintsProcess type = HINTS_GET_PROCESSING(mode);
+    Arg a = {0};
+    switch (type) {
+        case HINTS_PROCESS_INPUT:
+            a.s = g_strconcat((mode & HINTS_TARGET_BLANK) ? ":tabopen " : ":open ", uri, NULL);
+            command_input(&a);
+            g_free(a.s);
+            break;
+
+        case HINTS_PROCESS_YANK:
+            /* TODO not implemented */
+            break;
+    }
 }
 
 static Hint* hints_get_hint_by_number(const gulong num)
@@ -390,7 +421,7 @@ static gchar* hints_get_xpath(const gchar* input)
 {
     gchar* xpath = NULL;
 
-    switch (CLEAN_HINTS_TYPE(currentMode)) {
+    switch (HINTS_GET_TYPE(currentMode)) {
         case HINTS_TYPE_LINK:
             if (input == NULL) {
                 xpath = g_strdup(
@@ -452,9 +483,8 @@ static gboolean hints_changed_callback(GtkEditable *entry, gpointer data)
 {
     const gchar* text = GET_TEXT();
 
-    if (text[0] == '.' || text[0] == ',') {
-        hints_create(text + 1, currentMode);
-    }
+    /* skip hinting prefixes like '. ', ', ', ';y' ... */
+    hints_create(text + 2, currentMode);
 
     return TRUE;
 }

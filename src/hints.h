@@ -22,24 +22,37 @@
 
 #include "main.h"
 
-#define CLEAN_HINTS_TYPE(type) ((type) & ~(HINTS_OPEN_USE | HINTS_CLICK_BLANK))
+#define HINTS_GET_TYPE(type)       ((type) & (HINTS_TYPE_LAST))
+#define HINTS_GET_PROCESSING(type) ((type) & ~(HINTS_TYPE_LAST | HINTS_PROCESS | HINTS_TARGET_BLANK))
 
-enum {
+/*
+bits 1 and 2 form the hint type
+3:  0 = click hint       1 = process source
+4:  0 = open current     1 = open in new window
+all further bits are used for processing types
+*/
+typedef enum {
     HINTS_TYPE_LINK,
     HINTS_TYPE_IMAGE,
     HINTS_TYPE_DEFAULT,
-    HINTS_TYPE_FORM
+    HINTS_TYPE_FORM,
+    HINTS_TYPE_LAST = HINTS_TYPE_FORM,
 } HintsType;
 
 enum {
-    HINTS_OPEN_CLICK,
-    HINTS_OPEN_USE = (1 << 2)
+    HINTS_CLICK,
+    HINTS_PROCESS = (1 << 2)
 };
 
 enum {
-    HINTS_CLICK_CURRENT,
-    HINTS_CLICK_BLANK = (1 << 3)
+    HINTS_TARGET_CURRENT,
+    HINTS_TARGET_BLANK = (1 << 3)
 };
+
+typedef enum {
+    HINTS_PROCESS_INPUT = (1 << 4),
+    HINTS_PROCESS_YANK
+} HintsProcess;
 
 void hints_create(const gchar* input, guint mode);
 void hints_update(const gulong num);
