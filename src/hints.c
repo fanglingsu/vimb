@@ -47,15 +47,15 @@
 
 typedef struct {
     gulong num;
-    Element* elem;                 /* hinted element */
-    gchar*   elemColor;            /* element color */
-    gchar*   elemBackgroundColor;  /* element background color */
-    Element* hint;                 /* numbered hint element */
+    Element*  elem;                 /* hinted element */
+    gchar*    elemColor;            /* element color */
+    gchar*    elemBackgroundColor;  /* element background color */
+    Element*  hint;                 /* numbered hint element */
+    Element*  container;
 } Hint;
 
-static void hints_create_for_window(
-    const gchar* input, Window* win, gulong top_width,
-    gulong top_height, gulong offsetX, gulong offsetY);
+static Element* hints_get_hint_container(Document* doc);
+static void hints_create_for_window(const gchar* input, Window* win);
 static void hints_focus(const gulong num);
 static void hints_fire(const gulong num);
 static void hints_click_fired_hint(guint mode, Element* elem);
@@ -74,7 +74,6 @@ static gulong currentFocusNum = 0;
 static gulong hintCount = 0;
 static gulong hintNum = 0;
 static guint currentMode = HINTS_TYPE_LINK;
-static Element* hintContainer = NULL;
 
 void hints_clear(void)
 {
@@ -87,6 +86,10 @@ void hints_clear(void)
             /* reset the previous color of the hinted elements */
             dom_element_style_set_property(hint->elem, "color", hint->elemColor);
             dom_element_style_set_property(hint->elem, "background-color", hint->elemBackgroundColor);
+
+            /* remove the hint element from hint container */
+            Node* parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(hint->hint));
+            webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(hint->hint), NULL);
             g_free(hint);
         }
 
@@ -94,12 +97,6 @@ void hints_clear(void)
         hints = NULL;
         hintCount = 0;
         hintNum = 0;
-    }
-    /* remove the hint container */
-    if (hintContainer) {
-        Node* parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(hintContainer));
-        webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(hintContainer), NULL);
-        hintContainer = NULL;
     }
 
     hints_observe_input(FALSE);
@@ -109,7 +106,6 @@ void hints_create(const gchar* input, guint mode)
 {
     Document* doc;
     Window* win;
-    gulong top_width, top_height, offsetX, offsetY;
 
     currentMode = mode;
     hints_clear();
@@ -122,14 +118,9 @@ void hints_create(const gchar* input, guint mode)
     /* add event hanlder for inputbox */
     hints_observe_input(TRUE);
 
-    win        = webkit_dom_document_get_default_view(doc);
-    top_width  = webkit_dom_dom_window_get_inner_width(win);
-    top_height = webkit_dom_dom_window_get_inner_height(win);
-    offsetY    = webkit_dom_dom_window_get_scroll_y(win);
-    offsetX    = webkit_dom_dom_window_get_scroll_x(win);
+    win = webkit_dom_document_get_default_view(doc);
 
-    /* create the hints for the main window */
-    hints_create_for_window(input, win, top_width, top_height, offsetX, offsetY);
+    hints_create_for_window(input, win);
 
     hints_focus(1);
 
@@ -157,7 +148,10 @@ void hints_update(const gulong num)
             /* reset the previous color of the hinted elements */
             dom_element_style_set_property(hint->elem, "color", hint->elemColor);
             dom_element_style_set_property(hint->elem, "background-color", hint->elemBackgroundColor);
-            webkit_dom_node_remove_child(WEBKIT_DOM_NODE(hintContainer), WEBKIT_DOM_NODE(hint->hint), NULL);
+
+            /* remove the hint element from hint container */
+            Node* parent = webkit_dom_node_get_parent_node(WEBKIT_DOM_NODE(hint->hint));
+            webkit_dom_node_remove_child(parent, WEBKIT_DOM_NODE(hint->hint), NULL);
             g_free(hint);
 
             /* store next element before remove current */
@@ -191,16 +185,36 @@ void hints_focus_next(const gboolean back)
     hints_focus(hint->num);
 }
 
-static void hints_create_for_window(
-    const gchar* input,
-    Window* win,
-    gulong top_width,
-    gulong top_height,
-    gulong offsetX,
-    gulong offsetY)
+/**
+ * Retrieves an existing or new created hint container for given document.
+ */
+static Element* hints_get_hint_container(Document* doc)
 {
-    Document* doc = webkit_dom_dom_window_get_document(win);
-    NodeList* list = webkit_dom_document_get_elements_by_tag_name(doc, "body");
+    Element* container;
+
+    /* first try to find a previous container */
+    container = webkit_dom_document_get_element_by_id(doc, HINT_CONTAINER_ID);
+
+    if (!container) {
+        /* create the hint container element */
+        container = webkit_dom_document_create_element(doc, "p", NULL);
+        dom_element_set_style(container, HINT_CONTAINER_STYLE);
+
+        webkit_dom_html_element_set_id(WEBKIT_DOM_HTML_ELEMENT(container), HINT_CONTAINER_ID);
+    }
+
+    return container;
+}
+
+static void hints_create_for_window(const gchar* input, Window* win)
+{
+    Element* container = NULL;
+    NodeList* list = NULL;
+    Document* doc  = NULL;
+    gulong i, listLength;
+
+    doc = webkit_dom_dom_window_get_document(win);
+    list = webkit_dom_document_get_elements_by_tag_name(doc, "body");
     if (!list) {
         return;
     }
@@ -224,21 +238,18 @@ static void hints_create_for_window(
     /* get the bounds */
     gulong win_height = webkit_dom_dom_window_get_inner_height(win);
     gulong win_width  = webkit_dom_dom_window_get_inner_width(win);
-    gulong minX = offsetX < 0 ? -offsetX : offsetX;
-    gulong minY = offsetY < 0 ? -offsetY : offsetY;
-    gulong maxX = offsetX + win_width;
-    gulong maxY = offsetY + win_height;
+    gulong minY = webkit_dom_dom_window_get_scroll_y(win);
+    gulong minX = webkit_dom_dom_window_get_scroll_x(win);
+    gulong maxX = minX + win_width;
+    gulong maxY = minY + win_height;
 
     /* create the hint container element */
-    hintContainer = webkit_dom_document_create_element(doc, "p", NULL);
-    dom_element_set_style(hintContainer, HINT_CONTAINER_STYLE);
+    container = hints_get_hint_container(doc);
+    webkit_dom_node_append_child(body, WEBKIT_DOM_NODE(container), NULL);
 
-    webkit_dom_node_append_child(body, WEBKIT_DOM_NODE(hintContainer), NULL);
-    webkit_dom_html_element_set_id(WEBKIT_DOM_HTML_ELEMENT(hintContainer), HINT_CONTAINER_ID);
+    listLength = webkit_dom_xpath_result_get_snapshot_length(result, NULL);
 
-    gulong snapshot_length = webkit_dom_xpath_result_get_snapshot_length(result, NULL);
-
-    for (gulong i = 0; i < snapshot_length && hintCount < MAX_HINTS; i++) {
+    for (i = 0; i < listLength && hintCount < MAX_HINTS; i++) {
         /* TODO this cast causes a bug if hinting is started after a link was
          * opened into new window via middle mouse click or right click
          * context menu */
@@ -278,10 +289,23 @@ static void hints_create_for_window(
         dom_element_style_set_property(newHint->elem, "background-color", ELEM_BACKGROUND);
         dom_element_style_set_property(newHint->elem, "color", ELEM_COLOR);
 
-        webkit_dom_node_append_child(WEBKIT_DOM_NODE(hintContainer), WEBKIT_DOM_NODE(hint), NULL);
+        webkit_dom_node_append_child(WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE(hint), NULL);
     }
 
-    /* TODO call this function for every found frame or iframe too */
+    /* call this function for every found frame or iframe too */
+    list       = webkit_dom_document_get_elements_by_tag_name(doc, "IFRAME");
+    listLength = webkit_dom_node_list_get_length(list);
+    for (i = 0; i < listLength; i++) {
+        Node* iframe   = webkit_dom_node_list_item(list, i);
+        Window* window = webkit_dom_html_iframe_element_get_content_window(WEBKIT_DOM_HTML_IFRAME_ELEMENT(iframe));
+        DomBoundingRect rect = dom_elemen_get_bounding_rect(WEBKIT_DOM_ELEMENT(iframe));
+
+        if (rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
+            continue;
+        }
+
+        hints_create_for_window(input, window);
+    }
 }
 
 static void hints_focus(const gulong num)

@@ -30,7 +30,6 @@
 #define PRINT_DEBUG(...) do { \
     fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s()\t", __FILE__, __LINE__, __func__); \
     fprintf(stderr, __VA_ARGS__);\
-    fprintf(stderr, "\n"); \
 } while(0);
 #define TIMER_START GTimer *__timer; do {__timer = g_timer_new(); g_timer_start(__timer);} while(0)
 #define TIMER_END do {gulong __debug_micro = 0; gdouble __debug_elapsed = g_timer_elapsed(__timer, &__debug_micro);\
