@@ -128,10 +128,10 @@ void hints_create(const gchar* input, guint mode, const guint prefixLength)
     if (g_list_length(hints->list) == 1) {
         /* only one element hinted - we can fire it */
         hints_fire(1);
+    } else {
+        /* add event hanlder for inputbox */
+        hints_observe_input(TRUE);
     }
-
-    /* add event hanlder for inputbox */
-    hints_observe_input(TRUE);
 }
 
 void hints_update(const gulong num)
