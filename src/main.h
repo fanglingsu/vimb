@@ -209,11 +209,11 @@ typedef struct {
 } Completions;
 
 typedef struct {
-    VpColor              input_fg[VP_MSG_LAST];
-    VpColor              input_bg[VP_MSG_LAST];
+    VpColor               input_fg[VP_MSG_LAST];
+    VpColor               input_bg[VP_MSG_LAST];
     PangoFontDescription* input_font[VP_MSG_LAST];
-    VpColor              comp_fg[VP_COMP_LAST];
-    VpColor              comp_bg[VP_COMP_LAST];
+    VpColor               comp_fg[VP_COMP_LAST];
+    VpColor               comp_bg[VP_COMP_LAST];
     PangoFontDescription* comp_font[VP_COMP_LAST];
 } Style;
 
