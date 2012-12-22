@@ -440,6 +440,9 @@ static void vp_init(void)
     /* initialize settings */
     setting_init();
 
+    /* initialize the hints */
+    hints_init();
+
     vp_read_config();
 }
 

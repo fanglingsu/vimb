@@ -54,6 +54,7 @@ typedef enum {
     HINTS_PROCESS_YANK
 } HintsProcess;
 
+void hints_init(void);
 void hints_create(const gchar* input, guint mode);
 void hints_update(const gulong num);
 void hints_clear(void);

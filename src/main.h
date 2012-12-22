@@ -217,6 +217,13 @@ typedef struct {
     PangoFontDescription* comp_font[VP_COMP_LAST];
 } Style;
 
+typedef struct {
+    GList* list;
+    gulong focusNum;
+    gulong num;
+    guint  mode;
+} Hints;
+
 /* core struct */
 typedef struct {
     Gui           gui;
@@ -230,6 +237,7 @@ typedef struct {
     Completions   comps;
     Style         style;
     GHashTable*   settings;
+    Hints         hints;
 #if 0
     Ssl           ssl;
     Communication comm;

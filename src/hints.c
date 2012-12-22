@@ -55,7 +55,7 @@ typedef struct {
 } Hint;
 
 static Element* hints_get_hint_container(Document* doc);
-static void hints_create_for_window(const gchar* input, Window* win);
+static void hints_create_for_window(const gchar* input, Window* win, gulong hintCount);
 static void hints_focus(const gulong num);
 static void hints_fire(const gulong num);
 static void hints_click_fired_hint(guint mode, Element* elem);
@@ -68,19 +68,24 @@ static gboolean hints_changed_callback(GtkEditable *entry, gpointer data);
 static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
 static gboolean hints_num_has_prefix(gulong num, gulong prefix);
 
-/* variables */
-static GList* hints = NULL;
-static gulong currentFocusNum = 0;
-static gulong hintCount = 0;
-static gulong hintNum = 0;
-static guint currentMode = HINTS_TYPE_LINK;
+
+void hints_init(void)
+{
+    Hints* hints = &vp.hints;
+
+    hints->list     = NULL;
+    hints->focusNum = 0;
+    hints->num      = 0;
+}
 
 void hints_clear(void)
 {
+    Hints* hints = &vp.hints;
+
     /* free the list of hints */
-    if (hints) {
+    if (hints->list) {
         GList* link;
-        for (link = hints; link != NULL; link = link->next) {
+        for (link = hints->list; link != NULL; link = link->next) {
             Hint* hint = (Hint*)link->data;
 
             /* reset the previous color of the hinted elements */
@@ -93,10 +98,10 @@ void hints_clear(void)
             g_free(hint);
         }
 
-        g_list_free(hints);
-        hints = NULL;
-        hintCount = 0;
-        hintNum = 0;
+        g_list_free(hints->list);
+
+        /* use hints_init to unset previous data */
+        hints_init();
     }
 
     hints_observe_input(FALSE);
@@ -104,10 +109,11 @@ void hints_clear(void)
 
 void hints_create(const gchar* input, guint mode)
 {
+    Hints* hints = &vp.hints;
     Document* doc;
     Window* win;
 
-    currentMode = mode;
+    hints->mode = mode;
     hints_clear();
 
     doc = webkit_web_view_get_dom_document(WEBKIT_WEB_VIEW(vp.gui.webview));
@@ -120,11 +126,11 @@ void hints_create(const gchar* input, guint mode)
 
     win = webkit_dom_document_get_default_view(doc);
 
-    hints_create_for_window(input, win);
+    hints_create_for_window(input, win, 0);
 
     hints_focus(1);
 
-    if (hintCount == 1) {
+    if (g_list_length(hints->list) == 1) {
         /* only one element hinted - we can fire it */
         hints_fire(1);
     }
@@ -132,13 +138,14 @@ void hints_create(const gchar* input, guint mode)
 
 void hints_update(const gulong num)
 {
-    Hint* hint = NULL;
-    GList* next = NULL;
-    GList* link = hints;
+    Hints* hints = &vp.hints;
+    Hint* hint   = NULL;
+    GList* next  = NULL;
+    GList* link  = hints->list;
 
     if (num == 0) {
         /* recreate the hints */
-        hints_create(NULL, currentMode);
+        hints_create(NULL, hints->mode);
         return;
     }
 
@@ -156,13 +163,13 @@ void hints_update(const gulong num)
 
             /* store next element before remove current */
             next = g_list_next(link);
-            hints = g_list_remove_link(hints, link);
+            hints->list = g_list_remove_link(hints->list, link);
             link = next;
         } else {
             link = g_list_next(link);
         }
     }
-    if (g_list_length(hints) == 1) {
+    if (g_list_length(hints->list) == 1) {
         hints_fire(num);
     } else {
         hints_focus(num);
@@ -171,15 +178,16 @@ void hints_update(const gulong num)
 
 void hints_focus_next(const gboolean back)
 {
-    Hint* hint  = NULL;
-    GList* list = hints_get_hint_list_by_number(currentFocusNum);
+    Hints* hints = &vp.hints;
+    Hint* hint   = NULL;
+    GList* list  = hints_get_hint_list_by_number(hints->focusNum);
 
     list = back ? g_list_previous(list) : g_list_next(list);
     if (list != NULL) {
         hint = (Hint*)list->data;
     } else {
         /* if we reached begin or end start on the opposite side */
-        list = back ? g_list_last(hints) : g_list_first(hints);
+        list = back ? g_list_last(hints->list) : g_list_first(hints->list);
         hint = (Hint*)list->data;
     }
     hints_focus(hint->num);
@@ -206,11 +214,12 @@ static Element* hints_get_hint_container(Document* doc)
     return container;
 }
 
-static void hints_create_for_window(const gchar* input, Window* win)
+static void hints_create_for_window(const gchar* input, Window* win, gulong hintCount)
 {
+    Hints* hints       = &vp.hints;
     Element* container = NULL;
-    NodeList* list = NULL;
-    Document* doc  = NULL;
+    NodeList* list     = NULL;
+    Document* doc      = NULL;
     gulong i, listLength;
 
     doc = webkit_dom_dom_window_get_document(win);
@@ -274,7 +283,7 @@ static void hints_create_for_window(const gchar* input, Window* win)
         newHint->elemColor           = webkit_dom_css_style_declaration_get_property_value(css_style, "color");
         newHint->elemBackgroundColor = webkit_dom_css_style_declaration_get_property_value(css_style, "background-color");
         newHint->hint                = hint;
-        hints = g_list_append(hints, newHint);
+        hints->list = g_list_append(hints->list, newHint);
 
         gulong left = rect.left - 3;
         gulong top  = rect.top - 3;
@@ -304,7 +313,7 @@ static void hints_create_for_window(const gchar* input, Window* win)
             continue;
         }
 
-        hints_create_for_window(input, window);
+        hints_create_for_window(input, window, hintCount);
     }
 }
 
@@ -312,7 +321,7 @@ static void hints_focus(const gulong num)
 {
     Document* doc = NULL;
 
-    Hint* hint = hints_get_hint_by_number(currentFocusNum);
+    Hint* hint = hints_get_hint_by_number(vp.hints.focusNum);
     if (hint) {
         /* reset previous focused element */
         dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND);
@@ -331,12 +340,13 @@ static void hints_focus(const gulong num)
         webkit_dom_element_blur(hint->elem);
     }
 
-    currentFocusNum = num;
+    vp.hints.focusNum = num;
 }
 
 static void hints_fire(const gulong num)
 {
-    Hint* hint = hints_get_hint_by_number(num);
+    Hints* hints = &vp.hints;
+    Hint* hint   = hints_get_hint_by_number(num);
     if (!hint) {
         return;
     }
@@ -344,10 +354,10 @@ static void hints_fire(const gulong num)
         webkit_dom_element_focus(hint->elem);
         vp_set_mode(VP_MODE_INSERT, FALSE);
     } else {
-        if (currentMode & HINTS_PROCESS) {
-            hints_process_fired_hint(currentMode, dom_element_get_source(hint->elem));
+        if (hints->mode & HINTS_PROCESS) {
+            hints_process_fired_hint(hints->mode, dom_element_get_source(hint->elem));
         } else {
-            hints_click_fired_hint(currentMode, hint->elem);
+            hints_click_fired_hint(hints->mode, hint->elem);
 
             /* remove the hint filter input and witch to normal mode */
             vp_set_mode(VP_MODE_NORMAL, TRUE);
@@ -413,7 +423,7 @@ static Hint* hints_get_hint_by_number(const gulong num)
 static GList* hints_get_hint_list_by_number(const gulong num)
 {
     GList* link;
-    for (link = hints; link != NULL; link = link->next) {
+    for (link = vp.hints.list; link != NULL; link = link->next) {
         Hint* hint = (Hint*)link->data;
         /* TODO check if it would be faster to use the sorting of the numbers
          * in the list to get the items */
@@ -435,7 +445,7 @@ static gchar* hints_get_xpath(const gchar* input)
 {
     gchar* xpath = NULL;
 
-    switch (HINTS_GET_TYPE(currentMode)) {
+    switch (HINTS_GET_TYPE(vp.hints.mode)) {
         case HINTS_TYPE_LINK:
             if (input == NULL) {
                 xpath = g_strdup(
@@ -498,32 +508,33 @@ static gboolean hints_changed_callback(GtkEditable *entry, gpointer data)
     const gchar* text = GET_TEXT();
 
     /* skip hinting prefixes like '. ', ', ', ';y' ... */
-    hints_create(text + 2, currentMode);
+    hints_create(text + 2, vp.hints.mode);
 
     return TRUE;
 }
 
 static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
 {
+    Hints* hints = &vp.hints;
     gint numval;
     guint keyval = event->keyval;
     guint state  = CLEAN_STATE_WITH_SHIFT(event);
 
     if (keyval == GDK_Return) {
-        hints_fire(currentFocusNum);
+        hints_fire(hints->focusNum);
         return TRUE;
     }
     if (keyval == GDK_BackSpace && (state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {
-        hintNum /= 10;
-        hints_update(hintNum);
+        hints->num /= 10;
+        hints_update(hints->num);
 
         return TRUE;
     }
     numval = g_unichar_digit_value((gunichar)gdk_keyval_to_unicode(keyval));
-    if ((numval >= 1 && numval <= 9) || (numval == 0 && hintNum)) {
+    if ((numval >= 1 && numval <= 9) || (numval == 0 && hints->num)) {
         /* allow a zero as non-first number */
-        hintNum = (hintNum ? hintNum * 10 : 0) + numval;
-        hints_update(hintNum);
+        hints->num = (hints->num ? hints->num * 10 : 0) + numval;
+        hints_update(hints->num);
 
         return TRUE;
     }
