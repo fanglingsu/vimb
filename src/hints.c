@@ -112,7 +112,6 @@ void hints_create(const gchar* input, guint mode, const guint prefixLength)
 {
     Hints* hints = &vp.hints;
     Document* doc;
-    Window* win;
 
     hints_clear();
     hints->mode         = mode;
@@ -123,19 +122,16 @@ void hints_create(const gchar* input, guint mode, const guint prefixLength)
         return;
     }
 
-    /* add event hanlder for inputbox */
-    hints_observe_input(TRUE);
-
-    win = webkit_dom_document_get_default_view(doc);
-
-    hints_create_for_window(input, win, 0);
-
+    hints_create_for_window(input, webkit_dom_document_get_default_view(doc), 0);
     hints_focus(1);
 
     if (g_list_length(hints->list) == 1) {
         /* only one element hinted - we can fire it */
         hints_fire(1);
     }
+
+    /* add event hanlder for inputbox */
+    hints_observe_input(TRUE);
 }
 
 void hints_update(const gulong num)
