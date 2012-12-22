@@ -115,12 +115,8 @@ void hints_create(const gchar* input, guint mode, const guint prefixLength)
     Window* win;
 
     hints_clear();
-    hints->mode = mode;
-
-    /* don't overwrite if zero */
-    if (prefixLength) {
-        hints->prefixLength = prefixLength;
-    }
+    hints->mode         = mode;
+    hints->prefixLength = prefixLength;
 
     doc = webkit_web_view_get_dom_document(WEBKIT_WEB_VIEW(vp.gui.webview));
     if (!doc) {
@@ -151,7 +147,7 @@ void hints_update(const gulong num)
 
     if (num == 0) {
         /* recreate the hints */
-        hints_create(NULL, hints->mode, 0);
+        hints_create(NULL, hints->mode, hints->prefixLength);
         return;
     }
 
@@ -514,7 +510,7 @@ static gboolean hints_changed_callback(GtkEditable *entry, gpointer data)
     const gchar* text = GET_TEXT();
 
     /* skip hinting prefixes like '.', ',', ';y' ... */
-    hints_create(text + vp.hints.prefixLength, vp.hints.mode, 0);
+    hints_create(text + vp.hints.prefixLength, vp.hints.mode, vp.hints.prefixLength);
 
     return TRUE;
 }
