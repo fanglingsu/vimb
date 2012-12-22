@@ -310,13 +310,14 @@ static void hints_create_for_window(const gchar* input, Window* win)
 
 static void hints_focus(const gulong num)
 {
-    /* TODO use the document the hinted element belongs to */
-    Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
+    Document* doc = NULL;
+
     Hint* hint = hints_get_hint_by_number(currentFocusNum);
     if (hint) {
         /* reset previous focused element */
         dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND);
 
+        doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(hint->elem));
         dom_dispatch_mouse_event(doc, hint->elem, "mouseout", 0);
     }
 
@@ -325,6 +326,7 @@ static void hints_focus(const gulong num)
         /* mark new hint as focused */
         dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND_FOCUS);
 
+        doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(hint->elem));
         dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);
         webkit_dom_element_blur(hint->elem);
     }
@@ -359,10 +361,6 @@ static void hints_fire(const gulong num)
  */
 static void hints_click_fired_hint(guint mode, Element* elem)
 {
-    /* TODO I don't get the mouse click event dispatched here to
-     * invoke the gtk events for button press wich might be the better
-     * way hanlding to open new windows than setting temporary target
-     * attribute here */
     gchar* target = webkit_dom_element_get_attribute(elem, "target");
     if (mode & HINTS_TARGET_BLANK) {                /* open in new window */
         webkit_dom_element_set_attribute(elem, "target", "_blank", NULL);
@@ -371,9 +369,7 @@ static void hints_click_fired_hint(guint mode, Element* elem)
     }
 
     /* dispatch click event */
-    /* TODO use document of the hint an not the default one, but this is only
-     * required if we hint also into frames and iframes */
-    Document* doc = webkit_web_view_get_dom_document(vp.gui.webview);
+    Document* doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(elem));
     dom_dispatch_mouse_event(doc, elem, "click", 0);
 
     /* reset previous target attribute */
