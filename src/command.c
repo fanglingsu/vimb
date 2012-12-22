@@ -64,8 +64,8 @@ static CommandInfo cmd_list[] = {
     {"complete",            command_complete,    {0},                                                                                VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"complete-back",       command_complete,    {1},                                                                                VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"inspect",             command_inspect,     {0},                                                                                VP_MODE_NORMAL},
-    {"hint-link",           command_hints,       {HINTS_TYPE_LINK, ". "},                                                             VP_MODE_HINTING},
-    {"hint-link-new",       command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK, ", "},                                        VP_MODE_HINTING},
+    {"hint-link",           command_hints,       {HINTS_TYPE_LINK, "."},                                                             VP_MODE_HINTING},
+    {"hint-link-new",       command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK, ","},                                        VP_MODE_HINTING},
     {"hint-input-open",     command_hints,       {HINTS_TYPE_LINK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";o"},                      VP_MODE_HINTING},
     {"hint-input-tabopen",  command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";t"}, VP_MODE_HINTING},
     {"hint-focus-next",     command_hints_focus, {0},                                                                                VP_MODE_HINTING},
@@ -275,7 +275,7 @@ gboolean command_inspect(const Arg* arg)
 gboolean command_hints(const Arg* arg)
 {
     command_write_input(arg->s);
-    hints_create(NULL, arg->i);
+    hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
     return TRUE;
 }

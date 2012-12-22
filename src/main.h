@@ -222,6 +222,7 @@ typedef struct {
     gulong focusNum;
     gulong num;
     guint  mode;
+    guint  prefixLength;
 } Hints;
 
 /* core struct */
