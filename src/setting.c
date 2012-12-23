@@ -30,6 +30,7 @@ static gboolean setting_status_color_fg(const Setting* s);
 static gboolean setting_status_font(const Setting* s);
 static gboolean setting_input_style(const Setting* s);
 static gboolean setting_completion_style(const Setting* s);
+static gboolean setting_hint_style(const Setting* s);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -96,6 +97,9 @@ static Setting default_settings[] = {
     {NULL, "completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#fff"}},
     {NULL, "completion-bg-normal", TYPE_CHAR, setting_completion_style, {.s = "#656565"}},
     {NULL, "completion-bg-active", TYPE_CHAR, setting_completion_style, {.s = "#777777"}},
+    {NULL, "hint-bg", TYPE_CHAR, setting_hint_style, {.s = "#ff0"}},
+    {NULL, "hint-bg-focus", TYPE_CHAR, setting_hint_style, {.s = "#8f0"}},
+    {NULL, "hint-fg", TYPE_CHAR, setting_hint_style, {.s = "#000"}},
 };
 
 
@@ -268,6 +272,23 @@ static gboolean setting_completion_style(const Setting* s)
             pango_font_description_free(style->comp_font[type]);
         }
         style->comp_font[type] = pango_font_description_from_string(s->arg.s);
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_hint_style(const Setting* s)
+{
+    Style* style = &vp.style;
+    if (!g_strcmp0(s->name, "hint-bg")) {
+        strncpy(style->hint_bg, s->arg.s, HEX_COLOR_LEN - 1);
+        style->hint_bg[HEX_COLOR_LEN - 1] = '\0';
+    } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
+        strncpy(style->hint_bg_focus, s->arg.s, HEX_COLOR_LEN - 1);
+        style->hint_bg_focus[HEX_COLOR_LEN] = '\0';
+    } else if (!g_strcmp0(s->name, "hint-fg")) {
+        strncpy(style->hint_fg, s->arg.s, HEX_COLOR_LEN - 1);
+        style->hint_fg[HEX_COLOR_LEN - 1] = '\0';
     }
 
     return TRUE;

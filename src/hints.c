@@ -27,10 +27,6 @@
 #define HINT_CONTAINER_ID "__hint_container"
 #define HINT_CLASS "__hint"
 
-#define ELEM_BACKGROUND "#ff0"
-#define ELEM_BACKGROUND_FOCUS "#8f0"
-#define ELEM_COLOR "#000"
-
 #define HINT_CONTAINER_STYLE "line-height:1em;"
 #define HINT_STYLE "z-index:100000;"\
     "position:absolute;"\
@@ -293,8 +289,8 @@ static void hints_create_for_window(const gchar* input, Window* win, gulong hint
         g_free(num);
 
         /* change the style of the hinted element */
-        dom_element_style_set_property(newHint->elem, "background-color", ELEM_BACKGROUND);
-        dom_element_style_set_property(newHint->elem, "color", ELEM_COLOR);
+        dom_element_style_set_property(newHint->elem, "background-color", vp.style.hint_bg);
+        dom_element_style_set_property(newHint->elem, "color", vp.style.hint_fg);
 
         webkit_dom_node_append_child(WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE(hint), NULL);
     }
@@ -322,7 +318,7 @@ static void hints_focus(const gulong num)
     Hint* hint = hints_get_hint_by_number(vp.hints.focusNum);
     if (hint) {
         /* reset previous focused element */
-        dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND);
+        dom_element_style_set_property(hint->elem, "background-color", vp.style.hint_bg);
 
         doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(hint->elem));
         dom_dispatch_mouse_event(doc, hint->elem, "mouseout", 0);
@@ -331,7 +327,7 @@ static void hints_focus(const gulong num)
     hint = hints_get_hint_by_number(num);
     if (hint) {
         /* mark new hint as focused */
-        dom_element_style_set_property(hint->elem, "background-color", ELEM_BACKGROUND_FOCUS);
+        dom_element_style_set_property(hint->elem, "background-color", vp.style.hint_bg_focus);
 
         doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(hint->elem));
         dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);
