@@ -202,6 +202,7 @@ typedef struct {
     time_t cookie_timeout;
 #endif
     gint   scrollstep;
+    guint  max_completion_items;
 } Config;
 
 typedef struct {
@@ -214,6 +215,7 @@ typedef struct {
     VpColor               input_fg[VP_MSG_LAST];
     VpColor               input_bg[VP_MSG_LAST];
     PangoFontDescription* input_font[VP_MSG_LAST];
+    /* completion */
     VpColor               comp_fg[VP_COMP_LAST];
     VpColor               comp_bg[VP_COMP_LAST];
     PangoFontDescription* comp_font[VP_COMP_LAST];
@@ -246,11 +248,6 @@ typedef struct {
     Style         style;
     GHashTable*   settings;
     Hints         hints;
-#if 0
-    Ssl           ssl;
-    Communication comm;
-    Info          info;
-#endif
 } VpCore;
 
 /* main object */

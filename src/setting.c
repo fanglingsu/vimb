@@ -97,6 +97,7 @@ static Setting default_settings[] = {
     {NULL, "completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#fff"}},
     {NULL, "completion-bg-normal", TYPE_CHAR, setting_completion_style, {.s = "#656565"}},
     {NULL, "completion-bg-active", TYPE_CHAR, setting_completion_style, {.s = "#777777"}},
+    {NULL, "max-completion-items", TYPE_INTEGER, setting_completion_style, {.i = 15}},
     {NULL, "hint-bg", TYPE_CHAR, setting_hint_style, {.s = "#ff0"}},
     {NULL, "hint-bg-focus", TYPE_CHAR, setting_hint_style, {.s = "#8f0"}},
     {NULL, "hint-fg", TYPE_CHAR, setting_hint_style, {.s = "#000"}},
@@ -273,6 +274,8 @@ static gboolean setting_completion_style(const Setting* s)
             pango_font_description_free(style->comp_font[type]);
         }
         style->comp_font[type] = pango_font_description_from_string(s->arg.s);
+    } else if (!g_strcmp0(s->name, "max-completion-items")) {
+        vp.config.max_completion_items = s->arg.i;
     }
 
     return TRUE;

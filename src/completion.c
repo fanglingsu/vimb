@@ -144,11 +144,11 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
     GList *old, *new;
     Completion *c;
 
-    int length = g_list_length(completion);
-    int max = 15;
-    int items = MAX(length, max);
-    int r = (max) % 2;
-    int offset = max / 2 - 1 + r;
+    gint length = g_list_length(completion);
+    gint max    = vp.config.max_completion_items;
+    gint items  = MAX(length, max);
+    gint r      = (max) % 2;
+    gint offset = max / 2 - 1 + r;
 
     old = active;
     int position = g_list_position(completion, active) + 1;
@@ -216,17 +216,16 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
 /* allow to chenge the direction of display */
 static void completion_show(gboolean back)
 {
-    /* TODO make this configurable */
-    const gint max_items = 15;
+    guint max = vp.config.max_completion_items;
     gint i = 0;
     if (back) {
         vp.comps.active = g_list_last(vp.comps.completions);
-        for (GList *l = vp.comps.active; l && i < max_items; l = l->prev, i++) {
+        for (GList *l = vp.comps.active; l && i < max; l = l->prev, i++) {
             gtk_widget_show_all(((Completion*)l->data)->event);
         }
     } else {
         vp.comps.active = g_list_first(vp.comps.completions);
-        for (GList *l = vp.comps.active; l && i < max_items; l = l->next, i++) {
+        for (GList *l = vp.comps.active; l && i < max; l = l->next, i++) {
             gtk_widget_show_all(((Completion*)l->data)->event);
         }
     }
@@ -269,7 +268,6 @@ static void completion_set_entry_text(Completion* completion)
 
 static Completion* completion_get_new(const gchar* label, const gchar* prefix)
 {
-    /* TODO make this configurable */
     const gint padding = 2;
     Completion* c = g_new0(Completion, 1);
 
