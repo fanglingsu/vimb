@@ -129,7 +129,7 @@ gboolean command_input(const Arg* arg)
 
     /* add current url if requested */
     if (VP_INPUT_CURRENT_URI == arg->i
-        && (url = webkit_web_view_get_uri(vp.gui.webview))
+        && (url = CURRENT_URL())
     ) {
         /* append the current url to the input message */
         gchar* input = g_strconcat(arg->s, url, NULL);
@@ -283,6 +283,18 @@ gboolean command_hints(const Arg* arg)
 gboolean command_hints_focus(const Arg* arg)
 {
     hints_focus_next(arg->i ? TRUE : FALSE);
+
+    return TRUE;
+}
+
+gboolean command_yank(const Arg* arg)
+{
+    const gchar* uri = CURRENT_URL();
+    if (!uri) {
+        return TRUE;
+    }
+
+    vp_set_clipboard(uri, arg->i);
 
     return TRUE;
 }

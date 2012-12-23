@@ -46,6 +46,7 @@
 #define CLEAN_MODE(mode) ((mode) & ~(VP_MODE_COMPLETE))
 #define GET_CLEAN_MODE() (CLEAN_MODE(vp.state.mode))
 #define CLEAR_INPUT() (vp_echo(VP_MSG_NORMAL, ""))
+#define CURRENT_URL() webkit_web_view_get_uri(vp.gui.webview)
 
 #define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
 #define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))

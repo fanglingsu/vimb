@@ -66,7 +66,7 @@ static gboolean vp_hide_message(void);
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
 {
     Gui* gui        = &vp.gui;
-    const char* uri = webkit_web_view_get_uri(gui->webview);
+    const char* uri = CURRENT_URL();
 
     switch (webkit_web_view_get_load_status(gui->webview)) {
         case WEBKIT_LOAD_PROVISIONAL:
@@ -166,7 +166,7 @@ static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* 
     GtkWidget* window;
     GtkWidget* view;
 
-    title  = g_strdup_printf("Inspect page - %s", webkit_web_view_get_uri(web_view));
+    title  = g_strdup_printf("Inspect page - %s", CURRENT_URL());
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_wmclass(GTK_WINDOW(window), PROJECT, PROJECT);
     gtk_window_set_title(GTK_WINDOW(window), title);
