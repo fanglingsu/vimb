@@ -20,6 +20,13 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
+enum {
+    COMMAND_YANK_PRIMARY   = VP_CLIPBOARD_PRIMARY,
+    COMMAND_YANK_SECONDARY = VP_CLIPBOARD_SECONDARY,
+    COMMAND_YANK_URI       = (COMMAND_YANK_SECONDARY<<1),
+    COMMAND_YANK_SELECTION = (COMMAND_YANK_SECONDARY<<2)
+};
+
 typedef gboolean (*Command)(const Arg* arg);
 
 typedef struct {
@@ -48,5 +55,6 @@ gboolean command_complete(const Arg* arg);
 gboolean command_inspect(const Arg* arg);
 gboolean command_hints(const Arg* arg);
 gboolean command_hints_focus(const Arg* arg);
+gboolean command_yank(const Arg* arg);
 
 #endif /* end of include guard: COMMAND_H */

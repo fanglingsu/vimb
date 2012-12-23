@@ -70,6 +70,8 @@ static CommandInfo cmd_list[] = {
     {"hint-input-tabopen",  command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";t"}, VP_MODE_HINTING},
     {"hint-focus-next",     command_hints_focus, {0},                                                                                VP_MODE_HINTING},
     {"hint-focus-prev",     command_hints_focus, {1},                                                                                VP_MODE_HINTING},
+    {"yank-uri",            command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI},                 VP_MODE_NORMAL},
+    {"yank-selection",      command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION},           VP_MODE_NORMAL},
 };
 
 static void command_write_input(const gchar* str);
@@ -289,14 +291,34 @@ gboolean command_hints_focus(const Arg* arg)
 
 gboolean command_yank(const Arg* arg)
 {
-    const gchar* uri = CURRENT_URL();
-    if (!uri) {
-        return TRUE;
+    if (arg->i & COMMAND_YANK_SELECTION) {
+        gchar* text = NULL;
+        /* copy current selection to clipboard */
+        webkit_web_view_copy_clipboard(vp.gui.webview);
+        text = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+        if (!text) {
+            text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
+        }
+        if (text) {
+            vp_echo(VP_MSG_NORMAL, FALSE, "Yanked: %s", text);
+            g_free(text);
+
+            return TRUE;
+        }
+    } else {
+        /* use current arg.s a new clipboard content */
+        Arg a = {arg->i, arg->s};
+        if (arg->i & COMMAND_YANK_URI) {
+            /* yank current url */
+            a.s = (gchar*)CURRENT_URL();
+        }
+        if (vp_set_clipboard(&a)) {
+            vp_echo(VP_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
+
+            return TRUE;
+        }
     }
-
-    vp_set_clipboard(uri, arg->i);
-
-    return TRUE;
+    return FALSE;
 }
 
 static void command_write_input(const gchar* str)

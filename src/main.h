@@ -47,6 +47,8 @@
 #define GET_CLEAN_MODE() (CLEAN_MODE(vp.state.mode))
 #define CLEAR_INPUT() (vp_echo(VP_MSG_NORMAL, ""))
 #define CURRENT_URL() webkit_web_view_get_uri(vp.gui.webview)
+#define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
+#define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
 
 #define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
 #define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))
@@ -150,6 +152,11 @@ typedef enum {
     TYPE_DOUBLE,
     TYPE_COLOR,
 } Type;
+
+enum {
+    VP_CLIPBOARD_PRIMARY   = (1<<0),
+    VP_CLIPBOARD_SECONDARY = (1<<1)
+};
 
 /* structs */
 typedef struct {
@@ -263,5 +270,6 @@ void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg,
 gboolean vp_load_uri(const Arg* arg);
 void vp_clean_up(void);
 void vp_clean_input(void);
+gboolean vp_set_clipboard(const Arg* arg);
 
 #endif /* end of include guard: MAIN_H */

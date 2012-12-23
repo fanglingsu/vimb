@@ -298,6 +298,25 @@ void vp_clean_input(void)
     vp_echo(VP_MSG_NORMAL, FALSE, "");
 }
 
+gboolean vp_set_clipboard(const Arg* arg)
+{
+    gboolean result = FALSE;
+    if (!arg->s) {
+        return result;
+    }
+
+    if (arg->i & VP_CLIPBOARD_PRIMARY) {
+        gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), arg->s, -1);
+        result = TRUE;
+    }
+    if (arg->i & VP_CLIPBOARD_SECONDARY) {
+        gtk_clipboard_set_text(SECONDARY_CLIPBOARD(), arg->s, -1);
+        result = TRUE;
+    }
+
+    return result;
+}
+
 static gboolean vp_hide_message(void)
 {
     vp_echo(VP_MSG_NORMAL, FALSE, "");
