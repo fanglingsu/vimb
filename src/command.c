@@ -162,9 +162,9 @@ gboolean command_view_source(const Arg* arg)
 gboolean command_navigate(const Arg* arg)
 {
     if (arg->i <= VP_NAVIG_FORWARD) {
-        /* TODO allow to set a count for the navigation */
+        gint count = vp.state.count ? vp.state.count : 1;
         webkit_web_view_go_back_or_forward(
-            vp.gui.webview, (arg->i == VP_NAVIG_BACK ? -1 : 1)
+            vp.gui.webview, (arg->i == VP_NAVIG_BACK ? -count : count)
         );
     } else if (arg->i == VP_NAVIG_RELOAD) {
         webkit_web_view_reload(vp.gui.webview);
