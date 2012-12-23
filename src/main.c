@@ -437,11 +437,11 @@ static void vp_init(void)
     /* initialize the keybindings */
     keybind_init();
 
-    /* initialize settings */
-    setting_init();
-
     /* initialize the hints */
     hints_init();
+
+    /* initialize settings */
+    setting_init();
 
     vp_read_config();
 }

@@ -221,6 +221,7 @@ typedef struct {
     gchar                 hint_bg[HEX_COLOR_LEN];
     gchar                 hint_bg_focus[HEX_COLOR_LEN];
     gchar                 hint_fg[HEX_COLOR_LEN];
+    gchar*                hint_style;
 } Style;
 
 typedef struct {

@@ -28,18 +28,7 @@
 #define HINT_CLASS "__hint"
 
 #define HINT_CONTAINER_STYLE "line-height:1em;"
-#define HINT_STYLE "z-index:100000;"\
-    "position:absolute;"\
-    "font-family:monospace;"\
-    "font-size:10px;"\
-    "font-weight:bold;"\
-    "color:#000;"\
-    "background-color:#fff;"\
-    "margin:0;"\
-    "padding:0px 1px;"\
-    "border:1px solid #444;"\
-    "opacity:0.7;"\
-    "left:%lipx;top:%lipx;"
+#define HINT_STYLE "z-index:100000;position:absolute;left:%lipx;top:%lipx;%s"
 
 typedef struct {
     gulong num;
@@ -281,7 +270,7 @@ static void hints_create_for_window(const gchar* input, Window* win, gulong hint
 
         gulong left = rect.left - 3;
         gulong top  = rect.top - 3;
-        dom_element_set_style(hint, HINT_STYLE, left, top);
+        dom_element_set_style(hint, HINT_STYLE, left, top, vp.style.hint_style);
 
         gchar* num = g_strdup_printf("%li", newHint->num);
         webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(hint), num, NULL);

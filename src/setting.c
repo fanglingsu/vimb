@@ -100,6 +100,7 @@ static Setting default_settings[] = {
     {NULL, "hint-bg", TYPE_CHAR, setting_hint_style, {.s = "#ff0"}},
     {NULL, "hint-bg-focus", TYPE_CHAR, setting_hint_style, {.s = "#8f0"}},
     {NULL, "hint-fg", TYPE_CHAR, setting_hint_style, {.s = "#000"}},
+    {NULL, "hint-style", TYPE_CHAR, setting_hint_style, {.s = "font-family:monospace;font-weight:bold;color:#000;background-color:#fff;margin:0;padding:0px 1px;border:1px solid #444;opacity:0.7;"}},
 };
 
 
@@ -289,6 +290,12 @@ static gboolean setting_hint_style(const Setting* s)
     } else if (!g_strcmp0(s->name, "hint-fg")) {
         strncpy(style->hint_fg, s->arg.s, HEX_COLOR_LEN - 1);
         style->hint_fg[HEX_COLOR_LEN - 1] = '\0';
+    } else if (!g_strcmp0(s->name, "hint-style")) {
+        if (style->hint_style) {
+            g_free(style->hint_style);
+            style->hint_style = NULL;
+        }
+        style->hint_style = g_strdup(s->arg.s);
     }
 
     return TRUE;
