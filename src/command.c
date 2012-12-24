@@ -68,6 +68,7 @@ static CommandInfo cmd_list[] = {
     {"hint-link-new",       command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK, ","},                                        VP_MODE_HINTING},
     {"hint-input-open",     command_hints,       {HINTS_TYPE_LINK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";o"},                      VP_MODE_HINTING},
     {"hint-input-tabopen",  command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";t"}, VP_MODE_HINTING},
+    {"hint-yank",           command_hints,       {HINTS_TYPE_LINK | HINTS_PROCESS | HINTS_PROCESS_YANK, ";y"},                       VP_MODE_HINTING},
     {"hint-focus-next",     command_hints_focus, {0},                                                                                VP_MODE_HINTING},
     {"hint-focus-prev",     command_hints_focus, {1},                                                                                VP_MODE_HINTING},
     {"yank-uri",            command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI},                 VP_MODE_NORMAL},
@@ -300,24 +301,34 @@ gboolean command_yank(const Arg* arg)
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
+            /* TODO is this the rigth place to switch the focus */
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
             vp_echo(VP_MSG_NORMAL, FALSE, "Yanked: %s", text);
             g_free(text);
 
             return TRUE;
         }
-    } else {
-        /* use current arg.s a new clipboard content */
-        Arg a = {arg->i, arg->s};
-        if (arg->i & COMMAND_YANK_URI) {
-            /* yank current url */
-            a.s = (gchar*)CURRENT_URL();
-        }
-        if (vp_set_clipboard(&a)) {
-            vp_echo(VP_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
 
-            return TRUE;
-        }
+        return FALSE;
     }
+    /* use current arg.s a new clipboard content */
+    Arg a = {arg->i};
+    if (arg->i & COMMAND_YANK_URI) {
+        /* yank current url */
+        a.s = g_strdup(CURRENT_URL());
+    } else {
+        a.s = arg->s ? g_strdup(arg->s) : NULL;
+    }
+    if (a.s) {
+        vp_set_clipboard(&a);
+        /* TODO is this the rigth place to switch the focus */
+        gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+        vp_echo(VP_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
+        g_free(a.s);
+
+        return TRUE;
+    }
+
     return FALSE;
 }
 

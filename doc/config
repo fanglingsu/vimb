@@ -27,6 +27,7 @@ nmap f hint-link
 nmap F hint-link-new
 nmap ;o hint-input-open
 nmap ;t hint-input-tabopen
+nmap ;y hint-yank
 nmap y yank-uri
 nmap Y yank-selection
 cmap <tab> complete

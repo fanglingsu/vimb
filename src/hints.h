@@ -51,7 +51,7 @@ enum {
 
 typedef enum {
     HINTS_PROCESS_INPUT = (1 << 4),
-    HINTS_PROCESS_YANK
+    HINTS_PROCESS_YANK  = (1 << 5),
 } HintsProcess;
 
 void hints_init(void);
