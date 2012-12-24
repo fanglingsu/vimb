@@ -439,7 +439,7 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
 
 static void vp_print_version(void)
 {
-    fprintf(stderr, "%s/%s (build %s %s)\n", VERSION, PROJECT, __DATE__, __TIME__);
+    fprintf(stderr, "%s/%s (build %s %s)\n", PROJECT, VERSION, __DATE__, __TIME__);
 }
 
 static void vp_init(void)
