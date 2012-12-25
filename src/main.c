@@ -719,9 +719,9 @@ int main(int argc, char* argv[])
     static gboolean ver = false;
     static GError* err;
     static GOptionEntry opts[] = {
-        { "version", 'v', 0, G_OPTION_ARG_NONE, &ver, "print version", NULL },
-        { "embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "embedded", NULL },
-        { NULL }
+        {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
+        {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+        {NULL}
     };
     /* Initialize GTK+ */
     if (!gtk_init_with_args(&argc, &argv, "[<uri>]", opts, NULL, &err)) {
