@@ -190,9 +190,10 @@ typedef struct {
 
 /* state */
 typedef struct {
-    Mode          mode;
-    gchar         modkey;
-    guint         count;
+    Mode            mode;
+    gchar           modkey;
+    guint           count;
+    GdkNativeWindow embed;
 } State;
 
 /* behaviour */

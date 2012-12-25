@@ -166,9 +166,15 @@ static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* 
     GtkWidget* window;
     GtkWidget* view;
 
+    /* TODO allow to use a new inspector window event if embed is used */
+    if (vp.state.embed) {
+        window = gtk_plug_new(vp.state.embed);
+    } else {
+        window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+        gtk_window_set_wmclass(GTK_WINDOW(window), PROJECT, PROJECT);
+    }
+
     title  = g_strdup_printf("Inspect page - %s", CURRENT_URL());
-    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_wmclass(GTK_WINDOW(window), PROJECT, PROJECT);
     gtk_window_set_title(GTK_WINDOW(window), title);
     g_free(title);
 
@@ -231,9 +237,19 @@ gboolean vp_load_uri(const Arg* arg)
     uri = g_strrstr(line, "://") ? g_strdup(line) : g_strdup_printf("http://%s", line);
     if (arg->i == VP_TARGET_NEW) {
         gchar *argv[64];
+
         argv[0] = *args;
-        argv[1] = uri;
-        argv[2] = NULL;
+        if (vp.state.embed) {
+            gchar tmp[64];
+            snprintf(tmp, LENGTH(tmp), "%u", (gint)vp.state.embed);
+            argv[1] = "-e";
+            argv[2] = tmp;
+            argv[3] = uri;
+            argv[4] = NULL;
+        } else {
+            argv[1] = uri;
+            argv[2] = NULL;
+        }
 
         /* spawn a new browser instance */
         g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
@@ -501,9 +517,15 @@ static void vp_init_gui(void)
 {
     Gui* gui = &vp.gui;
 
+    if (vp.state.embed) {
+        gui->window = gtk_plug_new(vp.state.embed);
+    } else {
+        gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+        gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT);
+        gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT);
+    }
+
     GdkGeometry hints = {10, 10};
-    gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT);
     gtk_window_set_default_size(GTK_WINDOW(gui->window), 640, 480);
     gtk_window_set_title(GTK_WINDOW(gui->window), PROJECT);
     gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
@@ -693,10 +715,12 @@ static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_s
 
 int main(int argc, char* argv[])
 {
+    static gchar* winid = NULL;
     static gboolean ver = false;
     static GError* err;
     static GOptionEntry opts[] = {
         { "version", 'v', 0, G_OPTION_ARG_NONE, &ver, "print version", NULL },
+        { "embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "embedded", NULL },
         { NULL }
     };
     /* Initialize GTK+ */
@@ -714,6 +738,10 @@ int main(int argc, char* argv[])
 
     /* save arguments */
     args = argv;
+
+    if (winid) {
+        vp.state.embed = strtol(winid, NULL, 0);
+    }
 
     vp_init();
 
