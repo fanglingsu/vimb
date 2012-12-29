@@ -6,7 +6,7 @@ man: vimp.1
 
 %.1: %.1.txt
 	@echo "${PP} $< > $@"
-	@$(PP) $(CPPFLAGS) $< > $@
+	@$(PP) -DVERSION=$(VERSION) -DPROJECT=$(PROJECT) $< > $@
 
 clean:
 	$(RM) *.1

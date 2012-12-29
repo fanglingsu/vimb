@@ -1,6 +1,4 @@
 .\" Process this file with
-define(`PROJECT', translit(PROJECT, `"\', `'))dnl
-define(`VERSION', translit(VERSION, `"\', `'))dnl
 .\" groff -man -Tascii PROJECT.1
 .TH PROJECT 1 "29/12/2012" PROJECT/VERSION "PROJECT Manual"
 .SH NAME
