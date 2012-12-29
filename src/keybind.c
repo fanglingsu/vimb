@@ -58,7 +58,7 @@ gboolean keybind_add_from_string(const gchar* str, const Mode mode)
     g_strstrip(line);
 
     /* split into keybinding and command */
-    char **string = g_strsplit(line, " ", 2);
+    char **string = g_strsplit(line, "=", 2);
 
     guint len = g_strv_length(string);
     if (len == 2 && command_exists(string[1])) {

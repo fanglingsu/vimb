@@ -32,10 +32,10 @@
 const struct {
     char* command;
 } default_config[] = {
-    {"nmap o inputopen"},
-    {"nmap O inputopencurrent"},
-    {"nmap : input"},
-    {"nmap d quit"},
+    {"nmap o=inputopen"},
+    {"nmap O=inputopencurrent"},
+    {"nmap :=input"},
+    {"nmap d=quit"},
     {NULL}
 };
 
