@@ -33,6 +33,15 @@ $(DTARGET): $(DOBJ)
 man:
 	@$(MAKE) $(MFLAGS) -C doc man
 
+install: $(TARGET) man
+	install -d $(BINDIR)
+	install -m 755 $(TARGET) $(BINDIR)
+	@$(MAKE) $(MFLAGS) -C doc install
+
+uninstall:
+	$(RM) $(BINDIR)$(TARGET)
+	@$(MAKE) $(MFLAGS) -C doc uninstall
+
 clean:
 	@$(MAKE) $(MFLAGS) -C doc clean
 	$(RM) $(OBJ) $(DOBJ) $(TARGET) $(DTARGET)

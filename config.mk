@@ -2,9 +2,9 @@
 VERSION = 0.1.3
 
 PROJECT = vimp
-PREFIX ?= /usr/local
-BINDIR ?= $(PREFIX)/bin/
-MANDIR ?= $(PREFIX)/share/man/
+PREFIX  ?= /usr/local/
+BINDIR  ?= $(PREFIX)bin/
+MANDIR  ?= $(PREFIX)share/man/
 
 #----------------compile options---------------------
 LIBS = libsoup-2.4
