@@ -1,8 +1,8 @@
 include config.mk
 
-all: $(TARGET)
-
 -include $(DEPS)
+
+all: $(TARGET) man
 
 options:
 	@echo "$(PROJECT) build options:"
@@ -11,8 +11,6 @@ options:
 	@echo "CFLAGS    = $(CFLAGS)"
 	@echo "CPPFLAGS  = $(CPPFLAGS)"
 	@echo "LDFLAGS   = $(LDFLAGS)"
-
-all: $(TARGET)
 
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
@@ -32,7 +30,11 @@ $(DTARGET): $(DOBJ)
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(DFLAGS)
 
+man:
+	@$(MAKE) $(MFLAGS) -C doc man
+
 clean:
+	@$(MAKE) $(MFLAGS) -C doc clean
 	$(RM) $(OBJ) $(DOBJ) $(TARGET) $(DTARGET)
 
 dist: distclean

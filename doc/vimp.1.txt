@@ -1,0 +1,248 @@
+.\" Process this file with
+define(`PROJECT', translit(PROJECT, `"\', `'))dnl
+define(`VERSION', translit(VERSION, `"\', `'))dnl
+.\" groff -man -Tascii PROJECT.1
+.TH PROJECT 1 "29/12/2012" PROJECT/VERSION "PROJECT Manual"
+.SH NAME
+PROJECT \- A modal web browser based on webkit thats inspired by vim the great editor.
+.SH SYNOPSIS
+.BI "PROJECT [" "OPTION" "] [" "URI" "]"
+.SH DESCRIPTION
+.B PROJECT
+is a wenkit based web browser that behaves like the vimperator
+plugin for the firefox and usage paradigms from the great editor vim. The goal
+of PROJECT is to build a completely keyboard-driven, efficient and pleasurable
+browsing-experience.
+.SH OPTIONS
+Mandatory arguments to long options are mandatory for short options too.
+.TP
+.BI "-e, --embed " "WindowId"
+WindowId of an XEmbed-aware application, that PROJECT will use as its parent.
+.TP
+.B "-h, --help"
+Show help options.
+.TP
+.B "-v, --version"
+Print build and version information.
+.SH MODES
+PROJECT is modal an has following main modes:
+.TP
+.B Normal Mode
+The default mode. Pressing Escape always enter normal mode.
+.TP
+.B Insert Mode
+Used for editing text elements in a webpage.
+.TP
+.B Hint Mode
+Follow links, form fields and frames via hints.
+.TP
+.B Command Mode
+Execute PROJECT commands from the builtin inputbox (commandline).
+.TP
+.B Insert Mode
+Used for editing text elements in a webpage.
+.SH COMMANDS
+Commands are a central part in PROJECT. They are used for nearly all things
+that could be done with this browser. Commands allow to set config variables,
+to assign keybindings and much more. Also the keybindings are only shortcut
+for the commands itself.
+
+Commands can be called in Insert Mode from the inputbox in the way like
+":[count]command[ param[=value]]". But some commands are not available in
+Command Mode and therefore not callable directly. To use them too, they must be
+bound to the keybinding.
+
+For example the command "hint-focus-next" is only available in hinting mode.
+To call it, it has to be bound to a key like "hmap <tab>=hint-focus-next" to
+be used.
+.SS Open
+.TP
+.B open
+Open the give url into current window.
+.TP
+.B tabopen
+Open the give url into a new window.
+.SS Input
+Switches the browser into Command Mode and prefill the inputbox on th bottom of
+the browser with various prefilled content.
+.TP
+.B input
+Writes ":" into to inputbox.
+.TP
+.B inputopen
+Writes ":open " into to inputbox.
+.TP
+.B inputtabopen
+Writes ":tabopen " into to inputbox.
+.TP
+.B inputopencurrent
+Writes ":open {url}" into to inputbox where {url} is the current used url.
+.TP
+.B inputtabopencurrent
+Writes ":tabopen {url}" into to inputbox where {url} is the current used url.
+.SS Navigate
+Following commands are used to navigate within the browser history.
+.TP
+.IB [N] back
+Move N steps back in browser history.
+.TP
+.IB [N] forward
+Move N steps back in browser history.
+.TP
+.B reload
+Reload the current viewed url.
+.TP
+.B reload!
+Discard any caches and reload the current viewed url.
+.TP
+.B stop
+Stop loading the current url.
+.SS Scroll
+Following commands are used to scroll ad jump within the current view.
+.TP
+.IB [N] jumpleft
+Scrolls the current view to the left.
+.br
+If N is given jump to N% of the page from the left.
+.TP
+.IB [N] jumpright
+Scrolls the current view to the right.
+.br
+If N is given jump to N% of the page from the left.
+.TP
+.IB [N] jumptop
+Scrolls the current view to the top of page.
+.br
+If N is given, scroll to N% of the page.
+.TP
+.IB [N] jumpbottom
+Scrolls the current view to the end of page.
+.br
+If N is given, scroll to N% of the page.
+.TP
+.IB [N] pageup
+Scroll up the page N screens.
+.TP
+.IB [N] pagedown
+Scroll down the page N screens.
+.TP
+.IB [N] halfpageup
+Scroll up the page N half screens.
+.TP
+.IB [N] halfpagedown
+Scroll down the page N half  screens.
+.TP
+.IB [N] scrollleft
+Scroll the page N times the "scrollstep" to the left.
+.TP
+.IB [N] scrollright
+Scroll the page N times the "scrollstep" to the right.
+.TP
+.IB [N] scrollup
+Scroll the page N times the "scrollstep" to the top.
+.TP
+.IB [N] scrolldown
+Scroll the page N times the "scrollstep" to the end.
+.SS Keybinding
+To bind a command to a key sequence use the {n,i,c,h}map command. To map a
+keysequence to a command, use this format "nmap {[modkey]key}={command}".
+
+The modkey is a single simple char like "g". The key can also contain
+special keys and modifiers and is given in format like "<ctrl-o>", "<tab>",
+"<shift-tab>" or also a simple char like "G".
+
+Example:
+.br
+To add a keybinding to focus the next hint in hinting mode use
+"hmap <shift-tab>=hint-focus-prev"
+.br
+To remove this keybinding use "hunmap <shift-tab>".
+.TP
+.B nmap
+Add a keybinding used in Normal Mode.
+.TP
+.B imap
+Add a keybinding used in Input Mode.
+.TP
+.B cmap
+Add a keybinding used in Command Mode.
+.TP
+.B hmap
+Add a keybinding used in Hint Mode.
+.TP
+.B nunmap
+Remove a Normal Mode keybinding.
+.TP
+.B iunmap
+Remove a Input Mode keybinding.
+.TP
+.B cunmap
+Remove a Command Mode keybinding.
+.TP
+.B hunmap
+Remove a Hint Mode keybinding.
+.SS Complete
+.TP
+.B complete
+Start a completion according to the current first chars in the inputbox. If
+complation is already started, switch to the next completion item.
+.TP
+.B complete-back
+If complation is already started, switch to the previous completion item.
+.SS Hints
+.TP
+.B hint-link
+Start hinting to open link into current window.
+.TP
+.B hint-link-new
+Start hinting to open link into a new window.
+.TP
+.B hint-input-open
+Start hinting to fill the inputbox with ":open {hintedLinkUrl}"
+.TP
+.B hint-input-tabopen
+Start hinting to fill the inputbox with ":tabopen {hintedLinkUrl}"
+.TP
+.B hint-yank
+Start hinting to yank the hinted link url into the primary and secondary
+clipboard.
+.TP
+.B hint-focus-next
+Focus next hint.
+.TP
+.B hint-focus-prev
+Foxus previous hint.
+.SS Yank
+.TP
+.B yank-uri
+Yank the current url to the primary and secondary clipboard.
+.TP
+.B yank-selection
+Yank the selected text into the primary and secondary clipboard.
+.SS Misc
+.TP
+.B set
+Set configuration values.
+.TP
+.B inspect
+Open the webinspector for current page. This is only available if the config
+"webinspector" is enabled.
+.TP
+.B quit
+Close the browser.
+.TP
+.B source
+Toggle between normal view and source view for the current page.
+.SH FILES
+.I $XDG_CONFIG_HOME/PROJECT/config
+.RS
+THe users config file.
+.RE
+.I $XDG_CONFIG_HOME/PROJECT/cookies
+.RS
+Cookie store file.
+.SH "REPORTING BUGS"
+Report bugs to the main project page on
+.IR https://github.com/fanglingsu/vimp/issues .
+.SH AUTHOR
+Daniel Carl
