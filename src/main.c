@@ -724,7 +724,7 @@ int main(int argc, char* argv[])
         {NULL}
     };
     /* Initialize GTK+ */
-    if (!gtk_init_with_args(&argc, &argv, "[<uri>]", opts, NULL, &err)) {
+    if (!gtk_init_with_args(&argc, &argv, "[URI]", opts, NULL, &err)) {
         g_printerr("can't init gtk: %s\n", err->message);
         g_error_free(err);
 
