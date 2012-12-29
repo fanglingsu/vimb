@@ -289,7 +289,7 @@ static gboolean setting_hint_style(const Setting* s)
         style->hint_bg[HEX_COLOR_LEN - 1] = '\0';
     } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
         strncpy(style->hint_bg_focus, s->arg.s, HEX_COLOR_LEN - 1);
-        style->hint_bg_focus[HEX_COLOR_LEN] = '\0';
+        style->hint_bg_focus[HEX_COLOR_LEN - 1] = '\0';
     } else if (!g_strcmp0(s->name, "hint-fg")) {
         strncpy(style->hint_fg, s->arg.s, HEX_COLOR_LEN - 1);
         style->hint_fg[HEX_COLOR_LEN - 1] = '\0';
