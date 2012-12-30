@@ -22,6 +22,7 @@
 #include "command.h"
 #include "completion.h"
 
+static void keybind_rebuild_modkeys(void);
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval);
 static void keybind_str_to_keybind(gchar* str, Keybind* key);
 static guint keybind_str_to_modmask(const gchar* str);
@@ -68,8 +69,8 @@ gboolean keybind_add_from_string(const gchar* str, const Mode mode)
         /* add the keybinding to the list */
         vp.behave.keys = g_slist_prepend(vp.behave.keys, keybind);
 
-        /* save the modkey also in the modkey string */
-        if (keybind->modkey) {
+        /* save the modkey also in the modkey string if not exists already */
+        if (keybind->modkey && strchr(vp.behave.modkeys->str, keybind->modkey) == NULL) {
             g_string_append_c(vp.behave.modkeys, keybind->modkey);
         }
         result = TRUE;
@@ -101,8 +102,35 @@ gboolean keybind_remove_from_string(const gchar* str, const Mode mode)
     if (link) {
         vp.behave.keys = g_slist_delete_link(vp.behave.keys, link);
     }
-    /* TODO remove eventually no more used modkeys */
+
+    if (keybind.modkey && strchr(vp.behave.modkeys->str, keybind.modkey) != NULL) {
+        /* remove eventually no more used modkeys */
+        keybind_rebuild_modkeys();
+    }
     return TRUE;
+}
+
+/**
+ * Discard all knows modkeys and walk through all keybindings to aggregate
+ * them new.
+ */
+static void keybind_rebuild_modkeys(void)
+{
+    GSList* link;
+    /* remove previous modkeys */
+    if (vp.behave.modkeys) {
+        g_string_free(vp.behave.modkeys, TRUE);
+        vp.behave.modkeys = g_string_new("");
+    }
+
+    /* regenerate the modekeys */
+    for (link = vp.behave.keys; link != NULL; link = link->next) {
+        Keybind* keybind = (Keybind*)link->data;
+        /* if not not exists - add it */
+        if (keybind->modkey && strchr(vp.behave.modkeys->str, keybind->modkey) == NULL) {
+            g_string_append_c(vp.behave.modkeys, keybind->modkey);
+        }
+    }
 }
 
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
@@ -111,9 +139,10 @@ static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
     for (link = vp.behave.keys; link != NULL; link = link->next) {
         Keybind* keybind = (Keybind*)link->data;
         if (keybind->keyval == keyval
-                && keybind->modmask == modmask
-                && keybind->modkey == modkey
-                && keybind->mode == mode) {
+            && keybind->modmask == modmask
+            && keybind->modkey == modkey
+            && keybind->mode == mode
+        ) {
             return link;
         }
     }
