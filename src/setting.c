@@ -150,7 +150,11 @@ gboolean setting_run(gchar* name, const gchar* param)
     }
 
     if (get || !param) {
-        return s->func(s, get);
+        result = s->func(s, get);
+        if (!result) {
+            vp_echo(VP_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
+        }
+        return result;
     }
 
     /* if string param is given convert it to the required data type and set
@@ -168,6 +172,9 @@ gboolean setting_run(gchar* name, const gchar* param)
     }
     g_free(a);
 
+    if (!result) {
+        vp_echo(VP_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
+    }
     return result;
 }
 
@@ -337,19 +344,8 @@ static gboolean setting_input_style(const Setting* s, const gboolean get)
     Style* style = &vp.style;
     MessageType type = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
 
-    if (g_str_has_prefix(s->name, "input-bg")) {
-        if (get) {
-            setting_print_value(s, &style->input_bg[type]);
-        } else {
-            VP_COLOR_PARSE(&style->input_bg[type], s->arg.s);
-        }
-    } else if (g_str_has_prefix(s->name, "input-fg")) {
-        if (get) {
-            setting_print_value(s, &style->input_fg[type]);
-        } else {
-            VP_COLOR_PARSE(&style->input_fg[type], s->arg.s);
-        }
-    } else if (g_str_has_prefix(s->name, "input-font")) {
+    if (s->type == TYPE_FONT) {
+        /* input font */
         if (get) {
             setting_print_value(s, style->input_font[type]);
         } else {
@@ -357,6 +353,21 @@ static gboolean setting_input_style(const Setting* s, const gboolean get)
                 pango_font_description_free(style->input_font[type]);
             }
             style->input_font[type] = pango_font_description_from_string(s->arg.s);
+        }
+    } else {
+        VpColor* color = NULL;
+        if (g_str_has_prefix(s->name, "input-bg")) {
+            /* background color */
+            color = &style->input_bg[type];
+        } else {
+            /* foreground color */
+            color = &style->input_fg[type];
+        }
+
+        if (get) {
+            setting_print_value(s, color);
+        } else {
+            VP_COLOR_PARSE(color, s->arg.s);
         }
     }
     if (!get) {
@@ -372,19 +383,14 @@ static gboolean setting_completion_style(const Setting* s, const gboolean get)
     Style* style = &vp.style;
     CompletionStyle type = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
 
-    if (g_str_has_prefix(s->name, "completion-bg")) {
+    if (s->type == TYPE_INTEGER) {
+        /* max completion items */
         if (get) {
-            setting_print_value(s, &style->comp_bg[type]);
+            setting_print_value(s, &vp.config.max_completion_items);
         } else {
-            VP_COLOR_PARSE(&style->comp_bg[type], s->arg.s);
+            vp.config.max_completion_items = s->arg.i;
         }
-    } else if (g_str_has_prefix(s->name, "completion-fg")) {
-        if (get) {
-            setting_print_value(s, &style->comp_fg[type]);
-        } else {
-            VP_COLOR_PARSE(&style->comp_fg[type], s->arg.s);
-        }
-    } else if (g_str_has_prefix(s->name, "completion-font")) {
+    } else if (s->type == TYPE_FONT) {
         if (get) {
             setting_print_value(s, style->comp_font[type]);
         } else {
@@ -393,11 +399,20 @@ static gboolean setting_completion_style(const Setting* s, const gboolean get)
             }
             style->comp_font[type] = pango_font_description_from_string(s->arg.s);
         }
-    } else if (!g_strcmp0(s->name, "max-completion-items")) {
-        if (get) {
-            setting_print_value(s, &vp.config.max_completion_items);
+    } else {
+        VpColor* color = NULL;
+        if (g_str_has_prefix(s->name, "completion-bg")) {
+            /* completion background color */
+            color = &style->comp_bg[type];
         } else {
-            vp.config.max_completion_items = s->arg.i;
+            /* completion foreground color */
+            color = &style->comp_fg[type];
+        }
+
+        if (get) {
+            setting_print_value(s, color);
+        } else {
+            VP_COLOR_PARSE(color, s->arg.s);
         }
     }
 
