@@ -9,7 +9,7 @@ man: $(MAN1)
 
 %.1: %.1.txt
 	@echo "${PP} $< > $@"
-	@$(PP) -DVERSION=$(VERSION) -DPROJECT=$(PROJECT) $< > $@
+	@$(PP) -DVERSION=$(VERSION) $< > $@
 
 install: man
 	install -d $(MANDIR1)

@@ -38,7 +38,6 @@ LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext
 # features
 CPPFLAGS += -DFEATURE_COOKIE
 
-CPPFLAGS += -DPROJECT=\"${PROJECT}\"
 CPPFLAGS += -DVERSION=\"${VERSION}\"
 ifeq ($(USEGTK3), 1)
 CPPFLAGS += -DHAS_GTK3

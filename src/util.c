@@ -22,7 +22,7 @@
 
 gchar* util_get_config_dir(void)
 {
-    gchar *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
+    gchar *path = g_build_filename(g_get_user_config_dir(), "vimp", NULL);
     util_create_dir_if_not_exists(path);
 
     return path;
@@ -30,7 +30,7 @@ gchar* util_get_config_dir(void)
 
 gchar* util_get_cache_dir(void)
 {
-    gchar *path = g_build_filename(g_get_user_cache_dir(), PROJECT, NULL);
+    gchar *path = g_build_filename(g_get_user_cache_dir(), "vimp", NULL);
     util_create_dir_if_not_exists(path);
 
     return path;

@@ -25,7 +25,6 @@
 #define START_PAGE      "https://github.com/fanglingsu/vimp"
 
 #define SETTING_DEFAUL_FONT_SIZE    12
-#define SETTING_USER_AGENT          PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST  5
 

@@ -171,7 +171,7 @@ static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* 
         window = gtk_plug_new(vp.state.embed);
     } else {
         window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_wmclass(GTK_WINDOW(window), PROJECT, PROJECT);
+        gtk_window_set_wmclass(GTK_WINDOW(window), "vimp", "Vimp");
     }
 
     title  = g_strdup_printf("Inspect page - %s", CURRENT_URL());
@@ -455,7 +455,7 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
 
 static void vp_print_version(void)
 {
-    fprintf(stderr, "%s/%s (build %s %s)\n", PROJECT, VERSION, __DATE__, __TIME__);
+    fprintf(stderr, "%s/%s (build %s %s)\n", "vimp", VERSION, __DATE__, __TIME__);
 }
 
 static void vp_init(void)
@@ -521,16 +521,16 @@ static void vp_init_gui(void)
         gui->window = gtk_plug_new(vp.state.embed);
     } else {
         gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT);
-        gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT);
+        gtk_window_set_wmclass(GTK_WINDOW(gui->window), "vimp", "Vimp");
+        gtk_window_set_role(GTK_WINDOW(gui->window), "Vimp");
     }
 
     GdkGeometry hints = {10, 10};
     gtk_window_set_default_size(GTK_WINDOW(gui->window), 640, 480);
-    gtk_window_set_title(GTK_WINDOW(gui->window), PROJECT);
+    gtk_window_set_title(GTK_WINDOW(gui->window), "vimp");
     gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
     gtk_window_set_icon(GTK_WINDOW(gui->window), NULL);
-    gtk_widget_set_name(GTK_WIDGET(gui->window), PROJECT);
+    gtk_widget_set_name(GTK_WIDGET(gui->window), "vimp");
 
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());

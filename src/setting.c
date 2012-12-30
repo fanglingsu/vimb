@@ -74,7 +74,7 @@ static Setting default_settings[] = {
     {"seriffont", "serif-font-family", TYPE_CHAR, setting_webkit, {.s = "serif"}},
     {"spelllang", "spell-checking-languages", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {NULL, "tab-key-cycles-through-elements", TYPE_BOOLEAN, setting_webkit, {.i = 1}},
-    {"useragent", "user-agent", TYPE_CHAR, setting_webkit, {.s = PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}},
+    {"useragent", "user-agent", TYPE_CHAR, setting_webkit, {.s = "vimp/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}},
     {"stylesheet", "user-stylesheet-uri", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {"zoomstep", "zoom-step", TYPE_DOUBLE, setting_webkit, {.i = 100}},
     /* internal variables */

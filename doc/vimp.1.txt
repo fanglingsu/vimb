@@ -1,21 +1,21 @@
 .\" Process this file with
-.\" groff -man -Tascii PROJECT.1
-.TH PROJECT 1 "29/12/2012" PROJECT/VERSION "PROJECT Manual"
+.\" groff -man -Tascii vimp.1
+.TH vimp 1 "30/12/2012" "vimp/VERSION" "Vimp Manual"
 .SH NAME
-PROJECT \- A modal web browser based on webkit thats inspired by vim the great editor.
+vimp \- A modal web browser based on webkit thats inspired by vim the great editor.
 .SH SYNOPSIS
-.BI "PROJECT [" "OPTION" "] [" "URI" "]"
+.BI "vimp [" "OPTION" "] [" "URI" "]"
 .SH DESCRIPTION
-.B PROJECT
+.B vimp
 is a wenkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
-of PROJECT is to build a completely keyboard-driven, efficient and pleasurable
+of vimp is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
 .BI "-e, --embed " "WindowId"
-WindowId of an XEmbed-aware application, that PROJECT will use as its parent.
+WindowId of an XEmbed-aware application, that vimp will use as its parent.
 .TP
 .B "-h, --help"
 Show help options.
@@ -23,7 +23,7 @@ Show help options.
 .B "-v, --version"
 Print build and version information.
 .SH MODES
-PROJECT is modal an has following main modes:
+vimp is modal an has following main modes:
 .TP
 .B Normal Mode
 The default mode. Pressing Escape always enter normal mode.
@@ -35,12 +35,12 @@ Used for editing text elements in a webpage.
 Follow links, form fields and frames via hints.
 .TP
 .B Command Mode
-Execute PROJECT commands from the builtin inputbox (commandline).
+Execute vimp commands from the builtin inputbox (commandline).
 .TP
 .B Insert Mode
 Used for editing text elements in a webpage.
 .SH COMMANDS
-Commands are a central part in PROJECT. They are used for nearly all things
+Commands are a central part in vimp. They are used for nearly all things
 that could be done with this browser. Commands allow to set config variables,
 to assign keybindings and much more. Also the keybindings are only shortcut
 for the commands itself.
@@ -232,11 +232,11 @@ Close the browser.
 .B source
 Toggle between normal view and source view for the current page.
 .SH FILES
-.I $XDG_CONFIG_HOME/PROJECT/config
+.I $XDG_CONFIG_HOME/vimp/config
 .RS
 THe users config file.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/cookies
+.I $XDG_CONFIG_HOME/vimp/cookies
 .RS
 Cookie store file.
 .SH "REPORTING BUGS"
