@@ -7,7 +7,7 @@ vimp \- A modal web browser based on webkit thats inspired by vim the great edit
 .BI "vimp [" "OPTION" "] [" "URI" "]"
 .SH DESCRIPTION
 .B vimp
-is a wenkit based web browser that behaves like the vimperator
+is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
 of vimp is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
