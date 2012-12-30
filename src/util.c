@@ -67,12 +67,13 @@ Arg* util_char_to_arg(const gchar* str, Type type)
             arg->i = g_ascii_strtoull(str, (gchar**)NULL, 10);
             break;
 
-        case TYPE_DOUBLE:
-            arg->i = (1000 * g_ascii_strtod(str, (gchar**)NULL));
+        case TYPE_FLOAT:
+            arg->i = (1000000 * g_ascii_strtod(str, (gchar**)NULL));
             break;
 
         case TYPE_CHAR:
         case TYPE_COLOR:
+        case TYPE_FONT:
             arg->s = g_strdup(str);
             break;
     }

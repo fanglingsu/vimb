@@ -20,17 +20,18 @@
 #include "setting.h"
 #include "util.h"
 
-static gboolean setting_webkit(const Setting* s);
+static void setting_print_value(const Setting* s, void* value);
+static gboolean setting_webkit(const Setting* s, const gboolean get);
 #ifdef FEATURE_COOKIE
-static gboolean setting_cookie_timeout(const Setting* s);
+static gboolean setting_cookie_timeout(const Setting* s, const gboolean get);
 #endif
-static gboolean setting_scrollstep(const Setting* s);
-static gboolean setting_status_color_bg(const Setting* s);
-static gboolean setting_status_color_fg(const Setting* s);
-static gboolean setting_status_font(const Setting* s);
-static gboolean setting_input_style(const Setting* s);
-static gboolean setting_completion_style(const Setting* s);
-static gboolean setting_hint_style(const Setting* s);
+static gboolean setting_scrollstep(const Setting* s, const gboolean get);
+static gboolean setting_status_color_bg(const Setting* s, const gboolean get);
+static gboolean setting_status_color_fg(const Setting* s, const gboolean get);
+static gboolean setting_status_font(const Setting* s, const gboolean get);
+static gboolean setting_input_style(const Setting* s, const gboolean get);
+static gboolean setting_completion_style(const Setting* s, const gboolean get);
+static gboolean setting_hint_style(const Setting* s, const gboolean get);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -76,7 +77,7 @@ static Setting default_settings[] = {
     {NULL, "tab-key-cycles-through-elements", TYPE_BOOLEAN, setting_webkit, {.i = 1}},
     {"useragent", "user-agent", TYPE_CHAR, setting_webkit, {.s = "vimp/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}},
     {"stylesheet", "user-stylesheet-uri", TYPE_CHAR, setting_webkit, {.s = NULL}},
-    {"zoomstep", "zoom-step", TYPE_DOUBLE, setting_webkit, {.i = 100}},
+    {"zoomstep", "zoom-step", TYPE_FLOAT, setting_webkit, {.i = 100000}},
     /* internal variables */
 #ifdef FEATURE_COOKIE
     {NULL, "cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
@@ -84,19 +85,19 @@ static Setting default_settings[] = {
     {NULL, "scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
     {NULL, "status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
     {NULL, "status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
-    {NULL, "status-font", TYPE_CHAR, setting_status_font, {.s = "monospace bold 8"}},
-    {NULL, "input-bg-normal", TYPE_CHAR, setting_input_style, {.s = "#fff"}},
-    {NULL, "input-bg-error", TYPE_CHAR, setting_input_style, {.s = "#f00"}},
-    {NULL, "input-fg-normal", TYPE_CHAR, setting_input_style, {.s = "#000"}},
-    {NULL, "input-fg-error", TYPE_CHAR, setting_input_style, {.s = "#000"}},
-    {NULL, "input-font-normal", TYPE_CHAR, setting_input_style, {.s = "monospace normal 8"}},
-    {NULL, "input-font-error", TYPE_CHAR, setting_input_style, {.s = "monospace bold 8"}},
-    {NULL, "completion-font-normal", TYPE_CHAR, setting_completion_style, {.s = "monospace normal 8"}},
-    {NULL, "completion-font-active", TYPE_CHAR, setting_completion_style, {.s = "monospace bold 8"}},
-    {NULL, "completion-fg-normal", TYPE_CHAR, setting_completion_style, {.s = "#f6f3e8"}},
-    {NULL, "completion-fg-active", TYPE_CHAR, setting_completion_style, {.s = "#fff"}},
-    {NULL, "completion-bg-normal", TYPE_CHAR, setting_completion_style, {.s = "#656565"}},
-    {NULL, "completion-bg-active", TYPE_CHAR, setting_completion_style, {.s = "#777777"}},
+    {NULL, "status-font", TYPE_FONT, setting_status_font, {.s = "monospace bold 8"}},
+    {NULL, "input-bg-normal", TYPE_COLOR, setting_input_style, {.s = "#fff"}},
+    {NULL, "input-bg-error", TYPE_COLOR, setting_input_style, {.s = "#f00"}},
+    {NULL, "input-fg-normal", TYPE_COLOR, setting_input_style, {.s = "#000"}},
+    {NULL, "input-fg-error", TYPE_COLOR, setting_input_style, {.s = "#000"}},
+    {NULL, "input-font-normal", TYPE_FONT, setting_input_style, {.s = "monospace normal 8"}},
+    {NULL, "input-font-error", TYPE_FONT, setting_input_style, {.s = "monospace bold 8"}},
+    {NULL, "completion-font-normal", TYPE_FONT, setting_completion_style, {.s = "monospace normal 8"}},
+    {NULL, "completion-font-active", TYPE_FONT, setting_completion_style, {.s = "monospace bold 8"}},
+    {NULL, "completion-fg-normal", TYPE_COLOR, setting_completion_style, {.s = "#f6f3e8"}},
+    {NULL, "completion-fg-active", TYPE_COLOR, setting_completion_style, {.s = "#fff"}},
+    {NULL, "completion-bg-normal", TYPE_COLOR, setting_completion_style, {.s = "#656565"}},
+    {NULL, "completion-bg-active", TYPE_COLOR, setting_completion_style, {.s = "#777777"}},
     {NULL, "max-completion-items", TYPE_INTEGER, setting_completion_style, {.i = 15}},
     {NULL, "hint-bg", TYPE_CHAR, setting_hint_style, {.s = "#ff0"}},
     {NULL, "hint-bg-focus", TYPE_CHAR, setting_hint_style, {.s = "#8f0"}},
@@ -117,7 +118,7 @@ void setting_init(void)
         g_hash_table_insert(vp.settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
 
         /* set the default settings */
-        s->func(s);
+        s->func(s, FALSE);
     }
 }
 
@@ -128,18 +129,28 @@ void setting_cleanup(void)
     }
 }
 
-gboolean setting_run(const gchar* name, const gchar* param)
+gboolean setting_run(gchar* name, const gchar* param)
 {
-    Arg* a = NULL;
+    Arg* a          = NULL;
     gboolean result = FALSE;
-    Setting* s      = g_hash_table_lookup(vp.settings, name);
+    gboolean get    = FALSE;
+
+    /* check if we should display current value */
+    gint len = strlen(name);
+    if (name[len - 1] == '?') {
+        /* remove the last ? char from setting name */
+        name[len - 1] = '\0';
+        get = TRUE;
+    }
+
+    Setting* s = g_hash_table_lookup(vp.settings, name);
     if (!s) {
         vp_echo(VP_MSG_ERROR, TRUE, "Config '%s' not found", name);
         return FALSE;
     }
 
-    if (!param) {
-        return s->func(s);
+    if (get || !param) {
+        return s->func(s, get);
     }
 
     /* if string param is given convert it to the required data type and set
@@ -151,7 +162,7 @@ gboolean setting_run(const gchar* name, const gchar* param)
     }
 
     s->arg = *a;
-    result = s->func(s);
+    result = s->func(s, get);
     if (a->s) {
         g_free(a->s);
     }
@@ -160,145 +171,273 @@ gboolean setting_run(const gchar* name, const gchar* param)
     return result;
 }
 
-static gboolean setting_webkit(const Setting* s)
+/**
+ * Print the setting value to the input box.
+ */
+static void setting_print_value(const Setting* s, void* value)
+{
+    const gchar* name = s->alias ? s->alias : s->name;
+    gchar* string = NULL;
+
+    switch (s->type) {
+        case TYPE_BOOLEAN:
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%s", name, *(gboolean*)value ? "true" : "false");
+            break;
+
+        case TYPE_INTEGER:
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%d", name, *(gint*)value);
+            break;
+
+        case TYPE_FLOAT:
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%g", name, *(gfloat*)value);
+            break;
+
+        case TYPE_CHAR:
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%s", name, (gchar*)value);
+            break;
+
+        case TYPE_COLOR:
+            string = VP_COLOR_TO_STRING((VpColor*)value);
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            g_free(string);
+            break;
+
+        case TYPE_FONT:
+            string = pango_font_description_to_string((PangoFontDescription*)value);
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            g_free(string);
+            break;
+    }
+}
+
+static gboolean setting_webkit(const Setting* s, const gboolean get)
 {
     WebKitWebSettings* web_setting = webkit_web_view_get_settings(vp.gui.webview);
 
     switch (s->type) {
         case TYPE_BOOLEAN:
-            g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? TRUE : FALSE, NULL);
+            if (get) {
+                gboolean value;
+                g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
+                setting_print_value(s, &value);
+            } else {
+                g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? TRUE : FALSE, NULL);
+            }
             break;
 
         case TYPE_INTEGER:
-            g_object_set(G_OBJECT(web_setting), s->name, s->arg.i, NULL);
+            if (get) {
+                gint value;
+                g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
+                setting_print_value(s, &value);
+            } else {
+                g_object_set(G_OBJECT(web_setting), s->name, s->arg.i, NULL);
+            }
             break;
 
-        case TYPE_DOUBLE:
-            g_object_set(G_OBJECT(web_setting), s->name, (s->arg.i / 1000.0), NULL);
+        case TYPE_FLOAT:
+            if (get) {
+                gfloat value;
+                g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
+                setting_print_value(s, &value);
+            } else {
+                g_object_set(G_OBJECT(web_setting), s->name, (gfloat)(s->arg.i / 1000000.0), NULL);
+            }
             break;
 
         case TYPE_CHAR:
         case TYPE_COLOR:
-            g_object_set(G_OBJECT(web_setting), s->name, s->arg.s, NULL);
+        case TYPE_FONT:
+            if (get) {
+                gchar* value = NULL;
+                g_object_get(G_OBJECT(web_setting), s->name, value, NULL);
+                setting_print_value(s, value);
+            } else {
+                g_object_set(G_OBJECT(web_setting), s->name, s->arg.s, NULL);
+            }
             break;
     }
+
     return TRUE;
 }
 
 #ifdef FEATURE_COOKIE
-static gboolean setting_cookie_timeout(const Setting* s)
+static gboolean setting_cookie_timeout(const Setting* s, const gboolean get)
 {
-    vp.config.cookie_timeout = s->arg.i;
+    if (get) {
+        setting_print_value(s, &vp.config.cookie_timeout);
+    } else {
+        vp.config.cookie_timeout = s->arg.i;
+    }
 
     return TRUE;
 }
 #endif
 
-static gboolean setting_scrollstep(const Setting* s)
+static gboolean setting_scrollstep(const Setting* s, const gboolean get)
 {
-    vp.config.scrollstep = s->arg.i;
+    if (get) {
+        setting_print_value(s, &vp.config.scrollstep);
+    } else {
+        vp.config.scrollstep = s->arg.i;
+    }
 
     return TRUE;
 }
 
-static gboolean setting_status_color_bg(const Setting* s)
+static gboolean setting_status_color_bg(const Setting* s, const gboolean get)
 {
-    VpColor color;
-
-    VP_COLOR_PARSE(&color, s->arg.s);
-    VP_WIDGET_OVERRIDE_BACKGROUND(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
-    VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
-    VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
+    if (get) {
+        setting_print_value(s, &vp.style.status_bg);
+    } else {
+        VP_COLOR_PARSE(&vp.style.status_bg, s->arg.s);
+        VP_WIDGET_OVERRIDE_BACKGROUND(vp.gui.eventbox, GTK_STATE_NORMAL, &vp.style.status_bg);
+        VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &vp.style.status_bg);
+        VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &vp.style.status_bg);
+    }
 
     return TRUE;
 }
 
-static gboolean setting_status_color_fg(const Setting* s)
+static gboolean setting_status_color_fg(const Setting* s, const gboolean get)
 {
-    VpColor color;
-
-    VP_COLOR_PARSE(&color, s->arg.s);
-    VP_WIDGET_OVERRIDE_COLOR(vp.gui.eventbox, GTK_STATE_NORMAL, &color);
-    VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &color);
-    VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &color);
+    if (get) {
+        setting_print_value(s, &vp.style.status_fg);
+    } else {
+        VP_COLOR_PARSE(&vp.style.status_fg, s->arg.s);
+        VP_WIDGET_OVERRIDE_COLOR(vp.gui.eventbox, GTK_STATE_NORMAL, &vp.style.status_fg);
+        VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &vp.style.status_fg);
+        VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &vp.style.status_fg);
+    }
 
     return TRUE;
 }
 
-static gboolean setting_status_font(const Setting* s)
+static gboolean setting_status_font(const Setting* s, const gboolean get)
 {
-    PangoFontDescription* font;
-    font = pango_font_description_from_string(s->arg.s);
+    if (get) {
+        setting_print_value(s, vp.style.status_font);
+    } else {
+        if (vp.style.status_font) {
+            /* free previous font description */
+            pango_font_description_free(vp.style.status_font);
+        }
+        vp.style.status_font = pango_font_description_from_string(s->arg.s);
 
-    VP_WIDGET_OVERRIDE_FONT(vp.gui.eventbox, font);
-    VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.left), font);
-    VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.right), font);
-
-    pango_font_description_free(font);
+        VP_WIDGET_OVERRIDE_FONT(vp.gui.eventbox, vp.style.status_font);
+        VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.left), vp.style.status_font);
+        VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.right), vp.style.status_font);
+    }
 
     return TRUE;
 }
 
-static gboolean setting_input_style(const Setting* s)
+static gboolean setting_input_style(const Setting* s, const gboolean get)
 {
     Style* style = &vp.style;
     MessageType type = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
 
     if (g_str_has_prefix(s->name, "input-bg")) {
-        VP_COLOR_PARSE(&style->input_bg[type], s->arg.s);
-    } else if (g_str_has_prefix(s->name, "input-fg")) {
-        VP_COLOR_PARSE(&style->input_fg[type], s->arg.s);
-    } else if (g_str_has_prefix(s->name, "input-font")) {
-        if (style->input_font[type]) {
-            pango_font_description_free(style->input_font[type]);
+        if (get) {
+            setting_print_value(s, &style->input_bg[type]);
+        } else {
+            VP_COLOR_PARSE(&style->input_bg[type], s->arg.s);
         }
-        style->input_font[type] = pango_font_description_from_string(s->arg.s);
+    } else if (g_str_has_prefix(s->name, "input-fg")) {
+        if (get) {
+            setting_print_value(s, &style->input_fg[type]);
+        } else {
+            VP_COLOR_PARSE(&style->input_fg[type], s->arg.s);
+        }
+    } else if (g_str_has_prefix(s->name, "input-font")) {
+        if (get) {
+            setting_print_value(s, style->input_font[type]);
+        } else {
+            if (style->input_font[type]) {
+                pango_font_description_free(style->input_font[type]);
+            }
+            style->input_font[type] = pango_font_description_from_string(s->arg.s);
+        }
     }
-    /* echo already visible input text to apply the new style to input box */
-    vp_echo(VP_MSG_NORMAL, FALSE, GET_TEXT());
+    if (!get) {
+        /* echo already visible input text to apply the new style to input box */
+        vp_echo(VP_MSG_NORMAL, FALSE, GET_TEXT());
+    }
 
     return TRUE;
 }
 
-static gboolean setting_completion_style(const Setting* s)
+static gboolean setting_completion_style(const Setting* s, const gboolean get)
 {
     Style* style = &vp.style;
     CompletionStyle type = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
 
     if (g_str_has_prefix(s->name, "completion-bg")) {
-        VP_COLOR_PARSE(&style->comp_bg[type], s->arg.s);
-    } else if (g_str_has_prefix(s->name, "completion-fg")) {
-        VP_COLOR_PARSE(&style->comp_fg[type], s->arg.s);
-    } else if (g_str_has_prefix(s->name, "completion-font")) {
-        if (style->comp_font[type]) {
-            pango_font_description_free(style->comp_font[type]);
+        if (get) {
+            setting_print_value(s, &style->comp_bg[type]);
+        } else {
+            VP_COLOR_PARSE(&style->comp_bg[type], s->arg.s);
         }
-        style->comp_font[type] = pango_font_description_from_string(s->arg.s);
+    } else if (g_str_has_prefix(s->name, "completion-fg")) {
+        if (get) {
+            setting_print_value(s, &style->comp_fg[type]);
+        } else {
+            VP_COLOR_PARSE(&style->comp_fg[type], s->arg.s);
+        }
+    } else if (g_str_has_prefix(s->name, "completion-font")) {
+        if (get) {
+            setting_print_value(s, style->comp_font[type]);
+        } else {
+            if (style->comp_font[type]) {
+                pango_font_description_free(style->comp_font[type]);
+            }
+            style->comp_font[type] = pango_font_description_from_string(s->arg.s);
+        }
     } else if (!g_strcmp0(s->name, "max-completion-items")) {
-        vp.config.max_completion_items = s->arg.i;
+        if (get) {
+            setting_print_value(s, &vp.config.max_completion_items);
+        } else {
+            vp.config.max_completion_items = s->arg.i;
+        }
     }
 
     return TRUE;
 }
 
-static gboolean setting_hint_style(const Setting* s)
+static gboolean setting_hint_style(const Setting* s, const gboolean get)
 {
     Style* style = &vp.style;
     if (!g_strcmp0(s->name, "hint-bg")) {
-        strncpy(style->hint_bg, s->arg.s, HEX_COLOR_LEN - 1);
-        style->hint_bg[HEX_COLOR_LEN - 1] = '\0';
-    } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
-        strncpy(style->hint_bg_focus, s->arg.s, HEX_COLOR_LEN - 1);
-        style->hint_bg_focus[HEX_COLOR_LEN - 1] = '\0';
-    } else if (!g_strcmp0(s->name, "hint-fg")) {
-        strncpy(style->hint_fg, s->arg.s, HEX_COLOR_LEN - 1);
-        style->hint_fg[HEX_COLOR_LEN - 1] = '\0';
-    } else if (!g_strcmp0(s->name, "hint-style")) {
-        if (style->hint_style) {
-            g_free(style->hint_style);
-            style->hint_style = NULL;
+        if (get) {
+            setting_print_value(s, style->hint_bg);
+        } else {
+            strncpy(style->hint_bg, s->arg.s, HEX_COLOR_LEN - 1);
+            style->hint_bg[HEX_COLOR_LEN - 1] = '\0';
         }
-        style->hint_style = g_strdup(s->arg.s);
+    } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
+        if (get) {
+            setting_print_value(s, style->hint_bg_focus);
+        } else {
+            strncpy(style->hint_bg_focus, s->arg.s, HEX_COLOR_LEN - 1);
+            style->hint_bg_focus[HEX_COLOR_LEN - 1] = '\0';
+        }
+    } else if (!g_strcmp0(s->name, "hint-fg")) {
+        if (get) {
+            setting_print_value(s, style->hint_bg_focus);
+        } else {
+            strncpy(style->hint_fg, s->arg.s, HEX_COLOR_LEN - 1);
+            style->hint_fg[HEX_COLOR_LEN - 1] = '\0';
+        }
+    } else if (!g_strcmp0(s->name, "hint-style")) {
+        if (get) {
+            setting_print_value(s, style->hint_style);
+        } else {
+            if (style->hint_style) {
+                g_free(style->hint_style);
+                style->hint_style = NULL;
+            }
+            style->hint_style = g_strdup(s->arg.s);
+        }
     }
 
     return TRUE;

@@ -240,12 +240,6 @@ gboolean command_set(const Arg* arg)
     token = g_strsplit(line, "=", 2);
     g_free(line);
 
-    if (!token[1]) {
-        /* TODO display current value */
-        g_strfreev(token);
-        vp_echo(VP_MSG_ERROR, TRUE, "No param given");
-        return FALSE;
-    }
     success = setting_run(token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
 

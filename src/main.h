@@ -57,6 +57,7 @@
 #ifdef HAS_GTK3
 #define VpColor GdkRGBA
 #define VP_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
+#define VP_COLOR_TO_STRING(color)       (gdk_rgba_to_string(color))
 #define VP_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_override_background_color
 #define VP_WIDGET_OVERRIDE_BASE         gtk_widget_override_background_color
 #define VP_WIDGET_OVERRIDE_COLOR        gtk_widget_override_color
@@ -65,6 +66,7 @@
 #else
 #define VpColor GdkColor
 #define VP_COLOR_PARSE(color, string)   (gdk_color_parse(string, color))
+#define VP_COLOR_TO_STRING(color)       (gdk_color_to_string(color))
 #define VP_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_modify_bg
 #define VP_WIDGET_OVERRIDE_BASE         gtk_widget_modify_base
 #define VP_WIDGET_OVERRIDE_COLOR        gtk_widget_modify_fg
@@ -149,8 +151,9 @@ typedef enum {
     TYPE_CHAR,
     TYPE_BOOLEAN,
     TYPE_INTEGER,
-    TYPE_DOUBLE,
+    TYPE_FLOAT,
     TYPE_COLOR,
+    TYPE_FONT,
 } Type;
 
 enum {
@@ -233,6 +236,10 @@ typedef struct {
     gchar                 hint_bg_focus[HEX_COLOR_LEN];
     gchar                 hint_fg[HEX_COLOR_LEN];
     gchar*                hint_style;
+    /* status bar */
+    VpColor               status_bg;
+    VpColor               status_fg;
+    PangoFontDescription* status_font;
 } Style;
 
 typedef struct {

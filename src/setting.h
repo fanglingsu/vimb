@@ -23,7 +23,7 @@
 #include "main.h"
 
 typedef struct _Setting Setting;
-typedef gboolean (*SettingFunc)(const Setting*);
+typedef gboolean (*SettingFunc)(const Setting*, const gboolean get);
 
 struct _Setting {
     gchar*      alias;
@@ -35,6 +35,6 @@ struct _Setting {
 
 void setting_init(void);
 void setting_cleanup(void);
-gboolean setting_run(const gchar* name, const gchar* param);
+gboolean setting_run(gchar* name, const gchar* param);
 
 #endif /* end of include guard: SETTING_H */
