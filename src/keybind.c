@@ -22,9 +22,6 @@
 #include "command.h"
 #include "completion.h"
 
-static GSList* keys = NULL;
-static GString* modkeys = NULL;
-
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval);
 static void keybind_str_to_keybind(gchar* str, Keybind* key);
 static guint keybind_str_to_modmask(const gchar* str);
@@ -34,17 +31,17 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
 
 void keybind_init(void)
 {
-    modkeys = g_string_new("");
+    vp.behave.modkeys = g_string_new("");
     g_signal_connect(G_OBJECT(vp.gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
 }
 
 void keybind_cleanup(void)
 {
-    if (keys) {
-        g_slist_free(keys);
+    if (vp.behave.keys) {
+        g_slist_free(vp.behave.keys);
     }
-    if (modkeys) {
-        g_string_free(modkeys, TRUE);
+    if (vp.behave.modkeys) {
+        g_string_free(vp.behave.modkeys, TRUE);
     }
 }
 
@@ -69,11 +66,11 @@ gboolean keybind_add_from_string(const gchar* str, const Mode mode)
         keybind_str_to_keybind(string[0], keybind);
 
         /* add the keybinding to the list */
-        keys = g_slist_prepend(keys, keybind);
+        vp.behave.keys = g_slist_prepend(vp.behave.keys, keybind);
 
         /* save the modkey also in the modkey string */
         if (keybind->modkey) {
-            g_string_append_c(modkeys, keybind->modkey);
+            g_string_append_c(vp.behave.modkeys, keybind->modkey);
         }
         result = TRUE;
     } else {
@@ -102,7 +99,7 @@ gboolean keybind_remove_from_string(const gchar* str, const Mode mode)
 
     GSList* link = keybind_find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
     if (link) {
-        keys = g_slist_delete_link(keys, link);
+        vp.behave.keys = g_slist_delete_link(vp.behave.keys, link);
     }
     /* TODO remove eventually no more used modkeys */
     return TRUE;
@@ -111,7 +108,7 @@ gboolean keybind_remove_from_string(const gchar* str, const Mode mode)
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
 {
     GSList* link;
-    for (link = keys; link != NULL; link = link->next) {
+    for (link = vp.behave.keys; link != NULL; link = link->next) {
         Keybind* keybind = (Keybind*)link->data;
         if (keybind->keyval == keyval
                 && keybind->modmask == modmask
@@ -225,7 +222,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
 
             return TRUE;
         }
-        if (strchr(modkeys->str, keyval) && vp.state.modkey != keyval) {
+        if (strchr(vp.behave.modkeys->str, keyval) && vp.state.modkey != keyval) {
             vp.state.modkey = (gchar)keyval;
             vp_update_statusbar();
 
