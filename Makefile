@@ -31,19 +31,19 @@ $(DTARGET): $(DOBJ)
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(DFLAGS)
 
 man:
-	@$(MAKE) $(MFLAGS) -C doc man
+	@$(MAKE) -C doc man
 
-install: $(TARGET) man
+install: $(TARGET)
 	install -d $(BINDIR)
 	install -m 755 $(TARGET) $(BINDIR)
-	@$(MAKE) $(MFLAGS) -C doc install
+	@$(MAKE) -C doc install
 
 uninstall:
 	$(RM) $(BINDIR)$(TARGET)
-	@$(MAKE) $(MFLAGS) -C doc uninstall
+	@$(MAKE) -C doc uninstall
 
 clean:
-	@$(MAKE) $(MFLAGS) -C doc clean
+	@$(MAKE) -C doc clean
 	$(RM) $(OBJ) $(DOBJ) $(TARGET) $(DTARGET)
 
 dist: distclean

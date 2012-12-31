@@ -50,9 +50,6 @@ DFLAGS += -DDEBUG
 DFLAGS += -ggdb
 DFLAGS += -g
 
-# Makeflags
-MFLAGS=--no-print-directory
-
 #----------------end of options----------------------
 PP        = m4
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
