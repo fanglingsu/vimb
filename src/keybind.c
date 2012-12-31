@@ -87,7 +87,7 @@ gboolean keybind_add_from_string(const gchar* str, const Mode mode)
 gboolean keybind_remove_from_string(const gchar* str, const Mode mode)
 {
     gchar* line = NULL;
-    Keybind keybind = {0};
+    Keybind keybind = {.mode = mode};
 
     if (str == NULL || *str == '\0') {
         return FALSE;
