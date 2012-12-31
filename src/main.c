@@ -48,6 +48,7 @@ static gboolean vp_new_window_policy_cb(
     WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, gpointer data);
 static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data);
 static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec);
+static void vp_hover_link_cb(WebKitWebView* webview, const gchar* titl, const char* link, gpointer data);
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -622,6 +623,7 @@ static void vp_setup_signals(void)
         "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), NULL,
         "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), NULL,
         "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), NULL,
+        "signal::hovering-over-link", G_CALLBACK(vp_hover_link_cb), NULL,
         NULL
     );
 
@@ -711,6 +713,17 @@ static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_s
     gtk_widget_destroy(GTK_WIDGET(view));
     /* open the requested window */
     vp_load_uri(&a);
+}
+
+static void vp_hover_link_cb(WebKitWebView* webview, const gchar* titl, const char* link, gpointer data)
+{
+    if (link) {
+        gchar* message = g_strdup_printf("Link: %s", link);
+        gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), message);
+        g_free(message);
+    } else {
+        vp_update_urlbar(webkit_web_view_get_uri(webview));
+    }
 }
 
 int main(int argc, char* argv[])
