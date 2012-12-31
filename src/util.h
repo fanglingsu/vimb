@@ -26,7 +26,5 @@ gchar* util_get_config_dir(void);
 gchar* util_get_cache_dir(void);
 void util_create_dir_if_not_exists(const gchar* dirpath);
 void util_create_file_if_not_exists(const gchar* filename);
-Arg* util_char_to_arg(const gchar* str, Type type);
-Arg* util_new_arg(void);
 
 #endif /* end of include guard: UTIL_H */

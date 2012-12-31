@@ -20,6 +20,7 @@
 #include "setting.h"
 #include "util.h"
 
+static Arg* setting_char_to_arg(const gchar* str, const Type type);
 static void setting_print_value(const Setting* s, void* value);
 static gboolean setting_webkit(const Setting* s, const gboolean get);
 #ifdef FEATURE_COOKIE
@@ -159,7 +160,7 @@ gboolean setting_run(gchar* name, const gchar* param)
 
     /* if string param is given convert it to the required data type and set
      * it to the arg of the setting */
-    a = util_char_to_arg(param, s->type);
+    a = setting_char_to_arg(param, s->type);
     if (a == NULL) {
         vp_echo(VP_MSG_ERROR, TRUE, "No valid value");
         return FALSE;
@@ -176,6 +177,40 @@ gboolean setting_run(gchar* name, const gchar* param)
         vp_echo(VP_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
     }
     return result;
+}
+
+/**
+ * Converts string representing also given data type into and Arg.
+ */
+static Arg* setting_char_to_arg(const gchar* str, const Type type)
+{
+    if (!str) {
+        return NULL;
+    }
+
+    Arg* arg = g_new0(Arg, 1);
+    switch (type) {
+        case TYPE_BOOLEAN:
+            arg->i = g_ascii_strncasecmp(str, "true", 4) == 0
+                || g_ascii_strncasecmp(str, "on", 2) == 0 ? 1 : 0;
+            break;
+
+        case TYPE_INTEGER:
+            arg->i = g_ascii_strtoull(str, (gchar**)NULL, 10);
+            break;
+
+        case TYPE_FLOAT:
+            arg->i = (1000000 * g_ascii_strtod(str, (gchar**)NULL));
+            break;
+
+        case TYPE_CHAR:
+        case TYPE_COLOR:
+        case TYPE_FONT:
+            arg->s = g_strdup(str);
+            break;
+    }
+
+    return arg;
 }
 
 /**
