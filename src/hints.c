@@ -91,6 +91,9 @@ void hints_clear(void)
     }
 
     hints_observe_input(FALSE);
+
+    /* simulate the mouse out of the last focused hint */
+    g_signal_emit_by_name(vp.gui.webview, "hovering-over-link", NULL, NULL);
 }
 
 void hints_create(const gchar* input, guint mode, const guint prefixLength)
@@ -321,6 +324,21 @@ static void hints_focus(const gulong num)
         doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(hint->elem));
         dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);
         webkit_dom_element_blur(hint->elem);
+
+        const gchar* tag = webkit_dom_element_get_tag_name(hint->elem);
+        if (!g_ascii_strcasecmp(tag, "a")) {
+            /* simulate the hovering over the hinted element this is done to show
+             * the hinted elements url in the url bar */
+            g_signal_emit_by_name(
+                vp.gui.webview,
+                "hovering-over-link",
+                "",
+                dom_element_get_source(hint->elem)
+            );
+        } else {
+            /* if hinted element has no url unhover the previous element */
+            g_signal_emit_by_name(vp.gui.webview, "hovering-over-link", NULL, NULL);
+        }
     }
 
     vp.hints.focusNum = num;

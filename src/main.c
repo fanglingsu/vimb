@@ -48,7 +48,7 @@ static gboolean vp_new_window_policy_cb(
     WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, gpointer data);
 static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data);
 static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec);
-static void vp_hover_link_cb(WebKitWebView* webview, const gchar* titl, const char* link, gpointer data);
+static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const char* link, gpointer data);
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -715,7 +715,7 @@ static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_s
     vp_load_uri(&a);
 }
 
-static void vp_hover_link_cb(WebKitWebView* webview, const gchar* titl, const char* link, gpointer data)
+static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const char* link, gpointer data)
 {
     if (link) {
         gchar* message = g_strdup_printf("Link: %s", link);
