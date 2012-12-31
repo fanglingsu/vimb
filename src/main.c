@@ -49,6 +49,7 @@ static gboolean vp_new_window_policy_cb(
 static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data);
 static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec);
 static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const char* link, gpointer data);
+static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const gchar* title, gpointer data);
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -624,6 +625,7 @@ static void vp_setup_signals(void)
         "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), NULL,
         "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), NULL,
         "signal::hovering-over-link", G_CALLBACK(vp_hover_link_cb), NULL,
+        "signal::title-changed", G_CALLBACK(vp_title_changed_cb), NULL,
         NULL
     );
 
@@ -724,6 +726,11 @@ static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const c
     } else {
         vp_update_urlbar(webkit_web_view_get_uri(webview));
     }
+}
+
+static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const gchar* title, gpointer data)
+{
+    gtk_window_set_title(GTK_WINDOW(vp.gui.window), title);
 }
 
 int main(int argc, char* argv[])
