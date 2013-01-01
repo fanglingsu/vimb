@@ -197,6 +197,7 @@ typedef struct {
     gchar           modkey;
     guint           count;
     GdkNativeWindow embed;
+    guint           progress;
 } State;
 
 /* behaviour */

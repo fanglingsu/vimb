@@ -32,6 +32,7 @@ static gchar **args;
 VpCore vp;
 
 /* callbacks */
+static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gpointer data);
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data);
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
 static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
@@ -65,25 +66,38 @@ static const gchar* vp_get_cookies(SoupURI *uri);
 #endif
 static gboolean vp_hide_message(void);
 
+static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gpointer data)
+{
+    vp.state.progress = webkit_web_view_get_progress(view) * 100;
+    vp_update_statusbar();
+}
+
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
 {
-    Gui* gui        = &vp.gui;
     const char* uri = CURRENT_URL();
 
-    switch (webkit_web_view_get_load_status(gui->webview)) {
+    switch (webkit_web_view_get_load_status(vp.gui.webview)) {
         case WEBKIT_LOAD_PROVISIONAL:
+            /* update load progress in statusbar */
+            vp.state.progress = 0;
+            vp_update_statusbar();
             break;
 
         case WEBKIT_LOAD_COMMITTED:
             /* status bar is updated by vp_set_mode */
             vp_set_mode(VP_MODE_NORMAL , FALSE);
             vp_update_urlbar(uri);
+
             break;
 
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
             break;
 
         case WEBKIT_LOAD_FINISHED:
+            /* update load progress in statusbar */
+            vp.state.progress = 100;
+            vp_update_statusbar();
+
             dom_check_auto_insert();
             break;
 
@@ -256,11 +270,11 @@ gboolean vp_load_uri(const Arg* arg)
         /* spawn a new browser instance */
         g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
     } else {
-        /* Load a web page into the browser instance */
-        webkit_web_view_load_uri(vp.gui.webview, uri);
-
         /* change state to normal mode */
         vp_set_mode(VP_MODE_NORMAL, FALSE);
+
+        /* Load a web page into the browser instance */
+        webkit_web_view_load_uri(vp.gui.webview, uri);
     }
     g_free(uri);
 
@@ -408,6 +422,10 @@ void vp_update_statusbar(void)
     /* show current modkey */
     if (vp.state.modkey) {
         g_string_append_c(status, vp.state.modkey);
+    }
+
+    if (vp.state.progress != 100) {
+        g_string_append_printf(status, " [%i%%]", vp.state.progress);
     }
 
     /* show the scroll status */
@@ -620,6 +638,7 @@ static void vp_setup_signals(void)
     g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
     g_object_connect(
         G_OBJECT(gui->webview),
+        "signal::notify::progress", G_CALLBACK(vp_webview_progress_cb), NULL,
         "signal::notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), NULL,
         "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), NULL,
