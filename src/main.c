@@ -618,9 +618,9 @@ static void vp_setup_signals(void)
     /* Set up callbacks so that if either the main window or the browser
      * instance is closed, the program will exit */
     g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
-    g_signal_connect(G_OBJECT(gui->webview), "notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL);
     g_object_connect(
         G_OBJECT(gui->webview),
+        "signal::notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), NULL,
         "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), NULL,
         "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), NULL,
