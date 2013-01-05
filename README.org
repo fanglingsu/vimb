@@ -6,6 +6,9 @@
 ** Features
    - fully keyboard controllable
    - change setting to runtime
+   - add and remove keybindings to runtime
+   - cookie support
+   - ssl validation against ca-file
 ** Dependencies
    - libwebkit-1.0
    - libgtk+-2.0
