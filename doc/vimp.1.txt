@@ -60,6 +60,12 @@ Open the give url into current window.
 .TP
 .B tabopen
 Open the give url into a new window.
+.TP
+.B open-home
+Opens the configured 'home-page' into current window.
+.TP
+.B tabopen-home
+Opens the home page into a new window.
 .SS Input
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
