@@ -58,6 +58,7 @@ static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
 static void vp_setup_signals(void);
+static void vp_setup_settings(void);
 static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
 static gboolean vp_hide_message(void);
@@ -80,6 +81,19 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
             break;
 
         case WEBKIT_LOAD_COMMITTED:
+            /* set the status */
+            if (g_str_has_prefix(uri, "https://")) {
+                WebKitWebFrame* frame         = webkit_web_view_get_main_frame(vp.gui.webview);
+                WebKitWebDataSource* src      = webkit_web_frame_get_data_source(frame);
+                WebKitNetworkRequest* request = webkit_web_data_source_get_request(src);
+                SoupMessage* msg              = webkit_network_request_get_message(request);
+                vp.state.status = (soup_message_get_flags(msg) ^ SOUP_MESSAGE_CERTIFICATE_TRUSTED)
+                    ? VP_STATUS_SSL_VALID
+                    : VP_STATUS_SSL_INVALID;
+            } else {
+                vp.state.status = VP_STATUS_NORMAL;
+            }
+
             /* status bar is updated by vp_set_mode */
             vp_set_mode(VP_MODE_NORMAL , FALSE);
             vp_update_urlbar(uri);
@@ -411,6 +425,8 @@ void vp_update_statusbar(void)
 {
     GString* status = g_string_new("");
 
+    vp_update_status_style();
+
     /* show current count */
     g_string_append_printf(status, "%.0d", vp.state.count);
     /* show current modkey */
@@ -438,6 +454,14 @@ void vp_update_statusbar(void)
 
     gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.right), status->str);
     g_string_free(status, TRUE);
+}
+
+void vp_update_status_style(void)
+{
+    StatusType type = vp.state.status;
+    vp_set_widget_font(vp.gui.eventbox, &vp.style.status_fg[type], &vp.style.status_bg[type], vp.style.status_font[type]);
+    vp_set_widget_font(vp.gui.statusbar.left, &vp.style.status_fg[type], &vp.style.status_bg[type], vp.style.status_font[type]);
+    vp_set_widget_font(vp.gui.statusbar.right, &vp.style.status_fg[type], &vp.style.status_bg[type], vp.style.status_font[type]);
 }
 
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
@@ -492,7 +516,11 @@ static void vp_init(void)
     /* initialize settings */
     setting_init();
 
+    /* read additional configuration from config files */
     vp_read_config();
+
+    /* set the configuration to the required objects */
+    vp_setup_settings();
 }
 
 static void vp_read_config(void)
@@ -617,13 +645,16 @@ static void vp_init_files(void)
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
 {
     VP_WIDGET_OVERRIDE_FONT(widget, font);
+    /* TODO are they all required? */
     VP_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
+    VP_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
     VP_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
+    VP_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
 }
 
 static void vp_setup_signals(void)
 {
-    Gui* gui              = &vp.gui;
+    Gui* gui = &vp.gui;
 
     /* Set up callbacks so that if either the main window or the browser
      * instance is closed, the program will exit */
@@ -652,8 +683,6 @@ static void vp_setup_signals(void)
         NULL
     );
 
-    g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
 
     /* inspector */
@@ -663,6 +692,12 @@ static void vp_setup_signals(void)
         G_CALLBACK(vp_inspect_web_view_cb),
         NULL
     );
+}
+
+static void vp_setup_settings(void)
+{
+    g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
 }
 
 static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, gpointer data)

@@ -20,6 +20,8 @@
 #include "setting.h"
 #include "util.h"
 
+#define OVERWRITE_STRING(t, s) {if(t){g_free(t);t=NULL;}t=g_strdup(s);}
+
 static Arg* setting_char_to_arg(const gchar* str, const Type type);
 static void setting_print_value(const Setting* s, void* value);
 static gboolean setting_webkit(const Setting* s, const gboolean get);
@@ -31,6 +33,8 @@ static gboolean setting_status_font(const Setting* s, const gboolean get);
 static gboolean setting_input_style(const Setting* s, const gboolean get);
 static gboolean setting_completion_style(const Setting* s, const gboolean get);
 static gboolean setting_hint_style(const Setting* s, const gboolean get);
+static gboolean setting_strict_ssl(const Setting* s, const gboolean get);
+static gboolean setting_ca_bundle(const Setting* s, const gboolean get);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -80,9 +84,18 @@ static Setting default_settings[] = {
     /* internal variables */
     {NULL, "cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
     {NULL, "scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
+
+    /* TODO set type to color */
     {NULL, "status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
     {NULL, "status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
     {NULL, "status-font", TYPE_FONT, setting_status_font, {.s = "monospace bold 8"}},
+    {NULL, "status-ssl-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#95e454"}},
+    {NULL, "status-ssl-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#000"}},
+    {NULL, "status-ssl-font", TYPE_FONT, setting_status_font, {.s = "monospace bold 8"}},
+    {NULL, "status-sslinvalid-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#f08080"}},
+    {NULL, "status-sslinvalid-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#000"}},
+    {NULL, "status-sslinvalid-font", TYPE_FONT, setting_status_font, {.s = "monospace bold 8"}},
+
     {NULL, "input-bg-normal", TYPE_COLOR, setting_input_style, {.s = "#fff"}},
     {NULL, "input-bg-error", TYPE_COLOR, setting_input_style, {.s = "#f00"}},
     {NULL, "input-fg-normal", TYPE_COLOR, setting_input_style, {.s = "#000"}},
@@ -100,6 +113,8 @@ static Setting default_settings[] = {
     {NULL, "hint-bg-focus", TYPE_CHAR, setting_hint_style, {.s = "#8f0"}},
     {NULL, "hint-fg", TYPE_CHAR, setting_hint_style, {.s = "#000"}},
     {NULL, "hint-style", TYPE_CHAR, setting_hint_style, {.s = "font-family:monospace;font-weight:bold;color:#000;background-color:#fff;margin:0;padding:0px 1px;border:1px solid #444;opacity:0.7;"}},
+    {NULL, "strict-ssl", TYPE_BOOLEAN, setting_strict_ssl, {.i = 1}},
+    {NULL, "ca-bundle", TYPE_CHAR, setting_ca_bundle, {.s = "/etc/ssl/certs/ca-certificates.crt"}},
 };
 
 
@@ -323,13 +338,20 @@ static gboolean setting_scrollstep(const Setting* s, const gboolean get)
 
 static gboolean setting_status_color_bg(const Setting* s, const gboolean get)
 {
-    if (get) {
-        setting_print_value(s, &vp.style.status_bg);
+    StatusType type;
+    if (g_str_has_prefix(s->name, "status-sslinvalid")) {
+        type = VP_STATUS_SSL_INVALID;
+    } else if (g_str_has_prefix(s->name, "status-ssl")) {
+        type = VP_STATUS_SSL_VALID;
     } else {
-        VP_COLOR_PARSE(&vp.style.status_bg, s->arg.s);
-        VP_WIDGET_OVERRIDE_BACKGROUND(vp.gui.eventbox, GTK_STATE_NORMAL, &vp.style.status_bg);
-        VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &vp.style.status_bg);
-        VP_WIDGET_OVERRIDE_BACKGROUND(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &vp.style.status_bg);
+        type = VP_STATUS_NORMAL;
+    }
+
+    if (get) {
+        setting_print_value(s, &vp.style.status_bg[type]);
+    } else {
+        VP_COLOR_PARSE(&vp.style.status_bg[type], s->arg.s);
+        vp_update_status_style();
     }
 
     return TRUE;
@@ -337,13 +359,20 @@ static gboolean setting_status_color_bg(const Setting* s, const gboolean get)
 
 static gboolean setting_status_color_fg(const Setting* s, const gboolean get)
 {
-    if (get) {
-        setting_print_value(s, &vp.style.status_fg);
+    StatusType type;
+    if (g_str_has_prefix(s->name, "status-sslinvalid")) {
+        type = VP_STATUS_SSL_INVALID;
+    } else if (g_str_has_prefix(s->name, "status-ssl")) {
+        type = VP_STATUS_SSL_VALID;
     } else {
-        VP_COLOR_PARSE(&vp.style.status_fg, s->arg.s);
-        VP_WIDGET_OVERRIDE_COLOR(vp.gui.eventbox, GTK_STATE_NORMAL, &vp.style.status_fg);
-        VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.left), GTK_STATE_NORMAL, &vp.style.status_fg);
-        VP_WIDGET_OVERRIDE_COLOR(GTK_WIDGET(vp.gui.statusbar.right), GTK_STATE_NORMAL, &vp.style.status_fg);
+        type = VP_STATUS_NORMAL;
+    }
+
+    if (get) {
+        setting_print_value(s, &vp.style.status_fg[type]);
+    } else {
+        VP_COLOR_PARSE(&vp.style.status_fg[type], s->arg.s);
+        vp_update_status_style();
     }
 
     return TRUE;
@@ -351,18 +380,25 @@ static gboolean setting_status_color_fg(const Setting* s, const gboolean get)
 
 static gboolean setting_status_font(const Setting* s, const gboolean get)
 {
-    if (get) {
-        setting_print_value(s, vp.style.status_font);
+    StatusType type;
+    if (g_str_has_prefix(s->name, "status-sslinvalid")) {
+        type = VP_STATUS_SSL_INVALID;
+    } else if (g_str_has_prefix(s->name, "status-ssl")) {
+        type = VP_STATUS_SSL_VALID;
     } else {
-        if (vp.style.status_font) {
-            /* free previous font description */
-            pango_font_description_free(vp.style.status_font);
-        }
-        vp.style.status_font = pango_font_description_from_string(s->arg.s);
+        type = VP_STATUS_NORMAL;
+    }
 
-        VP_WIDGET_OVERRIDE_FONT(vp.gui.eventbox, vp.style.status_font);
-        VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.left), vp.style.status_font);
-        VP_WIDGET_OVERRIDE_FONT(GTK_WIDGET(vp.gui.statusbar.right), vp.style.status_font);
+    if (get) {
+        setting_print_value(s, vp.style.status_font[type]);
+    } else {
+        if (vp.style.status_font[type]) {
+            /* free previous font description */
+            pango_font_description_free(vp.style.status_font[type]);
+        }
+        vp.style.status_font[type] = pango_font_description_from_string(s->arg.s);
+
+        vp_update_status_style();
     }
 
     return TRUE;
@@ -476,12 +512,36 @@ static gboolean setting_hint_style(const Setting* s, const gboolean get)
         if (get) {
             setting_print_value(s, style->hint_style);
         } else {
-            if (style->hint_style) {
-                g_free(style->hint_style);
-                style->hint_style = NULL;
-            }
-            style->hint_style = g_strdup(s->arg.s);
+            OVERWRITE_STRING(style->hint_style, s->arg.s);
         }
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_strict_ssl(const Setting* s, const gboolean get)
+{
+    if (get) {
+        gboolean value;
+        g_object_get(vp.net.soup_session, "ssl-strict", &value, NULL);
+        setting_print_value(s, &value);
+    } else {
+        g_object_set(vp.net.soup_session, "ssl-strict", s->arg.i ? TRUE : FALSE, NULL);
+
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_ca_bundle(const Setting* s, const gboolean get)
+{
+    if (get) {
+        gchar* value = NULL;
+        g_object_get(vp.net.soup_session, "ssl-ca-file", &value, NULL);
+        setting_print_value(s, value);
+        g_free(value);
+    } else {
+        g_object_set(vp.net.soup_session, "ssl-ca-file", s->arg.s, NULL);
     }
 
     return TRUE;

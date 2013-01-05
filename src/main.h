@@ -135,6 +135,13 @@ typedef enum {
 } MessageType;
 
 typedef enum {
+    VP_STATUS_NORMAL,
+    VP_STATUS_SSL_VALID,
+    VP_STATUS_SSL_INVALID,
+    VP_STATUS_LAST
+} StatusType;
+
+typedef enum {
     VP_COMP_NORMAL,
     VP_COMP_ACTIVE,
     VP_COMP_LAST
@@ -198,6 +205,7 @@ typedef struct {
     guint           count;
     GdkNativeWindow embed;
     guint           progress;
+    StatusType      status;
 } State;
 
 /* behaviour */
@@ -239,9 +247,9 @@ typedef struct {
     gchar                 hint_fg[HEX_COLOR_LEN];
     gchar*                hint_style;
     /* status bar */
-    VpColor               status_bg;
-    VpColor               status_fg;
-    PangoFontDescription* status_font;
+    VpColor               status_bg[VP_STATUS_LAST];
+    VpColor               status_fg[VP_STATUS_LAST];
+    PangoFontDescription* status_font[VP_STATUS_LAST];
 } Style;
 
 typedef struct {
@@ -272,6 +280,7 @@ extern VpCore vp;
 /* functions */
 void vp_update_statusbar(void);
 void vp_update_urlbar(const gchar* uri);
+void vp_update_status_style(void);
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
 gboolean vp_set_mode(Mode mode, gboolean clean);
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
