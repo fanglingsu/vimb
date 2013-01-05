@@ -85,7 +85,6 @@ static Setting default_settings[] = {
     {NULL, "cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
     {NULL, "scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
 
-    /* TODO set type to color */
     {NULL, "status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
     {NULL, "status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
     {NULL, "status-font", TYPE_FONT, setting_status_font, {.s = "monospace bold 8"}},
@@ -491,24 +490,21 @@ static gboolean setting_hint_style(const Setting* s, const gboolean get)
         if (get) {
             setting_print_value(s, style->hint_bg);
         } else {
-            strncpy(style->hint_bg, s->arg.s, HEX_COLOR_LEN - 1);
-            style->hint_bg[HEX_COLOR_LEN - 1] = '\0';
+            OVERWRITE_STRING(style->hint_bg, s->arg.s)
         }
     } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
         if (get) {
             setting_print_value(s, style->hint_bg_focus);
         } else {
-            strncpy(style->hint_bg_focus, s->arg.s, HEX_COLOR_LEN - 1);
-            style->hint_bg_focus[HEX_COLOR_LEN - 1] = '\0';
+            OVERWRITE_STRING(style->hint_bg_focus, s->arg.s)
         }
     } else if (!g_strcmp0(s->name, "hint-fg")) {
         if (get) {
-            setting_print_value(s, style->hint_bg_focus);
+            setting_print_value(s, style->hint_fg);
         } else {
-            strncpy(style->hint_fg, s->arg.s, HEX_COLOR_LEN - 1);
-            style->hint_fg[HEX_COLOR_LEN - 1] = '\0';
+            OVERWRITE_STRING(style->hint_fg, s->arg.s)
         }
-    } else if (!g_strcmp0(s->name, "hint-style")) {
+    } else {
         if (get) {
             setting_print_value(s, style->hint_style);
         } else {

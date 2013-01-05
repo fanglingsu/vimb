@@ -74,8 +74,6 @@
 #define VP_WIDGET_OVERRIDE_FONT         gtk_widget_modify_font
 #endif
 
-#define HEX_COLOR_LEN 8
-
 /* enums */
 typedef enum _vp_mode {
     VP_MODE_NORMAL        = 1<<0,
@@ -242,9 +240,9 @@ typedef struct {
     VpColor               comp_bg[VP_COMP_LAST];
     PangoFontDescription* comp_font[VP_COMP_LAST];
     /* hint style */
-    gchar                 hint_bg[HEX_COLOR_LEN];
-    gchar                 hint_bg_focus[HEX_COLOR_LEN];
-    gchar                 hint_fg[HEX_COLOR_LEN];
+    gchar*                hint_bg;
+    gchar*                hint_bg_focus;
+    gchar*                hint_fg;
     gchar*                hint_style;
     /* status bar */
     VpColor               status_bg[VP_STATUS_LAST];
