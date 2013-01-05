@@ -23,9 +23,7 @@
 static Arg* setting_char_to_arg(const gchar* str, const Type type);
 static void setting_print_value(const Setting* s, void* value);
 static gboolean setting_webkit(const Setting* s, const gboolean get);
-#ifdef FEATURE_COOKIE
 static gboolean setting_cookie_timeout(const Setting* s, const gboolean get);
-#endif
 static gboolean setting_scrollstep(const Setting* s, const gboolean get);
 static gboolean setting_status_color_bg(const Setting* s, const gboolean get);
 static gboolean setting_status_color_fg(const Setting* s, const gboolean get);
@@ -80,9 +78,7 @@ static Setting default_settings[] = {
     {"stylesheet", "user-stylesheet-uri", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {"zoomstep", "zoom-step", TYPE_FLOAT, setting_webkit, {.i = 100000}},
     /* internal variables */
-#ifdef FEATURE_COOKIE
     {NULL, "cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
-#endif
     {NULL, "scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
     {NULL, "status-color-bg", TYPE_CHAR, setting_status_color_bg, {.s = "#000"}},
     {NULL, "status-color-fg", TYPE_CHAR, setting_status_color_fg, {.s = "#fff"}},
@@ -303,7 +299,6 @@ static gboolean setting_webkit(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-#ifdef FEATURE_COOKIE
 static gboolean setting_cookie_timeout(const Setting* s, const gboolean get)
 {
     if (get) {
@@ -314,7 +309,6 @@ static gboolean setting_cookie_timeout(const Setting* s, const gboolean get)
 
     return TRUE;
 }
-#endif
 
 static gboolean setting_scrollstep(const Setting* s, const gboolean get)
 {

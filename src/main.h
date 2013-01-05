@@ -214,9 +214,7 @@ typedef struct {
 } Network;
 
 typedef struct {
-#ifdef FEATURE_COOKIE
     time_t cookie_timeout;
-#endif
     gint   scrollstep;
     guint  max_completion_items;
 } Config;
@@ -260,9 +258,7 @@ typedef struct {
     State         state;
     Behaviour     behave;
     gchar*        files[FILES_LAST];
-#ifdef FEATURE_COOKIE
     Network       net;
-#endif
     Config        config;
     Completions   comps;
     Style         style;

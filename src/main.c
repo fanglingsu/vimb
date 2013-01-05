@@ -38,10 +38,8 @@ static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer 
 static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
 static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
 static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data);
-#ifdef FEATURE_COOKIE
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data);
 static void vp_gotheaders_cb(SoupMessage* message, gpointer data);
-#endif
 static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* web_view);
 static gboolean vp_button_relase_cb(WebKitWebView *webview, GdkEventButton* event, gpointer data);
 static gboolean vp_new_window_policy_cb(
@@ -60,10 +58,8 @@ static void vp_read_config(void);
 static void vp_init_gui(void);
 static void vp_init_files(void);
 static void vp_setup_signals(void);
-#ifdef FEATURE_COOKIE
 static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
-#endif
 static gboolean vp_hide_message(void);
 
 static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gpointer data)
@@ -149,7 +145,6 @@ static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data)
     vp_update_statusbar();
 }
 
-#ifdef FEATURE_COOKIE
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data)
 {
     SoupMessageHeaders* header = message->request_headers;
@@ -174,7 +169,6 @@ static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
     }
     soup_cookies_free(list);
 }
-#endif
 
 static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* web_view)
 {
@@ -557,10 +551,8 @@ static void vp_init_gui(void)
     gui->inspector = webkit_web_view_get_inspector(gui->webview);
 
     /* init soup session */
-#ifdef FEATURE_COOKIE
     vp.net.soup_session = webkit_get_default_session();
     soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_jar_get_type());
-#endif
 
     /* Create a scrollable area */
     gui->viewport = gtk_scrolled_window_new(NULL, NULL);
@@ -660,11 +652,9 @@ static void vp_setup_signals(void)
         NULL
     );
 
-#ifdef FEATURE_COOKIE
     g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
     g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
-#endif
 
     /* inspector */
     g_signal_connect(
