@@ -814,7 +814,7 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         arg.s = g_strdup(argv[argc - 1]);
     } else {
-        arg.s = g_strdup(START_PAGE);
+        arg.s = g_strdup(vp.config.home_page);
     }
     vp_load_uri(&arg);
     g_free(arg.s);

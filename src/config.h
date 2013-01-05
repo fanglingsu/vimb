@@ -22,9 +22,6 @@
 
 #include "stdlib.h"
 
-#define START_PAGE      "https://github.com/fanglingsu/vimp"
-
-#define SETTING_DEFAUL_FONT_SIZE    12
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST  5
 
@@ -37,6 +34,8 @@ const struct {
     {"nmap t=inputtabopen"},
     {"nmap O=inputopencurrent"},
     {"nmap T=inputtabopencurrent"},
+    {"nmap gh=open-home"},
+    {"nmap gH=tabopen-home"},
     {"nmap d=quit"},
     {"nmap <ctrl-o>=back"},
     {"nmap <ctrl-i>=forward"},

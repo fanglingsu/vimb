@@ -35,6 +35,7 @@ static gboolean setting_completion_style(const Setting* s, const gboolean get);
 static gboolean setting_hint_style(const Setting* s, const gboolean get);
 static gboolean setting_strict_ssl(const Setting* s, const gboolean get);
 static gboolean setting_ca_bundle(const Setting* s, const gboolean get);
+static gboolean setting_home_page(const Setting* s, const gboolean get);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -114,6 +115,7 @@ static Setting default_settings[] = {
     {NULL, "hint-style", TYPE_CHAR, setting_hint_style, {.s = "font-family:monospace;font-weight:bold;color:#000;background-color:#fff;margin:0;padding:0px 1px;border:1px solid #444;opacity:0.7;"}},
     {NULL, "strict-ssl", TYPE_BOOLEAN, setting_strict_ssl, {.i = 1}},
     {NULL, "ca-bundle", TYPE_CHAR, setting_ca_bundle, {.s = "/etc/ssl/certs/ca-certificates.crt"}},
+    {NULL, "home-page", TYPE_CHAR, setting_home_page, {.s = "https://github.com/fanglingsu/vimp"}},
 };
 
 
@@ -538,6 +540,17 @@ static gboolean setting_ca_bundle(const Setting* s, const gboolean get)
         g_free(value);
     } else {
         g_object_set(vp.net.soup_session, "ssl-ca-file", s->arg.s, NULL);
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_home_page(const Setting* s, const gboolean get)
+{
+    if (get) {
+        setting_print_value(s, vp.config.home_page);
+    } else {
+        OVERWRITE_STRING(vp.config.home_page, s->arg.s);
     }
 
     return TRUE;

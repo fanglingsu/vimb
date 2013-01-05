@@ -43,6 +43,7 @@ gboolean command_exists(const gchar* name);
 gboolean command_run(const gchar* name, const gchar* param);
 
 gboolean command_open(const Arg* arg);
+gboolean command_open_home(const Arg* arg);
 gboolean command_input(const Arg* arg);
 gboolean command_close(const Arg* arg);
 gboolean command_view_source(const Arg* arg);

@@ -223,6 +223,7 @@ typedef struct {
     time_t cookie_timeout;
     gint   scrollstep;
     guint  max_completion_items;
+    gchar* home_page;
 } Config;
 
 typedef struct {

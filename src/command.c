@@ -28,6 +28,8 @@ static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
     {"open",                command_open,        {VP_TARGET_CURRENT, ""},                                                            VP_MODE_NORMAL},
     {"tabopen",             command_open,        {VP_TARGET_NEW, ""},                                                                VP_MODE_NORMAL},
+    {"open-home",           command_open_home,   {VP_TARGET_CURRENT, ""},                                                            VP_MODE_NORMAL},
+    {"tabopen-home",        command_open_home,   {VP_TARGET_NEW, ""},                                                                VP_MODE_NORMAL},
     {"input",               command_input,       {0, ":"},                                                                           VP_MODE_COMMAND},
     {"inputopen",           command_input,       {0, ":open "},                                                                      VP_MODE_COMMAND},
     {"inputtabopen",        command_input,       {0, ":tabopen "},                                                                   VP_MODE_COMMAND},
@@ -124,6 +126,16 @@ gboolean command_run(const gchar* name, const gchar* param)
 gboolean command_open(const Arg* arg)
 {
     return vp_load_uri(arg);
+}
+
+gboolean command_open_home(const Arg* arg)
+{
+    gboolean result;
+
+    Arg a = {.i = arg->i, .s = vp.config.home_page};
+    result = vp_load_uri(&a);
+
+    return result;
 }
 
 gboolean command_input(const Arg* arg)
