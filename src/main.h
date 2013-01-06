@@ -217,6 +217,7 @@ typedef struct {
 
 typedef struct {
     SoupSession*    soup_session;
+    GList*          downloads;
 } Network;
 
 typedef struct {
@@ -224,6 +225,7 @@ typedef struct {
     gint   scrollstep;
     guint  max_completion_items;
     gchar* home_page;
+    gchar* download_dir;
 } Config;
 
 typedef struct {

@@ -24,6 +24,7 @@
 
 gchar* util_get_config_dir(void);
 gchar* util_get_cache_dir(void);
+const gchar* util_get_home_dir(void);
 void util_create_dir_if_not_exists(const gchar* dirpath);
 void util_create_file_if_not_exists(const gchar* filename);
 

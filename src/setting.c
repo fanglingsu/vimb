@@ -36,6 +36,7 @@ static gboolean setting_hint_style(const Setting* s, const gboolean get);
 static gboolean setting_strict_ssl(const Setting* s, const gboolean get);
 static gboolean setting_ca_bundle(const Setting* s, const gboolean get);
 static gboolean setting_home_page(const Setting* s, const gboolean get);
+static gboolean setting_download_path(const Setting* s, const gboolean get);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -116,6 +117,7 @@ static Setting default_settings[] = {
     {NULL, "strict-ssl", TYPE_BOOLEAN, setting_strict_ssl, {.i = 1}},
     {NULL, "ca-bundle", TYPE_CHAR, setting_ca_bundle, {.s = "/etc/ssl/certs/ca-certificates.crt"}},
     {NULL, "home-page", TYPE_CHAR, setting_home_page, {.s = "https://github.com/fanglingsu/vimp"}},
+    {NULL, "download-path", TYPE_CHAR, setting_download_path, {.s = "/tmp/vimp"}},
 };
 
 
@@ -551,6 +553,28 @@ static gboolean setting_home_page(const Setting* s, const gboolean get)
         setting_print_value(s, vp.config.home_page);
     } else {
         OVERWRITE_STRING(vp.config.home_page, s->arg.s);
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_download_path(const Setting* s, const gboolean get)
+{
+    if (get) {
+        setting_print_value(s, vp.config.download_dir);
+    } else {
+        if (vp.config.download_dir) {
+            g_free(vp.config.download_dir);
+            vp.config.download_dir = NULL;
+        }
+        /* if path is not absolute create it in the home directory */
+        if (s->arg.s[0] != '/') {
+            vp.config.download_dir = g_build_filename(util_get_home_dir(), s->arg.s, NULL);
+        } else {
+            vp.config.download_dir = g_strdup(s->arg.s);
+        }
+        /* create the path if it does not exist */
+        util_create_dir_if_not_exists(vp.config.download_dir);
     }
 
     return TRUE;

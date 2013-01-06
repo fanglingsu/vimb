@@ -36,6 +36,17 @@ gchar* util_get_cache_dir(void)
     return path;
 }
 
+const gchar* util_get_home_dir(void)
+{
+    const gchar* dir = g_getenv("HOME");
+
+    if (!dir) {
+        dir = g_get_home_dir();
+    }
+
+    return dir;
+}
+
 void util_create_dir_if_not_exists(const gchar* dirpath)
 {
     if (!g_file_test(dirpath, G_FILE_TEST_IS_DIR)) {
@@ -43,7 +54,8 @@ void util_create_dir_if_not_exists(const gchar* dirpath)
     }
 }
 
-void util_create_file_if_not_exists(const char* filename) {
+void util_create_file_if_not_exists(const char* filename)
+{
     if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
         FILE* f = fopen(filename, "a");
         fclose(f);

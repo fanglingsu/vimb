@@ -32,7 +32,7 @@ static gchar **args;
 VpCore vp;
 
 /* callbacks */
-static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gpointer data);
+static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download);
 static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data);
 static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
 static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
@@ -49,6 +49,11 @@ static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWeb
 static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec);
 static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const char* link, gpointer data);
 static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const gchar* title, gpointer data);
+static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
+    WebKitWebFrame* frame, WebKitNetworkRequest* request, gchar*
+    mime_type, WebKitWebPolicyDecision* decision, gpointer data);
+static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, gpointer data);
+static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec);
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -63,9 +68,20 @@ static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
 static gboolean vp_hide_message(void);
 
-static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gpointer data)
+static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download)
 {
-    vp.state.progress = webkit_web_view_get_progress(view) * 100;
+    if (download) {
+        if (vp.net.downloads) {
+            vp.state.progress = 0;
+            GList* ptr;
+            for (ptr = vp.net.downloads; ptr; ptr = g_list_next(ptr)) {
+                vp.state.progress += 100 * webkit_download_get_progress(ptr->data);
+            }
+            vp.state.progress /= g_list_length(vp.net.downloads);
+        }
+    } else {
+        vp.state.progress = webkit_web_view_get_progress(view) * 100;
+    }
     vp_update_statusbar();
 }
 
@@ -434,6 +450,13 @@ void vp_update_statusbar(void)
         g_string_append_c(status, vp.state.modkey);
     }
 
+    /* show the active downloads */
+    if (vp.net.downloads) {
+        gint num = g_list_length(vp.net.downloads);
+        g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
+    }
+
+    /* show load status of page or the downloads */
     if (vp.state.progress != 100) {
         g_string_append_printf(status, " [%i%%]", vp.state.progress);
     }
@@ -661,13 +684,15 @@ static void vp_setup_signals(void)
     g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
     g_object_connect(
         G_OBJECT(gui->webview),
-        "signal::notify::progress", G_CALLBACK(vp_webview_progress_cb), NULL,
+        "signal::notify::progress", G_CALLBACK(vp_webview_progress_cb), (gpointer)FALSE,
         "signal::notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), NULL,
         "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), NULL,
         "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), NULL,
         "signal::hovering-over-link", G_CALLBACK(vp_hover_link_cb), NULL,
         "signal::title-changed", G_CALLBACK(vp_title_changed_cb), NULL,
+        "signal::mime-type-policy-decision-requested", G_CALLBACK(vp_mimetype_decision_cb), NULL,
+        "signal::download-requested", G_CALLBACK(vp_download_requested_cb), NULL,
         NULL
     );
 
@@ -776,6 +801,80 @@ static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, c
 {
     gtk_window_set_title(GTK_WINDOW(vp.gui.window), title);
 }
+
+static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
+    WebKitWebFrame* frame, WebKitNetworkRequest* request, gchar*
+    mime_type, WebKitWebPolicyDecision* decision, gpointer data)
+{
+    if (webkit_web_view_can_show_mime_type(webview, mime_type) == FALSE) {
+        webkit_web_policy_decision_download(decision);
+
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, gpointer data)
+{
+    WebKitDownloadStatus status;
+    gchar* uri = NULL;
+
+    const gchar* filename = webkit_download_get_suggested_filename(download);
+    if (!filename) {
+        filename = "vimp_donwload";
+    }
+
+    /* prepare the download target path */
+    uri = g_strdup_printf("file://%s%c%s", vp.config.download_dir, G_DIR_SEPARATOR, filename);
+    webkit_download_set_destination_uri(download, uri);
+    g_free(uri);
+
+    guint64 size = webkit_download_get_total_size(download);
+    if (size > 0) {
+        vp_echo(VP_MSG_NORMAL, FALSE, "Download %s [~%uB] started ...", filename, size);
+    } else {
+        vp_echo(VP_MSG_NORMAL, FALSE, "Download %s started ...", filename);
+    }
+
+    status = webkit_download_get_status(download);
+    if (status == WEBKIT_DOWNLOAD_STATUS_CREATED) {
+        webkit_download_start(download);
+    }
+
+    /* prepend the download to the download list */
+    vp.net.downloads = g_list_prepend(vp.net.downloads, download);
+
+    /* connect signal handler to check if the download is done */
+    g_signal_connect(download, "notify::status", G_CALLBACK(vp_download_progress_cp), NULL);
+    g_signal_connect(download, "notify::progress", G_CALLBACK(vp_webview_progress_cb), (gpointer)TRUE);
+
+    vp_update_statusbar();
+
+    return TRUE;
+}
+
+static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
+{
+    WebKitDownloadStatus status = webkit_download_get_status(download);
+
+    if (status == WEBKIT_DOWNLOAD_STATUS_STARTED || status == WEBKIT_DOWNLOAD_STATUS_CREATED) {
+        return;
+    }
+
+    gchar* file = g_path_get_basename(webkit_download_get_destination_uri(download));
+    if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
+        vp_echo(VP_MSG_ERROR, FALSE, "Error downloading %s", file);
+    } else {
+        vp_echo(VP_MSG_NORMAL, FALSE, "Download %s finished", file);
+    }
+    g_free(file);
+
+    /* remove the donwload from the list */
+    vp.net.downloads = g_list_remove(vp.net.downloads, download);
+
+    vp_update_statusbar();
+}
+
 
 int main(int argc, char* argv[])
 {
