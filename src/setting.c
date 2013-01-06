@@ -20,8 +20,6 @@
 #include "setting.h"
 #include "util.h"
 
-#define OVERWRITE_STRING(t, s) {if(t){g_free(t);t=NULL;}t=g_strdup(s);}
-
 static Arg* setting_char_to_arg(const gchar* str, const Type type);
 static void setting_print_value(const Setting* s, void* value);
 static gboolean setting_webkit(const Setting* s, const gboolean get);
