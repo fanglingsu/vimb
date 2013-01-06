@@ -334,6 +334,12 @@ static const gchar* vp_get_cookies(SoupURI *uri)
 
 void vp_clean_up(void)
 {
+    const gchar* uri = CURRENT_URL();
+    /* write last URL into file for recreation */
+    if (uri) {
+        g_file_set_contents(vp.files[FILES_CLOSED], uri, -1, NULL);
+    }
+
     if (vp.behave.commands) {
         g_hash_table_destroy(vp.behave.commands);
         vp.behave.commands = NULL;
@@ -661,6 +667,9 @@ static void vp_init_files(void)
 
     vp.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
     util_create_file_if_not_exists(vp.files[FILES_COOKIE]);
+
+    vp.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
+    util_create_file_if_not_exists(vp.files[FILES_CLOSED]);
 
     g_free(path);
 }

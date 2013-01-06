@@ -66,6 +66,12 @@ Opens the configured 'home-page' into current window.
 .TP
 .B tabopen-home
 Opens the home page into a new window.
+.TP
+.B open-closed
+Open the last closed page into current window.
+.TP
+.B tabopen-closed
+Open the last closed page into new window.
 .SS Input
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.

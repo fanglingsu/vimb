@@ -36,6 +36,8 @@ const struct {
     {"nmap T=inputtabopencurrent"},
     {"nmap gh=open-home"},
     {"nmap gH=tabopen-home"},
+    {"nmap u=open-closed"},
+    {"nmap U=tabopen-closed"},
     {"nmap d=quit"},
     {"nmap <ctrl-o>=back"},
     {"nmap <ctrl-i>=forward"},

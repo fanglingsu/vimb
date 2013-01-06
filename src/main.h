@@ -151,6 +151,7 @@ enum {
     FILES_FIRST = 0,
     FILES_CONFIG = 0,
     FILES_COOKIE,
+    FILES_CLOSED,
     FILES_LAST
 };
 

@@ -26,10 +26,12 @@
 
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
-    {"open",                command_open,        {VP_TARGET_CURRENT, ""},                                                            VP_MODE_NORMAL},
-    {"tabopen",             command_open,        {VP_TARGET_NEW, ""},                                                                VP_MODE_NORMAL},
-    {"open-home",           command_open_home,   {VP_TARGET_CURRENT, ""},                                                            VP_MODE_NORMAL},
-    {"tabopen-home",        command_open_home,   {VP_TARGET_NEW, ""},                                                                VP_MODE_NORMAL},
+    {"open",                command_open,        {VP_TARGET_CURRENT},                                                                VP_MODE_NORMAL},
+    {"tabopen",             command_open,        {VP_TARGET_NEW},                                                                    VP_MODE_NORMAL},
+    {"open-home",           command_open_home,   {VP_TARGET_CURRENT},                                                                VP_MODE_NORMAL},
+    {"tabopen-home",        command_open_home,   {VP_TARGET_NEW},                                                                    VP_MODE_NORMAL},
+    {"open-closed",         command_open_closed, {VP_TARGET_CURRENT},                                                                VP_MODE_NORMAL},
+    {"tabopen-closed",      command_open_closed, {VP_TARGET_NEW},                                                                    VP_MODE_NORMAL},
     {"input",               command_input,       {0, ":"},                                                                           VP_MODE_COMMAND},
     {"inputopen",           command_input,       {0, ":open "},                                                                      VP_MODE_COMMAND},
     {"inputtabopen",        command_input,       {0, ":tabopen "},                                                                   VP_MODE_COMMAND},
@@ -130,10 +132,21 @@ gboolean command_open(const Arg* arg)
 
 gboolean command_open_home(const Arg* arg)
 {
+    Arg a = {arg->i, vp.config.home_page};
+    return vp_load_uri(&a);
+}
+
+/**
+ * Reopens the last closed page.
+ */
+gboolean command_open_closed(const Arg* arg)
+{
     gboolean result;
 
-    Arg a = {.i = arg->i, .s = vp.config.home_page};
+    Arg a = {arg->i};
+    g_file_get_contents(vp.files[FILES_CLOSED], &a.s, NULL, NULL);
     result = vp_load_uri(&a);
+    g_free(a.s);
 
     return result;
 }
