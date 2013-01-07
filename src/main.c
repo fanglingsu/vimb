@@ -103,7 +103,7 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
                 WebKitWebDataSource* src      = webkit_web_frame_get_data_source(frame);
                 WebKitNetworkRequest* request = webkit_web_data_source_get_request(src);
                 SoupMessage* msg              = webkit_network_request_get_message(request);
-                vp.state.status = (soup_message_get_flags(msg) ^ SOUP_MESSAGE_CERTIFICATE_TRUSTED)
+                vp.state.status = (soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED)
                     ? VP_STATUS_SSL_VALID
                     : VP_STATUS_SSL_INVALID;
             } else {
