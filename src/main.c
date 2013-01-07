@@ -70,6 +70,7 @@ static void vp_setup_settings(void);
 static void vp_set_cookie(SoupCookie* cookie);
 static const gchar* vp_get_cookies(SoupURI *uri);
 static gboolean vp_hide_message(void);
+static void vp_set_status(const StatusType status);
 
 static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download)
 {
@@ -106,12 +107,16 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
                 WebKitWebDataSource* src      = webkit_web_frame_get_data_source(frame);
                 WebKitNetworkRequest* request = webkit_web_data_source_get_request(src);
                 SoupMessage* msg              = webkit_network_request_get_message(request);
-                vp.state.status = (soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED)
-                    ? VP_STATUS_SSL_VALID
-                    : VP_STATUS_SSL_INVALID;
+                SoupMessageFlags flags        = soup_message_get_flags(msg);
+                vp_set_status(
+                    (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VP_STATUS_SSL_VALID : VP_STATUS_SSL_INVALID
+                );
             } else {
-                vp.state.status = VP_STATUS_NORMAL;
+                vp_set_status(VP_STATUS_NORMAL);
             }
+
+            /* update the style of the status bar according to status */
+            vp_update_status_style();
 
             /* status bar is updated by vp_set_mode */
             vp_set_mode(VP_MODE_NORMAL , FALSE);
@@ -389,6 +394,15 @@ static gboolean vp_hide_message(void)
     return FALSE;
 }
 
+static void vp_set_status(const StatusType status)
+{
+    if (vp.state.status != status) {
+        vp.state.status = status;
+        /* update the statusbar style only if the status changed */
+        vp_update_status_style();
+    }
+}
+
 /**
  * Set the base modes. All other mode flags like completion can be set directly
  * to vp.state.mode.
@@ -449,8 +463,6 @@ void vp_update_urlbar(const gchar* uri)
 void vp_update_statusbar(void)
 {
     GString* status = g_string_new("");
-
-    vp_update_status_style();
 
     /* show current count */
     g_string_append_printf(status, "%.0d", vp.state.count);
