@@ -27,15 +27,15 @@
 #define LENGTH(x) (sizeof x / sizeof x[0])
 
 #ifdef DEBUG
-#define PRINT_DEBUG(...) do { \
+#define PRINT_DEBUG(...) { \
     fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s()\t", __FILE__, __LINE__, __func__); \
     fprintf(stderr, __VA_ARGS__);\
-} while(0);
-#define TIMER_START GTimer *__timer; do {__timer = g_timer_new(); g_timer_start(__timer);} while(0)
-#define TIMER_END do {gulong __debug_micro = 0; gdouble __debug_elapsed = g_timer_elapsed(__timer, &__debug_micro);\
+}
+#define TIMER_START GTimer *__timer; {__timer = g_timer_new(); g_timer_start(__timer);}
+#define TIMER_END {gulong __debug_micro = 0; gdouble __debug_elapsed = g_timer_elapsed(__timer, &__debug_micro);\
     PRINT_DEBUG("\033[33mtimer:\033[0m elapsed: %f, micro: %lu", __debug_elapsed, __debug_micro);\
     g_timer_destroy(__timer); \
-} while(0)
+}
 #else
 #define PRINT_DEBUG(message, ...)
 #define TIMER_START
