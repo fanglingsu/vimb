@@ -28,5 +28,6 @@ const gchar* util_get_home_dir(void);
 void util_create_dir_if_not_exists(const gchar* dirpath);
 void util_create_file_if_not_exists(const gchar* filename);
 gchar* util_get_file_contents(const gchar* filename, gsize* length);
+gchar** util_get_lines(const gchar* filename);
 
 #endif /* end of include guard: UTIL_H */

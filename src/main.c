@@ -569,34 +569,30 @@ static void vp_init(void)
 
 static void vp_read_config(void)
 {
-    FILE* fp;
-    gchar line[255];
-
     /* load default config */
     for (guint i = 0; default_config[i].command != NULL; i++) {
         vp_process_input(default_config[i].command);
     }
 
     /* read config from config files */
-    if (access(vp.files[FILES_CONFIG], F_OK) != 0) {
-        fprintf(stderr, "Could not find config file");
-        return;
-    }
-    fp = fopen(vp.files[FILES_CONFIG], "r");
-    if (fp == NULL) {
-        fprintf(stderr, "Could not read config file");
-        return;
-    }
-    while (fgets(line, 254, fp)) {
-        if (!g_ascii_isalpha(line[0])) {
-            continue;
-        }
-        if (!vp_process_input(line)) {
-            fprintf(stderr, "Invalid config: %s", line);
-        }
-    }
+    gchar **lines = util_get_lines(vp.files[FILES_CONFIG]);
+    gchar *line;
 
-    fclose(fp);
+    if (lines) {
+        gint length = g_strv_length(lines) - 1;
+        for (gint i = 0; i < length; i++) {
+            line = lines[i];
+            g_strstrip(line);
+
+            if (!g_ascii_isalpha(line[0])) {
+                continue;
+            }
+            if (vp_process_input(line)) {
+                fprintf(stderr, "Invalid config: %s\n", line);
+            }
+        }
+        g_strfreev(lines);
+    }
 }
 
 static void vp_init_gui(void)

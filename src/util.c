@@ -79,3 +79,20 @@ gchar* util_get_file_contents(const gchar* filename, gsize* length)
     }
     return content;
 }
+
+/**
+ * Retrieves the file content as lines.
+ *
+ * The result have to be freed by g_strfreev().
+ */
+gchar** util_get_lines(const gchar* filename)
+{
+    gchar* content = util_get_file_contents(filename, NULL);
+    gchar** lines  = NULL;
+    if (content) {
+        /* split the file content into lines */
+        lines = g_strsplit(content, "\n", -1);
+        g_free(content);
+    }
+    return lines;
+}
