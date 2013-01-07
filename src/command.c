@@ -23,6 +23,7 @@
 #include "setting.h"
 #include "completion.h"
 #include "hints.h"
+#include "util.h"
 
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
@@ -144,7 +145,7 @@ gboolean command_open_closed(const Arg* arg)
     gboolean result;
 
     Arg a = {arg->i};
-    g_file_get_contents(vp.files[FILES_CLOSED], &a.s, NULL, NULL);
+    a.s = util_get_file_contents(vp.files[FILES_CLOSED], NULL);
     result = vp_load_uri(&a);
     g_free(a.s);
 

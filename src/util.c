@@ -61,3 +61,21 @@ void util_create_file_if_not_exists(const char* filename)
         fclose(f);
     }
 }
+
+/**
+ * Retrieves the length bytes from given file.
+ *
+ * The memory of returned string have to be freed!
+ */
+gchar* util_get_file_contents(const gchar* filename, gsize* length)
+{
+    GError* error  = NULL;
+    gchar* content = NULL;
+    if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR)
+        && g_file_get_contents(filename, &content, length, &error))
+    ) {
+        fprintf(stderr, "Cannot open %s: %s\n", filename, error ? error->message : "file not found");
+        g_clear_error(&error);
+    }
+    return content;
+}
