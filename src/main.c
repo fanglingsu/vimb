@@ -54,6 +54,9 @@ static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
     mime_type, WebKitWebPolicyDecision* decision, gpointer data);
 static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, gpointer data);
 static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec);
+static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
+    WebKitWebResource* resource, WebKitNetworkRequest* request,
+    WebKitNetworkResponse* response, gpointer data);
 
 /* functions */
 static gboolean vp_process_input(const char* input);
@@ -702,6 +705,7 @@ static void vp_setup_signals(void)
         "signal::title-changed", G_CALLBACK(vp_title_changed_cb), NULL,
         "signal::mime-type-policy-decision-requested", G_CALLBACK(vp_mimetype_decision_cb), NULL,
         "signal::download-requested", G_CALLBACK(vp_download_requested_cb), NULL,
+        "signal::resource-request-starting", G_CALLBACK(vp_request_start_cb), NULL,
         NULL
     );
 
@@ -860,6 +864,19 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
     vp_update_statusbar();
 
     return TRUE;
+}
+
+/**
+ * Callback to filter started resource request.
+ */
+static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
+    WebKitWebResource* resource, WebKitNetworkRequest* request,
+    WebKitNetworkResponse* response, gpointer data)
+{
+    const gchar* uri = webkit_network_request_get_uri(request);
+    if (g_str_has_suffix(uri, "/favicon.ico")) {
+        webkit_network_request_set_uri(request, "about:blank");
+    }
 }
 
 static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
