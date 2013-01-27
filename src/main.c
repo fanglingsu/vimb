@@ -571,7 +571,9 @@ static void vp_read_config(void)
 {
     /* load default config */
     for (guint i = 0; default_config[i].command != NULL; i++) {
-        vp_process_input(default_config[i].command);
+        if (!vp_process_input(default_config[i].command)) {
+            fprintf(stderr, "Invalid default config: %s\n", default_config[i].command);
+        }
     }
 
     /* read config from config files */
@@ -587,7 +589,7 @@ static void vp_read_config(void)
             if (!g_ascii_isalpha(line[0])) {
                 continue;
             }
-            if (vp_process_input(line)) {
+            if (!vp_process_input(line)) {
                 fprintf(stderr, "Invalid config: %s\n", line);
             }
         }
