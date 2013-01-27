@@ -40,7 +40,10 @@ static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
 static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data);
 static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data);
 static void vp_gotheaders_cb(SoupMessage* message, gpointer data);
-static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* web_view);
+static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview);
+static gboolean vp_inspector_show(WebKitWebInspector* inspector);
+static gboolean vp_inspector_close(WebKitWebInspector* inspector);
+static void vp_inspector_finished(WebKitWebInspector* inspector);
 static gboolean vp_button_relase_cb(WebKitWebView *webview, GdkEventButton* event, gpointer data);
 static gboolean vp_new_window_policy_cb(
     WebKitWebView* view, WebKitWebFrame* frame, WebKitNetworkRequest* request,
@@ -208,7 +211,7 @@ static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
     soup_cookies_free(list);
 }
 
-static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* web_view)
+static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview)
 {
     gchar*     title = NULL;
     GtkWidget* window;
@@ -231,6 +234,25 @@ static WebKitWebView* vp_inspect_web_view_cb(gpointer inspector, WebKitWebView* 
     gtk_widget_show_all(window);
 
     return WEBKIT_WEB_VIEW(view);
+}
+
+static gboolean vp_inspector_show(WebKitWebInspector* inspector)
+{
+    gtk_widget_show(GTK_WIDGET(webkit_web_inspector_get_web_view(inspector)));
+
+    return TRUE;
+}
+
+static gboolean vp_inspector_close(WebKitWebInspector* inspector)
+{
+    gtk_widget_hide(GTK_WIDGET(webkit_web_inspector_get_web_view(inspector)));
+
+    return TRUE;
+}
+
+static void vp_inspector_finished(WebKitWebInspector* inspector)
+{
+    g_free(vp.gui.inspector);
 }
 
 /**
@@ -734,12 +756,10 @@ static void vp_setup_signals(void)
     g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
 
     /* inspector */
-    g_signal_connect(
-        G_OBJECT(vp.gui.inspector),
-        "inspect-web-view",
-        G_CALLBACK(vp_inspect_web_view_cb),
-        NULL
-    );
+    g_signal_connect(G_OBJECT(vp.gui.inspector), "inspect-web-view", G_CALLBACK(vp_inspector_new), NULL);
+    g_signal_connect(G_OBJECT(vp.gui.inspector), "show-window", G_CALLBACK(vp_inspector_show), NULL);
+    g_signal_connect(G_OBJECT(vp.gui.inspector), "close-window", G_CALLBACK(vp_inspector_close), NULL);
+    g_signal_connect(G_OBJECT(vp.gui.inspector), "finished", G_CALLBACK(vp_inspector_finished), NULL);
 }
 
 static void vp_setup_settings(void)

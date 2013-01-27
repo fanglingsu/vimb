@@ -184,19 +184,19 @@ typedef struct {
 
 /* gui */
 typedef struct {
-    GtkWidget*         window;
-    WebKitWebView*     webview;
-    WebKitWebInspector *inspector;
-    GtkWidget*         viewport;
-    GtkBox*            box;
-    GtkWidget*         eventbox;
-    GtkWidget*         inputbox;
-    GtkWidget*         compbox;
-    StatusBar          statusbar;
-    GtkScrollbar*      sb_h;
-    GtkScrollbar*      sb_v;
-    GtkAdjustment*     adjust_h;
-    GtkAdjustment*     adjust_v;
+    GtkWidget*          window;
+    WebKitWebView*      webview;
+    WebKitWebInspector* inspector;
+    GtkWidget*          viewport;
+    GtkBox*             box;
+    GtkWidget*          eventbox;
+    GtkWidget*          inputbox;
+    GtkWidget*          compbox;
+    StatusBar           statusbar;
+    GtkScrollbar*       sb_h;
+    GtkScrollbar*       sb_v;
+    GtkAdjustment*      adjust_h;
+    GtkAdjustment*      adjust_v;
 } Gui;
 
 /* state */
