@@ -29,6 +29,7 @@ const struct {
     char* command;
 } default_config[] = {
     {"nmap gf=source"},
+    {"nmap gF=inspect"},
     {"nmap <shift-:>=input"},
     {"nmap o=inputopen"},
     {"nmap t=inputtabopen"},

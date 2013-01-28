@@ -185,13 +185,14 @@ typedef struct {
 /* gui */
 typedef struct {
     GtkWidget*          window;
+    GtkWidget*          scroll;
     WebKitWebView*      webview;
     WebKitWebInspector* inspector;
-    GtkWidget*          viewport;
     GtkBox*             box;
     GtkWidget*          eventbox;
     GtkWidget*          inputbox;
     GtkWidget*          compbox;
+    GtkWidget*          pane;
     StatusBar           statusbar;
     GtkScrollbar*       sb_h;
     GtkScrollbar*       sb_v;
@@ -207,6 +208,7 @@ typedef struct {
     GdkNativeWindow embed;
     guint           progress;
     StatusType      status;
+    gboolean        is_inspecting;
 } State;
 
 /* behaviour */

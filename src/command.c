@@ -287,7 +287,11 @@ gboolean command_inspect(const Arg* arg)
     settings = webkit_web_view_get_settings(vp.gui.webview);
     g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
     if (enabled) {
-        webkit_web_inspector_show(vp.gui.inspector);
+        if (vp.state.is_inspecting) {
+            webkit_web_inspector_close(vp.gui.inspector);
+        } else {
+            webkit_web_inspector_show(vp.gui.inspector);
+        }
         return TRUE;
     } else {
         vp_echo(VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");

@@ -213,39 +213,37 @@ static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
 
 static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview)
 {
-    gchar*     title = NULL;
-    GtkWidget* window;
-    GtkWidget* view;
-
-    /* TODO allow to use a new inspector window event if embed is used */
-    if (vp.state.embed) {
-        window = gtk_plug_new(vp.state.embed);
-    } else {
-        window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_wmclass(GTK_WINDOW(window), "vimp", "Vimp");
-    }
-
-    title  = g_strdup_printf("Inspect page - %s", CURRENT_URL());
-    gtk_window_set_title(GTK_WINDOW(window), title);
-    g_free(title);
-
-    view = webkit_web_view_new();
-    gtk_container_add(GTK_CONTAINER(window), view);
-    gtk_widget_show_all(window);
-
-    return WEBKIT_WEB_VIEW(view);
+    return WEBKIT_WEB_VIEW(webkit_web_view_new());
 }
 
 static gboolean vp_inspector_show(WebKitWebInspector* inspector)
 {
-    gtk_widget_show(GTK_WIDGET(webkit_web_inspector_get_web_view(inspector)));
+    WebKitWebView* webview;
+
+    if (vp.state.is_inspecting) {
+        return FALSE;
+    }
+    webview = webkit_web_inspector_get_web_view(inspector);
+    gtk_paned_pack2(GTK_PANED(vp.gui.pane), GTK_WIDGET(webview), TRUE, TRUE);
+    gtk_widget_show(GTK_WIDGET(webview));
+
+    vp.state.is_inspecting = TRUE;
 
     return TRUE;
 }
 
 static gboolean vp_inspector_close(WebKitWebInspector* inspector)
 {
-    gtk_widget_hide(GTK_WIDGET(webkit_web_inspector_get_web_view(inspector)));
+    WebKitWebView* webview;
+
+    if (!vp.state.is_inspecting) {
+        return FALSE;
+    }
+    webview = webkit_web_inspector_get_web_view(inspector);
+    gtk_widget_hide(GTK_WIDGET(webview));
+    gtk_widget_destroy(GTK_WIDGET(webview));
+
+    vp.state.is_inspecting = FALSE;
 
     return TRUE;
 }
@@ -647,11 +645,11 @@ static void vp_init_gui(void)
     soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_jar_get_type());
 
     /* Create a scrollable area */
-    gui->viewport = gtk_scrolled_window_new(NULL, NULL);
-    gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->viewport));
-    gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->viewport));
+    gui->scroll = gtk_scrolled_window_new(NULL, NULL);
+    gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
+    gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
 
-    /* Prepare the imputbox */
+    /* Prepare the inputbox */
     gui->inputbox = gtk_entry_new();
     gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
     g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", FALSE, NULL);
@@ -669,18 +667,21 @@ static void vp_init_gui(void)
     /* Prepare the event box */
     gui->eventbox = gtk_event_box_new();
 
+    gui->pane = gtk_vpaned_new();
+    gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), TRUE, TRUE);
+
     vp_setup_signals();
 
     /* Put all part together */
-    gtk_container_add(GTK_CONTAINER(gui->viewport), GTK_WIDGET(gui->webview));
+    gtk_container_add(GTK_CONTAINER(gui->scroll), GTK_WIDGET(gui->webview));
     gtk_container_add(GTK_CONTAINER(gui->eventbox), GTK_WIDGET(gui->statusbar.box));
-    gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->box));
+    gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->pane));
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.right), 1.0, 0.0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, TRUE, TRUE, 2);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, FALSE, FALSE, 2);
 
-    gtk_box_pack_start(gui->box, gui->viewport, TRUE, TRUE, 0);
+    gtk_box_pack_start(gui->box, gui->scroll, TRUE, TRUE, 0);
     gtk_box_pack_start(gui->box, gui->eventbox, FALSE, FALSE, 0);
     gtk_entry_set_has_frame(GTK_ENTRY(gui->inputbox), FALSE);
     gtk_box_pack_end(gui->box, gui->inputbox, FALSE, FALSE, 0);

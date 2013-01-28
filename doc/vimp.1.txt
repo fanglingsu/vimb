@@ -235,7 +235,7 @@ Yank the selected text into the primary and secondary clipboard.
 Set configuration values.
 .TP
 .B inspect
-Open the webinspector for current page. This is only available if the config
+Toggles the webinspector for current page. This is only available if the config
 "webinspector" is enabled.
 .TP
 .B quit
