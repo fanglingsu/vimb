@@ -35,6 +35,7 @@ static gboolean setting_strict_ssl(const Setting* s, const gboolean get);
 static gboolean setting_ca_bundle(const Setting* s, const gboolean get);
 static gboolean setting_home_page(const Setting* s, const gboolean get);
 static gboolean setting_download_path(const Setting* s, const gboolean get);
+static gboolean setting_proxy(const Setting* s, const gboolean get);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -82,6 +83,7 @@ static Setting default_settings[] = {
     {"stylesheet", "user-stylesheet-uri", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {"zoomstep", "zoom-step", TYPE_FLOAT, setting_webkit, {.i = 100000}},
     /* internal variables */
+    {NULL, "proxy", TYPE_BOOLEAN, setting_proxy, {.i = 1}},
     {NULL, "cookie-timeout", TYPE_INTEGER, setting_cookie_timeout, {.i = 4800}},
     {NULL, "scrollstep", TYPE_INTEGER, setting_scrollstep, {.i = 40}},
 
@@ -573,6 +575,33 @@ static gboolean setting_download_path(const Setting* s, const gboolean get)
         }
         /* create the path if it does not exist */
         util_create_dir_if_not_exists(vp.config.download_dir);
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_proxy(const Setting* s, const gboolean get)
+{
+    SoupURI* proxy_uri = NULL;
+    if (get) {
+        g_object_get(vp.net.soup_session, "proxy-uri", &proxy_uri, NULL);
+        gboolean value = (proxy_uri != NULL);
+        setting_print_value(s, &value);
+    } else if (s->arg.i) {
+        gchar* proxy = (gchar *)g_getenv("http_proxy");
+        if (proxy != NULL && strlen(proxy)) {
+            gchar* proxy_new = g_strrstr(proxy, "http://")
+                ? g_strdup(proxy)
+                : g_strdup_printf("http://%s", proxy);
+            proxy_uri = soup_uri_new(proxy_new);
+
+            g_object_set(vp.net.soup_session, "proxy-uri", proxy_uri, NULL);
+
+            soup_uri_free(proxy_uri);
+            g_free(proxy_new);
+        }
+    } else {
+        g_object_set(vp.net.soup_session, "proxy-uri", NULL, NULL);
     }
 
     return TRUE;
