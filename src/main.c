@@ -219,11 +219,18 @@ static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebV
 static gboolean vp_inspector_show(WebKitWebInspector* inspector)
 {
     WebKitWebView* webview;
+    gint height;
 
     if (vp.state.is_inspecting) {
         return FALSE;
     }
+
     webview = webkit_web_inspector_get_web_view(inspector);
+
+    /* use about 1/3 of window height for the inspector */
+    gtk_window_get_size(GTK_WINDOW(vp.gui.window), NULL, &height);
+    gtk_paned_set_position(GTK_PANED(vp.gui.pane), 2 * height / 3);
+
     gtk_paned_pack2(GTK_PANED(vp.gui.pane), GTK_WIDGET(webview), TRUE, TRUE);
     gtk_widget_show(GTK_WIDGET(webview));
 
