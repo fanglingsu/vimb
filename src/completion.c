@@ -131,9 +131,12 @@ static GList* completion_init_completion(GList* target, GList* source, const gch
         if (match) {
             Completion* c = completion_get_new(data, prefix);
             gtk_box_pack_start(GTK_BOX(vp.gui.compbox), c->event, TRUE, TRUE, 0);
-            target = g_list_append(target, c);
+            /* use prepend because that faster */
+            target = g_list_prepend(target, c);
         }
     }
+
+    target = g_list_reverse(target);
     g_strfreev(token);
 
     return target;
@@ -245,6 +248,7 @@ static void completion_set_color(Completion* completion, const VpColor* fg, cons
 {
     VP_WIDGET_OVERRIDE_COLOR(completion->label, GTK_STATE_NORMAL, fg);
     VP_WIDGET_OVERRIDE_BACKGROUND(completion->event, GTK_STATE_NORMAL, bg);
+    /* TODO is it really necessary to set the font for each item */
     VP_WIDGET_OVERRIDE_FONT(completion->label, font);
 }
 
