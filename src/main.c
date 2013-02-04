@@ -662,9 +662,11 @@ static void vp_init_gui(void)
     g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", FALSE, NULL);
 
 #ifdef HAS_GTK3
+    gui->pane            = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gui->box             = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
     gui->statusbar.box   = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
 #else
+    gui->pane            = gtk_vpaned_new();
     gui->box             = GTK_BOX(gtk_vbox_new(FALSE, 0));
     gui->statusbar.box   = GTK_BOX(gtk_hbox_new(FALSE, 0));
 #endif
@@ -674,7 +676,6 @@ static void vp_init_gui(void)
     /* Prepare the event box */
     gui->eventbox = gtk_event_box_new();
 
-    gui->pane = gtk_vpaned_new();
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), TRUE, TRUE);
 
     vp_setup_signals();

@@ -23,6 +23,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <webkit/webkit.h>
+#ifdef HAS_GTK3
+#include <gdk/gdkx.h>
+#include <gtk/gtkx.h>
+#else
+#endif
 
 #define LENGTH(x) (sizeof x / sizeof x[0])
 
@@ -205,7 +210,11 @@ typedef struct {
     Mode            mode;
     gchar           modkey;
     guint           count;
+#ifdef HAS_GTK3
+    Window          embed;
+#else
     GdkNativeWindow embed;
+#endif
     guint           progress;
     StatusType      status;
     gboolean        is_inspecting;
