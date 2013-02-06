@@ -161,18 +161,33 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
 
     gtk_widget_grab_focus(GTK_WIDGET(gui->webview));
 
+    if (length <= 1) {
+        return;
+    }
+
     /* do not free or modify text */
     text = gtk_entry_get_text(entry);
 
-    if (1 < length && ':' == text[0]) {
-        completion_clean();
-        success = vp_process_input((text + 1));
-        if (!success) {
-            /* switch to normal mode after running command without success the
-             * mode after success is set by command_run to the value defined
-             * for the command */
-            vp_set_mode(VP_MODE_NORMAL , FALSE);
-        }
+    switch (text[0]) {
+        case '/':
+        case '?':
+            {
+                Arg a = {text[0] == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD, g_strdup(text + 1)};
+                command_search(&a);
+                g_free(a.s);
+            }
+            break;
+
+        case ':':
+            completion_clean();
+            success = vp_process_input((text + 1));
+            if (!success) {
+                /* switch to normal mode after running command without success the
+                 * mode after success is set by command_run to the value defined
+                 * for the command */
+                vp_set_mode(VP_MODE_NORMAL, FALSE);
+            }
+            break;
     }
 }
 
@@ -443,15 +458,20 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
     }
     switch (CLEAN_MODE(mode)) {
         case VP_MODE_NORMAL:
-            /* if previous mode was hinting clear the hints */
             if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
+                /* if previous mode was hinting clear the hints */
                 hints_clear();
-            }
-            /* clean the input if current mode is insert to remove -- INPUT -- */
-            if (GET_CLEAN_MODE() == VP_MODE_INSERT) {
+            } else if (GET_CLEAN_MODE() == VP_MODE_INSERT) {
+                /* clean the input if current mode is insert to remove -- INPUT -- */
                 clean = TRUE;
+            } else if (GET_CLEAN_MODE() == VP_MODE_SEARCH) {
+                /* cleaup previous search */
+                command_search(&((Arg){VP_SEARCH_OFF}));
             }
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            break;
+
+        case VP_MODE_SEARCH:
             break;
 
         case VP_MODE_COMMAND:

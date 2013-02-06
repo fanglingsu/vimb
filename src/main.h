@@ -134,6 +134,12 @@ enum {
 };
 
 typedef enum {
+    VP_SEARCH_FORWARD,
+    VP_SEARCH_BACKWARD,
+    VP_SEARCH_OFF,
+} SearchDirection;
+
+typedef enum {
     VP_MSG_NORMAL,
     VP_MSG_ERROR,
     VP_MSG_LAST
@@ -218,6 +224,8 @@ typedef struct {
     guint           progress;
     StatusType      status;
     gboolean        is_inspecting;
+    SearchDirection search_dir;
+    gchar*          search_query;
 } State;
 
 /* behaviour */

@@ -61,10 +61,12 @@ static CommandInfo cmd_list[] = {
     {"imap",                command_map,         {VP_MODE_INSERT},                                                                   VP_MODE_NORMAL},
     {"cmap",                command_map,         {VP_MODE_COMMAND},                                                                  VP_MODE_NORMAL},
     {"hmap",                command_map,         {VP_MODE_HINTING},                                                                  VP_MODE_NORMAL},
+    {"smap",                command_map,         {VP_MODE_SEARCH},                                                                   VP_MODE_NORMAL},
     {"nunmap",              command_unmap,       {VP_MODE_NORMAL},                                                                   VP_MODE_NORMAL},
     {"iunmap",              command_unmap,       {VP_MODE_INSERT},                                                                   VP_MODE_NORMAL},
     {"cunmap",              command_unmap,       {VP_MODE_COMMAND},                                                                  VP_MODE_NORMAL},
     {"hunmap",              command_unmap,       {VP_MODE_HINTING},                                                                  VP_MODE_NORMAL},
+    {"sunmap",              command_map,         {VP_MODE_SEARCH},                                                                   VP_MODE_NORMAL},
     {"set",                 command_set,         {0},                                                                                VP_MODE_NORMAL},
     {"complete",            command_complete,    {0},                                                                                VP_MODE_COMMAND | VP_MODE_COMPLETE},
     {"complete-back",       command_complete,    {1},                                                                                VP_MODE_COMMAND | VP_MODE_COMPLETE},
@@ -78,6 +80,8 @@ static CommandInfo cmd_list[] = {
     {"hint-focus-prev",     command_hints_focus, {1},                                                                                VP_MODE_HINTING},
     {"yank-uri",            command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI},                 VP_MODE_NORMAL},
     {"yank-selection",      command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION},           VP_MODE_NORMAL},
+    {"search-forward",      command_search,      {VP_SEARCH_FORWARD},                                                                VP_MODE_SEARCH},
+    {"search-backward",     command_search,      {VP_SEARCH_BACKWARD},                                                               VP_MODE_SEARCH},
 };
 
 static void command_write_input(const gchar* str);
@@ -354,6 +358,37 @@ gboolean command_yank(const Arg* arg)
     }
 
     return FALSE;
+}
+
+gboolean command_search(const Arg* arg)
+{
+    State* state     = &vp.state;
+    gboolean forward = !(arg->i ^ state->search_dir);
+
+    if (arg->i == VP_SEARCH_OFF && state->search_query) {
+        OVERWRITE_STRING(state->search_query, NULL);
+        webkit_web_view_unmark_text_matches(vp.gui.webview);
+
+        return TRUE;
+    }
+
+    /* copy search query for later use */
+    if (arg->s) {
+        OVERWRITE_STRING(state->search_query, arg->s);
+        /* set dearch dir only when the searching is started */
+        vp.state.search_dir = arg->i;
+
+        vp_set_mode(VP_MODE_SEARCH, FALSE);
+    }
+
+    if (state->search_query) {
+        webkit_web_view_mark_text_matches(vp.gui.webview, state->search_query, FALSE, 0);
+        webkit_web_view_set_highlight_text_matches(vp.gui.webview, TRUE);
+
+        webkit_web_view_search_text(vp.gui.webview, state->search_query, FALSE, forward, TRUE);
+    }
+
+    return TRUE;
 }
 
 static void command_write_input(const gchar* str)

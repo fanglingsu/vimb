@@ -59,10 +59,19 @@ gboolean keybind_add_from_string(const gchar* str, const Mode mode)
     char **string = g_strsplit(line, "=", 2);
 
     guint len = g_strv_length(string);
-    if (len == 2 && command_exists(string[1])) {
+    if (len == 2) {
+        /* split the input string into command and parameter part */
+        gchar** token = g_strsplit(string[1], " ", 2);
+        if (!token[0] || !command_exists(token[0])) {
+            g_strfreev(token);
+            return FALSE;
+        }
+
         Keybind* keybind = g_new0(Keybind, 1);
         keybind->mode    = mode;
-        keybind->command = g_strdup(string[1]);
+        keybind->command = g_strdup(token[0]);
+        keybind->param   = g_strdup(token[1]);
+        g_strfreev(token);
 
         keybind_str_to_keybind(string[0], keybind);
 
@@ -264,7 +273,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
 
     if (link) {
         Keybind* keybind = (Keybind*)link->data;
-        command_run(keybind->command, NULL);
+        command_run(keybind->command, keybind->param);
 
         return TRUE;
     }

@@ -37,6 +37,9 @@ Follow links, form fields and frames via hints.
 .B Command Mode
 Execute vimp commands from the builtin inputbox (commandline).
 .TP
+.B Search Mode
+Search for strings within the current displayed page.
+.TP
 .B Insert Mode
 Used for editing text elements in a webpage.
 .SH COMMANDS
@@ -155,7 +158,7 @@ Scroll the page N times the "scrollstep" to the top.
 Scroll the page N times the "scrollstep" to the end.
 .SS Keybinding
 To bind a command to a key sequence use the {n,i,c,h}map command. To map a
-keysequence to a command, use this format "nmap {[modkey]key}={command}".
+keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]".
 
 The modkey is a single simple char like "g". The key can also contain
 special keys and modifiers and is given in format like "<ctrl-o>", "<tab>",
@@ -163,10 +166,11 @@ special keys and modifiers and is given in format like "<ctrl-o>", "<tab>",
 
 Example:
 .br
-To add a keybinding to focus the next hint in hinting mode use
-"hmap <shift-tab>=hint-focus-prev"
+"hmap <shift-tab>=hint-focus-prev" to add focus next in in Hinting Mode.
 .br
-To remove this keybinding use "hunmap <shift-tab>".
+"nmap <shift-?>=input :foo" to write :foo into input box and switch to Command Mode.
+.br
+"hunmap <shift-tab>" To remove this keybinding use.
 .TP
 .B nmap
 Add a keybinding used in Normal Mode.
@@ -180,6 +184,9 @@ Add a keybinding used in Command Mode.
 .B hmap
 Add a keybinding used in Hint Mode.
 .TP
+.B smap
+Add keybinding used in Search Mode.
+.TP
 .B nunmap
 Remove a Normal Mode keybinding.
 .TP
@@ -191,6 +198,9 @@ Remove a Command Mode keybinding.
 .TP
 .B hunmap
 Remove a Hint Mode keybinding.
+.TP
+.B sunmap
+Remove a Search Mode keybinding.
 .SS Complete
 .TP
 .B complete
@@ -233,6 +243,9 @@ Yank the selected text into the primary and secondary clipboard.
 .TP
 .B set
 Set configuration values.
+.TP
+.B search-{forward, backward}
+Search in current page forward or backward.
 .TP
 .B inspect
 Toggles the webinspector for current page. This is only available if the config

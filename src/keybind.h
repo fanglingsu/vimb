@@ -29,6 +29,7 @@ typedef struct {
     guint  modmask;     /* modemask for the kayval */
     guint  keyval;
     gchar* command;     /* command to run */
+    gchar* param;
 } Keybind;
 
 void keybind_init(void);
