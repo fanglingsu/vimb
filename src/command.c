@@ -367,7 +367,9 @@ gboolean command_search(const Arg* arg)
 
     if (arg->i == VP_SEARCH_OFF && state->search_query) {
         OVERWRITE_STRING(state->search_query, NULL);
+#ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_unmark_text_matches(vp.gui.webview);
+#endif
 
         return TRUE;
     }
@@ -382,9 +384,10 @@ gboolean command_search(const Arg* arg)
     }
 
     if (state->search_query) {
+#ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_mark_text_matches(vp.gui.webview, state->search_query, FALSE, 0);
         webkit_web_view_set_highlight_text_matches(vp.gui.webview, TRUE);
-
+#endif
         webkit_web_view_search_text(vp.gui.webview, state->search_query, FALSE, forward, TRUE);
     }
 

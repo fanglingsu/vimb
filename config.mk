@@ -37,6 +37,7 @@ LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext
 
 # features
 CPPFLAGS += -DFEATURE_COOKIE
+CPPFLAGS += -DFEATURE_SEARCH_HIGHLIGHT
 
 CPPFLAGS += -DVERSION=\"${VERSION}\"
 ifeq ($(USEGTK3), 1)
