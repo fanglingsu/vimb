@@ -251,7 +251,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
         return TRUE;
     }
     /* allow mode keys and counts only in normal mode */
-    if (VP_MODE_NORMAL == vp.state.mode) {
+    if ((VP_MODE_SEARCH | VP_MODE_NORMAL) & vp.state.mode) {
         if (vp.state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
                 || (keyval == GDK_0 && vp.state.count))) {
             /* append the new entered count to previous one */

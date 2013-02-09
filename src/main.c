@@ -471,9 +471,6 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
             break;
 
-        case VP_MODE_SEARCH:
-            break;
-
         case VP_MODE_COMMAND:
         case VP_MODE_HINTING:
             gtk_widget_grab_focus(GTK_WIDGET(vp.gui.inputbox));

@@ -244,7 +244,7 @@ Yank the selected text into the primary and secondary clipboard.
 .B set
 Set configuration values.
 .TP
-.B search-{forward, backward}
+.IB [N] search-{forward, backward}
 Search in current page forward or backward.
 .TP
 .B inspect

@@ -388,7 +388,11 @@ gboolean command_search(const Arg* arg)
         webkit_web_view_mark_text_matches(vp.gui.webview, state->search_query, FALSE, 0);
         webkit_web_view_set_highlight_text_matches(vp.gui.webview, TRUE);
 #endif
-        webkit_web_view_search_text(vp.gui.webview, state->search_query, FALSE, forward, TRUE);
+        /* make sure we have a count greater than 0 */
+        vp.state.count = vp.state.count ? vp.state.count : 1;
+        do {
+            webkit_web_view_search_text(vp.gui.webview, state->search_query, FALSE, forward, TRUE);
+        } while (--vp.state.count);
     }
 
     return TRUE;

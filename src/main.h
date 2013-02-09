@@ -230,9 +230,7 @@ typedef struct {
 
 /* behaviour */
 typedef struct {
-    /* command list: (key)name -> (value)Command  */
     GHashTable* commands;
-    /* keybindings */
     GSList*     keys;
     GString*    modkeys;
 } Behaviour;
