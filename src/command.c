@@ -432,7 +432,7 @@ static void command_write_input(const gchar* str)
     );
 
     /* remove content from input box */
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
+    gtk_editable_delete_text(GTK_EDITABLE(vp.gui.inputbox), 0, -1);
 
     /* insert string from arg */
     gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), str, -1, &pos);
