@@ -206,7 +206,10 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
 
     /* set the shift mask for uppercase keys like 'G' */
     guint32 ukval = gdk_keyval_to_unicode(keybind->keyval);
-    if (g_unichar_isgraph(ukval) && gdk_keyval_is_upper(keybind->keyval)) {
+    if (g_unichar_isgraph(ukval)
+        /* ignore SHIFT if key is not subject to case */
+        && (gdk_keyval_is_upper(keybind->keyval) && !gdk_keyval_is_lower(keybind->keyval))
+    ) {
         keybind->modmask = GDK_SHIFT_MASK;
     }
 
