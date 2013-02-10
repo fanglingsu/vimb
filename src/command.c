@@ -27,61 +27,61 @@
 
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
-    {"open",                command_open,        {VP_TARGET_CURRENT},                                                                VP_MODE_NORMAL},
-    {"tabopen",             command_open,        {VP_TARGET_NEW},                                                                    VP_MODE_NORMAL},
-    {"open-home",           command_open_home,   {VP_TARGET_CURRENT},                                                                VP_MODE_NORMAL},
-    {"tabopen-home",        command_open_home,   {VP_TARGET_NEW},                                                                    VP_MODE_NORMAL},
-    {"open-closed",         command_open_closed, {VP_TARGET_CURRENT},                                                                VP_MODE_NORMAL},
-    {"tabopen-closed",      command_open_closed, {VP_TARGET_NEW},                                                                    VP_MODE_NORMAL},
-    {"input",               command_input,       {0, ":"},                                                                           VP_MODE_COMMAND},
-    {"inputopen",           command_input,       {0, ":open "},                                                                      VP_MODE_COMMAND},
-    {"inputtabopen",        command_input,       {0, ":tabopen "},                                                                   VP_MODE_COMMAND},
-    {"inputopencurrent",    command_input,       {VP_INPUT_CURRENT_URI, ":open "},                                                   VP_MODE_COMMAND},
-    {"inputtabopencurrent", command_input,       {VP_INPUT_CURRENT_URI, ":tabopen "},                                                VP_MODE_COMMAND},
-    {"quit",                command_close,       {0},                                                                                VP_MODE_NORMAL},
-    {"source",              command_view_source, {0},                                                                                VP_MODE_NORMAL},
-    {"back",                command_navigate,    {VP_NAVIG_BACK},                                                                    VP_MODE_NORMAL},
-    {"forward",             command_navigate,    {VP_NAVIG_FORWARD},                                                                 VP_MODE_NORMAL},
-    {"reload",              command_navigate,    {VP_NAVIG_RELOAD},                                                                  VP_MODE_NORMAL},
-    {"reload!",             command_navigate,    {VP_NAVIG_RELOAD_FORCE},                                                            VP_MODE_NORMAL},
-    {"stop",                command_navigate,    {VP_NAVIG_STOP_LOADING},                                                            VP_MODE_NORMAL},
-    {"jumpleft",            command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_LEFT},                                   VP_MODE_NORMAL},
-    {"jumpright",           command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_RIGHT},                                  VP_MODE_NORMAL},
-    {"jumptop",             command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_TOP},                                    VP_MODE_NORMAL},
-    {"jumpbottom",          command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_DOWN},                                   VP_MODE_NORMAL},
-    {"pageup",              command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_PAGE},            VP_MODE_NORMAL},
-    {"pagedown",            command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_PAGE},           VP_MODE_NORMAL},
-    {"halfpageup",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_HALFPAGE},        VP_MODE_NORMAL},
-    {"halfpagedown",        command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_HALFPAGE},       VP_MODE_NORMAL},
-    {"scrollleft",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_LEFT | VP_SCROLL_UNIT_LINE},           VP_MODE_NORMAL},
-    {"scrollright",         command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_RIGHT | VP_SCROLL_UNIT_LINE},          VP_MODE_NORMAL},
-    {"scrollup",            command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_LINE},            VP_MODE_NORMAL},
-    {"scrolldown",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_LINE},           VP_MODE_NORMAL},
-    {"nmap",                command_map,         {VP_MODE_NORMAL},                                                                   VP_MODE_NORMAL},
-    {"imap",                command_map,         {VP_MODE_INSERT},                                                                   VP_MODE_NORMAL},
-    {"cmap",                command_map,         {VP_MODE_COMMAND},                                                                  VP_MODE_NORMAL},
-    {"hmap",                command_map,         {VP_MODE_HINTING},                                                                  VP_MODE_NORMAL},
-    {"smap",                command_map,         {VP_MODE_SEARCH},                                                                   VP_MODE_NORMAL},
-    {"nunmap",              command_unmap,       {VP_MODE_NORMAL},                                                                   VP_MODE_NORMAL},
-    {"iunmap",              command_unmap,       {VP_MODE_INSERT},                                                                   VP_MODE_NORMAL},
-    {"cunmap",              command_unmap,       {VP_MODE_COMMAND},                                                                  VP_MODE_NORMAL},
-    {"hunmap",              command_unmap,       {VP_MODE_HINTING},                                                                  VP_MODE_NORMAL},
-    {"sunmap",              command_map,         {VP_MODE_SEARCH},                                                                   VP_MODE_NORMAL},
-    {"set",                 command_set,         {0},                                                                                VP_MODE_NORMAL},
-    {"complete",            command_complete,    {0},                                                                                VP_MODE_COMMAND | VP_MODE_COMPLETE},
-    {"complete-back",       command_complete,    {1},                                                                                VP_MODE_COMMAND | VP_MODE_COMPLETE},
-    {"inspect",             command_inspect,     {0},                                                                                VP_MODE_NORMAL},
-    {"hint-link",           command_hints,       {HINTS_TYPE_LINK, "."},                                                             VP_MODE_HINTING},
-    {"hint-link-new",       command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK, ","},                                        VP_MODE_HINTING},
-    {"hint-input-open",     command_hints,       {HINTS_TYPE_LINK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";o"},                      VP_MODE_HINTING},
-    {"hint-input-tabopen",  command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";t"}, VP_MODE_HINTING},
-    {"hint-yank",           command_hints,       {HINTS_TYPE_LINK | HINTS_PROCESS | HINTS_PROCESS_YANK, ";y"},                       VP_MODE_HINTING},
-    {"hint-focus-next",     command_hints_focus, {0},                                                                                VP_MODE_HINTING},
-    {"hint-focus-prev",     command_hints_focus, {1},                                                                                VP_MODE_HINTING},
-    {"yank-uri",            command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI},                 VP_MODE_NORMAL},
-    {"yank-selection",      command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION},           VP_MODE_NORMAL},
-    {"search-forward",      command_search,      {VP_SEARCH_FORWARD},                                                                VP_MODE_SEARCH},
-    {"search-backward",     command_search,      {VP_SEARCH_BACKWARD},                                                               VP_MODE_SEARCH},
+    {"open",                command_open,        {VP_TARGET_CURRENT}},
+    {"tabopen",             command_open,        {VP_TARGET_NEW}},
+    {"open-home",           command_open_home,   {VP_TARGET_CURRENT}},
+    {"tabopen-home",        command_open_home,   {VP_TARGET_NEW}},
+    {"open-closed",         command_open_closed, {VP_TARGET_CURRENT}},
+    {"tabopen-closed",      command_open_closed, {VP_TARGET_NEW}},
+    {"input",               command_input,       {0, ":"}},
+    {"inputopen",           command_input,       {0, ":open "}},
+    {"inputtabopen",        command_input,       {0, ":tabopen "}},
+    {"inputopencurrent",    command_input,       {VP_INPUT_CURRENT_URI, ":open "}},
+    {"inputtabopencurrent", command_input,       {VP_INPUT_CURRENT_URI, ":tabopen "}},
+    {"quit",                command_close,       {0}},
+    {"source",              command_view_source, {0}},
+    {"back",                command_navigate,    {VP_NAVIG_BACK}},
+    {"forward",             command_navigate,    {VP_NAVIG_FORWARD}},
+    {"reload",              command_navigate,    {VP_NAVIG_RELOAD}},
+    {"reload!",             command_navigate,    {VP_NAVIG_RELOAD_FORCE}},
+    {"stop",                command_navigate,    {VP_NAVIG_STOP_LOADING}},
+    {"jumpleft",            command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_LEFT}},
+    {"jumpright",           command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_RIGHT}},
+    {"jumptop",             command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_TOP}},
+    {"jumpbottom",          command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_DOWN}},
+    {"pageup",              command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_PAGE}},
+    {"pagedown",            command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_PAGE}},
+    {"halfpageup",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_HALFPAGE}},
+    {"halfpagedown",        command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_HALFPAGE}},
+    {"scrollleft",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_LEFT | VP_SCROLL_UNIT_LINE}},
+    {"scrollright",         command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_RIGHT | VP_SCROLL_UNIT_LINE}},
+    {"scrollup",            command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_LINE}},
+    {"scrolldown",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_LINE}},
+    {"nmap",                command_map,         {VP_MODE_NORMAL}},
+    {"imap",                command_map,         {VP_MODE_INSERT}},
+    {"cmap",                command_map,         {VP_MODE_COMMAND}},
+    {"hmap",                command_map,         {VP_MODE_HINTING}},
+    {"smap",                command_map,         {VP_MODE_SEARCH}},
+    {"nunmap",              command_unmap,       {VP_MODE_NORMAL}},
+    {"iunmap",              command_unmap,       {VP_MODE_INSERT}},
+    {"cunmap",              command_unmap,       {VP_MODE_COMMAND}},
+    {"hunmap",              command_unmap,       {VP_MODE_HINTING}},
+    {"sunmap",              command_map,         {VP_MODE_SEARCH}},
+    {"set",                 command_set,         {0}},
+    {"complete",            command_complete,    {0}},
+    {"complete-back",       command_complete,    {1}},
+    {"inspect",             command_inspect,     {0}},
+    {"hint-link",           command_hints,       {HINTS_TYPE_LINK, "."}},
+    {"hint-link-new",       command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK, ","}},
+    {"hint-input-open",     command_hints,       {HINTS_TYPE_LINK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";o"}},
+    {"hint-input-tabopen",  command_hints,       {HINTS_TYPE_LINK | HINTS_TARGET_BLANK | HINTS_PROCESS | HINTS_PROCESS_INPUT, ";t"}},
+    {"hint-yank",           command_hints,       {HINTS_TYPE_LINK | HINTS_PROCESS | HINTS_PROCESS_YANK, ";y"}},
+    {"hint-focus-next",     command_hints_focus, {0}},
+    {"hint-focus-prev",     command_hints_focus, {1}},
+    {"yank-uri",            command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI}},
+    {"yank-selection",      command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION}},
+    {"search-forward",      command_search,      {VP_SEARCH_FORWARD}},
+    {"search-backward",     command_search,      {VP_SEARCH_BACKWARD}},
 };
 
 static void command_write_input(const gchar* str);
@@ -123,9 +123,6 @@ gboolean command_run(const gchar* name, const gchar* param)
     a.s = g_strdup(param ? param : c->arg.s);
     result = c->function(&a);
     g_free(a.s);
-
-    /* set the new mode */
-    vp_set_mode(c->mode, FALSE);
 
     return result;
 }
@@ -172,6 +169,8 @@ gboolean command_input(const Arg* arg)
         command_write_input(arg->s);
     }
 
+    vp_set_mode(VP_MODE_COMMAND, FALSE);
+
     return TRUE;
 }
 
@@ -188,6 +187,8 @@ gboolean command_view_source(const Arg* arg)
     gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
     webkit_web_view_set_view_source_mode(vp.gui.webview, !mode);
     webkit_web_view_reload(vp.gui.webview);
+
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
@@ -206,6 +207,8 @@ gboolean command_navigate(const Arg* arg)
     } else {
         webkit_web_view_stop_loading(vp.gui.webview);
     }
+
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
@@ -240,16 +243,22 @@ gboolean command_scroll(const Arg* arg)
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
     }
 
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
     return TRUE;
 }
 
 gboolean command_map(const Arg* arg)
 {
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
     return keybind_add_from_string(arg->s, arg->i);
 }
 
 gboolean command_unmap(const Arg* arg)
 {
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
     return keybind_remove_from_string(arg->s, arg->i);
 }
 
@@ -273,12 +282,16 @@ gboolean command_set(const Arg* arg)
     success = setting_run(token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
 
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
     return success;
 }
 
 gboolean command_complete(const Arg* arg)
 {
     completion_complete(arg->i ? TRUE : FALSE);
+
+    vp_set_mode(VP_MODE_COMMAND | VP_MODE_COMPLETE, FALSE);
 
     return TRUE;
 }
@@ -287,6 +300,8 @@ gboolean command_inspect(const Arg* arg)
 {
     gboolean enabled;
     WebKitWebSettings* settings = NULL;
+
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
 
     settings = webkit_web_view_get_settings(vp.gui.webview);
     g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
@@ -297,16 +312,19 @@ gboolean command_inspect(const Arg* arg)
             webkit_web_inspector_show(vp.gui.inspector);
         }
         return TRUE;
-    } else {
-        vp_echo(VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");
-        return FALSE;
     }
+
+    vp_echo(VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");
+
+    return FALSE;
 }
 
 gboolean command_hints(const Arg* arg)
 {
     command_write_input(arg->s);
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
+
+    vp_set_mode(VP_MODE_HINTING, FALSE);
 
     return TRUE;
 }
@@ -315,11 +333,15 @@ gboolean command_hints_focus(const Arg* arg)
 {
     hints_focus_next(arg->i ? TRUE : FALSE);
 
+    vp_set_mode(VP_MODE_HINTING, FALSE);
+
     return TRUE;
 }
 
 gboolean command_yank(const Arg* arg)
 {
+    vp_set_mode(VP_MODE_NORMAL, TRUE);
+
     if (arg->i & COMMAND_YANK_SELECTION) {
         gchar* text = NULL;
         /* copy current selection to clipboard */
@@ -379,8 +401,6 @@ gboolean command_search(const Arg* arg)
         OVERWRITE_STRING(state->search_query, arg->s);
         /* set dearch dir only when the searching is started */
         vp.state.search_dir = arg->i;
-
-        vp_set_mode(VP_MODE_SEARCH, FALSE);
     }
 
     if (state->search_query) {
@@ -394,6 +414,8 @@ gboolean command_search(const Arg* arg)
             webkit_web_view_search_text(vp.gui.webview, state->search_query, FALSE, forward, TRUE);
         } while (--vp.state.count);
     }
+
+    vp_set_mode(VP_MODE_SEARCH, FALSE);
 
     return TRUE;
 }
