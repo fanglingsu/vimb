@@ -64,17 +64,14 @@ Open the give url into current window.
 .B tabopen
 Open the give url into a new window.
 .TP
-.B open-home
-Opens the configured 'home-page' into current window.
+.B (tab)open-home
+Opens the configured 'home-page'.
 .TP
-.B tabopen-home
-Opens the home page into a new window.
+.B (tab)open-closed
+Open the last closed page.
 .TP
-.B open-closed
-Open the last closed page into current window.
-.TP
-.B tabopen-closed
-Open the last closed page into new window.
+.B (tab)open-clipboard
+Open the url from clipboard.
 .SS Input
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.

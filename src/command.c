@@ -80,6 +80,8 @@ static CommandInfo cmd_list[] = {
     {"hint-focus-prev",     command_hints_focus, {1}},
     {"yank-uri",            command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",      command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION}},
+    {"open-clipboard",      command_paste,       {VP_CLIPBOARD_PRIMARY | VP_CLIPBOARD_SECONDARY | VP_TARGET_CURRENT}},
+    {"tabopen-clipboard",   command_paste,       {VP_CLIPBOARD_PRIMARY | VP_CLIPBOARD_SECONDARY | VP_TARGET_NEW}},
     {"search-forward",      command_search,      {VP_SEARCH_FORWARD}},
     {"search-backward",     command_search,      {VP_SEARCH_BACKWARD}},
 };
@@ -379,6 +381,25 @@ gboolean command_yank(const Arg* arg)
         return TRUE;
     }
 
+    return FALSE;
+}
+
+gboolean command_paste(const Arg* arg)
+{
+    Arg a = {.i = arg->i & VP_TARGET_NEW};
+    if (arg->i & VP_CLIPBOARD_PRIMARY) {
+        a.s = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+    }
+    if (!a.s && arg->i & VP_CLIPBOARD_SECONDARY) {
+        a.s = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
+    }
+
+    if (a.s) {
+        vp_load_uri(&a);
+        g_free(a.s);
+
+        return TRUE;
+    }
     return FALSE;
 }
 

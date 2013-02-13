@@ -176,8 +176,8 @@ typedef enum {
 } Type;
 
 enum {
-    VP_CLIPBOARD_PRIMARY   = (1<<0),
-    VP_CLIPBOARD_SECONDARY = (1<<1)
+    VP_CLIPBOARD_PRIMARY   = (1<<1),
+    VP_CLIPBOARD_SECONDARY = (1<<2)
 };
 
 /* structs */

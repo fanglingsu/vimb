@@ -68,6 +68,8 @@ const struct {
     {"nmap ;y=hint-yank"},
     {"nmap y=yank-uri"},
     {"nmap Y=yank-selection"},
+    {"nmap p=open-clipboard"},
+    {"nmap P=tabopen-clipboard"},
     {"cmap <tab>=complete"},
     {"cmap <shift-tab>=complete-back"},
     {"hmap <tab>=hint-focus-next"},
