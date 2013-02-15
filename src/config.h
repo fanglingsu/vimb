@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef _CONFIG_H
+#define _CONFIG_H
 
 #include "stdlib.h"
 
@@ -82,4 +82,4 @@ const struct {
     {NULL}
 };
 
-#endif /* end of include guard: CONFIG_H */
+#endif /* end of include guard: _CONFIG_H */

@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef HINTS_H
-#define HINTS_H
+#ifndef _HINTS_H
+#define _HINTS_H
 
 #include "main.h"
 
@@ -60,4 +60,4 @@ void hints_update(const gulong num);
 void hints_clear(void);
 void hints_focus_next(const gboolean back);
 
-#endif /* end of include guard: HINTS_H */
+#endif /* end of include guard: _HINTS_H */

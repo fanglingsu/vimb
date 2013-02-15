@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef COMMAND_H
-#define COMMAND_H
+#ifndef _COMMAND_H
+#define _COMMAND_H
 
 enum {
     COMMAND_YANK_PRIMARY   = VP_CLIPBOARD_PRIMARY,
@@ -61,4 +61,4 @@ gboolean command_paste(const Arg* arg);
 gboolean command_search(const Arg* arg);
 gboolean command_searchengine(const Arg* arg);
 
-#endif /* end of include guard: COMMAND_H */
+#endif /* end of include guard: _COMMAND_H */

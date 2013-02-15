@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef SETTING_H
-#define SETTING_H
+#ifndef _SETTING_H
+#define _SETTING_H
 
 #include "main.h"
 
@@ -37,4 +37,4 @@ void setting_init(void);
 void setting_cleanup(void);
 gboolean setting_run(gchar* name, const gchar* param);
 
-#endif /* end of include guard: SETTING_H */
+#endif /* end of include guard: _SETTING_H */

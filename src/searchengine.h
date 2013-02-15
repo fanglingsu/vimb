@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef SEARCHENGINE_H
-#define SEARCHENGINE_H
+#ifndef _SEARCHENGINE_H
+#define _SEARCHENGINE_H
 
 typedef struct {
     gchar* handle;
@@ -30,4 +30,4 @@ gboolean searchengine_add(const gchar* handle, const gchar* uri);
 gboolean searchengine_remove(const gchar* handle);
 gchar* searchengine_get_uri(const gchar* handle);
 
-#endif /* end of include guard: SEARCHENGINE_H */
+#endif /* end of include guard: _SEARCHENGINE_H */

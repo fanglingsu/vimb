@@ -17,12 +17,12 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef COMPLETION_H
-#define COMPLETION_H
+#ifndef _COMPLETION_H
+#define _COMPLETION_H
 
 #include "main.h"
 
 void completion_clean(void);
 gboolean completion_complete(gboolean back);
 
-#endif /* end of include guard: COMPLETION_H */
+#endif /* end of include guard: _COMPLETION_H */

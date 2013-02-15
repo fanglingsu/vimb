@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef KEYBIND_H
-#define KEYBIND_H
+#ifndef _KEYBIND_H
+#define _KEYBIND_H
 
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
@@ -37,4 +37,4 @@ void keybind_cleanup(void);
 gboolean keybind_add_from_string(const gchar* str, const Mode mode);
 gboolean keybind_remove_from_string(const gchar* str, const Mode mode);
 
-#endif /* end of include guard: KEYBIND_H */
+#endif /* end of include guard: _KEYBIND_H */

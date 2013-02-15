@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef MAIN_H
-#define MAIN_H
+#ifndef _MAIN_H
+#define _MAIN_H
 
 #include <stdlib.h>
 #include <string.h>
@@ -311,4 +311,4 @@ void vp_clean_up(void);
 void vp_clean_input(void);
 gboolean vp_set_clipboard(const Arg* arg);
 
-#endif /* end of include guard: MAIN_H */
+#endif /* end of include guard: _MAIN_H */

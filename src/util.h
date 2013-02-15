@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef _UTIL_H
+#define _UTIL_H
 
 #include "main.h"
 
@@ -30,4 +30,4 @@ void util_create_file_if_not_exists(const gchar* filename);
 gchar* util_get_file_contents(const gchar* filename, gsize* length);
 gchar** util_get_lines(const gchar* filename);
 
-#endif /* end of include guard: UTIL_H */
+#endif /* end of include guard: _UTIL_H */

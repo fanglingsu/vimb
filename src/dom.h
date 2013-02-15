@@ -17,8 +17,8 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef DOM_H
-#define DOM_H
+#ifndef _DOM_H
+#define _DOM_H
 
 #include <webkit/webkit.h>
 
@@ -57,4 +57,4 @@ void dom_dispatch_mouse_event(Document* doc, Element* element, gchar* type, gush
 gboolean dom_is_editable(Element* element);
 gchar* dom_element_get_source(Element* elem);
 
-#endif /* end of include guard: DOM_H */
+#endif /* end of include guard: _DOM_H */
