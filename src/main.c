@@ -26,6 +26,7 @@
 #include "completion.h"
 #include "dom.h"
 #include "hints.h"
+#include "searchengine.h"
 
 /* variables */
 static gchar **args;
@@ -401,6 +402,7 @@ void vp_clean_up(void)
     setting_cleanup();
     keybind_cleanup();
     completion_clean();
+    searchengine_cleanup();
 }
 
 void vp_clean_input(void)
@@ -575,7 +577,7 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
     );
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
     if (hide) {
-        g_timeout_add_seconds(2, (GSourceFunc)vp_hide_message, NULL);
+        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vp_hide_message, NULL);
     }
 }
 

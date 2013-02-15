@@ -236,12 +236,22 @@ Yank the current url to the primary and secondary clipboard.
 .TP
 .B yank-selection
 Yank the selected text into the primary and secondary clipboard.
+.SS Searchengines
+Searchengines allows to query a searchengine instead of typing a full url. If
+a searchengine with shortcut 'dd' is defined you can use 'dd search terms' to
+perform a search query.
+.TP
+.B searchengine-add shortcut=uri
+Adds a searchengine with the shortcut and search uri. The uri must not contain
+more than one '%s' placeholder.
+
+Example: searchengine-add dl=https://duckduckgo.com/lite/?q=%s
 .SS Misc
 .TP
 .B set
 Set configuration values.
 .TP
-.IB [N] search-{forward, backward}
+.IB [N] "search-{forward, backward}"
 Search in current page forward or backward.
 .TP
 .B inspect

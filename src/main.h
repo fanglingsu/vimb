@@ -233,6 +233,7 @@ typedef struct {
     GHashTable* commands;
     GSList*     keys;
     GString*    modkeys;
+    GSList*     searchengines;
 } Behaviour;
 
 typedef struct {

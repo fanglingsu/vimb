@@ -59,5 +59,6 @@ gboolean command_hints_focus(const Arg* arg);
 gboolean command_yank(const Arg* arg);
 gboolean command_paste(const Arg* arg);
 gboolean command_search(const Arg* arg);
+gboolean command_searchengine(const Arg* arg);
 
 #endif /* end of include guard: COMMAND_H */

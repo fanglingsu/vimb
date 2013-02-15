@@ -22,6 +22,9 @@
 
 #include "stdlib.h"
 
+/* time in seconds after that message will be removed from inputbox if the
+ * message where only temporary */
+#define MESSAGE_TIMEOUT             5
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST  5
 
@@ -74,6 +77,8 @@ const struct {
     {"cmap <shift-tab>=complete-back"},
     {"hmap <tab>=hint-focus-next"},
     {"hmap <shift-tab>=hint-focus-prev"},
+    {"searchengine-add dl=https://duckduckgo.com/lite/?q=%s"},
+    {"searchengine-add dd=https://duckduckgo.com/?q=%s"},
     {NULL}
 };
 

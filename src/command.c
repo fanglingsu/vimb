@@ -24,6 +24,7 @@
 #include "completion.h"
 #include "hints.h"
 #include "util.h"
+#include "searchengine.h"
 
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
@@ -84,6 +85,8 @@ static CommandInfo cmd_list[] = {
     {"tabopen-clipboard",   command_paste,       {VP_CLIPBOARD_PRIMARY | VP_CLIPBOARD_SECONDARY | VP_TARGET_NEW}},
     {"search-forward",      command_search,      {VP_SEARCH_FORWARD}},
     {"search-backward",     command_search,      {VP_SEARCH_BACKWARD}},
+    {"searchengine-add",    command_searchengine,{1}},
+    {"searchengine-remove", command_searchengine,{0}},
 };
 
 static void command_write_input(const gchar* str);
@@ -131,7 +134,25 @@ gboolean command_run(const gchar* name, const gchar* param)
 
 gboolean command_open(const Arg* arg)
 {
-    return vp_load_uri(arg);
+    gchar* uri = NULL;
+    gboolean result;
+    /* check for searchengine handles */
+    /* split into handle and searchterms */
+    char **string = g_strsplit(arg->s, " ", 2);
+    if (g_strv_length(string) == 2
+        && (uri = searchengine_get_uri(string[0]))
+    ) {
+        gchar* term = soup_uri_encode(string[1], "&");
+        Arg a  = {arg->i, g_strdup_printf(uri, term)};
+        result = vp_load_uri(&a);
+        g_free(term);
+        g_free(a.s);
+    } else {
+        result = vp_load_uri(arg);
+    }
+    g_strfreev(string);
+
+    return result;
 }
 
 gboolean command_open_home(const Arg* arg)
@@ -439,6 +460,27 @@ gboolean command_search(const Arg* arg)
     vp_set_mode(VP_MODE_SEARCH, FALSE);
 
     return TRUE;
+}
+
+gboolean command_searchengine(const Arg* arg)
+{
+    gboolean result;
+    if (arg->i) {
+        /* add the searchengine */
+        gchar **string = g_strsplit(arg->s, "=", 2);
+        if (g_strv_length(string) != 2) {
+            return FALSE;
+        }
+        result = searchengine_add(string[0], string[1]);
+        g_strfreev(string);
+    } else {
+        /* remove the search engine */
+        result = searchengine_remove(arg->s);
+    }
+
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
+    return result;
 }
 
 static void command_write_input(const gchar* str)
