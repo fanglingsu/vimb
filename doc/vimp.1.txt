@@ -77,20 +77,20 @@ Open the url from clipboard.
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
 .TP
-.B input
-Writes ":" into to inputbox.
+.BI "input [" "TEXT" "]" 
+Writes
+.I TEXT
+into to inputbox and switch to command mode. If no
+.I TEXT
+is given, print ':' into the inputbox.
 .TP
-.B inputopen
-Writes ":open " into to inputbox.
-.TP
-.B inputtabopen
-Writes ":tabopen " into to inputbox.
-.TP
-.B inputopencurrent
-Writes ":open {url}" into to inputbox where {url} is the current used url.
-.TP
-.B inputtabopencurrent
-Writes ":tabopen {url}" into to inputbox where {url} is the current used url.
+.BI "inputuri [" "TEXT" "]"
+Writes
+.I TEXT\fR{URI}
+into to inputbox where {URL} is the current used url. This can be used to add
+keybindings to generate the tabopen command with current uri prefilled. If
+.I TEXT
+is not given use ':' instead.
 .SS Navigate
 Following commands are used to navigate within the browser history.
 .TP
