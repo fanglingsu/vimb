@@ -26,8 +26,8 @@ typedef struct _Setting Setting;
 typedef gboolean (*SettingFunc)(const Setting*, const gboolean get);
 
 struct _Setting {
-    gchar*      alias;
-    gchar*      name;
+    char*      alias;
+    char*      name;
     Type        type;
     SettingFunc func;
     Arg         arg;
@@ -35,6 +35,6 @@ struct _Setting {
 
 void setting_init(void);
 void setting_cleanup(void);
-gboolean setting_run(gchar* name, const gchar* param);
+gboolean setting_run(char* name, const char* param);
 
 #endif /* end of include guard: _SETTING_H */

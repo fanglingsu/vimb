@@ -29,7 +29,7 @@
 #include "searchengine.h"
 
 /* variables */
-static gchar **args;
+static char **args;
 VpCore vp;
 
 /* callbacks */
@@ -51,10 +51,10 @@ static gboolean vp_new_window_policy_cb(
     WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, gpointer data);
 static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data);
 static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec);
-static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const char* link, gpointer data);
-static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const gchar* title, gpointer data);
+static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, gpointer data);
+static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, gpointer data);
 static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
-    WebKitWebFrame* frame, WebKitNetworkRequest* request, gchar*
+    WebKitWebFrame* frame, WebKitNetworkRequest* request, char*
     mime_type, WebKitWebPolicyDecision* decision, gpointer data);
 static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, gpointer data);
 static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec);
@@ -72,7 +72,7 @@ static void vp_init_files(void);
 static void vp_setup_signals(void);
 static void vp_setup_settings(void);
 static void vp_set_cookie(SoupCookie* cookie);
-static const gchar* vp_get_cookies(SoupURI *uri);
+static const char* vp_get_cookies(SoupURI *uri);
 static gboolean vp_hide_message(void);
 static void vp_set_status(const StatusType status);
 
@@ -152,7 +152,7 @@ static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer 
 static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
 {
     gboolean success = FALSE;
-    const gchar *text;
+    const char *text;
     guint16 length = gtk_entry_get_text_length(entry);
     Gui* gui = &vp.gui;
 
@@ -206,7 +206,7 @@ static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpoint
 {
     SoupMessageHeaders* header = message->request_headers;
     SoupURI* uri;
-    const gchar* cookie;
+    const char* cookie;
 
     soup_message_headers_remove(header, "Cookie");
     uri = soup_message_get_uri(message);
@@ -235,7 +235,7 @@ static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebV
 static gboolean vp_inspector_show(WebKitWebInspector* inspector)
 {
     WebKitWebView* webview;
-    gint height;
+    int height;
 
     if (vp.state.is_inspecting) {
         return FALSE;
@@ -283,9 +283,9 @@ static void vp_inspector_finished(WebKitWebInspector* inspector)
 static gboolean vp_process_input(const char* input)
 {
     gboolean success;
-    gchar* line = NULL;
-    gchar* command = NULL;
-    gchar** token;
+    char* line = NULL;
+    char* command = NULL;
+    char** token;
 
     if (!input || !strlen(input)) {
         return FALSE;
@@ -327,12 +327,12 @@ gboolean vp_load_uri(const Arg* arg)
 
     uri = g_strrstr(line, "://") ? g_strdup(line) : g_strdup_printf("http://%s", line);
     if (arg->i == VP_TARGET_NEW) {
-        gchar *argv[64];
+        char *argv[64];
 
         argv[0] = *args;
         if (vp.state.embed) {
-            gchar tmp[64];
-            snprintf(tmp, LENGTH(tmp), "%u", (gint)vp.state.embed);
+            char tmp[64];
+            snprintf(tmp, LENGTH(tmp), "%u", (int)vp.state.embed);
             argv[1] = "-e";
             argv[2] = tmp;
             argv[3] = uri;
@@ -371,9 +371,9 @@ static void vp_set_cookie(SoupCookie* cookie)
     g_object_unref(jar);
 }
 
-static const gchar* vp_get_cookies(SoupURI *uri)
+static const char* vp_get_cookies(SoupURI *uri)
 {
-    const gchar* cookie;
+    const char* cookie;
 
     SoupCookieJar* jar = soup_cookie_jar_text_new(vp.files[FILES_COOKIE], TRUE);
     cookie = soup_cookie_jar_get_cookies(jar, uri, TRUE);
@@ -385,7 +385,7 @@ static const gchar* vp_get_cookies(SoupURI *uri)
 
 void vp_clean_up(void)
 {
-    const gchar* uri = CURRENT_URL();
+    const char* uri = CURRENT_URL();
     /* write last URL into file for recreation */
     if (uri) {
         g_file_set_contents(vp.files[FILES_CLOSED], uri, -1, NULL);
@@ -501,7 +501,7 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
     return TRUE;
 }
 
-void vp_update_urlbar(const gchar* uri)
+void vp_update_urlbar(const char* uri)
 {
     gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), uri);
 }
@@ -519,7 +519,7 @@ void vp_update_statusbar(void)
 
     /* show the active downloads */
     if (vp.net.downloads) {
-        gint num = g_list_length(vp.net.downloads);
+        int num = g_list_length(vp.net.downloads);
         g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
     }
 
@@ -529,8 +529,8 @@ void vp_update_statusbar(void)
     }
 
     /* show the scroll status */
-    gint max = gtk_adjustment_get_upper(vp.gui.adjust_v) - gtk_adjustment_get_page_size(vp.gui.adjust_v);
-    gint val = (int)(gtk_adjustment_get_value(vp.gui.adjust_v) / max * 100);
+    int max = gtk_adjustment_get_upper(vp.gui.adjust_v) - gtk_adjustment_get_page_size(vp.gui.adjust_v);
+    int val = (int)(gtk_adjustment_get_value(vp.gui.adjust_v) / max * 100);
 
     if (max == 0) {
         g_string_append(status, " All");
@@ -623,12 +623,12 @@ static void vp_read_config(void)
     }
 
     /* read config from config files */
-    gchar **lines = util_get_lines(vp.files[FILES_CONFIG]);
-    gchar *line;
+    char **lines = util_get_lines(vp.files[FILES_CONFIG]);
+    char *line;
 
     if (lines) {
-        gint length = g_strv_length(lines) - 1;
-        for (gint i = 0; i < length; i++) {
+        int length = g_strv_length(lines) - 1;
+        for (int i = 0; i < length; i++) {
             line = lines[i];
             g_strstrip(line);
 
@@ -723,7 +723,7 @@ static void vp_init_gui(void)
 
 static void vp_init_files(void)
 {
-    gchar* path = util_get_config_dir();
+    char* path = util_get_config_dir();
 
     vp.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
     util_create_file_if_not_exists(vp.files[FILES_CONFIG]);
@@ -829,7 +829,7 @@ static gboolean vp_new_window_policy_cb(
 {
     if (webkit_web_navigation_action_get_reason(navig) == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
         /* open in a new window */
-        Arg a = {VP_TARGET_NEW, (gchar*)webkit_network_request_get_uri(request)};
+        Arg a = {VP_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
         vp_load_uri(&a);
         webkit_web_policy_decision_ignore(policy);
         return TRUE;
@@ -849,7 +849,7 @@ static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWeb
 
 static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec)
 {
-    Arg a = {VP_TARGET_NEW, (gchar*)webkit_web_view_get_uri(view)};
+    Arg a = {VP_TARGET_NEW, (char*)webkit_web_view_get_uri(view)};
     /* clean up */
     webkit_web_view_stop_loading(view);
     gtk_widget_destroy(GTK_WIDGET(view));
@@ -857,10 +857,10 @@ static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_s
     vp_load_uri(&a);
 }
 
-static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const char* link, gpointer data)
+static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, gpointer data)
 {
     if (link) {
-        gchar* message = g_strdup_printf("Link: %s", link);
+        char* message = g_strdup_printf("Link: %s", link);
         gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), message);
         g_free(message);
     } else {
@@ -868,13 +868,13 @@ static void vp_hover_link_cb(WebKitWebView* webview, const gchar* title, const c
     }
 }
 
-static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const gchar* title, gpointer data)
+static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, gpointer data)
 {
     gtk_window_set_title(GTK_WINDOW(vp.gui.window), title);
 }
 
 static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
-    WebKitWebFrame* frame, WebKitNetworkRequest* request, gchar*
+    WebKitWebFrame* frame, WebKitNetworkRequest* request, char*
     mime_type, WebKitWebPolicyDecision* decision, gpointer data)
 {
     if (webkit_web_view_can_show_mime_type(webview, mime_type) == FALSE) {
@@ -888,9 +888,9 @@ static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
 static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, gpointer data)
 {
     WebKitDownloadStatus status;
-    gchar* uri = NULL;
+    char* uri = NULL;
 
-    const gchar* filename = webkit_download_get_suggested_filename(download);
+    const char* filename = webkit_download_get_suggested_filename(download);
     if (!filename) {
         filename = "vimp_donwload";
     }
@@ -931,7 +931,7 @@ static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
     WebKitWebResource* resource, WebKitNetworkRequest* request,
     WebKitNetworkResponse* response, gpointer data)
 {
-    const gchar* uri = webkit_network_request_get_uri(request);
+    const char* uri = webkit_network_request_get_uri(request);
     if (g_str_has_suffix(uri, "/favicon.ico")) {
         webkit_network_request_set_uri(request, "about:blank");
     }
@@ -945,7 +945,7 @@ static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
         return;
     }
 
-    gchar* file = g_path_get_basename(webkit_download_get_destination_uri(download));
+    char* file = g_path_get_basename(webkit_download_get_destination_uri(download));
     if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
         vp_echo(VP_MSG_ERROR, FALSE, "Error downloading %s", file);
     } else {
@@ -962,7 +962,7 @@ static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
 
 int main(int argc, char* argv[])
 {
-    static gchar* winid = NULL;
+    static char* winid = NULL;
     static gboolean ver = false;
     static GError* err;
     static GOptionEntry opts[] = {

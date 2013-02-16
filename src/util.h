@@ -22,12 +22,12 @@
 
 #include "main.h"
 
-gchar* util_get_config_dir(void);
-gchar* util_get_cache_dir(void);
-const gchar* util_get_home_dir(void);
-void util_create_dir_if_not_exists(const gchar* dirpath);
-void util_create_file_if_not_exists(const gchar* filename);
-gchar* util_get_file_contents(const gchar* filename, gsize* length);
-gchar** util_get_lines(const gchar* filename);
+char* util_get_config_dir(void);
+char* util_get_cache_dir(void);
+const char* util_get_home_dir(void);
+void util_create_dir_if_not_exists(const char* dirpath);
+void util_create_file_if_not_exists(const char* filename);
+char* util_get_file_contents(const char* filename, gsize* length);
+char** util_get_lines(const char* filename);
 
 #endif /* end of include guard: _UTIL_H */

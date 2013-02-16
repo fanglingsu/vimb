@@ -30,7 +30,7 @@ enum {
 typedef gboolean (*Command)(const Arg* arg);
 
 typedef struct {
-    const gchar* name;
+    const char* name;
     Command      function;
     const Arg    arg;       /* arguments to call the command with */
 } CommandInfo;
@@ -38,8 +38,8 @@ typedef struct {
 
 void command_init(void);
 void command_cleanup(void);
-gboolean command_exists(const gchar* name);
-gboolean command_run(const gchar* name, const gchar* param);
+gboolean command_exists(const char* name);
+gboolean command_run(const char* name, const char* param);
 
 gboolean command_open(const Arg* arg);
 gboolean command_open_home(const Arg* arg);

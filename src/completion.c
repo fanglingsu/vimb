@@ -22,19 +22,19 @@
 typedef struct {
     GtkWidget* label;
     GtkWidget* event;
-    gchar*     prefix;
+    char*     prefix;
 } Completion;
 
-static GList* completion_init_completion(GList* target, GList* source, const gchar* prefix);
+static GList* completion_init_completion(GList* target, GList* source, const char* prefix);
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
 static void completion_set_color(Completion* completion, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
 static void completion_set_entry_text(Completion* completion);
-static Completion* completion_get_new(const gchar* label, const gchar* prefix);
+static Completion* completion_get_new(const char* label, const char* prefix);
 
 gboolean completion_complete(gboolean back)
 {
-    const gchar* input = NULL;
+    const char* input = NULL;
     GList* source = NULL;
 
     if (vp.comps.completions
@@ -95,13 +95,13 @@ void completion_clean(void)
     vp.state.mode &= ~VP_MODE_COMPLETE;
 }
 
-static GList* completion_init_completion(GList* target, GList* source, const gchar* prefix)
+static GList* completion_init_completion(GList* target, GList* source, const char* prefix)
 {
-    const gchar* input = GET_TEXT();
-    gchar* command = NULL;
-    gchar* data = NULL;
+    const char* input = GET_TEXT();
+    char* command = NULL;
+    char* data = NULL;
     gboolean match;
-    gchar **token = NULL;
+    char **token = NULL;
 
     /* skip prefix for completion */
     if (g_str_has_prefix(input, prefix)) {
@@ -119,7 +119,7 @@ static GList* completion_init_completion(GList* target, GList* source, const gch
         if (*command == 0) {
             match = TRUE;
         } else {
-            for (gint i = 0; token[i]; i++) {
+            for (int i = 0; token[i]; i++) {
                 if (g_str_has_prefix(data, token[i])) {
                     match = TRUE;
                 } else {
@@ -147,11 +147,11 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
     GList *old, *new;
     Completion *c;
 
-    gint length = g_list_length(completion);
-    gint max    = vp.config.max_completion_items;
-    gint items  = MAX(length, max);
-    gint r      = (max) % 2;
-    gint offset = max / 2 - 1 + r;
+    int length = g_list_length(completion);
+    int max    = vp.config.max_completion_items;
+    int items  = MAX(length, max);
+    int r      = (max) % 2;
+    int offset = max / 2 - 1 + r;
 
     old = active;
     int position = g_list_position(completion, active) + 1;
@@ -220,7 +220,7 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
 static void completion_show(gboolean back)
 {
     guint max = vp.config.max_completion_items;
-    gint i = 0;
+    int i = 0;
     if (back) {
         vp.comps.active = g_list_last(vp.comps.completions);
         for (GList *l = vp.comps.active; l && i < max; l = l->prev, i++) {
@@ -255,7 +255,7 @@ static void completion_set_color(Completion* completion, const VpColor* fg, cons
 static void completion_set_entry_text(Completion* completion)
 {
     GString* string = g_string_new(completion->prefix);
-    const gchar* text;
+    const char* text;
 
     text = gtk_label_get_text(GTK_LABEL(completion->label));
 
@@ -270,9 +270,9 @@ static void completion_set_entry_text(Completion* completion)
     g_string_free(string, TRUE);
 }
 
-static Completion* completion_get_new(const gchar* label, const gchar* prefix)
+static Completion* completion_get_new(const char* label, const char* prefix)
 {
-    const gint padding = 2;
+    const int padding = 2;
     Completion* c = g_new0(Completion, 1);
 
     c->label  = gtk_label_new(label);

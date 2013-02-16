@@ -55,7 +55,7 @@ typedef enum {
 } HintsProcess;
 
 void hints_init(void);
-void hints_create(const gchar* input, guint mode, const guint prefixLength);
+void hints_create(const char* input, guint mode, const guint prefixLength);
 void hints_update(const gulong num);
 void hints_clear(void);
 void hints_focus_next(const gboolean back);

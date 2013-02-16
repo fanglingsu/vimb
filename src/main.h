@@ -182,8 +182,8 @@ enum {
 
 /* structs */
 typedef struct {
-    gint     i;
-    gchar*   s;
+    int     i;
+    char*   s;
 } Arg;
 
 /* statusbar */
@@ -214,7 +214,7 @@ typedef struct {
 /* state */
 typedef struct {
     Mode            mode;
-    gchar           modkey;
+    char           modkey;
     guint           count;
 #ifdef HAS_GTK3
     Window          embed;
@@ -225,7 +225,7 @@ typedef struct {
     StatusType      status;
     gboolean        is_inspecting;
     SearchDirection search_dir;
-    gchar*          search_query;
+    char*          search_query;
 } State;
 
 /* behaviour */
@@ -243,16 +243,16 @@ typedef struct {
 
 typedef struct {
     time_t cookie_timeout;
-    gint   scrollstep;
+    int   scrollstep;
     guint  max_completion_items;
-    gchar* home_page;
-    gchar* download_dir;
+    char* home_page;
+    char* download_dir;
 } Config;
 
 typedef struct {
     GList* completions;
     GList* active;
-    gint   count;
+    int   count;
 } Completions;
 
 typedef struct {
@@ -264,10 +264,10 @@ typedef struct {
     VpColor               comp_bg[VP_COMP_LAST];
     PangoFontDescription* comp_font[VP_COMP_LAST];
     /* hint style */
-    gchar*                hint_bg;
-    gchar*                hint_bg_focus;
-    gchar*                hint_fg;
-    gchar*                hint_style;
+    char*                hint_bg;
+    char*                hint_bg_focus;
+    char*                hint_fg;
+    char*                hint_style;
     /* status bar */
     VpColor               status_bg[VP_STATUS_LAST];
     VpColor               status_fg[VP_STATUS_LAST];
@@ -287,7 +287,7 @@ typedef struct {
     Gui           gui;
     State         state;
     Behaviour     behave;
-    gchar*        files[FILES_LAST];
+    char*        files[FILES_LAST];
     Network       net;
     Config        config;
     Completions   comps;
@@ -301,7 +301,7 @@ extern VpCore vp;
 
 /* functions */
 void vp_update_statusbar(void);
-void vp_update_urlbar(const gchar* uri);
+void vp_update_urlbar(const char* uri);
 void vp_update_status_style(void);
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
 gboolean vp_set_mode(Mode mode, gboolean clean);

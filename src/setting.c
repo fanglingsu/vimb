@@ -20,7 +20,7 @@
 #include "setting.h"
 #include "util.h"
 
-static Arg* setting_char_to_arg(const gchar* str, const Type type);
+static Arg* setting_char_to_arg(const char* str, const Type type);
 static void setting_print_value(const Setting* s, void* value);
 static gboolean setting_webkit(const Setting* s, const gboolean get);
 static gboolean setting_cookie_timeout(const Setting* s, const gboolean get);
@@ -144,14 +144,14 @@ void setting_cleanup(void)
     }
 }
 
-gboolean setting_run(gchar* name, const gchar* param)
+gboolean setting_run(char* name, const char* param)
 {
     Arg* a          = NULL;
     gboolean result = FALSE;
     gboolean get    = FALSE;
 
     /* check if we should display current value */
-    gint len = strlen(name);
+    int len = strlen(name);
     if (name[len - 1] == '?') {
         /* remove the last ? char from setting name */
         name[len - 1] = '\0';
@@ -196,7 +196,7 @@ gboolean setting_run(gchar* name, const gchar* param)
 /**
  * Converts string representing also given data type into and Arg.
  */
-static Arg* setting_char_to_arg(const gchar* str, const Type type)
+static Arg* setting_char_to_arg(const char* str, const Type type)
 {
     if (!str) {
         return NULL;
@@ -210,11 +210,11 @@ static Arg* setting_char_to_arg(const gchar* str, const Type type)
             break;
 
         case TYPE_INTEGER:
-            arg->i = g_ascii_strtoull(str, (gchar**)NULL, 10);
+            arg->i = g_ascii_strtoull(str, (char**)NULL, 10);
             break;
 
         case TYPE_FLOAT:
-            arg->i = (1000000 * g_ascii_strtod(str, (gchar**)NULL));
+            arg->i = (1000000 * g_ascii_strtod(str, (char**)NULL));
             break;
 
         case TYPE_CHAR:
@@ -232,8 +232,8 @@ static Arg* setting_char_to_arg(const gchar* str, const Type type)
  */
 static void setting_print_value(const Setting* s, void* value)
 {
-    const gchar* name = s->alias ? s->alias : s->name;
-    gchar* string = NULL;
+    const char* name = s->alias ? s->alias : s->name;
+    char* string = NULL;
 
     switch (s->type) {
         case TYPE_BOOLEAN:
@@ -241,7 +241,7 @@ static void setting_print_value(const Setting* s, void* value)
             break;
 
         case TYPE_INTEGER:
-            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%d", name, *(gint*)value);
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%d", name, *(int*)value);
             break;
 
         case TYPE_FLOAT:
@@ -249,7 +249,7 @@ static void setting_print_value(const Setting* s, void* value)
             break;
 
         case TYPE_CHAR:
-            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%s", name, (gchar*)value);
+            vp_echo(VP_MSG_NORMAL, FALSE, "  %s=%s", name, (char*)value);
             break;
 
         case TYPE_COLOR:
@@ -283,7 +283,7 @@ static gboolean setting_webkit(const Setting* s, const gboolean get)
 
         case TYPE_INTEGER:
             if (get) {
-                gint value;
+                int value;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
                 setting_print_value(s, &value);
             } else {
@@ -305,7 +305,7 @@ static gboolean setting_webkit(const Setting* s, const gboolean get)
         case TYPE_COLOR:
         case TYPE_FONT:
             if (get) {
-                gchar* value = NULL;
+                char* value = NULL;
                 g_object_get(G_OBJECT(web_setting), s->name, value, NULL);
                 setting_print_value(s, value);
             } else {
@@ -536,7 +536,7 @@ static gboolean setting_strict_ssl(const Setting* s, const gboolean get)
 static gboolean setting_ca_bundle(const Setting* s, const gboolean get)
 {
     if (get) {
-        gchar* value = NULL;
+        char* value = NULL;
         g_object_get(vp.net.soup_session, "ssl-ca-file", &value, NULL);
         setting_print_value(s, value);
         g_free(value);
@@ -588,9 +588,9 @@ static gboolean setting_proxy(const Setting* s, const gboolean get)
         gboolean value = (proxy_uri != NULL);
         setting_print_value(s, &value);
     } else if (s->arg.i) {
-        gchar* proxy = (gchar *)g_getenv("http_proxy");
+        char* proxy = (char *)g_getenv("http_proxy");
         if (proxy != NULL && strlen(proxy)) {
-            gchar* proxy_new = g_strrstr(proxy, "http://")
+            char* proxy_new = g_strrstr(proxy, "http://")
                 ? g_strdup(proxy)
                 : g_strdup_printf("http://%s", proxy);
             proxy_uri = soup_uri_new(proxy_new);

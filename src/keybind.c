@@ -24,9 +24,9 @@
 
 static void keybind_rebuild_modkeys(void);
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval);
-static void keybind_str_to_keybind(gchar* str, Keybind* key);
-static guint keybind_str_to_modmask(const gchar* str);
-static guint keybind_str_to_value(const gchar* str);
+static void keybind_str_to_keybind(char* str, Keybind* key);
+static guint keybind_str_to_modmask(const char* str);
+static guint keybind_str_to_value(const char* str);
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
 
 
@@ -46,14 +46,14 @@ void keybind_cleanup(void)
     }
 }
 
-gboolean keybind_add_from_string(gchar* keys, const gchar* command, const Mode mode)
+gboolean keybind_add_from_string(char* keys, const char* command, const Mode mode)
 {
     if (keys == NULL || *keys == '\0') {
         return FALSE;
     }
 
     /* split the input string into command and parameter part */
-    gchar** token = g_strsplit(command, " ", 2);
+    char** token = g_strsplit(command, " ", 2);
     if (!token[0] || !command_exists(token[0])) {
         g_strfreev(token);
         return FALSE;
@@ -78,7 +78,7 @@ gboolean keybind_add_from_string(gchar* keys, const gchar* command, const Mode m
     return TRUE;
 }
 
-gboolean keybind_remove_from_string(gchar* str, const Mode mode)
+gboolean keybind_remove_from_string(char* str, const Mode mode)
 {
     Keybind keybind = {.mode = mode};
 
@@ -145,9 +145,9 @@ static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
 /**
  * Configures the given keybind by also given string.
  */
-static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
+static void keybind_str_to_keybind(char* str, Keybind* keybind)
 {
-    gchar** string = NULL;
+    char** string = NULL;
     guint len = 0;
 
     g_strstrip(str);
@@ -200,7 +200,7 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
     }
 }
 
-static guint keybind_str_to_modmask(const gchar* str)
+static guint keybind_str_to_modmask(const char* str)
 {
     if (g_ascii_strcasecmp(str, "ctrl") == 0) {
         return GDK_CONTROL_MASK;
@@ -212,7 +212,7 @@ static guint keybind_str_to_modmask(const gchar* str)
     return 0;
 }
 
-static guint keybind_str_to_value(const gchar* str)
+static guint keybind_str_to_value(const char* str)
 {
     if (g_ascii_strcasecmp(str, "tab") == 0) {
         return GDK_Tab;
@@ -244,7 +244,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
             return TRUE;
         }
         if (strchr(vp.behave.modkeys->str, keyval) && vp.state.modkey != keyval) {
-            vp.state.modkey = (gchar)keyval;
+            vp.state.modkey = (char)keyval;
             vp_update_statusbar();
 
             return TRUE;

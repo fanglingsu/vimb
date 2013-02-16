@@ -40,11 +40,11 @@ void dom_check_auto_insert(void)
     }
 }
 
-void dom_element_set_style(Element* element, const gchar* format, ...)
+void dom_element_set_style(Element* element, const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    gchar* value = g_strdup_vprintf(format, args);
+    char* value = g_strdup_vprintf(format, args);
     CssDeclaration* css = webkit_dom_element_get_style(element);
     if (css) {
         webkit_dom_css_style_declaration_set_css_text(css, value, NULL);
@@ -52,7 +52,7 @@ void dom_element_set_style(Element* element, const gchar* format, ...)
     g_free(value);
 }
 
-void dom_element_style_set_property(Element* element, const gchar* property, const gchar* style)
+void dom_element_style_set_property(Element* element, const char* property, const char* style)
 {
     CssDeclaration* css = webkit_dom_element_get_style(element);
     if (css) {
@@ -92,7 +92,7 @@ DomBoundingRect dom_elemen_get_bounding_rect(Element* element)
     return rect;
 }
 
-void dom_dispatch_mouse_event(Document* doc, Element* element, gchar* type, gushort button)
+void dom_dispatch_mouse_event(Document* doc, Element* element, char* type, gushort button)
 {
     Event* event = webkit_dom_document_create_event(doc, "MouseEvents", NULL);
     webkit_dom_mouse_event_init_mouse_event(
@@ -120,11 +120,11 @@ gboolean dom_is_editable(Element* element)
         return FALSE;
     }
 
-    gchar* tagname = webkit_dom_element_get_tag_name(element);
+    char* tagname = webkit_dom_element_get_tag_name(element);
     if (!g_ascii_strcasecmp(tagname, "textarea")) {
         return TRUE;
     }
-    gchar *type = webkit_dom_element_get_attribute(element, "type");
+    char *type = webkit_dom_element_get_attribute(element, "type");
     if (!g_ascii_strcasecmp(tagname, "input")
         || !g_ascii_strcasecmp(type, "text")
         || !g_ascii_strcasecmp(type, "password")
@@ -137,9 +137,9 @@ gboolean dom_is_editable(Element* element)
 /**
  * Retrieves the src or href attribute of the given element.
  */
-gchar* dom_element_get_source(Element* elem)
+char* dom_element_get_source(Element* elem)
 {
-    gchar* url = NULL;
+    char* url = NULL;
 
     url = webkit_dom_html_anchor_element_get_href(WEBKIT_DOM_HTML_ANCHOR_ELEMENT(elem));
     if (!url) {
@@ -174,7 +174,7 @@ static Element* dom_get_active_element(Document* doc)
 {
     Document* d     = NULL;
     Element* active = webkit_dom_html_document_get_active_element((void*)doc);
-    gchar* tagname  = webkit_dom_element_get_tag_name(active);
+    char* tagname  = webkit_dom_element_get_tag_name(active);
 
     if (!g_strcmp0(tagname, "FRAME")) {
         d = webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active));

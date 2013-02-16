@@ -33,21 +33,21 @@
 typedef struct {
     gulong num;
     Element*  elem;                 /* hinted element */
-    gchar*    elemColor;            /* element color */
-    gchar*    elemBackgroundColor;  /* element background color */
+    char*    elemColor;            /* element color */
+    char*    elemBackgroundColor;  /* element background color */
     Element*  hint;                 /* numbered hint element */
     Element*  container;
 } Hint;
 
 static Element* hints_get_hint_container(Document* doc);
-static void hints_create_for_window(const gchar* input, Window* win, gulong hintCount);
+static void hints_create_for_window(const char* input, Window* win, gulong hintCount);
 static void hints_focus(const gulong num);
 static void hints_fire(const gulong num);
 static void hints_click_fired_hint(guint mode, Element* elem);
-static void hints_process_fired_hint(guint mode, const gchar* uri);
+static void hints_process_fired_hint(guint mode, const char* uri);
 static Hint* hints_get_hint_by_number(const gulong num);
 static GList* hints_get_hint_list_by_number(const gulong num);
-static gchar* hints_get_xpath(const gchar* input);
+static char* hints_get_xpath(const char* input);
 static void hints_observe_input(gboolean observe);
 static gboolean hints_changed_callback(GtkEditable *entry, gpointer data);
 static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
@@ -96,7 +96,7 @@ void hints_clear(void)
     g_signal_emit_by_name(vp.gui.webview, "hovering-over-link", NULL, NULL);
 }
 
-void hints_create(const gchar* input, guint mode, const guint prefixLength)
+void hints_create(const char* input, guint mode, const guint prefixLength)
 {
     Hints* hints = &vp.hints;
     Document* doc;
@@ -200,7 +200,7 @@ static Element* hints_get_hint_container(Document* doc)
     return container;
 }
 
-static void hints_create_for_window(const gchar* input, Window* win, gulong hintCount)
+static void hints_create_for_window(const char* input, Window* win, gulong hintCount)
 {
     Hints* hints       = &vp.hints;
     Element* container = NULL;
@@ -220,7 +220,7 @@ static void hints_create_for_window(const gchar* input, Window* win, gulong hint
         return;
     }
 
-    gchar* xpath = hints_get_xpath(input);
+    char* xpath = hints_get_xpath(input);
     WebKitDOMXPathResult* result = webkit_dom_document_evaluate(
         doc, xpath, WEBKIT_DOM_NODE(doc), ns_resolver, 7, NULL, NULL
     );
@@ -275,7 +275,7 @@ static void hints_create_for_window(const gchar* input, Window* win, gulong hint
         gulong top  = rect.top - 3;
         dom_element_set_style(hint, HINT_STYLE, left, top, vp.style.hint_style);
 
-        gchar* num = g_strdup_printf("%li", newHint->num);
+        char* num = g_strdup_printf("%li", newHint->num);
         webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(hint), num, NULL);
         webkit_dom_html_element_set_class_name(WEBKIT_DOM_HTML_ELEMENT(hint), HINT_CLASS);
         g_free(num);
@@ -325,7 +325,7 @@ static void hints_focus(const gulong num)
         dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);
         webkit_dom_element_blur(hint->elem);
 
-        const gchar* tag = webkit_dom_element_get_tag_name(hint->elem);
+        const char* tag = webkit_dom_element_get_tag_name(hint->elem);
         if (!g_ascii_strcasecmp(tag, "a")) {
             /* simulate the hovering over the hinted element this is done to show
              * the hinted elements url in the url bar */
@@ -372,7 +372,7 @@ static void hints_fire(const gulong num)
  */
 static void hints_click_fired_hint(guint mode, Element* elem)
 {
-    gchar* target = webkit_dom_element_get_attribute(elem, "target");
+    char* target = webkit_dom_element_get_attribute(elem, "target");
     if (mode & HINTS_TARGET_BLANK) {                /* open in new window */
         webkit_dom_element_set_attribute(elem, "target", "_blank", NULL);
     } else if (g_strcmp0(target, "_blank") == 0) {  /* remove possible target attribute */
@@ -394,7 +394,7 @@ static void hints_click_fired_hint(guint mode, Element* elem)
 /**
  * Handle fired hints that are not opened via simulated mouse click.
  */
-static void hints_process_fired_hint(guint mode, const gchar* uri)
+static void hints_process_fired_hint(guint mode, const char* uri)
 {
     HintsProcess type = HINTS_GET_PROCESSING(mode);
     Arg a = {0};
@@ -448,9 +448,9 @@ static GList* hints_get_hint_list_by_number(const gulong num)
  *
  * The returned string have to be freed.
  */
-static gchar* hints_get_xpath(const gchar* input)
+static char* hints_get_xpath(const char* input)
 {
-    gchar* xpath = NULL;
+    char* xpath = NULL;
 
     switch (HINTS_GET_TYPE(vp.hints.mode)) {
         case HINTS_TYPE_LINK:
@@ -512,7 +512,7 @@ static void hints_observe_input(gboolean observe)
 
 static gboolean hints_changed_callback(GtkEditable *entry, gpointer data)
 {
-    const gchar* text = GET_TEXT();
+    const char* text = GET_TEXT();
 
     /* skip hinting prefixes like '.', ',', ';y' ... */
     hints_create(text + vp.hints.prefixLength, vp.hints.mode, vp.hints.prefixLength);
@@ -523,7 +523,7 @@ static gboolean hints_changed_callback(GtkEditable *entry, gpointer data)
 static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
 {
     Hints* hints = &vp.hints;
-    gint numval;
+    int numval;
     guint keyval = event->keyval;
     guint state  = CLEAN_STATE_WITH_SHIFT(event);
 

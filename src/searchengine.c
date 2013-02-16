@@ -20,8 +20,8 @@
 #include "main.h"
 #include "searchengine.h"
 
-static GSList* searchengine_find(const gchar* handle);
-static gboolean searchengine_is_valid_uri(const gchar* uri);
+static GSList* searchengine_find(const char* handle);
+static gboolean searchengine_is_valid_uri(const char* uri);
 
 
 void searchengine_cleanup(void)
@@ -31,7 +31,7 @@ void searchengine_cleanup(void)
     }
 }
 
-gboolean searchengine_add(const gchar* handle, const gchar* uri)
+gboolean searchengine_add(const char* handle, const char* uri)
 {
     /* validate if the uri contains only one %s sequence */
     if (!searchengine_is_valid_uri(uri)) {
@@ -47,7 +47,7 @@ gboolean searchengine_add(const gchar* handle, const gchar* uri)
     return TRUE;
 }
 
-gboolean searchengine_remove(const gchar* handle)
+gboolean searchengine_remove(const char* handle)
 {
     GSList* list = searchengine_find(handle);
 
@@ -64,7 +64,7 @@ gboolean searchengine_remove(const gchar* handle)
     return FALSE;
 }
 
-gchar* searchengine_get_uri(const gchar* handle)
+char* searchengine_get_uri(const char* handle)
 {
     GSList* list = searchengine_find(handle);
 
@@ -75,7 +75,7 @@ gchar* searchengine_get_uri(const gchar* handle)
     return NULL;
 }
 
-static GSList* searchengine_find(const gchar* handle)
+static GSList* searchengine_find(const char* handle)
 {
     GSList* s;
     for (s = vp.behave.searchengines; s != NULL; s = s->next) {
@@ -87,9 +87,9 @@ static GSList* searchengine_find(const gchar* handle)
     return NULL;
 }
 
-static gboolean searchengine_is_valid_uri(const gchar* uri)
+static gboolean searchengine_is_valid_uri(const char* uri)
 {
-    gint count = 0;
+    int count = 0;
 
     for (; *uri; uri++) {
         if (*uri == '%') {

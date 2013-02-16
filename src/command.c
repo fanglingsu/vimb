@@ -89,7 +89,7 @@ static CommandInfo cmd_list[] = {
     {"searchengine-remove", command_searchengine,{0}},
 };
 
-static void command_write_input(const gchar* str);
+static void command_write_input(const char* str);
 
 
 void command_init(void)
@@ -109,12 +109,12 @@ void command_cleanup(void)
     }
 }
 
-gboolean command_exists(const gchar* name)
+gboolean command_exists(const char* name)
 {
     return g_hash_table_contains(vp.behave.commands, name);
 }
 
-gboolean command_run(const gchar* name, const gchar* param)
+gboolean command_run(const char* name, const char* param)
 {
     CommandInfo* c = NULL;
     gboolean result;
@@ -134,7 +134,7 @@ gboolean command_run(const gchar* name, const gchar* param)
 
 gboolean command_open(const Arg* arg)
 {
-    gchar* uri = NULL;
+    char* uri = NULL;
     gboolean result;
     /* check for searchengine handles */
     /* split into handle and searchterms */
@@ -142,7 +142,7 @@ gboolean command_open(const Arg* arg)
     if (g_strv_length(string) == 2
         && (uri = searchengine_get_uri(string[0]))
     ) {
-        gchar* term = soup_uri_encode(string[1], "&");
+        char* term = soup_uri_encode(string[1], "&");
         Arg a  = {arg->i, g_strdup_printf(uri, term)};
         result = vp_load_uri(&a);
         g_free(term);
@@ -178,14 +178,14 @@ gboolean command_open_closed(const Arg* arg)
 
 gboolean command_input(const Arg* arg)
 {
-    const gchar* url;
+    const char* url;
 
     /* add current url if requested */
     if (VP_INPUT_CURRENT_URI == arg->i
         && (url = CURRENT_URL())
     ) {
         /* append the current url to the input message */
-        gchar* input = g_strconcat(arg->s, url, NULL);
+        char* input = g_strconcat(arg->s, url, NULL);
         command_write_input(input);
         g_free(input);
     } else {
@@ -219,7 +219,7 @@ gboolean command_view_source(const Arg* arg)
 gboolean command_navigate(const Arg* arg)
 {
     if (arg->i <= VP_NAVIG_FORWARD) {
-        gint count = vp.state.count ? vp.state.count : 1;
+        int count = vp.state.count ? vp.state.count : 1;
         webkit_web_view_go_back_or_forward(
             vp.gui.webview, (arg->i == VP_NAVIG_BACK ? -count : count)
         );
@@ -240,12 +240,12 @@ gboolean command_scroll(const Arg* arg)
 {
     GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? vp.gui.adjust_h : vp.gui.adjust_v;
 
-    gint direction  = (arg->i & (1 << 2)) ? 1 : -1;
+    int direction  = (arg->i & (1 << 2)) ? 1 : -1;
 
     /* type scroll */
     if (arg->i & VP_SCROLL_TYPE_SCROLL) {
         gdouble value;
-        gint count = vp.state.count ? vp.state.count : 1;
+        int count = vp.state.count ? vp.state.count : 1;
         if (arg->i & VP_SCROLL_UNIT_LINE) {
             value = vp.config.scrollstep;
         } else if (arg->i & VP_SCROLL_UNIT_HALFPAGE) {
@@ -276,7 +276,7 @@ gboolean command_map(const Arg* arg)
     gboolean result;
     vp_set_mode(VP_MODE_NORMAL, FALSE);
 
-    gchar **string = g_strsplit(arg->s, "=", 2);
+    char **string = g_strsplit(arg->s, "=", 2);
     if (g_strv_length(string) != 2) {
         return FALSE;
     }
@@ -296,8 +296,8 @@ gboolean command_unmap(const Arg* arg)
 gboolean command_set(const Arg* arg)
 {
     gboolean success;
-    gchar* line = NULL;
-    gchar** token;
+    char* line = NULL;
+    char** token;
 
     if (!arg->s || !strlen(arg->s)) {
         return FALSE;
@@ -374,7 +374,7 @@ gboolean command_yank(const Arg* arg)
     vp_set_mode(VP_MODE_NORMAL, TRUE);
 
     if (arg->i & COMMAND_YANK_SELECTION) {
-        gchar* text = NULL;
+        char* text = NULL;
         /* copy current selection to clipboard */
         webkit_web_view_copy_clipboard(vp.gui.webview);
         text = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
@@ -475,7 +475,7 @@ gboolean command_searchengine(const Arg* arg)
     gboolean result;
     if (arg->i) {
         /* add the searchengine */
-        gchar **string = g_strsplit(arg->s, "=", 2);
+        char **string = g_strsplit(arg->s, "=", 2);
         if (g_strv_length(string) != 2) {
             return FALSE;
         }
@@ -491,9 +491,9 @@ gboolean command_searchengine(const Arg* arg)
     return result;
 }
 
-static void command_write_input(const gchar* str)
+static void command_write_input(const char* str)
 {
-    gint pos = 0;
+    int pos = 0;
     /* reset the colors and fonts to defalts */
     vp_set_widget_font(
         vp.gui.inputbox,
