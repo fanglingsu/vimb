@@ -46,66 +46,49 @@ void keybind_cleanup(void)
     }
 }
 
-gboolean keybind_add_from_string(const gchar* str, const Mode mode)
+gboolean keybind_add_from_string(gchar* keys, const gchar* command, const Mode mode)
 {
-    if (str == NULL || *str == '\0') {
+    if (keys == NULL || *keys == '\0') {
         return FALSE;
     }
-    gboolean result;
-    gchar* line = g_strdup(str);
-    g_strstrip(line);
 
-    /* split into keybinding and command */
-    char **string = g_strsplit(line, "=", 2);
-
-    guint len = g_strv_length(string);
-    if (len == 2) {
-        /* split the input string into command and parameter part */
-        gchar** token = g_strsplit(string[1], " ", 2);
-        if (!token[0] || !command_exists(token[0])) {
-            g_strfreev(token);
-            return FALSE;
-        }
-
-        Keybind* keybind = g_new0(Keybind, 1);
-        keybind->mode    = mode;
-        keybind->command = g_strdup(token[0]);
-        keybind->param   = g_strdup(token[1]);
+    /* split the input string into command and parameter part */
+    gchar** token = g_strsplit(command, " ", 2);
+    if (!token[0] || !command_exists(token[0])) {
         g_strfreev(token);
-
-        keybind_str_to_keybind(string[0], keybind);
-
-        /* add the keybinding to the list */
-        vp.behave.keys = g_slist_prepend(vp.behave.keys, keybind);
-
-        /* save the modkey also in the modkey string if not exists already */
-        if (keybind->modkey && strchr(vp.behave.modkeys->str, keybind->modkey) == NULL) {
-            g_string_append_c(vp.behave.modkeys, keybind->modkey);
-        }
-        result = TRUE;
-    } else {
-        result = FALSE;
+        return FALSE;
     }
 
-    g_strfreev(string);
-    g_free(line);
+    Keybind* keybind = g_new0(Keybind, 1);
+    keybind->mode    = mode;
+    keybind->command = g_strdup(token[0]);
+    keybind->param   = g_strdup(token[1]);
+    g_strfreev(token);
 
-    return result;
+    keybind_str_to_keybind(keys, keybind);
+
+    /* add the keybinding to the list */
+    vp.behave.keys = g_slist_prepend(vp.behave.keys, keybind);
+
+    /* save the modkey also in the modkey string if not exists already */
+    if (keybind->modkey && strchr(vp.behave.modkeys->str, keybind->modkey) == NULL) {
+        g_string_append_c(vp.behave.modkeys, keybind->modkey);
+    }
+
+    return TRUE;
 }
 
-gboolean keybind_remove_from_string(const gchar* str, const Mode mode)
+gboolean keybind_remove_from_string(gchar* str, const Mode mode)
 {
-    gchar* line = NULL;
     Keybind keybind = {.mode = mode};
 
     if (str == NULL || *str == '\0') {
         return FALSE;
     }
-    line = g_strdup(str);
-    g_strstrip(line);
+    g_strstrip(str);
 
     /* fill the keybind with data from given string */
-    keybind_str_to_keybind(line, &keybind);
+    keybind_str_to_keybind(str, &keybind);
 
     GSList* link = keybind_find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
     if (link) {
@@ -167,9 +150,6 @@ static void keybind_str_to_keybind(gchar* str, Keybind* keybind)
     gchar** string = NULL;
     guint len = 0;
 
-    if (str == NULL || *str == '\0') {
-        return;
-    }
     g_strstrip(str);
 
     /* [modkey]keyval

@@ -34,7 +34,7 @@ typedef struct {
 
 void keybind_init(void);
 void keybind_cleanup(void);
-gboolean keybind_add_from_string(const gchar* str, const Mode mode);
-gboolean keybind_remove_from_string(const gchar* str, const Mode mode);
+gboolean keybind_add_from_string(gchar* keys, const gchar* command, const Mode mode);
+gboolean keybind_remove_from_string(gchar* str, const Mode mode);
 
 #endif /* end of include guard: _KEYBIND_H */

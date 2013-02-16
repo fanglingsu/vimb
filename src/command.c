@@ -273,9 +273,17 @@ gboolean command_scroll(const Arg* arg)
 
 gboolean command_map(const Arg* arg)
 {
+    gboolean result;
     vp_set_mode(VP_MODE_NORMAL, FALSE);
 
-    return keybind_add_from_string(arg->s, arg->i);
+    gchar **string = g_strsplit(arg->s, "=", 2);
+    if (g_strv_length(string) != 2) {
+        return FALSE;
+    }
+    result = keybind_add_from_string(string[0], string[1], arg->i);
+    g_strfreev(string);
+
+    return result;
 }
 
 gboolean command_unmap(const Arg* arg)
