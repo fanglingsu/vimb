@@ -283,7 +283,6 @@ static void vp_inspector_finished(WebKitWebInspector* inspector)
 static gboolean vp_process_input(const char* input)
 {
     gboolean success;
-    char* line = NULL;
     char* command = NULL;
     char** token;
 
@@ -291,15 +290,11 @@ static gboolean vp_process_input(const char* input)
         return FALSE;
     }
 
-    line = g_strdup(input);
-    g_strstrip(line);
-
     /* get a possible command count */
-    vp.state.count = g_ascii_strtoll(line, &command, 10);
+    vp.state.count = g_ascii_strtoll(input, &command, 10);
 
     /* split the input string into command and parameter part */
     token = g_strsplit(command, " ", 2);
-    g_free(line);
 
     if (!token[0]) {
         g_strfreev(token);
