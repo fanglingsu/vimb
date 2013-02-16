@@ -77,7 +77,7 @@ Open the url from clipboard.
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
 .TP
-.BI "input [" "TEXT" "]" 
+.BI "input [" "TEXT" "]"
 Writes
 .I TEXT
 into to inputbox and switch to command mode. If no
@@ -283,10 +283,23 @@ and search
 .I URI\fR. The uri must not contain more than one '%s' placeholder.
 
 Example: searchengine-add dl=https://duckduckgo.com/lite/?q=%s
-.SS Misc
+.SS Configuration
 .TP
-.B set
-Set configuration values.
+.BI "set " VAR = VALUE
+Set configuration values named by
+.IR VAR .
+To set boolean variable you should use 'on', 'off' or 'true'
+and 'false'. Colors are given as hexadecimal value like '#f57700'.
+.TP
+.BI "set " VAR ?
+Show the current set value of variable
+.IR VAR .
+.TP
+.BI "set " VAR !
+Toggle the value of boolean variable
+.I VAR
+ and display the new set value.
+.SS Misc
 .TP
 .BI "[" "N" "]search-{forward, backward}"
 Search in current page forward or backward.

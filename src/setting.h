@@ -22,8 +22,14 @@
 
 #include "main.h"
 
+typedef enum {
+    SETTING_SET,
+    SETTING_GET,
+    SETTING_TOGGLE
+} SettingType;
+
 typedef struct _Setting Setting;
-typedef gboolean (*SettingFunc)(const Setting*, const gboolean get);
+typedef gboolean (*SettingFunc)(const Setting*, const SettingType);
 
 struct _Setting {
     char*      alias;

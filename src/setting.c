@@ -22,20 +22,20 @@
 
 static Arg* setting_char_to_arg(const char* str, const Type type);
 static void setting_print_value(const Setting* s, void* value);
-static gboolean setting_webkit(const Setting* s, const gboolean get);
-static gboolean setting_cookie_timeout(const Setting* s, const gboolean get);
-static gboolean setting_scrollstep(const Setting* s, const gboolean get);
-static gboolean setting_status_color_bg(const Setting* s, const gboolean get);
-static gboolean setting_status_color_fg(const Setting* s, const gboolean get);
-static gboolean setting_status_font(const Setting* s, const gboolean get);
-static gboolean setting_input_style(const Setting* s, const gboolean get);
-static gboolean setting_completion_style(const Setting* s, const gboolean get);
-static gboolean setting_hint_style(const Setting* s, const gboolean get);
-static gboolean setting_strict_ssl(const Setting* s, const gboolean get);
-static gboolean setting_ca_bundle(const Setting* s, const gboolean get);
-static gboolean setting_home_page(const Setting* s, const gboolean get);
-static gboolean setting_download_path(const Setting* s, const gboolean get);
-static gboolean setting_proxy(const Setting* s, const gboolean get);
+static gboolean setting_webkit(const Setting* s, const SettingType type);
+static gboolean setting_cookie_timeout(const Setting* s, const SettingType type);
+static gboolean setting_scrollstep(const Setting* s, const SettingType type);
+static gboolean setting_status_color_bg(const Setting* s, const SettingType type);
+static gboolean setting_status_color_fg(const Setting* s, const SettingType type);
+static gboolean setting_status_font(const Setting* s, const SettingType type);
+static gboolean setting_input_style(const Setting* s, const SettingType type);
+static gboolean setting_completion_style(const Setting* s, const SettingType type);
+static gboolean setting_hint_style(const Setting* s, const SettingType type);
+static gboolean setting_strict_ssl(const Setting* s, const SettingType type);
+static gboolean setting_ca_bundle(const Setting* s, const SettingType type);
+static gboolean setting_home_page(const Setting* s, const SettingType type);
+static gboolean setting_download_path(const Setting* s, const SettingType type);
+static gboolean setting_proxy(const Setting* s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -149,13 +149,19 @@ gboolean setting_run(char* name, const char* param)
     Arg* a          = NULL;
     gboolean result = FALSE;
     gboolean get    = FALSE;
+    SettingType type = SETTING_SET;
 
-    /* check if we should display current value */
+
+    /* determine the type to names last char and param */
     int len = strlen(name);
     if (name[len - 1] == '?') {
-        /* remove the last ? char from setting name */
         name[len - 1] = '\0';
-        get = TRUE;
+        type = SETTING_GET;
+    } else if (name[len - 1] == '!') {
+        name[len - 1] = '\0';
+        type = SETTING_TOGGLE;
+    } else if (!param) {
+        type = SETTING_GET;
     }
 
     Setting* s = g_hash_table_lookup(vp.settings, name);
@@ -164,32 +170,50 @@ gboolean setting_run(char* name, const char* param)
         return FALSE;
     }
 
-    if (get || !param) {
-        result = s->func(s, get);
-        if (!result) {
-            vp_echo(VP_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
+    if (type == SETTING_SET) {
+        /* if string param is given convert it to the required data type and set
+         * it to the arg of the setting */
+        a = setting_char_to_arg(param, s->type);
+        if (a == NULL) {
+            vp_echo(VP_MSG_ERROR, TRUE, "No valid value");
+            return FALSE;
         }
+
+        s->arg = *a;
+        result = s->func(s, get);
+        if (a->s) {
+            g_free(a->s);
+        }
+        g_free(a);
+
+        if (!result) {
+            vp_echo(VP_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
+        }
+
         return result;
     }
 
-    /* if string param is given convert it to the required data type and set
-     * it to the arg of the setting */
-    a = setting_char_to_arg(param, s->type);
-    if (a == NULL) {
-        vp_echo(VP_MSG_ERROR, TRUE, "No valid value");
+    if (type == SETTING_GET) {
+        result = s->func(s, type);
+        if (!result) {
+            vp_echo(VP_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
+        }
+
+        return result;
+    }
+
+    /* toggle bolean vars */
+    if (s->type != TYPE_BOOLEAN) {
+        vp_echo(VP_MSG_ERROR, TRUE, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
+
         return FALSE;
     }
 
-    s->arg = *a;
-    result = s->func(s, get);
-    if (a->s) {
-        g_free(a->s);
-    }
-    g_free(a);
-
+    result = s->func(s, type);
     if (!result) {
-        vp_echo(VP_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
+        vp_echo(VP_MSG_ERROR, TRUE, "Could not toggle %s", s->alias ? s->alias : s->name);
     }
+
     return result;
 }
 
@@ -266,15 +290,24 @@ static void setting_print_value(const Setting* s, void* value)
     }
 }
 
-static gboolean setting_webkit(const Setting* s, const gboolean get)
+static gboolean setting_webkit(const Setting* s, const SettingType type)
 {
     WebKitWebSettings* web_setting = webkit_web_view_get_settings(vp.gui.webview);
 
     switch (s->type) {
         case TYPE_BOOLEAN:
-            if (get) {
+            /* acts for type toggle and get */
+            if (type != SETTING_SET) {
                 gboolean value;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
+
+                /* toggle the variable */
+                if (type == SETTING_TOGGLE) {
+                    value = !value;
+                    g_object_set(G_OBJECT(web_setting), s->name, value, NULL);
+                }
+
+                /* print the new value */
                 setting_print_value(s, &value);
             } else {
                 g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? TRUE : FALSE, NULL);
@@ -282,7 +315,7 @@ static gboolean setting_webkit(const Setting* s, const gboolean get)
             break;
 
         case TYPE_INTEGER:
-            if (get) {
+            if (type == SETTING_GET) {
                 int value;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
                 setting_print_value(s, &value);
@@ -292,7 +325,7 @@ static gboolean setting_webkit(const Setting* s, const gboolean get)
             break;
 
         case TYPE_FLOAT:
-            if (get) {
+            if (type == SETTING_GET) {
                 gfloat value;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
                 setting_print_value(s, &value);
@@ -304,7 +337,7 @@ static gboolean setting_webkit(const Setting* s, const gboolean get)
         case TYPE_CHAR:
         case TYPE_COLOR:
         case TYPE_FONT:
-            if (get) {
+            if (type == SETTING_GET) {
                 char* value = NULL;
                 g_object_get(G_OBJECT(web_setting), s->name, value, NULL);
                 setting_print_value(s, value);
@@ -316,10 +349,9 @@ static gboolean setting_webkit(const Setting* s, const gboolean get)
 
     return TRUE;
 }
-
-static gboolean setting_cookie_timeout(const Setting* s, const gboolean get)
+static gboolean setting_cookie_timeout(const Setting* s, const SettingType type)
 {
-    if (get) {
+    if (type == SETTING_GET) {
         setting_print_value(s, &vp.config.cookie_timeout);
     } else {
         vp.config.cookie_timeout = s->arg.i;
@@ -328,9 +360,9 @@ static gboolean setting_cookie_timeout(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_scrollstep(const Setting* s, const gboolean get)
+static gboolean setting_scrollstep(const Setting* s, const SettingType type)
 {
-    if (get) {
+    if (type == SETTING_GET) {
         setting_print_value(s, &vp.config.scrollstep);
     } else {
         vp.config.scrollstep = s->arg.i;
@@ -339,67 +371,67 @@ static gboolean setting_scrollstep(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_status_color_bg(const Setting* s, const gboolean get)
+static gboolean setting_status_color_bg(const Setting* s, const SettingType type)
 {
-    StatusType type;
+    StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
-        type = VP_STATUS_SSL_INVALID;
+        stype = VP_STATUS_SSL_INVALID;
     } else if (g_str_has_prefix(s->name, "status-ssl")) {
-        type = VP_STATUS_SSL_VALID;
+        stype = VP_STATUS_SSL_VALID;
     } else {
-        type = VP_STATUS_NORMAL;
+        stype = VP_STATUS_NORMAL;
     }
 
-    if (get) {
-        setting_print_value(s, &vp.style.status_bg[type]);
+    if (type == SETTING_GET) {
+        setting_print_value(s, &vp.style.status_bg[stype]);
     } else {
-        VP_COLOR_PARSE(&vp.style.status_bg[type], s->arg.s);
+        VP_COLOR_PARSE(&vp.style.status_bg[stype], s->arg.s);
         vp_update_status_style();
     }
 
     return TRUE;
 }
 
-static gboolean setting_status_color_fg(const Setting* s, const gboolean get)
+static gboolean setting_status_color_fg(const Setting* s, const SettingType type)
 {
-    StatusType type;
+    StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
-        type = VP_STATUS_SSL_INVALID;
+        stype = VP_STATUS_SSL_INVALID;
     } else if (g_str_has_prefix(s->name, "status-ssl")) {
-        type = VP_STATUS_SSL_VALID;
+        stype = VP_STATUS_SSL_VALID;
     } else {
-        type = VP_STATUS_NORMAL;
+        stype = VP_STATUS_NORMAL;
     }
 
-    if (get) {
-        setting_print_value(s, &vp.style.status_fg[type]);
+    if (type == SETTING_GET) {
+        setting_print_value(s, &vp.style.status_fg[stype]);
     } else {
-        VP_COLOR_PARSE(&vp.style.status_fg[type], s->arg.s);
+        VP_COLOR_PARSE(&vp.style.status_fg[stype], s->arg.s);
         vp_update_status_style();
     }
 
     return TRUE;
 }
 
-static gboolean setting_status_font(const Setting* s, const gboolean get)
+static gboolean setting_status_font(const Setting* s, const SettingType type)
 {
-    StatusType type;
+    StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
-        type = VP_STATUS_SSL_INVALID;
+        stype = VP_STATUS_SSL_INVALID;
     } else if (g_str_has_prefix(s->name, "status-ssl")) {
-        type = VP_STATUS_SSL_VALID;
+        stype = VP_STATUS_SSL_VALID;
     } else {
-        type = VP_STATUS_NORMAL;
+        stype = VP_STATUS_NORMAL;
     }
 
-    if (get) {
-        setting_print_value(s, vp.style.status_font[type]);
+    if (type == SETTING_GET) {
+        setting_print_value(s, vp.style.status_font[stype]);
     } else {
-        if (vp.style.status_font[type]) {
+        if (vp.style.status_font[stype]) {
             /* free previous font description */
-            pango_font_description_free(vp.style.status_font[type]);
+            pango_font_description_free(vp.style.status_font[stype]);
         }
-        vp.style.status_font[type] = pango_font_description_from_string(s->arg.s);
+        vp.style.status_font[stype] = pango_font_description_from_string(s->arg.s);
 
         vp_update_status_style();
     }
@@ -407,38 +439,38 @@ static gboolean setting_status_font(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_input_style(const Setting* s, const gboolean get)
+static gboolean setting_input_style(const Setting* s, const SettingType type)
 {
     Style* style = &vp.style;
-    MessageType type = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
+    MessageType itype = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
 
     if (s->type == TYPE_FONT) {
         /* input font */
-        if (get) {
-            setting_print_value(s, style->input_font[type]);
+        if (type == SETTING_GET) {
+            setting_print_value(s, style->input_font[itype]);
         } else {
-            if (style->input_font[type]) {
-                pango_font_description_free(style->input_font[type]);
+            if (style->input_font[itype]) {
+                pango_font_description_free(style->input_font[itype]);
             }
-            style->input_font[type] = pango_font_description_from_string(s->arg.s);
+            style->input_font[itype] = pango_font_description_from_string(s->arg.s);
         }
     } else {
         VpColor* color = NULL;
         if (g_str_has_prefix(s->name, "input-bg")) {
             /* background color */
-            color = &style->input_bg[type];
+            color = &style->input_bg[itype];
         } else {
             /* foreground color */
-            color = &style->input_fg[type];
+            color = &style->input_fg[itype];
         }
 
-        if (get) {
+        if (type == SETTING_GET) {
             setting_print_value(s, color);
         } else {
             VP_COLOR_PARSE(color, s->arg.s);
         }
     }
-    if (!get) {
+    if (type != SETTING_GET) {
         /* echo already visible input text to apply the new style to input box */
         vp_echo(VP_MSG_NORMAL, FALSE, GET_TEXT());
     }
@@ -446,38 +478,38 @@ static gboolean setting_input_style(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_completion_style(const Setting* s, const gboolean get)
+static gboolean setting_completion_style(const Setting* s, const SettingType type)
 {
     Style* style = &vp.style;
-    CompletionStyle type = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
+    CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
 
     if (s->type == TYPE_INTEGER) {
         /* max completion items */
-        if (get) {
+        if (type == SETTING_GET) {
             setting_print_value(s, &vp.config.max_completion_items);
         } else {
             vp.config.max_completion_items = s->arg.i;
         }
     } else if (s->type == TYPE_FONT) {
-        if (get) {
-            setting_print_value(s, style->comp_font[type]);
+        if (type == SETTING_GET) {
+            setting_print_value(s, style->comp_font[ctype]);
         } else {
-            if (style->comp_font[type]) {
-                pango_font_description_free(style->comp_font[type]);
+            if (style->comp_font[ctype]) {
+                pango_font_description_free(style->comp_font[ctype]);
             }
-            style->comp_font[type] = pango_font_description_from_string(s->arg.s);
+            style->comp_font[ctype] = pango_font_description_from_string(s->arg.s);
         }
     } else {
         VpColor* color = NULL;
         if (g_str_has_prefix(s->name, "completion-bg")) {
             /* completion background color */
-            color = &style->comp_bg[type];
+            color = &style->comp_bg[ctype];
         } else {
             /* completion foreground color */
-            color = &style->comp_fg[type];
+            color = &style->comp_fg[ctype];
         }
 
-        if (get) {
+        if (type == SETTING_GET) {
             setting_print_value(s, color);
         } else {
             VP_COLOR_PARSE(color, s->arg.s);
@@ -487,29 +519,29 @@ static gboolean setting_completion_style(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_hint_style(const Setting* s, const gboolean get)
+static gboolean setting_hint_style(const Setting* s, const SettingType type)
 {
     Style* style = &vp.style;
     if (!g_strcmp0(s->name, "hint-bg")) {
-        if (get) {
+        if (type == SETTING_GET) {
             setting_print_value(s, style->hint_bg);
         } else {
             OVERWRITE_STRING(style->hint_bg, s->arg.s)
         }
     } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
-        if (get) {
+        if (type == SETTING_GET) {
             setting_print_value(s, style->hint_bg_focus);
         } else {
             OVERWRITE_STRING(style->hint_bg_focus, s->arg.s)
         }
     } else if (!g_strcmp0(s->name, "hint-fg")) {
-        if (get) {
+        if (type == SETTING_GET) {
             setting_print_value(s, style->hint_fg);
         } else {
             OVERWRITE_STRING(style->hint_fg, s->arg.s)
         }
     } else {
-        if (get) {
+        if (type == SETTING_GET) {
             setting_print_value(s, style->hint_style);
         } else {
             OVERWRITE_STRING(style->hint_style, s->arg.s);
@@ -519,23 +551,28 @@ static gboolean setting_hint_style(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_strict_ssl(const Setting* s, const gboolean get)
+static gboolean setting_strict_ssl(const Setting* s, const SettingType type)
 {
-    if (get) {
-        gboolean value;
+    gboolean value;
+    if (type != SETTING_SET) {
         g_object_get(vp.net.soup_session, "ssl-strict", &value, NULL);
-        setting_print_value(s, &value);
-    } else {
-        g_object_set(vp.net.soup_session, "ssl-strict", s->arg.i ? TRUE : FALSE, NULL);
+        if (type == SETTING_GET) {
+            setting_print_value(s, &value);
 
+            return TRUE;
+        }
     }
+
+    value = type == SETTING_TOGGLE ? !value : (s->arg.i ? TRUE : FALSE);
+
+    g_object_set(vp.net.soup_session, "ssl-strict", value, NULL);
 
     return TRUE;
 }
 
-static gboolean setting_ca_bundle(const Setting* s, const gboolean get)
+static gboolean setting_ca_bundle(const Setting* s, const SettingType type)
 {
-    if (get) {
+    if (type == SETTING_GET) {
         char* value = NULL;
         g_object_get(vp.net.soup_session, "ssl-ca-file", &value, NULL);
         setting_print_value(s, value);
@@ -547,9 +584,9 @@ static gboolean setting_ca_bundle(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_home_page(const Setting* s, const gboolean get)
+static gboolean setting_home_page(const Setting* s, const SettingType type)
 {
-    if (get) {
+    if (type == SETTING_GET) {
         setting_print_value(s, vp.config.home_page);
     } else {
         OVERWRITE_STRING(vp.config.home_page, s->arg.s);
@@ -558,9 +595,9 @@ static gboolean setting_home_page(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_download_path(const Setting* s, const gboolean get)
+static gboolean setting_download_path(const Setting* s, const SettingType type)
 {
-    if (get) {
+    if (type == SETTING_GET) {
         setting_print_value(s, vp.config.download_dir);
     } else {
         if (vp.config.download_dir) {
@@ -580,14 +617,32 @@ static gboolean setting_download_path(const Setting* s, const gboolean get)
     return TRUE;
 }
 
-static gboolean setting_proxy(const Setting* s, const gboolean get)
+static gboolean setting_proxy(const Setting* s, const SettingType type)
 {
+    gboolean enabled;
     SoupURI* proxy_uri = NULL;
-    if (get) {
+
+    /* get the current status */
+    if (type != SETTING_SET) {
         g_object_get(vp.net.soup_session, "proxy-uri", &proxy_uri, NULL);
-        gboolean value = (proxy_uri != NULL);
-        setting_print_value(s, &value);
-    } else if (s->arg.i) {
+        enabled = (proxy_uri != NULL);
+
+        if (type == SETTING_GET) {
+            setting_print_value(s, &enabled);
+
+            return TRUE;
+        }
+    }
+
+    if (type == SETTING_TOGGLE) {
+        enabled = !enabled;
+        /* print the new value */
+        setting_print_value(s, &enabled);
+    } else {
+        enabled = s->arg.i;
+    }
+
+    if (enabled) {
         char* proxy = (char *)g_getenv("http_proxy");
         if (proxy != NULL && strlen(proxy)) {
             char* proxy_new = g_strrstr(proxy, "http://")
