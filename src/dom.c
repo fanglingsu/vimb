@@ -126,11 +126,13 @@ gboolean dom_is_editable(Element* element)
     }
     char *type = webkit_dom_element_get_attribute(element, "type");
     if (!g_ascii_strcasecmp(tagname, "input")
-        || !g_ascii_strcasecmp(type, "text")
-        || !g_ascii_strcasecmp(type, "password")
+        && g_ascii_strcasecmp(type, "submit")
+        && g_ascii_strcasecmp(type, "reset")
+        && g_ascii_strcasecmp(type, "image")
     ) {
         return TRUE;
     }
+
     return FALSE;
 }
 
