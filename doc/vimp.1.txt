@@ -1,6 +1,6 @@
 .\" Process this file with
 .\" groff -man -Tascii vimp.1
-.TH vimp 1 "30/12/2012" "vimp/VERSION" "Vimp Manual"
+.TH vimp 1 "16/02/2013" "vimp/VERSION" "Vimp Manual"
 .SH NAME
 vimp \- A modal web browser based on webkit thats inspired by vim the great editor.
 .SH SYNOPSIS
@@ -14,8 +14,9 @@ browsing-experience.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
-.BI "-e, --embed " "WindowId"
-WindowId of an XEmbed-aware application, that vimp will use as its parent.
+.BI "-e, --embed " "WINID"
+.I WINID
+of an XEmbed-aware application, that vimp will use as its parent.
 .TP
 .B "-h, --help"
 Show help options.
@@ -93,11 +94,15 @@ Writes ":tabopen {url}" into to inputbox where {url} is the current used url.
 .SS Navigate
 Following commands are used to navigate within the browser history.
 .TP
-.IB [N] back
-Move N steps back in browser history.
+.BI "[" "N" "]back"
+Move
+. I N
+steps back in browser history.
 .TP
-.IB [N] forward
-Move N steps back in browser history.
+.BI "[" "N" "]forward"
+Move
+.I N
+steps back in browser history.
 .TP
 .B reload
 Reload the current viewed url.
@@ -110,49 +115,75 @@ Stop loading the current url.
 .SS Scroll
 Following commands are used to scroll ad jump within the current view.
 .TP
-.IB [N] jumpleft
-Scrolls the current view to the left.
+.BI "[" "N" "]jumpleft"
+Scrolls the current view
+.I N
+steps to the left.
 .br
-If N is given jump to N% of the page from the left.
+If
+.I N
+is given jump to \fIN\fR% of the page from the left.
 .TP
-.IB [N] jumpright
+.BI "[" "N" "]jumpright"
 Scrolls the current view to the right.
 .br
-If N is given jump to N% of the page from the left.
+If
+.I N
+is given jump to N% of the page from the left.
 .TP
-.IB [N] jumptop
+.BI "[" "N" "]jumptop"
 Scrolls the current view to the top of page.
 .br
-If N is given, scroll to N% of the page.
+If
+.I N
+is given, scroll to \fIN\fR% of the page.
 .TP
-.IB [N] jumpbottom
+.BI "[" "N" "]jumpbottom"
 Scrolls the current view to the end of page.
 .br
-If N is given, scroll to N% of the page.
+If
+.I N
+is given, scroll to \fIN\fR% of the page.
 .TP
-.IB [N] pageup
-Scroll up the page N screens.
+.BI "[" "N" "]pageup"
+Scroll up the page
+.I N
+screens.
 .TP
-.IB [N] pagedown
-Scroll down the page N screens.
+.BI "[" "N" "]pagedown"
+Scroll down the page
+.I N
+screens.
 .TP
-.IB [N] halfpageup
-Scroll up the page N half screens.
+.BI "[" "N" "]halfpageup"
+Scroll up the page
+.I N
+half screens.
 .TP
-.IB [N] halfpagedown
-Scroll down the page N half  screens.
+.BI "[" "N" "]halfpagedown"
+Scroll down the page
+.I N
+half screens.
 .TP
-.IB [N] scrollleft
-Scroll the page N times the "scrollstep" to the left.
+.BI "[" "N" "]scrollleft"
+Scroll the page
+.I N
+times the "scrollstep" to the left.
 .TP
-.IB [N] scrollright
-Scroll the page N times the "scrollstep" to the right.
+.BI "[" "N" "]scrollright"
+Scroll the page
+.I N
+times the "scrollstep" to the right.
 .TP
-.IB [N] scrollup
-Scroll the page N times the "scrollstep" to the top.
+.BI "[" "N" "]scrollup"
+Scroll the page
+.I N
+times the "scrollstep" to the top.
 .TP
-.IB [N] scrolldown
-Scroll the page N times the "scrollstep" to the end.
+.BI "[" "N" "]scrolldown"
+Scroll the page
+.I N
+times the "scrollstep" to the end.
 .SS Keybinding
 To bind a command to a key sequence use the {n,i,c,h}map command. To map a
 keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]".
@@ -245,9 +276,11 @@ Searchengines allows to query a searchengine instead of typing a full url. If
 a searchengine with shortcut 'dd' is defined you can use 'dd search terms' to
 perform a search query.
 .TP
-.B searchengine-add shortcut=uri
-Adds a searchengine with the shortcut and search uri. The uri must not contain
-more than one '%s' placeholder.
+.BI "searchengine-add " "SHORTCUT" "=" "URI"
+Adds a searchengine with the
+.I SHORTCUT
+and search
+.I URI\fR. The uri must not contain more than one '%s' placeholder.
 
 Example: searchengine-add dl=https://duckduckgo.com/lite/?q=%s
 .SS Misc
@@ -255,7 +288,7 @@ Example: searchengine-add dl=https://duckduckgo.com/lite/?q=%s
 .B set
 Set configuration values.
 .TP
-.IB [N] "search-{forward, backward}"
+.BI "[" "N" "]search-{forward, backward}"
 Search in current page forward or backward.
 .TP
 .B inspect
