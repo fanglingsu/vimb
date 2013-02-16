@@ -168,6 +168,10 @@ Example:
 "nmap <shift-?>=input :foo" to write :foo into input box and switch to Command Mode.
 .br
 "hunmap <shift-tab>" To remove this keybinding use.
+
+If a keybinding is added, for the same key-sequence like another keybinding,
+the later added have precedence. If a keybinding is removed only that with the
+highest precedence will be removed and all other will still be active.
 .TP
 .B nmap
 Add a keybinding used in Normal Mode.
