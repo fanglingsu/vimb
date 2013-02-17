@@ -27,6 +27,13 @@ enum {
     COMMAND_YANK_SELECTION = (COMMAND_YANK_SECONDARY<<2)
 };
 
+enum {
+    COMMAND_ZOOM_OUT,
+    COMMAND_ZOOM_IN,
+    COMMAND_ZOOM_FULL  = (1<<1),
+    COMMAND_ZOOM_RESET = (1<<2)
+};
+
 typedef gboolean (*Command)(const Arg* arg);
 
 typedef struct {
@@ -60,5 +67,6 @@ gboolean command_yank(const Arg* arg);
 gboolean command_paste(const Arg* arg);
 gboolean command_search(const Arg* arg);
 gboolean command_searchengine(const Arg* arg);
+gboolean command_zoom(const Arg* arg);
 
 #endif /* end of include guard: _COMMAND_H */

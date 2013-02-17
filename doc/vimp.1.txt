@@ -299,10 +299,23 @@ Show the current set value of variable
 Toggle the value of boolean variable
 .I VAR
  and display the new set value.
+.SS Zoom
+.TP
+.BI [ N "]zoom{" "in" ", " "out" "}"
+Zoom \fIN\fP steps \fIin\fP or \fIout\fP of the current page \- effects only the text.
+.TP
+.BI [ N "]zoom{" "in" ", " "out" "}full"
+Zoom \fIN\fP steps \fIin\fP or \fIout\fP of the current page \- effecting all elements.
+.TP
+.B zoomreset
+Reset the zoomlevel to the default value.
 .SS Misc
 .TP
-.BI "[" "N" "]search-{forward, backward}"
-Search in current page forward or backward.
+.BI "[" "N" "]search-{" forward ", " "backward" "}"
+Search in current page
+.I forward
+or
+.IR backward .
 .TP
 .B inspect
 Toggles the webinspector for current page. This is only available if the config

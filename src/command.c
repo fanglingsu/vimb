@@ -84,6 +84,11 @@ static CommandInfo cmd_list[] = {
     {"search-backward",     command_search,      {VP_SEARCH_BACKWARD}},
     {"searchengine-add",    command_searchengine,{1}},
     {"searchengine-remove", command_searchengine,{0}},
+    {"zoomin",              command_zoom,        {COMMAND_ZOOM_IN}},
+    {"zoomout",             command_zoom,        {COMMAND_ZOOM_OUT}},
+    {"zoominfull",          command_zoom,        {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
+    {"zoomoutfull",         command_zoom,        {COMMAND_ZOOM_OUT | COMMAND_ZOOM_FULL}},
+    {"zoomreset",           command_zoom,        {COMMAND_ZOOM_RESET}},
 };
 
 static void command_write_input(const char* str);
@@ -486,6 +491,39 @@ gboolean command_searchengine(const Arg* arg)
     vp_set_mode(VP_MODE_NORMAL, FALSE);
 
     return result;
+}
+
+gboolean command_zoom(const Arg* arg)
+{
+    float step, level;
+    int count;
+
+    if (arg->i & COMMAND_ZOOM_RESET) {
+        webkit_web_view_set_zoom_level(vp.gui.webview, 1.0);
+        vp_set_mode(VP_MODE_NORMAL, FALSE);
+
+        return TRUE;
+    }
+
+    count = vp.state.count ? vp.state.count : 1;
+    level = webkit_web_view_get_zoom_level(vp.gui.webview);
+
+    WebKitWebSettings* setting = webkit_web_view_get_settings(vp.gui.webview);
+    g_object_get(G_OBJECT(setting), "zoom-step", &step, NULL);
+
+    webkit_web_view_set_full_content_zoom(
+        vp.gui.webview, (arg->i & COMMAND_ZOOM_FULL) > 0
+    );
+
+    webkit_web_view_set_zoom_level(
+        vp.gui.webview,
+        level + (float)(count *step) * (arg->i & COMMAND_ZOOM_IN ? 1.0 : -1.0)
+    );
+
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
+    return TRUE;
+
 }
 
 static void command_write_input(const char* str)
