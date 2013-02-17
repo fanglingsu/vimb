@@ -94,15 +94,13 @@ is not given use ':' instead.
 .SS Navigate
 Following commands are used to navigate within the browser history.
 .TP
-.BI "[" "N" "]back"
+.BI [ N "]back"
 Move
 . I N
 steps back in browser history.
 .TP
-.BI "[" "N" "]forward"
-Move
-.I N
-steps back in browser history.
+.BI [ N "]forward"
+Move \fIN\fP steps back in browser history.
 .TP
 .B reload
 Reload the current viewed url.
@@ -115,75 +113,49 @@ Stop loading the current url.
 .SS Scroll
 Following commands are used to scroll ad jump within the current view.
 .TP
-.BI "[" "N" "]jumpleft"
-Scrolls the current view
-.I N
-steps to the left.
+.BI [ N "]jumpleft"
+Scrolls the current view \fIN\fP steps to the left.
 .br
-If
-.I N
-is given jump to \fIN\fR% of the page from the left.
+If \fIN\fP is given jump to \fIN\fR% of the page from the left.
 .TP
-.BI "[" "N" "]jumpright"
+.BI [ N "]jumpright"
 Scrolls the current view to the right.
 .br
-If
-.I N
-is given jump to N% of the page from the left.
+If \fIN\fP is given jump to \fIN\fP% of the page from the left.
 .TP
-.BI "[" "N" "]jumptop"
+.BI [ N "]jumptop"
 Scrolls the current view to the top of page.
 .br
-If
-.I N
-is given, scroll to \fIN\fR% of the page.
+If \fIN\fP is given, scroll to \fIN\fR% of the page.
 .TP
-.BI "[" "N" "]jumpbottom"
+.BI [ N "]jumpbottom"
 Scrolls the current view to the end of page.
 .br
-If
-.I N
-is given, scroll to \fIN\fR% of the page.
+If \fIN\fP is given, scroll to \fIN\fR% of the page.
 .TP
-.BI "[" "N" "]pageup"
-Scroll up the page
-.I N
-screens.
+.BI [ N "]pageup"
+Scroll up the page \fIN\fP screens.
 .TP
-.BI "[" "N" "]pagedown"
-Scroll down the page
-.I N
-screens.
+.BI [ N "]pagedown"
+Scroll down the page \fIN\fP screens.
 .TP
-.BI "[" "N" "]halfpageup"
-Scroll up the page
-.I N
-half screens.
+.BI [ N "]halfpageup"
+Scroll up the page \fIN\fP half screens.
 .TP
-.BI "[" "N" "]halfpagedown"
-Scroll down the page
-.I N
-half screens.
+.BI [ N "]halfpagedown"
+Scroll down the page \fIN\fP half screens.
 .TP
-.BI "[" "N" "]scrollleft"
-Scroll the page
-.I N
-times the "scrollstep" to the left.
+.BI [ N "]scrollleft"
+Scroll the page \fIN\fP times the "scrollstep" to the left.
 .TP
-.BI "[" "N" "]scrollright"
-Scroll the page
-.I N
-times the "scrollstep" to the right.
+.BI [ N "]scrollright"
+Scroll the page \fIN\fP times the "scrollstep" to the right.
 .TP
-.BI "[" "N" "]scrollup"
-Scroll the page
-.I N
-times the "scrollstep" to the top.
+.BI [ N "]scrollup"
+Scroll the page \fIN\fP times the "scrollstep" to the top.
 .TP
-.BI "[" "N" "]scrolldown"
-Scroll the page
-.I N
-times the "scrollstep" to the end.
+.BI [ N "]scrolldown"
+Scroll the page \fIN\fP times the "scrollstep" to the end.
 .SS Keybinding
 To bind a command to a key sequence use the {n,i,c,h}map command. To map a
 keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]".
@@ -277,10 +249,8 @@ a searchengine with shortcut 'dd' is defined you can use 'dd search terms' to
 perform a search query.
 .TP
 .BI "searchengine-add " "SHORTCUT" "=" "URI"
-Adds a searchengine with the
-.I SHORTCUT
-and search
-.I URI\fR. The uri must not contain more than one '%s' placeholder.
+Adds a searchengine with the \fISHORTCUT\fP and search \fIURI\fP. The uri must
+not contain more than one '%s' placeholder.
 
 Example: searchengine-add dl=https://duckduckgo.com/lite/?q=%s
 .SS Configuration
@@ -296,9 +266,7 @@ Show the current set value of variable
 .IR VAR .
 .TP
 .BI "set " VAR !
-Toggle the value of boolean variable
-.I VAR
- and display the new set value.
+Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 .SS Zoom
 .TP
 .BI [ N "]zoom{" "in" ", " "out" "}"
@@ -311,11 +279,8 @@ Zoom \fIN\fP steps \fIin\fP or \fIout\fP of the current page \- effecting all el
 Reset the zoomlevel to the default value.
 .SS Misc
 .TP
-.BI "[" "N" "]search-{" forward ", " "backward" "}"
-Search in current page
-.I forward
-or
-.IR backward .
+.BI [ N "]search-{" forward ", " "backward" "}"
+Search in current page \fIforward\fP or \fIbackward\fP.
 .TP
 .B inspect
 Toggles the webinspector for current page. This is only available if the config
