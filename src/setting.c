@@ -339,7 +339,7 @@ static gboolean setting_webkit(const Setting* s, const SettingType type)
         case TYPE_FONT:
             if (type == SETTING_GET) {
                 char* value = NULL;
-                g_object_get(G_OBJECT(web_setting), s->name, value, NULL);
+                g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
                 setting_print_value(s, value);
             } else {
                 g_object_set(G_OBJECT(web_setting), s->name, s->arg.s, NULL);
