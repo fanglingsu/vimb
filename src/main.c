@@ -327,6 +327,10 @@ gboolean vp_load_uri(const Arg* arg)
     } else {
         uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
     }
+
+    /* change state to normal mode */
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
     if (arg->i == VP_TARGET_NEW) {
         char *argv[64];
 
@@ -346,9 +350,6 @@ gboolean vp_load_uri(const Arg* arg)
         /* spawn a new browser instance */
         g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
     } else {
-        /* change state to normal mode */
-        vp_set_mode(VP_MODE_NORMAL, FALSE);
-
         /* Load a web page into the browser instance */
         webkit_web_view_load_uri(vp.gui.webview, uri);
     }
