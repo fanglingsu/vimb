@@ -309,18 +309,24 @@ static gboolean vp_process_input(const char* input)
 gboolean vp_load_uri(const Arg* arg)
 {
     char* uri;
-    char* line = arg->s;
+    char* path = arg->s;
 
-    if (!line) {
+    if (!path) {
         return FALSE;
     }
 
-    g_strstrip(line);
-    if (!strlen(line)) {
+    g_strstrip(path);
+    if (!strlen(path)) {
         return FALSE;
     }
 
-    uri = g_strrstr(line, "://") ? g_strdup(line) : g_strdup_printf("http://%s", line);
+    /* check if the path is a file path */
+    if (path[0] == '/' || !strcspn(path, "./")) {
+        char* rp = realpath(path, NULL);
+        uri = g_strdup_printf("file://%s", rp);
+    } else {
+        uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
+    }
     if (arg->i == VP_TARGET_NEW) {
         char *argv[64];
 

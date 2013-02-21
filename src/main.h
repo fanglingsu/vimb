@@ -20,6 +20,7 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <webkit/webkit.h>
