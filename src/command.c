@@ -89,6 +89,8 @@ static CommandInfo cmd_list[] = {
     {"zoominfull",          command_zoom,        {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
     {"zoomoutfull",         command_zoom,        {COMMAND_ZOOM_OUT | COMMAND_ZOOM_FULL}},
     {"zoomreset",           command_zoom,        {COMMAND_ZOOM_RESET}},
+    {"command-hist-next",   command_history,     {VP_SEARCH_FORWARD, ":"}},
+    {"command-hist-prev",   command_history,     {VP_SEARCH_BACKWARD, ":"}},
 };
 
 static void command_write_input(const char* str);
@@ -524,6 +526,30 @@ gboolean command_zoom(const Arg* arg)
 
     return TRUE;
 
+}
+
+gboolean command_history(const Arg* arg)
+{
+    State* state    = &vp.state;
+    const int len   = g_list_length(state->history);
+    char* message   = NULL;
+    const int count = state->count ? state->count : 1;
+   
+    if (!len) {
+        return FALSE;
+    }
+    if (arg->i == VP_SEARCH_BACKWARD) {
+        state->history_pointer = (len + state->history_pointer - count) % len;
+    } else {
+        state->history_pointer = (len + state->history_pointer + count) % len;
+    }
+    
+    const char* command = (char*)g_list_nth_data(state->history, state->history_pointer);
+    message = g_strconcat(arg->s, command, NULL);
+    command_write_input(message);
+    g_free(message);
+
+    return TRUE;
 }
 
 static void command_write_input(const char* str)

@@ -27,6 +27,7 @@
 #include "dom.h"
 #include "hints.h"
 #include "searchengine.h"
+#include "history.h"
 
 /* variables */
 static char **args;
@@ -303,6 +304,9 @@ static gboolean vp_process_input(const char* input)
     success = command_run(token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
 
+    /* save the command in history */
+    history_append(command);
+
     return success;
 }
 
@@ -462,6 +466,10 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
     }
     switch (CLEAN_MODE(mode)) {
         case VP_MODE_NORMAL:
+            /* do this only if the mode is really switched */
+            if (GET_CLEAN_MODE() != VP_MODE_NORMAL) {
+                history_rewind();
+            }
             if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
                 /* if previous mode was hinting clear the hints */
                 hints_clear();

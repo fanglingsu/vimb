@@ -28,6 +28,8 @@
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST  5
 
+const int COMMAND_HISTORY_SIZE = 30;
+
 const struct {
     char* command;
 } default_config[] = {
@@ -80,6 +82,8 @@ const struct {
     {"nmap zz=zoomreset"},
     {"cmap <tab>=complete"},
     {"cmap <shift-tab>=complete-back"},
+    {"cmap <ctrl-p>=command-hist-prev"},
+    {"cmap <ctrl-n>=command-hist-next"},
     {"hmap <tab>=hint-focus-next"},
     {"hmap <shift-tab>=hint-focus-prev"},
     {"searchengine-add dl=https://duckduckgo.com/lite/?q=%s"},

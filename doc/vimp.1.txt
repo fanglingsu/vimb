@@ -277,6 +277,12 @@ Zoom \fIN\fP steps \fIin\fP or \fIout\fP of the current page \- effecting all el
 .TP
 .B zoomreset
 Reset the zoomlevel to the default value.
+.SS Command-History
+.TP
+.BI [ N "]command-hist-prev [" VALUE "], [" N "]command-hist-next [" VALUE ]
+Prints the \fIprev\fPious or \fInext\fP cammand from history into inputbox. If
+\fIVALUE\fP is given, this will be used as prefix for the inserted command,
+else the default ':' will be used.
 .SS Misc
 .TP
 .BI [ N "]search-{" forward ", " "backward" "}"

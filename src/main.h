@@ -227,6 +227,8 @@ typedef struct {
     gboolean        is_inspecting;
     SearchDirection search_dir;
     char*           search_query;
+    GList*          history;
+    int             history_pointer;
 } State;
 
 /* behaviour */
