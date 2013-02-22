@@ -28,10 +28,8 @@
 
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
-    {"open",                command_open,        {VP_TARGET_CURRENT}},
-    {"tabopen",             command_open,        {VP_TARGET_NEW}},
-    {"open-home",           command_open_home,   {VP_TARGET_CURRENT}},
-    {"tabopen-home",        command_open_home,   {VP_TARGET_NEW}},
+    {"open",                command_open,        {VP_TARGET_CURRENT, ""}},
+    {"tabopen",             command_open,        {VP_TARGET_NEW, ""}},
     {"open-closed",         command_open_closed, {VP_TARGET_CURRENT}},
     {"tabopen-closed",      command_open_closed, {VP_TARGET_NEW}},
     {"input",               command_input,       {0, ":"}},
@@ -140,6 +138,11 @@ gboolean command_open(const Arg* arg)
 {
     char* uri = NULL;
     gboolean result;
+
+    if (!arg->s || arg->s[0] == '\0') {
+        Arg a = {arg->i, vp.config.home_page};
+        return vp_load_uri(&a);
+    }
     /* check for searchengine handles */
     /* split into handle and searchterms */
     char **string = g_strsplit(arg->s, " ", 2);
@@ -157,12 +160,6 @@ gboolean command_open(const Arg* arg)
     g_strfreev(string);
 
     return result;
-}
-
-gboolean command_open_home(const Arg* arg)
-{
-    Arg a = {arg->i, vp.config.home_page};
-    return vp_load_uri(&a);
 }
 
 /**

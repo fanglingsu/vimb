@@ -59,14 +59,13 @@ To call it, it has to be bound to a key like "hmap <tab>=hint-focus-next" to
 be used.
 .SS Open
 .TP
-.BI open " URI"
-Open the give \fIURI\fP into current window.
+.BI "open [" URI ]
+Open the give \fIURI\fP into current window. If \fIURI\fP is empty the
+configured 'home-page' is opened.
 .TP
-.BI tabopen " URI"
-Open the give \fIURI\fP into a new window.
-.TP
-.B (tab)open-home
-Opens the configured 'home-page'.
+.BI "tabopen [" URI ]
+Open the give \fIURI\fP into a new window. If \fIURI\fP is empty the
+configured 'home-page' is opened.
 .TP
 .B (tab)open-closed
 Open the last closed page.
