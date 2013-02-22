@@ -59,11 +59,11 @@ To call it, it has to be bound to a key like "hmap <tab>=hint-focus-next" to
 be used.
 .SS Open
 .TP
-.B open
-Open the give url into current window.
+.BI open " URI"
+Open the give \fIURI\fP into current window.
 .TP
-.B tabopen
-Open the give url into a new window.
+.BI tabopen " URI"
+Open the give \fIURI\fP into a new window.
 .TP
 .B (tab)open-home
 Opens the configured 'home-page'.
@@ -215,21 +215,26 @@ complation is already started, switch to the next completion item.
 If complation is already started, switch to the previous completion item.
 .SS Hints
 .TP
-.B hint-link
-Start hinting to open link into current window.
+.BI "hint-link [" PREFIX ]
+Start hinting to open link into current window. If \fIPREFIX\fP is given,
+print this into the inputbox, default '.'.
 .TP
-.B hint-link-new
-Start hinting to open link into a new window.
+.BI "hint-link-new [" PREFIX ]
+Start hinting to open link into a new window. If \fIPREFIX\fP is given,
+print this into the inputbox, default ','.
 .TP
-.B hint-input-open
-Start hinting to fill the inputbox with ":open {hintedLinkUrl}"
+.BI "hint-input-open [" PREFIX ]
+Start hinting to fill the inputbox with ":open {hintedLinkUrl}". If
+\fIPREFIX\fP is given, print this into the inputbox, default ';o'.
 .TP
-.B hint-input-tabopen
-Start hinting to fill the inputbox with ":tabopen {hintedLinkUrl}"
+.BI "hint-input-tabopen [" PREFIX ]
+Start hinting to fill the inputbox with ":tabopen {hintedLinkUrl}". If
+\fIPREFIX\fP is given, print this into the inputbox, default ';t'.
 .TP
-.B hint-yank
+.BI "hint-yank [" PREFIX ]
 Start hinting to yank the hinted link url into the primary and secondary
-clipboard.
+clipboard. If \fIPREFIX\fP is given, print this into the inputbox, default
+';y'.
 .TP
 .B hint-focus-next
 Focus next hint.
@@ -279,8 +284,8 @@ Zoom \fIN\fP steps in or out of the current page \- effecting all elements.
 Reset the zoomlevel to the default value.
 .SS Command-History
 .TP
-.BI [ N "]command-hist-prev [" VALUE "], [" N "]command-hist-next [" VALUE ]
-Prints the previous or next cammand from history into inputbox. If \fIVALUE\fP
+.BI [ N "]command-hist-prev [" PREFIX "], [" N "]command-hist-next [" PREFIX ]
+Prints the previous or next cammand from history into inputbox. If \fIPREFIX\fP
 is given, this will be used as prefix for the inserted command, else the
 default ':' will be used.
 .SS Misc
