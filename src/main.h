@@ -215,7 +215,7 @@ typedef struct {
 /* state */
 typedef struct {
     Mode            mode;
-    char           modkey;
+    char            modkey;
     guint           count;
 #ifdef HAS_GTK3
     Window          embed;
@@ -226,7 +226,7 @@ typedef struct {
     StatusType      status;
     gboolean        is_inspecting;
     SearchDirection search_dir;
-    char*          search_query;
+    char*           search_query;
 } State;
 
 /* behaviour */
@@ -244,16 +244,16 @@ typedef struct {
 
 typedef struct {
     time_t cookie_timeout;
-    int   scrollstep;
+    int    scrollstep;
     guint  max_completion_items;
-    char* home_page;
-    char* download_dir;
+    char*  home_page;
+    char*  download_dir;
 } Config;
 
 typedef struct {
     GList* completions;
     GList* active;
-    int   count;
+    int    count;
 } Completions;
 
 typedef struct {
@@ -288,7 +288,7 @@ typedef struct {
     Gui           gui;
     State         state;
     Behaviour     behave;
-    char*        files[FILES_LAST];
+    char*         files[FILES_LAST];
     Network       net;
     Config        config;
     Completions   comps;
