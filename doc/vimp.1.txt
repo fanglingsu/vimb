@@ -269,24 +269,24 @@ Show the current set value of variable
 Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 .SS Zoom
 .TP
-.BI [ N "]zoom{" "in" ", " "out" "}"
-Zoom \fIN\fP steps \fIin\fP or \fIout\fP of the current page \- effects only the text.
+.BI [ N "]zoomin, [" N "]zoomout"
+Zoom \fIN\fP steps in or out of the current page \- effects only the text.
 .TP
-.BI [ N "]zoom{" "in" ", " "out" "}full"
-Zoom \fIN\fP steps \fIin\fP or \fIout\fP of the current page \- effecting all elements.
+.BI [ N "]zoominfullt, [" N "]zoomoutfull"
+Zoom \fIN\fP steps in or out of the current page \- effecting all elements.
 .TP
 .B zoomreset
 Reset the zoomlevel to the default value.
 .SS Command-History
 .TP
 .BI [ N "]command-hist-prev [" VALUE "], [" N "]command-hist-next [" VALUE ]
-Prints the \fIprev\fPious or \fInext\fP cammand from history into inputbox. If
-\fIVALUE\fP is given, this will be used as prefix for the inserted command,
-else the default ':' will be used.
+Prints the previous or next cammand from history into inputbox. If \fIVALUE\fP
+is given, this will be used as prefix for the inserted command, else the
+default ':' will be used.
 .SS Misc
 .TP
-.BI [ N "]search-{" forward ", " "backward" "}"
-Search in current page \fIforward\fP or \fIbackward\fP.
+.BI [ N "]search-forward, [" N "]search-backward"
+Search in current page forward or backward.
 .TP
 .B inspect
 Toggles the webinspector for current page. This is only available if the config
