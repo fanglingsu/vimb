@@ -124,6 +124,8 @@ gboolean command_run(const char* name, const char* param)
     c = g_hash_table_lookup(vp.behave.commands, name);
     if (!c) {
         vp_echo(VP_MSG_ERROR, TRUE, "Command '%s' not found", name);
+        vp_set_mode(VP_MODE_NORMAL, FALSE);
+
         return FALSE;
     }
     a.i = c->arg.i;
@@ -531,7 +533,7 @@ gboolean command_history(const Arg* arg)
     const int len   = g_list_length(state->history);
     char* message   = NULL;
     const int count = state->count ? state->count : 1;
-   
+
     if (!len) {
         return FALSE;
     }
@@ -540,7 +542,7 @@ gboolean command_history(const Arg* arg)
     } else {
         state->history_pointer = (len + state->history_pointer + count) % len;
     }
-    
+
     const char* command = (char*)g_list_nth_data(state->history, state->history_pointer);
     message = g_strconcat(arg->s, command, NULL);
     command_write_input(message);

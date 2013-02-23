@@ -152,7 +152,6 @@ static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer 
 
 static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
 {
-    gboolean success = FALSE;
     const char *text;
     guint16 length = gtk_entry_get_text_length(entry);
     Gui* gui = &vp.gui;
@@ -182,13 +181,8 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
 
         case ':':
             completion_clean();
-            success = vp_process_input((text + 1));
-            if (!success) {
-                /* switch to normal mode after running command without success the
-                 * mode after success is set by command_run to the value defined
-                 * for the command */
-                vp_set_mode(VP_MODE_NORMAL, FALSE);
-            }
+            vp_process_input((text + 1));
+
             /* save the command in history */
             history_append((text + 1));
 
