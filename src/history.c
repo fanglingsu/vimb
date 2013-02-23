@@ -24,7 +24,7 @@ extern const int COMMAND_HISTORY_SIZE;
 
 void history_cleanup(void)
 {
-    g_list_free(vp.state.history);
+    g_list_free_full(vp.state.history, (GDestroyNotify)g_free);
 }
 
 void history_append(const char* line)

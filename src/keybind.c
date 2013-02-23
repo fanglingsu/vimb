@@ -28,6 +28,7 @@ static void keybind_str_to_keybind(char* str, Keybind* key);
 static guint keybind_str_to_modmask(const char* str);
 static guint keybind_str_to_value(const char* str);
 static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
+static void keybind_free(Keybind* keybind);
 
 
 void keybind_init(void)
@@ -39,7 +40,7 @@ void keybind_init(void)
 void keybind_cleanup(void)
 {
     if (vp.behave.keys) {
-        g_slist_free(vp.behave.keys);
+        g_slist_free_full(vp.behave.keys, (GDestroyNotify)keybind_free);
     }
     if (vp.behave.modkeys) {
         g_string_free(vp.behave.modkeys, TRUE);
@@ -262,4 +263,11 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     }
 
     return FALSE;
+}
+
+static void keybind_free(Keybind* keybind)
+{
+    g_free(keybind->command);
+    g_free(keybind->param);
+    g_free(keybind);
 }

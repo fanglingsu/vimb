@@ -78,10 +78,7 @@ gboolean completion_complete(gboolean back)
 
 void completion_clean(void)
 {
-    for (GList *l = vp.comps.completions; l; l = l->next) {
-        g_free(l->data);
-    }
-    g_list_free(vp.comps.completions);
+    g_list_free_full(vp.comps.completions, (GDestroyNotify)g_free);
 
     if (vp.gui.compbox) {
         gtk_widget_destroy(vp.gui.compbox);

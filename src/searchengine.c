@@ -22,12 +22,13 @@
 
 static GSList* searchengine_find(const char* handle);
 static gboolean searchengine_is_valid_uri(const char* uri);
+static void searchengine_free(Searchengine* se);
 
 
 void searchengine_cleanup(void)
 {
     if (vp.behave.searchengines) {
-        g_slist_free(vp.behave.searchengines);
+        g_slist_free_full(vp.behave.searchengines, (GDestroyNotify)searchengine_free);
     }
 }
 
@@ -101,4 +102,11 @@ static gboolean searchengine_is_valid_uri(const char* uri)
     }
 
     return count == 1;
+}
+
+static void searchengine_free(Searchengine* se)
+{
+    g_free(se->uri);
+    g_free(se->handle);
+    g_free(se);
 }
