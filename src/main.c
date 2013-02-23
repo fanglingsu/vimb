@@ -189,6 +189,9 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
                  * for the command */
                 vp_set_mode(VP_MODE_NORMAL, FALSE);
             }
+            /* save the command in history */
+            history_append((text + 1));
+
             break;
     }
 }
@@ -303,9 +306,6 @@ static gboolean vp_process_input(const char* input)
     }
     success = command_run(token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
-
-    /* save the command in history */
-    history_append(command);
 
     return success;
 }
