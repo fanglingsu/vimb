@@ -406,13 +406,10 @@ static void hints_process_fired_hint(guint mode, const char* uri)
             break;
 
         case HINTS_PROCESS_YANK:
-            /* TODO not implemented */
             a.i = COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY;
             a.s = g_strdup(uri);
             command_yank(&a);
             g_free(a.s);
-            /* TODO add a command that do the mode switching instead */
-            vp_set_mode(VP_MODE_NORMAL, FALSE);
             break;
     }
 }

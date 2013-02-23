@@ -391,10 +391,6 @@ void vp_clean_up(void)
         g_file_set_contents(vp.files[FILES_CLOSED], uri, -1, NULL);
     }
 
-    if (vp.behave.commands) {
-        g_hash_table_destroy(vp.behave.commands);
-        vp.behave.commands = NULL;
-    }
     for (int i = FILES_FIRST; i < FILES_LAST; i++) {
         g_free(vp.files[i]);
     }
