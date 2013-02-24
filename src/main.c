@@ -151,7 +151,8 @@ static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer 
 static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
 {
     const char* text;
-    char* command = NULL;
+    gboolean hist_save = FALSE;
+    char* command  = NULL;
     guint16 length = gtk_entry_get_text_length(entry);
     Gui* gui = &vp.gui;
 
@@ -173,23 +174,26 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
      * content of inputbox */
     command = g_strdup((text));
 
+    Arg a;
     switch (*text) {
         case '/':
         case '?':
-            {
-                Arg a = {*text == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD, (command + 1)};
-                command_search(&a);
-            }
+            a.i = *text == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD;
+            a.s = (command + 1);
+            command_search(&a);
+            hist_save = TRUE;
             break;
 
         case ':':
             completion_clean();
             vp_process_input((command + 1));
-
-            /* save the command together with the first char in history */
-            history_append(command);
-
+            hist_save = TRUE;
             break;
+    }
+
+    if (hist_save) {
+        /* save the command in history */
+        history_append(command);
     }
     g_free(command);
 }

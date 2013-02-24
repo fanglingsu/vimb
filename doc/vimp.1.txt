@@ -285,7 +285,12 @@ Reset the zoomlevel to the default value.
 .TP
 .BI [ N "]command-hist-prev, [" N "]command-hist-next"
 Prints the previous or next cammand from history into inputbox. If there is
-already text in the input box this will be used to get history items.
+already text in the input box this will be used to get history items. A
+command is not a internal command, but every string entered into inputbox that
+begins with \fI[:/?]\fP. So the history contains real commands and search queries.
+.br
+Note that the history distinguishes between '/query' and '?query' what's not
+what the vim editor does.
 .SS Misc
 .TP
 .BI [ N "]search-forward, [" N "]search-backward"
