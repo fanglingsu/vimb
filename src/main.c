@@ -120,9 +120,6 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
                 vp_set_status(VP_STATUS_NORMAL);
             }
 
-            /* update the style of the status bar according to status */
-            vp_update_status_style();
-
             /* status bar is updated by vp_set_mode */
             vp_set_mode(VP_MODE_NORMAL , FALSE);
             vp_update_urlbar(uri);
