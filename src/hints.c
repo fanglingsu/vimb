@@ -273,7 +273,7 @@ static void hints_create_for_window(const char* input, Window* win, gulong hintC
 
         gulong left = rect.left - 3;
         gulong top  = rect.top - 3;
-        dom_element_set_style(hint, HINT_STYLE, left, top, vp.style.hint_style);
+        dom_element_set_style(hint, HINT_STYLE, left, top, core.style.hint_style);
 
         char* num = g_strdup_printf("%li", newHint->num);
         webkit_dom_html_element_set_inner_text(WEBKIT_DOM_HTML_ELEMENT(hint), num, NULL);
@@ -281,8 +281,8 @@ static void hints_create_for_window(const char* input, Window* win, gulong hintC
         g_free(num);
 
         /* change the style of the hinted element */
-        dom_element_style_set_property(newHint->elem, "background-color", vp.style.hint_bg);
-        dom_element_style_set_property(newHint->elem, "color", vp.style.hint_fg);
+        dom_element_style_set_property(newHint->elem, "background-color", core.style.hint_bg);
+        dom_element_style_set_property(newHint->elem, "color", core.style.hint_fg);
 
         webkit_dom_node_append_child(WEBKIT_DOM_NODE(container), WEBKIT_DOM_NODE(hint), NULL);
     }
@@ -310,7 +310,7 @@ static void hints_focus(const gulong num)
     Hint* hint = hints_get_hint_by_number(vp.hints.focusNum);
     if (hint) {
         /* reset previous focused element */
-        dom_element_style_set_property(hint->elem, "background-color", vp.style.hint_bg);
+        dom_element_style_set_property(hint->elem, "background-color", core.style.hint_bg);
 
         doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(hint->elem));
         dom_dispatch_mouse_event(doc, hint->elem, "mouseout", 0);
@@ -319,7 +319,7 @@ static void hints_focus(const gulong num)
     hint = hints_get_hint_by_number(num);
     if (hint) {
         /* mark new hint as focused */
-        dom_element_style_set_property(hint->elem, "background-color", vp.style.hint_bg_focus);
+        dom_element_style_set_property(hint->elem, "background-color", core.style.hint_bg_focus);
 
         doc = webkit_dom_node_get_owner_document(WEBKIT_DOM_NODE(hint->elem));
         dom_dispatch_mouse_event(doc, hint->elem, "mouseover", 0);

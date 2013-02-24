@@ -24,21 +24,19 @@ extern const int COMMAND_HISTORY_SIZE;
 
 void history_cleanup(void)
 {
-    g_list_free_full(vp.state.history, (GDestroyNotify)g_free);
+    g_list_free_full(core.behave.history, (GDestroyNotify)g_free);
 }
 
 void history_append(const char* line)
 {
-    State *s = &vp.state;
-
-    if (COMMAND_HISTORY_SIZE <= g_list_length(s->history)) {
+    if (COMMAND_HISTORY_SIZE <= g_list_length(core.behave.history)) {
         /* if list is too long - remove items from beginning */
-        s->history = g_list_delete_link(s->history, g_list_first(s->history));
+        core.behave.history = g_list_delete_link(core.behave.history, g_list_first(core.behave.history));
     }
-    s->history = g_list_append(s->history, g_strdup(line));
+    core.behave.history = g_list_append(core.behave.history, g_strdup(line));
 }
 
 void history_rewind(void)
 {
-    vp.state.history_pointer = 0;
+    core.behave.history_pointer = 0;
 }

@@ -97,23 +97,23 @@ static void command_write_input(const char* str);
 void command_init(void)
 {
     guint i;
-    vp.behave.commands = g_hash_table_new(g_str_hash, g_str_equal);
+    core.behave.commands = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < LENGTH(cmd_list); i++) {
-        g_hash_table_insert(vp.behave.commands, (gpointer)cmd_list[i].name, &cmd_list[i]);
+        g_hash_table_insert(core.behave.commands, (gpointer)cmd_list[i].name, &cmd_list[i]);
     }
 }
 
 void command_cleanup(void)
 {
-    if (vp.behave.commands) {
-        g_hash_table_destroy(vp.behave.commands);
+    if (core.behave.commands) {
+        g_hash_table_destroy(core.behave.commands);
     }
 }
 
 gboolean command_exists(const char* name)
 {
-    return g_hash_table_contains(vp.behave.commands, name);
+    return g_hash_table_contains(core.behave.commands, name);
 }
 
 gboolean command_run(const char* name, const char* param)
@@ -121,7 +121,7 @@ gboolean command_run(const char* name, const char* param)
     CommandInfo* c = NULL;
     gboolean result;
     Arg a;
-    c = g_hash_table_lookup(vp.behave.commands, name);
+    c = g_hash_table_lookup(core.behave.commands, name);
     if (!c) {
         vp_echo(VP_MSG_ERROR, TRUE, "Command '%s' not found", name);
         vp_set_mode(VP_MODE_NORMAL, FALSE);
@@ -142,7 +142,7 @@ gboolean command_open(const Arg* arg)
     gboolean result;
 
     if (!arg->s || arg->s[0] == '\0') {
-        Arg a = {arg->i, vp.config.home_page};
+        Arg a = {arg->i, core.config.home_page};
         return vp_load_uri(&a);
     }
     /* check for searchengine handles */
@@ -172,7 +172,7 @@ gboolean command_open_closed(const Arg* arg)
     gboolean result;
 
     Arg a = {arg->i};
-    a.s = util_get_file_contents(vp.files[FILES_CLOSED], NULL);
+    a.s = util_get_file_contents(core.files[FILES_CLOSED], NULL);
     result = vp_load_uri(&a);
     g_free(a.s);
 
@@ -250,7 +250,7 @@ gboolean command_scroll(const Arg* arg)
         gdouble value;
         int count = vp.state.count ? vp.state.count : 1;
         if (arg->i & VP_SCROLL_UNIT_LINE) {
-            value = vp.config.scrollstep;
+            value = core.config.scrollstep;
         } else if (arg->i & VP_SCROLL_UNIT_HALFPAGE) {
             value = gtk_adjustment_get_page_size(adjust) / 2;
         } else {
@@ -529,21 +529,20 @@ gboolean command_zoom(const Arg* arg)
 
 gboolean command_history(const Arg* arg)
 {
-    State* state    = &vp.state;
-    const int len   = g_list_length(state->history);
+    const int len   = g_list_length(core.behave.history);
     char* message   = NULL;
-    const int count = state->count ? state->count : 1;
+    const int count = vp.state.count ? vp.state.count : 1;
 
     if (!len) {
         return FALSE;
     }
     if (arg->i == VP_SEARCH_BACKWARD) {
-        state->history_pointer = (len + state->history_pointer - count) % len;
+        core.behave.history_pointer = (len + core.behave.history_pointer - count) % len;
     } else {
-        state->history_pointer = (len + state->history_pointer + count) % len;
+        core.behave.history_pointer = (len + core.behave.history_pointer + count) % len;
     }
 
-    const char* command = (char*)g_list_nth_data(state->history, state->history_pointer);
+    const char* command = (char*)g_list_nth_data(core.behave.history, core.behave.history_pointer);
     message = g_strconcat(arg->s, command, NULL);
     command_write_input(message);
     g_free(message);
@@ -557,9 +556,9 @@ static void command_write_input(const char* str)
     /* reset the colors and fonts to defalts */
     vp_set_widget_font(
         vp.gui.inputbox,
-        &vp.style.input_fg[VP_MSG_NORMAL],
-        &vp.style.input_bg[VP_MSG_NORMAL],
-        vp.style.input_font[VP_MSG_NORMAL]
+        &core.style.input_fg[VP_MSG_NORMAL],
+        &core.style.input_bg[VP_MSG_NORMAL],
+        core.style.input_font[VP_MSG_NORMAL]
     );
 
     /* remove content from input box */

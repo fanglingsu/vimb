@@ -31,7 +31,8 @@
 
 /* variables */
 static char **args;
-VpCore vp;
+VpClient vp;
+VpCore   core;
 
 /* callbacks */
 static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download);
@@ -80,13 +81,13 @@ static void vp_set_status(const StatusType status);
 static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download)
 {
     if (download) {
-        if (vp.net.downloads) {
+        if (vp.state.downloads) {
             vp.state.progress = 0;
             GList* ptr;
-            for (ptr = vp.net.downloads; ptr; ptr = g_list_next(ptr)) {
+            for (ptr = vp.state.downloads; ptr; ptr = g_list_next(ptr)) {
                 vp.state.progress += 100 * webkit_download_get_progress(ptr->data);
             }
-            vp.state.progress /= g_list_length(vp.net.downloads);
+            vp.state.progress /= g_list_length(vp.state.downloads);
         }
     } else {
         vp.state.progress = webkit_web_view_get_progress(view) * 100;
@@ -364,10 +365,10 @@ static void vp_set_cookie(SoupCookie* cookie)
 {
     SoupDate* date;
 
-    SoupCookieJar* jar = soup_cookie_jar_text_new(vp.files[FILES_COOKIE], FALSE);
+    SoupCookieJar* jar = soup_cookie_jar_text_new(core.files[FILES_COOKIE], FALSE);
     cookie = soup_cookie_copy(cookie);
-    if (cookie->expires == NULL && vp.config.cookie_timeout) {
-        date = soup_date_new_from_time_t(time(NULL) + vp.config.cookie_timeout);
+    if (cookie->expires == NULL && core.config.cookie_timeout) {
+        date = soup_date_new_from_time_t(time(NULL) + core.config.cookie_timeout);
         soup_cookie_set_expires(cookie, date);
     }
     soup_cookie_jar_add_cookie(jar, cookie);
@@ -378,7 +379,7 @@ static const char* vp_get_cookies(SoupURI *uri)
 {
     const char* cookie;
 
-    SoupCookieJar* jar = soup_cookie_jar_text_new(vp.files[FILES_COOKIE], TRUE);
+    SoupCookieJar* jar = soup_cookie_jar_text_new(core.files[FILES_COOKIE], TRUE);
     cookie = soup_cookie_jar_get_cookies(jar, uri, TRUE);
     g_object_unref(jar);
 
@@ -391,11 +392,11 @@ void vp_clean_up(void)
     const char* uri = CURRENT_URL();
     /* write last URL into file for recreation */
     if (uri) {
-        g_file_set_contents(vp.files[FILES_CLOSED], uri, -1, NULL);
+        g_file_set_contents(core.files[FILES_CLOSED], uri, -1, NULL);
     }
 
     for (int i = FILES_FIRST; i < FILES_LAST; i++) {
-        g_free(vp.files[i]);
+        g_free(core.files[i]);
     }
     command_cleanup();
     setting_cleanup();
@@ -521,8 +522,8 @@ void vp_update_statusbar(void)
     }
 
     /* show the active downloads */
-    if (vp.net.downloads) {
-        int num = g_list_length(vp.net.downloads);
+    if (vp.state.downloads) {
+        int num = g_list_length(vp.state.downloads);
         g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
     }
 
@@ -552,9 +553,9 @@ void vp_update_statusbar(void)
 void vp_update_status_style(void)
 {
     StatusType type = vp.state.status;
-    vp_set_widget_font(vp.gui.eventbox, &vp.style.status_fg[type], &vp.style.status_bg[type], vp.style.status_font[type]);
-    vp_set_widget_font(vp.gui.statusbar.left, &vp.style.status_fg[type], &vp.style.status_bg[type], vp.style.status_font[type]);
-    vp_set_widget_font(vp.gui.statusbar.right, &vp.style.status_fg[type], &vp.style.status_bg[type], vp.style.status_font[type]);
+    vp_set_widget_font(vp.gui.eventbox, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
+    vp_set_widget_font(vp.gui.statusbar.left, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
+    vp_set_widget_font(vp.gui.statusbar.right, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
 }
 
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
@@ -574,9 +575,9 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
     /* set the collors according to message type */
     vp_set_widget_font(
         vp.gui.inputbox,
-        &vp.style.input_fg[type],
-        &vp.style.input_bg[type],
-        vp.style.input_font[type]
+        &core.style.input_fg[type],
+        &core.style.input_bg[type],
+        core.style.input_font[type]
     );
     gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
     if (hide) {
@@ -626,7 +627,7 @@ static void vp_read_config(void)
     }
 
     /* read config from config files */
-    char **lines = util_get_lines(vp.files[FILES_CONFIG]);
+    char **lines = util_get_lines(core.files[FILES_CONFIG]);
     char *line;
 
     if (lines) {
@@ -670,8 +671,8 @@ static void vp_init_gui(void)
     gui->inspector = webkit_web_view_get_inspector(gui->webview);
 
     /* init soup session */
-    vp.net.soup_session = webkit_get_default_session();
-    soup_session_remove_feature_by_type(vp.net.soup_session, soup_cookie_jar_get_type());
+    core.soup_session = webkit_get_default_session();
+    soup_session_remove_feature_by_type(core.soup_session, soup_cookie_jar_get_type());
 
     /* Create a scrollable area */
     gui->scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -728,14 +729,14 @@ static void vp_init_files(void)
 {
     char* path = util_get_config_dir();
 
-    vp.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
-    util_create_file_if_not_exists(vp.files[FILES_CONFIG]);
+    core.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
+    util_create_file_if_not_exists(core.files[FILES_CONFIG]);
 
-    vp.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
-    util_create_file_if_not_exists(vp.files[FILES_COOKIE]);
+    core.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
+    util_create_file_if_not_exists(core.files[FILES_COOKIE]);
 
-    vp.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
-    util_create_file_if_not_exists(vp.files[FILES_CLOSED]);
+    core.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
+    util_create_file_if_not_exists(core.files[FILES_CLOSED]);
 
     g_free(path);
 }
@@ -784,7 +785,7 @@ static void vp_setup_signals(void)
         NULL
     );
 
-    g_signal_connect_after(G_OBJECT(vp.net.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
+    g_signal_connect_after(G_OBJECT(core.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
 
     /* inspector */
     g_signal_connect(G_OBJECT(vp.gui.inspector), "inspect-web-view", G_CALLBACK(vp_inspector_new), NULL);
@@ -795,8 +796,8 @@ static void vp_setup_signals(void)
 
 static void vp_setup_settings(void)
 {
-    g_object_set(vp.net.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vp.net.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
+    g_object_set(core.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(core.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
 }
 
 static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, gpointer data)
@@ -899,7 +900,7 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
     }
 
     /* prepare the download target path */
-    uri = g_strdup_printf("file://%s%c%s", vp.config.download_dir, G_DIR_SEPARATOR, filename);
+    uri = g_strdup_printf("file://%s%c%s", core.config.download_dir, G_DIR_SEPARATOR, filename);
     webkit_download_set_destination_uri(download, uri);
     g_free(uri);
 
@@ -916,7 +917,7 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
     }
 
     /* prepend the download to the download list */
-    vp.net.downloads = g_list_prepend(vp.net.downloads, download);
+    vp.state.downloads = g_list_prepend(vp.state.downloads, download);
 
     /* connect signal handler to check if the download is done */
     g_signal_connect(download, "notify::status", G_CALLBACK(vp_download_progress_cp), NULL);
@@ -957,7 +958,7 @@ static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
     g_free(file);
 
     /* remove the donwload from the list */
-    vp.net.downloads = g_list_remove(vp.net.downloads, download);
+    vp.state.downloads = g_list_remove(vp.state.downloads, download);
 
     vp_update_statusbar();
 }
@@ -1000,7 +1001,7 @@ int main(int argc, char* argv[])
     if (argc > 1) {
         arg.s = g_strdup(argv[argc - 1]);
     } else {
-        arg.s = g_strdup(vp.config.home_page);
+        arg.s = g_strdup(core.config.home_page);
     }
     vp_load_uri(&arg);
     g_free(arg.s);

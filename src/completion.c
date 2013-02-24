@@ -59,11 +59,11 @@ gboolean completion_complete(gboolean back)
     input = GET_TEXT();
     /* TODO move these decision to a more generic place */
     if (g_str_has_prefix(input, ":set ")) {
-        source = g_hash_table_get_keys(vp.settings);
+        source = g_hash_table_get_keys(core.settings);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
         vp.comps.completions = completion_init_completion(vp.comps.completions, source, ":set ");
     } else {
-        source = g_hash_table_get_keys(vp.behave.commands);
+        source = g_hash_table_get_keys(core.behave.commands);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
         vp.comps.completions = completion_init_completion(vp.comps.completions, source, ":");
     }
@@ -145,7 +145,7 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
     Completion *c;
 
     int length = g_list_length(completion);
-    int max    = vp.config.max_completion_items;
+    int max    = core.config.max_completion_items;
     int items  = MAX(length, max);
     int r      = (max) % 2;
     int offset = max / 2 - 1 + r;
@@ -197,15 +197,15 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
 
     completion_set_color(
         old->data,
-        &vp.style.comp_fg[VP_COMP_NORMAL],
-        &vp.style.comp_bg[VP_COMP_NORMAL],
-        vp.style.comp_font[VP_COMP_NORMAL]
+        &core.style.comp_fg[VP_COMP_NORMAL],
+        &core.style.comp_bg[VP_COMP_NORMAL],
+        core.style.comp_font[VP_COMP_NORMAL]
     );
     completion_set_color(
         new->data,
-        &vp.style.comp_fg[VP_COMP_ACTIVE],
-        &vp.style.comp_bg[VP_COMP_ACTIVE],
-        vp.style.comp_font[VP_COMP_ACTIVE]
+        &core.style.comp_fg[VP_COMP_ACTIVE],
+        &core.style.comp_bg[VP_COMP_ACTIVE],
+        core.style.comp_font[VP_COMP_ACTIVE]
     );
 
     active = new;
@@ -216,7 +216,7 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
 /* allow to chenge the direction of display */
 static void completion_show(gboolean back)
 {
-    guint max = vp.config.max_completion_items;
+    guint max = core.config.max_completion_items;
     int i = 0;
     if (back) {
         vp.comps.active = g_list_last(vp.comps.completions);
@@ -232,9 +232,9 @@ static void completion_show(gboolean back)
     if (vp.comps.active != NULL) {
         completion_set_color(
             vp.comps.active->data,
-            &vp.style.comp_fg[VP_COMP_ACTIVE],
-            &vp.style.comp_bg[VP_COMP_ACTIVE],
-            vp.style.comp_font[VP_COMP_ACTIVE]
+            &core.style.comp_fg[VP_COMP_ACTIVE],
+            &core.style.comp_bg[VP_COMP_ACTIVE],
+            core.style.comp_font[VP_COMP_ACTIVE]
         );
         completion_set_entry_text(vp.comps.active->data);
         gtk_widget_show(vp.gui.compbox);
@@ -289,9 +289,9 @@ static Completion* completion_get_new(const char* label, const char* prefix)
 
     completion_set_color(
         c,
-        &vp.style.comp_fg[VP_COMP_NORMAL],
-        &vp.style.comp_bg[VP_COMP_NORMAL],
-        vp.style.comp_font[VP_COMP_NORMAL]
+        &core.style.comp_fg[VP_COMP_NORMAL],
+        &core.style.comp_bg[VP_COMP_NORMAL],
+        core.style.comp_font[VP_COMP_NORMAL]
     );
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);

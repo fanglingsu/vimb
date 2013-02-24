@@ -227,8 +227,7 @@ typedef struct {
     gboolean        is_inspecting;
     SearchDirection search_dir;
     char*           search_query;
-    GList*          history;
-    int             history_pointer;
+    GList*          downloads;
 } State;
 
 /* behaviour */
@@ -237,12 +236,9 @@ typedef struct {
     GSList*     keys;
     GString*    modkeys;
     GSList*     searchengines;
+    GList*      history;
+    int         history_pointer;
 } Behaviour;
-
-typedef struct {
-    SoupSession*    soup_session;
-    GList*          downloads;
-} Network;
 
 typedef struct {
     time_t cookie_timeout;
@@ -289,18 +285,22 @@ typedef struct {
 typedef struct {
     Gui           gui;
     State         state;
-    Behaviour     behave;
-    char*         files[FILES_LAST];
-    Network       net;
-    Config        config;
     Completions   comps;
-    Style         style;
-    GHashTable*   settings;
     Hints         hints;
+} VpClient;
+
+typedef struct {
+    char*         files[FILES_LAST];
+    Config        config;
+    Style         style;
+    Behaviour     behave;
+    GHashTable*   settings;
+    SoupSession*  soup_session;
 } VpCore;
 
 /* main object */
-extern VpCore vp;
+extern VpClient vp;
+extern VpCore   core;
 
 /* functions */
 void vp_update_statusbar(void);

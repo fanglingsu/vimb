@@ -125,12 +125,12 @@ void setting_init(void)
 {
     Setting* s;
     guint i;
-    vp.settings = g_hash_table_new(g_str_hash, g_str_equal);
+    core.settings = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < LENGTH(default_settings); i++) {
         s = &default_settings[i];
         /* use alias as key if available */
-        g_hash_table_insert(vp.settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
+        g_hash_table_insert(core.settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
 
         /* set the default settings */
         s->func(s, FALSE);
@@ -139,8 +139,8 @@ void setting_init(void)
 
 void setting_cleanup(void)
 {
-    if (vp.settings) {
-        g_hash_table_destroy(vp.settings);
+    if (core.settings) {
+        g_hash_table_destroy(core.settings);
     }
 }
 
@@ -164,7 +164,7 @@ gboolean setting_run(char* name, const char* param)
         type = SETTING_GET;
     }
 
-    Setting* s = g_hash_table_lookup(vp.settings, name);
+    Setting* s = g_hash_table_lookup(core.settings, name);
     if (!s) {
         vp_echo(VP_MSG_ERROR, TRUE, "Config '%s' not found", name);
         return FALSE;
@@ -352,9 +352,9 @@ static gboolean setting_webkit(const Setting* s, const SettingType type)
 static gboolean setting_cookie_timeout(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(s, &vp.config.cookie_timeout);
+        setting_print_value(s, &core.config.cookie_timeout);
     } else {
-        vp.config.cookie_timeout = s->arg.i;
+        core.config.cookie_timeout = s->arg.i;
     }
 
     return TRUE;
@@ -363,9 +363,9 @@ static gboolean setting_cookie_timeout(const Setting* s, const SettingType type)
 static gboolean setting_scrollstep(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(s, &vp.config.scrollstep);
+        setting_print_value(s, &core.config.scrollstep);
     } else {
-        vp.config.scrollstep = s->arg.i;
+        core.config.scrollstep = s->arg.i;
     }
 
     return TRUE;
@@ -383,9 +383,9 @@ static gboolean setting_status_color_bg(const Setting* s, const SettingType type
     }
 
     if (type == SETTING_GET) {
-        setting_print_value(s, &vp.style.status_bg[stype]);
+        setting_print_value(s, &core.style.status_bg[stype]);
     } else {
-        VP_COLOR_PARSE(&vp.style.status_bg[stype], s->arg.s);
+        VP_COLOR_PARSE(&core.style.status_bg[stype], s->arg.s);
         vp_update_status_style();
     }
 
@@ -404,9 +404,9 @@ static gboolean setting_status_color_fg(const Setting* s, const SettingType type
     }
 
     if (type == SETTING_GET) {
-        setting_print_value(s, &vp.style.status_fg[stype]);
+        setting_print_value(s, &core.style.status_fg[stype]);
     } else {
-        VP_COLOR_PARSE(&vp.style.status_fg[stype], s->arg.s);
+        VP_COLOR_PARSE(&core.style.status_fg[stype], s->arg.s);
         vp_update_status_style();
     }
 
@@ -425,13 +425,13 @@ static gboolean setting_status_font(const Setting* s, const SettingType type)
     }
 
     if (type == SETTING_GET) {
-        setting_print_value(s, vp.style.status_font[stype]);
+        setting_print_value(s, core.style.status_font[stype]);
     } else {
-        if (vp.style.status_font[stype]) {
+        if (core.style.status_font[stype]) {
             /* free previous font description */
-            pango_font_description_free(vp.style.status_font[stype]);
+            pango_font_description_free(core.style.status_font[stype]);
         }
-        vp.style.status_font[stype] = pango_font_description_from_string(s->arg.s);
+        core.style.status_font[stype] = pango_font_description_from_string(s->arg.s);
 
         vp_update_status_style();
     }
@@ -441,7 +441,7 @@ static gboolean setting_status_font(const Setting* s, const SettingType type)
 
 static gboolean setting_input_style(const Setting* s, const SettingType type)
 {
-    Style* style = &vp.style;
+    Style* style = &core.style;
     MessageType itype = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
 
     if (s->type == TYPE_FONT) {
@@ -480,15 +480,15 @@ static gboolean setting_input_style(const Setting* s, const SettingType type)
 
 static gboolean setting_completion_style(const Setting* s, const SettingType type)
 {
-    Style* style = &vp.style;
+    Style* style = &core.style;
     CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
 
     if (s->type == TYPE_INTEGER) {
         /* max completion items */
         if (type == SETTING_GET) {
-            setting_print_value(s, &vp.config.max_completion_items);
+            setting_print_value(s, &core.config.max_completion_items);
         } else {
-            vp.config.max_completion_items = s->arg.i;
+            core.config.max_completion_items = s->arg.i;
         }
     } else if (s->type == TYPE_FONT) {
         if (type == SETTING_GET) {
@@ -521,7 +521,7 @@ static gboolean setting_completion_style(const Setting* s, const SettingType typ
 
 static gboolean setting_hint_style(const Setting* s, const SettingType type)
 {
-    Style* style = &vp.style;
+    Style* style = &core.style;
     if (!g_strcmp0(s->name, "hint-bg")) {
         if (type == SETTING_GET) {
             setting_print_value(s, style->hint_bg);
@@ -555,7 +555,7 @@ static gboolean setting_strict_ssl(const Setting* s, const SettingType type)
 {
     gboolean value;
     if (type != SETTING_SET) {
-        g_object_get(vp.net.soup_session, "ssl-strict", &value, NULL);
+        g_object_get(core.soup_session, "ssl-strict", &value, NULL);
         if (type == SETTING_GET) {
             setting_print_value(s, &value);
 
@@ -565,7 +565,7 @@ static gboolean setting_strict_ssl(const Setting* s, const SettingType type)
 
     value = type == SETTING_TOGGLE ? !value : (s->arg.i ? TRUE : FALSE);
 
-    g_object_set(vp.net.soup_session, "ssl-strict", value, NULL);
+    g_object_set(core.soup_session, "ssl-strict", value, NULL);
 
     return TRUE;
 }
@@ -574,11 +574,11 @@ static gboolean setting_ca_bundle(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
         char* value = NULL;
-        g_object_get(vp.net.soup_session, "ssl-ca-file", &value, NULL);
+        g_object_get(core.soup_session, "ssl-ca-file", &value, NULL);
         setting_print_value(s, value);
         g_free(value);
     } else {
-        g_object_set(vp.net.soup_session, "ssl-ca-file", s->arg.s, NULL);
+        g_object_set(core.soup_session, "ssl-ca-file", s->arg.s, NULL);
     }
 
     return TRUE;
@@ -587,9 +587,9 @@ static gboolean setting_ca_bundle(const Setting* s, const SettingType type)
 static gboolean setting_home_page(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(s, vp.config.home_page);
+        setting_print_value(s, core.config.home_page);
     } else {
-        OVERWRITE_STRING(vp.config.home_page, s->arg.s);
+        OVERWRITE_STRING(core.config.home_page, s->arg.s);
     }
 
     return TRUE;
@@ -598,20 +598,20 @@ static gboolean setting_home_page(const Setting* s, const SettingType type)
 static gboolean setting_download_path(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(s, vp.config.download_dir);
+        setting_print_value(s, core.config.download_dir);
     } else {
-        if (vp.config.download_dir) {
-            g_free(vp.config.download_dir);
-            vp.config.download_dir = NULL;
+        if (core.config.download_dir) {
+            g_free(core.config.download_dir);
+            core.config.download_dir = NULL;
         }
         /* if path is not absolute create it in the home directory */
         if (s->arg.s[0] != '/') {
-            vp.config.download_dir = g_build_filename(util_get_home_dir(), s->arg.s, NULL);
+            core.config.download_dir = g_build_filename(util_get_home_dir(), s->arg.s, NULL);
         } else {
-            vp.config.download_dir = g_strdup(s->arg.s);
+            core.config.download_dir = g_strdup(s->arg.s);
         }
         /* create the path if it does not exist */
-        util_create_dir_if_not_exists(vp.config.download_dir);
+        util_create_dir_if_not_exists(core.config.download_dir);
     }
 
     return TRUE;
@@ -624,7 +624,7 @@ static gboolean setting_proxy(const Setting* s, const SettingType type)
 
     /* get the current status */
     if (type != SETTING_SET) {
-        g_object_get(vp.net.soup_session, "proxy-uri", &proxy_uri, NULL);
+        g_object_get(core.soup_session, "proxy-uri", &proxy_uri, NULL);
         enabled = (proxy_uri != NULL);
 
         if (type == SETTING_GET) {
@@ -650,13 +650,13 @@ static gboolean setting_proxy(const Setting* s, const SettingType type)
                 : g_strdup_printf("http://%s", proxy);
             proxy_uri = soup_uri_new(proxy_new);
 
-            g_object_set(vp.net.soup_session, "proxy-uri", proxy_uri, NULL);
+            g_object_set(core.soup_session, "proxy-uri", proxy_uri, NULL);
 
             soup_uri_free(proxy_uri);
             g_free(proxy_new);
         }
     } else {
-        g_object_set(vp.net.soup_session, "proxy-uri", NULL, NULL);
+        g_object_set(core.soup_session, "proxy-uri", NULL, NULL);
     }
 
     return TRUE;

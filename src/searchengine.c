@@ -27,8 +27,8 @@ static void searchengine_free(Searchengine* se);
 
 void searchengine_cleanup(void)
 {
-    if (vp.behave.searchengines) {
-        g_slist_free_full(vp.behave.searchengines, (GDestroyNotify)searchengine_free);
+    if (core.behave.searchengines) {
+        g_slist_free_full(core.behave.searchengines, (GDestroyNotify)searchengine_free);
     }
 }
 
@@ -43,7 +43,7 @@ gboolean searchengine_add(const char* handle, const char* uri)
     s->handle = g_strdup(handle);
     s->uri    = g_strdup(uri);
 
-    vp.behave.searchengines = g_slist_prepend(vp.behave.searchengines, s);
+    core.behave.searchengines = g_slist_prepend(core.behave.searchengines, s);
 
     return TRUE;
 }
@@ -57,7 +57,7 @@ gboolean searchengine_remove(const char* handle)
         g_free(s->handle);
         g_free(s->uri);
 
-        vp.behave.searchengines = g_slist_delete_link(vp.behave.searchengines, list);
+        core.behave.searchengines = g_slist_delete_link(core.behave.searchengines, list);
 
         return TRUE;
     }
@@ -79,7 +79,7 @@ char* searchengine_get_uri(const char* handle)
 static GSList* searchengine_find(const char* handle)
 {
     GSList* s;
-    for (s = vp.behave.searchengines; s != NULL; s = s->next) {
+    for (s = core.behave.searchengines; s != NULL; s = s->next) {
         if (!strcmp(((Searchengine*)s->data)->handle, handle)) {
             return s;
         }
