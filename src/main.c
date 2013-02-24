@@ -149,7 +149,8 @@ static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer 
 
 static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
 {
-    const char *text;
+    const char* text;
+    char* command = NULL;
     guint16 length = gtk_entry_get_text_length(entry);
     Gui* gui = &vp.gui;
 
@@ -166,25 +167,30 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
     /* do not free or modify text */
     text = gtk_entry_get_text(entry);
 
-    switch (text[0]) {
+    /* duplicate the content because this may change for example if
+     * :set varName? is used the text is changed to the new printed
+     * content of inputbox */
+    command = g_strdup((text + 1));
+
+    switch (*text) {
         case '/':
         case '?':
             {
-                Arg a = {text[0] == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD, g_strdup(text + 1)};
+                Arg a = {*text == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD, command};
                 command_search(&a);
-                g_free(a.s);
             }
             break;
 
         case ':':
             completion_clean();
-            vp_process_input((text + 1));
+            vp_process_input(command);
 
             /* save the command in history */
-            history_append((text + 1));
+            history_append(command);
 
             break;
     }
+    g_free(command);
 }
 
 static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event)
