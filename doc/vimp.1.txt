@@ -287,6 +287,8 @@ Reset the zoomlevel to the default value.
 Prints the previous or next cammand from history into inputbox. If \fIPREFIX\fP
 is given, this will be used as prefix for the inserted command, else the
 default ':' will be used.
+If there is already text in the input box this will be used to get previous
+history items.
 .SS Misc
 .TP
 .BI [ N "]search-forward, [" N "]search-backward"

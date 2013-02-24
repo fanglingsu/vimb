@@ -228,6 +228,8 @@ typedef struct {
     SearchDirection search_dir;
     char*           search_query;
     GList*          downloads;
+    int             history_pointer;
+    char*           history_prefix;
 } State;
 
 /* behaviour */
@@ -237,7 +239,6 @@ typedef struct {
     GString*    modkeys;
     GSList*     searchengines;
     GList*      history;
-    int         history_pointer;
 } Behaviour;
 
 typedef struct {

@@ -25,6 +25,7 @@
 #include "hints.h"
 #include "util.h"
 #include "searchengine.h"
+#include "history.h"
 
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
@@ -529,23 +530,17 @@ gboolean command_zoom(const Arg* arg)
 
 gboolean command_history(const Arg* arg)
 {
-    const int len   = g_list_length(core.behave.history);
-    char* message   = NULL;
+    char* msg = NULL;
     const int count = vp.state.count ? vp.state.count : 1;
+    const gint step = count * (arg->i == VP_SEARCH_BACKWARD ? -1 : 1);
+    const char* entry = history_get(step);
 
-    if (!len) {
+    if (!entry) {
         return FALSE;
     }
-    if (arg->i == VP_SEARCH_BACKWARD) {
-        core.behave.history_pointer = (len + core.behave.history_pointer - count) % len;
-    } else {
-        core.behave.history_pointer = (len + core.behave.history_pointer + count) % len;
-    }
-
-    const char* command = (char*)g_list_nth_data(core.behave.history, core.behave.history_pointer);
-    message = g_strconcat(arg->s, command, NULL);
-    command_write_input(message);
-    g_free(message);
+    msg = g_strconcat(arg->s, entry, NULL);
+    command_write_input(msg);
+    g_free(msg);
 
     return TRUE;
 }
