@@ -88,8 +88,8 @@ static CommandInfo cmd_list[] = {
     {"zoominfull",          command_zoom,        {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
     {"zoomoutfull",         command_zoom,        {COMMAND_ZOOM_OUT | COMMAND_ZOOM_FULL}},
     {"zoomreset",           command_zoom,        {COMMAND_ZOOM_RESET}},
-    {"command-hist-next",   command_history,     {VP_SEARCH_FORWARD, ":"}},
-    {"command-hist-prev",   command_history,     {VP_SEARCH_BACKWARD, ":"}},
+    {"command-hist-next",   command_history,     {VP_SEARCH_FORWARD}},
+    {"command-hist-prev",   command_history,     {VP_SEARCH_BACKWARD}},
 };
 
 static void command_write_input(const char* str);
@@ -530,7 +530,6 @@ gboolean command_zoom(const Arg* arg)
 
 gboolean command_history(const Arg* arg)
 {
-    char* msg = NULL;
     const int count = vp.state.count ? vp.state.count : 1;
     const gint step = count * (arg->i == VP_SEARCH_BACKWARD ? -1 : 1);
     const char* entry = history_get(step);
@@ -538,9 +537,7 @@ gboolean command_history(const Arg* arg)
     if (!entry) {
         return FALSE;
     }
-    msg = g_strconcat(arg->s, entry, NULL);
-    command_write_input(msg);
-    g_free(msg);
+    command_write_input(entry);
 
     return TRUE;
 }

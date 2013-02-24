@@ -43,10 +43,7 @@ const char* history_get(const int step)
 
     /* get the search prefix only on start of history search */
     if (!vp.state.history_prefix) {
-        const char* text = GET_TEXT();
-        /* TODO at the moment we skip only the first char of input box but
-         * maybe we'll have history items that have a longer or no prefix */
-        OVERWRITE_STRING(vp.state.history_prefix, (text + 1));
+        OVERWRITE_STRING(vp.state.history_prefix, GET_TEXT());
     }
 
     for (GList* l = core.behave.history; l; l = l->next) {

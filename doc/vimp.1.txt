@@ -283,12 +283,9 @@ Zoom \fIN\fP steps in or out of the current page \- effecting all elements.
 Reset the zoomlevel to the default value.
 .SS Command-History
 .TP
-.BI [ N "]command-hist-prev [" PREFIX "], [" N "]command-hist-next [" PREFIX ]
-Prints the previous or next cammand from history into inputbox. If \fIPREFIX\fP
-is given, this will be used as prefix for the inserted command, else the
-default ':' will be used.
-If there is already text in the input box this will be used to get previous
-history items.
+.BI [ N "]command-hist-prev, [" N "]command-hist-next"
+Prints the previous or next cammand from history into inputbox. If there is
+already text in the input box this will be used to get history items.
 .SS Misc
 .TP
 .BI [ N "]search-forward, [" N "]search-backward"

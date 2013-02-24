@@ -171,22 +171,22 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
     /* duplicate the content because this may change for example if
      * :set varName? is used the text is changed to the new printed
      * content of inputbox */
-    command = g_strdup((text + 1));
+    command = g_strdup((text));
 
     switch (*text) {
         case '/':
         case '?':
             {
-                Arg a = {*text == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD, command};
+                Arg a = {*text == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD, (command + 1)};
                 command_search(&a);
             }
             break;
 
         case ':':
             completion_clean();
-            vp_process_input(command);
+            vp_process_input((command + 1));
 
-            /* save the command in history */
+            /* save the command together with the first char in history */
             history_append(command);
 
             break;
