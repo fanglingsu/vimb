@@ -66,6 +66,8 @@ static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
 
 /* functions */
 static gboolean vp_process_input(const char* input);
+static void vp_run_user_script(void);
+static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref);
 static void vp_print_version(void);
 static void vp_init(void);
 static void vp_read_config(void);
@@ -120,6 +122,9 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
             } else {
                 vp_set_status(VP_STATUS_NORMAL);
             }
+
+            /* run user script file */
+            vp_run_user_script();
 
             /* status bar is updated by vp_set_mode */
             vp_set_mode(VP_MODE_NORMAL , FALSE);
@@ -589,6 +594,58 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
     }
 }
 
+static void vp_run_user_script(void)
+{
+    char* js      = NULL;
+    GError* error = NULL;
+
+    if (g_file_test(core.files[FILES_SCRIPT], G_FILE_TEST_IS_REGULAR)
+        && g_file_get_contents(core.files[FILES_SCRIPT], &js, NULL, &error)
+    ) {
+        char* value = NULL;
+        char* error = NULL;
+
+        vp_eval_script(webkit_web_view_get_main_frame(vp.gui.webview), js, &value, &error);
+        if (error) {
+            fprintf(stderr, "%s", error);
+            g_free(error);
+        } else {
+            g_free(value);
+        }
+        g_free(js);
+    }
+}
+
+void vp_eval_script(WebKitWebFrame* frame, char* script, char** value, char** error)
+{
+    JSContextRef js = webkit_web_frame_get_global_context(frame);
+    JSValueRef exception = NULL;
+    JSValueRef result    = NULL;
+    JSStringRef str      = JSStringCreateWithUTF8CString(script);
+
+    result = JSEvaluateScript(js, str, JSContextGetGlobalObject(js), NULL, 0, &exception);
+    JSStringRelease(str);
+
+    if (result) {
+        *value = vp_jsref_to_string(js, result);
+    } else {
+        *error = vp_jsref_to_string(js, exception);
+    }
+}
+
+static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref)
+{
+    char *string;
+    JSStringRef str_ref = JSValueToStringCopy(context, ref, NULL);
+    size_t len          = JSStringGetMaximumUTF8CStringSize(str_ref);
+
+    string = g_new0(char, len);
+    JSStringGetUTF8CString(str_ref, string, len);
+    JSStringRelease(str_ref);
+
+    return string;
+}
+
 static void vp_print_version(void)
 {
     fprintf(stderr, "%s/%s (build %s %s)\n", "vimp", VERSION, __DATE__, __TIME__);
@@ -741,6 +798,8 @@ static void vp_init_files(void)
 
     core.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
     util_create_file_if_not_exists(core.files[FILES_CLOSED]);
+
+    core.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
 
     g_free(path);
 }

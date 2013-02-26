@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <webkit/webkit.h>
+#include <JavaScriptCore/JavaScript.h>
 #ifdef HAS_GTK3
 #include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
@@ -164,6 +165,7 @@ enum {
     FILES_CONFIG = 0,
     FILES_COOKIE,
     FILES_CLOSED,
+    FILES_SCRIPT,
     FILES_LAST
 };
 
@@ -312,6 +314,7 @@ void vp_update_statusbar(void);
 void vp_update_urlbar(const char* uri);
 void vp_update_status_style(void);
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
+void vp_eval_script(WebKitWebFrame* frame, char* script, char** value, char** error);
 gboolean vp_set_mode(Mode mode, gboolean clean);
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
 gboolean vp_load_uri(const Arg* arg);
