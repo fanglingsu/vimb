@@ -39,37 +39,39 @@ void history_append(const char* line)
 const char* history_get(const int step)
 {
     const char* command;
-    GList* history = NULL;
 
     /* get the search prefix only on start of history search */
     if (!vp.state.history_prefix) {
         OVERWRITE_STRING(vp.state.history_prefix, GET_TEXT());
-    }
 
-    for (GList* l = core.behave.history; l; l = l->next) {
-        char* entry = (char*)l->data;
-        if (g_str_has_prefix(entry, vp.state.history_prefix)) {
-            history = g_list_prepend(history, entry);
+        /* generate new history list with the matching items */
+        for (GList* l = core.behave.history; l; l = l->next) {
+            char* entry = (char*)l->data;
+            if (g_str_has_prefix(entry, vp.state.history_prefix)) {
+                vp.state.history_active = g_list_prepend(vp.state.history_active, entry);
+            }
         }
+
+        vp.state.history_active = g_list_reverse(vp.state.history_active);
     }
 
-    const int len = g_list_length(history);
+    const int len = g_list_length(vp.state.history_active);
     if (!len) {
         return NULL;
     }
 
-    history = g_list_reverse(history);
-
     /* if reached end/beginnen start at the opposit site of list again */
     vp.state.history_pointer = (len + vp.state.history_pointer + step) % len;
 
-    command = (char*)g_list_nth_data(history, vp.state.history_pointer);
+    command = (char*)g_list_nth_data(vp.state.history_active, vp.state.history_pointer);
 
     return command;
 }
 
 void history_rewind(void)
 {
-    vp.state.history_pointer = 0;
     OVERWRITE_STRING(vp.state.history_prefix, NULL);
+    vp.state.history_pointer = 0;
+    /* free temporary used history list */
+    g_list_free_full(vp.state.history_active, (GDestroyNotify)g_free);
 }

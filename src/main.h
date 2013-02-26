@@ -228,8 +228,12 @@ typedef struct {
     SearchDirection search_dir;
     char*           search_query;
     GList*          downloads;
+    /* points to the actual shown history entry */
     int             history_pointer;
+    /* search string for that is searched in history */
     char*           history_prefix;
+    /* list holding matching items according to history_prefix */
+    GList*          history_active;
 } State;
 
 /* behaviour */
