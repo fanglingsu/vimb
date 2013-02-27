@@ -24,18 +24,10 @@
 
 // Types
 #define Document       WebKitDOMDocument
-#define Body           WebKitDOMHTMLBodyElement
-#define Head           WebKitDOMHTMLHeadElement
-#define Window         WebKitDOMDOMWindow
-#define NodeList       WebKitDOMNodeList
-#define Node           WebKitDOMNode
 #define HtmlElement    WebKitDOMHTMLElement
 #define Element        WebKitDOMElement
-#define CssDeclaration WebKitDOMCSSStyleDeclaration
 #define Event          WebKitDOMEvent
 #define EventTarget    WebKitDOMEventTarget
-#define IFrameElement  WebKitDOMHTMLIFrameElement
-#define FrameElement   WebKitDOMHTMLFrameElement
 
 // style 
 #define style_compare_property(style, name, value)    (!strcmp(webkit_dom_css_style_declaration_get_property_value(style, name), value))
@@ -49,6 +41,5 @@ typedef struct {
 
 void dom_check_auto_insert(void);
 gboolean dom_is_editable(Element* element);
-char* dom_element_get_source(Element* elem);
 
 #endif /* end of include guard: _DOM_H */
