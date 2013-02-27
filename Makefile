@@ -12,6 +12,11 @@ options:
 	@echo "CPPFLAGS  = $(CPPFLAGS)"
 	@echo "LDFLAGS   = $(LDFLAGS)"
 
+src/hints.o: src/hint.js.h
+src/hint.js.h: src/hint.js
+	@echo "minify $<"
+	@cat $< | src/js2h.sh > $@
+
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
@@ -44,7 +49,7 @@ uninstall:
 
 clean:
 	@$(MAKE) -C doc clean
-	$(RM) $(OBJ) $(DOBJ) $(TARGET) $(DTARGET)
+	$(RM) $(OBJ) $(DOBJ) $(TARGET) $(DTARGET) src/hint.js.h
 
 dist: distclean
 	@echo "Creating tarball."

@@ -29,7 +29,6 @@
 #define Window         WebKitDOMDOMWindow
 #define NodeList       WebKitDOMNodeList
 #define Node           WebKitDOMNode
-#define Style          WebKitDOMCSSStyleDeclaration
 #define HtmlElement    WebKitDOMHTMLElement
 #define Element        WebKitDOMElement
 #define CssDeclaration WebKitDOMCSSStyleDeclaration
@@ -49,11 +48,6 @@ typedef struct {
 } DomBoundingRect;
 
 void dom_check_auto_insert(void);
-void dom_element_set_style(Element* element, const char* format, ...);
-void dom_element_style_set_property(Element* element, const char* property, const char* style);
-gboolean dom_element_is_visible(Window* win, Element* element);
-DomBoundingRect dom_elemen_get_bounding_rect(Element* element);
-void dom_dispatch_mouse_event(Document* doc, Element* element, char* type, gushort button);
 gboolean dom_is_editable(Element* element);
 char* dom_element_get_source(Element* elem);
 

@@ -270,10 +270,10 @@ typedef struct {
     VpColor               comp_bg[VP_COMP_LAST];
     PangoFontDescription* comp_font[VP_COMP_LAST];
     /* hint style */
-    char*                hint_bg;
-    char*                hint_bg_focus;
-    char*                hint_fg;
-    char*                hint_style;
+    char*                 hint_bg;
+    char*                 hint_bg_focus;
+    char*                 hint_fg;
+    char*                 hint_style;
     /* status bar */
     VpColor               status_bg[VP_STATUS_LAST];
     VpColor               status_fg[VP_STATUS_LAST];
@@ -281,8 +281,6 @@ typedef struct {
 } Style;
 
 typedef struct {
-    GList* list;
-    gulong focusNum;
     gulong num;
     guint  mode;
     guint  prefixLength;

@@ -22,36 +22,23 @@
 
 #include "main.h"
 
-#define HINTS_GET_TYPE(type)       ((type) & (HINTS_TYPE_LAST))
-#define HINTS_GET_PROCESSING(type) ((type) & ~(HINTS_TYPE_LAST | HINTS_PROCESS | HINTS_TARGET_BLANK))
+#define HINTS_GET_TYPE(type)       ((type) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE))
+#define HINTS_GET_PROCESSING(type) ((type) & ~(HINTS_TYPE_LINK | HINTS_TYPE_IMAGE | HINTS_PROCESS | HINTS_TARGET_BLANK))
 
-/*
-bits 1 and 2 form the hint type
-3:  0 = click hint       1 = process source
-4:  0 = open current     1 = open in new window
-all further bits are used for processing types
-*/
 typedef enum {
-    HINTS_TYPE_LINK,
-    HINTS_TYPE_IMAGE,
-    HINTS_TYPE_DEFAULT,
-    HINTS_TYPE_FORM,
-    HINTS_TYPE_LAST = HINTS_TYPE_FORM,
+    HINTS_TYPE_LINK  = (1 << 1),
+    HINTS_TYPE_IMAGE = (1 << 2),
+    HINTS_TYPE_LAST  = HINTS_TYPE_IMAGE,
 } HintsType;
 
 enum {
-    HINTS_CLICK,
-    HINTS_PROCESS = (1 << 2)
-};
-
-enum {
-    HINTS_TARGET_CURRENT,
-    HINTS_TARGET_BLANK = (1 << 3)
+    HINTS_PROCESS      = (1 << 3),
+    HINTS_TARGET_BLANK = (1 << 4)
 };
 
 typedef enum {
-    HINTS_PROCESS_INPUT = (1 << 4),
-    HINTS_PROCESS_YANK  = (1 << 5),
+    HINTS_PROCESS_INPUT = (1 << 5),
+    HINTS_PROCESS_YANK  = (1 << 6),
 } HintsProcess;
 
 void hints_init(void);

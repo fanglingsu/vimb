@@ -123,6 +123,9 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
                 vp_set_status(VP_STATUS_NORMAL);
             }
 
+            /* inject the hinting javascript */
+            hints_init();
+
             /* run user script file */
             vp_run_user_script();
 
@@ -664,9 +667,6 @@ static void vp_init(void)
 
     /* initialize the keybindings */
     keybind_init();
-
-    /* initialize the hints */
-    hints_init();
 
     /* initialize settings */
     setting_init();
