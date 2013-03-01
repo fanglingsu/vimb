@@ -24,10 +24,7 @@
 #include "command.h"
 #include "hint.js.h"
 
-/* TODO use this in hinting script */
-#define MAX_HINTS 200
-#define HINT_CONTAINER_ID "__hint_container"
-#define HINT_CLASS "__hint"
+#define HINT_VAR "VpHint"
 
 static void hints_run_script(char* js);
 static void hints_fire(void);
@@ -48,7 +45,7 @@ void hints_clear(void)
 {
     hints_observe_input(FALSE);
     if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
-        char* js = g_strdup("hints.clear();");
+        char* js = g_strdup_printf("%s.clear();", HINT_VAR);
         char* value = NULL;
         char* error = NULL;
 
@@ -70,7 +67,8 @@ void hints_create(const char* input, guint mode, const guint prefixLength)
         vp.hints.num          = 0;
 
         js = g_strdup_printf(
-            "hints = new VimpHints('%s', '%s', '%s', '%s');",
+            "var %s = new VimpHints('%s', '%s', '%s', '%s');",
+            HINT_VAR,
             style->hint_bg,
             style->hint_bg_focus,
             style->hint_fg,
@@ -91,21 +89,21 @@ void hints_create(const char* input, guint mode, const guint prefixLength)
         type = (HINTS_TARGET_BLANK & mode) ? 'F' : 'f';
     }
 
-    js = g_strdup_printf("hints.create('%s', '%c');", input ? input : "", type);
+    js = g_strdup_printf("%s.create('%s', '%c');", HINT_VAR, input ? input : "", type);
     hints_run_script(js);
     g_free(js);
 }
 
 void hints_update(const gulong num)
 {
-    char* js = g_strdup_printf("hints.update(%lu);", num);
+    char* js = g_strdup_printf("%s.update(%lu);", HINT_VAR, num);
     hints_run_script(js);
     g_free(js);
 }
 
 void hints_focus_next(const gboolean back)
 {
-    char* js = g_strdup(back ? "hints.focusPrev()" : "hints.focusNext();");
+    char* js = g_strdup_printf(back ? "%s.focusPrev()" : "%s.focusNext();", HINT_VAR);
     hints_run_script(js);
     g_free(js);
 }
@@ -159,7 +157,7 @@ static void hints_run_script(char* js)
 static void hints_fire(void)
 {
     hints_observe_input(FALSE);
-    char* js = g_strdup("hints.fire();");
+    char* js = g_strdup_printf("%s.fire();", HINT_VAR);
     hints_run_script(js);
     g_free(js);
 }
