@@ -12,8 +12,8 @@ options:
 	@echo "CPPFLAGS  = $(CPPFLAGS)"
 	@echo "LDFLAGS   = $(LDFLAGS)"
 
-src/hints.o: src/hint.js.h
-src/hint.js.h: src/hint.js
+src/hints.o: src/hints.js.h
+src/hints.js.h: src/hints.js
 	@echo "minify $<"
 	@cat $< | src/js2h.sh > $@
 

@@ -22,7 +22,7 @@
 #include "hints.h"
 #include "dom.h"
 #include "command.h"
-#include "hint.js.h"
+#include "hints.js.h"
 
 #define HINT_VAR "VpHint"
 
