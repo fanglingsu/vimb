@@ -25,7 +25,7 @@
 #include "hints.js.h"
 
 #define HINT_VAR "VpHint"
-#define HINT_FILE "hints.js"
+#define HINT_FILE NULL
 
 static void hints_run_script(char* js);
 static void hints_fire(void);
