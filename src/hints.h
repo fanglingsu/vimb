@@ -22,7 +22,6 @@
 
 #include "main.h"
 
-#define HINTS_GET_TYPE(type)       ((type) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE))
 #define HINTS_GET_PROCESSING(type) ((type) & ~(HINTS_TYPE_LINK | HINTS_TYPE_IMAGE | HINTS_PROCESS | HINTS_TARGET_BLANK))
 
 typedef enum {

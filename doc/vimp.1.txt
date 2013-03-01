@@ -214,32 +214,25 @@ complation is already started, switch to the next completion item.
 If complation is already started, switch to the previous completion item.
 .SS Hints
 .TP
-.BI "hint-link [" PREFIX ]
-Start hinting to open link into current window. If \fIPREFIX\fP is given,
-print this into the inputbox, default '.'.
+.BI "hint-link [" PREFIX "], hint-link-new [" PREFIX ]
+Start hinting to open link into current or new window. If \fIPREFIX\fP is given,
+print this into the inputbox, default '.' and ','.
 .TP
-.BI "hint-link-new [" PREFIX ]
-Start hinting to open link into a new window. If \fIPREFIX\fP is given,
-print this into the inputbox, default ','.
-.TP
-.BI "hint-input-open [" PREFIX ]
-Start hinting to fill the inputbox with ":open {hintedLinkUrl}". If
-\fIPREFIX\fP is given, print this into the inputbox, default ';o'.
-.TP
-.BI "hint-input-tabopen [" PREFIX ]
-Start hinting to fill the inputbox with ":tabopen {hintedLinkUrl}". If
-\fIPREFIX\fP is given, print this into the inputbox, default ';t'.
+.BI "hint-input-open [" PREFIX "], hint-input-tabopen [" PREFIX ]
+Start hinting to fill the inputbox with ":open {hintedLinkUrl}" or ":tabopen
+{hintedLinkUrl}". If \fIPREFIX\fP is given, print this into the inputbox,
+default ';o' and ';t'.
 .TP
 .BI "hint-yank [" PREFIX ]
 Start hinting to yank the hinted link url into the primary and secondary
-clipboard. If \fIPREFIX\fP is given, print this into the inputbox, default
-';y'.
+clipboard. If \fIPREFIX\fP is given, print this into the inputbox, default ';y'.
 .TP
-.B hint-focus-next
-Focus next hint.
+.BI "hint-image-open [" PREFIX "], hint-image-tabopen [" PREFIX ]
+Start hinting to open images into current or new window. If \fIPREFIX\fP is
+given, print this into the inputbox, default ';i' and ';I'.
 .TP
-.B hint-focus-prev
-Foxus previous hint.
+.B hint-focus-nex, hint-focus-prevt
+Focus next or previous hint.
 .SS Yank
 .TP
 .B yank-uri

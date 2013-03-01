@@ -71,6 +71,8 @@ const struct {
     {"nmap ;o=hint-input-open"},
     {"nmap ;t=hint-input-tabopen"},
     {"nmap ;y=hint-yank"},
+    {"nmap ;i=hint-image-open"},
+    {"nmap ;I=hint-image-tabopen"},
     {"nmap y=yank-uri"},
     {"nmap Y=yank-selection"},
     {"nmap p=open-clipboard"},

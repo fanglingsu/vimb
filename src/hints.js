@@ -200,10 +200,10 @@ VimpHints = function Hints(bg, bgf, fg, style) {
     this.fire = function(n)
     {
         n = n ? n : curFocusNum;
-        var result;
+        var result = "DONE:";
         var hint = _getHintByNumber(n);
         if (typeof(hint.elem) == "undefined") {
-            return "DONE:";
+            return result;
         }
 
         var el  = hint.elem;
@@ -211,7 +211,9 @@ VimpHints = function Hints(bg, bgf, fg, style) {
 
         this.clear();
 
-        if (tag === "iframe" || tag === "frame" || tag === "textarea" || tag === "input" && (el.type === "text" || el.type === "password" || el.type === "checkbox" || el.type === "radio") || tag === "select") {
+        if (tag === "iframe" || tag === "frame" || tag === "textarea" || tag === "select" || tag === "input"
+            && (el.type != "image" && el.type != "submit")
+        ) {
             el.focus();
             if (tag === "input" || tag === "textarea") {
                 return "INSERT:";
@@ -219,18 +221,11 @@ VimpHints = function Hints(bg, bgf, fg, style) {
             return "DONE:";
         }
 
-        result = "DONE:";
         switch (mode) {
             case "f":
                 _open(el);
                 break;
             case "F":
-                _openNewWindow(el);
-                break;
-            case "i":
-                _open(el);
-                break;
-            case "I":
                 _openNewWindow(el);
                 break;
             default:

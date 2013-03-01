@@ -133,6 +133,7 @@ static void hints_run_script(char* js)
     if (!value) {
         return;
     }
+
     if (!strncmp(value, "DONE:", 5)) {
         hints_observe_input(FALSE);
         vp_set_mode(VP_MODE_NORMAL, TRUE);
@@ -141,21 +142,22 @@ static void hints_run_script(char* js)
         vp_set_mode(VP_MODE_INSERT, TRUE);
     } else if (!strncmp(value, "DATA:", 5)) {
         hints_observe_input(FALSE);
-        HintsProcess type = HINTS_GET_PROCESSING(mode);
         Arg a = {0};
-        switch (type) {
-            case HINTS_PROCESS_INPUT:
+        if (mode & HINTS_TYPE_IMAGE) {
+            a.s = (value + 5);
+            a.i = (mode & HINTS_TARGET_BLANK) ? VP_TARGET_NEW : VP_TARGET_CURRENT;
+            command_open(&a);
+        } else {
+            HintsProcess type = HINTS_GET_PROCESSING(mode);
+            if (type == HINTS_PROCESS_INPUT) {
                 a.s = g_strconcat((mode & HINTS_TARGET_BLANK) ? ":tabopen " : ":open ", (value + 5), NULL);
                 command_input(&a);
                 g_free(a.s);
-                break;
-
-            case HINTS_PROCESS_YANK:
+            } else if (type == HINTS_PROCESS_YANK) {
                 a.i = COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY;
-                a.s = g_strdup((value + 5));
+                a.s = (value + 5);
                 command_yank(&a);
-                g_free(a.s);
-                break;
+            }
         }
     }
     g_free(value);
