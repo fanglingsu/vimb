@@ -1,5 +1,5 @@
 #----------------user/install options----------------
-VERSION = 0.1.3
+VERSION = 0.1.4
 
 PROJECT = vimp
 PREFIX  ?= /usr/local/
