@@ -25,6 +25,7 @@
 #include "hints.js.h"
 
 #define HINT_VAR "VpHint"
+#define HINT_FILE "hints.js"
 
 static void hints_run_script(char* js);
 static void hints_fire(void);
@@ -36,7 +37,9 @@ void hints_init(void)
 {
     char* value = NULL;
     char* error = NULL;
-    vp_eval_script(webkit_web_view_get_main_frame(vp.gui.webview), HINTS_JS, &value, &error);
+    vp_eval_script(
+        webkit_web_view_get_main_frame(vp.gui.webview), HINTS_JS, HINT_FILE, &value, &error
+    );
     g_free(value);
     g_free(error);
 }
@@ -49,7 +52,9 @@ void hints_clear(void)
         char* value = NULL;
         char* error = NULL;
 
-        vp_eval_script(webkit_web_view_get_main_frame(vp.gui.webview), js, &value, &error);
+        vp_eval_script(
+            webkit_web_view_get_main_frame(vp.gui.webview), js, HINT_FILE, &value, &error
+        );
         g_free(value);
         g_free(error);
         g_free(js);
@@ -67,7 +72,7 @@ void hints_create(const char* input, guint mode, const guint prefixLength)
         vp.hints.num          = 0;
 
         js = g_strdup_printf(
-            "var %s = new VimpHints('%s', '%s', '%s', '%s');",
+            "%s = new VimpHints('%s', '%s', '%s', '%s');",
             HINT_VAR,
             style->hint_bg,
             style->hint_bg_focus,
@@ -114,7 +119,9 @@ static void hints_run_script(char* js)
     char* error = NULL;
     int mode = vp.hints.mode;
 
-    vp_eval_script(webkit_web_view_get_main_frame(vp.gui.webview), js, &value, &error);
+    vp_eval_script(
+        webkit_web_view_get_main_frame(vp.gui.webview), js, HINT_FILE, &value, &error
+    );
     if (error) {
         fprintf(stderr, "%s\n", error);
         g_free(error);

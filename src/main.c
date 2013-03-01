@@ -608,7 +608,9 @@ static void vp_run_user_script(void)
         char* value = NULL;
         char* error = NULL;
 
-        vp_eval_script(webkit_web_view_get_main_frame(vp.gui.webview), js, &value, &error);
+        vp_eval_script(
+            webkit_web_view_get_main_frame(vp.gui.webview), js, core.files[FILES_SCRIPT], &value, &error
+        );
         if (error) {
             fprintf(stderr, "%s", error);
             g_free(error);
@@ -619,14 +621,18 @@ static void vp_run_user_script(void)
     }
 }
 
-void vp_eval_script(WebKitWebFrame* frame, char* script, char** value, char** error)
+void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error)
 {
-    JSContextRef js = webkit_web_frame_get_global_context(frame);
-    JSValueRef exception = NULL;
-    JSValueRef result    = NULL;
-    JSStringRef str      = JSStringCreateWithUTF8CString(script);
+    JSStringRef str, file_name;
+    JSValueRef exception = NULL, result = NULL;
+    JSContextRef js;
 
-    result = JSEvaluateScript(js, str, JSContextGetGlobalObject(js), NULL, 0, &exception);
+    js        = webkit_web_frame_get_global_context(frame);
+    str       = JSStringCreateWithUTF8CString(script);
+    file_name = JSStringCreateWithUTF8CString(file);
+
+    result = JSEvaluateScript(js, str, JSContextGetGlobalObject(js), file_name, 0, &exception);
+    JSStringRelease(file_name);
     JSStringRelease(str);
 
     if (result) {
@@ -638,7 +644,7 @@ void vp_eval_script(WebKitWebFrame* frame, char* script, char** value, char** er
 
 static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref)
 {
-    char *string;
+    char* string;
     JSStringRef str_ref = JSValueToStringCopy(context, ref, NULL);
     size_t len          = JSStringGetMaximumUTF8CStringSize(str_ref);
 

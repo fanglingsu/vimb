@@ -1,4 +1,5 @@
 VimpHints = function Hints(bg, bgf, fg, style) {
+    "use strict";
     var config = {
         maxHints: 200,
         hintCss: style,
