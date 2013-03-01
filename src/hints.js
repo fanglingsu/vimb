@@ -121,11 +121,10 @@ VimpHints = function Hints(bg, bgf, fg, style) {
 
         _helper(topwin, 0, 0);
 
-        _focus(1);
-        if (hintCount == 1) {
-            /* just one hinted element - might as well follow it */
+        if (hintCount <= 1) {
             return this.fire(1);
         }
+        _focus(1);
     };
 
     /* set focus to next avaiable hint */
@@ -202,7 +201,7 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         n = n ? n : curFocusNum;
         var result = "DONE:";
         var hint = _getHintByNumber(n);
-        if (typeof(hint.elem) == "undefined") {
+        if (!hint || typeof(hint.elem) == "undefined") {
             return result;
         }
 
