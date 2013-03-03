@@ -29,5 +29,6 @@ void util_create_dir_if_not_exists(const char* dirpath);
 void util_create_file_if_not_exists(const char* filename);
 char* util_get_file_contents(const char* filename, gsize* length);
 char** util_get_lines(const char* filename);
+char* util_strcasestr(const char* haystack, const char* needle);
 
 #endif /* end of include guard: _UTIL_H */

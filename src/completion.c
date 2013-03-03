@@ -18,14 +18,17 @@
  */
 
 #include "completion.h"
+#include "util.h"
+#include "url_history.h"
 
+typedef gboolean (*Comp_Func)(char*, const char*);
 typedef struct {
     GtkWidget* label;
     GtkWidget* event;
     char*     prefix;
 } Completion;
 
-static GList* completion_init_completion(GList* target, GList* source, const char* prefix);
+static GList* completion_init_completion(GList* target, GList* source, Comp_Func func, const char* prefix);
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
 static void completion_set_color(Completion* completion, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
@@ -58,14 +61,26 @@ gboolean completion_complete(gboolean back)
 
     input = GET_TEXT();
     /* TODO move these decision to a more generic place */
-    if (g_str_has_prefix(input, ":set ")) {
+    if (!strncmp(input, ":set ", 5)) {
         source = g_hash_table_get_keys(core.settings);
-        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
-        vp.comps.completions = completion_init_completion(vp.comps.completions, source, ":set ");
+        vp.comps.completions = completion_init_completion(
+            vp.comps.completions, source, (Comp_Func)g_str_has_prefix, ":set "
+        );
+    } else if (!strncmp(input, ":open ", 6)) {
+        source = url_history_get_all();
+        vp.comps.completions = completion_init_completion(
+            vp.comps.completions, source, (Comp_Func)util_strcasestr, ":open "
+        );
+    } else if (!strncmp(input, ":tabopen ", 9)) {
+        source = url_history_get_all();
+        vp.comps.completions = completion_init_completion(
+            vp.comps.completions, source, (Comp_Func)util_strcasestr, ":tabopen "
+        );
     } else {
         source = g_hash_table_get_keys(core.behave.commands);
-        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
-        vp.comps.completions = completion_init_completion(vp.comps.completions, source, ":");
+        vp.comps.completions = completion_init_completion(
+            vp.comps.completions, source, (Comp_Func)g_str_has_prefix, ":"
+        );
     }
 
     if (!vp.comps.completions) {
@@ -92,7 +107,7 @@ void completion_clean(void)
     vp.state.mode &= ~VP_MODE_COMPLETE;
 }
 
-static GList* completion_init_completion(GList* target, GList* source, const char* prefix)
+static GList* completion_init_completion(GList* target, GList* source, Comp_Func func, const char* prefix)
 {
     const char* input = GET_TEXT();
     char* command = NULL;
@@ -110,6 +125,7 @@ static GList* completion_init_completion(GList* target, GList* source, const cha
 
     token = g_strsplit(command, " ", -1);
 
+    source = g_list_sort(source, (GCompareFunc)g_strcmp0);
     for (GList* l = source; l; l = l->next) {
         data = l->data;
         match = FALSE;
@@ -117,7 +133,7 @@ static GList* completion_init_completion(GList* target, GList* source, const cha
             match = TRUE;
         } else {
             for (int i = 0; token[i]; i++) {
-                if (g_str_has_prefix(data, token[i])) {
+                if (func(data, token[i])) {
                     match = TRUE;
                 } else {
                     match = FALSE;

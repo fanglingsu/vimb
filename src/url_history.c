@@ -83,6 +83,18 @@ void url_history_add(const char* url, const char* title)
     core.behave.url_history = g_list_prepend(core.behave.url_history, item);
 }
 
+GList* url_history_get_all(void)
+{
+    GList* out = NULL;
+    for (GList* link = core.behave.url_history; link; link = link->next) {
+        UrlHist* hi = (UrlHist*)link->data;
+        /* put only the url in the list - do not allocate new memory */
+        out = g_list_prepend(out, hi->uri);
+    }
+
+    return out;
+}
+
 static void url_history_free(UrlHist* item)
 {
     g_free(item->uri);
