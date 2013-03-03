@@ -36,6 +36,8 @@ static gboolean setting_ca_bundle(const Setting* s, const SettingType type);
 static gboolean setting_home_page(const Setting* s, const SettingType type);
 static gboolean setting_download_path(const Setting* s, const SettingType type);
 static gboolean setting_proxy(const Setting* s, const SettingType type);
+static gboolean setting_user_style(const Setting* s, const SettingType type);
+static gboolean setting_history_max_items(const Setting* s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -80,7 +82,6 @@ static Setting default_settings[] = {
     {"spelllang", "spell-checking-languages", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {NULL, "tab-key-cycles-through-elements", TYPE_BOOLEAN, setting_webkit, {.i = 1}},
     {"useragent", "user-agent", TYPE_CHAR, setting_webkit, {.s = "vimp/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}},
-    {"stylesheet", "user-stylesheet-uri", TYPE_CHAR, setting_webkit, {.s = NULL}},
     {"zoomstep", "zoom-step", TYPE_FLOAT, setting_webkit, {.i = 100000}},
     /* internal variables */
     {NULL, "proxy", TYPE_BOOLEAN, setting_proxy, {.i = 1}},
@@ -118,6 +119,8 @@ static Setting default_settings[] = {
     {NULL, "ca-bundle", TYPE_CHAR, setting_ca_bundle, {.s = "/etc/ssl/certs/ca-certificates.crt"}},
     {NULL, "home-page", TYPE_CHAR, setting_home_page, {.s = "https://github.com/fanglingsu/vimp"}},
     {NULL, "download-path", TYPE_CHAR, setting_download_path, {.s = "/tmp/vimp"}},
+    {NULL, "stylesheet", TYPE_BOOLEAN, setting_user_style, {.i = 1}},
+    {NULL, "history-max-items", TYPE_INTEGER, setting_history_max_items, {.i = 100}},
 };
 
 
@@ -658,6 +661,54 @@ static gboolean setting_proxy(const Setting* s, const SettingType type)
     } else {
         g_object_set(core.soup_session, "proxy-uri", NULL, NULL);
     }
+
+    return TRUE;
+}
+
+static gboolean setting_user_style(const Setting* s, const SettingType type)
+{
+    gboolean enabled = FALSE;
+    char* uri = NULL;
+    WebKitWebSettings* web_setting = webkit_web_view_get_settings(vp.gui.webview);
+    if (type != SETTING_SET) {
+        g_object_get(web_setting, "user-stylesheet-uri", &uri, NULL);
+        enabled = (uri != NULL);
+
+        if (type == SETTING_GET) {
+            setting_print_value(s, &enabled);
+
+            return TRUE;
+        }
+    }
+
+    if (type == SETTING_TOGGLE) {
+        enabled = !enabled;
+        /* print the new value */
+        setting_print_value(s, &enabled);
+    } else {
+        enabled = s->arg.i;
+    }
+
+    if (enabled) {
+        uri = g_strconcat("file://", core.files[FILES_USER_STYLE], NULL);
+        g_object_set(web_setting, "user-stylesheet-uri", uri, NULL);
+        g_free(uri);
+    } else {
+        g_object_set(web_setting, "user-stylesheet-uri", NULL, NULL);
+    }
+
+    return TRUE;
+}
+
+static gboolean setting_history_max_items(const Setting* s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        setting_print_value(s, &core.config.max_history_items);
+
+        return TRUE;
+    }
+
+    core.config.max_history_items = s->arg.i;
 
     return TRUE;
 }

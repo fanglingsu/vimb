@@ -409,7 +409,7 @@ void vp_clean_up(void)
         g_file_set_contents(core.files[FILES_CLOSED], uri, -1, NULL);
     }
 
-    for (int i = FILES_FIRST; i < FILES_LAST; i++) {
+    for (int i = 0; i < FILES_LAST; i++) {
         g_free(core.files[i]);
     }
     command_cleanup();
@@ -806,6 +806,12 @@ static void vp_init_files(void)
     util_create_file_if_not_exists(core.files[FILES_CLOSED]);
 
     core.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
+
+    core.files[FILES_HISTORY] = g_build_filename(path, "history", NULL);
+    util_create_file_if_not_exists(core.files[FILES_HISTORY]);
+
+    core.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
+    util_create_file_if_not_exists(core.files[FILES_USER_STYLE]);
 
     g_free(path);
 }

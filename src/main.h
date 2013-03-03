@@ -161,11 +161,12 @@ typedef enum {
 } CompletionStyle;
 
 enum {
-    FILES_FIRST = 0,
-    FILES_CONFIG = 0,
+    FILES_CONFIG,
     FILES_COOKIE,
     FILES_CLOSED,
     FILES_SCRIPT,
+    FILES_HISTORY,
+    FILES_USER_STYLE,
     FILES_LAST
 };
 
@@ -253,6 +254,7 @@ typedef struct {
     guint  max_completion_items;
     char*  home_page;
     char*  download_dir;
+    guint  max_history_items;
 } Config;
 
 typedef struct {
