@@ -124,7 +124,7 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         if (hintCount <= 1) {
             return this.fire(1);
         }
-        _focus(1);
+        return _focus(1);
     };
 
     /* set focus to next avaiable hint */
@@ -133,9 +133,9 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         var index = _getHintIdByNumber(curFocusNum);
 
         if (typeof(hints[index + 1]) !== "undefined") {
-            _focus(hints[index + 1].number);
+            return _focus(hints[index + 1].number);
         } else {
-            _focus(hints[0].number);
+            return _focus(hints[0].number);
         }
     };
 
@@ -144,9 +144,9 @@ VimpHints = function Hints(bg, bgf, fg, style) {
     {
         var index = _getHintIdByNumber(curFocusNum);
         if (index !== 0 && typeof(hints[index - 1].number) !== "undefined") {
-            _focus(hints[index - 1].number);
+            return _focus(hints[index - 1].number);
         } else {
-            _focus(hints[hints.length - 1].number);
+            return _focus(hints[hints.length - 1].number);
         }
     };
 
@@ -254,6 +254,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
             hint.elem.className = hint.elem.className.replace(config.hintClass, config.hintClassFocus);
             hint.elem.style.background = config.eBgf;
             _mouseEvent(hint.elem, "mouseover");
+            var source = _getElemtSource(hint.elem);
+            return "OVER:" + (source ? source : "");
         }
     }
 

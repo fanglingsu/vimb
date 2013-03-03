@@ -56,6 +56,8 @@ void hints_clear(void)
         g_free(value);
         g_free(error);
         g_free(js);
+
+        g_signal_emit_by_name(vp.gui.webview, "hovering-over-link", NULL, NULL);
     }
 }
 
@@ -132,7 +134,11 @@ static void hints_run_script(char* js)
         return;
     }
 
-    if (!strncmp(value, "DONE:", 5)) {
+    if (!strncmp(value, "OVER:", 5)) {
+        g_signal_emit_by_name(
+            vp.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
+        );
+    } else if (!strncmp(value, "DONE:", 5)) {
         hints_observe_input(FALSE);
         vp_set_mode(VP_MODE_NORMAL, TRUE);
     } else if (!strncmp(value, "INSERT:", 7)) {
