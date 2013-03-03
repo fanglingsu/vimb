@@ -41,12 +41,12 @@ const char* history_get(const int step)
     const char* command;
 
     /* get the search prefix only on start of history search */
-    if (!vp.state.history_prefix) {
+    if (!vp.state.history_active) {
         OVERWRITE_STRING(vp.state.history_prefix, GET_TEXT());
 
         /* generate new history list with the matching items */
         for (GList* l = core.behave.history; l; l = l->next) {
-            char* entry = (char*)l->data;
+            char* entry = g_strdup((char*)l->data);
             if (g_str_has_prefix(entry, vp.state.history_prefix)) {
                 vp.state.history_active = g_list_prepend(vp.state.history_active, entry);
             }
@@ -70,8 +70,11 @@ const char* history_get(const int step)
 
 void history_rewind(void)
 {
-    OVERWRITE_STRING(vp.state.history_prefix, NULL);
-    vp.state.history_pointer = 0;
-    /* free temporary used history list */
-    g_list_free_full(vp.state.history_active, (GDestroyNotify)g_free);
+    if (vp.state.history_active) {
+        OVERWRITE_STRING(vp.state.history_prefix, NULL);
+        vp.state.history_pointer = 0;
+        /* free temporary used history list */
+        g_list_free_full(vp.state.history_active, (GDestroyNotify)g_free);
+        vp.state.history_active = NULL;
+    }
 }
