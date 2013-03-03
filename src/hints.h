@@ -40,7 +40,7 @@ typedef enum {
     HINTS_PROCESS_YANK  = (1 << 6),
 } HintsProcess;
 
-void hints_init(void);
+void hints_init(WebKitWebFrame* frame);
 void hints_create(const char* input, guint mode, const guint prefixLength);
 void hints_update(const gulong num);
 void hints_clear(void);

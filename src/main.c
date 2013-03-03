@@ -66,7 +66,7 @@ static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
 
 /* functions */
 static gboolean vp_process_input(const char* input);
-static void vp_run_user_script(void);
+static void vp_run_user_script(WebKitWebFrame* frame);
 static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref);
 static void vp_print_version(void);
 static void vp_init(void);
@@ -109,25 +109,27 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
             break;
 
         case WEBKIT_LOAD_COMMITTED:
-            /* set the status */
-            if (g_str_has_prefix(uri, "https://")) {
-                WebKitWebFrame* frame         = webkit_web_view_get_main_frame(vp.gui.webview);
-                WebKitWebDataSource* src      = webkit_web_frame_get_data_source(frame);
-                WebKitNetworkRequest* request = webkit_web_data_source_get_request(src);
-                SoupMessage* msg              = webkit_network_request_get_message(request);
-                SoupMessageFlags flags        = soup_message_get_flags(msg);
-                vp_set_status(
-                    (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VP_STATUS_SSL_VALID : VP_STATUS_SSL_INVALID
-                );
-            } else {
-                vp_set_status(VP_STATUS_NORMAL);
+            {
+                WebKitWebFrame* frame = webkit_web_view_get_main_frame(vp.gui.webview);
+                /* set the status */
+                if (g_str_has_prefix(uri, "https://")) {
+                    WebKitWebDataSource* src      = webkit_web_frame_get_data_source(frame);
+                    WebKitNetworkRequest* request = webkit_web_data_source_get_request(src);
+                    SoupMessage* msg              = webkit_network_request_get_message(request);
+                    SoupMessageFlags flags        = soup_message_get_flags(msg);
+                    vp_set_status(
+                        (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VP_STATUS_SSL_VALID : VP_STATUS_SSL_INVALID
+                    );
+                } else {
+                    vp_set_status(VP_STATUS_NORMAL);
+                }
+
+                /* inject the hinting javascript */
+                hints_init(frame);
+
+                /* run user script file */
+                vp_run_user_script(frame);
             }
-
-            /* inject the hinting javascript */
-            hints_init();
-
-            /* run user script file */
-            vp_run_user_script();
 
             /* status bar is updated by vp_set_mode */
             vp_set_mode(VP_MODE_NORMAL , FALSE);
@@ -597,7 +599,7 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
     }
 }
 
-static void vp_run_user_script(void)
+static void vp_run_user_script(WebKitWebFrame* frame)
 {
     char* js      = NULL;
     GError* error = NULL;
@@ -608,9 +610,7 @@ static void vp_run_user_script(void)
         char* value = NULL;
         char* error = NULL;
 
-        vp_eval_script(
-            webkit_web_view_get_main_frame(vp.gui.webview), js, core.files[FILES_SCRIPT], &value, &error
-        );
+        vp_eval_script(frame, js, core.files[FILES_SCRIPT], &value, &error);
         if (error) {
             fprintf(stderr, "%s", error);
             g_free(error);

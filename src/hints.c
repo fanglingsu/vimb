@@ -33,13 +33,11 @@ static void hints_observe_input(gboolean observe);
 static gboolean hints_changed_callback(GtkEditable *entry, gpointer data);
 static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
 
-void hints_init(void)
+void hints_init(WebKitWebFrame* frame)
 {
     char* value = NULL;
     char* error = NULL;
-    vp_eval_script(
-        webkit_web_view_get_main_frame(vp.gui.webview), HINTS_JS, HINT_FILE, &value, &error
-    );
+    vp_eval_script(frame, HINTS_JS, HINT_FILE, &value, &error);
     g_free(value);
     g_free(error);
 }
