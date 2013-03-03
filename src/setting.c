@@ -703,12 +703,12 @@ static gboolean setting_user_style(const Setting* s, const SettingType type)
 static gboolean setting_history_max_items(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(s, &core.config.max_history_items);
+        setting_print_value(s, &core.config.url_history_max);
 
         return TRUE;
     }
 
-    core.config.max_history_items = s->arg.i;
+    core.config.url_history_max = s->arg.i;
 
     return TRUE;
 }

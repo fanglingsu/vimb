@@ -28,6 +28,7 @@
 #include "hints.h"
 #include "searchengine.h"
 #include "history.h"
+#include "url_history.h"
 
 /* variables */
 static char **args;
@@ -79,7 +80,6 @@ static void vp_set_cookie(SoupCookie* cookie);
 static const char* vp_get_cookies(SoupURI *uri);
 static gboolean vp_hide_message(void);
 static void vp_set_status(const StatusType status);
-static void vp_save_url_history(const char* url, const char* title);
 
 static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download)
 {
@@ -148,7 +148,7 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
 
             dom_check_auto_insert();
 
-            vp_save_url_history(uri, webkit_web_view_get_title(vp.gui.webview));
+            url_history_add(uri, webkit_web_view_get_title(vp.gui.webview));
             break;
 
         case WEBKIT_LOAD_FAILED:
@@ -412,14 +412,16 @@ void vp_clean_up(void)
         g_file_set_contents(core.files[FILES_CLOSED], uri, -1, NULL);
     }
 
-    for (int i = 0; i < FILES_LAST; i++) {
-        g_free(core.files[i]);
-    }
     command_cleanup();
     setting_cleanup();
     keybind_cleanup();
     completion_clean();
     searchengine_cleanup();
+    url_history_cleanup();
+
+    for (int i = 0; i < FILES_LAST; i++) {
+        g_free(core.files[i]);
+    }
 }
 
 void vp_clean_input(void)
@@ -462,45 +464,6 @@ static void vp_set_status(const StatusType status)
         /* update the statusbar style only if the status changed */
         vp_update_status_style();
     }
-}
-
-static void vp_save_url_history(const char* url, const char* title)
-{
-    FILE* f = NULL;
-    char buf[512] = {0};
-    char* new = NULL;
-    guint max = core.config.max_history_items;
-    f = fopen(core.files[FILES_HISTORY], "r");
-    if (!f) {
-        return;
-    }
-
-    char* title_escaped = g_shell_quote(title ? title : "");
-    char* new_item = g_strdup_printf("%s %s\n", url, title);
-    gint n = strlen(new_item);
-    g_free(title_escaped);
-
-    new = g_new0(char, max * sizeof(buf));
-    /* put the new entry to the top */
-    strncpy(new, new_item, n);
-
-    for (guint i = 1; i < max && fgets(buf, sizeof(buf), f); i++) {
-        if (strncmp(new_item, buf, n) != 0) {
-            strncat(new, buf, sizeof(buf));
-        }
-    }
-    fclose(f);
-
-    f = fopen(core.files[FILES_HISTORY], "w");
-    if (!f) {
-        g_free(new);
-
-        return;
-    }
-    fprintf(f, "%s", new);
-    g_free(new);
-
-    fclose(f);
 }
 
 /**
@@ -724,6 +687,8 @@ static void vp_init(void)
 
     /* set the configuration to the required objects */
     vp_setup_settings();
+
+    url_history_init();
 }
 
 static void vp_read_config(void)

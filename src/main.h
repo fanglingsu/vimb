@@ -25,6 +25,8 @@
 #include <string.h>
 #include <webkit/webkit.h>
 #include <JavaScriptCore/JavaScript.h>
+#include <fcntl.h>
+#include <stdio.h>
 #ifdef HAS_GTK3
 #include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
@@ -62,6 +64,12 @@
 #define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
 #define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))
 #define CLEAN_STATE(e)            ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_CONTROL_MASK))
+
+#define file_lock_set(fd, cmd) \
+{ \
+    struct flock lock = { .l_type = cmd, .l_start = 0, .l_whence = SEEK_SET, .l_len = 0}; \
+    fcntl(fd, F_SETLK, lock); \
+}
 
 #ifdef HAS_GTK3
 #define VpColor GdkRGBA
@@ -246,6 +254,7 @@ typedef struct {
     GString*    modkeys;
     GSList*     searchengines;
     GList*      history;
+    GList*      url_history;
 } Behaviour;
 
 typedef struct {
@@ -254,7 +263,7 @@ typedef struct {
     guint  max_completion_items;
     char*  home_page;
     char*  download_dir;
-    guint  max_history_items;
+    guint  url_history_max;
 } Config;
 
 typedef struct {
