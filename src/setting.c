@@ -120,7 +120,7 @@ static Setting default_settings[] = {
     {NULL, "home-page", TYPE_CHAR, setting_home_page, {.s = "https://github.com/fanglingsu/vimp"}},
     {NULL, "download-path", TYPE_CHAR, setting_download_path, {.s = "/tmp/vimp"}},
     {NULL, "stylesheet", TYPE_BOOLEAN, setting_user_style, {.i = 1}},
-    {NULL, "history-max-items", TYPE_INTEGER, setting_history_max_items, {.i = 100}},
+    {NULL, "history-max-items", TYPE_INTEGER, setting_history_max_items, {.i = 500}},
 };
 
 
