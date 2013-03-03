@@ -29,7 +29,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         var hintCount = 0;
         this.clear();
 
-        function _helper (win, offsetX, offsetY) {
+        function _helper (win, offsetX, offsetY)
+        {
             var doc = win.document;
 
             var win_height = win.height;
@@ -47,12 +48,13 @@ VimpHints = function Hints(bg, bgf, fg, style) {
             hCont = doc.createElement("div");
             hCont.id = "hint_container";
 
-            xpath_expr = _getXpathXpression(inputText);
+            xpath_expr = _getXpath(inputText);
 
-            var res = doc.evaluate(xpath_expr, doc,
-                function (p) {
-                    return "http://www.w3.org/1999/xhtml";
-                }, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            var res = doc.evaluate(
+                xpath_expr, doc,
+                function (p) {return "http://www.w3.org/1999/xhtml";},
+                XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null
+            );
 
             /* generate basic hint element which will be cloned and updated later */
             var hintSpan = doc.createElement("span");
@@ -73,7 +75,7 @@ VimpHints = function Hints(bg, bgf, fg, style) {
                 }
 
                 var style = topwin.getComputedStyle(elem, "");
-                if (style.display == "none" || style.visibility != "visible") {
+                if (style.display === "none" || style.visibility !== "visible") {
                     continue;
                 }
 
@@ -134,9 +136,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
 
         if (typeof(hints[index + 1]) !== "undefined") {
             return _focus(hints[index + 1].number);
-        } else {
-            return _focus(hints[0].number);
         }
+        return _focus(hints[0].number);
     };
 
     /* set focus to previous avaiable hint */
@@ -145,9 +146,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         var index = _getHintIdByNumber(curFocusNum);
         if (index !== 0 && typeof(hints[index - 1].number) !== "undefined") {
             return _focus(hints[index - 1].number);
-        } else {
-            return _focus(hints[hints.length - 1].number);
         }
+        return _focus(hints[hints.length - 1].number);
     };
 
     /* filters hints matching given number */
@@ -199,10 +199,9 @@ VimpHints = function Hints(bg, bgf, fg, style) {
     this.fire = function(n)
     {
         n = n ? n : curFocusNum;
-        var result = "DONE:";
         var hint = _getHintByNumber(n);
         if (!hint || typeof(hint.elem) == "undefined") {
-            return result;
+            return "DONE:";
         }
 
         var el  = hint.elem;
@@ -211,7 +210,7 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         this.clear();
 
         if (tag === "iframe" || tag === "frame" || tag === "textarea" || tag === "select" || tag === "input"
-            && (el.type != "image" && el.type != "submit")
+            && (el.type !== "image" && el.type !== "submit")
         ) {
             el.focus();
             if (tag === "input" || tag === "textarea") {
@@ -220,19 +219,7 @@ VimpHints = function Hints(bg, bgf, fg, style) {
             return "DONE:";
         }
 
-        switch (mode) {
-            case "f":
-                _open(el);
-                break;
-            case "F":
-                _openNewWindow(el);
-                break;
-            default:
-                result = "DATA:" + _getElemtSource(el);
-                break;
-        }
-
-        return result;
+        return "DATA:" + _getSrc(el);;
     };
 
     /* set focus on hint with given number */
@@ -254,27 +241,10 @@ VimpHints = function Hints(bg, bgf, fg, style) {
             hint.elem.className = hint.elem.className.replace(config.hintClass, config.hintClassFocus);
             hint.elem.style.background = config.eBgf;
             _mouseEvent(hint.elem, "mouseover");
-            var source = _getElemtSource(hint.elem);
+            var source = _getSrc(hint.elem);
+
             return "OVER:" + (source ? source : "");
         }
-    }
-
-    /* retrieves text content fro given element */
-    function _getTextFromElement(el)
-    {
-        var text;
-        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-            text = el.value;
-        } else if (el instanceof HTMLSelectElement) {
-            if (el.selectedIndex >= 0) {
-                text = el.item(el.selectedIndex).text;
-            } else{
-                text = "";
-            }
-        } else {
-            text = el.textContent;
-        }
-        return text.toLowerCase();
     }
 
     /* retrieves the hint for given hint number */
@@ -318,28 +288,6 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         }
     }
 
-    /* opens given element */
-    function _open(elem)
-    {
-        if (elem.target == "_blank") {
-            elem.removeAttribute("target");
-        }
-        _mouseEvent(elem, "moudedown");
-        _mouseEvent(elem, "click");
-    }
-
-    /* opens given element into new window */
-    function _openNewWindow(elem)
-    {
-        var oldTarget = elem.target;
-
-        /* set target to open in new window */
-        elem.target = "_blank";
-        _mouseEvent(elem, "moudedown");
-        _mouseEvent(elem, "click");
-        elem.target = oldTarget;
-    }
-
     function _mouseEvent(elem, name)
     {
         var doc = elem.ownerDocument;
@@ -351,41 +299,38 @@ VimpHints = function Hints(bg, bgf, fg, style) {
     }
 
     /* retrieves the url of given element */
-    function _getElemtSource(elem)
+    function _getSrc(elem)
     {
-        var url = elem.href || elem.src;
-        return url;
+        return elem.href || elem.src;
     }
 
     /* retrieves the xpath expression according to mode */
-    function _getXpathXpression(text)
+    function _getXpath(s)
     {
         var expr;
-        if (typeof(text) === "undefined") {
-            text = "";
+        if (typeof(s) === "undefined") {
+            s = "";
         }
         switch (mode) {
-            case "f":
-            case "F":
-                if (text === "") {
+            case "l":
+                if (s === "") {
                     expr = "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href] | //input[not(@type='hidden')] | //a[href] | //area | //textarea | //button | //select";
                 } else {
-                    expr = "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and contains(., '" + text + "')] | //input[not(@type='hidden') and contains(., '" + text + "')] | //a[@href and contains(., '" + text + "')] | //area[contains(., '" + text + "')] |  //textarea[contains(., '" + text + "')] | //button[contains(@value, '" + text + "')] | //select[contains(., '" + text + "')]";
+                    expr = "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and contains(., '" + s + "')] | //input[not(@type='hidden') and contains(., '" + s + "')] | //a[@href and contains(., '" + s + "')] | //area[contains(., '" + s + "')] |  //textarea[contains(., '" + s + "')] | //button[contains(@value, '" + s + "')] | //select[contains(., '" + s + "')]";
                 }
                 break;
             case "i":
-            case "I":
-                if (text === "") {
+                if (s === "") {
                     expr = "//img[@src]";
                 } else {
-                    expr = "//img[@src and contains(., '" + text + "')]";
+                    expr = "//img[@src and contains(., '" + s + "')]";
                 }
                 break;
             default:
-                if (text === "") {
+                if (s === "") {
                     expr = "//*[@role='link' or @href] | //a[href] | //area | //img[not(ancestor::a)]";
                 } else {
-                    expr = "//*[(@role='link' or @href) and contains(., '" + text + "')] | //a[@href and contains(., '" + text + "')] | //area[contains(., '" + text + "')] | //img[not(ancestor::a) and contains(., '" + text + "')]";
+                    expr = "//*[(@role='link' or @href) and contains(., '" + s + "')] | //a[@href and contains(., '" + s + "')] | //area[contains(., '" + s + "')] | //img[not(ancestor::a) and contains(., '" + s + "')]";
                 }
                 break;
         }

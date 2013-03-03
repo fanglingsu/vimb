@@ -86,12 +86,10 @@ void hints_create(const char* input, guint mode, const guint prefixLength)
     }
 
     /* convert the mode into the type chare used in the hint script */
-    if (mode & HINTS_PROCESS) {
-        type = 'd';
-    } else if (mode & HINTS_TYPE_IMAGE) {
-        type = (HINTS_TARGET_BLANK & mode) ? 'I' : 'i';
-    } else {
-        type = (HINTS_TARGET_BLANK & mode) ? 'F' : 'f';
+    if (mode & HINTS_TYPE_LINK) {
+        type = 'l';
+    } else if (HINTS_TYPE_IMAGE) {
+        type = 'i';
     }
 
     js = g_strdup_printf("%s.create('%s', '%c');", HINT_VAR, input ? input : "", type);
@@ -147,21 +145,19 @@ static void hints_run_script(char* js)
     } else if (!strncmp(value, "DATA:", 5)) {
         hints_observe_input(FALSE);
         Arg a = {0};
-        if (mode & HINTS_TYPE_IMAGE) {
-            a.s = (value + 5);
-            a.i = (mode & HINTS_TARGET_BLANK) ? VP_TARGET_NEW : VP_TARGET_CURRENT;
+        char* v = (value + 5);
+        if (mode & HINTS_PROCESS_OPEN) {
+            a.s = v;
+            a.i = (mode & HINTS_OPEN_NEW) ? VP_TARGET_NEW : VP_TARGET_CURRENT;
             command_open(&a);
+        } else if (mode & HINTS_PROCESS_INPUT) {
+            a.s = g_strconcat((mode & HINTS_OPEN_NEW) ? ":tabopen " : ":open ", v, NULL);
+            command_input(&a);
+            g_free(a.s);
         } else {
-            HintsProcess type = HINTS_GET_PROCESSING(mode);
-            if (type == HINTS_PROCESS_INPUT) {
-                a.s = g_strconcat((mode & HINTS_TARGET_BLANK) ? ":tabopen " : ":open ", (value + 5), NULL);
-                command_input(&a);
-                g_free(a.s);
-            } else if (type == HINTS_PROCESS_YANK) {
-                a.i = COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY;
-                a.s = (value + 5);
-                command_yank(&a);
-            }
+            a.i = COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY;
+            a.s = v;
+            command_yank(&a);
         }
     }
     g_free(value);
@@ -192,6 +188,10 @@ static void hints_observe_input(gboolean observe)
         g_signal_handler_disconnect(G_OBJECT(vp.gui.inputbox), keypressHandler);
         changeHandler = 0;
         keypressHandler = 0;
+
+        /* clear the input box - TODO move this to a better place */
+        gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+        gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), "");
     }
 }
 

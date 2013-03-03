@@ -22,23 +22,16 @@
 
 #include "main.h"
 
-#define HINTS_GET_PROCESSING(type) ((type) & ~(HINTS_TYPE_LINK | HINTS_TYPE_IMAGE | HINTS_PROCESS | HINTS_TARGET_BLANK))
-
-typedef enum {
-    HINTS_TYPE_LINK  = (1 << 1),
-    HINTS_TYPE_IMAGE = (1 << 2),
-    HINTS_TYPE_LAST  = HINTS_TYPE_IMAGE,
-} HintsType;
+#define HINTS_GET_TYPE(n) ((n) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE))
 
 enum {
-    HINTS_PROCESS      = (1 << 3),
-    HINTS_TARGET_BLANK = (1 << 4)
+    HINTS_TYPE_LINK     = 1,
+    HINTS_TYPE_IMAGE    = 2,
+    HINTS_PROCESS_INPUT = (1 << 2),
+    HINTS_PROCESS_YANK  = (1 << 3),
+    HINTS_PROCESS_OPEN  = (1 << 4),
+    HINTS_OPEN_NEW      = (1 << 5),
 };
-
-typedef enum {
-    HINTS_PROCESS_INPUT = (1 << 5),
-    HINTS_PROCESS_YANK  = (1 << 6),
-} HintsProcess;
 
 void hints_init(WebKitWebFrame* frame);
 void hints_create(const char* input, guint mode, const guint prefixLength);
