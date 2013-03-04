@@ -270,6 +270,7 @@ typedef struct {
     GList* completions;
     GList* active;
     int    count;
+    char*  prefix;
 } Completions;
 
 typedef struct {
