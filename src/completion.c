@@ -32,22 +32,29 @@ static GList* completion_init_completion(GList* target, GList* source, Comp_Func
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
 static void completion_set_color(Completion* completion, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
-static void completion_set_entry_text(Completion* completion);
+static void completion_set_entry_text(Completion* c);
+static char* completion_get_text(Completion* c);
 static Completion* completion_get_new(const char* label, const char* prefix);
 
 gboolean completion_complete(gboolean back)
 {
-    const char* input = NULL;
+    const char* input = GET_TEXT();
     GList* source = NULL;
 
     if (vp.comps.completions
         && vp.comps.active
         && (vp.state.mode & VP_MODE_COMPLETE)
     ) {
-        /* updatecompletions */
-        vp.comps.active = completion_update(vp.comps.completions, vp.comps.active, back);
+        char* text = completion_get_text((Completion*)vp.comps.active->data);
+        if (!strcmp(input, text)) {
+            /* updatecompletions */
+            vp.comps.active = completion_update(vp.comps.completions, vp.comps.active, back);
 
-        return TRUE;
+            return TRUE;
+        } else {
+            /* if current input isn't the content of the completion item */
+            completion_clean();
+        }
     }
 
     /* create new completion */
@@ -59,7 +66,6 @@ gboolean completion_complete(gboolean back)
 #endif
     gtk_box_pack_start(GTK_BOX(vp.gui.box), vp.gui.compbox, FALSE, FALSE, 0);
 
-    input = GET_TEXT();
     /* TODO move these decision to a more generic place */
     if (!strncmp(input, ":set ", 5)) {
         source = g_hash_table_get_keys(core.settings);
@@ -266,22 +272,29 @@ static void completion_set_color(Completion* completion, const VpColor* fg, cons
     VP_WIDGET_OVERRIDE_FONT(completion->label, font);
 }
 
-static void completion_set_entry_text(Completion* completion)
+static void completion_set_entry_text(Completion* c)
 {
-    GString* string = g_string_new(completion->prefix);
-    const char* text;
+    char* text = completion_get_text(c);
+    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), text);
+    gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
+    g_free(text);
+}
 
-    text = gtk_label_get_text(GTK_LABEL(completion->label));
+/**
+ * Retrieves the full new allocated entry text for given completion item.
+ */
+static char* completion_get_text(Completion* c)
+{
+    char* text = NULL;
 
     /* print the previous typed command count into inputbox too */
     if (vp.comps.count) {
-        g_string_append_printf(string, "%d", vp.comps.count);
+        text = g_strdup_printf("%s%d%s", c->prefix, vp.comps.count, gtk_label_get_text(GTK_LABEL(c->label)));
+    } else {
+        text = g_strdup_printf("%s%s", c->prefix, gtk_label_get_text(GTK_LABEL(c->label)));
     }
-    g_string_append(string, text);
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), string->str);
-    gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
 
-    g_string_free(string, TRUE);
+    return text;
 }
 
 static Completion* completion_get_new(const char* label, const char* prefix)
