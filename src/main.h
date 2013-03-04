@@ -53,9 +53,7 @@
 
 #define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vp.gui.inputbox)))
 #define CLEAN_MODE(mode) ((mode) & ~(VP_MODE_COMPLETE))
-#define GET_CLEAN_MODE() (CLEAN_MODE(vp.state.mode))
 #define CLEAR_INPUT() (vp_echo(VP_MSG_NORMAL, ""))
-#define CURRENT_URL() webkit_web_view_get_uri(vp.gui.webview)
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
 
@@ -178,15 +176,16 @@ typedef enum {
     VP_COMP_LAST
 } CompletionStyle;
 
-enum {
-    FILES_CONFIG,
+typedef enum {
+    FILES_GLOBAL_CONFIG,
+    FILES_LOCAL_CONFIG,
     FILES_COOKIE,
     FILES_CLOSED,
     FILES_SCRIPT,
     FILES_HISTORY,
     FILES_USER_STYLE,
     FILES_LAST
-};
+} VpFile;
 
 typedef enum {
     TYPE_CHAR,
@@ -238,11 +237,6 @@ typedef struct {
     Mode            mode;
     char            modkey;
     guint           count;
-#ifdef HAS_GTK3
-    Window          embed;
-#else
-    GdkNativeWindow embed;
-#endif
     guint           progress;
     StatusType      status;
     gboolean        is_inspecting;
@@ -306,40 +300,47 @@ typedef struct {
     gulong num;
     guint  mode;
     guint  prefixLength;
+    gulong change_handler;
+    gulong keypress_handler;
 } Hints;
 
 /* core struct */
-typedef struct {
-    Gui           gui;
-    State         state;
-    Completions   comps;
-    Hints         hints;
-} VpClient;
+typedef struct Client {
+    Gui            gui;
+    State          state;
+    Completions    comps;
+    Hints          hints;
+    struct Client* next;
+} Client;
 
 typedef struct {
-    char*         files[FILES_LAST];
-    Config        config;
-    Style         style;
-    Behaviour     behave;
-    GHashTable*   settings;
-    SoupSession*  soup_session;
+    char*           files[FILES_LAST];
+    Config          config;
+    Style           style;
+    Behaviour       behave;
+    GHashTable*     settings;
+    SoupSession*    soup_session;
+#ifdef HAS_GTK3
+    Window          embed;
+#else
+    GdkNativeWindow embed;
+#endif
 } VpCore;
 
 /* main object */
-extern VpClient vp;
-extern VpCore   core;
+extern VpCore core;
 
 /* functions */
-void vp_clean_input(void);
-void vp_clean_up(void);
-void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
+void vp_clean_input(Client* c);
+void vp_echo(Client* c, const MessageType type, gboolean hide, const char *error, ...);
 void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error);
-gboolean vp_load_uri(const Arg* arg);
+gboolean vp_load_uri(Client* c, const Arg* arg);
 gboolean vp_set_clipboard(const Arg* arg);
-gboolean vp_set_mode(Mode mode, gboolean clean);
+gboolean vp_set_mode(Client* c, Mode mode, gboolean clean);
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
-void vp_update_statusbar(void);
-void vp_update_status_style(void);
-void vp_update_urlbar(const char* uri);
+void vp_update_statusbar(Client* c);
+void vp_update_status_style(Client* c);
+void vp_update_input_style(Client* c, MessageType type);
+void vp_update_urlbar(Client* c, const char* uri);
 
 #endif /* end of include guard: _MAIN_H */

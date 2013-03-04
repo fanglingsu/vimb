@@ -38,45 +38,45 @@ void history_append(const char* line)
     core.behave.history = g_list_append(core.behave.history, g_strdup(line));
 }
 
-const char* history_get(const int step)
+const char* history_get(Client* c, const int step)
 {
     const char* command;
 
     /* get the search prefix only on start of history search */
-    if (!vp.state.history_active) {
-        OVERWRITE_STRING(vp.state.history_prefix, GET_TEXT());
+    if (!c->state.history_active) {
+        OVERWRITE_STRING(c->state.history_prefix, gtk_entry_get_text(GTK_ENTRY(c->gui.inputbox)));
 
         /* generate new history list with the matching items */
         for (GList* l = core.behave.history; l; l = l->next) {
             char* entry = g_strdup((char*)l->data);
-            if (g_str_has_prefix(entry, vp.state.history_prefix)) {
-                vp.state.history_active = g_list_prepend(vp.state.history_active, entry);
+            if (g_str_has_prefix(entry, c->state.history_prefix)) {
+                c->state.history_active = g_list_prepend(c->state.history_active, entry);
             }
         }
 
-        vp.state.history_active = g_list_reverse(vp.state.history_active);
+        c->state.history_active = g_list_reverse(c->state.history_active);
     }
 
-    const int len = g_list_length(vp.state.history_active);
+    const int len = g_list_length(c->state.history_active);
     if (!len) {
         return NULL;
     }
 
     /* if reached end/beginnen start at the opposit site of list again */
-    vp.state.history_pointer = (len + vp.state.history_pointer + step) % len;
+    c->state.history_pointer = (len + c->state.history_pointer + step) % len;
 
-    command = (char*)g_list_nth_data(vp.state.history_active, vp.state.history_pointer);
+    command = (char*)g_list_nth_data(c->state.history_active, c->state.history_pointer);
 
     return command;
 }
 
-void history_rewind(void)
+void history_rewind(Client* c)
 {
-    if (vp.state.history_active) {
-        OVERWRITE_STRING(vp.state.history_prefix, NULL);
-        vp.state.history_pointer = 0;
+    if (c->state.history_active) {
+        OVERWRITE_STRING(c->state.history_prefix, NULL);
+        c->state.history_pointer = 0;
         /* free temporary used history list */
-        g_list_free_full(vp.state.history_active, (GDestroyNotify)g_free);
-        vp.state.history_active = NULL;
+        g_list_free_full(c->state.history_active, (GDestroyNotify)g_free);
+        c->state.history_active = NULL;
     }
 }

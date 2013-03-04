@@ -27,14 +27,18 @@ static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
 static void keybind_str_to_keybind(char* str, Keybind* key);
 static guint keybind_str_to_modmask(const char* str);
 static guint keybind_str_to_value(const char* str);
-static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
+static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event, Client* c);
 static void keybind_free(Keybind* keybind);
 
 
 void keybind_init(void)
 {
     core.behave.modkeys = g_string_new("");
-    g_signal_connect(G_OBJECT(vp.gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
+}
+
+void keybind_init_client(Client* c)
+{
+    g_signal_connect(G_OBJECT(c->gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), c);
 }
 
 void keybind_cleanup(void)
@@ -223,7 +227,7 @@ static guint keybind_str_to_value(const char* str)
     return str[0];
 }
 
-static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
+static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event, Client* c)
 {
     guint keyval = event->keyval;
     guint state  = CLEAN_STATE_WITH_SHIFT(event);
@@ -231,34 +235,34 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
         /* switch to normal mode and clear the input box */
-        vp_set_mode(VP_MODE_NORMAL, TRUE);
+        vp_set_mode(c, VP_MODE_NORMAL, TRUE);
 
         return TRUE;
     }
     /* allow mode keys and counts only in normal mode */
-    if ((VP_MODE_SEARCH | VP_MODE_NORMAL) & vp.state.mode) {
-        if (vp.state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
-                || (keyval == GDK_0 && vp.state.count))) {
+    if ((VP_MODE_SEARCH | VP_MODE_NORMAL) & c->state.mode) {
+        if (c->state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
+                || (keyval == GDK_0 && c->state.count))) {
             /* append the new entered count to previous one */
-            vp.state.count = (vp.state.count ? vp.state.count * 10 : 0) + (keyval - GDK_0);
-            vp_update_statusbar();
+            c->state.count = (c->state.count ? c->state.count * 10 : 0) + (keyval - GDK_0);
+            vp_update_statusbar(c);
 
             return TRUE;
         }
-        if (strchr(core.behave.modkeys->str, keyval) && vp.state.modkey != keyval) {
-            vp.state.modkey = (char)keyval;
-            vp_update_statusbar();
+        if (strchr(core.behave.modkeys->str, keyval) && c->state.modkey != keyval) {
+            c->state.modkey = (char)keyval;
+            vp_update_statusbar(c);
 
             return TRUE;
         }
     }
 
     /* check for keybinding */
-    GSList* link = keybind_find(GET_CLEAN_MODE(), vp.state.modkey, state, keyval);
+    GSList* link = keybind_find(CLEAN_MODE(c->state.mode), c->state.modkey, state, keyval);
 
     if (link) {
         Keybind* keybind = (Keybind*)link->data;
-        command_run(keybind->command, keybind->param);
+        command_run(c, keybind->command, keybind->param);
 
         return TRUE;
     }

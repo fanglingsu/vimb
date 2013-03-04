@@ -20,22 +20,22 @@
 #include "main.h"
 #include "dom.h"
 
-static gboolean dom_auto_insert(Element* element);
-static gboolean dom_editable_focus_cb(Element* element, Event* event);
+static gboolean dom_auto_insert(Client* c, Element* element);
+static gboolean dom_editable_focus_cb(Element* element, Event* event, Client* c);
 static Element* dom_get_active_element(Document* doc);
 
 
-void dom_check_auto_insert(void)
+void dom_check_auto_insert(Client* c)
 {
-    Document* doc   = webkit_web_view_get_dom_document(vp.gui.webview);
+    Document* doc   = webkit_web_view_get_dom_document(c->gui.webview);
     Element* active = dom_get_active_element(doc);
-    if (!dom_auto_insert(active)) {
+    if (!dom_auto_insert(c, active)) {
         HtmlElement* element = webkit_dom_document_get_body(doc);
         if (!element) {
             element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
         }
         webkit_dom_event_target_add_event_listener(
-            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true, NULL
+            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true, c
         );
     }
 }
@@ -66,23 +66,23 @@ gboolean dom_is_editable(Element* element)
     return FALSE;
 }
 
-static gboolean dom_auto_insert(Element* element)
+static gboolean dom_auto_insert(Client* c, Element* element)
 {
     if (dom_is_editable(element)) {
-        vp_set_mode(VP_MODE_INSERT, FALSE);
+        vp_set_mode(c, VP_MODE_INSERT, FALSE);
         return TRUE;
     }
     return FALSE;
 }
 
-static gboolean dom_editable_focus_cb(Element* element, Event* event)
+static gboolean dom_editable_focus_cb(Element* element, Event* event, Client* c)
 {
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true
     );
-    if (GET_CLEAN_MODE() != VP_MODE_INSERT) {
+    if (CLEAN_MODE(c->state.mode) != VP_MODE_INSERT) {
         EventTarget* target = webkit_dom_event_get_target(event);
-        dom_auto_insert((void*)target);
+        dom_auto_insert(c, (void*)target);
     }
     return FALSE;
 }

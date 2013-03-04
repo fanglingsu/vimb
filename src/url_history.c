@@ -92,6 +92,7 @@ GList* url_history_get_all(void)
         out = g_list_prepend(out, hi->uri);
     }
 
+    out = g_list_reverse(out);
     return out;
 }
 

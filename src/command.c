@@ -94,7 +94,7 @@ static CommandInfo cmd_list[] = {
     {"command-hist-prev",   command_history,     {VP_SEARCH_BACKWARD}},
 };
 
-static void command_write_input(const char* str);
+static void command_write_input(Client* c, const char* str);
 
 
 void command_init(void)
@@ -119,34 +119,36 @@ gboolean command_exists(const char* name)
     return g_hash_table_contains(core.behave.commands, name);
 }
 
-gboolean command_run(const char* name, const char* param)
+gboolean command_run(Client* c, const char* name, const char* param)
 {
-    CommandInfo* c = NULL;
+    CommandInfo* command = NULL;
     gboolean result;
     Arg a;
-    c = g_hash_table_lookup(core.behave.commands, name);
-    if (!c) {
-        vp_echo(VP_MSG_ERROR, TRUE, "Command '%s' not found", name);
-        vp_set_mode(VP_MODE_NORMAL, FALSE);
+    command = g_hash_table_lookup(core.behave.commands, name);
+    if (!command) {
+        if (c) {
+            vp_echo(c, VP_MSG_ERROR, TRUE, "Command '%s' not found", name);
+            vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+        }
 
         return FALSE;
     }
-    a.i = c->arg.i;
-    a.s = g_strdup(param ? param : c->arg.s);
-    result = c->function(&a);
+    a.i = command->arg.i;
+    a.s = g_strdup(param ? param : command->arg.s);
+    result = command->function(c, &a);
     g_free(a.s);
 
     return result;
 }
 
-gboolean command_open(const Arg* arg)
+gboolean command_open(Client* c, const Arg* arg)
 {
     char* uri = NULL;
     gboolean result;
 
     if (!arg->s || arg->s[0] == '\0') {
         Arg a = {arg->i, core.config.home_page};
-        return vp_load_uri(&a);
+        return vp_load_uri(c, &a);
     }
     /* check for searchengine handles */
     /* split into handle and searchterms */
@@ -156,11 +158,11 @@ gboolean command_open(const Arg* arg)
     ) {
         char* term = soup_uri_encode(string[1], "&");
         Arg a  = {arg->i, g_strdup_printf(uri, term)};
-        result = vp_load_uri(&a);
+        result = vp_load_uri(c, &a);
         g_free(term);
         g_free(a.s);
     } else {
-        result = vp_load_uri(arg);
+        result = vp_load_uri(c, arg);
     }
     g_strfreev(string);
 
@@ -170,88 +172,87 @@ gboolean command_open(const Arg* arg)
 /**
  * Reopens the last closed page.
  */
-gboolean command_open_closed(const Arg* arg)
+gboolean command_open_closed(Client* c, const Arg* arg)
 {
     gboolean result;
 
     Arg a = {arg->i};
     a.s = util_get_file_contents(core.files[FILES_CLOSED], NULL);
-    result = vp_load_uri(&a);
+    result = vp_load_uri(c, &a);
     g_free(a.s);
 
     return result;
 }
 
-gboolean command_input(const Arg* arg)
+gboolean command_input(Client* c, const Arg* arg)
 {
     const char* url;
 
     /* add current url if requested */
     if (VP_INPUT_CURRENT_URI == arg->i
-        && (url = CURRENT_URL())
+        && (url = webkit_web_view_get_uri(c->gui.webview))
     ) {
         /* append the current url to the input message */
         char* input = g_strconcat(arg->s, url, NULL);
-        command_write_input(input);
+        command_write_input(c, input);
         g_free(input);
     } else {
-        command_write_input(arg->s);
+        command_write_input(c, arg->s);
     }
 
-    vp_set_mode(VP_MODE_COMMAND, FALSE);
+    vp_set_mode(c, VP_MODE_COMMAND, FALSE);
 
     return TRUE;
 }
 
-gboolean command_close(const Arg* arg)
+gboolean command_close(Client* c, const Arg* arg)
 {
-    gtk_main_quit();
-    vp_clean_up();
+    gtk_widget_destroy(GTK_WIDGET(c->gui.window));
 
     return TRUE;
 }
 
-gboolean command_view_source(const Arg* arg)
+gboolean command_view_source(Client* c, const Arg* arg)
 {
-    gboolean mode = webkit_web_view_get_view_source_mode(vp.gui.webview);
-    webkit_web_view_set_view_source_mode(vp.gui.webview, !mode);
-    webkit_web_view_reload(vp.gui.webview);
+    gboolean mode = webkit_web_view_get_view_source_mode(c->gui.webview);
+    webkit_web_view_set_view_source_mode(c->gui.webview, !mode);
+    webkit_web_view_reload(c->gui.webview);
 
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
 
-gboolean command_navigate(const Arg* arg)
+gboolean command_navigate(Client* c, const Arg* arg)
 {
     if (arg->i <= VP_NAVIG_FORWARD) {
-        int count = vp.state.count ? vp.state.count : 1;
+        int count = c->state.count ? c->state.count : 1;
         webkit_web_view_go_back_or_forward(
-            vp.gui.webview, (arg->i == VP_NAVIG_BACK ? -count : count)
+            c->gui.webview, (arg->i == VP_NAVIG_BACK ? -count : count)
         );
     } else if (arg->i == VP_NAVIG_RELOAD) {
-        webkit_web_view_reload(vp.gui.webview);
+        webkit_web_view_reload(c->gui.webview);
     } else if (arg->i == VP_NAVIG_RELOAD_FORCE) {
-        webkit_web_view_reload_bypass_cache(vp.gui.webview);
+        webkit_web_view_reload_bypass_cache(c->gui.webview);
     } else {
-        webkit_web_view_stop_loading(vp.gui.webview);
+        webkit_web_view_stop_loading(c->gui.webview);
     }
 
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
 
-gboolean command_scroll(const Arg* arg)
+gboolean command_scroll(Client* c, const Arg* arg)
 {
-    GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? vp.gui.adjust_h : vp.gui.adjust_v;
+    GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? c->gui.adjust_h : c->gui.adjust_v;
 
     int direction  = (arg->i & (1 << 2)) ? 1 : -1;
 
     /* type scroll */
     if (arg->i & VP_SCROLL_TYPE_SCROLL) {
         gdouble value;
-        int count = vp.state.count ? vp.state.count : 1;
+        int count = c->state.count ? c->state.count : 1;
         if (arg->i & VP_SCROLL_UNIT_LINE) {
             value = core.config.scrollstep;
         } else if (arg->i & VP_SCROLL_UNIT_HALFPAGE) {
@@ -260,10 +261,10 @@ gboolean command_scroll(const Arg* arg)
             value = gtk_adjustment_get_page_size(adjust);
         }
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_value(adjust) + direction * value * count);
-    } else if (vp.state.count) {
+    } else if (c->state.count) {
         /* jump - if count is set to count% of page */
         gdouble max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-        gtk_adjustment_set_value(adjust, max * vp.state.count / 100);
+        gtk_adjustment_set_value(adjust, max * c->state.count / 100);
     } else if (direction == 1) {
         /* jump to top */
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_upper(adjust));
@@ -272,15 +273,15 @@ gboolean command_scroll(const Arg* arg)
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
     }
 
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
 
-gboolean command_map(const Arg* arg)
+gboolean command_map(Client* c, const Arg* arg)
 {
     gboolean result;
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     char **string = g_strsplit(arg->s, "=", 2);
     if (g_strv_length(string) != 2) {
@@ -292,14 +293,14 @@ gboolean command_map(const Arg* arg)
     return result;
 }
 
-gboolean command_unmap(const Arg* arg)
+gboolean command_unmap(Client* c, const Arg* arg)
 {
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     return keybind_remove_from_string(arg->s, arg->i);
 }
 
-gboolean command_set(const Arg* arg)
+gboolean command_set(Client* c, const Arg* arg)
 {
     gboolean success;
     char* line = NULL;
@@ -316,81 +317,81 @@ gboolean command_set(const Arg* arg)
     token = g_strsplit(line, "=", 2);
     g_free(line);
 
-    success = setting_run(token[0], token[1] ? token[1] : NULL);
+    success = setting_run(c, token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
 
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     return success;
 }
 
-gboolean command_complete(const Arg* arg)
+gboolean command_complete(Client* c, const Arg* arg)
 {
-    completion_complete(arg->i ? TRUE : FALSE);
+    completion_complete(c, arg->i ? TRUE : FALSE);
 
-    vp_set_mode(VP_MODE_COMMAND | VP_MODE_COMPLETE, FALSE);
+    vp_set_mode(c, VP_MODE_COMMAND | VP_MODE_COMPLETE, FALSE);
 
     return TRUE;
 }
 
-gboolean command_inspect(const Arg* arg)
+gboolean command_inspect(Client* c, const Arg* arg)
 {
     gboolean enabled;
     WebKitWebSettings* settings = NULL;
 
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
-    settings = webkit_web_view_get_settings(vp.gui.webview);
+    settings = webkit_web_view_get_settings(c->gui.webview);
     g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
     if (enabled) {
-        if (vp.state.is_inspecting) {
-            webkit_web_inspector_close(vp.gui.inspector);
+        if (c->state.is_inspecting) {
+            webkit_web_inspector_close(c->gui.inspector);
         } else {
-            webkit_web_inspector_show(vp.gui.inspector);
+            webkit_web_inspector_show(c->gui.inspector);
         }
         return TRUE;
     }
 
-    vp_echo(VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");
+    vp_echo(c, VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");
 
     return FALSE;
 }
 
-gboolean command_hints(const Arg* arg)
+gboolean command_hints(Client* c, const Arg* arg)
 {
-    command_write_input(arg->s);
-    hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
+    command_write_input(c, arg->s);
+    hints_create(c, NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
-    vp_set_mode(VP_MODE_HINTING, FALSE);
+    vp_set_mode(c, VP_MODE_HINTING, FALSE);
 
     return TRUE;
 }
 
-gboolean command_hints_focus(const Arg* arg)
+gboolean command_hints_focus(Client* c, const Arg* arg)
 {
-    hints_focus_next(arg->i ? TRUE : FALSE);
+    hints_focus_next(c, arg->i ? TRUE : FALSE);
 
-    vp_set_mode(VP_MODE_HINTING, FALSE);
+    vp_set_mode(c, VP_MODE_HINTING, FALSE);
 
     return TRUE;
 }
 
-gboolean command_yank(const Arg* arg)
+gboolean command_yank(Client* c, const Arg* arg)
 {
-    vp_set_mode(VP_MODE_NORMAL, TRUE);
+    vp_set_mode(c, VP_MODE_NORMAL, TRUE);
 
     if (arg->i & COMMAND_YANK_SELECTION) {
         char* text = NULL;
         /* copy current selection to clipboard */
-        webkit_web_view_copy_clipboard(vp.gui.webview);
+        webkit_web_view_copy_clipboard(c->gui.webview);
         text = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
         if (!text) {
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
             /* TODO is this the rigth place to switch the focus */
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-            vp_echo(VP_MSG_NORMAL, FALSE, "Yanked: %s", text);
+            gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
+            vp_echo(c, VP_MSG_NORMAL, FALSE, "Yanked: %s", text);
             g_free(text);
 
             return TRUE;
@@ -402,15 +403,15 @@ gboolean command_yank(const Arg* arg)
     Arg a = {arg->i};
     if (arg->i & COMMAND_YANK_URI) {
         /* yank current url */
-        a.s = g_strdup(CURRENT_URL());
+        a.s = g_strdup(webkit_web_view_get_uri(c->gui.webview));
     } else {
         a.s = arg->s ? g_strdup(arg->s) : NULL;
     }
     if (a.s) {
         vp_set_clipboard(&a);
         /* TODO is this the rigth place to switch the focus */
-        gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-        vp_echo(VP_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
+        gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
+        vp_echo(c, VP_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
         g_free(a.s);
 
         return TRUE;
@@ -419,7 +420,7 @@ gboolean command_yank(const Arg* arg)
     return FALSE;
 }
 
-gboolean command_paste(const Arg* arg)
+gboolean command_paste(Client* c, const Arg* arg)
 {
     Arg a = {.i = arg->i & VP_TARGET_NEW};
     if (arg->i & VP_CLIPBOARD_PRIMARY) {
@@ -430,7 +431,7 @@ gboolean command_paste(const Arg* arg)
     }
 
     if (a.s) {
-        vp_load_uri(&a);
+        vp_load_uri(c, &a);
         g_free(a.s);
 
         return TRUE;
@@ -438,15 +439,14 @@ gboolean command_paste(const Arg* arg)
     return FALSE;
 }
 
-gboolean command_search(const Arg* arg)
+gboolean command_search(Client* c, const Arg* arg)
 {
-    State* state     = &vp.state;
-    gboolean forward = !(arg->i ^ state->search_dir);
+    gboolean forward = !(arg->i ^ c->state.search_dir);
 
-    if (arg->i == VP_SEARCH_OFF && state->search_query) {
-        OVERWRITE_STRING(state->search_query, NULL);
+    if (arg->i == VP_SEARCH_OFF && c->state.search_query) {
+        OVERWRITE_STRING(c->state.search_query, NULL);
 #ifdef FEATURE_SEARCH_HIGHLIGHT
-        webkit_web_view_unmark_text_matches(vp.gui.webview);
+        webkit_web_view_unmark_text_matches(c->gui.webview);
 #endif
 
         return TRUE;
@@ -454,29 +454,29 @@ gboolean command_search(const Arg* arg)
 
     /* copy search query for later use */
     if (arg->s) {
-        OVERWRITE_STRING(state->search_query, arg->s);
+        OVERWRITE_STRING(c->state.search_query, arg->s);
         /* set dearch dir only when the searching is started */
-        vp.state.search_dir = arg->i;
+        c->state.search_dir = arg->i;
     }
 
-    if (state->search_query) {
+    if (c->state.search_query) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
-        webkit_web_view_mark_text_matches(vp.gui.webview, state->search_query, FALSE, 0);
-        webkit_web_view_set_highlight_text_matches(vp.gui.webview, TRUE);
+        webkit_web_view_mark_text_matches(c->gui.webview, c->state.search_query, FALSE, 0);
+        webkit_web_view_set_highlight_text_matches(c->gui.webview, TRUE);
 #endif
         /* make sure we have a count greater than 0 */
-        vp.state.count = vp.state.count ? vp.state.count : 1;
+        c->state.count = c->state.count ? c->state.count : 1;
         do {
-            webkit_web_view_search_text(vp.gui.webview, state->search_query, FALSE, forward, TRUE);
-        } while (--vp.state.count);
+            webkit_web_view_search_text(c->gui.webview, c->state.search_query, FALSE, forward, TRUE);
+        } while (--c->state.count);
     }
 
-    vp_set_mode(VP_MODE_SEARCH, FALSE);
+    vp_set_mode(c, VP_MODE_SEARCH, FALSE);
 
     return TRUE;
 }
 
-gboolean command_searchengine(const Arg* arg)
+gboolean command_searchengine(Client* c, const Arg* arg)
 {
     gboolean result;
     if (arg->i) {
@@ -492,73 +492,74 @@ gboolean command_searchengine(const Arg* arg)
         result = searchengine_remove(arg->s);
     }
 
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     return result;
 }
 
-gboolean command_zoom(const Arg* arg)
+gboolean command_zoom(Client* c, const Arg* arg)
 {
     float step, level;
     int count;
 
     if (arg->i & COMMAND_ZOOM_RESET) {
-        webkit_web_view_set_zoom_level(vp.gui.webview, 1.0);
-        vp_set_mode(VP_MODE_NORMAL, FALSE);
+        webkit_web_view_set_zoom_level(c->gui.webview, 1.0);
+        vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
         return TRUE;
     }
 
-    count = vp.state.count ? vp.state.count : 1;
-    level = webkit_web_view_get_zoom_level(vp.gui.webview);
+    count = c->state.count ? c->state.count : 1;
+    level = webkit_web_view_get_zoom_level(c->gui.webview);
 
-    WebKitWebSettings* setting = webkit_web_view_get_settings(vp.gui.webview);
+    WebKitWebSettings* setting = webkit_web_view_get_settings(c->gui.webview);
     g_object_get(G_OBJECT(setting), "zoom-step", &step, NULL);
 
     webkit_web_view_set_full_content_zoom(
-        vp.gui.webview, (arg->i & COMMAND_ZOOM_FULL) > 0
+        c->gui.webview, (arg->i & COMMAND_ZOOM_FULL) > 0
     );
 
     webkit_web_view_set_zoom_level(
-        vp.gui.webview,
+        c->gui.webview,
         level + (float)(count *step) * (arg->i & COMMAND_ZOOM_IN ? 1.0 : -1.0)
     );
 
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     return TRUE;
 
 }
 
-gboolean command_history(const Arg* arg)
+gboolean command_history(Client* c, const Arg* arg)
 {
-    const int count = vp.state.count ? vp.state.count : 1;
+    const int count = c->state.count ? c->state.count : 1;
     const gint step = count * (arg->i == VP_SEARCH_BACKWARD ? -1 : 1);
-    const char* entry = history_get(step);
+    const char* entry = history_get(c, step);
 
     if (!entry) {
         return FALSE;
     }
-    command_write_input(entry);
+    command_write_input(c, entry);
 
     return TRUE;
 }
 
-static void command_write_input(const char* str)
+static void command_write_input(Client* c, const char* str)
 {
     int pos = 0;
+    GtkEditable* box = GTK_EDITABLE(c->gui.inputbox);
     /* reset the colors and fonts to defalts */
     vp_set_widget_font(
-        vp.gui.inputbox,
+        c->gui.inputbox,
         &core.style.input_fg[VP_MSG_NORMAL],
         &core.style.input_bg[VP_MSG_NORMAL],
         core.style.input_font[VP_MSG_NORMAL]
     );
 
     /* remove content from input box */
-    gtk_editable_delete_text(GTK_EDITABLE(vp.gui.inputbox), 0, -1);
+    gtk_editable_delete_text(box, 0, -1);
 
     /* insert string from arg */
-    gtk_editable_insert_text(GTK_EDITABLE(vp.gui.inputbox), str, -1, &pos);
-    gtk_editable_set_position(GTK_EDITABLE(vp.gui.inputbox), -1);
+    gtk_editable_insert_text(box, str, -1, &pos);
+    gtk_editable_set_position(box, -1);
 }
