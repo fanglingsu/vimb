@@ -93,6 +93,7 @@ gboolean keybind_remove_from_string(char* str, const Mode mode)
 
     GSList* link = keybind_find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
     if (link) {
+        keybind_free((Keybind*)link->data);
         core.behave.keys = g_slist_delete_link(core.behave.keys, link);
     }
 

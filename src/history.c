@@ -31,7 +31,9 @@ void history_append(const char* line)
 {
     if (COMMAND_HISTORY_SIZE <= g_list_length(core.behave.history)) {
         /* if list is too long - remove items from beginning */
-        core.behave.history = g_list_delete_link(core.behave.history, g_list_first(core.behave.history));
+        GList* first = g_list_first(core.behave.history);
+        g_free((char*)first->data);
+        core.behave.history = g_list_delete_link(core.behave.history, first);
     }
     core.behave.history = g_list_append(core.behave.history, g_strdup(line));
 }

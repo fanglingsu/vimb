@@ -53,10 +53,7 @@ gboolean searchengine_remove(const char* handle)
     GSList* list = searchengine_find(handle);
 
     if (list) {
-        Searchengine* s = (Searchengine*)list->data;
-        g_free(s->handle);
-        g_free(s->uri);
-
+        searchengine_free((Searchengine*)list->data);
         core.behave.searchengines = g_slist_delete_link(core.behave.searchengines, list);
 
         return TRUE;

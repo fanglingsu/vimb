@@ -59,6 +59,7 @@ void url_history_cleanup(void)
 void url_history_add(const char* url, const char* title)
 {
     /* uf the url is already in history, remove this entry */
+    /* TODO use g_list_find_custom for this task */
     for (GList* link = core.behave.url_history; link; link = link->next) {
         UrlHist* hi = (UrlHist*)link->data;
         if (!g_strcmp0(url, hi->uri)) {
@@ -70,10 +71,9 @@ void url_history_add(const char* url, const char* title)
 
     while (core.config.url_history_max < g_list_length(core.behave.url_history)) {
         /* if list is too long - remove items from end */
-        core.behave.url_history = g_list_delete_link(
-            core.behave.url_history,
-            g_list_last(core.behave.url_history)
-        );
+        GList* last = g_list_last(core.behave.url_history);
+        url_history_free((UrlHist*)last->data);
+        core.behave.url_history = g_list_delete_link(core.behave.url_history, last);
     }
 
     UrlHist* item = g_new0(UrlHist, 1);
