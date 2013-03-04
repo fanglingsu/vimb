@@ -186,7 +186,6 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
             for (GList *l = g_list_first(completion); l && i < max; l = l->next, i++) {
                 gtk_widget_hide(((Completion*)l->data)->event);
             }
-            gtk_widget_show(vp.gui.compbox);
             i = 0;
             for (GList *l = g_list_last(completion); l && i < max; l = l->prev, i++) {
                 c = l->data;
@@ -204,10 +203,9 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
             gtk_widget_show_all(c->event);
         } else if (position == items || position  == 1) {
             int i = 0;
-            for (GList *l = g_list_last(completion); l && i < max; l = l->prev) {
+            for (GList *l = g_list_last(completion); l && i < max; l = l->prev, i++) {
                 gtk_widget_hide(((Completion*)l->data)->event);
             }
-            gtk_widget_show(vp.gui.compbox);
             i = 0;
             for (GList *l = g_list_first(completion); l && i < max; l = l->next, i++) {
                 gtk_widget_show_all(((Completion*)l->data)->event);
