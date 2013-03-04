@@ -330,16 +330,16 @@ extern VpClient vp;
 extern VpCore   core;
 
 /* functions */
-void vp_update_statusbar(void);
-void vp_update_urlbar(const char* uri);
-void vp_update_status_style(void);
+void vp_clean_input(void);
+void vp_clean_up(void);
 void vp_echo(const MessageType type, gboolean hide, const char *error, ...);
 void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error);
+gboolean vp_load_uri(const Arg* arg);
+gboolean vp_set_clipboard(const Arg* arg);
 gboolean vp_set_mode(Mode mode, gboolean clean);
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
-gboolean vp_load_uri(const Arg* arg);
-void vp_clean_up(void);
-void vp_clean_input(void);
-gboolean vp_set_clipboard(const Arg* arg);
+void vp_update_statusbar(void);
+void vp_update_status_style(void);
+void vp_update_urlbar(const char* uri);
 
 #endif /* end of include guard: _MAIN_H */

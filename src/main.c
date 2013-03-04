@@ -81,6 +81,280 @@ static const char* vp_get_cookies(SoupURI *uri);
 static gboolean vp_hide_message(void);
 static void vp_set_status(const StatusType status);
 
+void vp_clean_input(void)
+{
+    /* move focus from input box to clean it */
+    gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+    vp_echo(VP_MSG_NORMAL, FALSE, "");
+}
+
+void vp_clean_up(void)
+{
+    const char* uri = CURRENT_URL();
+    /* write last URL into file for recreation */
+    if (uri) {
+        g_file_set_contents(core.files[FILES_CLOSED], uri, -1, NULL);
+    }
+
+    command_cleanup();
+    setting_cleanup();
+    keybind_cleanup();
+    completion_clean();
+    searchengine_cleanup();
+    url_history_cleanup();
+
+    for (int i = 0; i < FILES_LAST; i++) {
+        g_free(core.files[i]);
+    }
+}
+
+void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
+{
+    va_list arg_list;
+
+    va_start(arg_list, error);
+    char message[255];
+    vsnprintf(message, 255, error, arg_list);
+    va_end(arg_list);
+
+    /* don't print message if the input is focussed */
+    if (gtk_widget_is_focus(GTK_WIDGET(vp.gui.inputbox))) {
+        return;
+    }
+
+    /* set the collors according to message type */
+    vp_set_widget_font(
+        vp.gui.inputbox,
+        &core.style.input_fg[type],
+        &core.style.input_bg[type],
+        core.style.input_font[type]
+    );
+    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
+    if (hide) {
+        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vp_hide_message, NULL);
+    }
+}
+
+void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error)
+{
+    JSStringRef str, file_name;
+    JSValueRef exception = NULL, result = NULL;
+    JSContextRef js;
+
+    js        = webkit_web_frame_get_global_context(frame);
+    str       = JSStringCreateWithUTF8CString(script);
+    file_name = JSStringCreateWithUTF8CString(file);
+
+    result = JSEvaluateScript(js, str, JSContextGetGlobalObject(js), file_name, 0, &exception);
+    JSStringRelease(file_name);
+    JSStringRelease(str);
+
+    if (result) {
+        *value = vp_jsref_to_string(js, result);
+    } else {
+        *error = vp_jsref_to_string(js, exception);
+    }
+}
+
+gboolean vp_load_uri(const Arg* arg)
+{
+    char* uri;
+    char* path = arg->s;
+
+    if (!path) {
+        return FALSE;
+    }
+
+    g_strstrip(path);
+    if (!strlen(path)) {
+        return FALSE;
+    }
+
+    /* check if the path is a file path */
+    if (path[0] == '/' || !strcspn(path, "./")) {
+        char* rp = realpath(path, NULL);
+        uri = g_strdup_printf("file://%s", rp);
+    } else {
+        uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
+    }
+
+    /* change state to normal mode */
+    vp_set_mode(VP_MODE_NORMAL, FALSE);
+
+    if (arg->i == VP_TARGET_NEW) {
+        char *argv[64];
+
+        argv[0] = *args;
+        if (vp.state.embed) {
+            char tmp[64];
+            snprintf(tmp, LENGTH(tmp), "%u", (int)vp.state.embed);
+            argv[1] = "-e";
+            argv[2] = tmp;
+            argv[3] = uri;
+            argv[4] = NULL;
+        } else {
+            argv[1] = uri;
+            argv[2] = NULL;
+        }
+
+        /* spawn a new browser instance */
+        g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+    } else {
+        /* Load a web page into the browser instance */
+        webkit_web_view_load_uri(vp.gui.webview, uri);
+    }
+    g_free(uri);
+
+    return TRUE;
+}
+
+gboolean vp_set_clipboard(const Arg* arg)
+{
+    gboolean result = FALSE;
+    if (!arg->s) {
+        return result;
+    }
+
+    if (arg->i & VP_CLIPBOARD_PRIMARY) {
+        gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), arg->s, -1);
+        result = TRUE;
+    }
+    if (arg->i & VP_CLIPBOARD_SECONDARY) {
+        gtk_clipboard_set_text(SECONDARY_CLIPBOARD(), arg->s, -1);
+        result = TRUE;
+    }
+
+    return result;
+}
+
+/**
+ * Set the base modes. All other mode flags like completion can be set directly
+ * to vp.state.mode.
+ */
+gboolean vp_set_mode(Mode mode, gboolean clean)
+{
+    if ((vp.state.mode & VP_MODE_COMPLETE)
+        && !(mode & VP_MODE_COMPLETE)
+    ) {
+        completion_clean();
+    }
+    switch (CLEAN_MODE(mode)) {
+        case VP_MODE_NORMAL:
+            /* do this only if the mode is really switched */
+            if (GET_CLEAN_MODE() != VP_MODE_NORMAL) {
+                history_rewind();
+            }
+            if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
+                /* if previous mode was hinting clear the hints */
+                hints_clear();
+            } else if (GET_CLEAN_MODE() == VP_MODE_INSERT) {
+                /* clean the input if current mode is insert to remove -- INPUT -- */
+                clean = TRUE;
+            } else if (GET_CLEAN_MODE() == VP_MODE_SEARCH) {
+                /* cleaup previous search */
+                command_search(&((Arg){VP_SEARCH_OFF}));
+            }
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            break;
+
+        case VP_MODE_COMMAND:
+        case VP_MODE_HINTING:
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.inputbox));
+            break;
+
+        case VP_MODE_INSERT:
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            vp_echo(VP_MSG_NORMAL, FALSE, "-- INPUT --");
+            break;
+
+        case VP_MODE_PATH_THROUGH:
+            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            break;
+    }
+
+    vp.state.mode = mode;
+    vp.state.modkey = vp.state.count  = 0;
+
+    /* echo message if given */
+    if (clean) {
+        vp_echo(VP_MSG_NORMAL, FALSE, "");
+    }
+
+    vp_update_statusbar();
+
+    return TRUE;
+}
+
+void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
+{
+    VP_WIDGET_OVERRIDE_FONT(widget, font);
+    /* TODO are they all required? */
+    VP_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
+    VP_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
+    VP_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
+    VP_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
+}
+
+void vp_update_statusbar(void)
+{
+    GString* status = g_string_new("");
+
+    /* show current count */
+    g_string_append_printf(status, "%.0d", vp.state.count);
+    /* show current modkey */
+    if (vp.state.modkey) {
+        g_string_append_c(status, vp.state.modkey);
+    }
+
+    /* show the active downloads */
+    if (vp.state.downloads) {
+        int num = g_list_length(vp.state.downloads);
+        g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
+    }
+
+    /* show load status of page or the downloads */
+    if (vp.state.progress != 100) {
+        g_string_append_printf(status, " [%i%%]", vp.state.progress);
+    }
+
+    /* show the scroll status */
+    int max = gtk_adjustment_get_upper(vp.gui.adjust_v) - gtk_adjustment_get_page_size(vp.gui.adjust_v);
+    int val = (int)(gtk_adjustment_get_value(vp.gui.adjust_v) / max * 100);
+
+    if (max == 0) {
+        g_string_append(status, " All");
+    } else if (val == 0) {
+        g_string_append(status, " Top");
+    } else if (val >= 100) {
+        g_string_append(status, " Bot");
+    } else {
+        g_string_append_printf(status, " %d%%", val);
+    }
+
+    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.right), status->str);
+    g_string_free(status, TRUE);
+}
+
+void vp_update_status_style(void)
+{
+    StatusType type = vp.state.status;
+    vp_set_widget_font(vp.gui.eventbox, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
+    vp_set_widget_font(vp.gui.statusbar.left, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
+    vp_set_widget_font(vp.gui.statusbar.right, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
+}
+
+void vp_update_urlbar(const char* uri)
+{
+    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), uri);
+}
+
+static gboolean vp_hide_message(void)
+{
+    vp_echo(VP_MSG_NORMAL, FALSE, "");
+
+    return FALSE;
+}
+
 static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download)
 {
     if (download) {
@@ -325,58 +599,6 @@ static gboolean vp_process_input(const char* input)
     return success;
 }
 
-gboolean vp_load_uri(const Arg* arg)
-{
-    char* uri;
-    char* path = arg->s;
-
-    if (!path) {
-        return FALSE;
-    }
-
-    g_strstrip(path);
-    if (!strlen(path)) {
-        return FALSE;
-    }
-
-    /* check if the path is a file path */
-    if (path[0] == '/' || !strcspn(path, "./")) {
-        char* rp = realpath(path, NULL);
-        uri = g_strdup_printf("file://%s", rp);
-    } else {
-        uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
-    }
-
-    /* change state to normal mode */
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
-
-    if (arg->i == VP_TARGET_NEW) {
-        char *argv[64];
-
-        argv[0] = *args;
-        if (vp.state.embed) {
-            char tmp[64];
-            snprintf(tmp, LENGTH(tmp), "%u", (int)vp.state.embed);
-            argv[1] = "-e";
-            argv[2] = tmp;
-            argv[3] = uri;
-            argv[4] = NULL;
-        } else {
-            argv[1] = uri;
-            argv[2] = NULL;
-        }
-
-        /* spawn a new browser instance */
-        g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
-    } else {
-        /* Load a web page into the browser instance */
-        webkit_web_view_load_uri(vp.gui.webview, uri);
-    }
-    g_free(uri);
-
-    return TRUE;
-}
-
 #ifdef FEATURE_COOKIE
 static void vp_set_cookie(SoupCookie* cookie)
 {
@@ -404,203 +626,12 @@ static const char* vp_get_cookies(SoupURI *uri)
 }
 #endif
 
-void vp_clean_up(void)
-{
-    const char* uri = CURRENT_URL();
-    /* write last URL into file for recreation */
-    if (uri) {
-        g_file_set_contents(core.files[FILES_CLOSED], uri, -1, NULL);
-    }
-
-    command_cleanup();
-    setting_cleanup();
-    keybind_cleanup();
-    completion_clean();
-    searchengine_cleanup();
-    url_history_cleanup();
-
-    for (int i = 0; i < FILES_LAST; i++) {
-        g_free(core.files[i]);
-    }
-}
-
-void vp_clean_input(void)
-{
-    /* move focus from input box to clean it */
-    gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-    vp_echo(VP_MSG_NORMAL, FALSE, "");
-}
-
-gboolean vp_set_clipboard(const Arg* arg)
-{
-    gboolean result = FALSE;
-    if (!arg->s) {
-        return result;
-    }
-
-    if (arg->i & VP_CLIPBOARD_PRIMARY) {
-        gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), arg->s, -1);
-        result = TRUE;
-    }
-    if (arg->i & VP_CLIPBOARD_SECONDARY) {
-        gtk_clipboard_set_text(SECONDARY_CLIPBOARD(), arg->s, -1);
-        result = TRUE;
-    }
-
-    return result;
-}
-
-static gboolean vp_hide_message(void)
-{
-    vp_echo(VP_MSG_NORMAL, FALSE, "");
-
-    return FALSE;
-}
-
 static void vp_set_status(const StatusType status)
 {
     if (vp.state.status != status) {
         vp.state.status = status;
         /* update the statusbar style only if the status changed */
         vp_update_status_style();
-    }
-}
-
-/**
- * Set the base modes. All other mode flags like completion can be set directly
- * to vp.state.mode.
- */
-gboolean vp_set_mode(Mode mode, gboolean clean)
-{
-    if ((vp.state.mode & VP_MODE_COMPLETE)
-        && !(mode & VP_MODE_COMPLETE)
-    ) {
-        completion_clean();
-    }
-    switch (CLEAN_MODE(mode)) {
-        case VP_MODE_NORMAL:
-            /* do this only if the mode is really switched */
-            if (GET_CLEAN_MODE() != VP_MODE_NORMAL) {
-                history_rewind();
-            }
-            if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
-                /* if previous mode was hinting clear the hints */
-                hints_clear();
-            } else if (GET_CLEAN_MODE() == VP_MODE_INSERT) {
-                /* clean the input if current mode is insert to remove -- INPUT -- */
-                clean = TRUE;
-            } else if (GET_CLEAN_MODE() == VP_MODE_SEARCH) {
-                /* cleaup previous search */
-                command_search(&((Arg){VP_SEARCH_OFF}));
-            }
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-            break;
-
-        case VP_MODE_COMMAND:
-        case VP_MODE_HINTING:
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.inputbox));
-            break;
-
-        case VP_MODE_INSERT:
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-            vp_echo(VP_MSG_NORMAL, FALSE, "-- INPUT --");
-            break;
-
-        case VP_MODE_PATH_THROUGH:
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-            break;
-    }
-
-    vp.state.mode = mode;
-    vp.state.modkey = vp.state.count  = 0;
-
-    /* echo message if given */
-    if (clean) {
-        vp_echo(VP_MSG_NORMAL, FALSE, "");
-    }
-
-    vp_update_statusbar();
-
-    return TRUE;
-}
-
-void vp_update_urlbar(const char* uri)
-{
-    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), uri);
-}
-
-void vp_update_statusbar(void)
-{
-    GString* status = g_string_new("");
-
-    /* show current count */
-    g_string_append_printf(status, "%.0d", vp.state.count);
-    /* show current modkey */
-    if (vp.state.modkey) {
-        g_string_append_c(status, vp.state.modkey);
-    }
-
-    /* show the active downloads */
-    if (vp.state.downloads) {
-        int num = g_list_length(vp.state.downloads);
-        g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
-    }
-
-    /* show load status of page or the downloads */
-    if (vp.state.progress != 100) {
-        g_string_append_printf(status, " [%i%%]", vp.state.progress);
-    }
-
-    /* show the scroll status */
-    int max = gtk_adjustment_get_upper(vp.gui.adjust_v) - gtk_adjustment_get_page_size(vp.gui.adjust_v);
-    int val = (int)(gtk_adjustment_get_value(vp.gui.adjust_v) / max * 100);
-
-    if (max == 0) {
-        g_string_append(status, " All");
-    } else if (val == 0) {
-        g_string_append(status, " Top");
-    } else if (val >= 100) {
-        g_string_append(status, " Bot");
-    } else {
-        g_string_append_printf(status, " %d%%", val);
-    }
-
-    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.right), status->str);
-    g_string_free(status, TRUE);
-}
-
-void vp_update_status_style(void)
-{
-    StatusType type = vp.state.status;
-    vp_set_widget_font(vp.gui.eventbox, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
-    vp_set_widget_font(vp.gui.statusbar.left, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
-    vp_set_widget_font(vp.gui.statusbar.right, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
-}
-
-void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
-{
-    va_list arg_list;
-
-    va_start(arg_list, error);
-    char message[255];
-    vsnprintf(message, 255, error, arg_list);
-    va_end(arg_list);
-
-    /* don't print message if the input is focussed */
-    if (gtk_widget_is_focus(GTK_WIDGET(vp.gui.inputbox))) {
-        return;
-    }
-
-    /* set the collors according to message type */
-    vp_set_widget_font(
-        vp.gui.inputbox,
-        &core.style.input_fg[type],
-        &core.style.input_bg[type],
-        core.style.input_font[type]
-    );
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
-    if (hide) {
-        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vp_hide_message, NULL);
     }
 }
 
@@ -623,27 +654,6 @@ static void vp_run_user_script(WebKitWebFrame* frame)
             g_free(value);
         }
         g_free(js);
-    }
-}
-
-void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error)
-{
-    JSStringRef str, file_name;
-    JSValueRef exception = NULL, result = NULL;
-    JSContextRef js;
-
-    js        = webkit_web_frame_get_global_context(frame);
-    str       = JSStringCreateWithUTF8CString(script);
-    file_name = JSStringCreateWithUTF8CString(file);
-
-    result = JSEvaluateScript(js, str, JSContextGetGlobalObject(js), file_name, 0, &exception);
-    JSStringRelease(file_name);
-    JSStringRelease(str);
-
-    if (result) {
-        *value = vp_jsref_to_string(js, result);
-    } else {
-        *error = vp_jsref_to_string(js, exception);
     }
 }
 
@@ -821,16 +831,6 @@ static void vp_init_files(void)
     util_create_file_if_not_exists(core.files[FILES_USER_STYLE]);
 
     g_free(path);
-}
-
-void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
-{
-    VP_WIDGET_OVERRIDE_FONT(widget, font);
-    /* TODO are they all required? */
-    VP_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
-    VP_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
-    VP_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
-    VP_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
 }
 
 static void vp_setup_signals(void)
@@ -1044,7 +1044,6 @@ static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
 
     vp_update_statusbar();
 }
-
 
 int main(int argc, char* argv[])
 {
