@@ -104,8 +104,7 @@ static Setting default_settings[] = {
     {NULL, "input-fg-error", TYPE_COLOR, setting_input_style, {.s = "#000"}},
     {NULL, "input-font-normal", TYPE_FONT, setting_input_style, {.s = "monospace normal 8"}},
     {NULL, "input-font-error", TYPE_FONT, setting_input_style, {.s = "monospace bold 8"}},
-    {NULL, "completion-font-normal", TYPE_FONT, setting_completion_style, {.s = "monospace normal 8"}},
-    {NULL, "completion-font-active", TYPE_FONT, setting_completion_style, {.s = "monospace bold 8"}},
+    {NULL, "completion-font", TYPE_FONT, setting_completion_style, {.s = "monospace normal 8"}},
     {NULL, "completion-fg-normal", TYPE_COLOR, setting_completion_style, {.s = "#f6f3e8"}},
     {NULL, "completion-fg-active", TYPE_COLOR, setting_completion_style, {.s = "#fff"}},
     {NULL, "completion-bg-normal", TYPE_COLOR, setting_completion_style, {.s = "#656565"}},
@@ -495,12 +494,12 @@ static gboolean setting_completion_style(const Setting* s, const SettingType typ
         }
     } else if (s->type == TYPE_FONT) {
         if (type == SETTING_GET) {
-            setting_print_value(s, style->comp_font[ctype]);
+            setting_print_value(s, style->comp_font);
         } else {
-            if (style->comp_font[ctype]) {
-                pango_font_description_free(style->comp_font[ctype]);
+            if (style->comp_font) {
+                pango_font_description_free(style->comp_font);
             }
-            style->comp_font[ctype] = pango_font_description_from_string(s->arg.s);
+            style->comp_font = pango_font_description_from_string(s->arg.s);
         }
     } else {
         VpColor* color = NULL;

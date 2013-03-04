@@ -80,7 +80,13 @@
 #define VP_WIDGET_OVERRIDE_COLOR        gtk_widget_override_color
 #define VP_WIDGET_OVERRIDE_TEXT         gtk_widget_override_color
 #define VP_WIDGET_OVERRIDE_FONT         gtk_widget_override_font
+
+#define VP_GTK_STATE_NORMAL             GTK_STATE_FLAG_NORMAL
+#define VP_GTK_STATE_ACTIVE             GTK_STATE_FLAG_ACTIVE
+#define VP_WIDGET_SET_STATE(w, s)       gtk_widget_set_state_flags(w, s, true)
+
 #else
+
 #define VpColor GdkColor
 #define VP_COLOR_PARSE(color, string)   (gdk_color_parse(string, color))
 #define VP_COLOR_TO_STRING(color)       (gdk_color_to_string(color))
@@ -89,6 +95,10 @@
 #define VP_WIDGET_OVERRIDE_COLOR        gtk_widget_modify_fg
 #define VP_WIDGET_OVERRIDE_TEXT         gtk_widget_modify_text
 #define VP_WIDGET_OVERRIDE_FONT         gtk_widget_modify_font
+
+#define VP_GTK_STATE_NORMAL             GTK_STATE_NORMAL
+#define VP_GTK_STATE_ACTIVE             GTK_STATE_ACTIVE
+#define VP_WIDGET_SET_STATE(w, s)       gtk_widget_set_state(w, s)
 #endif
 
 /* enums */
@@ -280,7 +290,7 @@ typedef struct {
     /* completion */
     VpColor               comp_fg[VP_COMP_LAST];
     VpColor               comp_bg[VP_COMP_LAST];
-    PangoFontDescription* comp_font[VP_COMP_LAST];
+    PangoFontDescription* comp_font;
     /* hint style */
     char*                 hint_bg;
     char*                 hint_bg_focus;

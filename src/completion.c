@@ -32,7 +32,6 @@ static GList* completion_init_completion(GList* target, GList* source,
     Comp_Func func, const char* input, const char* prefix);
 static GList* completion_update(GList* completion, GList* active, gboolean back);
 static void completion_show(gboolean back);
-static void completion_set_color(Completion* completion, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
 static void completion_set_entry_text(Completion* c);
 static char* completion_get_text(Completion* c);
 static Completion* completion_get_new(const char* label, const char* prefix);
@@ -216,18 +215,10 @@ static GList* completion_update(GList* completion, GList* active, gboolean back)
         }
     }
 
-    completion_set_color(
-        old->data,
-        &core.style.comp_fg[VP_COMP_NORMAL],
-        &core.style.comp_bg[VP_COMP_NORMAL],
-        core.style.comp_font[VP_COMP_NORMAL]
-    );
-    completion_set_color(
-        new->data,
-        &core.style.comp_fg[VP_COMP_ACTIVE],
-        &core.style.comp_bg[VP_COMP_ACTIVE],
-        core.style.comp_font[VP_COMP_ACTIVE]
-    );
+    VP_WIDGET_SET_STATE(((Completion*)old->data)->label, VP_GTK_STATE_NORMAL);
+    VP_WIDGET_SET_STATE(((Completion*)old->data)->event, VP_GTK_STATE_NORMAL);
+    VP_WIDGET_SET_STATE(((Completion*)new->data)->label, VP_GTK_STATE_ACTIVE);
+    VP_WIDGET_SET_STATE(((Completion*)new->data)->event, VP_GTK_STATE_ACTIVE);
 
     active = new;
     completion_set_entry_text(active->data);
@@ -251,23 +242,13 @@ static void completion_show(gboolean back)
         }
     }
     if (vp.comps.active != NULL) {
-        completion_set_color(
-            vp.comps.active->data,
-            &core.style.comp_fg[VP_COMP_ACTIVE],
-            &core.style.comp_bg[VP_COMP_ACTIVE],
-            core.style.comp_font[VP_COMP_ACTIVE]
-        );
-        completion_set_entry_text(vp.comps.active->data);
+        Completion* active = (Completion*)vp.comps.active->data;
+        VP_WIDGET_SET_STATE(active->label, VP_GTK_STATE_ACTIVE);
+        VP_WIDGET_SET_STATE(active->event, VP_GTK_STATE_ACTIVE);
+
+        completion_set_entry_text(active);
         gtk_widget_show(vp.gui.compbox);
     }
-}
-
-static void completion_set_color(Completion* completion, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
-{
-    VP_WIDGET_OVERRIDE_COLOR(completion->label, GTK_STATE_NORMAL, fg);
-    VP_WIDGET_OVERRIDE_BACKGROUND(completion->event, GTK_STATE_NORMAL, bg);
-    /* TODO is it really necessary to set the font for each item */
-    VP_WIDGET_OVERRIDE_FONT(completion->label, font);
 }
 
 static void completion_set_entry_text(Completion* c)
@@ -315,12 +296,14 @@ static Completion* completion_get_new(const char* label, const char* prefix)
     gtk_label_set_ellipsize(GTK_LABEL(c->label), PANGO_ELLIPSIZE_MIDDLE);
     gtk_misc_set_alignment(GTK_MISC(c->label), 0.0, 0.5);
 
-    completion_set_color(
-        c,
-        &core.style.comp_fg[VP_COMP_NORMAL],
-        &core.style.comp_bg[VP_COMP_NORMAL],
-        core.style.comp_font[VP_COMP_NORMAL]
-    );
+    VP_WIDGET_SET_STATE(c->label, VP_GTK_STATE_NORMAL);
+    VP_WIDGET_SET_STATE(c->event, VP_GTK_STATE_NORMAL);
+
+    VP_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_NORMAL, &core.style.comp_fg[VP_COMP_NORMAL]);
+    VP_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_ACTIVE, &core.style.comp_fg[VP_COMP_ACTIVE]);
+    VP_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_NORMAL, &core.style.comp_bg[VP_COMP_NORMAL]);
+    VP_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_ACTIVE, &core.style.comp_bg[VP_COMP_ACTIVE]);
+    VP_WIDGET_OVERRIDE_FONT(c->label, core.style.comp_font);
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
     gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
