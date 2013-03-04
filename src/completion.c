@@ -63,6 +63,7 @@ gboolean completion_complete(gboolean back)
     /* TODO move these decision to a more generic place */
     if (!strncmp(input, ":set ", 5)) {
         source = g_hash_table_get_keys(core.settings);
+        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
         vp.comps.completions = completion_init_completion(
             vp.comps.completions, source, (Comp_Func)g_str_has_prefix, ":set "
         );
@@ -78,6 +79,7 @@ gboolean completion_complete(gboolean back)
         );
     } else {
         source = g_hash_table_get_keys(core.behave.commands);
+        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
         vp.comps.completions = completion_init_completion(
             vp.comps.completions, source, (Comp_Func)g_str_has_prefix, ":"
         );
@@ -125,7 +127,6 @@ static GList* completion_init_completion(GList* target, GList* source, Comp_Func
 
     token = g_strsplit(command, " ", -1);
 
-    source = g_list_sort(source, (GCompareFunc)g_strcmp0);
     for (GList* l = source; l; l = l->next) {
         data = l->data;
         match = FALSE;
