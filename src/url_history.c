@@ -27,6 +27,9 @@ void url_history_init(void)
 
     file_lock_set(fileno(file), F_UNLCK);
     fclose(file);
+
+    /* reverse history form file */
+    core.behave.url_history = g_list_reverse(core.behave.url_history);
 }
 
 void url_history_cleanup(void)
@@ -101,4 +104,5 @@ static void url_history_free(UrlHist* item)
     if (item->title) {
         g_free(item->title);
     }
+    g_free(item);
 }

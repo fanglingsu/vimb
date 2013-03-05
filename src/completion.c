@@ -78,11 +78,13 @@ gboolean completion_complete(gboolean back)
         vp.comps.completions = completion_init_completion(
             vp.comps.completions, source, (Comp_Func)util_strcasestr, &input[6], ":open "
         );
+        g_list_free(source);
     } else if (!strncmp(input, ":tabopen ", 9)) {
         source = url_history_get_all();
         vp.comps.completions = completion_init_completion(
             vp.comps.completions, source, (Comp_Func)util_strcasestr, &input[9], ":tabopen "
         );
+        g_list_free(source);
     } else {
         source = g_hash_table_get_keys(core.behave.commands);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
