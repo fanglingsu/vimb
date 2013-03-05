@@ -35,6 +35,7 @@ static void completion_show(Client* c, gboolean back);
 static void completion_set_entry_text(Client* c, Completion* completion);
 static char* completion_get_text(Client* c, Completion* completion);
 static Completion* completion_get_new(const char* label, const char* prefix);
+static void completion_free(Completion* completion);
 
 gboolean completion_complete(Client* c, gboolean back)
 {
@@ -49,9 +50,10 @@ gboolean completion_complete(Client* c, gboolean back)
         if (!strcmp(input, text)) {
             /* updatecompletions */
             c->comps.active = completion_update(c, c->comps.completions, c->comps.active, back);
-
+            g_free(text);
             return TRUE;
         } else {
+            g_free(text);
             /* if current input isn't the content of the completion item */
             completion_clean(c);
         }
@@ -80,6 +82,7 @@ gboolean completion_complete(Client* c, gboolean back)
             c,
             c->comps.completions, source, (Comp_Func)util_strcasestr, &input[6], ":open "
         );
+        g_list_free(source);
     } else if (!strncmp(input, ":tabopen ", 9)) {
         source = url_history_get_all();
         c->comps.completions = completion_init_completion(
@@ -105,7 +108,7 @@ gboolean completion_complete(Client* c, gboolean back)
 
 void completion_clean(Client* c)
 {
-    g_list_free_full(c->comps.completions, (GDestroyNotify)g_free);
+    g_list_free_full(c->comps.completions, (GDestroyNotify)completion_free);
     c->comps.completions = NULL;
 
     if (c->gui.compbox) {
@@ -317,4 +320,11 @@ static Completion* completion_get_new(const char* label, const char* prefix)
     gtk_container_add(GTK_CONTAINER(c->event), alignment);
 
     return c;
+}
+
+static void completion_free(Completion* completion)
+{
+    gtk_widget_destroy(completion->event);
+    g_free(completion->prefix);
+    g_free(completion);
 }

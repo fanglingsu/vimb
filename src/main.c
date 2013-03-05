@@ -710,8 +710,8 @@ static void vp_process_config_file(Client* c, VpFile file)
                 fprintf(stderr, "Invalid config: %s\n", line);
             }
         }
-        g_strfreev(lines);
     }
+    g_strfreev(lines);
 }
 
 static Client* vp_client_new(void)
@@ -1035,6 +1035,8 @@ static void vp_destroy_client(Client* c)
 
     webkit_web_view_stop_loading(c->gui.webview);
     gtk_widget_destroy(GTK_WIDGET(c->gui.webview));
+    gtk_widget_destroy(GTK_WIDGET(c->gui.scroll));
+    gtk_widget_destroy(GTK_WIDGET(c->gui.box));
     gtk_widget_destroy(GTK_WIDGET(c->gui.window));
 
     for(p = clients; p && p->next != c; p = p->next);

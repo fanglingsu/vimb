@@ -128,9 +128,6 @@ static void hints_run_script(Client* c, char* js)
 
         return;
     }
-    if (!value) {
-        return;
-    }
 
     if (!strncmp(value, "OVER:", 5)) {
         g_signal_emit_by_name(
