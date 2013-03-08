@@ -64,7 +64,7 @@ void hints_clear(Client* c)
 void hints_create(Client* c, const char* input, guint mode, const guint prefixLength)
 {
     char* js = NULL;
-    char  type;
+    char  type, usage;
     if (CLEAN_MODE(c->state.mode) != VP_MODE_HINTING) {
         Style* style = &core.style;
         c->hints.prefixLength = prefixLength;
@@ -92,7 +92,18 @@ void hints_create(Client* c, const char* input, guint mode, const guint prefixLe
         type = 'i';
     }
 
-    js = g_strdup_printf("%s.create('%s', '%c');", HINT_VAR, input ? input : "", type);
+    if (mode & HINTS_PROCESS_OPEN) {
+        usage = mode & HINTS_OPEN_NEW ? 'T' : 'O';
+    } else {
+        usage = 'U';
+    }
+
+    js = g_strdup_printf(
+        "%s.create('%s', '%c', '%c');",
+        HINT_VAR,
+        input ? input : "", type,
+        usage
+    );
     hints_run_script(c, js);
     g_free(js);
 }
@@ -143,11 +154,7 @@ static void hints_run_script(Client* c, char* js)
         hints_observe_input(c, FALSE);
         Arg a = {0};
         char* v = (value + 5);
-        if (mode & HINTS_PROCESS_OPEN) {
-            a.s = v;
-            a.i = (mode & HINTS_OPEN_NEW) ? VP_TARGET_NEW : VP_TARGET_CURRENT;
-            command_open(c, &a);
-        } else if (mode & HINTS_PROCESS_INPUT) {
+        if (mode & HINTS_PROCESS_INPUT) {
             a.s = g_strconcat((mode & HINTS_OPEN_NEW) ? ":tabopen " : ":open ", v, NULL);
             command_input(c, &a);
             g_free(a.s);
@@ -180,7 +187,7 @@ static void hints_observe_input(Client* c, gboolean observe)
     } else if (c->hints.change_handler && c->hints.keypress_handler) {
         g_signal_handler_disconnect(G_OBJECT(c->gui.inputbox), c->hints.change_handler);
         g_signal_handler_disconnect(G_OBJECT(c->gui.inputbox), c->hints.keypress_handler);
-        
+
         c->hints.change_handler = c->hints.keypress_handler = 0;
 
         /* clear the input box - TODO move this to a better place */

@@ -14,11 +14,16 @@ VimpHints = function Hints(bg, bgf, fg, style) {
     var curFocusNum = 1;
     var hints = [];
     var mode;
+    /* O - open, T - open in new window, U - use source */
+    var usage;
 
-    this.create = function(inputText, hintMode)
+    this.create = function(inputText, hintMode, resultUsage)
     {
         if (hintMode) {
             mode = hintMode;
+        }
+        if (resultUsage) {
+            usage = resultUsage;
         }
 
         var topwin = window;
@@ -219,8 +224,35 @@ VimpHints = function Hints(bg, bgf, fg, style) {
             return "DONE:";
         }
 
-        return "DATA:" + _getSrc(el);;
+        switch (usage) {
+            case "T": _openNewWindow(el); return "DONE:";
+            case "O": _open(el); return "DONE:";
+            default: return "DATA:" + _getSrc(el);
+        }
     };
+
+    /* opens given element */
+    function _open(elem)
+    {
+        if (elem.target == "_blank") {
+            elem.removeAttribute("target");
+        }
+        _mouseEvent(elem, "moudedown", 0);
+        _mouseEvent(elem, "click", 0);
+    }
+
+    /* opens given element into new window */
+    function _openNewWindow(elem)
+    {
+        var oldTarget = elem.target;
+
+        /* set target to open in new window */
+        elem.target = "_blank";
+        _mouseEvent(elem, "moudedown");
+        _mouseEvent(elem, "click");
+        elem.target = oldTarget;
+    }
+
 
     /* set focus on hint with given number */
     function _focus(n)
