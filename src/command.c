@@ -352,7 +352,7 @@ gboolean command_inspect(Client* c, const Arg* arg)
         return TRUE;
     }
 
-    vp_echo(c, VP_MSG_ERROR, TRUE, "enable-developer-extras not enabled");
+    vp_echo(c, VP_MSG_ERROR, TRUE, "webinspector is not enabled");
 
     return FALSE;
 }
