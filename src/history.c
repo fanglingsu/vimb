@@ -20,7 +20,7 @@
 #include "main.h"
 #include "history.h"
 
-extern const int COMMAND_HISTORY_SIZE;
+extern const unsigned int COMMAND_HISTORY_SIZE;
 
 void history_cleanup(void)
 {

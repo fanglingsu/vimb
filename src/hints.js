@@ -1,31 +1,15 @@
-VimpHints = function Hints(bg, bgf, fg, style) {
+/* mode: l - links, i - images */
+/* usage: O - open, T - open in new window, U - use source */
+VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     "use strict";
-    var config = {
-        maxHints: 200,
-        hintCss: style,
-        hintClass: "__hint",
-        hintClassFocus: "__hint_container",
-        eBg: bg,
-        eBgf: bgf,
-        eFg: fg
-    };
-
+    var hClass = "__hint";
+    var hClassFocus = "__hint_container";
     var hCont;
     var curFocusNum = 1;
     var hints = [];
-    var mode;
-    /* O - open, T - open in new window, U - use source */
-    var usage;
 
-    this.create = function(inputText, hintMode, resultUsage)
+    this.create = function(inputText)
     {
-        if (hintMode) {
-            mode = hintMode;
-        }
-        if (resultUsage) {
-            usage = resultUsage;
-        }
-
         var topwin = window;
         var top_height = topwin.innerHeight;
         var top_width = topwin.innerWidth;
@@ -63,13 +47,13 @@ VimpHints = function Hints(bg, bgf, fg, style) {
 
             /* generate basic hint element which will be cloned and updated later */
             var hintSpan = doc.createElement("span");
-            hintSpan.setAttribute("class", config.hintClass);
-            hintSpan.style.cssText = config.hintCss;
+            hintSpan.setAttribute("class", hClass);
+            hintSpan.style.cssText = style;
 
             /* due to the different XPath result type, we will need two counter variables */
             var rect, elem, text, node, show_text;
             for (i = 0; i < res.snapshotLength; i++) {
-                if (hintCount >= config.maxHints) {
+                if (hintCount >= maxHints) {
                     break;
                 }
 
@@ -79,8 +63,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
                     continue;
                 }
 
-                var style = topwin.getComputedStyle(elem, "");
-                if (style.display === "none" || style.visibility !== "visible") {
+                var cStyle = topwin.getComputedStyle(elem, "");
+                if (cStyle.display === "none" || cStyle.visibility !== "visible") {
                     continue;
                 }
 
@@ -105,8 +89,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
                 );
 
                 /* make the link black to ensure it's readable */
-                elem.style.color = config.eFg;
-                elem.style.background = config.eBg;
+                elem.style.color = fg;
+                elem.style.background = bg;
             }
 
             doc.documentElement.appendChild(hCont);
@@ -260,8 +244,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         /* reset previous focused hint */
         var hint = _getHintByNumber(curFocusNum);
         if (hint !== null) {
-            hint.elem.className = hint.elem.className.replace(config.hintClassFocus, config.hintClass);
-            hint.elem.style.background = config.eBg;
+            hint.elem.className = hint.elem.className.replace(hClassFocus, hClass);
+            hint.elem.style.background = bg;
             _mouseEvent(hint.elem, "mouseout");
         }
 
@@ -270,8 +254,8 @@ VimpHints = function Hints(bg, bgf, fg, style) {
         /* mark new hint as focused */
         hint = _getHintByNumber(curFocusNum);
         if (hint !== null) {
-            hint.elem.className = hint.elem.className.replace(config.hintClass, config.hintClassFocus);
-            hint.elem.style.background = config.eBgf;
+            hint.elem.className = hint.elem.className.replace(hClass, hClassFocus);
+            hint.elem.style.background = bgf;
             _mouseEvent(hint.elem, "mouseover");
             var source = _getSrc(hint.elem);
 
@@ -356,13 +340,6 @@ VimpHints = function Hints(bg, bgf, fg, style) {
                     expr = "//img[@src]";
                 } else {
                     expr = "//img[@src and contains(., '" + s + "')]";
-                }
-                break;
-            default:
-                if (s === "") {
-                    expr = "//*[@role='link' or @href] | //a[href] | //area | //img[not(ancestor::a)]";
-                } else {
-                    expr = "//*[(@role='link' or @href) and contains(., '" + s + "')] | //a[@href and contains(., '" + s + "')] | //area[contains(., '" + s + "')] | //img[not(ancestor::a) and contains(., '" + s + "')]";
                 }
                 break;
         }

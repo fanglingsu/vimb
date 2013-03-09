@@ -27,6 +27,8 @@
 #define HINT_VAR "VpHint"
 #define HINT_FILE NULL
 
+extern const unsigned int MAXIMUM_HINTS;
+
 static void hints_run_script(Client* c, char* js);
 static void hints_fire(Client* c);
 static void hints_observe_input(Client* c, gboolean observe);
@@ -64,20 +66,30 @@ void hints_clear(Client* c)
 void hints_create(Client* c, const char* input, guint mode, const guint prefixLength)
 {
     char* js = NULL;
-    char  type, usage;
     if (CLEAN_MODE(c->state.mode) != VP_MODE_HINTING) {
         Style* style = &core.style;
         c->hints.prefixLength = prefixLength;
         c->hints.mode         = mode;
         c->hints.num          = 0;
 
+        char type, usage;
+        /* convert the mode into the type chare used in the hint script */
+        type = mode & HINTS_TYPE_LINK ? 'l' : 'i';
+
+        if (mode & HINTS_PROCESS_OPEN) {
+            usage = mode & HINTS_OPEN_NEW ? 'T' : 'O';
+        } else {
+            usage = 'U';
+        }
+
         js = g_strdup_printf(
-            "%s = new VimpHints('%s', '%s', '%s', '%s');",
-            HINT_VAR,
+            "%s = new VimpHints('%c', '%c', '%s', '%s', '%s', '%s', %d);",
+            HINT_VAR, type, usage,
             style->hint_bg,
             style->hint_bg_focus,
             style->hint_fg,
-            style->hint_style
+            style->hint_style,
+            MAXIMUM_HINTS
         );
         hints_run_script(c, js);
         g_free(js);
@@ -85,25 +97,8 @@ void hints_create(Client* c, const char* input, guint mode, const guint prefixLe
         hints_observe_input(c, TRUE);
     }
 
-    /* convert the mode into the type chare used in the hint script */
-    if (mode & HINTS_TYPE_LINK) {
-        type = 'l';
-    } else if (HINTS_TYPE_IMAGE) {
-        type = 'i';
-    }
 
-    if (mode & HINTS_PROCESS_OPEN) {
-        usage = mode & HINTS_OPEN_NEW ? 'T' : 'O';
-    } else {
-        usage = 'U';
-    }
-
-    js = g_strdup_printf(
-        "%s.create('%s', '%c', '%c');",
-        HINT_VAR,
-        input ? input : "", type,
-        usage
-    );
+    js = g_strdup_printf("%s.create('%s');", HINT_VAR, input ? input : "");
     hints_run_script(c, js);
     g_free(js);
 }
