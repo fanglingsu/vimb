@@ -77,14 +77,14 @@ gboolean completion_complete(Client* c, gboolean back)
             c->comps.completions, source, (Comp_Func)g_str_has_prefix, &input[5], ":set "
         );
     } else if (!strncmp(input, ":open ", 6)) {
-        source = url_history_get_all();
+        url_history_get_all(&source);
         c->comps.completions = completion_init_completion(
             c,
             c->comps.completions, source, (Comp_Func)util_strcasestr, &input[6], ":open "
         );
         g_list_free(source);
     } else if (!strncmp(input, ":tabopen ", 9)) {
-        source = url_history_get_all();
+        url_history_get_all(&source);
         c->comps.completions = completion_init_completion(
             c,
             c->comps.completions, source, (Comp_Func)util_strcasestr, &input[9], ":tabopen "

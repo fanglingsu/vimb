@@ -9,6 +9,6 @@ typedef struct {
 void url_history_init(void);
 void url_history_cleanup(void);
 void url_history_add(const char* url, const char* title);
-GList* url_history_get_all(void);
+void url_history_get_all(GList** list);
 
 #endif /* end of include guard: _URL_HISTORY_H */

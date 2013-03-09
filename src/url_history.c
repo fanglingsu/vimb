@@ -87,19 +87,17 @@ void url_history_add(const char* url, const char* title)
 }
 
 /**
- * Retrieves the ur history as ne allocated list.
+ * Appends the url history entries to given list.
  */
-GList* url_history_get_all(void)
+void url_history_get_all(GList** list)
 {
-    GList* out = NULL;
     for (GList* link = core.behave.url_history; link; link = link->next) {
         UrlHist* hi = (UrlHist*)link->data;
         /* put only the url in the list - do not allocate new memory */
-        out = g_list_prepend(out, hi->uri);
+        *list = g_list_prepend(*list, hi->uri);
     }
 
-    out = g_list_reverse(out);
-    return out;
+    *list = g_list_reverse(*list);
 }
 
 static void url_history_free(UrlHist* item)
