@@ -25,7 +25,7 @@
 #include "hints.js.h"
 
 #define HINT_VAR "VpHint"
-#define HINT_FILE NULL
+#define HINT_FILE "hints.js"
 
 extern const unsigned int MAXIMUM_HINTS;
 

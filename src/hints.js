@@ -34,9 +34,7 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             var scrollX = win.scrollX;
             var scrollY = win.scrollY;
 
-            hCont = doc.createElement("div");
-            hCont.id = "hint_container";
-
+            var fragment = doc.createDocumentFragment();
             xpath_expr = _getXpath(inputText);
 
             var res = doc.evaluate(
@@ -78,7 +76,7 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
                 text = doc.createTextNode(hintCount + 1);
                 hint.appendChild(text);
 
-                hCont.appendChild(hint);
+                fragment.appendChild(hint);
                 hintCount++;
                 hints.push({
                     elem:       elem,
@@ -92,7 +90,11 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
                 elem.style.color = fg;
                 elem.style.background = bg;
             }
+            
+            hCont = doc.createElement("div");
+            hCont.id = "hint_container";
 
+            hCont.appendChild(fragment);
             doc.documentElement.appendChild(hCont);
 
             /* recurse into any iframe or frame element */
@@ -173,10 +175,10 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         }
         for (var i = 0; i < hints.length; ++i) {
             var hint = hints[i];
-            if (typeof(hint.elem) !== "undefined") {
+            if (hint.elem) {
                 hint.elem.style.background = hint.background;
                 hint.elem.style.color = hint.foreground;
-                hint.span.parentNode.removeChild(hint.span);
+                hCont.removeChild(hint.span);
             }
         }
         hints = [];
