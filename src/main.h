@@ -333,7 +333,7 @@ extern VpCore core;
 /* functions */
 void vp_clean_input(Client* c);
 void vp_echo(Client* c, const MessageType type, gboolean hide, const char *error, ...);
-void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error);
+gboolean vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value);
 gboolean vp_load_uri(Client* c, const Arg* arg);
 gboolean vp_set_clipboard(const Arg* arg);
 gboolean vp_set_mode(Client* c, Mode mode, gboolean clean);

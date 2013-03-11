@@ -110,7 +110,7 @@ void vp_echo(Client* c, const MessageType type, gboolean hide, const char *error
     }
 }
 
-void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error)
+gboolean vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value)
 {
     JSStringRef str, file_name;
     JSValueRef exception = NULL, result = NULL;
@@ -126,9 +126,11 @@ void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** valu
 
     if (result) {
         *value = vp_jsref_to_string(js, result);
-    } else {
-        *error = vp_jsref_to_string(js, exception);
+        return TRUE;
     }
+
+    *value = vp_jsref_to_string(js, exception);
+    return FALSE;
 }
 
 gboolean vp_load_uri(Client* c, const Arg* arg)
@@ -626,15 +628,11 @@ static void vp_run_user_script(WebKitWebFrame* frame)
         && g_file_get_contents(core.files[FILES_SCRIPT], &js, NULL, &error)
     ) {
         char* value = NULL;
-        char* error = NULL;
-
-        vp_eval_script(frame, js, core.files[FILES_SCRIPT], &value, &error);
-        if (error) {
-            fprintf(stderr, "%s", error);
-            g_free(error);
-        } else {
-            g_free(value);
+        gboolean success = vp_eval_script(frame, js, core.files[FILES_SCRIPT], &value);
+        if (!success) {
+            fprintf(stderr, "%s", value);
         }
+        g_free(value);
         g_free(js);
     }
 }

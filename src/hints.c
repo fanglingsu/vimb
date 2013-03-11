@@ -38,10 +38,8 @@ static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* eve
 void hints_init(WebKitWebFrame* frame)
 {
     char* value = NULL;
-    char* error = NULL;
-    vp_eval_script(frame, HINTS_JS, HINT_FILE, &value, &error);
+    vp_eval_script(frame, HINTS_JS, HINT_FILE, &value);
     g_free(value);
-    g_free(error);
 }
 
 void hints_clear(Client* c)
@@ -50,13 +48,8 @@ void hints_clear(Client* c)
     if (CLEAN_MODE(c->state.mode) == VP_MODE_HINTING) {
         char* js = g_strdup_printf("%s.clear();", HINT_VAR);
         char* value = NULL;
-        char* error = NULL;
-
-        vp_eval_script(
-            webkit_web_view_get_main_frame(c->gui.webview), js, HINT_FILE, &value, &error
-        );
+        vp_eval_script(webkit_web_view_get_main_frame(c->gui.webview), js, HINT_FILE, &value);
         g_free(value);
-        g_free(error);
         g_free(js);
 
         g_signal_emit_by_name(c->gui.webview, "hovering-over-link", NULL, NULL);
@@ -120,15 +113,14 @@ void hints_focus_next(Client* c, const gboolean back)
 static void hints_run_script(Client* c, char* js)
 {
     char* value = NULL;
-    char* error = NULL;
     int mode = c->hints.mode;
 
-    vp_eval_script(
-        webkit_web_view_get_main_frame(c->gui.webview), js, HINT_FILE, &value, &error
+    gboolean success = vp_eval_script(
+        webkit_web_view_get_main_frame(c->gui.webview), js, HINT_FILE, &value
     );
-    if (error) {
-        fprintf(stderr, "%s\n", error);
-        g_free(error);
+    if (!success) {
+        fprintf(stderr, "%s\n", value);
+        g_free(value);
 
         vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
