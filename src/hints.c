@@ -136,7 +136,7 @@ static void hints_run_script(Client* c, char* js)
         vp_set_mode(c, VP_MODE_NORMAL, TRUE);
     } else if (!strncmp(value, "INSERT:", 7)) {
         hints_observe_input(c, FALSE);
-        vp_set_mode(c, VP_MODE_INSERT, TRUE);
+        vp_set_mode(c, VP_MODE_INSERT, FALSE);
     } else if (!strncmp(value, "DATA:", 5)) {
         hints_observe_input(c, FALSE);
         Arg a = {0};
