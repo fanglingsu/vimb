@@ -90,7 +90,7 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
                 elem.style.color = fg;
                 elem.style.background = bg;
             }
-            
+
             hCont = doc.createElement("div");
             hCont.id = "hint_container";
 
@@ -195,42 +195,48 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             return "DONE:";
         }
 
-        var el  = hint.elem;
-        var tag = el.nodeName.toLowerCase();
+        var e  = hint.elem;
+        var tag = e.nodeName.toLowerCase();
+        var type = e.type ? e.type : "";
 
         this.clear();
 
-        if (tag === "iframe" || tag === "frame" || tag === "textarea" || tag === "select" || tag === "input"
-            && (el.type !== "image" && el.type !== "submit")
-        ) {
-            el.focus();
-            if (tag === "input" || tag === "textarea") {
-                return "INSERT:";
+        if (tag === "input" || tag === "textarea" || tag === "select") {
+            if (type === "radio" || type === "checkbox") {
+                e.focus();
+                _click(e);
+                return "DONE:";
             }
+            if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
+                _click(e);
+                return "DONE:";
+            }
+            e.focus();
+            return "INSERT:";
+        } else if (tag === "iframe" || tag === "frame") {
+            e.focus();
             return "DONE:";
         }
 
         switch (usage) {
-            case "T": _open(el, true); return "DONE:";
-            case "O": _open(el, false); return "DONE:";
-            default: return "DATA:" + _getSrc(el);
+            case "T": _open(e, true); return "DONE:";
+            case "O": _open(e, false); return "DONE:";
+            default: return "DATA:" + _getSrc(e);
         }
     };
 
     /* opens given element */
-    function _open(elem, newWin)
+    function _open(e, newWin)
     {
-        var oldTarget = elem.target;
+        var oldTarget = e.target;
         if (newWin) {
             /* set target to open in new window */
-            elem.target = "_blank";
+            e.target = "_blank";
         } else {
-            elem.removeAttribute("target");
+            e.removeAttribute("target");
         }
-        _mouseEvent(elem, "mousedown");
-        _mouseEvent(elem, "moudeup");
-        _mouseEvent(elem, "click");
-        elem.target = oldTarget;
+        _click(e);
+        e.target = oldTarget;
     }
 
     /* set focus on hint with given number */
@@ -297,6 +303,13 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             /* remove hints from all hints */
             hints.splice(index, 1);
         }
+    }
+
+    function _click(e) {
+        _mouseEvent(e, "mouseover");
+        _mouseEvent(e, "mousedown");
+        _mouseEvent(e, "mouseup");
+        _mouseEvent(e, "click");
     }
 
     function _mouseEvent(elem, name)
