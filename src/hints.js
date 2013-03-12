@@ -15,7 +15,7 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         var top_width = topwin.innerWidth;
         var xpath_expr;
 
-        var hintCount = 0;
+        var hCount = 0;
         this.clear();
 
         function _helper (win, offsetX, offsetY)
@@ -49,19 +49,19 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             hintSpan.style.cssText = style;
 
             /* due to the different XPath result type, we will need two counter variables */
-            var rect, elem, text, node, show_text;
+            var rect, e, text, node, show_text;
             for (i = 0; i < res.snapshotLength; i++) {
-                if (hintCount >= maxHints) {
+                if (hCount >= maxHints) {
                     break;
                 }
 
-                elem = res.snapshotItem(i);
-                rect = elem.getBoundingClientRect();
+                e = res.snapshotItem(i);
+                rect = e.getBoundingClientRect();
                 if (!rect || rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
                     continue;
                 }
 
-                var cStyle = topwin.getComputedStyle(elem, "");
+                var cStyle = topwin.getComputedStyle(e, "");
                 if (cStyle.display === "none" || cStyle.visibility !== "visible") {
                     continue;
                 }
@@ -73,22 +73,22 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
                 var hint = hintSpan.cloneNode(false);
                 hint.style.left = leftpos - 3 + "px";
                 hint.style.top =  toppos - 3 + "px";
-                text = doc.createTextNode(hintCount + 1);
+                text = doc.createTextNode(hCount + 1);
                 hint.appendChild(text);
 
                 fragment.appendChild(hint);
-                hintCount++;
+                hCount++;
                 hints.push({
-                    elem:       elem,
-                    number:     hintCount,
-                    span:       hint,
-                    background: elem.style.background,
-                    foreground: elem.style.color}
+                    e:    e,
+                    num:  hCount,
+                    span: hint,
+                    bg:   e.style.background,
+                    fg:   e.style.color}
                 );
 
                 /* make the link black to ensure it's readable */
-                elem.style.color = fg;
-                elem.style.background = bg;
+                e.style.color = fg;
+                e.style.background = bg;
             }
 
             hCont = doc.createElement("div");
@@ -102,19 +102,19 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             for (var f = 0; f < frameTags.length; ++f) {
                 var frames = doc.getElementsByTagName(frameTags[f]);
                 for (var i = 0, nframes = frames.length; i < nframes; ++i) {
-                    elem = frames[i];
-                    rect = elem.getBoundingClientRect();
-                    if (!elem.contentWindow || !rect || rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
+                    e = frames[i];
+                    rect = e.getBoundingClientRect();
+                    if (!e.contentWindow || !rect || rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
                         continue;
                     }
-                    _helper(elem.contentWindow, offsetX + rect.left, offsetY + rect.top);
+                    _helper(e.contentWindow, offsetX + rect.left, offsetY + rect.top);
                 }
             }
         }
 
         _helper(topwin, 0, 0);
 
-        if (hintCount <= 1) {
+        if (hCount <= 1) {
             return this.fire(1);
         }
         return _focus(1);
@@ -123,22 +123,22 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     /* set focus to next avaiable hint */
     this.focusNext = function()
     {
-        var index = _getHintIdByNumber(curFocusNum);
+        var index = _getHintIdByNum(curFocusNum);
 
         if (typeof(hints[index + 1]) !== "undefined") {
-            return _focus(hints[index + 1].number);
+            return _focus(hints[index + 1].num);
         }
-        return _focus(hints[0].number);
+        return _focus(hints[0].num);
     };
 
     /* set focus to previous avaiable hint */
     this.focusPrev = function()
     {
-        var index = _getHintIdByNumber(curFocusNum);
-        if (index !== 0 && typeof(hints[index - 1].number) !== "undefined") {
-            return _focus(hints[index - 1].number);
+        var index = _getHintIdByNum(curFocusNum);
+        if (index !== 0 && typeof(hints[index - 1].num) !== "undefined") {
+            return _focus(hints[index - 1].num);
         }
-        return _focus(hints[hints.length - 1].number);
+        return _focus(hints[hints.length - 1].num);
     };
 
     /* filters hints matching given number */
@@ -152,8 +152,8 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         var i;
         for (i = 0; i < hints.length; ++i) {
             var hint = hints[i];
-            if (0 !== hint.number.toString().indexOf(n.toString())) {
-                remove.push(hint.number);
+            if (0 !== hint.num.toString().indexOf(n.toString())) {
+                remove.push(hint.num);
             }
         }
 
@@ -162,7 +162,7 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         }
 
         if (hints.length === 1) {
-            return this.fire(hints[0].number);
+            return this.fire(hints[0].num);
         }
         return _focus(n);
     };
@@ -175,9 +175,9 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         }
         for (var i = 0; i < hints.length; ++i) {
             var hint = hints[i];
-            if (hint.elem) {
-                hint.elem.style.background = hint.background;
-                hint.elem.style.color = hint.foreground;
+            if (hint.e) {
+                hint.e.style.background = hint.bg;
+                hint.e.style.color = hint.fg;
                 hCont.removeChild(hint.span);
             }
         }
@@ -190,12 +190,12 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     this.fire = function(n)
     {
         n = n ? n : curFocusNum;
-        var hint = _getHintByNumber(n);
-        if (!hint || typeof(hint.elem) == "undefined") {
+        var hint = _getHintByNum(n);
+        if (!hint || typeof(hint.e) == "undefined") {
             return "DONE:";
         }
 
-        var e  = hint.elem;
+        var e  = hint.e;
         var tag = e.nodeName.toLowerCase();
         var type = e.type ? e.type : "";
 
@@ -243,31 +243,31 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     function _focus(n)
     {
         /* reset previous focused hint */
-        var hint = _getHintByNumber(curFocusNum);
+        var hint = _getHintByNum(curFocusNum);
         if (hint !== null) {
-            hint.elem.className = hint.elem.className.replace(hClassFocus, hClass);
-            hint.elem.style.background = bg;
-            _mouseEvent(hint.elem, "mouseout");
+            hint.e.className = hint.e.className.replace(hClassFocus, hClass);
+            hint.e.style.background = bg;
+            _mouseEvent(hint.e, "mouseout");
         }
 
         curFocusNum = n;
 
         /* mark new hint as focused */
-        hint = _getHintByNumber(curFocusNum);
+        hint = _getHintByNum(curFocusNum);
         if (hint !== null) {
-            hint.elem.className = hint.elem.className.replace(hClass, hClassFocus);
-            hint.elem.style.background = bgf;
-            _mouseEvent(hint.elem, "mouseover");
-            var source = _getSrc(hint.elem);
+            hint.e.className = hint.e.className.replace(hClass, hClassFocus);
+            hint.e.style.background = bgf;
+            _mouseEvent(hint.e, "mouseover");
+            var source = _getSrc(hint.e);
 
             return "OVER:" + (source ? source : "");
         }
     }
 
     /* retrieves the hint for given hint number */
-    function _getHintByNumber(n)
+    function _getHintByNum(n)
     {
-        var index = _getHintIdByNumber(n);
+        var index = _getHintIdByNum(n);
         if (index !== null) {
             return hints[index];
         }
@@ -275,12 +275,12 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     }
 
     /* retrieves the id of hint with given number */
-    function _getHintIdByNumber(n)
+    function _getHintIdByNum(n)
     {
         var hint;
         for (var i = 0; i < hints.length; ++i) {
             hint = hints[i];
-            if (hint.number === n) {
+            if (hint.num === n) {
                 return i;
             }
         }
@@ -290,14 +290,14 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     /* removes hint with given number from hints array */
     function _removeHint(n)
     {
-        var index = _getHintIdByNumber(n);
+        var index = _getHintIdByNum(n);
         if (index === null) {
             return;
         }
         var hint = hints[index];
-        if (hint.number === n) {
-            hint.elem.style.background = hint.background;
-            hint.elem.style.color = hint.foreground;
+        if (hint.num === n) {
+            hint.e.style.background = hint.bg;
+            hint.e.style.color = hint.fg;
             hint.span.parentNode.removeChild(hint.span);
 
             /* remove hints from all hints */
@@ -312,20 +312,20 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         _mouseEvent(e, "click");
     }
 
-    function _mouseEvent(elem, name)
+    function _mouseEvent(e, name)
     {
-        var doc = elem.ownerDocument;
-        var view = elem.contentWindow;
+        var doc = e.ownerDocument;
+        var view = e.contentWindow;
 
         var evObj = doc.createEvent("MouseEvents");
         evObj.initMouseEvent(name, true, true, view, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-        elem.dispatchEvent(evObj);
+        e.dispatchEvent(evObj);
     }
 
     /* retrieves the url of given element */
-    function _getSrc(elem)
+    function _getSrc(e)
     {
-        return elem.href || elem.src;
+        return e.href || e.src;
     }
 
     /* retrieves the xpath expression according to mode */
