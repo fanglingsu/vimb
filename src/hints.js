@@ -211,34 +211,27 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         }
 
         switch (usage) {
-            case "T": _openNewWindow(el); return "DONE:";
-            case "O": _open(el); return "DONE:";
+            case "T": _open(el, true); return "DONE:";
+            case "O": _open(el, false); return "DONE:";
             default: return "DATA:" + _getSrc(el);
         }
     };
 
     /* opens given element */
-    function _open(elem)
-    {
-        if (elem.target == "_blank") {
-            elem.removeAttribute("target");
-        }
-        _mouseEvent(elem, "moudedown", 0);
-        _mouseEvent(elem, "click", 0);
-    }
-
-    /* opens given element into new window */
-    function _openNewWindow(elem)
+    function _open(elem, newWin)
     {
         var oldTarget = elem.target;
-
-        /* set target to open in new window */
-        elem.target = "_blank";
-        _mouseEvent(elem, "moudedown");
+        if (newWin) {
+            /* set target to open in new window */
+            elem.target = "_blank";
+        } else {
+            elem.removeAttribute("target");
+        }
+        _mouseEvent(elem, "mousedown");
+        _mouseEvent(elem, "moudeup");
         _mouseEvent(elem, "click");
         elem.target = oldTarget;
     }
-
 
     /* set focus on hint with given number */
     function _focus(n)
