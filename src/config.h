@@ -28,7 +28,9 @@
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST  5
 
-const int COMMAND_HISTORY_SIZE = 30;
+const unsigned int MAXIMUM_HINTS = 500;
+
+const unsigned int COMMAND_HISTORY_SIZE = 30;
 
 const struct {
     char* command;

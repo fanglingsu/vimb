@@ -299,13 +299,39 @@ Close the browser.
 .B source
 Toggle between normal view and source view for the current page.
 .SH FILES
-.I $XDG_CONFIG_HOME/vimp/config
+.I $XDG_CONFIG_HOME/vimp/global.conf
 .RS
-THe users config file.
+Global configuration that are read on startup of application. This is the
+right place to set keybindings and global style settings for vimp.
+.RE
+.I $XDG_CONFIG_HOME/vimp/local.conf
+.RS
+Local configuration that are process every time a new window is opened. This
+will be mainly used to apply webkit settings for the new browser window.
 .RE
 .I $XDG_CONFIG_HOME/vimp/cookies
 .RS
 Cookie store file.
+.RE
+.I $XDG_CONFIG_HOME/vimp/closed
+.RS
+Holds the URI of the last closed browser window.
+.RE
+.I $XDG_CONFIG_HOME/vimp/history
+.RS
+This file holds the history of opened URIs. Note that this file is only
+written if last window of the browser is closed.
+.RE
+.I $XDG_CONFIG_HOME/vimp/scripts.js
+.RS
+This file can be used to run user scripts, that are injected into every paged
+that is opened.
+.RE
+.I $XDG_CONFIG_HOME/vimp/style.css
+.RS
+File for userdefined css styles. These file is used if the config variable
+'stylesheet' is enabled.
+.RE
 .SH "REPORTING BUGS"
 Report bugs to the main project page on
 .IR https://github.com/fanglingsu/vimp/issues .

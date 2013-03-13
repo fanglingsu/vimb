@@ -29,18 +29,20 @@ typedef enum {
 } SettingType;
 
 typedef struct _Setting Setting;
-typedef gboolean (*SettingFunc)(const Setting*, const SettingType);
+typedef gboolean (*SettingFunc)(Client* c, const Setting*, const SettingType);
 
 struct _Setting {
-    char*      alias;
-    char*      name;
+    char*       alias;
+    char*       name;
     Type        type;
     SettingFunc func;
     Arg         arg;
+    gboolean    global;
 };
 
 void setting_init(void);
+void setting_init_client(Client* c);
 void setting_cleanup(void);
-gboolean setting_run(char* name, const char* param);
+gboolean setting_run(Client* c, char* name, const char* param);
 
 #endif /* end of include guard: _SETTING_H */

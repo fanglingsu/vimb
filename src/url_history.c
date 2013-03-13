@@ -28,7 +28,7 @@ void url_history_init(void)
     file_lock_set(fileno(file), F_UNLCK);
     fclose(file);
 
-    /* reverse history form file */
+    /* reverse the history because we read it from lates to old from file */
     core.behave.url_history = g_list_reverse(core.behave.url_history);
 }
 
@@ -86,16 +86,18 @@ void url_history_add(const char* url, const char* title)
     core.behave.url_history = g_list_prepend(core.behave.url_history, item);
 }
 
-GList* url_history_get_all(void)
+/**
+ * Appends the url history entries to given list.
+ */
+void url_history_get_all(GList** list)
 {
-    GList* out = NULL;
     for (GList* link = core.behave.url_history; link; link = link->next) {
         UrlHist* hi = (UrlHist*)link->data;
         /* put only the url in the list - do not allocate new memory */
-        out = g_list_prepend(out, hi->uri);
+        *list = g_list_prepend(*list, hi->uri);
     }
 
-    return out;
+    *list = g_list_reverse(*list);
 }
 
 static void url_history_free(UrlHist* item)

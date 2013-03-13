@@ -20,22 +20,22 @@
 #include "main.h"
 #include "dom.h"
 
-static gboolean dom_auto_insert(Element* element);
-static gboolean dom_editable_focus_cb(Element* element, Event* event);
+static gboolean dom_auto_insert(Client* c, Element* element);
+static gboolean dom_editable_focus_cb(Element* element, Event* event, Client* c);
 static Element* dom_get_active_element(Document* doc);
 
 
-void dom_check_auto_insert(void)
+void dom_check_auto_insert(Client* c)
 {
-    Document* doc   = webkit_web_view_get_dom_document(vp.gui.webview);
+    Document* doc   = webkit_web_view_get_dom_document(c->gui.webview);
     Element* active = dom_get_active_element(doc);
-    if (!dom_auto_insert(active)) {
+    if (!dom_auto_insert(c, active)) {
         HtmlElement* element = webkit_dom_document_get_body(doc);
         if (!element) {
             element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
         }
         webkit_dom_event_target_add_event_listener(
-            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true, NULL
+            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true, c
         );
     }
 }
@@ -46,43 +46,47 @@ void dom_check_auto_insert(void)
  */
 gboolean dom_is_editable(Element* element)
 {
+    gboolean result = FALSE;
     if (!element) {
-        return FALSE;
+        return result;
     }
 
     char* tagname = webkit_dom_element_get_tag_name(element);
-    if (!g_ascii_strcasecmp(tagname, "textarea")) {
-        return TRUE;
-    }
     char *type = webkit_dom_element_get_attribute(element, "type");
-    if (!g_ascii_strcasecmp(tagname, "input")
+    if (!g_ascii_strcasecmp(tagname, "textarea")) {
+        result = TRUE;
+    } else if (!g_ascii_strcasecmp(tagname, "input")
         && g_ascii_strcasecmp(type, "submit")
         && g_ascii_strcasecmp(type, "reset")
         && g_ascii_strcasecmp(type, "image")
     ) {
-        return TRUE;
+        result = TRUE;
+    } else {
+        result = FALSE;
     }
+    g_free(tagname);
+    g_free(type);
 
-    return FALSE;
+    return result;
 }
 
-static gboolean dom_auto_insert(Element* element)
+static gboolean dom_auto_insert(Client* c, Element* element)
 {
     if (dom_is_editable(element)) {
-        vp_set_mode(VP_MODE_INSERT, FALSE);
+        vp_set_mode(c, VP_MODE_INSERT, FALSE);
         return TRUE;
     }
     return FALSE;
 }
 
-static gboolean dom_editable_focus_cb(Element* element, Event* event)
+static gboolean dom_editable_focus_cb(Element* element, Event* event, Client* c)
 {
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true
     );
-    if (GET_CLEAN_MODE() != VP_MODE_INSERT) {
+    if (CLEAN_MODE(c->state.mode) != VP_MODE_INSERT) {
         EventTarget* target = webkit_dom_event_get_target(event);
-        dom_auto_insert((void*)target);
+        dom_auto_insert(c, (void*)target);
     }
     return FALSE;
 }
@@ -91,15 +95,23 @@ static Element* dom_get_active_element(Document* doc)
 {
     Document* d     = NULL;
     Element* active = webkit_dom_html_document_get_active_element((void*)doc);
-    char* tagname  = webkit_dom_element_get_tag_name(active);
+    char* tagname   = webkit_dom_element_get_tag_name(active);
+    Element* result = NULL;
 
     if (!g_strcmp0(tagname, "FRAME")) {
         d = webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active));
-        return dom_get_active_element(d);
-    }
-    if (!g_strcmp0(tagname, "IFRAME")) {
+        result = dom_get_active_element(d);
+    } else if (!g_strcmp0(tagname, "IFRAME")) {
         d = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(active));
-        return dom_get_active_element(d);
+        result = dom_get_active_element(d);
     }
+    g_free(tagname);
+
+    if (result) {
+        g_free(active);
+
+        return result;
+    }
+
     return active;
 }

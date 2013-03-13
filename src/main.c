@@ -32,83 +32,64 @@
 
 /* variables */
 static char **args;
-VpClient vp;
-VpCore   core;
+VpCore      core;
+Client* clients = NULL;
 
 /* callbacks */
-static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download);
-static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data);
-static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data);
-static void vp_inputbox_activate_cb(GtkEntry* entry, gpointer user_data);
-static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event);
-static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data);
-static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data);
-static void vp_gotheaders_cb(SoupMessage* message, gpointer data);
-static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview);
-static gboolean vp_inspector_show(WebKitWebInspector* inspector);
-static gboolean vp_inspector_close(WebKitWebInspector* inspector);
-static void vp_inspector_finished(WebKitWebInspector* inspector);
-static gboolean vp_button_relase_cb(WebKitWebView *webview, GdkEventButton* event, gpointer data);
+static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
+static void vp_webview_download_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
+static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
+static void vp_destroy_window_cb(GtkWidget* widget, Client* c);
+static void vp_inputbox_activate_cb(GtkEntry* entry, Client* c);
+static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event, Client* c);
+static void vp_scroll_cb(GtkAdjustment* adjustment, Client* c);
+static void vp_new_request_cb(SoupSession* session, SoupMessage *message, Client* c);
+static void vp_gotheaders_cb(SoupMessage* message, Client* c);
+static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview, Client* c);
+static gboolean vp_inspector_show(WebKitWebInspector* inspector, Client* c);
+static gboolean vp_inspector_close(WebKitWebInspector* inspector, Client* c);
+static void vp_inspector_finished(WebKitWebInspector* inspector, Client* c);
+static gboolean vp_button_relase_cb(WebKitWebView *webview, GdkEventButton* event, Client* c);
 static gboolean vp_new_window_policy_cb(
     WebKitWebView* view, WebKitWebFrame* frame, WebKitNetworkRequest* request,
-    WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, gpointer data);
-static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data);
-static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec);
-static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, gpointer data);
-static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, gpointer data);
+    WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, Client* c);
+static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, Client* c);
+static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, Client* c);
+static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, Client* c);
 static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
     WebKitWebFrame* frame, WebKitNetworkRequest* request, char*
-    mime_type, WebKitWebPolicyDecision* decision, gpointer data);
-static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, gpointer data);
-static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec);
+    mime_type, WebKitWebPolicyDecision* decision, Client* c);
+static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, Client* c);
+static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec, Client* c);
 static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
     WebKitWebResource* resource, WebKitNetworkRequest* request,
-    WebKitNetworkResponse* response, gpointer data);
+    WebKitNetworkResponse* response, Client* c);
 
 /* functions */
-static gboolean vp_process_input(const char* input);
+static gboolean vp_process_input(Client* c, const char* input);
 static void vp_run_user_script(WebKitWebFrame* frame);
 static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref);
-static void vp_print_version(void);
-static void vp_init(void);
-static void vp_read_config(void);
-static void vp_init_gui(void);
+static void vp_init_core(void);
+static void vp_read_global_config(void);
+static void vp_process_config_file(Client* c, VpFile file);
+static Client* vp_client_new(void);
+static void vp_setup_signals(Client* c);
 static void vp_init_files(void);
-static void vp_setup_signals(void);
-static void vp_setup_settings(void);
 static void vp_set_cookie(SoupCookie* cookie);
 static const char* vp_get_cookies(SoupURI *uri);
-static gboolean vp_hide_message(void);
-static void vp_set_status(const StatusType status);
+static gboolean vp_hide_message(Client* c);
+static void vp_set_status(Client* c, const StatusType status);
+static void vp_destroy_client(Client* c);
+static void vp_clean_up(void);
 
-void vp_clean_input(void)
+void vp_clean_input(Client* c)
 {
     /* move focus from input box to clean it */
-    gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-    vp_echo(VP_MSG_NORMAL, FALSE, "");
+    gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
+    vp_echo(c, VP_MSG_NORMAL, FALSE, "");
 }
 
-void vp_clean_up(void)
-{
-    const char* uri = CURRENT_URL();
-    /* write last URL into file for recreation */
-    if (uri) {
-        g_file_set_contents(core.files[FILES_CLOSED], uri, -1, NULL);
-    }
-
-    command_cleanup();
-    setting_cleanup();
-    keybind_cleanup();
-    completion_clean();
-    searchengine_cleanup();
-    url_history_cleanup();
-
-    for (int i = 0; i < FILES_LAST; i++) {
-        g_free(core.files[i]);
-    }
-}
-
-void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
+void vp_echo(Client* c, const MessageType type, gboolean hide, const char *error, ...)
 {
     va_list arg_list;
 
@@ -118,24 +99,18 @@ void vp_echo(const MessageType type, gboolean hide, const char *error, ...)
     va_end(arg_list);
 
     /* don't print message if the input is focussed */
-    if (gtk_widget_is_focus(GTK_WIDGET(vp.gui.inputbox))) {
+    if (gtk_widget_is_focus(GTK_WIDGET(c->gui.inputbox))) {
         return;
     }
 
-    /* set the collors according to message type */
-    vp_set_widget_font(
-        vp.gui.inputbox,
-        &core.style.input_fg[type],
-        &core.style.input_bg[type],
-        core.style.input_font[type]
-    );
-    gtk_entry_set_text(GTK_ENTRY(vp.gui.inputbox), message);
+    vp_update_input_style(c, type);
+    gtk_entry_set_text(GTK_ENTRY(c->gui.inputbox), message);
     if (hide) {
-        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vp_hide_message, NULL);
+        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vp_hide_message, c);
     }
 }
 
-void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value, char** error)
+gboolean vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value)
 {
     JSStringRef str, file_name;
     JSValueRef exception = NULL, result = NULL;
@@ -151,12 +126,14 @@ void vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** valu
 
     if (result) {
         *value = vp_jsref_to_string(js, result);
-    } else {
-        *error = vp_jsref_to_string(js, exception);
+        return TRUE;
     }
+
+    *value = vp_jsref_to_string(js, exception);
+    return FALSE;
 }
 
-gboolean vp_load_uri(const Arg* arg)
+gboolean vp_load_uri(Client* c, const Arg* arg)
 {
     char* uri;
     char* path = arg->s;
@@ -179,29 +156,14 @@ gboolean vp_load_uri(const Arg* arg)
     }
 
     /* change state to normal mode */
-    vp_set_mode(VP_MODE_NORMAL, FALSE);
+    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
 
     if (arg->i == VP_TARGET_NEW) {
-        char *argv[64];
-
-        argv[0] = *args;
-        if (vp.state.embed) {
-            char tmp[64];
-            snprintf(tmp, LENGTH(tmp), "%u", (int)vp.state.embed);
-            argv[1] = "-e";
-            argv[2] = tmp;
-            argv[3] = uri;
-            argv[4] = NULL;
-        } else {
-            argv[1] = uri;
-            argv[2] = NULL;
-        }
-
-        /* spawn a new browser instance */
-        g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+        Client* new = vp_client_new();
+        webkit_web_view_load_uri(new->gui.webview, uri);
     } else {
         /* Load a web page into the browser instance */
-        webkit_web_view_load_uri(vp.gui.webview, uri);
+        webkit_web_view_load_uri(c->gui.webview, uri);
     }
     g_free(uri);
 
@@ -229,58 +191,62 @@ gboolean vp_set_clipboard(const Arg* arg)
 
 /**
  * Set the base modes. All other mode flags like completion can be set directly
- * to vp.state.mode.
+ * to c->state.mode.
  */
-gboolean vp_set_mode(Mode mode, gboolean clean)
+gboolean vp_set_mode(Client* c, Mode mode, gboolean clean)
 {
-    if ((vp.state.mode & VP_MODE_COMPLETE)
+    if (!c) {
+        return FALSE;
+    }
+    if ((c->state.mode & VP_MODE_COMPLETE)
         && !(mode & VP_MODE_COMPLETE)
     ) {
-        completion_clean();
+        completion_clean(c);
     }
+    int clean_mode = CLEAN_MODE(c->state.mode);
     switch (CLEAN_MODE(mode)) {
         case VP_MODE_NORMAL:
             /* do this only if the mode is really switched */
-            if (GET_CLEAN_MODE() != VP_MODE_NORMAL) {
-                history_rewind();
+            if (clean_mode != VP_MODE_NORMAL) {
+                history_rewind(c);
             }
-            if (GET_CLEAN_MODE() == VP_MODE_HINTING) {
+            if (clean_mode == VP_MODE_HINTING) {
                 /* if previous mode was hinting clear the hints */
-                hints_clear();
-            } else if (GET_CLEAN_MODE() == VP_MODE_INSERT) {
+                hints_clear(c);
+            } else if (clean_mode == VP_MODE_INSERT) {
                 /* clean the input if current mode is insert to remove -- INPUT -- */
                 clean = TRUE;
-            } else if (GET_CLEAN_MODE() == VP_MODE_SEARCH) {
+            } else if (clean_mode == VP_MODE_SEARCH) {
                 /* cleaup previous search */
-                command_search(&((Arg){VP_SEARCH_OFF}));
+                command_search(c, &((Arg){VP_SEARCH_OFF}));
             }
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
             break;
 
         case VP_MODE_COMMAND:
         case VP_MODE_HINTING:
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.inputbox));
+            gtk_widget_grab_focus(GTK_WIDGET(c->gui.inputbox));
             break;
 
         case VP_MODE_INSERT:
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
-            vp_echo(VP_MSG_NORMAL, FALSE, "-- INPUT --");
+            gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
+            vp_echo(c, VP_MSG_NORMAL, FALSE, "-- INPUT --");
             break;
 
         case VP_MODE_PATH_THROUGH:
-            gtk_widget_grab_focus(GTK_WIDGET(vp.gui.webview));
+            gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
             break;
     }
 
-    vp.state.mode = mode;
-    vp.state.modkey = vp.state.count  = 0;
+    c->state.mode = mode;
+    c->state.modkey = c->state.count  = 0;
 
     /* echo message if given */
     if (clean) {
-        vp_echo(VP_MSG_NORMAL, FALSE, "");
+        vp_echo(c, VP_MSG_NORMAL, FALSE, "");
     }
 
-    vp_update_statusbar();
+    vp_update_statusbar(c);
 
     return TRUE;
 }
@@ -288,38 +254,37 @@ gboolean vp_set_mode(Mode mode, gboolean clean)
 void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
 {
     VP_WIDGET_OVERRIDE_FONT(widget, font);
-    /* TODO are they all required? */
     VP_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
     VP_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
     VP_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
     VP_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
 }
 
-void vp_update_statusbar(void)
+void vp_update_statusbar(Client* c)
 {
     GString* status = g_string_new("");
 
     /* show current count */
-    g_string_append_printf(status, "%.0d", vp.state.count);
+    g_string_append_printf(status, "%.0d", c->state.count);
     /* show current modkey */
-    if (vp.state.modkey) {
-        g_string_append_c(status, vp.state.modkey);
+    if (c->state.modkey) {
+        g_string_append_c(status, c->state.modkey);
     }
 
     /* show the active downloads */
-    if (vp.state.downloads) {
-        int num = g_list_length(vp.state.downloads);
+    if (c->state.downloads) {
+        int num = g_list_length(c->state.downloads);
         g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
     }
 
     /* show load status of page or the downloads */
-    if (vp.state.progress != 100) {
-        g_string_append_printf(status, " [%i%%]", vp.state.progress);
+    if (c->state.progress != 100) {
+        g_string_append_printf(status, " [%i%%]", c->state.progress);
     }
 
     /* show the scroll status */
-    int max = gtk_adjustment_get_upper(vp.gui.adjust_v) - gtk_adjustment_get_page_size(vp.gui.adjust_v);
-    int val = (int)(gtk_adjustment_get_value(vp.gui.adjust_v) / max * 100);
+    int max = gtk_adjustment_get_upper(c->gui.adjust_v) - gtk_adjustment_get_page_size(c->gui.adjust_v);
+    int val = (int)(gtk_adjustment_get_value(c->gui.adjust_v) / max * 100);
 
     if (max == 0) {
         g_string_append(status, " All");
@@ -331,61 +296,76 @@ void vp_update_statusbar(void)
         g_string_append_printf(status, " %d%%", val);
     }
 
-    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.right), status->str);
+    gtk_label_set_text(GTK_LABEL(c->gui.statusbar.right), status->str);
     g_string_free(status, TRUE);
 }
 
-void vp_update_status_style(void)
+void vp_update_status_style(Client* c)
 {
-    StatusType type = vp.state.status;
-    vp_set_widget_font(vp.gui.eventbox, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
-    vp_set_widget_font(vp.gui.statusbar.left, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
-    vp_set_widget_font(vp.gui.statusbar.right, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]);
+    StatusType type = c->state.status;
+    vp_set_widget_font(
+        c->gui.eventbox, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]
+    );
+    vp_set_widget_font(
+        c->gui.statusbar.left, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]
+    );
+    vp_set_widget_font(
+        c->gui.statusbar.right, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]
+    );
 }
 
-void vp_update_urlbar(const char* uri)
+void vp_update_input_style(Client* c, MessageType type)
 {
-    gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), uri);
+    vp_set_widget_font(
+        c->gui.inputbox, &core.style.input_fg[type], &core.style.input_bg[type], core.style.input_font[type]
+    );
 }
 
-static gboolean vp_hide_message(void)
+void vp_update_urlbar(Client* c, const char* uri)
 {
-    vp_echo(VP_MSG_NORMAL, FALSE, "");
+    gtk_label_set_text(GTK_LABEL(c->gui.statusbar.left), uri);
+}
+
+static gboolean vp_hide_message(Client* c)
+{
+    vp_echo(c, VP_MSG_NORMAL, FALSE, "");
 
     return FALSE;
 }
 
-static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, gboolean download)
+static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
 {
-    if (download) {
-        if (vp.state.downloads) {
-            vp.state.progress = 0;
-            GList* ptr;
-            for (ptr = vp.state.downloads; ptr; ptr = g_list_next(ptr)) {
-                vp.state.progress += 100 * webkit_download_get_progress(ptr->data);
-            }
-            vp.state.progress /= g_list_length(vp.state.downloads);
-        }
-    } else {
-        vp.state.progress = webkit_web_view_get_progress(view) * 100;
-    }
-    vp_update_statusbar();
+    c->state.progress = webkit_web_view_get_progress(view) * 100;
+    vp_update_statusbar(c);
 }
 
-static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gpointer user_data)
+static void vp_webview_download_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
 {
-    const char* uri = CURRENT_URL();
+    if (c->state.downloads) {
+        c->state.progress = 0;
+        GList* ptr;
+        for (ptr = c->state.downloads; ptr; ptr = g_list_next(ptr)) {
+            c->state.progress += 100 * webkit_download_get_progress(ptr->data);
+        }
+        c->state.progress /= g_list_length(c->state.downloads);
+    }
+    vp_update_statusbar(c);
+}
 
-    switch (webkit_web_view_get_load_status(vp.gui.webview)) {
+static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
+{
+    const char* uri = webkit_web_view_get_uri(c->gui.webview);
+
+    switch (webkit_web_view_get_load_status(c->gui.webview)) {
         case WEBKIT_LOAD_PROVISIONAL:
             /* update load progress in statusbar */
-            vp.state.progress = 0;
-            vp_update_statusbar();
+            c->state.progress = 0;
+            vp_update_statusbar(c);
             break;
 
         case WEBKIT_LOAD_COMMITTED:
             {
-                WebKitWebFrame* frame = webkit_web_view_get_main_frame(vp.gui.webview);
+                WebKitWebFrame* frame = webkit_web_view_get_main_frame(c->gui.webview);
                 /* set the status */
                 if (g_str_has_prefix(uri, "https://")) {
                     WebKitWebDataSource* src      = webkit_web_frame_get_data_source(frame);
@@ -393,10 +373,11 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
                     SoupMessage* msg              = webkit_network_request_get_message(request);
                     SoupMessageFlags flags        = soup_message_get_flags(msg);
                     vp_set_status(
+                        c,
                         (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VP_STATUS_SSL_VALID : VP_STATUS_SSL_INVALID
                     );
                 } else {
-                    vp_set_status(VP_STATUS_NORMAL);
+                    vp_set_status(c, VP_STATUS_NORMAL);
                 }
 
                 /* inject the hinting javascript */
@@ -407,8 +388,8 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
             }
 
             /* status bar is updated by vp_set_mode */
-            vp_set_mode(VP_MODE_NORMAL , FALSE);
-            vp_update_urlbar(uri);
+            vp_set_mode(c, VP_MODE_NORMAL , FALSE);
+            vp_update_urlbar(c, uri);
 
             break;
 
@@ -417,12 +398,12 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
 
         case WEBKIT_LOAD_FINISHED:
             /* update load progress in statusbar */
-            vp.state.progress = 100;
-            vp_update_statusbar();
+            c->state.progress = 100;
+            vp_update_statusbar(c);
 
-            dom_check_auto_insert();
+            dom_check_auto_insert(c);
 
-            url_history_add(uri, webkit_web_view_get_title(vp.gui.webview));
+            url_history_add(uri, webkit_web_view_get_title(c->gui.webview));
             break;
 
         case WEBKIT_LOAD_FAILED:
@@ -430,24 +411,23 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, gp
     }
 }
 
-static void vp_destroy_window_cb(GtkWidget* widget, GtkWidget* window, gpointer user_data)
+static void vp_destroy_window_cb(GtkWidget* widget, Client* c)
 {
-    command_close(0);
+    vp_destroy_client(c);
 }
 
-static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
+static void vp_inputbox_activate_cb(GtkEntry *entry, Client* c)
 {
     const char* text;
     gboolean hist_save = FALSE;
     char* command  = NULL;
     guint16 length = gtk_entry_get_text_length(entry);
-    Gui* gui = &vp.gui;
 
     if (0 == length) {
         return;
     }
 
-    gtk_widget_grab_focus(GTK_WIDGET(gui->webview));
+    gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
 
     if (length <= 1) {
         return;
@@ -467,13 +447,13 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
         case '?':
             a.i = *text == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD;
             a.s = (command + 1);
-            command_search(&a);
+            command_search(c, &a);
             hist_save = TRUE;
             break;
 
         case ':':
-            completion_clean();
-            vp_process_input((command + 1));
+            completion_clean(c);
+            vp_process_input(c, (command + 1));
             hist_save = TRUE;
             break;
     }
@@ -485,17 +465,17 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, gpointer user_data)
     g_free(command);
 }
 
-static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event)
+static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event, Client* c)
 {
     return FALSE;
 }
 
-static void vp_scroll_cb(GtkAdjustment* adjustment, gpointer data)
+static void vp_scroll_cb(GtkAdjustment* adjustment, Client* c)
 {
-    vp_update_statusbar();
+    vp_update_statusbar(c);
 }
 
-static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpointer data)
+static void vp_new_request_cb(SoupSession* session, SoupMessage *message, Client* c)
 {
     SoupMessageHeaders* header = message->request_headers;
     SoupURI* uri;
@@ -506,10 +486,10 @@ static void vp_new_request_cb(SoupSession* session, SoupMessage *message, gpoint
     if ((cookie = vp_get_cookies(uri))) {
         soup_message_headers_append(header, "Cookie", cookie);
     }
-    g_signal_connect_after(G_OBJECT(message), "got-headers", G_CALLBACK(vp_gotheaders_cb), NULL);
+    g_signal_connect_after(G_OBJECT(message), "got-headers", G_CALLBACK(vp_gotheaders_cb), c);
 }
 
-static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
+static void vp_gotheaders_cb(SoupMessage* message, Client* c)
 {
     GSList* list = NULL;
     GSList* p = NULL;
@@ -520,60 +500,60 @@ static void vp_gotheaders_cb(SoupMessage* message, gpointer data)
     soup_cookies_free(list);
 }
 
-static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview)
+static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview, Client* c)
 {
     return WEBKIT_WEB_VIEW(webkit_web_view_new());
 }
 
-static gboolean vp_inspector_show(WebKitWebInspector* inspector)
+static gboolean vp_inspector_show(WebKitWebInspector* inspector, Client* c)
 {
     WebKitWebView* webview;
     int height;
 
-    if (vp.state.is_inspecting) {
+    if (c->state.is_inspecting) {
         return FALSE;
     }
 
     webview = webkit_web_inspector_get_web_view(inspector);
 
     /* use about 1/3 of window height for the inspector */
-    gtk_window_get_size(GTK_WINDOW(vp.gui.window), NULL, &height);
-    gtk_paned_set_position(GTK_PANED(vp.gui.pane), 2 * height / 3);
+    gtk_window_get_size(GTK_WINDOW(c->gui.window), NULL, &height);
+    gtk_paned_set_position(GTK_PANED(c->gui.pane), 2 * height / 3);
 
-    gtk_paned_pack2(GTK_PANED(vp.gui.pane), GTK_WIDGET(webview), TRUE, TRUE);
+    gtk_paned_pack2(GTK_PANED(c->gui.pane), GTK_WIDGET(webview), TRUE, TRUE);
     gtk_widget_show(GTK_WIDGET(webview));
 
-    vp.state.is_inspecting = TRUE;
+    c->state.is_inspecting = TRUE;
 
     return TRUE;
 }
 
-static gboolean vp_inspector_close(WebKitWebInspector* inspector)
+static gboolean vp_inspector_close(WebKitWebInspector* inspector, Client* c)
 {
     WebKitWebView* webview;
 
-    if (!vp.state.is_inspecting) {
+    if (!c->state.is_inspecting) {
         return FALSE;
     }
     webview = webkit_web_inspector_get_web_view(inspector);
     gtk_widget_hide(GTK_WIDGET(webview));
     gtk_widget_destroy(GTK_WIDGET(webview));
 
-    vp.state.is_inspecting = FALSE;
+    c->state.is_inspecting = FALSE;
 
     return TRUE;
 }
 
-static void vp_inspector_finished(WebKitWebInspector* inspector)
+static void vp_inspector_finished(WebKitWebInspector* inspector, Client* c)
 {
-    g_free(vp.gui.inspector);
+    g_free(c->gui.inspector);
 }
 
 /**
  * Processed input from input box without trailing : or ? /, input from config
  * file and default config.
  */
-static gboolean vp_process_input(const char* input)
+static gboolean vp_process_input(Client* c, const char* input)
 {
     gboolean success;
     char* command = NULL;
@@ -584,7 +564,11 @@ static gboolean vp_process_input(const char* input)
     }
 
     /* get a possible command count */
-    vp.state.count = g_ascii_strtoll(input, &command, 10);
+    if (c) {
+        c->state.count = g_ascii_strtoll(input, &command, 10);
+    } else {
+        command = (char*)input;
+    }
 
     /* split the input string into command and parameter part */
     token = g_strsplit(command, " ", 2);
@@ -593,7 +577,7 @@ static gboolean vp_process_input(const char* input)
         g_strfreev(token);
         return FALSE;
     }
-    success = command_run(token[0], token[1] ? token[1] : NULL);
+    success = command_run(c, token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
 
     return success;
@@ -626,12 +610,12 @@ static const char* vp_get_cookies(SoupURI *uri)
 }
 #endif
 
-static void vp_set_status(const StatusType status)
+static void vp_set_status(Client* c, const StatusType status)
 {
-    if (vp.state.status != status) {
-        vp.state.status = status;
+    if (c->state.status != status) {
+        c->state.status = status;
         /* update the statusbar style only if the status changed */
-        vp_update_status_style();
+        vp_update_status_style(c);
     }
 }
 
@@ -644,15 +628,11 @@ static void vp_run_user_script(WebKitWebFrame* frame)
         && g_file_get_contents(core.files[FILES_SCRIPT], &js, NULL, &error)
     ) {
         char* value = NULL;
-        char* error = NULL;
-
-        vp_eval_script(frame, js, core.files[FILES_SCRIPT], &value, &error);
-        if (error) {
-            fprintf(stderr, "%s", error);
-            g_free(error);
-        } else {
-            g_free(value);
+        gboolean success = vp_eval_script(frame, js, core.files[FILES_SCRIPT], &value);
+        if (!success) {
+            fprintf(stderr, "%s", value);
         }
+        g_free(value);
         g_free(js);
     }
 }
@@ -670,16 +650,9 @@ static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref)
     return string;
 }
 
-static void vp_print_version(void)
+static void vp_init_core(void)
 {
-    fprintf(stderr, "%s/%s (build %s %s)\n", "vimp", VERSION, __DATE__, __TIME__);
-}
-
-static void vp_init(void)
-{
-    /* initialize the gui elements and event callbacks */
-    vp_init_gui();
-
+    /* TODO */
     /* initialize the commands hash map */
     command_init();
 
@@ -689,29 +662,37 @@ static void vp_init(void)
     /* initialize the keybindings */
     keybind_init();
 
+    /* init soup session */
+    core.soup_session = webkit_get_default_session();
+    soup_session_remove_feature_by_type(core.soup_session, soup_cookie_jar_get_type());
+    g_object_set(core.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(core.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
+
     /* initialize settings */
     setting_init();
 
     /* read additional configuration from config files */
-    vp_read_config();
-
-    /* set the configuration to the required objects */
-    vp_setup_settings();
+    vp_read_global_config();
 
     url_history_init();
 }
 
-static void vp_read_config(void)
+static void vp_read_global_config(void)
 {
     /* load default config */
     for (guint i = 0; default_config[i].command != NULL; i++) {
-        if (!vp_process_input(default_config[i].command)) {
+        if (!vp_process_input(NULL, default_config[i].command)) {
             fprintf(stderr, "Invalid default config: %s\n", default_config[i].command);
         }
     }
 
+    vp_process_config_file(NULL, FILES_GLOBAL_CONFIG);
+}
+
+static void vp_process_config_file(Client* c, VpFile file)
+{
     /* read config from config files */
-    char **lines = util_get_lines(core.files[FILES_CONFIG]);
+    char **lines = util_get_lines(core.files[file]);
     char *line;
 
     if (lines) {
@@ -723,20 +704,21 @@ static void vp_read_config(void)
             if (!g_ascii_isalpha(line[0])) {
                 continue;
             }
-            if (!vp_process_input(line)) {
+            if (!vp_process_input(c, line)) {
                 fprintf(stderr, "Invalid config: %s\n", line);
             }
         }
-        g_strfreev(lines);
     }
+    g_strfreev(lines);
 }
 
-static void vp_init_gui(void)
+static Client* vp_client_new(void)
 {
-    Gui* gui = &vp.gui;
+    Client* c = g_new0(Client, 1);
+    Gui* gui  = &c->gui;
 
-    if (vp.state.embed) {
-        gui->window = gtk_plug_new(vp.state.embed);
+    if (core.embed) {
+        gui->window = gtk_plug_new(core.embed);
     } else {
         gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
         gtk_window_set_wmclass(GTK_WINDOW(gui->window), "vimp", "Vimp");
@@ -753,10 +735,6 @@ static void vp_init_gui(void)
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
     gui->inspector = webkit_web_view_get_inspector(gui->webview);
-
-    /* init soup session */
-    core.soup_session = webkit_get_default_session();
-    soup_session_remove_feature_by_type(core.soup_session, soup_cookie_jar_get_type());
 
     /* Create a scrollable area */
     gui->scroll = gtk_scrolled_window_new(NULL, NULL);
@@ -785,7 +763,7 @@ static void vp_init_gui(void)
 
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), TRUE, TRUE);
 
-    vp_setup_signals();
+    vp_setup_signals(c);
 
     /* Put all part together */
     gtk_container_add(GTK_CONTAINER(gui->scroll), GTK_WIDGET(gui->webview));
@@ -807,14 +785,73 @@ static void vp_init_gui(void)
 
     /* Make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
+
+    keybind_init_client(c);
+    setting_init_client(c);
+
+    vp_process_config_file(c, FILES_LOCAL_CONFIG);
+
+    /* apply global settings to the status bar and input box */
+    vp_update_status_style(c);
+    vp_update_input_style(c, VP_MSG_NORMAL);
+
+    c->next = clients;
+    clients = c;
+
+    return c;
+}
+
+static void vp_setup_signals(Client* c)
+{
+    /* Set up callbacks so that if either the main window or the browser
+     * instance is closed, the program will exit */
+    g_signal_connect(c->gui.window, "destroy", G_CALLBACK(vp_destroy_window_cb), c);
+    g_object_connect(
+        G_OBJECT(c->gui.webview),
+        "signal::notify::progress", G_CALLBACK(vp_webview_progress_cb), c,
+        "signal::notify::load-status", G_CALLBACK(vp_webview_load_status_cb), c,
+        "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), c,
+        "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), c,
+        "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), c,
+        "signal::hovering-over-link", G_CALLBACK(vp_hover_link_cb), c,
+        "signal::title-changed", G_CALLBACK(vp_title_changed_cb), c,
+        "signal::mime-type-policy-decision-requested", G_CALLBACK(vp_mimetype_decision_cb), c,
+        "signal::download-requested", G_CALLBACK(vp_download_requested_cb), c,
+        "signal::resource-request-starting", G_CALLBACK(vp_request_start_cb), c,
+        NULL
+    );
+
+    g_object_connect(
+        G_OBJECT(c->gui.inputbox),
+        "signal::activate",          G_CALLBACK(vp_inputbox_activate_cb),   c,
+        "signal::key-release-event", G_CALLBACK(vp_inputbox_keyrelease_cb), c,
+        NULL
+    );
+    /* webview adjustment */
+    g_object_connect(G_OBJECT(c->gui.adjust_v),
+        "signal::value-changed",     G_CALLBACK(vp_scroll_cb),              c,
+        NULL
+    );
+
+    g_signal_connect_after(G_OBJECT(core.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), c);
+
+    /* inspector */
+    /* TODO use g_object_connect instead */
+    g_signal_connect(G_OBJECT(c->gui.inspector), "inspect-web-view", G_CALLBACK(vp_inspector_new), c);
+    g_signal_connect(G_OBJECT(c->gui.inspector), "show-window", G_CALLBACK(vp_inspector_show), c);
+    g_signal_connect(G_OBJECT(c->gui.inspector), "close-window", G_CALLBACK(vp_inspector_close), c);
+    g_signal_connect(G_OBJECT(c->gui.inspector), "finished", G_CALLBACK(vp_inspector_finished), c);
 }
 
 static void vp_init_files(void)
 {
     char* path = util_get_config_dir();
 
-    core.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
-    util_create_file_if_not_exists(core.files[FILES_CONFIG]);
+    core.files[FILES_GLOBAL_CONFIG] = g_build_filename(path, "global.conf", NULL);
+    util_create_file_if_not_exists(core.files[FILES_GLOBAL_CONFIG]);
+
+    core.files[FILES_LOCAL_CONFIG] = g_build_filename(path, "local.conf", NULL);
+    util_create_file_if_not_exists(core.files[FILES_LOCAL_CONFIG]);
 
     core.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
     util_create_file_if_not_exists(core.files[FILES_COOKIE]);
@@ -822,77 +859,27 @@ static void vp_init_files(void)
     core.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
     util_create_file_if_not_exists(core.files[FILES_CLOSED]);
 
-    core.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
-
     core.files[FILES_HISTORY] = g_build_filename(path, "history", NULL);
     util_create_file_if_not_exists(core.files[FILES_HISTORY]);
 
+    core.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
+
     core.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
-    util_create_file_if_not_exists(core.files[FILES_USER_STYLE]);
 
     g_free(path);
 }
 
-static void vp_setup_signals(void)
-{
-    Gui* gui = &vp.gui;
-
-    /* Set up callbacks so that if either the main window or the browser
-     * instance is closed, the program will exit */
-    g_signal_connect(gui->window, "destroy", G_CALLBACK(vp_destroy_window_cb), NULL);
-    g_object_connect(
-        G_OBJECT(gui->webview),
-        "signal::notify::progress", G_CALLBACK(vp_webview_progress_cb), (gpointer)FALSE,
-        "signal::notify::load-status", G_CALLBACK(vp_webview_load_status_cb), NULL,
-        "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), NULL,
-        "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), NULL,
-        "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), NULL,
-        "signal::hovering-over-link", G_CALLBACK(vp_hover_link_cb), NULL,
-        "signal::title-changed", G_CALLBACK(vp_title_changed_cb), NULL,
-        "signal::mime-type-policy-decision-requested", G_CALLBACK(vp_mimetype_decision_cb), NULL,
-        "signal::download-requested", G_CALLBACK(vp_download_requested_cb), NULL,
-        "signal::resource-request-starting", G_CALLBACK(vp_request_start_cb), NULL,
-        NULL
-    );
-
-    g_object_connect(
-        G_OBJECT(gui->inputbox),
-        "signal::activate",          G_CALLBACK(vp_inputbox_activate_cb),   NULL,
-        "signal::key-release-event", G_CALLBACK(vp_inputbox_keyrelease_cb), NULL,
-        NULL
-    );
-    /* webview adjustment */
-    g_object_connect(G_OBJECT(vp.gui.adjust_v),
-        "signal::value-changed",     G_CALLBACK(vp_scroll_cb),              NULL,
-        NULL
-    );
-
-    g_signal_connect_after(G_OBJECT(core.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), NULL);
-
-    /* inspector */
-    g_signal_connect(G_OBJECT(vp.gui.inspector), "inspect-web-view", G_CALLBACK(vp_inspector_new), NULL);
-    g_signal_connect(G_OBJECT(vp.gui.inspector), "show-window", G_CALLBACK(vp_inspector_show), NULL);
-    g_signal_connect(G_OBJECT(vp.gui.inspector), "close-window", G_CALLBACK(vp_inspector_close), NULL);
-    g_signal_connect(G_OBJECT(vp.gui.inspector), "finished", G_CALLBACK(vp_inspector_finished), NULL);
-}
-
-static void vp_setup_settings(void)
-{
-    g_object_set(core.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(core.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
-}
-
-static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, gpointer data)
+static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, Client* c)
 {
     gboolean propagate = FALSE;
     WebKitHitTestResultContext context;
-    Mode mode = GET_CLEAN_MODE();
+    Mode mode = CLEAN_MODE(c->state.mode);
 
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
 
     g_object_get(result, "context", &context, NULL);
     if (mode == VP_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-        vp_set_mode(VP_MODE_INSERT, FALSE);
+        vp_set_mode(c, VP_MODE_INSERT, FALSE);
 
         propagate = TRUE;
     }
@@ -900,7 +887,7 @@ static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* even
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
         Arg a = {VP_TARGET_NEW};
         g_object_get(result, "link-uri", &a.s, NULL);
-        vp_load_uri(&a);
+        vp_load_uri(c, &a);
 
         propagate = TRUE;
     }
@@ -911,57 +898,43 @@ static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* even
 
 static gboolean vp_new_window_policy_cb(
     WebKitWebView* view, WebKitWebFrame* frame, WebKitNetworkRequest* request,
-    WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, gpointer data)
+    WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, Client* c)
 {
     if (webkit_web_navigation_action_get_reason(navig) == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
         /* open in a new window */
         Arg a = {VP_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
-        vp_load_uri(&a);
+        vp_load_uri(c, &a);
         webkit_web_policy_decision_ignore(policy);
         return TRUE;
     }
     return FALSE;
 }
 
-static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, gpointer data)
+static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, Client* c)
 {
-    /* create only a temporary webview */
-    WebKitWebView* view = WEBKIT_WEB_VIEW(webkit_web_view_new());
-
-    /* wait until the new webview receives its new URI */
-    g_object_connect(view, "signal::notify::uri", G_CALLBACK(vp_create_new_webview_uri_cb), NULL, NULL);
-    return view;
+    Client* new = vp_client_new();
+    return new->gui.webview;
 }
 
-static void vp_create_new_webview_uri_cb(WebKitWebView* view, GParamSpec param_spec)
-{
-    Arg a = {VP_TARGET_NEW, (char*)webkit_web_view_get_uri(view)};
-    /* clean up */
-    webkit_web_view_stop_loading(view);
-    gtk_widget_destroy(GTK_WIDGET(view));
-    /* open the requested window */
-    vp_load_uri(&a);
-}
-
-static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, gpointer data)
+static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, Client* c)
 {
     if (link) {
         char* message = g_strdup_printf("Link: %s", link);
-        gtk_label_set_text(GTK_LABEL(vp.gui.statusbar.left), message);
+        gtk_label_set_text(GTK_LABEL(c->gui.statusbar.left), message);
         g_free(message);
     } else {
-        vp_update_urlbar(webkit_web_view_get_uri(webview));
+        vp_update_urlbar(c, webkit_web_view_get_uri(webview));
     }
 }
 
-static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, gpointer data)
+static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, Client* c)
 {
-    gtk_window_set_title(GTK_WINDOW(vp.gui.window), title);
+    gtk_window_set_title(GTK_WINDOW(c->gui.window), title);
 }
 
 static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
     WebKitWebFrame* frame, WebKitNetworkRequest* request, char*
-    mime_type, WebKitWebPolicyDecision* decision, gpointer data)
+    mime_type, WebKitWebPolicyDecision* decision, Client* c)
 {
     if (webkit_web_view_can_show_mime_type(webview, mime_type) == FALSE) {
         webkit_web_policy_decision_download(decision);
@@ -971,7 +944,7 @@ static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
     return FALSE;
 }
 
-static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, gpointer data)
+static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, Client* c)
 {
     WebKitDownloadStatus status;
     char* uri = NULL;
@@ -988,9 +961,9 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
 
     guint64 size = webkit_download_get_total_size(download);
     if (size > 0) {
-        vp_echo(VP_MSG_NORMAL, FALSE, "Download %s [~%uB] started ...", filename, size);
+        vp_echo(c, VP_MSG_NORMAL, FALSE, "Download %s [~%uB] started ...", filename, size);
     } else {
-        vp_echo(VP_MSG_NORMAL, FALSE, "Download %s started ...", filename);
+        vp_echo(c, VP_MSG_NORMAL, FALSE, "Download %s started ...", filename);
     }
 
     status = webkit_download_get_status(download);
@@ -999,13 +972,13 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
     }
 
     /* prepend the download to the download list */
-    vp.state.downloads = g_list_prepend(vp.state.downloads, download);
+    c->state.downloads = g_list_prepend(c->state.downloads, download);
 
     /* connect signal handler to check if the download is done */
-    g_signal_connect(download, "notify::status", G_CALLBACK(vp_download_progress_cp), NULL);
-    g_signal_connect(download, "notify::progress", G_CALLBACK(vp_webview_progress_cb), (gpointer)TRUE);
+    g_signal_connect(download, "notify::status", G_CALLBACK(vp_download_progress_cp), c);
+    g_signal_connect(download, "notify::progress", G_CALLBACK(vp_webview_download_progress_cb), c);
 
-    vp_update_statusbar();
+    vp_update_statusbar(c);
 
     return TRUE;
 }
@@ -1015,7 +988,7 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
  */
 static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
     WebKitWebResource* resource, WebKitNetworkRequest* request,
-    WebKitNetworkResponse* response, gpointer data)
+    WebKitNetworkResponse* response, Client* c)
 {
     const char* uri = webkit_network_request_get_uri(request);
     if (g_str_has_suffix(uri, "/favicon.ico")) {
@@ -1023,7 +996,7 @@ static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
     }
 }
 
-static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
+static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec, Client* c)
 {
     WebKitDownloadStatus status = webkit_download_get_status(download);
 
@@ -1033,16 +1006,63 @@ static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec)
 
     char* file = g_path_get_basename(webkit_download_get_destination_uri(download));
     if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
-        vp_echo(VP_MSG_ERROR, FALSE, "Error downloading %s", file);
+        vp_echo(c, VP_MSG_ERROR, FALSE, "Error downloading %s", file);
     } else {
-        vp_echo(VP_MSG_NORMAL, FALSE, "Download %s finished", file);
+        vp_echo(c, VP_MSG_NORMAL, FALSE, "Download %s finished", file);
     }
     g_free(file);
 
     /* remove the donwload from the list */
-    vp.state.downloads = g_list_remove(vp.state.downloads, download);
+    c->state.downloads = g_list_remove(c->state.downloads, download);
 
-    vp_update_statusbar();
+    vp_update_statusbar(c);
+}
+
+static void vp_destroy_client(Client* c)
+{
+    const char* uri = webkit_web_view_get_uri(c->gui.webview);
+    /* write last URL into file for recreation */
+    if (uri) {
+        g_file_set_contents(core.files[FILES_CLOSED], uri, -1, NULL);
+    }
+
+    Client* p;
+
+    completion_clean(c);
+
+    webkit_web_view_stop_loading(c->gui.webview);
+    gtk_widget_destroy(GTK_WIDGET(c->gui.webview));
+    gtk_widget_destroy(GTK_WIDGET(c->gui.scroll));
+    gtk_widget_destroy(GTK_WIDGET(c->gui.box));
+    gtk_widget_destroy(GTK_WIDGET(c->gui.window));
+
+    for(p = clients; p && p->next != c; p = p->next);
+    if (p) {
+        p->next = c->next;
+    } else {
+        clients = c->next;
+    }
+    g_free(c);
+    if (clients == NULL) {
+        gtk_main_quit();
+    }
+}
+
+static void vp_clean_up(void)
+{
+    while (clients) {
+        vp_destroy_client(clients);
+    }
+
+    command_cleanup();
+    setting_cleanup();
+    keybind_cleanup();
+    searchengine_cleanup();
+    url_history_cleanup();
+
+    for (int i = 0; i < FILES_LAST; i++) {
+        g_free(core.files[i]);
+    }
 }
 
 int main(int argc, char* argv[])
@@ -1064,7 +1084,7 @@ int main(int argc, char* argv[])
     }
 
     if (ver) {
-        vp_print_version();
+        fprintf(stderr, "%s/%s (build %s %s)\n", PROJECT, VERSION, __DATE__, __TIME__);
         return EXIT_SUCCESS;
     }
 
@@ -1072,10 +1092,12 @@ int main(int argc, char* argv[])
     args = argv;
 
     if (winid) {
-        vp.state.embed = strtol(winid, NULL, 0);
+        core.embed = strtol(winid, NULL, 0);
     }
 
-    vp_init();
+    vp_init_core();
+
+    vp_client_new();
 
     /* command line argument: URL */
     Arg arg = {VP_TARGET_CURRENT};
@@ -1084,11 +1106,12 @@ int main(int argc, char* argv[])
     } else {
         arg.s = g_strdup(core.config.home_page);
     }
-    vp_load_uri(&arg);
+    vp_load_uri(clients, &arg);
     g_free(arg.s);
 
     /* Run the main GTK+ event loop */
     gtk_main();
+    vp_clean_up();
 
     return EXIT_SUCCESS;
 }

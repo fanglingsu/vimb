@@ -22,7 +22,7 @@
 
 void history_cleanup(void);
 void history_append(const char* line);
-const char* history_get(const int step);
-void history_rewind(void);
+const char* history_get(Client* c, const int step);
+void history_rewind(Client* c);
 
 #endif /* end of include guard: _HISTORY_H */

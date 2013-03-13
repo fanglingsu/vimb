@@ -34,7 +34,7 @@ enum {
     COMMAND_ZOOM_RESET = (1<<2)
 };
 
-typedef gboolean (*Command)(const Arg* arg);
+typedef gboolean (*Command)(Client* c, const Arg* arg);
 
 typedef struct {
     const char* name;
@@ -46,28 +46,28 @@ typedef struct {
 void command_init(void);
 void command_cleanup(void);
 gboolean command_exists(const char* name);
-gboolean command_run(const char* name, const char* param);
+gboolean command_run(Client* c, const char* name, const char* param);
 
-gboolean command_open(const Arg* arg);
-gboolean command_open_home(const Arg* arg);
-gboolean command_open_closed(const Arg* arg);
-gboolean command_input(const Arg* arg);
-gboolean command_close(const Arg* arg);
-gboolean command_view_source(const Arg* arg);
-gboolean command_navigate(const Arg* arg);
-gboolean command_scroll(const Arg* arg);
-gboolean command_map(const Arg* arg);
-gboolean command_unmap(const Arg* arg);
-gboolean command_set(const Arg* arg);
-gboolean command_complete(const Arg* arg);
-gboolean command_inspect(const Arg* arg);
-gboolean command_hints(const Arg* arg);
-gboolean command_hints_focus(const Arg* arg);
-gboolean command_yank(const Arg* arg);
-gboolean command_paste(const Arg* arg);
-gboolean command_search(const Arg* arg);
-gboolean command_searchengine(const Arg* arg);
-gboolean command_zoom(const Arg* arg);
-gboolean command_history(const Arg* arg);
+gboolean command_open(Client* c, const Arg* arg);
+gboolean command_open_home(Client* c, const Arg* arg);
+gboolean command_open_closed(Client* c, const Arg* arg);
+gboolean command_input(Client* c, const Arg* arg);
+gboolean command_close(Client* c, const Arg* arg);
+gboolean command_view_source(Client* c, const Arg* arg);
+gboolean command_navigate(Client* c, const Arg* arg);
+gboolean command_scroll(Client* c, const Arg* arg);
+gboolean command_map(Client* c, const Arg* arg);
+gboolean command_unmap(Client* c, const Arg* arg);
+gboolean command_set(Client* c, const Arg* arg);
+gboolean command_complete(Client* c, const Arg* arg);
+gboolean command_inspect(Client* c, const Arg* arg);
+gboolean command_hints(Client* c, const Arg* arg);
+gboolean command_hints_focus(Client* c, const Arg* arg);
+gboolean command_yank(Client* c, const Arg* arg);
+gboolean command_paste(Client* c, const Arg* arg);
+gboolean command_search(Client* c, const Arg* arg);
+gboolean command_searchengine(Client* c, const Arg* arg);
+gboolean command_zoom(Client* c, const Arg* arg);
+gboolean command_history(Client* c, const Arg* arg);
 
 #endif /* end of include guard: _COMMAND_H */
