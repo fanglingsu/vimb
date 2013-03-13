@@ -178,7 +178,7 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             if (hint.e) {
                 hint.e.style.background = hint.bg;
                 hint.e.style.color = hint.fg;
-                hCont.removeChild(hint.span);
+                hint.span.parentNode.removeChild(hint.span);
             }
         }
         hints = [];
