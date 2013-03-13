@@ -1,44 +1,32 @@
 /* mode: l - links, i - images */
 /* usage: O - open, T - open in new window, U - use source */
-VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
+VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints)
+{
     "use strict";
-    var hClass = "__hint";
+    var hClass      = "__hint";
     var hClassFocus = "__hint_container";
-    var hCont;
-    var curFocusNum = 1;
-    var hints = [];
+    var hConts      = [];
+    var hints       = [];
+    var focusNum    = 1;
 
     this.create = function(inputText)
     {
-        var topwin = window;
+        var topwin     = window;
         var top_height = topwin.innerHeight;
-        var top_width = topwin.innerWidth;
-        var xpath_expr;
+        var top_width  = topwin.innerWidth;
+        var hCount     = 0;
 
-        var hCount = 0;
         this.clear();
 
-        function _helper (win, offsetX, offsetY)
+        function _helper(win, offsetX, offsetY)
         {
             var doc = win.document;
 
-            var win_height = win.height;
-            var win_width = win.width;
-
-            /* Bounds */
-            var minX = offsetX < 0 ? -offsetX : 0;
-            var minY = offsetY < 0 ? -offsetY : 0;
-            var maxX = offsetX + win_width > top_width ? top_width - offsetX : top_width;
-            var maxY = offsetY + win_height > top_height ? top_height - offsetY : top_height;
-
-            var scrollX = win.scrollX;
-            var scrollY = win.scrollY;
-
             var fragment = doc.createDocumentFragment();
-            xpath_expr = _getXpath(inputText);
+            var xpath    = _getXpath(inputText);
 
             var res = doc.evaluate(
-                xpath_expr, doc,
+                xpath, doc,
                 function (p) {return "http://www.w3.org/1999/xhtml";},
                 XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null
             );
@@ -48,14 +36,20 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             hintSpan.setAttribute("class", hClass);
             hintSpan.style.cssText = style;
 
+            /* Bounds */
+            var minX = offsetX < 0 ? -offsetX : 0;
+            var minY = offsetY < 0 ? -offsetY : 0;
+            var maxX = offsetX + win.width > top_width ? top_width - offsetX : top_width;
+            var maxY = offsetY + win.height > top_height ? top_height - offsetY : top_height;
+
             /* due to the different XPath result type, we will need two counter variables */
-            var rect, e, text, node, show_text;
+            var rect, e;
             for (i = 0; i < res.snapshotLength; i++) {
                 if (hCount >= maxHints) {
                     break;
                 }
 
-                e = res.snapshotItem(i);
+                e    = res.snapshotItem(i);
                 rect = e.getBoundingClientRect();
                 if (!rect || rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
                     continue;
@@ -66,17 +60,14 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
                     continue;
                 }
 
-                var leftpos = Math.max((rect.left + scrollX), scrollX);
-                var toppos = Math.max((rect.top + scrollY), scrollY);
-
                 /* making this block DOM compliant */
-                var hint = hintSpan.cloneNode(false);
-                hint.style.left = leftpos - 3 + "px";
-                hint.style.top =  toppos - 3 + "px";
-                text = doc.createTextNode(hCount + 1);
-                hint.appendChild(text);
+                var hint        = hintSpan.cloneNode(false);
+                hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) - 3 + "px";
+                hint.style.top  = Math.max((rect.top + win.scrollY), win.scrollY) - 3 + "px";
+                hint.appendChild(doc.createTextNode(hCount + 1));
 
                 fragment.appendChild(hint);
+
                 hCount++;
                 hints.push({
                     e:    e,
@@ -86,16 +77,18 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
                     fg:   e.style.color}
                 );
 
-                /* make the link black to ensure it's readable */
+                /* change the foreground and background colors of the hinted items */
                 e.style.color = fg;
                 e.style.background = bg;
             }
 
-            hCont = doc.createElement("div");
-            hCont.id = "hint_container";
+            var hDiv = doc.createElement("div");
+            hDiv.id  = "hint_container";
 
-            hCont.appendChild(fragment);
-            doc.documentElement.appendChild(hCont);
+            hDiv.appendChild(fragment);
+            doc.documentElement.appendChild(hDiv);
+
+            hConts.push(hDiv);
 
             /* recurse into any iframe or frame element */
             var frameTags = ["frame","iframe"];
@@ -123,10 +116,10 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     /* set focus to next avaiable hint */
     this.focusNext = function()
     {
-        var index = _getHintIdByNum(curFocusNum);
+        var i = _getHintIdByNum(focusNum);
 
-        if (typeof(hints[index + 1]) !== "undefined") {
-            return _focus(hints[index + 1].num);
+        if (typeof(hints[i + 1]) !== "undefined") {
+            return _focus(hints[i + 1].num);
         }
         return _focus(hints[0].num);
     };
@@ -134,9 +127,9 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     /* set focus to previous avaiable hint */
     this.focusPrev = function()
     {
-        var index = _getHintIdByNum(curFocusNum);
-        if (index !== 0 && typeof(hints[index - 1].num) !== "undefined") {
-            return _focus(hints[index - 1].num);
+        var i = _getHintIdByNum(focusNum);
+        if (i !== 0 && typeof(hints[i - 1].num) !== "undefined") {
+            return _focus(hints[i - 1].num);
         }
         return _focus(hints[hints.length - 1].num);
     };
@@ -182,21 +175,22 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
             }
         }
         hints = [];
-        hCont.parentNode.removeChild(hCont);
-        window.onkeyup = null;
+        for (var i = 0; i < hConts.length; ++i) {
+            hConts[i].parentNode.removeChild(hConts[i]);
+        }
+        hConts = [];
     };
 
     /* fires the modeevent on hint with given number */
     this.fire = function(n)
     {
-        n = n ? n : curFocusNum;
-        var hint = _getHintByNum(n);
-        if (!hint || typeof(hint.e) == "undefined") {
+        var hint = _getHintByNum(n ? n : focusNum);
+        if (!hint) {
             return "DONE:";
         }
 
-        var e  = hint.e;
-        var tag = e.nodeName.toLowerCase();
+        var e    = hint.e;
+        var tag  = e.nodeName.toLowerCase();
         var type = e.type ? e.type : "";
 
         this.clear();
@@ -243,22 +237,22 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     function _focus(n)
     {
         /* reset previous focused hint */
-        var hint = _getHintByNum(curFocusNum);
-        if (hint !== null) {
-            hint.e.className = hint.e.className.replace(hClassFocus, hClass);
+        var hint = _getHintByNum(focusNum);
+        if (hint) {
+            hint.e.className        = hint.e.className.replace(hClassFocus, hClass);
             hint.e.style.background = bg;
             _mouseEvent(hint.e, "mouseout");
         }
 
-        curFocusNum = n;
+        focusNum = n;
 
         /* mark new hint as focused */
-        hint = _getHintByNum(curFocusNum);
-        if (hint !== null) {
-            hint.e.className = hint.e.className.replace(hClass, hClassFocus);
+        hint = _getHintByNum(focusNum);
+        if (hint) {
+            hint.e.className        = hint.e.className.replace(hClass, hClassFocus);
             hint.e.style.background = bgf;
+            var source              = _getSrc(hint.e);
             _mouseEvent(hint.e, "mouseover");
-            var source = _getSrc(hint.e);
 
             return "OVER:" + (source ? source : "");
         }
@@ -267,20 +261,15 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     /* retrieves the hint for given hint number */
     function _getHintByNum(n)
     {
-        var index = _getHintIdByNum(n);
-        if (index !== null) {
-            return hints[index];
-        }
-        return null;
+        var i = _getHintIdByNum(n);
+        return i !== null ? hints[i] : null;
     }
 
     /* retrieves the id of hint with given number */
     function _getHintIdByNum(n)
     {
-        var hint;
         for (var i = 0; i < hints.length; ++i) {
-            hint = hints[i];
-            if (hint.num === n) {
+            if (hints[i].num === n) {
                 return i;
             }
         }
@@ -290,22 +279,21 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     /* removes hint with given number from hints array */
     function _removeHint(n)
     {
-        var index = _getHintIdByNum(n);
-        if (index === null) {
+        var i = _getHintIdByNum(n);
+        if (i === null) {
             return;
         }
-        var hint = hints[index];
-        if (hint.num === n) {
-            hint.e.style.background = hint.bg;
-            hint.e.style.color = hint.fg;
-            hint.span.parentNode.removeChild(hint.span);
+        var hint = hints[i];
+        hint.e.style.background = hint.bg;
+        hint.e.style.color      = hint.fg;
+        hint.span.parentNode.removeChild(hint.span);
 
-            /* remove hints from all hints */
-            hints.splice(index, 1);
-        }
+        /* remove hints from all hints */
+        hints.splice(i, 1);
     }
 
-    function _click(e) {
+    function _click(e)
+    {
         _mouseEvent(e, "mouseover");
         _mouseEvent(e, "mousedown");
         _mouseEvent(e, "mouseup");
@@ -314,11 +302,8 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
 
     function _mouseEvent(e, name)
     {
-        var doc = e.ownerDocument;
-        var view = e.contentWindow;
-
-        var evObj = doc.createEvent("MouseEvents");
-        evObj.initMouseEvent(name, true, true, view, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        var evObj = e.ownerDocument.createEvent("MouseEvents");
+        evObj.initMouseEvent(name, true, true, e.contentWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
         e.dispatchEvent(evObj);
     }
 
@@ -331,26 +316,22 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
     /* retrieves the xpath expression according to mode */
     function _getXpath(s)
     {
-        var expr;
         if (typeof(s) === "undefined") {
             s = "";
         }
         switch (mode) {
             case "l":
                 if (s === "") {
-                    expr = "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href] | //input[not(@type='hidden')] | //a[href] | //area | //textarea | //button | //select";
+                    return "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href] | //input[not(@type='hidden')] | //a[href] | //area | //textarea | //button | //select";
                 } else {
-                    expr = "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and contains(., '" + s + "')] | //input[not(@type='hidden') and contains(., '" + s + "')] | //a[@href and contains(., '" + s + "')] | //area[contains(., '" + s + "')] |  //textarea[contains(., '" + s + "')] | //button[contains(@value, '" + s + "')] | //select[contains(., '" + s + "')]";
+                    return "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and contains(., '" + s + "')] | //input[not(@type='hidden') and contains(., '" + s + "')] | //a[@href and contains(., '" + s + "')] | //area[contains(., '" + s + "')] |  //textarea[contains(., '" + s + "')] | //button[contains(@value, '" + s + "')] | //select[contains(., '" + s + "')]";
                 }
-                break;
             case "i":
                 if (s === "") {
-                    expr = "//img[@src]";
+                    return "//img[@src]";
                 } else {
-                    expr = "//img[@src and contains(., '" + s + "')]";
+                    return "//img[@src and contains(., '" + s + "')]";
                 }
-                break;
         }
-        return expr;
     }
 };
