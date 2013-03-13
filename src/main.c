@@ -847,10 +847,10 @@ static void vp_init_files(void)
 {
     char* path = util_get_config_dir();
 
-    core.files[FILES_GLOBAL_CONFIG] = g_build_filename(path, "global", NULL);
+    core.files[FILES_GLOBAL_CONFIG] = g_build_filename(path, "global.conf", NULL);
     util_create_file_if_not_exists(core.files[FILES_GLOBAL_CONFIG]);
 
-    core.files[FILES_LOCAL_CONFIG] = g_build_filename(path, "local", NULL);
+    core.files[FILES_LOCAL_CONFIG] = g_build_filename(path, "local.conf", NULL);
     util_create_file_if_not_exists(core.files[FILES_LOCAL_CONFIG]);
 
     core.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
@@ -859,13 +859,12 @@ static void vp_init_files(void)
     core.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
     util_create_file_if_not_exists(core.files[FILES_CLOSED]);
 
-    core.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
-
     core.files[FILES_HISTORY] = g_build_filename(path, "history", NULL);
     util_create_file_if_not_exists(core.files[FILES_HISTORY]);
 
+    core.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
+
     core.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
-    util_create_file_if_not_exists(core.files[FILES_USER_STYLE]);
 
     g_free(path);
 }
