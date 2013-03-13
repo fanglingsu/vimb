@@ -1,6 +1,6 @@
 /* mode: l - links, i - images */
 /* usage: O - open, T - open in new window, U - use source */
-VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints)
+function VimpHints(mode, usage, bg, bgf, fg, style, maxHints)
 {
     "use strict";
     var hClass      = "__hint";
