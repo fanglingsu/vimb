@@ -232,7 +232,7 @@ VimpHints = function Hints(mode, usage, bg, bgf, fg, style, maxHints) {
         if (newWin) {
             /* set target to open in new window */
             e.target = "_blank";
-        } else {
+        } else if (e.target === "_blank") {
             e.removeAttribute("target");
         }
         _click(e);
