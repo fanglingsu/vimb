@@ -1,7 +1,7 @@
 #----------------user/install options----------------
 VERSION = 0.1.4
 
-PROJECT = vimp
+PROJECT = vimb
 PREFIX  ?= /usr/local/
 BINDIR  ?= $(PREFIX)bin/
 MANDIR  ?= $(PREFIX)share/man/

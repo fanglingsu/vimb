@@ -1,22 +1,22 @@
 .\" Process this file with
-.\" groff -man -Tascii vimp.1
-.TH vimp 1 "16/02/2013" "vimp/VERSION" "Vimp Manual"
+.\" groff -man -Tascii vimb.1
+.TH vimb 1 "16/02/2013" "vimb/VERSION" "Vimb Manual"
 .SH NAME
-vimp \- A modal web browser based on webkit thats inspired by vim the great editor.
+vimb \- A modal web browser based on webkit thats inspired by vim the great editor.
 .SH SYNOPSIS
-.BI "vimp [" "OPTION" "] [" "URI" "]"
+.BI "vimb [" "OPTION" "] [" "URI" "]"
 .SH DESCRIPTION
-.B vimp
-is a webkit based web browser that behaves like the vimperator
+.B vimb
+is a webkit based web browser that behaves like the vimberator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
-of vimp is to build a completely keyboard-driven, efficient and pleasurable
+of vimb is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
 .BI "-e, --embed " "WINID"
 .I WINID
-of an XEmbed-aware application, that vimp will use as its parent.
+of an XEmbed-aware application, that vimb will use as its parent.
 .TP
 .B "-h, --help"
 Show help options.
@@ -24,7 +24,7 @@ Show help options.
 .B "-v, --version"
 Print build and version information.
 .SH MODES
-vimp is modal an has following main modes:
+vimb is modal an has following main modes:
 .TP
 .B Normal Mode
 The default mode. Pressing Escape always enter normal mode.
@@ -36,7 +36,7 @@ Used for editing text elements in a webpage.
 Follow links, form fields and frames via hints.
 .TP
 .B Command Mode
-Execute vimp commands from the builtin inputbox (commandline).
+Execute vimb commands from the builtin inputbox (commandline).
 .TP
 .B Search Mode
 Search for strings within the current displayed page.
@@ -44,7 +44,7 @@ Search for strings within the current displayed page.
 .B Insert Mode
 Used for editing text elements in a webpage.
 .SH COMMANDS
-Commands are a central part in vimp. They are used for nearly all things
+Commands are a central part in vimb. They are used for nearly all things
 that could be done with this browser. Commands allow to set config variables,
 to assign keybindings and much more. Also the keybindings are only shortcut
 for the commands itself.
@@ -299,41 +299,41 @@ Close the browser.
 .B source
 Toggle between normal view and source view for the current page.
 .SH FILES
-.I $XDG_CONFIG_HOME/vimp/global.conf
+.I $XDG_CONFIG_HOME/vimb/global.conf
 .RS
 Global configuration that are read on startup of application. This is the
-right place to set keybindings and global style settings for vimp.
+right place to set keybindings and global style settings for vimb.
 .RE
-.I $XDG_CONFIG_HOME/vimp/local.conf
+.I $XDG_CONFIG_HOME/vimb/local.conf
 .RS
 Local configuration that are process every time a new window is opened. This
 will be mainly used to apply webkit settings for the new browser window.
 .RE
-.I $XDG_CONFIG_HOME/vimp/cookies
+.I $XDG_CONFIG_HOME/vimb/cookies
 .RS
 Cookie store file.
 .RE
-.I $XDG_CONFIG_HOME/vimp/closed
+.I $XDG_CONFIG_HOME/vimb/closed
 .RS
 Holds the URI of the last closed browser window.
 .RE
-.I $XDG_CONFIG_HOME/vimp/history
+.I $XDG_CONFIG_HOME/vimb/history
 .RS
 This file holds the history of opened URIs. Note that this file is only
 written if last window of the browser is closed.
 .RE
-.I $XDG_CONFIG_HOME/vimp/scripts.js
+.I $XDG_CONFIG_HOME/vimb/scripts.js
 .RS
 This file can be used to run user scripts, that are injected into every paged
 that is opened.
 .RE
-.I $XDG_CONFIG_HOME/vimp/style.css
+.I $XDG_CONFIG_HOME/vimb/style.css
 .RS
 File for userdefined css styles. These file is used if the config variable
 'stylesheet' is enabled.
 .RE
 .SH "REPORTING BUGS"
 Report bugs to the main project page on
-.IR https://github.com/fanglingsu/vimp/issues .
+.IR https://github.com/fanglingsu/vimb/issues .
 .SH AUTHOR
 Daniel Carl

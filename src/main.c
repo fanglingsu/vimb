@@ -1,5 +1,5 @@
 /**
- * vimp - a webkit based vim like browser.
+ * vimb - a webkit based vim like browser.
  *
  * Copyright (C) 2012-2013 Daniel Carl
  *
@@ -721,16 +721,16 @@ static Client* vp_client_new(void)
         gui->window = gtk_plug_new(core.embed);
     } else {
         gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_wmclass(GTK_WINDOW(gui->window), "vimp", "Vimp");
-        gtk_window_set_role(GTK_WINDOW(gui->window), "Vimp");
+        gtk_window_set_wmclass(GTK_WINDOW(gui->window), "vimb", "Vimb");
+        gtk_window_set_role(GTK_WINDOW(gui->window), "Vimb");
     }
 
     GdkGeometry hints = {10, 10};
     gtk_window_set_default_size(GTK_WINDOW(gui->window), 640, 480);
-    gtk_window_set_title(GTK_WINDOW(gui->window), "vimp");
+    gtk_window_set_title(GTK_WINDOW(gui->window), "vimb");
     gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
     gtk_window_set_icon(GTK_WINDOW(gui->window), NULL);
-    gtk_widget_set_name(GTK_WIDGET(gui->window), "vimp");
+    gtk_widget_set_name(GTK_WIDGET(gui->window), "vimb");
 
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
@@ -951,7 +951,7 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
 
     const char* filename = webkit_download_get_suggested_filename(download);
     if (!filename) {
-        filename = "vimp_donwload";
+        filename = "vimb_donwload";
     }
 
     /* prepare the download target path */

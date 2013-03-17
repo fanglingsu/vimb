@@ -1,5 +1,5 @@
 /**
- * vimp - a webkit based vim like browser.
+ * vimb - a webkit based vim like browser.
  *
  * Copyright (C) 2012-2013 Daniel Carl
  *
@@ -81,7 +81,7 @@ static Setting default_settings[] = {
     {"seriffont", "serif-font-family", TYPE_CHAR, setting_webkit, {.s = "serif"}, FALSE},
     {"spelllang", "spell-checking-languages", TYPE_CHAR, setting_webkit, {.s = NULL}, FALSE},
     {NULL, "tab-key-cycles-through-elements", TYPE_BOOLEAN, setting_webkit, {.i = 1}, FALSE},
-    {"useragent", "user-agent", TYPE_CHAR, setting_webkit, {.s = "vimp/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}, FALSE},
+    {"useragent", "user-agent", TYPE_CHAR, setting_webkit, {.s = "vimb/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}, FALSE},
     {"zoomstep", "zoom-step", TYPE_FLOAT, setting_webkit, {.i = 100000}, FALSE},
 
     /* internal variables */
@@ -119,8 +119,8 @@ static Setting default_settings[] = {
     {NULL, "hint-fg", TYPE_CHAR, setting_hint_style, {.s = "#000"}, TRUE},
     {NULL, "hint-style", TYPE_CHAR, setting_hint_style, {.s = "position:absolute;z-index:100000;font-family:monospace;font-weight:bold;font-size:10px;color:#000;background-color:#fff;margin:0;padding:0px 1px;border:1px solid #444;opacity:0.7;"}, TRUE},
     {NULL, "ca-bundle", TYPE_CHAR, setting_ca_bundle, {.s = "/etc/ssl/certs/ca-certificates.crt"}, TRUE},
-    {NULL, "home-page", TYPE_CHAR, setting_home_page, {.s = "https://github.com/fanglingsu/vimp"}, TRUE},
-    {NULL, "download-path", TYPE_CHAR, setting_download_path, {.s = "/tmp/vimp"}, TRUE},
+    {NULL, "home-page", TYPE_CHAR, setting_home_page, {.s = "https://github.com/fanglingsu/vimb"}, TRUE},
+    {NULL, "download-path", TYPE_CHAR, setting_download_path, {.s = "/tmp/vimb"}, TRUE},
     {NULL, "history-max-items", TYPE_INTEGER, setting_history_max_items, {.i = 500}, TRUE},
 };
 

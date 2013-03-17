@@ -1,5 +1,5 @@
 /**
- * vimp - a webkit based vim like browser.
+ * vimb - a webkit based vim like browser.
  *
  * Copyright (C) 2012-2013 Daniel Carl
  *
@@ -23,7 +23,7 @@
 
 char* util_get_config_dir(void)
 {
-    char *path = g_build_filename(g_get_user_config_dir(), "vimp", NULL);
+    char *path = g_build_filename(g_get_user_config_dir(), "vimb", NULL);
     util_create_dir_if_not_exists(path);
 
     return path;
@@ -31,7 +31,7 @@ char* util_get_config_dir(void)
 
 char* util_get_cache_dir(void)
 {
-    char *path = g_build_filename(g_get_user_cache_dir(), "vimp", NULL);
+    char *path = g_build_filename(g_get_user_cache_dir(), "vimb", NULL);
     util_create_dir_if_not_exists(path);
 
     return path;

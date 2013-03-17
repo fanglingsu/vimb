@@ -1,5 +1,5 @@
 /**
- * vimp - a webkit based vim like browser.
+ * vimb - a webkit based vim like browser.
  *
  * Copyright (C) 2012-2013 Daniel Carl
  *
@@ -76,7 +76,7 @@ void hints_create(Client* c, const char* input, guint mode, const guint prefixLe
         }
 
         js = g_strdup_printf(
-            "%s = new VimpHints('%c', '%c', '%s', '%s', '%s', '%s', %d);",
+            "%s = new VimbHints('%c', '%c', '%s', '%s', '%s', '%s', %d);",
             HINT_VAR, type, usage,
             style->hint_bg,
             style->hint_bg_focus,

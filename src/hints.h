@@ -1,5 +1,5 @@
 /**
- * vimp - a webkit based vim like browser.
+ * vimb - a webkit based vim like browser.
  *
  * Copyright (C) 2012-2013 Daniel Carl
  *
