@@ -29,41 +29,41 @@
 
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
-    {"open",                command_open,        {VP_TARGET_CURRENT, ""}},
-    {"tabopen",             command_open,        {VP_TARGET_NEW, ""}},
-    {"open-closed",         command_open_closed, {VP_TARGET_CURRENT}},
-    {"tabopen-closed",      command_open_closed, {VP_TARGET_NEW}},
+    {"open",                command_open,        {VB_TARGET_CURRENT, ""}},
+    {"tabopen",             command_open,        {VB_TARGET_NEW, ""}},
+    {"open-closed",         command_open_closed, {VB_TARGET_CURRENT}},
+    {"tabopen-closed",      command_open_closed, {VB_TARGET_NEW}},
     {"input",               command_input,       {0, ":"}},
-    {"inputuri",            command_input,       {VP_INPUT_CURRENT_URI, ":"}},
+    {"inputuri",            command_input,       {VB_INPUT_CURRENT_URI, ":"}},
     {"quit",                command_close,       {0}},
     {"source",              command_view_source, {0}},
-    {"back",                command_navigate,    {VP_NAVIG_BACK}},
-    {"forward",             command_navigate,    {VP_NAVIG_FORWARD}},
-    {"reload",              command_navigate,    {VP_NAVIG_RELOAD}},
-    {"reload!",             command_navigate,    {VP_NAVIG_RELOAD_FORCE}},
-    {"stop",                command_navigate,    {VP_NAVIG_STOP_LOADING}},
-    {"jumpleft",            command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_LEFT}},
-    {"jumpright",           command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_RIGHT}},
-    {"jumptop",             command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_TOP}},
-    {"jumpbottom",          command_scroll,      {VP_SCROLL_TYPE_JUMP | VP_SCROLL_DIRECTION_DOWN}},
-    {"pageup",              command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_PAGE}},
-    {"pagedown",            command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_PAGE}},
-    {"halfpageup",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_HALFPAGE}},
-    {"halfpagedown",        command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_HALFPAGE}},
-    {"scrollleft",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_LEFT | VP_SCROLL_UNIT_LINE}},
-    {"scrollright",         command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_RIGHT | VP_SCROLL_UNIT_LINE}},
-    {"scrollup",            command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_TOP | VP_SCROLL_UNIT_LINE}},
-    {"scrolldown",          command_scroll,      {VP_SCROLL_TYPE_SCROLL | VP_SCROLL_DIRECTION_DOWN | VP_SCROLL_UNIT_LINE}},
-    {"nmap",                command_map,         {VP_MODE_NORMAL}},
-    {"imap",                command_map,         {VP_MODE_INSERT}},
-    {"cmap",                command_map,         {VP_MODE_COMMAND}},
-    {"hmap",                command_map,         {VP_MODE_HINTING}},
-    {"smap",                command_map,         {VP_MODE_SEARCH}},
-    {"nunmap",              command_unmap,       {VP_MODE_NORMAL}},
-    {"iunmap",              command_unmap,       {VP_MODE_INSERT}},
-    {"cunmap",              command_unmap,       {VP_MODE_COMMAND}},
-    {"hunmap",              command_unmap,       {VP_MODE_HINTING}},
-    {"sunmap",              command_map,         {VP_MODE_SEARCH}},
+    {"back",                command_navigate,    {VB_NAVIG_BACK}},
+    {"forward",             command_navigate,    {VB_NAVIG_FORWARD}},
+    {"reload",              command_navigate,    {VB_NAVIG_RELOAD}},
+    {"reload!",             command_navigate,    {VB_NAVIG_RELOAD_FORCE}},
+    {"stop",                command_navigate,    {VB_NAVIG_STOP_LOADING}},
+    {"jumpleft",            command_scroll,      {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_LEFT}},
+    {"jumpright",           command_scroll,      {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_RIGHT}},
+    {"jumptop",             command_scroll,      {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_TOP}},
+    {"jumpbottom",          command_scroll,      {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_DOWN}},
+    {"pageup",              command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_PAGE}},
+    {"pagedown",            command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_PAGE}},
+    {"halfpageup",          command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_HALFPAGE}},
+    {"halfpagedown",        command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_HALFPAGE}},
+    {"scrollleft",          command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_LEFT | VB_SCROLL_UNIT_LINE}},
+    {"scrollright",         command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_RIGHT | VB_SCROLL_UNIT_LINE}},
+    {"scrollup",            command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_LINE}},
+    {"scrolldown",          command_scroll,      {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_LINE}},
+    {"nmap",                command_map,         {VB_MODE_NORMAL}},
+    {"imap",                command_map,         {VB_MODE_INSERT}},
+    {"cmap",                command_map,         {VB_MODE_COMMAND}},
+    {"hmap",                command_map,         {VB_MODE_HINTING}},
+    {"smap",                command_map,         {VB_MODE_SEARCH}},
+    {"nunmap",              command_unmap,       {VB_MODE_NORMAL}},
+    {"iunmap",              command_unmap,       {VB_MODE_INSERT}},
+    {"cunmap",              command_unmap,       {VB_MODE_COMMAND}},
+    {"hunmap",              command_unmap,       {VB_MODE_HINTING}},
+    {"sunmap",              command_map,         {VB_MODE_SEARCH}},
     {"set",                 command_set,         {0}},
     {"complete",            command_complete,    {0}},
     {"complete-back",       command_complete,    {1}},
@@ -79,10 +79,10 @@ static CommandInfo cmd_list[] = {
     {"hint-focus-prev",     command_hints_focus, {1}},
     {"yank-uri",            command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",      command_yank,        {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION}},
-    {"open-clipboard",      command_paste,       {VP_CLIPBOARD_PRIMARY | VP_CLIPBOARD_SECONDARY | VP_TARGET_CURRENT}},
-    {"tabopen-clipboard",   command_paste,       {VP_CLIPBOARD_PRIMARY | VP_CLIPBOARD_SECONDARY | VP_TARGET_NEW}},
-    {"search-forward",      command_search,      {VP_SEARCH_FORWARD}},
-    {"search-backward",     command_search,      {VP_SEARCH_BACKWARD}},
+    {"open-clipboard",      command_paste,       {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_CURRENT}},
+    {"tabopen-clipboard",   command_paste,       {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_NEW}},
+    {"search-forward",      command_search,      {VB_SEARCH_FORWARD}},
+    {"search-backward",     command_search,      {VB_SEARCH_BACKWARD}},
     {"searchengine-add",    command_searchengine,{1}},
     {"searchengine-remove", command_searchengine,{0}},
     {"zoomin",              command_zoom,        {COMMAND_ZOOM_IN}},
@@ -90,8 +90,8 @@ static CommandInfo cmd_list[] = {
     {"zoominfull",          command_zoom,        {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
     {"zoomoutfull",         command_zoom,        {COMMAND_ZOOM_OUT | COMMAND_ZOOM_FULL}},
     {"zoomreset",           command_zoom,        {COMMAND_ZOOM_RESET}},
-    {"command-hist-next",   command_history,     {VP_SEARCH_FORWARD}},
-    {"command-hist-prev",   command_history,     {VP_SEARCH_BACKWARD}},
+    {"command-hist-next",   command_history,     {VB_SEARCH_FORWARD}},
+    {"command-hist-prev",   command_history,     {VB_SEARCH_BACKWARD}},
 };
 
 static void command_write_input(Client* c, const char* str);
@@ -127,8 +127,8 @@ gboolean command_run(Client* c, const char* name, const char* param)
     command = g_hash_table_lookup(core.behave.commands, name);
     if (!command) {
         if (c) {
-            vp_echo(c, VP_MSG_ERROR, TRUE, "Command '%s' not found", name);
-            vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+            vb_echo(c, VB_MSG_ERROR, TRUE, "Command '%s' not found", name);
+            vb_set_mode(c, VB_MODE_NORMAL, FALSE);
         }
 
         return FALSE;
@@ -148,7 +148,7 @@ gboolean command_open(Client* c, const Arg* arg)
 
     if (!arg->s || arg->s[0] == '\0') {
         Arg a = {arg->i, core.config.home_page};
-        return vp_load_uri(c, &a);
+        return vb_load_uri(c, &a);
     }
     /* check for searchengine handles */
     /* split into handle and searchterms */
@@ -158,11 +158,11 @@ gboolean command_open(Client* c, const Arg* arg)
     ) {
         char* term = soup_uri_encode(string[1], "&");
         Arg a  = {arg->i, g_strdup_printf(uri, term)};
-        result = vp_load_uri(c, &a);
+        result = vb_load_uri(c, &a);
         g_free(term);
         g_free(a.s);
     } else {
-        result = vp_load_uri(c, arg);
+        result = vb_load_uri(c, arg);
     }
     g_strfreev(string);
 
@@ -178,7 +178,7 @@ gboolean command_open_closed(Client* c, const Arg* arg)
 
     Arg a = {arg->i};
     a.s = util_get_file_contents(core.files[FILES_CLOSED], NULL);
-    result = vp_load_uri(c, &a);
+    result = vb_load_uri(c, &a);
     g_free(a.s);
 
     return result;
@@ -189,7 +189,7 @@ gboolean command_input(Client* c, const Arg* arg)
     const char* url;
 
     /* add current url if requested */
-    if (VP_INPUT_CURRENT_URI == arg->i
+    if (VB_INPUT_CURRENT_URI == arg->i
         && (url = webkit_web_view_get_uri(c->gui.webview))
     ) {
         /* append the current url to the input message */
@@ -200,7 +200,7 @@ gboolean command_input(Client* c, const Arg* arg)
         command_write_input(c, arg->s);
     }
 
-    vp_set_mode(c, VP_MODE_COMMAND, FALSE);
+    vb_set_mode(c, VB_MODE_COMMAND, FALSE);
 
     return TRUE;
 }
@@ -218,44 +218,44 @@ gboolean command_view_source(Client* c, const Arg* arg)
     webkit_web_view_set_view_source_mode(c->gui.webview, !mode);
     webkit_web_view_reload(c->gui.webview);
 
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
 
 gboolean command_navigate(Client* c, const Arg* arg)
 {
-    if (arg->i <= VP_NAVIG_FORWARD) {
+    if (arg->i <= VB_NAVIG_FORWARD) {
         int count = c->state.count ? c->state.count : 1;
         webkit_web_view_go_back_or_forward(
-            c->gui.webview, (arg->i == VP_NAVIG_BACK ? -count : count)
+            c->gui.webview, (arg->i == VB_NAVIG_BACK ? -count : count)
         );
-    } else if (arg->i == VP_NAVIG_RELOAD) {
+    } else if (arg->i == VB_NAVIG_RELOAD) {
         webkit_web_view_reload(c->gui.webview);
-    } else if (arg->i == VP_NAVIG_RELOAD_FORCE) {
+    } else if (arg->i == VB_NAVIG_RELOAD_FORCE) {
         webkit_web_view_reload_bypass_cache(c->gui.webview);
     } else {
         webkit_web_view_stop_loading(c->gui.webview);
     }
 
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
 
 gboolean command_scroll(Client* c, const Arg* arg)
 {
-    GtkAdjustment *adjust = (arg->i & VP_SCROLL_AXIS_H) ? c->gui.adjust_h : c->gui.adjust_v;
+    GtkAdjustment *adjust = (arg->i & VB_SCROLL_AXIS_H) ? c->gui.adjust_h : c->gui.adjust_v;
 
     int direction  = (arg->i & (1 << 2)) ? 1 : -1;
 
     /* type scroll */
-    if (arg->i & VP_SCROLL_TYPE_SCROLL) {
+    if (arg->i & VB_SCROLL_TYPE_SCROLL) {
         gdouble value;
         int count = c->state.count ? c->state.count : 1;
-        if (arg->i & VP_SCROLL_UNIT_LINE) {
+        if (arg->i & VB_SCROLL_UNIT_LINE) {
             value = core.config.scrollstep;
-        } else if (arg->i & VP_SCROLL_UNIT_HALFPAGE) {
+        } else if (arg->i & VB_SCROLL_UNIT_HALFPAGE) {
             value = gtk_adjustment_get_page_size(adjust) / 2;
         } else {
             value = gtk_adjustment_get_page_size(adjust);
@@ -273,7 +273,7 @@ gboolean command_scroll(Client* c, const Arg* arg)
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
     }
 
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     return TRUE;
 }
@@ -281,7 +281,7 @@ gboolean command_scroll(Client* c, const Arg* arg)
 gboolean command_map(Client* c, const Arg* arg)
 {
     gboolean result;
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     char **string = g_strsplit(arg->s, "=", 2);
     if (g_strv_length(string) != 2) {
@@ -295,7 +295,7 @@ gboolean command_map(Client* c, const Arg* arg)
 
 gboolean command_unmap(Client* c, const Arg* arg)
 {
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     return keybind_remove_from_string(arg->s, arg->i);
 }
@@ -320,7 +320,7 @@ gboolean command_set(Client* c, const Arg* arg)
     success = setting_run(c, token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
 
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     return success;
 }
@@ -329,7 +329,7 @@ gboolean command_complete(Client* c, const Arg* arg)
 {
     completion_complete(c, arg->i ? TRUE : FALSE);
 
-    vp_set_mode(c, VP_MODE_COMMAND | VP_MODE_COMPLETE, FALSE);
+    vb_set_mode(c, VB_MODE_COMMAND | VB_MODE_COMPLETE, FALSE);
 
     return TRUE;
 }
@@ -339,7 +339,7 @@ gboolean command_inspect(Client* c, const Arg* arg)
     gboolean enabled;
     WebKitWebSettings* settings = NULL;
 
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     settings = webkit_web_view_get_settings(c->gui.webview);
     g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
@@ -352,7 +352,7 @@ gboolean command_inspect(Client* c, const Arg* arg)
         return TRUE;
     }
 
-    vp_echo(c, VP_MSG_ERROR, TRUE, "webinspector is not enabled");
+    vb_echo(c, VB_MSG_ERROR, TRUE, "webinspector is not enabled");
 
     return FALSE;
 }
@@ -362,7 +362,7 @@ gboolean command_hints(Client* c, const Arg* arg)
     command_write_input(c, arg->s);
     hints_create(c, NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
-    vp_set_mode(c, VP_MODE_HINTING, FALSE);
+    vb_set_mode(c, VB_MODE_HINTING, FALSE);
 
     return TRUE;
 }
@@ -371,14 +371,14 @@ gboolean command_hints_focus(Client* c, const Arg* arg)
 {
     hints_focus_next(c, arg->i ? TRUE : FALSE);
 
-    vp_set_mode(c, VP_MODE_HINTING, FALSE);
+    vb_set_mode(c, VB_MODE_HINTING, FALSE);
 
     return TRUE;
 }
 
 gboolean command_yank(Client* c, const Arg* arg)
 {
-    vp_set_mode(c, VP_MODE_NORMAL, TRUE);
+    vb_set_mode(c, VB_MODE_NORMAL, TRUE);
 
     if (arg->i & COMMAND_YANK_SELECTION) {
         char* text = NULL;
@@ -391,7 +391,7 @@ gboolean command_yank(Client* c, const Arg* arg)
         if (text) {
             /* TODO is this the rigth place to switch the focus */
             gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "Yanked: %s", text);
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "Yanked: %s", text);
             g_free(text);
 
             return TRUE;
@@ -408,10 +408,10 @@ gboolean command_yank(Client* c, const Arg* arg)
         a.s = arg->s ? g_strdup(arg->s) : NULL;
     }
     if (a.s) {
-        vp_set_clipboard(&a);
+        vb_set_clipboard(&a);
         /* TODO is this the rigth place to switch the focus */
         gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
-        vp_echo(c, VP_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
+        vb_echo(c, VB_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
         g_free(a.s);
 
         return TRUE;
@@ -422,16 +422,16 @@ gboolean command_yank(Client* c, const Arg* arg)
 
 gboolean command_paste(Client* c, const Arg* arg)
 {
-    Arg a = {.i = arg->i & VP_TARGET_NEW};
-    if (arg->i & VP_CLIPBOARD_PRIMARY) {
+    Arg a = {.i = arg->i & VB_TARGET_NEW};
+    if (arg->i & VB_CLIPBOARD_PRIMARY) {
         a.s = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
     }
-    if (!a.s && arg->i & VP_CLIPBOARD_SECONDARY) {
+    if (!a.s && arg->i & VB_CLIPBOARD_SECONDARY) {
         a.s = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
     }
 
     if (a.s) {
-        vp_load_uri(c, &a);
+        vb_load_uri(c, &a);
         g_free(a.s);
 
         return TRUE;
@@ -443,7 +443,7 @@ gboolean command_search(Client* c, const Arg* arg)
 {
     gboolean forward = !(arg->i ^ c->state.search_dir);
 
-    if (arg->i == VP_SEARCH_OFF && c->state.search_query) {
+    if (arg->i == VB_SEARCH_OFF && c->state.search_query) {
         OVERWRITE_STRING(c->state.search_query, NULL);
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_unmark_text_matches(c->gui.webview);
@@ -471,7 +471,7 @@ gboolean command_search(Client* c, const Arg* arg)
         } while (--c->state.count);
     }
 
-    vp_set_mode(c, VP_MODE_SEARCH, FALSE);
+    vb_set_mode(c, VB_MODE_SEARCH, FALSE);
 
     return TRUE;
 }
@@ -492,7 +492,7 @@ gboolean command_searchengine(Client* c, const Arg* arg)
         result = searchengine_remove(arg->s);
     }
 
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     return result;
 }
@@ -504,7 +504,7 @@ gboolean command_zoom(Client* c, const Arg* arg)
 
     if (arg->i & COMMAND_ZOOM_RESET) {
         webkit_web_view_set_zoom_level(c->gui.webview, 1.0);
-        vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+        vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
         return TRUE;
     }
@@ -524,7 +524,7 @@ gboolean command_zoom(Client* c, const Arg* arg)
         level + (float)(count *step) * (arg->i & COMMAND_ZOOM_IN ? 1.0 : -1.0)
     );
 
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
     return TRUE;
 
@@ -533,7 +533,7 @@ gboolean command_zoom(Client* c, const Arg* arg)
 gboolean command_history(Client* c, const Arg* arg)
 {
     const int count = c->state.count ? c->state.count : 1;
-    const gint step = count * (arg->i == VP_SEARCH_BACKWARD ? -1 : 1);
+    const gint step = count * (arg->i == VB_SEARCH_BACKWARD ? -1 : 1);
     const char* entry = history_get(c, step);
 
     if (!entry) {
@@ -549,11 +549,11 @@ static void command_write_input(Client* c, const char* str)
     int pos = 0;
     GtkEditable* box = GTK_EDITABLE(c->gui.inputbox);
     /* reset the colors and fonts to defalts */
-    vp_set_widget_font(
+    vb_set_widget_font(
         c->gui.inputbox,
-        &core.style.input_fg[VP_MSG_NORMAL],
-        &core.style.input_bg[VP_MSG_NORMAL],
-        core.style.input_font[VP_MSG_NORMAL]
+        &core.style.input_fg[VB_MSG_NORMAL],
+        &core.style.input_bg[VB_MSG_NORMAL],
+        core.style.input_font[VB_MSG_NORMAL]
     );
 
     /* remove content from input box */

@@ -44,7 +44,7 @@ gboolean completion_complete(Client* c, gboolean back)
 
     if (c->comps.completions
         && c->comps.active
-        && (c->state.mode & VP_MODE_COMPLETE)
+        && (c->state.mode & VB_MODE_COMPLETE)
     ) {
         char* text = completion_get_text(c, (Completion*)c->comps.active->data);
         if (!strcmp(input, text)) {
@@ -121,7 +121,7 @@ void completion_clean(Client* c)
     c->comps.count  = 0;
 
     /* remove completion flag from mode */
-    c->state.mode &= ~VP_MODE_COMPLETE;
+    c->state.mode &= ~VB_MODE_COMPLETE;
 }
 
 static GList* completion_init_completion(Client* c, GList* target, GList* source,
@@ -221,10 +221,10 @@ static GList* completion_update(Client* c, GList* completion, GList* active, gbo
         }
     }
 
-    VP_WIDGET_SET_STATE(((Completion*)old->data)->label, VP_GTK_STATE_NORMAL);
-    VP_WIDGET_SET_STATE(((Completion*)old->data)->event, VP_GTK_STATE_NORMAL);
-    VP_WIDGET_SET_STATE(((Completion*)new->data)->label, VP_GTK_STATE_ACTIVE);
-    VP_WIDGET_SET_STATE(((Completion*)new->data)->event, VP_GTK_STATE_ACTIVE);
+    VB_WIDGET_SET_STATE(((Completion*)old->data)->label, VB_GTK_STATE_NORMAL);
+    VB_WIDGET_SET_STATE(((Completion*)old->data)->event, VB_GTK_STATE_NORMAL);
+    VB_WIDGET_SET_STATE(((Completion*)new->data)->label, VB_GTK_STATE_ACTIVE);
+    VB_WIDGET_SET_STATE(((Completion*)new->data)->event, VB_GTK_STATE_ACTIVE);
 
     active = new;
     completion_set_entry_text(c, active->data);
@@ -249,8 +249,8 @@ static void completion_show(Client* c, gboolean back)
     }
     if (c->comps.active != NULL) {
         Completion* active = (Completion*)c->comps.active->data;
-        VP_WIDGET_SET_STATE(active->label, VP_GTK_STATE_ACTIVE);
-        VP_WIDGET_SET_STATE(active->event, VP_GTK_STATE_ACTIVE);
+        VB_WIDGET_SET_STATE(active->label, VB_GTK_STATE_ACTIVE);
+        VB_WIDGET_SET_STATE(active->event, VB_GTK_STATE_ACTIVE);
 
         completion_set_entry_text(c, active);
         gtk_widget_show(c->gui.compbox);
@@ -306,14 +306,14 @@ static Completion* completion_get_new(const char* label, const char* prefix)
     gtk_label_set_ellipsize(GTK_LABEL(c->label), PANGO_ELLIPSIZE_MIDDLE);
     gtk_misc_set_alignment(GTK_MISC(c->label), 0.0, 0.5);
 
-    VP_WIDGET_SET_STATE(c->label, VP_GTK_STATE_NORMAL);
-    VP_WIDGET_SET_STATE(c->event, VP_GTK_STATE_NORMAL);
+    VB_WIDGET_SET_STATE(c->label, VB_GTK_STATE_NORMAL);
+    VB_WIDGET_SET_STATE(c->event, VB_GTK_STATE_NORMAL);
 
-    VP_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_NORMAL, &core.style.comp_fg[VP_COMP_NORMAL]);
-    VP_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_ACTIVE, &core.style.comp_fg[VP_COMP_ACTIVE]);
-    VP_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_NORMAL, &core.style.comp_bg[VP_COMP_NORMAL]);
-    VP_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_ACTIVE, &core.style.comp_bg[VP_COMP_ACTIVE]);
-    VP_WIDGET_OVERRIDE_FONT(c->label, core.style.comp_font);
+    VB_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_NORMAL, &core.style.comp_fg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_ACTIVE, &core.style.comp_fg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_NORMAL, &core.style.comp_bg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_ACTIVE, &core.style.comp_bg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_FONT(c->label, core.style.comp_font);
 
     GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
     gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);

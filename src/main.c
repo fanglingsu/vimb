@@ -32,64 +32,64 @@
 
 /* variables */
 static char **args;
-VpCore      core;
+VbCore      core;
 Client* clients = NULL;
 
 /* callbacks */
-static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
-static void vp_webview_download_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
-static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
-static void vp_destroy_window_cb(GtkWidget* widget, Client* c);
-static void vp_inputbox_activate_cb(GtkEntry* entry, Client* c);
-static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event, Client* c);
-static void vp_scroll_cb(GtkAdjustment* adjustment, Client* c);
-static void vp_new_request_cb(SoupSession* session, SoupMessage *message, Client* c);
-static void vp_gotheaders_cb(SoupMessage* message, Client* c);
-static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview, Client* c);
-static gboolean vp_inspector_show(WebKitWebInspector* inspector, Client* c);
-static gboolean vp_inspector_close(WebKitWebInspector* inspector, Client* c);
-static void vp_inspector_finished(WebKitWebInspector* inspector, Client* c);
-static gboolean vp_button_relase_cb(WebKitWebView *webview, GdkEventButton* event, Client* c);
-static gboolean vp_new_window_policy_cb(
+static void vb_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
+static void vb_webview_download_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
+static void vb_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Client* c);
+static void vb_destroy_window_cb(GtkWidget* widget, Client* c);
+static void vb_inputbox_activate_cb(GtkEntry* entry, Client* c);
+static gboolean vb_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event, Client* c);
+static void vb_scroll_cb(GtkAdjustment* adjustment, Client* c);
+static void vb_new_request_cb(SoupSession* session, SoupMessage *message, Client* c);
+static void vb_gotheaders_cb(SoupMessage* message, Client* c);
+static WebKitWebView* vb_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview, Client* c);
+static gboolean vb_inspector_show(WebKitWebInspector* inspector, Client* c);
+static gboolean vb_inspector_close(WebKitWebInspector* inspector, Client* c);
+static void vb_inspector_finished(WebKitWebInspector* inspector, Client* c);
+static gboolean vb_button_relase_cb(WebKitWebView *webview, GdkEventButton* event, Client* c);
+static gboolean vb_new_window_policy_cb(
     WebKitWebView* view, WebKitWebFrame* frame, WebKitNetworkRequest* request,
     WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, Client* c);
-static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, Client* c);
-static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, Client* c);
-static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, Client* c);
-static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
+static WebKitWebView* vb_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, Client* c);
+static void vb_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, Client* c);
+static void vb_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, Client* c);
+static gboolean vb_mimetype_decision_cb(WebKitWebView* webview,
     WebKitWebFrame* frame, WebKitNetworkRequest* request, char*
     mime_type, WebKitWebPolicyDecision* decision, Client* c);
-static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, Client* c);
-static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec, Client* c);
-static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
+static gboolean vb_download_requested_cb(WebKitWebView* view, WebKitDownload* download, Client* c);
+static void vb_download_progress_cp(WebKitDownload* download, GParamSpec* pspec, Client* c);
+static void vb_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
     WebKitWebResource* resource, WebKitNetworkRequest* request,
     WebKitNetworkResponse* response, Client* c);
 
 /* functions */
-static gboolean vp_process_input(Client* c, const char* input);
-static void vp_run_user_script(WebKitWebFrame* frame);
-static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref);
-static void vp_init_core(void);
-static void vp_read_global_config(void);
-static void vp_process_config_file(Client* c, VpFile file);
-static Client* vp_client_new(void);
-static void vp_setup_signals(Client* c);
-static void vp_init_files(void);
-static void vp_set_cookie(SoupCookie* cookie);
-static const char* vp_get_cookies(SoupURI *uri);
-static gboolean vp_hide_message(Client* c);
-static void vp_set_status(Client* c, const StatusType status);
-static void vp_destroy_client(Client* c);
-static void vp_clean_up(void);
+static gboolean vb_process_input(Client* c, const char* input);
+static void vb_run_user_script(WebKitWebFrame* frame);
+static char* vb_jsref_to_string(JSContextRef context, JSValueRef ref);
+static void vb_init_core(void);
+static void vb_read_global_config(void);
+static void vb_process_config_file(Client* c, VpFile file);
+static Client* vb_client_new(void);
+static void vb_setup_signals(Client* c);
+static void vb_init_files(void);
+static void vb_set_cookie(SoupCookie* cookie);
+static const char* vb_get_cookies(SoupURI *uri);
+static gboolean vb_hide_message(Client* c);
+static void vb_set_status(Client* c, const StatusType status);
+static void vb_destroy_client(Client* c);
+static void vb_clean_up(void);
 
-void vp_clean_input(Client* c)
+void vb_clean_input(Client* c)
 {
     /* move focus from input box to clean it */
     gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
-    vp_echo(c, VP_MSG_NORMAL, FALSE, "");
+    vb_echo(c, VB_MSG_NORMAL, FALSE, "");
 }
 
-void vp_echo(Client* c, const MessageType type, gboolean hide, const char *error, ...)
+void vb_echo(Client* c, const MessageType type, gboolean hide, const char *error, ...)
 {
     va_list arg_list;
 
@@ -103,14 +103,14 @@ void vp_echo(Client* c, const MessageType type, gboolean hide, const char *error
         return;
     }
 
-    vp_update_input_style(c, type);
+    vb_update_input_style(c, type);
     gtk_entry_set_text(GTK_ENTRY(c->gui.inputbox), message);
     if (hide) {
-        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vp_hide_message, c);
+        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vb_hide_message, c);
     }
 }
 
-gboolean vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value)
+gboolean vb_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value)
 {
     JSStringRef str, file_name;
     JSValueRef exception = NULL, result = NULL;
@@ -125,15 +125,15 @@ gboolean vp_eval_script(WebKitWebFrame* frame, char* script, char* file, char** 
     JSStringRelease(str);
 
     if (result) {
-        *value = vp_jsref_to_string(js, result);
+        *value = vb_jsref_to_string(js, result);
         return TRUE;
     }
 
-    *value = vp_jsref_to_string(js, exception);
+    *value = vb_jsref_to_string(js, exception);
     return FALSE;
 }
 
-gboolean vp_load_uri(Client* c, const Arg* arg)
+gboolean vb_load_uri(Client* c, const Arg* arg)
 {
     char* uri;
     char* path = arg->s;
@@ -156,10 +156,10 @@ gboolean vp_load_uri(Client* c, const Arg* arg)
     }
 
     /* change state to normal mode */
-    vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+    vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
-    if (arg->i == VP_TARGET_NEW) {
-        Client* new = vp_client_new();
+    if (arg->i == VB_TARGET_NEW) {
+        Client* new = vb_client_new();
         webkit_web_view_load_uri(new->gui.webview, uri);
     } else {
         /* Load a web page into the browser instance */
@@ -170,18 +170,18 @@ gboolean vp_load_uri(Client* c, const Arg* arg)
     return TRUE;
 }
 
-gboolean vp_set_clipboard(const Arg* arg)
+gboolean vb_set_clipboard(const Arg* arg)
 {
     gboolean result = FALSE;
     if (!arg->s) {
         return result;
     }
 
-    if (arg->i & VP_CLIPBOARD_PRIMARY) {
+    if (arg->i & VB_CLIPBOARD_PRIMARY) {
         gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), arg->s, -1);
         result = TRUE;
     }
-    if (arg->i & VP_CLIPBOARD_SECONDARY) {
+    if (arg->i & VB_CLIPBOARD_SECONDARY) {
         gtk_clipboard_set_text(SECONDARY_CLIPBOARD(), arg->s, -1);
         result = TRUE;
     }
@@ -193,47 +193,47 @@ gboolean vp_set_clipboard(const Arg* arg)
  * Set the base modes. All other mode flags like completion can be set directly
  * to c->state.mode.
  */
-gboolean vp_set_mode(Client* c, Mode mode, gboolean clean)
+gboolean vb_set_mode(Client* c, Mode mode, gboolean clean)
 {
     if (!c) {
         return FALSE;
     }
-    if ((c->state.mode & VP_MODE_COMPLETE)
-        && !(mode & VP_MODE_COMPLETE)
+    if ((c->state.mode & VB_MODE_COMPLETE)
+        && !(mode & VB_MODE_COMPLETE)
     ) {
         completion_clean(c);
     }
     int clean_mode = CLEAN_MODE(c->state.mode);
     switch (CLEAN_MODE(mode)) {
-        case VP_MODE_NORMAL:
+        case VB_MODE_NORMAL:
             /* do this only if the mode is really switched */
-            if (clean_mode != VP_MODE_NORMAL) {
+            if (clean_mode != VB_MODE_NORMAL) {
                 history_rewind(c);
             }
-            if (clean_mode == VP_MODE_HINTING) {
+            if (clean_mode == VB_MODE_HINTING) {
                 /* if previous mode was hinting clear the hints */
                 hints_clear(c);
-            } else if (clean_mode == VP_MODE_INSERT) {
+            } else if (clean_mode == VB_MODE_INSERT) {
                 /* clean the input if current mode is insert to remove -- INPUT -- */
                 clean = TRUE;
-            } else if (clean_mode == VP_MODE_SEARCH) {
+            } else if (clean_mode == VB_MODE_SEARCH) {
                 /* cleaup previous search */
-                command_search(c, &((Arg){VP_SEARCH_OFF}));
+                command_search(c, &((Arg){VB_SEARCH_OFF}));
             }
             gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
             break;
 
-        case VP_MODE_COMMAND:
-        case VP_MODE_HINTING:
+        case VB_MODE_COMMAND:
+        case VB_MODE_HINTING:
             gtk_widget_grab_focus(GTK_WIDGET(c->gui.inputbox));
             break;
 
-        case VP_MODE_INSERT:
+        case VB_MODE_INSERT:
             gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "-- INPUT --");
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "-- INPUT --");
             break;
 
-        case VP_MODE_PATH_THROUGH:
+        case VB_MODE_PATH_THROUGH:
             gtk_widget_grab_focus(GTK_WIDGET(c->gui.webview));
             break;
     }
@@ -243,24 +243,24 @@ gboolean vp_set_mode(Client* c, Mode mode, gboolean clean)
 
     /* echo message if given */
     if (clean) {
-        vp_echo(c, VP_MSG_NORMAL, FALSE, "");
+        vb_echo(c, VB_MSG_NORMAL, FALSE, "");
     }
 
-    vp_update_statusbar(c);
+    vb_update_statusbar(c);
 
     return TRUE;
 }
 
-void vp_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
+void vb_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
 {
-    VP_WIDGET_OVERRIDE_FONT(widget, font);
-    VP_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
-    VP_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
-    VP_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
-    VP_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
+    VB_WIDGET_OVERRIDE_FONT(widget, font);
+    VB_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
+    VB_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
+    VB_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
+    VB_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
 }
 
-void vp_update_statusbar(Client* c)
+void vb_update_statusbar(Client* c)
 {
     GString* status = g_string_new("");
 
@@ -300,46 +300,46 @@ void vp_update_statusbar(Client* c)
     g_string_free(status, TRUE);
 }
 
-void vp_update_status_style(Client* c)
+void vb_update_status_style(Client* c)
 {
     StatusType type = c->state.status;
-    vp_set_widget_font(
+    vb_set_widget_font(
         c->gui.eventbox, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]
     );
-    vp_set_widget_font(
+    vb_set_widget_font(
         c->gui.statusbar.left, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]
     );
-    vp_set_widget_font(
+    vb_set_widget_font(
         c->gui.statusbar.right, &core.style.status_fg[type], &core.style.status_bg[type], core.style.status_font[type]
     );
 }
 
-void vp_update_input_style(Client* c, MessageType type)
+void vb_update_input_style(Client* c, MessageType type)
 {
-    vp_set_widget_font(
+    vb_set_widget_font(
         c->gui.inputbox, &core.style.input_fg[type], &core.style.input_bg[type], core.style.input_font[type]
     );
 }
 
-void vp_update_urlbar(Client* c, const char* uri)
+void vb_update_urlbar(Client* c, const char* uri)
 {
     gtk_label_set_text(GTK_LABEL(c->gui.statusbar.left), uri);
 }
 
-static gboolean vp_hide_message(Client* c)
+static gboolean vb_hide_message(Client* c)
 {
-    vp_echo(c, VP_MSG_NORMAL, FALSE, "");
+    vb_echo(c, VB_MSG_NORMAL, FALSE, "");
 
     return FALSE;
 }
 
-static void vp_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
+static void vb_webview_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
 {
     c->state.progress = webkit_web_view_get_progress(view) * 100;
-    vp_update_statusbar(c);
+    vb_update_statusbar(c);
 }
 
-static void vp_webview_download_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
+static void vb_webview_download_progress_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
 {
     if (c->state.downloads) {
         c->state.progress = 0;
@@ -349,10 +349,10 @@ static void vp_webview_download_progress_cb(WebKitWebView* view, GParamSpec* psp
         }
         c->state.progress /= g_list_length(c->state.downloads);
     }
-    vp_update_statusbar(c);
+    vb_update_statusbar(c);
 }
 
-static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
+static void vb_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Client* c)
 {
     const char* uri = webkit_web_view_get_uri(c->gui.webview);
 
@@ -360,7 +360,7 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Cl
         case WEBKIT_LOAD_PROVISIONAL:
             /* update load progress in statusbar */
             c->state.progress = 0;
-            vp_update_statusbar(c);
+            vb_update_statusbar(c);
             break;
 
         case WEBKIT_LOAD_COMMITTED:
@@ -372,24 +372,24 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Cl
                     WebKitNetworkRequest* request = webkit_web_data_source_get_request(src);
                     SoupMessage* msg              = webkit_network_request_get_message(request);
                     SoupMessageFlags flags        = soup_message_get_flags(msg);
-                    vp_set_status(
+                    vb_set_status(
                         c,
-                        (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VP_STATUS_SSL_VALID : VP_STATUS_SSL_INVALID
+                        (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VB_STATUS_SSL_VALID : VB_STATUS_SSL_INVALID
                     );
                 } else {
-                    vp_set_status(c, VP_STATUS_NORMAL);
+                    vb_set_status(c, VB_STATUS_NORMAL);
                 }
 
                 /* inject the hinting javascript */
                 hints_init(frame);
 
                 /* run user script file */
-                vp_run_user_script(frame);
+                vb_run_user_script(frame);
             }
 
-            /* status bar is updated by vp_set_mode */
-            vp_set_mode(c, VP_MODE_NORMAL , FALSE);
-            vp_update_urlbar(c, uri);
+            /* status bar is updated by vb_set_mode */
+            vb_set_mode(c, VB_MODE_NORMAL , FALSE);
+            vb_update_urlbar(c, uri);
 
             break;
 
@@ -399,7 +399,7 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Cl
         case WEBKIT_LOAD_FINISHED:
             /* update load progress in statusbar */
             c->state.progress = 100;
-            vp_update_statusbar(c);
+            vb_update_statusbar(c);
 
             dom_check_auto_insert(c);
 
@@ -411,12 +411,12 @@ static void vp_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec, Cl
     }
 }
 
-static void vp_destroy_window_cb(GtkWidget* widget, Client* c)
+static void vb_destroy_window_cb(GtkWidget* widget, Client* c)
 {
-    vp_destroy_client(c);
+    vb_destroy_client(c);
 }
 
-static void vp_inputbox_activate_cb(GtkEntry *entry, Client* c)
+static void vb_inputbox_activate_cb(GtkEntry *entry, Client* c)
 {
     const char* text;
     gboolean hist_save = FALSE;
@@ -445,7 +445,7 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, Client* c)
     switch (*text) {
         case '/':
         case '?':
-            a.i = *text == '/' ? VP_SEARCH_FORWARD : VP_SEARCH_BACKWARD;
+            a.i = *text == '/' ? VB_SEARCH_FORWARD : VB_SEARCH_BACKWARD;
             a.s = (command + 1);
             command_search(c, &a);
             hist_save = TRUE;
@@ -453,7 +453,7 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, Client* c)
 
         case ':':
             completion_clean(c);
-            vp_process_input(c, (command + 1));
+            vb_process_input(c, (command + 1));
             hist_save = TRUE;
             break;
     }
@@ -465,17 +465,17 @@ static void vp_inputbox_activate_cb(GtkEntry *entry, Client* c)
     g_free(command);
 }
 
-static gboolean vp_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event, Client* c)
+static gboolean vb_inputbox_keyrelease_cb(GtkEntry* entry, GdkEventKey* event, Client* c)
 {
     return FALSE;
 }
 
-static void vp_scroll_cb(GtkAdjustment* adjustment, Client* c)
+static void vb_scroll_cb(GtkAdjustment* adjustment, Client* c)
 {
-    vp_update_statusbar(c);
+    vb_update_statusbar(c);
 }
 
-static void vp_new_request_cb(SoupSession* session, SoupMessage *message, Client* c)
+static void vb_new_request_cb(SoupSession* session, SoupMessage *message, Client* c)
 {
     SoupMessageHeaders* header = message->request_headers;
     SoupURI* uri;
@@ -483,29 +483,29 @@ static void vp_new_request_cb(SoupSession* session, SoupMessage *message, Client
 
     soup_message_headers_remove(header, "Cookie");
     uri = soup_message_get_uri(message);
-    if ((cookie = vp_get_cookies(uri))) {
+    if ((cookie = vb_get_cookies(uri))) {
         soup_message_headers_append(header, "Cookie", cookie);
     }
-    g_signal_connect_after(G_OBJECT(message), "got-headers", G_CALLBACK(vp_gotheaders_cb), c);
+    g_signal_connect_after(G_OBJECT(message), "got-headers", G_CALLBACK(vb_gotheaders_cb), c);
 }
 
-static void vp_gotheaders_cb(SoupMessage* message, Client* c)
+static void vb_gotheaders_cb(SoupMessage* message, Client* c)
 {
     GSList* list = NULL;
     GSList* p = NULL;
 
     for(p = list = soup_cookies_from_response(message); p; p = g_slist_next(p)) {
-        vp_set_cookie((SoupCookie *)p->data);
+        vb_set_cookie((SoupCookie *)p->data);
     }
     soup_cookies_free(list);
 }
 
-static WebKitWebView* vp_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview, Client* c)
+static WebKitWebView* vb_inspector_new(WebKitWebInspector* inspector, WebKitWebView* webview, Client* c)
 {
     return WEBKIT_WEB_VIEW(webkit_web_view_new());
 }
 
-static gboolean vp_inspector_show(WebKitWebInspector* inspector, Client* c)
+static gboolean vb_inspector_show(WebKitWebInspector* inspector, Client* c)
 {
     WebKitWebView* webview;
     int height;
@@ -528,7 +528,7 @@ static gboolean vp_inspector_show(WebKitWebInspector* inspector, Client* c)
     return TRUE;
 }
 
-static gboolean vp_inspector_close(WebKitWebInspector* inspector, Client* c)
+static gboolean vb_inspector_close(WebKitWebInspector* inspector, Client* c)
 {
     WebKitWebView* webview;
 
@@ -544,7 +544,7 @@ static gboolean vp_inspector_close(WebKitWebInspector* inspector, Client* c)
     return TRUE;
 }
 
-static void vp_inspector_finished(WebKitWebInspector* inspector, Client* c)
+static void vb_inspector_finished(WebKitWebInspector* inspector, Client* c)
 {
     g_free(c->gui.inspector);
 }
@@ -553,7 +553,7 @@ static void vp_inspector_finished(WebKitWebInspector* inspector, Client* c)
  * Processed input from input box without trailing : or ? /, input from config
  * file and default config.
  */
-static gboolean vp_process_input(Client* c, const char* input)
+static gboolean vb_process_input(Client* c, const char* input)
 {
     gboolean success;
     char* command = NULL;
@@ -584,7 +584,7 @@ static gboolean vp_process_input(Client* c, const char* input)
 }
 
 #ifdef FEATURE_COOKIE
-static void vp_set_cookie(SoupCookie* cookie)
+static void vb_set_cookie(SoupCookie* cookie)
 {
     SoupDate* date;
 
@@ -598,7 +598,7 @@ static void vp_set_cookie(SoupCookie* cookie)
     g_object_unref(jar);
 }
 
-static const char* vp_get_cookies(SoupURI *uri)
+static const char* vb_get_cookies(SoupURI *uri)
 {
     const char* cookie;
 
@@ -610,16 +610,16 @@ static const char* vp_get_cookies(SoupURI *uri)
 }
 #endif
 
-static void vp_set_status(Client* c, const StatusType status)
+static void vb_set_status(Client* c, const StatusType status)
 {
     if (c->state.status != status) {
         c->state.status = status;
         /* update the statusbar style only if the status changed */
-        vp_update_status_style(c);
+        vb_update_status_style(c);
     }
 }
 
-static void vp_run_user_script(WebKitWebFrame* frame)
+static void vb_run_user_script(WebKitWebFrame* frame)
 {
     char* js      = NULL;
     GError* error = NULL;
@@ -628,7 +628,7 @@ static void vp_run_user_script(WebKitWebFrame* frame)
         && g_file_get_contents(core.files[FILES_SCRIPT], &js, NULL, &error)
     ) {
         char* value = NULL;
-        gboolean success = vp_eval_script(frame, js, core.files[FILES_SCRIPT], &value);
+        gboolean success = vb_eval_script(frame, js, core.files[FILES_SCRIPT], &value);
         if (!success) {
             fprintf(stderr, "%s", value);
         }
@@ -637,7 +637,7 @@ static void vp_run_user_script(WebKitWebFrame* frame)
     }
 }
 
-static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref)
+static char* vb_jsref_to_string(JSContextRef context, JSValueRef ref)
 {
     char* string;
     JSStringRef str_ref = JSValueToStringCopy(context, ref, NULL);
@@ -650,14 +650,14 @@ static char* vp_jsref_to_string(JSContextRef context, JSValueRef ref)
     return string;
 }
 
-static void vp_init_core(void)
+static void vb_init_core(void)
 {
     /* TODO */
     /* initialize the commands hash map */
     command_init();
 
     /* initialize the config files */
-    vp_init_files();
+    vb_init_files();
 
     /* initialize the keybindings */
     keybind_init();
@@ -672,24 +672,24 @@ static void vp_init_core(void)
     setting_init();
 
     /* read additional configuration from config files */
-    vp_read_global_config();
+    vb_read_global_config();
 
     url_history_init();
 }
 
-static void vp_read_global_config(void)
+static void vb_read_global_config(void)
 {
     /* load default config */
     for (guint i = 0; default_config[i].command != NULL; i++) {
-        if (!vp_process_input(NULL, default_config[i].command)) {
+        if (!vb_process_input(NULL, default_config[i].command)) {
             fprintf(stderr, "Invalid default config: %s\n", default_config[i].command);
         }
     }
 
-    vp_process_config_file(NULL, FILES_GLOBAL_CONFIG);
+    vb_process_config_file(NULL, FILES_GLOBAL_CONFIG);
 }
 
-static void vp_process_config_file(Client* c, VpFile file)
+static void vb_process_config_file(Client* c, VpFile file)
 {
     /* read config from config files */
     char **lines = util_get_lines(core.files[file]);
@@ -704,7 +704,7 @@ static void vp_process_config_file(Client* c, VpFile file)
             if (!g_ascii_isalpha(line[0])) {
                 continue;
             }
-            if (!vp_process_input(c, line)) {
+            if (!vb_process_input(c, line)) {
                 fprintf(stderr, "Invalid config: %s\n", line);
             }
         }
@@ -712,7 +712,7 @@ static void vp_process_config_file(Client* c, VpFile file)
     g_strfreev(lines);
 }
 
-static Client* vp_client_new(void)
+static Client* vb_client_new(void)
 {
     Client* c = g_new0(Client, 1);
     Gui* gui  = &c->gui;
@@ -763,7 +763,7 @@ static Client* vp_client_new(void)
 
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), TRUE, TRUE);
 
-    vp_setup_signals(c);
+    vb_setup_signals(c);
 
     /* Put all part together */
     gtk_container_add(GTK_CONTAINER(gui->scroll), GTK_WIDGET(gui->webview));
@@ -789,11 +789,11 @@ static Client* vp_client_new(void)
     keybind_init_client(c);
     setting_init_client(c);
 
-    vp_process_config_file(c, FILES_LOCAL_CONFIG);
+    vb_process_config_file(c, FILES_LOCAL_CONFIG);
 
     /* apply global settings to the status bar and input box */
-    vp_update_status_style(c);
-    vp_update_input_style(c, VP_MSG_NORMAL);
+    vb_update_status_style(c);
+    vb_update_input_style(c, VB_MSG_NORMAL);
 
     c->next = clients;
     clients = c;
@@ -801,49 +801,49 @@ static Client* vp_client_new(void)
     return c;
 }
 
-static void vp_setup_signals(Client* c)
+static void vb_setup_signals(Client* c)
 {
     /* Set up callbacks so that if either the main window or the browser
      * instance is closed, the program will exit */
-    g_signal_connect(c->gui.window, "destroy", G_CALLBACK(vp_destroy_window_cb), c);
+    g_signal_connect(c->gui.window, "destroy", G_CALLBACK(vb_destroy_window_cb), c);
     g_object_connect(
         G_OBJECT(c->gui.webview),
-        "signal::notify::progress", G_CALLBACK(vp_webview_progress_cb), c,
-        "signal::notify::load-status", G_CALLBACK(vp_webview_load_status_cb), c,
-        "signal::button-release-event", G_CALLBACK(vp_button_relase_cb), c,
-        "signal::new-window-policy-decision-requested", G_CALLBACK(vp_new_window_policy_cb), c,
-        "signal::create-web-view", G_CALLBACK(vp_create_new_webview_cb), c,
-        "signal::hovering-over-link", G_CALLBACK(vp_hover_link_cb), c,
-        "signal::title-changed", G_CALLBACK(vp_title_changed_cb), c,
-        "signal::mime-type-policy-decision-requested", G_CALLBACK(vp_mimetype_decision_cb), c,
-        "signal::download-requested", G_CALLBACK(vp_download_requested_cb), c,
-        "signal::resource-request-starting", G_CALLBACK(vp_request_start_cb), c,
+        "signal::notify::progress", G_CALLBACK(vb_webview_progress_cb), c,
+        "signal::notify::load-status", G_CALLBACK(vb_webview_load_status_cb), c,
+        "signal::button-release-event", G_CALLBACK(vb_button_relase_cb), c,
+        "signal::new-window-policy-decision-requested", G_CALLBACK(vb_new_window_policy_cb), c,
+        "signal::create-web-view", G_CALLBACK(vb_create_new_webview_cb), c,
+        "signal::hovering-over-link", G_CALLBACK(vb_hover_link_cb), c,
+        "signal::title-changed", G_CALLBACK(vb_title_changed_cb), c,
+        "signal::mime-type-policy-decision-requested", G_CALLBACK(vb_mimetype_decision_cb), c,
+        "signal::download-requested", G_CALLBACK(vb_download_requested_cb), c,
+        "signal::resource-request-starting", G_CALLBACK(vb_request_start_cb), c,
         NULL
     );
 
     g_object_connect(
         G_OBJECT(c->gui.inputbox),
-        "signal::activate",          G_CALLBACK(vp_inputbox_activate_cb),   c,
-        "signal::key-release-event", G_CALLBACK(vp_inputbox_keyrelease_cb), c,
+        "signal::activate",          G_CALLBACK(vb_inputbox_activate_cb),   c,
+        "signal::key-release-event", G_CALLBACK(vb_inputbox_keyrelease_cb), c,
         NULL
     );
     /* webview adjustment */
     g_object_connect(G_OBJECT(c->gui.adjust_v),
-        "signal::value-changed",     G_CALLBACK(vp_scroll_cb),              c,
+        "signal::value-changed",     G_CALLBACK(vb_scroll_cb),              c,
         NULL
     );
 
-    g_signal_connect_after(G_OBJECT(core.soup_session), "request-started", G_CALLBACK(vp_new_request_cb), c);
+    g_signal_connect_after(G_OBJECT(core.soup_session), "request-started", G_CALLBACK(vb_new_request_cb), c);
 
     /* inspector */
     /* TODO use g_object_connect instead */
-    g_signal_connect(G_OBJECT(c->gui.inspector), "inspect-web-view", G_CALLBACK(vp_inspector_new), c);
-    g_signal_connect(G_OBJECT(c->gui.inspector), "show-window", G_CALLBACK(vp_inspector_show), c);
-    g_signal_connect(G_OBJECT(c->gui.inspector), "close-window", G_CALLBACK(vp_inspector_close), c);
-    g_signal_connect(G_OBJECT(c->gui.inspector), "finished", G_CALLBACK(vp_inspector_finished), c);
+    g_signal_connect(G_OBJECT(c->gui.inspector), "inspect-web-view", G_CALLBACK(vb_inspector_new), c);
+    g_signal_connect(G_OBJECT(c->gui.inspector), "show-window", G_CALLBACK(vb_inspector_show), c);
+    g_signal_connect(G_OBJECT(c->gui.inspector), "close-window", G_CALLBACK(vb_inspector_close), c);
+    g_signal_connect(G_OBJECT(c->gui.inspector), "finished", G_CALLBACK(vb_inspector_finished), c);
 }
 
-static void vp_init_files(void)
+static void vb_init_files(void)
 {
     char* path = util_get_config_dir();
 
@@ -869,7 +869,7 @@ static void vp_init_files(void)
     g_free(path);
 }
 
-static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, Client* c)
+static gboolean vb_button_relase_cb(WebKitWebView* webview, GdkEventButton* event, Client* c)
 {
     gboolean propagate = FALSE;
     WebKitHitTestResultContext context;
@@ -878,16 +878,16 @@ static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* even
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
 
     g_object_get(result, "context", &context, NULL);
-    if (mode == VP_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-        vp_set_mode(c, VP_MODE_INSERT, FALSE);
+    if (mode == VB_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+        vb_set_mode(c, VB_MODE_INSERT, FALSE);
 
         propagate = TRUE;
     }
     /* middle mouse click onto link */
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
-        Arg a = {VP_TARGET_NEW};
+        Arg a = {VB_TARGET_NEW};
         g_object_get(result, "link-uri", &a.s, NULL);
-        vp_load_uri(c, &a);
+        vb_load_uri(c, &a);
 
         propagate = TRUE;
     }
@@ -896,43 +896,43 @@ static gboolean vp_button_relase_cb(WebKitWebView* webview, GdkEventButton* even
     return propagate;
 }
 
-static gboolean vp_new_window_policy_cb(
+static gboolean vb_new_window_policy_cb(
     WebKitWebView* view, WebKitWebFrame* frame, WebKitNetworkRequest* request,
     WebKitWebNavigationAction* navig, WebKitWebPolicyDecision* policy, Client* c)
 {
     if (webkit_web_navigation_action_get_reason(navig) == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
         /* open in a new window */
-        Arg a = {VP_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
-        vp_load_uri(c, &a);
+        Arg a = {VB_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
+        vb_load_uri(c, &a);
         webkit_web_policy_decision_ignore(policy);
         return TRUE;
     }
     return FALSE;
 }
 
-static WebKitWebView* vp_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, Client* c)
+static WebKitWebView* vb_create_new_webview_cb(WebKitWebView* webview, WebKitWebFrame* frame, Client* c)
 {
-    Client* new = vp_client_new();
+    Client* new = vb_client_new();
     return new->gui.webview;
 }
 
-static void vp_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, Client* c)
+static void vb_hover_link_cb(WebKitWebView* webview, const char* title, const char* link, Client* c)
 {
     if (link) {
         char* message = g_strdup_printf("Link: %s", link);
         gtk_label_set_text(GTK_LABEL(c->gui.statusbar.left), message);
         g_free(message);
     } else {
-        vp_update_urlbar(c, webkit_web_view_get_uri(webview));
+        vb_update_urlbar(c, webkit_web_view_get_uri(webview));
     }
 }
 
-static void vp_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, Client* c)
+static void vb_title_changed_cb(WebKitWebView* webview, WebKitWebFrame* frame, const char* title, Client* c)
 {
     gtk_window_set_title(GTK_WINDOW(c->gui.window), title);
 }
 
-static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
+static gboolean vb_mimetype_decision_cb(WebKitWebView* webview,
     WebKitWebFrame* frame, WebKitNetworkRequest* request, char*
     mime_type, WebKitWebPolicyDecision* decision, Client* c)
 {
@@ -944,7 +944,7 @@ static gboolean vp_mimetype_decision_cb(WebKitWebView* webview,
     return FALSE;
 }
 
-static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* download, Client* c)
+static gboolean vb_download_requested_cb(WebKitWebView* view, WebKitDownload* download, Client* c)
 {
     WebKitDownloadStatus status;
     char* uri = NULL;
@@ -961,9 +961,9 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
 
     guint64 size = webkit_download_get_total_size(download);
     if (size > 0) {
-        vp_echo(c, VP_MSG_NORMAL, FALSE, "Download %s [~%uB] started ...", filename, size);
+        vb_echo(c, VB_MSG_NORMAL, FALSE, "Download %s [~%uB] started ...", filename, size);
     } else {
-        vp_echo(c, VP_MSG_NORMAL, FALSE, "Download %s started ...", filename);
+        vb_echo(c, VB_MSG_NORMAL, FALSE, "Download %s started ...", filename);
     }
 
     status = webkit_download_get_status(download);
@@ -975,10 +975,10 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
     c->state.downloads = g_list_prepend(c->state.downloads, download);
 
     /* connect signal handler to check if the download is done */
-    g_signal_connect(download, "notify::status", G_CALLBACK(vp_download_progress_cp), c);
-    g_signal_connect(download, "notify::progress", G_CALLBACK(vp_webview_download_progress_cb), c);
+    g_signal_connect(download, "notify::status", G_CALLBACK(vb_download_progress_cp), c);
+    g_signal_connect(download, "notify::progress", G_CALLBACK(vb_webview_download_progress_cb), c);
 
-    vp_update_statusbar(c);
+    vb_update_statusbar(c);
 
     return TRUE;
 }
@@ -986,7 +986,7 @@ static gboolean vp_download_requested_cb(WebKitWebView* view, WebKitDownload* do
 /**
  * Callback to filter started resource request.
  */
-static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
+static void vb_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
     WebKitWebResource* resource, WebKitNetworkRequest* request,
     WebKitNetworkResponse* response, Client* c)
 {
@@ -996,7 +996,7 @@ static void vp_request_start_cb(WebKitWebView* webview, WebKitWebFrame* frame,
     }
 }
 
-static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec, Client* c)
+static void vb_download_progress_cp(WebKitDownload* download, GParamSpec* pspec, Client* c)
 {
     WebKitDownloadStatus status = webkit_download_get_status(download);
 
@@ -1006,19 +1006,19 @@ static void vp_download_progress_cp(WebKitDownload* download, GParamSpec* pspec,
 
     char* file = g_path_get_basename(webkit_download_get_destination_uri(download));
     if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
-        vp_echo(c, VP_MSG_ERROR, FALSE, "Error downloading %s", file);
+        vb_echo(c, VB_MSG_ERROR, FALSE, "Error downloading %s", file);
     } else {
-        vp_echo(c, VP_MSG_NORMAL, FALSE, "Download %s finished", file);
+        vb_echo(c, VB_MSG_NORMAL, FALSE, "Download %s finished", file);
     }
     g_free(file);
 
     /* remove the donwload from the list */
     c->state.downloads = g_list_remove(c->state.downloads, download);
 
-    vp_update_statusbar(c);
+    vb_update_statusbar(c);
 }
 
-static void vp_destroy_client(Client* c)
+static void vb_destroy_client(Client* c)
 {
     const char* uri = webkit_web_view_get_uri(c->gui.webview);
     /* write last URL into file for recreation */
@@ -1048,10 +1048,10 @@ static void vp_destroy_client(Client* c)
     }
 }
 
-static void vp_clean_up(void)
+static void vb_clean_up(void)
 {
     while (clients) {
-        vp_destroy_client(clients);
+        vb_destroy_client(clients);
     }
 
     command_cleanup();
@@ -1095,23 +1095,23 @@ int main(int argc, char* argv[])
         core.embed = strtol(winid, NULL, 0);
     }
 
-    vp_init_core();
+    vb_init_core();
 
-    vp_client_new();
+    vb_client_new();
 
     /* command line argument: URL */
-    Arg arg = {VP_TARGET_CURRENT};
+    Arg arg = {VB_TARGET_CURRENT};
     if (argc > 1) {
         arg.s = g_strdup(argv[argc - 1]);
     } else {
         arg.s = g_strdup(core.config.home_page);
     }
-    vp_load_uri(clients, &arg);
+    vb_load_uri(clients, &arg);
     g_free(arg.s);
 
     /* Run the main GTK+ event loop */
     gtk_main();
-    vp_clean_up();
+    vb_clean_up();
 
     return EXIT_SUCCESS;
 }

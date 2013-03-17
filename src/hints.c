@@ -38,17 +38,17 @@ static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* eve
 void hints_init(WebKitWebFrame* frame)
 {
     char* value = NULL;
-    vp_eval_script(frame, HINTS_JS, HINT_FILE, &value);
+    vb_eval_script(frame, HINTS_JS, HINT_FILE, &value);
     g_free(value);
 }
 
 void hints_clear(Client* c)
 {
     hints_observe_input(c, FALSE);
-    if (CLEAN_MODE(c->state.mode) == VP_MODE_HINTING) {
+    if (CLEAN_MODE(c->state.mode) == VB_MODE_HINTING) {
         char* js = g_strdup_printf("%s.clear();", HINT_VAR);
         char* value = NULL;
-        vp_eval_script(webkit_web_view_get_main_frame(c->gui.webview), js, HINT_FILE, &value);
+        vb_eval_script(webkit_web_view_get_main_frame(c->gui.webview), js, HINT_FILE, &value);
         g_free(value);
         g_free(js);
 
@@ -59,7 +59,7 @@ void hints_clear(Client* c)
 void hints_create(Client* c, const char* input, guint mode, const guint prefixLength)
 {
     char* js = NULL;
-    if (CLEAN_MODE(c->state.mode) != VP_MODE_HINTING) {
+    if (CLEAN_MODE(c->state.mode) != VB_MODE_HINTING) {
         Style* style = &core.style;
         c->hints.prefixLength = prefixLength;
         c->hints.mode         = mode;
@@ -115,14 +115,14 @@ static void hints_run_script(Client* c, char* js)
     char* value = NULL;
     int mode = c->hints.mode;
 
-    gboolean success = vp_eval_script(
+    gboolean success = vb_eval_script(
         webkit_web_view_get_main_frame(c->gui.webview), js, HINT_FILE, &value
     );
     if (!success) {
         fprintf(stderr, "%s\n", value);
         g_free(value);
 
-        vp_set_mode(c, VP_MODE_NORMAL, FALSE);
+        vb_set_mode(c, VB_MODE_NORMAL, FALSE);
 
         return;
     }
@@ -133,10 +133,10 @@ static void hints_run_script(Client* c, char* js)
         );
     } else if (!strncmp(value, "DONE:", 5)) {
         hints_observe_input(c, FALSE);
-        vp_set_mode(c, VP_MODE_NORMAL, TRUE);
+        vb_set_mode(c, VB_MODE_NORMAL, TRUE);
     } else if (!strncmp(value, "INSERT:", 7)) {
         hints_observe_input(c, FALSE);
-        vp_set_mode(c, VP_MODE_INSERT, FALSE);
+        vb_set_mode(c, VB_MODE_INSERT, FALSE);
     } else if (!strncmp(value, "DATA:", 5)) {
         hints_observe_input(c, FALSE);
         Arg a = {0};

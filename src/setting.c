@@ -184,7 +184,7 @@ gboolean setting_run(Client* c, char* name, const char* param)
 
     Setting* s = g_hash_table_lookup(core.settings, name);
     if (!s) {
-        vp_echo(c, VP_MSG_ERROR, TRUE, "Config '%s' not found", name);
+        vb_echo(c, VB_MSG_ERROR, TRUE, "Config '%s' not found", name);
         return FALSE;
     }
 
@@ -199,7 +199,7 @@ gboolean setting_run(Client* c, char* name, const char* param)
          * it to the arg of the setting */
         a = setting_char_to_arg(param, s->type);
         if (a == NULL) {
-            vp_echo(c, VP_MSG_ERROR, TRUE, "No valid value");
+            vb_echo(c, VB_MSG_ERROR, TRUE, "No valid value");
             return FALSE;
         }
 
@@ -211,7 +211,7 @@ gboolean setting_run(Client* c, char* name, const char* param)
         g_free(a);
 
         if (!result) {
-            vp_echo(c, VP_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
+            vb_echo(c, VB_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
         }
 
         return result;
@@ -220,7 +220,7 @@ gboolean setting_run(Client* c, char* name, const char* param)
     if (type == SETTING_GET) {
         result = s->func(c, s, type);
         if (!result) {
-            vp_echo(c, VP_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
+            vb_echo(c, VB_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
         }
 
         return result;
@@ -228,14 +228,14 @@ gboolean setting_run(Client* c, char* name, const char* param)
 
     /* toggle bolean vars */
     if (s->type != TYPE_BOOLEAN) {
-        vp_echo(c, VP_MSG_ERROR, TRUE, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
+        vb_echo(c, VB_MSG_ERROR, TRUE, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
 
         return FALSE;
     }
 
     result = s->func(c, s, type);
     if (!result) {
-        vp_echo(c, VP_MSG_ERROR, TRUE, "Could not toggle %s", s->alias ? s->alias : s->name);
+        vb_echo(c, VB_MSG_ERROR, TRUE, "Could not toggle %s", s->alias ? s->alias : s->name);
     }
 
     return result;
@@ -288,30 +288,30 @@ static void setting_print_value(Client* c, const Setting* s, void* value)
 
     switch (s->type) {
         case TYPE_BOOLEAN:
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "  %s=%s", name, *(gboolean*)value ? "true" : "false");
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, *(gboolean*)value ? "true" : "false");
             break;
 
         case TYPE_INTEGER:
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "  %s=%d", name, *(int*)value);
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%d", name, *(int*)value);
             break;
 
         case TYPE_FLOAT:
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "  %s=%g", name, *(gfloat*)value);
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%g", name, *(gfloat*)value);
             break;
 
         case TYPE_CHAR:
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "  %s=%s", name, (char*)value);
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, (char*)value);
             break;
 
         case TYPE_COLOR:
-            string = VP_COLOR_TO_STRING((VpColor*)value);
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            string = VB_COLOR_TO_STRING((VpColor*)value);
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
             g_free(string);
             break;
 
         case TYPE_FONT:
             string = pango_font_description_to_string((PangoFontDescription*)value);
-            vp_echo(c, VP_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
             g_free(string);
             break;
     }
@@ -402,20 +402,20 @@ static gboolean setting_status_color_bg(Client* c, const Setting* s, const Setti
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
-        stype = VP_STATUS_SSL_INVALID;
+        stype = VB_STATUS_SSL_INVALID;
     } else if (g_str_has_prefix(s->name, "status-ssl")) {
-        stype = VP_STATUS_SSL_VALID;
+        stype = VB_STATUS_SSL_VALID;
     } else {
-        stype = VP_STATUS_NORMAL;
+        stype = VB_STATUS_NORMAL;
     }
 
     if (type == SETTING_GET) {
         setting_print_value(c, s, &core.style.status_bg[stype]);
     } else {
-        VP_COLOR_PARSE(&core.style.status_bg[stype], s->arg.s);
+        VB_COLOR_PARSE(&core.style.status_bg[stype], s->arg.s);
         /* update the status style for all clients */
         for(Client* p = clients; p; p = p->next) {
-            vp_update_status_style(p);
+            vb_update_status_style(p);
         }
     }
 
@@ -426,20 +426,20 @@ static gboolean setting_status_color_fg(Client* c, const Setting* s, const Setti
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
-        stype = VP_STATUS_SSL_INVALID;
+        stype = VB_STATUS_SSL_INVALID;
     } else if (g_str_has_prefix(s->name, "status-ssl")) {
-        stype = VP_STATUS_SSL_VALID;
+        stype = VB_STATUS_SSL_VALID;
     } else {
-        stype = VP_STATUS_NORMAL;
+        stype = VB_STATUS_NORMAL;
     }
 
     if (type == SETTING_GET) {
         setting_print_value(c, s, &core.style.status_fg[stype]);
     } else {
-        VP_COLOR_PARSE(&core.style.status_fg[stype], s->arg.s);
+        VB_COLOR_PARSE(&core.style.status_fg[stype], s->arg.s);
         /* update the status style for all clients */
         for(Client* p = clients; p; p = p->next) {
-            vp_update_status_style(p);
+            vb_update_status_style(p);
         }
     }
 
@@ -450,11 +450,11 @@ static gboolean setting_status_font(Client* c, const Setting* s, const SettingTy
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
-        stype = VP_STATUS_SSL_INVALID;
+        stype = VB_STATUS_SSL_INVALID;
     } else if (g_str_has_prefix(s->name, "status-ssl")) {
-        stype = VP_STATUS_SSL_VALID;
+        stype = VB_STATUS_SSL_VALID;
     } else {
-        stype = VP_STATUS_NORMAL;
+        stype = VB_STATUS_NORMAL;
     }
 
     if (type == SETTING_GET) {
@@ -467,7 +467,7 @@ static gboolean setting_status_font(Client* c, const Setting* s, const SettingTy
         core.style.status_font[stype] = pango_font_description_from_string(s->arg.s);
         /* update the status style for all clients */
         for(Client* p = clients; p; p = p->next) {
-            vp_update_status_style(p);
+            vb_update_status_style(p);
         }
     }
 
@@ -477,7 +477,7 @@ static gboolean setting_status_font(Client* c, const Setting* s, const SettingTy
 static gboolean setting_input_style(Client* c, const Setting* s, const SettingType type)
 {
     Style* style = &core.style;
-    MessageType itype = g_str_has_suffix(s->name, "normal") ? VP_MSG_NORMAL : VP_MSG_ERROR;
+    MessageType itype = g_str_has_suffix(s->name, "normal") ? VB_MSG_NORMAL : VB_MSG_ERROR;
 
     if (s->type == TYPE_FONT) {
         /* input font */
@@ -502,14 +502,14 @@ static gboolean setting_input_style(Client* c, const Setting* s, const SettingTy
         if (type == SETTING_GET) {
             setting_print_value(c, s, color);
         } else {
-            VP_COLOR_PARSE(color, s->arg.s);
+            VB_COLOR_PARSE(color, s->arg.s);
         }
     }
     if (type != SETTING_GET) {
         /* update the inputbox style for all clients */
         for(Client* p = clients; p; p = p->next) {
-            /* vp_update_input_style seems to take no immediatly effect */
-            vp_echo(p, VP_MSG_NORMAL, FALSE, gtk_entry_get_text(GTK_ENTRY(p->gui.inputbox)));
+            /* vb_update_input_style seems to take no immediatly effect */
+            vb_echo(p, VB_MSG_NORMAL, FALSE, gtk_entry_get_text(GTK_ENTRY(p->gui.inputbox)));
         }
     }
 
@@ -519,7 +519,7 @@ static gboolean setting_input_style(Client* c, const Setting* s, const SettingTy
 static gboolean setting_completion_style(Client* c, const Setting* s, const SettingType type)
 {
     Style* style = &core.style;
-    CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VP_COMP_NORMAL : VP_COMP_ACTIVE;
+    CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VB_COMP_NORMAL : VB_COMP_ACTIVE;
 
     if (s->type == TYPE_INTEGER) {
         /* max completion items */
@@ -550,7 +550,7 @@ static gboolean setting_completion_style(Client* c, const Setting* s, const Sett
         if (type == SETTING_GET) {
             setting_print_value(c, s, color);
         } else {
-            VP_COLOR_PARSE(color, s->arg.s);
+            VB_COLOR_PARSE(color, s->arg.s);
         }
     }
 

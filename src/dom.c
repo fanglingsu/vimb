@@ -73,7 +73,7 @@ gboolean dom_is_editable(Element* element)
 static gboolean dom_auto_insert(Client* c, Element* element)
 {
     if (dom_is_editable(element)) {
-        vp_set_mode(c, VP_MODE_INSERT, FALSE);
+        vb_set_mode(c, VB_MODE_INSERT, FALSE);
         return TRUE;
     }
     return FALSE;
@@ -84,7 +84,7 @@ static gboolean dom_editable_focus_cb(Element* element, Event* event, Client* c)
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true
     );
-    if (CLEAN_MODE(c->state.mode) != VP_MODE_INSERT) {
+    if (CLEAN_MODE(c->state.mode) != VB_MODE_INSERT) {
         EventTarget* target = webkit_dom_event_get_target(event);
         dom_auto_insert(c, (void*)target);
     }

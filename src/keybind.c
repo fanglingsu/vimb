@@ -235,23 +235,23 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
         /* switch to normal mode and clear the input box */
-        vp_set_mode(c, VP_MODE_NORMAL, TRUE);
+        vb_set_mode(c, VB_MODE_NORMAL, TRUE);
 
         return TRUE;
     }
     /* allow mode keys and counts only in normal mode */
-    if ((VP_MODE_SEARCH | VP_MODE_NORMAL) & c->state.mode) {
+    if ((VB_MODE_SEARCH | VB_MODE_NORMAL) & c->state.mode) {
         if (c->state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
                 || (keyval == GDK_0 && c->state.count))) {
             /* append the new entered count to previous one */
             c->state.count = (c->state.count ? c->state.count * 10 : 0) + (keyval - GDK_0);
-            vp_update_statusbar(c);
+            vb_update_statusbar(c);
 
             return TRUE;
         }
         if (strchr(core.behave.modkeys->str, keyval) && c->state.modkey != keyval) {
             c->state.modkey = (char)keyval;
-            vp_update_statusbar(c);
+            vb_update_statusbar(c);
 
             return TRUE;
         }
