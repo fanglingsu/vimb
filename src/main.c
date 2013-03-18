@@ -137,6 +137,7 @@ gboolean vb_load_uri(Client* c, const Arg* arg)
 {
     char* uri;
     char* path = arg->s;
+    struct stat st;
 
     if (!path) {
         return FALSE;
@@ -148,7 +149,7 @@ gboolean vb_load_uri(Client* c, const Arg* arg)
     }
 
     /* check if the path is a file path */
-    if (path[0] == '/' || !strcspn(path, "./")) {
+    if (stat(path, &st) == 0) {
         char* rp = realpath(path, NULL);
         uri = g_strdup_printf("file://%s", rp);
     } else {
