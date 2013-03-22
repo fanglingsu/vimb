@@ -177,8 +177,7 @@ typedef enum {
 } CompletionStyle;
 
 typedef enum {
-    FILES_GLOBAL_CONFIG,
-    FILES_LOCAL_CONFIG,
+    FILES_CONFIG,
     FILES_COOKIE,
     FILES_CLOSED,
     FILES_SCRIPT,
@@ -304,16 +303,12 @@ typedef struct {
     gulong keypress_handler;
 } Hints;
 
-/* core struct */
-typedef struct Client {
-    Gui            gui;
-    State          state;
-    Completions    comps;
-    Hints          hints;
-    struct Client* next;
-} Client;
-
 typedef struct {
+    Gui             gui;
+    State           state;
+    Completions     comps;
+    Hints           hints;
+
     char*           files[FILES_LAST];
     Config          config;
     Style           style;
@@ -331,16 +326,16 @@ typedef struct {
 extern VbCore core;
 
 /* functions */
-void vb_clean_input(Client* c);
-void vb_echo(Client* c, const MessageType type, gboolean hide, const char *error, ...);
+void vb_clean_input(void);
+void vb_echo(const MessageType type, gboolean hide, const char *error, ...);
 gboolean vb_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value);
-gboolean vb_load_uri(Client* c, const Arg* arg);
+gboolean vb_load_uri(const Arg* arg);
 gboolean vb_set_clipboard(const Arg* arg);
-gboolean vb_set_mode(Client* c, Mode mode, gboolean clean);
+gboolean vb_set_mode(Mode mode, gboolean clean);
 void vb_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
-void vb_update_statusbar(Client* c);
-void vb_update_status_style(Client* c);
-void vb_update_input_style(Client* c, MessageType type);
-void vb_update_urlbar(Client* c, const char* uri);
+void vb_update_statusbar(void);
+void vb_update_status_style(void);
+void vb_update_input_style(MessageType type);
+void vb_update_urlbar(const char* uri);
 
 #endif /* end of include guard: _MAIN_H */

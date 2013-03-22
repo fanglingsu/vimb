@@ -20,6 +20,8 @@
 #include "main.h"
 #include "searchengine.h"
 
+extern VbCore vb;
+
 static GSList* searchengine_find(const char* handle);
 static gboolean searchengine_is_valid_uri(const char* uri);
 static void searchengine_free(Searchengine* se);
@@ -27,8 +29,8 @@ static void searchengine_free(Searchengine* se);
 
 void searchengine_cleanup(void)
 {
-    if (core.behave.searchengines) {
-        g_slist_free_full(core.behave.searchengines, (GDestroyNotify)searchengine_free);
+    if (vb.behave.searchengines) {
+        g_slist_free_full(vb.behave.searchengines, (GDestroyNotify)searchengine_free);
     }
 }
 
@@ -43,7 +45,7 @@ gboolean searchengine_add(const char* handle, const char* uri)
     s->handle = g_strdup(handle);
     s->uri    = g_strdup(uri);
 
-    core.behave.searchengines = g_slist_prepend(core.behave.searchengines, s);
+    vb.behave.searchengines = g_slist_prepend(vb.behave.searchengines, s);
 
     return TRUE;
 }
@@ -54,7 +56,7 @@ gboolean searchengine_remove(const char* handle)
 
     if (list) {
         searchengine_free((Searchengine*)list->data);
-        core.behave.searchengines = g_slist_delete_link(core.behave.searchengines, list);
+        vb.behave.searchengines = g_slist_delete_link(vb.behave.searchengines, list);
 
         return TRUE;
     }
@@ -76,7 +78,7 @@ char* searchengine_get_uri(const char* handle)
 static GSList* searchengine_find(const char* handle)
 {
     GSList* s;
-    for (s = core.behave.searchengines; s != NULL; s = s->next) {
+    for (s = vb.behave.searchengines; s != NULL; s = s->next) {
         if (!strcmp(((Searchengine*)s->data)->handle, handle)) {
             return s;
         }

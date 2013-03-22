@@ -22,7 +22,7 @@
 
 #include "main.h"
 
-void completion_clean(Client* c);
-gboolean completion_complete(Client* c, gboolean back);
+void completion_clean();
+gboolean completion_complete(gboolean back);
 
 #endif /* end of include guard: _COMPLETION_H */

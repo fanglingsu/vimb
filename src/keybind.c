@@ -22,32 +22,30 @@
 #include "command.h"
 #include "completion.h"
 
+extern VbCore vb;
+
 static void keybind_rebuild_modkeys(void);
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval);
 static void keybind_str_to_keybind(char* str, Keybind* key);
 static guint keybind_str_to_modmask(const char* str);
 static guint keybind_str_to_value(const char* str);
-static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event, Client* c);
+static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
 static void keybind_free(Keybind* keybind);
 
 
 void keybind_init(void)
 {
-    core.behave.modkeys = g_string_new("");
-}
-
-void keybind_init_client(Client* c)
-{
-    g_signal_connect(G_OBJECT(c->gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), c);
+    vb.behave.modkeys = g_string_new("");
+    g_signal_connect(G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
 }
 
 void keybind_cleanup(void)
 {
-    if (core.behave.keys) {
-        g_slist_free_full(core.behave.keys, (GDestroyNotify)keybind_free);
+    if (vb.behave.keys) {
+        g_slist_free_full(vb.behave.keys, (GDestroyNotify)keybind_free);
     }
-    if (core.behave.modkeys) {
-        g_string_free(core.behave.modkeys, TRUE);
+    if (vb.behave.modkeys) {
+        g_string_free(vb.behave.modkeys, TRUE);
     }
 }
 
@@ -73,11 +71,11 @@ gboolean keybind_add_from_string(char* keys, const char* command, const Mode mod
     keybind_str_to_keybind(keys, keybind);
 
     /* add the keybinding to the list */
-    core.behave.keys = g_slist_prepend(core.behave.keys, keybind);
+    vb.behave.keys = g_slist_prepend(vb.behave.keys, keybind);
 
     /* save the modkey also in the modkey string if not exists already */
-    if (keybind->modkey && strchr(core.behave.modkeys->str, keybind->modkey) == NULL) {
-        g_string_append_c(core.behave.modkeys, keybind->modkey);
+    if (keybind->modkey && strchr(vb.behave.modkeys->str, keybind->modkey) == NULL) {
+        g_string_append_c(vb.behave.modkeys, keybind->modkey);
     }
 
     return TRUE;
@@ -98,10 +96,10 @@ gboolean keybind_remove_from_string(char* str, const Mode mode)
     GSList* link = keybind_find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
     if (link) {
         keybind_free((Keybind*)link->data);
-        core.behave.keys = g_slist_delete_link(core.behave.keys, link);
+        vb.behave.keys = g_slist_delete_link(vb.behave.keys, link);
     }
 
-    if (keybind.modkey && strchr(core.behave.modkeys->str, keybind.modkey) != NULL) {
+    if (keybind.modkey && strchr(vb.behave.modkeys->str, keybind.modkey) != NULL) {
         /* remove eventually no more used modkeys */
         keybind_rebuild_modkeys();
     }
@@ -116,17 +114,17 @@ static void keybind_rebuild_modkeys(void)
 {
     GSList* link;
     /* remove previous modkeys */
-    if (core.behave.modkeys) {
-        g_string_free(core.behave.modkeys, TRUE);
-        core.behave.modkeys = g_string_new("");
+    if (vb.behave.modkeys) {
+        g_string_free(vb.behave.modkeys, TRUE);
+        vb.behave.modkeys = g_string_new("");
     }
 
     /* regenerate the modekeys */
-    for (link = core.behave.keys; link != NULL; link = link->next) {
+    for (link = vb.behave.keys; link != NULL; link = link->next) {
         Keybind* keybind = (Keybind*)link->data;
         /* if not not exists - add it */
-        if (keybind->modkey && strchr(core.behave.modkeys->str, keybind->modkey) == NULL) {
-            g_string_append_c(core.behave.modkeys, keybind->modkey);
+        if (keybind->modkey && strchr(vb.behave.modkeys->str, keybind->modkey) == NULL) {
+            g_string_append_c(vb.behave.modkeys, keybind->modkey);
         }
     }
 }
@@ -134,7 +132,7 @@ static void keybind_rebuild_modkeys(void)
 static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
 {
     GSList* link;
-    for (link = core.behave.keys; link != NULL; link = link->next) {
+    for (link = vb.behave.keys; link != NULL; link = link->next) {
         Keybind* keybind = (Keybind*)link->data;
         if (keybind->keyval == keyval
             && keybind->modmask == modmask
@@ -227,7 +225,7 @@ static guint keybind_str_to_value(const char* str)
     return str[0];
 }
 
-static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event, Client* c)
+static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
 {
     guint keyval = event->keyval;
     guint state  = CLEAN_STATE_WITH_SHIFT(event);
@@ -235,34 +233,34 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
         /* switch to normal mode and clear the input box */
-        vb_set_mode(c, VB_MODE_NORMAL, TRUE);
+        vb_set_mode(VB_MODE_NORMAL, TRUE);
 
         return TRUE;
     }
     /* allow mode keys and counts only in normal mode */
-    if ((VB_MODE_SEARCH | VB_MODE_NORMAL) & c->state.mode) {
-        if (c->state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
-                || (keyval == GDK_0 && c->state.count))) {
+    if ((VB_MODE_SEARCH | VB_MODE_NORMAL) & vb.state.mode) {
+        if (vb.state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
+                || (keyval == GDK_0 && vb.state.count))) {
             /* append the new entered count to previous one */
-            c->state.count = (c->state.count ? c->state.count * 10 : 0) + (keyval - GDK_0);
-            vb_update_statusbar(c);
+            vb.state.count = (vb.state.count ? vb.state.count * 10 : 0) + (keyval - GDK_0);
+            vb_update_statusbar();
 
             return TRUE;
         }
-        if (strchr(core.behave.modkeys->str, keyval) && c->state.modkey != keyval) {
-            c->state.modkey = (char)keyval;
-            vb_update_statusbar(c);
+        if (strchr(vb.behave.modkeys->str, keyval) && vb.state.modkey != keyval) {
+            vb.state.modkey = (char)keyval;
+            vb_update_statusbar();
 
             return TRUE;
         }
     }
 
     /* check for keybinding */
-    GSList* link = keybind_find(CLEAN_MODE(c->state.mode), c->state.modkey, state, keyval);
+    GSList* link = keybind_find(CLEAN_MODE(vb.state.mode), vb.state.modkey, state, keyval);
 
     if (link) {
         Keybind* keybind = (Keybind*)link->data;
-        command_run(c, keybind->command, keybind->param);
+        command_run(keybind->command, keybind->param);
 
         return TRUE;
     }

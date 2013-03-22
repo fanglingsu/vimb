@@ -33,7 +33,6 @@ typedef struct {
 } Keybind;
 
 void keybind_init(void);
-void keybind_init_client(Client* c);
 void keybind_cleanup(void);
 gboolean keybind_add_from_string(char* keys, const char* command, const Mode mode);
 gboolean keybind_remove_from_string(char* str, const Mode mode);

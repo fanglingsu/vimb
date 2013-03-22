@@ -34,9 +34,9 @@ enum {
 };
 
 void hints_init(WebKitWebFrame* frame);
-void hints_create(Client* c, const char* input, guint mode, const guint prefixLength);
-void hints_update(Client* c, const gulong num);
-void hints_clear(Client* c);
-void hints_focus_next(Client* c, const gboolean back);
+void hints_create(const char* input, guint mode, const guint prefixLength);
+void hints_update(const gulong num);
+void hints_clear();
+void hints_focus_next(const gboolean back);
 
 #endif /* end of include guard: _HINTS_H */

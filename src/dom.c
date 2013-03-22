@@ -20,22 +20,24 @@
 #include "main.h"
 #include "dom.h"
 
-static gboolean dom_auto_insert(Client* c, Element* element);
-static gboolean dom_editable_focus_cb(Element* element, Event* event, Client* c);
+extern VbCore vb;
+
+static gboolean dom_auto_insert(Element* element);
+static gboolean dom_editable_focus_cb(Element* element, Event* event);
 static Element* dom_get_active_element(Document* doc);
 
 
-void dom_check_auto_insert(Client* c)
+void dom_check_auto_insert()
 {
-    Document* doc   = webkit_web_view_get_dom_document(c->gui.webview);
+    Document* doc   = webkit_web_view_get_dom_document(vb.gui.webview);
     Element* active = dom_get_active_element(doc);
-    if (!dom_auto_insert(c, active)) {
+    if (!dom_auto_insert(active)) {
         HtmlElement* element = webkit_dom_document_get_body(doc);
         if (!element) {
             element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
         }
         webkit_dom_event_target_add_event_listener(
-            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true, c
+            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true, NULL
         );
     }
 }
@@ -70,23 +72,23 @@ gboolean dom_is_editable(Element* element)
     return result;
 }
 
-static gboolean dom_auto_insert(Client* c, Element* element)
+static gboolean dom_auto_insert(Element* element)
 {
     if (dom_is_editable(element)) {
-        vb_set_mode(c, VB_MODE_INSERT, FALSE);
+        vb_set_mode(VB_MODE_INSERT, FALSE);
         return TRUE;
     }
     return FALSE;
 }
 
-static gboolean dom_editable_focus_cb(Element* element, Event* event, Client* c)
+static gboolean dom_editable_focus_cb(Element* element, Event* event)
 {
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true
     );
-    if (CLEAN_MODE(c->state.mode) != VB_MODE_INSERT) {
+    if (CLEAN_MODE(vb.state.mode) != VB_MODE_INSERT) {
         EventTarget* target = webkit_dom_event_get_target(event);
-        dom_auto_insert(c, (void*)target);
+        dom_auto_insert((void*)target);
     }
     return FALSE;
 }

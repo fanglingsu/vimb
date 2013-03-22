@@ -20,24 +20,26 @@
 #include "setting.h"
 #include "util.h"
 
+extern VbCore vb;
+
 static Arg* setting_char_to_arg(const char* str, const Type type);
-static void setting_print_value(Client* c, const Setting* s, void* value);
-static gboolean setting_webkit(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_cookie_timeout(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_scrollstep(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_status_color_bg(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_status_color_fg(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_status_font(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_input_style(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_completion_style(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_hint_style(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_strict_ssl(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_ca_bundle(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_home_page(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_download_path(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_proxy(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_user_style(Client* c, const Setting* s, const SettingType type);
-static gboolean setting_history_max_items(Client* c, const Setting* s, const SettingType type);
+static void setting_print_value(const Setting* s, void* value);
+static gboolean setting_webkit(const Setting* s, const SettingType type);
+static gboolean setting_cookie_timeout(const Setting* s, const SettingType type);
+static gboolean setting_scrollstep(const Setting* s, const SettingType type);
+static gboolean setting_status_color_bg(const Setting* s, const SettingType type);
+static gboolean setting_status_color_fg(const Setting* s, const SettingType type);
+static gboolean setting_status_font(const Setting* s, const SettingType type);
+static gboolean setting_input_style(const Setting* s, const SettingType type);
+static gboolean setting_completion_style(const Setting* s, const SettingType type);
+static gboolean setting_hint_style(const Setting* s, const SettingType type);
+static gboolean setting_strict_ssl(const Setting* s, const SettingType type);
+static gboolean setting_ca_bundle(const Setting* s, const SettingType type);
+static gboolean setting_home_page(const Setting* s, const SettingType type);
+static gboolean setting_download_path(const Setting* s, const SettingType type);
+static gboolean setting_proxy(const Setting* s, const SettingType type);
+static gboolean setting_user_style(const Setting* s, const SettingType type);
+static gboolean setting_history_max_items(const Setting* s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -124,46 +126,28 @@ static Setting default_settings[] = {
     {NULL, "history-max-items", TYPE_INTEGER, setting_history_max_items, {.i = 500}, TRUE},
 };
 
-extern Client* clients;
-
 void setting_init(void)
 {
     Setting* s;
     guint i;
-    core.settings = g_hash_table_new(g_str_hash, g_str_equal);
+    vb.settings = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < LENGTH(default_settings); i++) {
         s = &default_settings[i];
         /* use alias as key if available */
-        g_hash_table_insert(core.settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
-
-        /* set the global settings */
-        if (s->global) {
-            s->func(NULL, s, FALSE);
-        }
-    }
-}
-
-void setting_init_client(Client* c)
-{
-    Setting* s = NULL;
-    /* set the default settings */
-    for (int i = 0; i < LENGTH(default_settings); i++) {
-        s = &default_settings[i];
-        if (!s->global) {
-            s->func(c, s, FALSE);
-        }
+        g_hash_table_insert(vb.settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
+        s->func(s, FALSE);
     }
 }
 
 void setting_cleanup(void)
 {
-    if (core.settings) {
-        g_hash_table_destroy(core.settings);
+    if (vb.settings) {
+        g_hash_table_destroy(vb.settings);
     }
 }
 
-gboolean setting_run(Client* c, char* name, const char* param)
+gboolean setting_run(char* name, const char* param)
 {
     Arg* a          = NULL;
     gboolean result = FALSE;
@@ -182,15 +166,9 @@ gboolean setting_run(Client* c, char* name, const char* param)
         type = SETTING_GET;
     }
 
-    Setting* s = g_hash_table_lookup(core.settings, name);
+    Setting* s = g_hash_table_lookup(vb.settings, name);
     if (!s) {
-        vb_echo(c, VB_MSG_ERROR, TRUE, "Config '%s' not found", name);
-        return FALSE;
-    }
-
-    /* don't process locl settings if no client is given */
-    if (!c && !s->global) {
-        fprintf(stderr, "Can't set local config %s without client\n", s->alias ? s->alias : s->name);
+        vb_echo(VB_MSG_ERROR, TRUE, "Config '%s' not found", name);
         return FALSE;
     }
 
@@ -199,28 +177,28 @@ gboolean setting_run(Client* c, char* name, const char* param)
          * it to the arg of the setting */
         a = setting_char_to_arg(param, s->type);
         if (a == NULL) {
-            vb_echo(c, VB_MSG_ERROR, TRUE, "No valid value");
+            vb_echo(VB_MSG_ERROR, TRUE, "No valid value");
             return FALSE;
         }
 
         s->arg = *a;
-        result = s->func(c, s, get);
+        result = s->func(s, get);
         if (a->s) {
             g_free(a->s);
         }
         g_free(a);
 
         if (!result) {
-            vb_echo(c, VB_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
+            vb_echo(VB_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
         }
 
         return result;
     }
 
     if (type == SETTING_GET) {
-        result = s->func(c, s, type);
+        result = s->func(s, type);
         if (!result) {
-            vb_echo(c, VB_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
+            vb_echo(VB_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
         }
 
         return result;
@@ -228,14 +206,14 @@ gboolean setting_run(Client* c, char* name, const char* param)
 
     /* toggle bolean vars */
     if (s->type != TYPE_BOOLEAN) {
-        vb_echo(c, VB_MSG_ERROR, TRUE, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
+        vb_echo(VB_MSG_ERROR, TRUE, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
 
         return FALSE;
     }
 
-    result = s->func(c, s, type);
+    result = s->func(s, type);
     if (!result) {
-        vb_echo(c, VB_MSG_ERROR, TRUE, "Could not toggle %s", s->alias ? s->alias : s->name);
+        vb_echo(VB_MSG_ERROR, TRUE, "Could not toggle %s", s->alias ? s->alias : s->name);
     }
 
     return result;
@@ -278,48 +256,45 @@ static Arg* setting_char_to_arg(const char* str, const Type type)
 /**
  * Print the setting value to the input box.
  */
-static void setting_print_value(Client* c, const Setting* s, void* value)
+static void setting_print_value(const Setting* s, void* value)
 {
-    if (!c) {
-        return;
-    }
     const char* name = s->alias ? s->alias : s->name;
     char* string = NULL;
 
     switch (s->type) {
         case TYPE_BOOLEAN:
-            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, *(gboolean*)value ? "true" : "false");
+            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, *(gboolean*)value ? "true" : "false");
             break;
 
         case TYPE_INTEGER:
-            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%d", name, *(int*)value);
+            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%d", name, *(int*)value);
             break;
 
         case TYPE_FLOAT:
-            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%g", name, *(gfloat*)value);
+            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%g", name, *(gfloat*)value);
             break;
 
         case TYPE_CHAR:
-            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, (char*)value);
+            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, (char*)value);
             break;
 
         case TYPE_COLOR:
             string = VB_COLOR_TO_STRING((VpColor*)value);
-            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
             g_free(string);
             break;
 
         case TYPE_FONT:
             string = pango_font_description_to_string((PangoFontDescription*)value);
-            vb_echo(c, VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
             g_free(string);
             break;
     }
 }
 
-static gboolean setting_webkit(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_webkit(const Setting* s, const SettingType type)
 {
-    WebKitWebSettings* web_setting = webkit_web_view_get_settings(c->gui.webview);
+    WebKitWebSettings* web_setting = webkit_web_view_get_settings(vb.gui.webview);
 
     switch (s->type) {
         case TYPE_BOOLEAN:
@@ -335,7 +310,7 @@ static gboolean setting_webkit(Client* c, const Setting* s, const SettingType ty
                 }
 
                 /* print the new value */
-                setting_print_value(c, s, &value);
+                setting_print_value(s, &value);
             } else {
                 g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? TRUE : FALSE, NULL);
             }
@@ -345,7 +320,7 @@ static gboolean setting_webkit(Client* c, const Setting* s, const SettingType ty
             if (type == SETTING_GET) {
                 int value;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
-                setting_print_value(c, s, &value);
+                setting_print_value(s, &value);
             } else {
                 g_object_set(G_OBJECT(web_setting), s->name, s->arg.i, NULL);
             }
@@ -355,7 +330,7 @@ static gboolean setting_webkit(Client* c, const Setting* s, const SettingType ty
             if (type == SETTING_GET) {
                 gfloat value;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
-                setting_print_value(c, s, &value);
+                setting_print_value(s, &value);
             } else {
                 g_object_set(G_OBJECT(web_setting), s->name, (gfloat)(s->arg.i / 1000000.0), NULL);
             }
@@ -367,7 +342,7 @@ static gboolean setting_webkit(Client* c, const Setting* s, const SettingType ty
             if (type == SETTING_GET) {
                 char* value = NULL;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
-                setting_print_value(c, s, value);
+                setting_print_value(s, value);
             } else {
                 g_object_set(G_OBJECT(web_setting), s->name, s->arg.s, NULL);
             }
@@ -376,29 +351,29 @@ static gboolean setting_webkit(Client* c, const Setting* s, const SettingType ty
 
     return TRUE;
 }
-static gboolean setting_cookie_timeout(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_cookie_timeout(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(c, s, &core.config.cookie_timeout);
+        setting_print_value(s, &vb.config.cookie_timeout);
     } else {
-        core.config.cookie_timeout = s->arg.i;
+        vb.config.cookie_timeout = s->arg.i;
     }
 
     return TRUE;
 }
 
-static gboolean setting_scrollstep(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_scrollstep(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(c, s, &core.config.scrollstep);
+        setting_print_value(s, &vb.config.scrollstep);
     } else {
-        core.config.scrollstep = s->arg.i;
+        vb.config.scrollstep = s->arg.i;
     }
 
     return TRUE;
 }
 
-static gboolean setting_status_color_bg(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_status_color_bg(const Setting* s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -410,19 +385,16 @@ static gboolean setting_status_color_bg(Client* c, const Setting* s, const Setti
     }
 
     if (type == SETTING_GET) {
-        setting_print_value(c, s, &core.style.status_bg[stype]);
+        setting_print_value(s, &vb.style.status_bg[stype]);
     } else {
-        VB_COLOR_PARSE(&core.style.status_bg[stype], s->arg.s);
-        /* update the status style for all clients */
-        for(Client* p = clients; p; p = p->next) {
-            vb_update_status_style(p);
-        }
+        VB_COLOR_PARSE(&vb.style.status_bg[stype], s->arg.s);
+        vb_update_status_style();
     }
 
     return TRUE;
 }
 
-static gboolean setting_status_color_fg(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_status_color_fg(const Setting* s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -434,19 +406,16 @@ static gboolean setting_status_color_fg(Client* c, const Setting* s, const Setti
     }
 
     if (type == SETTING_GET) {
-        setting_print_value(c, s, &core.style.status_fg[stype]);
+        setting_print_value(s, &vb.style.status_fg[stype]);
     } else {
-        VB_COLOR_PARSE(&core.style.status_fg[stype], s->arg.s);
-        /* update the status style for all clients */
-        for(Client* p = clients; p; p = p->next) {
-            vb_update_status_style(p);
-        }
+        VB_COLOR_PARSE(&vb.style.status_fg[stype], s->arg.s);
+        vb_update_status_style();
     }
 
     return TRUE;
 }
 
-static gboolean setting_status_font(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_status_font(const Setting* s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -458,31 +427,28 @@ static gboolean setting_status_font(Client* c, const Setting* s, const SettingTy
     }
 
     if (type == SETTING_GET) {
-        setting_print_value(c, s, core.style.status_font[stype]);
+        setting_print_value(s, vb.style.status_font[stype]);
     } else {
-        if (core.style.status_font[stype]) {
+        if (vb.style.status_font[stype]) {
             /* free previous font description */
-            pango_font_description_free(core.style.status_font[stype]);
+            pango_font_description_free(vb.style.status_font[stype]);
         }
-        core.style.status_font[stype] = pango_font_description_from_string(s->arg.s);
-        /* update the status style for all clients */
-        for(Client* p = clients; p; p = p->next) {
-            vb_update_status_style(p);
-        }
+        vb.style.status_font[stype] = pango_font_description_from_string(s->arg.s);
+        vb_update_status_style();
     }
 
     return TRUE;
 }
 
-static gboolean setting_input_style(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_input_style(const Setting* s, const SettingType type)
 {
-    Style* style = &core.style;
+    Style* style = &vb.style;
     MessageType itype = g_str_has_suffix(s->name, "normal") ? VB_MSG_NORMAL : VB_MSG_ERROR;
 
     if (s->type == TYPE_FONT) {
         /* input font */
         if (type == SETTING_GET) {
-            setting_print_value(c, s, style->input_font[itype]);
+            setting_print_value(s, style->input_font[itype]);
         } else {
             if (style->input_font[itype]) {
                 pango_font_description_free(style->input_font[itype]);
@@ -500,37 +466,34 @@ static gboolean setting_input_style(Client* c, const Setting* s, const SettingTy
         }
 
         if (type == SETTING_GET) {
-            setting_print_value(c, s, color);
+            setting_print_value(s, color);
         } else {
             VB_COLOR_PARSE(color, s->arg.s);
         }
     }
     if (type != SETTING_GET) {
-        /* update the inputbox style for all clients */
-        for(Client* p = clients; p; p = p->next) {
-            /* vb_update_input_style seems to take no immediatly effect */
-            vb_echo(p, VB_MSG_NORMAL, FALSE, gtk_entry_get_text(GTK_ENTRY(p->gui.inputbox)));
-        }
+        /* vb_update_input_style seems to take no immediatly effect */
+        vb_echo(VB_MSG_NORMAL, FALSE, gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox)));
     }
 
     return TRUE;
 }
 
-static gboolean setting_completion_style(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_completion_style(const Setting* s, const SettingType type)
 {
-    Style* style = &core.style;
+    Style* style = &vb.style;
     CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VB_COMP_NORMAL : VB_COMP_ACTIVE;
 
     if (s->type == TYPE_INTEGER) {
         /* max completion items */
         if (type == SETTING_GET) {
-            setting_print_value(c, s, &core.config.max_completion_items);
+            setting_print_value(s, &vb.config.max_completion_items);
         } else {
-            core.config.max_completion_items = s->arg.i;
+            vb.config.max_completion_items = s->arg.i;
         }
     } else if (s->type == TYPE_FONT) {
         if (type == SETTING_GET) {
-            setting_print_value(c, s, style->comp_font);
+            setting_print_value(s, style->comp_font);
         } else {
             if (style->comp_font) {
                 pango_font_description_free(style->comp_font);
@@ -548,7 +511,7 @@ static gboolean setting_completion_style(Client* c, const Setting* s, const Sett
         }
 
         if (type == SETTING_GET) {
-            setting_print_value(c, s, color);
+            setting_print_value(s, color);
         } else {
             VB_COLOR_PARSE(color, s->arg.s);
         }
@@ -557,30 +520,30 @@ static gboolean setting_completion_style(Client* c, const Setting* s, const Sett
     return TRUE;
 }
 
-static gboolean setting_hint_style(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_hint_style(const Setting* s, const SettingType type)
 {
-    Style* style = &core.style;
+    Style* style = &vb.style;
     if (!g_strcmp0(s->name, "hint-bg")) {
         if (type == SETTING_GET) {
-            setting_print_value(c, s, style->hint_bg);
+            setting_print_value(s, style->hint_bg);
         } else {
             OVERWRITE_STRING(style->hint_bg, s->arg.s)
         }
     } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
         if (type == SETTING_GET) {
-            setting_print_value(c, s, style->hint_bg_focus);
+            setting_print_value(s, style->hint_bg_focus);
         } else {
             OVERWRITE_STRING(style->hint_bg_focus, s->arg.s)
         }
     } else if (!g_strcmp0(s->name, "hint-fg")) {
         if (type == SETTING_GET) {
-            setting_print_value(c, s, style->hint_fg);
+            setting_print_value(s, style->hint_fg);
         } else {
             OVERWRITE_STRING(style->hint_fg, s->arg.s)
         }
     } else {
         if (type == SETTING_GET) {
-            setting_print_value(c, s, style->hint_style);
+            setting_print_value(s, style->hint_style);
         } else {
             OVERWRITE_STRING(style->hint_style, s->arg.s);
         }
@@ -589,13 +552,13 @@ static gboolean setting_hint_style(Client* c, const Setting* s, const SettingTyp
     return TRUE;
 }
 
-static gboolean setting_strict_ssl(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_strict_ssl(const Setting* s, const SettingType type)
 {
     gboolean value;
     if (type != SETTING_SET) {
-        g_object_get(core.soup_session, "ssl-strict", &value, NULL);
+        g_object_get(vb.soup_session, "ssl-strict", &value, NULL);
         if (type == SETTING_GET) {
-            setting_print_value(c, s, &value);
+            setting_print_value(s, &value);
 
             return TRUE;
         }
@@ -603,70 +566,70 @@ static gboolean setting_strict_ssl(Client* c, const Setting* s, const SettingTyp
 
     value = type == SETTING_TOGGLE ? !value : (s->arg.i ? TRUE : FALSE);
 
-    g_object_set(core.soup_session, "ssl-strict", value, NULL);
+    g_object_set(vb.soup_session, "ssl-strict", value, NULL);
 
     return TRUE;
 }
 
-static gboolean setting_ca_bundle(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_ca_bundle(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
         char* value = NULL;
-        g_object_get(core.soup_session, "ssl-ca-file", &value, NULL);
-        setting_print_value(c, s, value);
+        g_object_get(vb.soup_session, "ssl-ca-file", &value, NULL);
+        setting_print_value(s, value);
         g_free(value);
     } else {
-        g_object_set(core.soup_session, "ssl-ca-file", s->arg.s, NULL);
+        g_object_set(vb.soup_session, "ssl-ca-file", s->arg.s, NULL);
     }
 
     return TRUE;
 }
 
-static gboolean setting_home_page(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_home_page(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(c, s, core.config.home_page);
+        setting_print_value(s, vb.config.home_page);
     } else {
-        OVERWRITE_STRING(core.config.home_page, s->arg.s);
+        OVERWRITE_STRING(vb.config.home_page, s->arg.s);
     }
 
     return TRUE;
 }
 
-static gboolean setting_download_path(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_download_path(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(c, s, core.config.download_dir);
+        setting_print_value(s, vb.config.download_dir);
     } else {
-        if (core.config.download_dir) {
-            g_free(core.config.download_dir);
-            core.config.download_dir = NULL;
+        if (vb.config.download_dir) {
+            g_free(vb.config.download_dir);
+            vb.config.download_dir = NULL;
         }
         /* if path is not absolute create it in the home directory */
         if (s->arg.s[0] != '/') {
-            core.config.download_dir = g_build_filename(util_get_home_dir(), s->arg.s, NULL);
+            vb.config.download_dir = g_build_filename(util_get_home_dir(), s->arg.s, NULL);
         } else {
-            core.config.download_dir = g_strdup(s->arg.s);
+            vb.config.download_dir = g_strdup(s->arg.s);
         }
         /* create the path if it does not exist */
-        util_create_dir_if_not_exists(core.config.download_dir);
+        util_create_dir_if_not_exists(vb.config.download_dir);
     }
 
     return TRUE;
 }
 
-static gboolean setting_proxy(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_proxy(const Setting* s, const SettingType type)
 {
     gboolean enabled;
     SoupURI* proxy_uri = NULL;
 
     /* get the current status */
     if (type != SETTING_SET) {
-        g_object_get(core.soup_session, "proxy-uri", &proxy_uri, NULL);
+        g_object_get(vb.soup_session, "proxy-uri", &proxy_uri, NULL);
         enabled = (proxy_uri != NULL);
 
         if (type == SETTING_GET) {
-            setting_print_value(c, s, &enabled);
+            setting_print_value(s, &enabled);
 
             return TRUE;
         }
@@ -675,7 +638,7 @@ static gboolean setting_proxy(Client* c, const Setting* s, const SettingType typ
     if (type == SETTING_TOGGLE) {
         enabled = !enabled;
         /* print the new value */
-        setting_print_value(c, s, &enabled);
+        setting_print_value(s, &enabled);
     } else {
         enabled = s->arg.i;
     }
@@ -688,29 +651,29 @@ static gboolean setting_proxy(Client* c, const Setting* s, const SettingType typ
                 : g_strdup_printf("http://%s", proxy);
             proxy_uri = soup_uri_new(proxy_new);
 
-            g_object_set(core.soup_session, "proxy-uri", proxy_uri, NULL);
+            g_object_set(vb.soup_session, "proxy-uri", proxy_uri, NULL);
 
             soup_uri_free(proxy_uri);
             g_free(proxy_new);
         }
     } else {
-        g_object_set(core.soup_session, "proxy-uri", NULL, NULL);
+        g_object_set(vb.soup_session, "proxy-uri", NULL, NULL);
     }
 
     return TRUE;
 }
 
-static gboolean setting_user_style(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_user_style(const Setting* s, const SettingType type)
 {
     gboolean enabled = FALSE;
     char* uri = NULL;
-    WebKitWebSettings* web_setting = webkit_web_view_get_settings(c->gui.webview);
+    WebKitWebSettings* web_setting = webkit_web_view_get_settings(vb.gui.webview);
     if (type != SETTING_SET) {
         g_object_get(web_setting, "user-stylesheet-uri", &uri, NULL);
         enabled = (uri != NULL);
 
         if (type == SETTING_GET) {
-            setting_print_value(c, s, &enabled);
+            setting_print_value(s, &enabled);
 
             return TRUE;
         }
@@ -719,13 +682,13 @@ static gboolean setting_user_style(Client* c, const Setting* s, const SettingTyp
     if (type == SETTING_TOGGLE) {
         enabled = !enabled;
         /* print the new value */
-        setting_print_value(c, s, &enabled);
+        setting_print_value(s, &enabled);
     } else {
         enabled = s->arg.i;
     }
 
     if (enabled) {
-        uri = g_strconcat("file://", core.files[FILES_USER_STYLE], NULL);
+        uri = g_strconcat("file://", vb.files[FILES_USER_STYLE], NULL);
         g_object_set(web_setting, "user-stylesheet-uri", uri, NULL);
         g_free(uri);
     } else {
@@ -735,15 +698,15 @@ static gboolean setting_user_style(Client* c, const Setting* s, const SettingTyp
     return TRUE;
 }
 
-static gboolean setting_history_max_items(Client* c, const Setting* s, const SettingType type)
+static gboolean setting_history_max_items(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(c, s, &core.config.url_history_max);
+        setting_print_value(s, &vb.config.url_history_max);
 
         return TRUE;
     }
 
-    core.config.url_history_max = s->arg.i;
+    vb.config.url_history_max = s->arg.i;
 
     return TRUE;
 }
