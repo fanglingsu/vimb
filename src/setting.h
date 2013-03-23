@@ -37,7 +37,6 @@ struct _Setting {
     Type        type;
     SettingFunc func;
     Arg         arg;
-    gboolean    global;
 };
 
 void setting_init(void);
