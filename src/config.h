@@ -55,7 +55,7 @@ const struct {
     {"nmap <ctrl-i>=forward"},
     {"nmap r=reload"},
     {"nmap R=reload!"},
-    {"nmap <ctrl-c>=stop"},
+    {"nmap C=stop"},
     {"nmap <ctrl-f>=pagedown"},
     {"nmap <ctrl-b>=pageup"},
     {"nmap <ctrl-d>=halfpagedown"},
