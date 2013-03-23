@@ -45,7 +45,7 @@ const char* history_get(const int step)
 
     /* get the search prefix only on start of history search */
     if (!vb.state.history_active) {
-        OVERWRITE_STRING(vb.state.history_prefix, gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox)));
+        OVERWRITE_STRING(vb.state.history_prefix, GET_TEXT());
 
         /* generate new history list with the matching items */
         for (GList* l = vb.behave.history; l; l = l->next) {

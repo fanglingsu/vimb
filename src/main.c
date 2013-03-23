@@ -446,7 +446,7 @@ static void vb_inputbox_activate_cb(GtkEntry *entry)
     }
 
     /* do not free or modify text */
-    text = gtk_entry_get_text(entry);
+    text = GET_TEXT();
 
     /* duplicate the content because this may change for example if
      * :set varName? is used the text is changed to the new printed

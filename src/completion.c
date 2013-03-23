@@ -41,7 +41,7 @@ static void completion_free(Completion* completion);
 
 gboolean completion_complete(gboolean back)
 {
-    const char* input = gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox));
+    const char* input = GET_TEXT();
     GList* source = NULL;
 
     if (vb.comps.completions

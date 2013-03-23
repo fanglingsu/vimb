@@ -181,7 +181,7 @@ static void hints_observe_input(gboolean observe)
 
 static gboolean hints_changed_callback(GtkEditable *entry)
 {
-    const char* text = gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox));
+    const char* text = GET_TEXT();
 
     /* skip hinting prefixes like '.', ',', ';y' ... */
     hints_create(text + vb.hints.prefixLength, vb.hints.mode, vb.hints.prefixLength);

@@ -449,7 +449,7 @@ static gboolean setting_input_style(const Setting* s, const SettingType type)
     }
     if (type != SETTING_GET) {
         /* vb_update_input_style seems to take no immediatly effect */
-        vb_echo(VB_MSG_NORMAL, FALSE, gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox)));
+        vb_echo(VB_MSG_NORMAL, FALSE, GET_TEXT());
     }
 
     return TRUE;
