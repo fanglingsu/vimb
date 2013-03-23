@@ -78,19 +78,25 @@ static gboolean vb_hide_message();
 static void vb_set_status(const StatusType status);
 static void vb_destroy_client();
 
-void vb_clean_input()
+void vb_echo_force(const MessageType type, const char *error, ...)
 {
-    /* move focus from input box to clean it */
-    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    vb_echo(VB_MSG_NORMAL, FALSE, "");
+    char message[255];
+    va_list arg_list;
+
+    va_start(arg_list, error);
+    vsnprintf(message, 255, error, arg_list);
+    va_end(arg_list);
+
+    vb_update_input_style(type);
+    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), message);
 }
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
 {
+    char message[255];
     va_list arg_list;
 
     va_start(arg_list, error);
-    char message[255];
     vsnprintf(message, 255, error, arg_list);
     va_end(arg_list);
 

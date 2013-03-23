@@ -325,7 +325,7 @@ typedef struct {
 extern VbCore core;
 
 /* functions */
-void vb_clean_input(void);
+void vb_echo_force(const MessageType type, const char *error, ...);
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...);
 gboolean vb_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value);
 gboolean vb_load_uri(const Arg* arg);

@@ -389,9 +389,7 @@ gboolean command_yank(const Arg* arg)
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
-            /* TODO is this the rigth place to switch the focus */
-            gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-            vb_echo(VB_MSG_NORMAL, FALSE, "Yanked: %s", text);
+            vb_echo_force(VB_MSG_NORMAL, "Yanked: %s", text);
             g_free(text);
 
             return TRUE;
@@ -409,9 +407,7 @@ gboolean command_yank(const Arg* arg)
     }
     if (a.s) {
         vb_set_clipboard(&a);
-        /* TODO is this the rigth place to switch the focus */
-        gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-        vb_echo(VB_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
+        vb_echo_force(VB_MSG_NORMAL, "Yanked: %s", a.s);
         g_free(a.s);
 
         return TRUE;

@@ -178,9 +178,8 @@ static void hints_observe_input(gboolean observe)
 
         vb.hints.change_handler = vb.hints.keypress_handler = 0;
 
-        /* clear the input box - TODO move this to a better place */
-        gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-        gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), "");
+        /* clear the input box */
+        vb_echo_force(VB_MSG_NORMAL, FALSE, "");
     }
 }
 
