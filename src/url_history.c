@@ -81,7 +81,7 @@ void url_history_cleanup(void)
 
 void url_history_add(const char* url, const char* title)
 {
-    /* uf the url is already in history, remove this entry */
+    /* if the url is already in history, remove this entry */
     /* TODO use g_list_find_custom for this task */
     for (GList* link = vb.behave.url_history; link; link = link->next) {
         UrlHist* hi = (UrlHist*)link->data;

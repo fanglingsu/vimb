@@ -681,7 +681,6 @@ static gboolean setting_history_max_items(const Setting* s, const SettingType ty
 
         return TRUE;
     }
-
     vb.config.url_history_max = s->arg.i;
 
     return TRUE;
