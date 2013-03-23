@@ -36,7 +36,7 @@ static void keybind_free(Keybind* keybind);
 void keybind_init(void)
 {
     vb.behave.modkeys = g_string_new("");
-    g_signal_connect(G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
+    g_signal_connect(G_OBJECT(vb.gui.box), "key-press-event", G_CALLBACK(keybind_keypress_callback), NULL);
 }
 
 void keybind_cleanup(void)
