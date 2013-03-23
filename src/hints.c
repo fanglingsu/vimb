@@ -61,6 +61,8 @@ void hints_create(const char* input, guint mode, const guint prefixLength)
 {
     char* js = NULL;
     if (CLEAN_MODE(vb.state.mode) != VB_MODE_HINTING) {
+        vb_set_mode(VB_MODE_HINTING, FALSE);
+
         Style* style = &vb.style;
         vb.hints.prefixLength = prefixLength;
         vb.hints.mode         = mode;
@@ -85,10 +87,11 @@ void hints_create(const char* input, guint mode, const guint prefixLength)
             style->hint_style,
             MAXIMUM_HINTS
         );
-        hints_run_script(js);
-        g_free(js);
 
         hints_observe_input(TRUE);
+
+        hints_run_script(js);
+        g_free(js);
     }
 
 
@@ -133,13 +136,10 @@ static void hints_run_script(char* js)
             vb.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
         );
     } else if (!strncmp(value, "DONE:", 5)) {
-        hints_observe_input(FALSE);
         vb_set_mode(VB_MODE_NORMAL, TRUE);
     } else if (!strncmp(value, "INSERT:", 7)) {
-        hints_observe_input(FALSE);
         vb_set_mode(VB_MODE_INSERT, FALSE);
     } else if (!strncmp(value, "DATA:", 5)) {
-        hints_observe_input(FALSE);
         Arg a = {0};
         char* v = (value + 5);
         if (mode & HINTS_PROCESS_INPUT) {
@@ -157,7 +157,6 @@ static void hints_run_script(char* js)
 
 static void hints_fire()
 {
-    hints_observe_input(FALSE);
     char* js = g_strdup_printf("%s.fire();", HINT_VAR);
     hints_run_script(js);
     g_free(js);
@@ -177,9 +176,6 @@ static void hints_observe_input(gboolean observe)
         g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), vb.hints.keypress_handler);
 
         vb.hints.change_handler = vb.hints.keypress_handler = 0;
-
-        /* clear the input box */
-        vb_echo_force(VB_MSG_NORMAL, FALSE, "");
     }
 }
 

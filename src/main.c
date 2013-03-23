@@ -216,20 +216,20 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
     ) {
         completion_clean();
     }
-    int clean_mode = CLEAN_MODE(vb.state.mode);
+    int current_mode = CLEAN_MODE(vb.state.mode);
     switch (CLEAN_MODE(mode)) {
         case VB_MODE_NORMAL:
             /* do this only if the mode is really switched */
-            if (clean_mode != VB_MODE_NORMAL) {
+            if (current_mode != VB_MODE_NORMAL) {
                 history_rewind();
             }
-            if (clean_mode == VB_MODE_HINTING) {
+            if (current_mode == VB_MODE_HINTING) {
                 /* if previous mode was hinting clear the hints */
                 hints_clear();
-            } else if (clean_mode == VB_MODE_INSERT) {
+            } else if (current_mode == VB_MODE_INSERT) {
                 /* clean the input if current mode is insert to remove -- INPUT -- */
                 clean = TRUE;
-            } else if (clean_mode == VB_MODE_SEARCH) {
+            } else if (current_mode == VB_MODE_SEARCH) {
                 /* cleaup previous search */
                 command_search(&((Arg){VB_SEARCH_OFF}));
             }

@@ -360,9 +360,8 @@ gboolean command_inspect(const Arg* arg)
 gboolean command_hints(const Arg* arg)
 {
     command_write_input(arg->s);
+    /* mode will be set in hints_create - so we don't neet to do it here */
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
-
-    vb_set_mode(VB_MODE_HINTING, FALSE);
 
     return TRUE;
 }
@@ -370,8 +369,6 @@ gboolean command_hints(const Arg* arg)
 gboolean command_hints_focus(const Arg* arg)
 {
     hints_focus_next(arg->i ? TRUE : FALSE);
-
-    vb_set_mode(VB_MODE_HINTING, FALSE);
 
     return TRUE;
 }
