@@ -264,7 +264,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
     return TRUE;
 }
 
-void vb_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font)
+void vb_set_widget_font(GtkWidget* widget, const VbColor* fg, const VbColor* bg, PangoFontDescription* font)
 {
     VB_WIDGET_OVERRIDE_FONT(widget, font);
     VB_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);

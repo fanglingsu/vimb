@@ -70,7 +70,7 @@
 }
 
 #ifdef HAS_GTK3
-#define VpColor GdkRGBA
+#define VbColor GdkRGBA
 #define VB_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
 #define VB_COLOR_TO_STRING(color)       (gdk_rgba_to_string(color))
 #define VB_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_override_background_color
@@ -85,7 +85,7 @@
 
 #else
 
-#define VpColor GdkColor
+#define VbColor GdkColor
 #define VB_COLOR_PARSE(color, string)   (gdk_color_parse(string, color))
 #define VB_COLOR_TO_STRING(color)       (gdk_color_to_string(color))
 #define VB_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_modify_bg
@@ -276,12 +276,12 @@ typedef struct {
 } Completions;
 
 typedef struct {
-    VpColor               input_fg[VB_MSG_LAST];
-    VpColor               input_bg[VB_MSG_LAST];
+    VbColor               input_fg[VB_MSG_LAST];
+    VbColor               input_bg[VB_MSG_LAST];
     PangoFontDescription* input_font[VB_MSG_LAST];
     /* completion */
-    VpColor               comp_fg[VB_COMP_LAST];
-    VpColor               comp_bg[VB_COMP_LAST];
+    VbColor               comp_fg[VB_COMP_LAST];
+    VbColor               comp_bg[VB_COMP_LAST];
     PangoFontDescription* comp_font;
     /* hint style */
     char*                 hint_bg;
@@ -289,8 +289,8 @@ typedef struct {
     char*                 hint_fg;
     char*                 hint_style;
     /* status bar */
-    VpColor               status_bg[VB_STATUS_LAST];
-    VpColor               status_fg[VB_STATUS_LAST];
+    VbColor               status_bg[VB_STATUS_LAST];
+    VbColor               status_fg[VB_STATUS_LAST];
     PangoFontDescription* status_font[VB_STATUS_LAST];
 } Style;
 
@@ -331,7 +331,7 @@ gboolean vb_eval_script(WebKitWebFrame* frame, char* script, char* file, char** 
 gboolean vb_load_uri(const Arg* arg);
 gboolean vb_set_clipboard(const Arg* arg);
 gboolean vb_set_mode(Mode mode, gboolean clean);
-void vb_set_widget_font(GtkWidget* widget, const VpColor* fg, const VpColor* bg, PangoFontDescription* font);
+void vb_set_widget_font(GtkWidget* widget, const VbColor* fg, const VbColor* bg, PangoFontDescription* font);
 void vb_update_statusbar(void);
 void vb_update_status_style(void);
 void vb_update_input_style(MessageType type);

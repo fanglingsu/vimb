@@ -255,7 +255,7 @@ static void setting_print_value(const Setting* s, void* value)
             break;
 
         case TYPE_COLOR:
-            string = VB_COLOR_TO_STRING((VpColor*)value);
+            string = VB_COLOR_TO_STRING((VbColor*)value);
             vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
             g_free(string);
             break;
@@ -432,7 +432,7 @@ static gboolean setting_input_style(const Setting* s, const SettingType type)
             style->input_font[itype] = pango_font_description_from_string(s->arg.s);
         }
     } else {
-        VpColor* color = NULL;
+        VbColor* color = NULL;
         if (g_str_has_prefix(s->name, "input-bg")) {
             /* background color */
             color = &style->input_bg[itype];
@@ -477,7 +477,7 @@ static gboolean setting_completion_style(const Setting* s, const SettingType typ
             style->comp_font = pango_font_description_from_string(s->arg.s);
         }
     } else {
-        VpColor* color = NULL;
+        VbColor* color = NULL;
         if (g_str_has_prefix(s->name, "completion-bg")) {
             /* completion background color */
             color = &style->comp_bg[ctype];
