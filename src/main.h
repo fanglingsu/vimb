@@ -257,7 +257,6 @@ typedef struct {
     GString*    modkeys;
     GSList*     searchengines;
     GList*      history;
-    GList*      url_history;
 } Behaviour;
 
 typedef struct {

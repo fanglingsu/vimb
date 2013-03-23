@@ -733,7 +733,6 @@ static void vb_init_core(void)
     command_init();
     keybind_init();
     vb_read_config();
-    url_history_init();
 
     vb_update_status_style();
     vb_update_input_style(VB_MSG_NORMAL);

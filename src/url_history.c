@@ -21,47 +21,130 @@
 #include "url_history.h"
 
 extern VbCore vb;
+static unsigned int url_history_add_unique(GList** list, const char* url, const char* title);
+static GList* url_history_load(void);
+static void url_history_write_to_file(GList* list);
+static void url_history_clear(GList** list);
 static void url_history_free(UrlHist* item);
 
 
-void url_history_init(void)
+void url_history_cleanup(void)
+{
+    url_history_write_to_file(url_history_load());
+}
+
+/**
+ * Write a new history entry to the end of history file.
+ */
+void url_history_add(const char* uri, const char* title)
+{
+    FILE* file = fopen(vb.files[FILES_HISTORY], "a+");
+    if (file) {
+        file_lock_set(fileno(file), F_WRLCK);
+
+        char* name = g_shell_quote(title ? title : "");
+        char* new  = g_strdup_printf("%s %s\n", uri, name);
+
+        fwrite(new, strlen(new), 1, file);
+
+        g_free(name);
+        g_free(new);
+
+        file_lock_set(fileno(file), F_UNLCK);
+        fclose(file);
+    }
+}
+
+/**
+ * Appends all url history entries form history file to given list.
+ */
+void url_history_get_all(GList** list)
+{
+    GList* src = url_history_load();
+
+    for (GList* link = src; link; link = link->next) {
+        UrlHist* hi = (UrlHist*)link->data;
+        /* put only the url in the list - do not allocate new memory */
+        *list = g_list_prepend(*list, hi->uri);
+    }
+
+    *list = g_list_reverse(*list);
+}
+
+/**
+ * Loads history items form file but elemiate duplicates.
+ */
+static GList* url_history_load(void)
 {
     /* read the history items from file */
-    char buf[512] = {0};
-    guint max = vb.config.url_history_max;
-    FILE* file = fopen(vb.files[FILES_HISTORY], "r");
-    if (!file) {
-        return;
+    GList* list        = NULL;
+    char buf[512]      = {0};
+    unsigned int max   = vb.config.url_history_max;
+    unsigned int added = 0;
+    FILE* file;
+    
+    if (!(file = fopen(vb.files[FILES_HISTORY], "r"))) {
+        return list;
     }
 
     file_lock_set(fileno(file), F_WRLCK);
-
-    for (guint i = 0; i < max && fgets(buf, sizeof(buf), file); i++) {
+    while (added < max && fgets(buf, sizeof(buf), file)) {
         char** argv = NULL;
-        gint   argc = 0;
+        int    argc = 0;
         if (g_shell_parse_argv(buf, &argc, &argv, NULL)) {
-            url_history_add(argv[0], argc > 1 ? argv[1] : NULL);
+            added += url_history_add_unique(&list, argv[0], argc > 1 ? argv[1] : NULL);
         }
         g_strfreev(argv);
     }
-
     file_lock_set(fileno(file), F_UNLCK);
     fclose(file);
 
-    /* reverse the history because we read it from lates to old from file */
-    vb.behave.url_history = g_list_reverse(vb.behave.url_history);
+    /* if list is too long - remove items from end (oldest entries) */
+    while (vb.config.url_history_max < g_list_length(list)) {
+        GList* last = g_list_last(list);
+        url_history_free((UrlHist*)last->data);
+        list = g_list_delete_link(list, last);
+    }
+
+    return list;
 }
 
-void url_history_cleanup(void)
+static unsigned int url_history_add_unique(GList** list, const char* url, const char* title)
+{
+    unsigned int num_added = 1;
+    /* if the url is already in history, remove this entry */
+    for (GList* link = *list; link; link = link->next) {
+        UrlHist* hi = (UrlHist*)link->data;
+        if (!g_strcmp0(url, hi->uri)) {
+            url_history_free(hi);
+            *list     = g_list_delete_link(*list, link);
+            num_added = 0;
+            break;
+        }
+    }
+
+    UrlHist* item = g_new0(UrlHist, 1);
+    item->uri     = g_strdup(url);
+    item->title   = title ? g_strdup(title) : NULL;
+
+    *list = g_list_prepend(*list, item);
+
+    return num_added;
+}
+
+/**
+ * Loads the entries from file, make them unique and write them back to file.
+ */
+static void url_history_write_to_file(GList* list)
 {
     FILE* file = fopen(vb.files[FILES_HISTORY], "w");
     if (file) {
         file_lock_set(fileno(file), F_WRLCK);
 
-        /* write the history to the file */
-        GList* link;
-        for (link = vb.behave.url_history; link != NULL; link = link->next) {
+        /* overwrite the history file with new unique history items */
+        for (GList* link = g_list_reverse(list); link; link = link->next) {
             UrlHist* item = (UrlHist*)link->data;
+
             char* title = g_shell_quote(item->title ? item->title : "");
             char* new   = g_strdup_printf("%s %s\n", item->uri, title);
 
@@ -70,54 +153,19 @@ void url_history_cleanup(void)
             g_free(title);
             g_free(new);
         }
+
         file_lock_set(fileno(file), F_UNLCK);
         fclose(file);
     }
-
-    if (vb.behave.url_history) {
-        g_list_free_full(vb.behave.url_history, (GDestroyNotify)url_history_free);
-    }
+    url_history_clear(&list);
 }
 
-void url_history_add(const char* url, const char* title)
+static void url_history_clear(GList** list)
 {
-    /* if the url is already in history, remove this entry */
-    /* TODO use g_list_find_custom for this task */
-    for (GList* link = vb.behave.url_history; link; link = link->next) {
-        UrlHist* hi = (UrlHist*)link->data;
-        if (!g_strcmp0(url, hi->uri)) {
-            url_history_free(hi);
-            vb.behave.url_history = g_list_delete_link(vb.behave.url_history, link);
-            break;
-        }
+    if (*list) {
+        g_list_free_full(*list, (GDestroyNotify)url_history_free);
+        *list = NULL;
     }
-
-    while (vb.config.url_history_max < g_list_length(vb.behave.url_history)) {
-        /* if list is too long - remove items from end */
-        GList* last = g_list_last(vb.behave.url_history);
-        url_history_free((UrlHist*)last->data);
-        vb.behave.url_history = g_list_delete_link(vb.behave.url_history, last);
-    }
-
-    UrlHist* item = g_new0(UrlHist, 1);
-    item->uri   = g_strdup(url);
-    item->title = title ? g_strdup(title) : NULL;
-
-    vb.behave.url_history = g_list_prepend(vb.behave.url_history, item);
-}
-
-/**
- * Appends the url history entries to given list.
- */
-void url_history_get_all(GList** list)
-{
-    for (GList* link = vb.behave.url_history; link; link = link->next) {
-        UrlHist* hi = (UrlHist*)link->data;
-        /* put only the url in the list - do not allocate new memory */
-        *list = g_list_prepend(*list, hi->uri);
-    }
-
-    *list = g_list_reverse(*list);
 }
 
 static void url_history_free(UrlHist* item)

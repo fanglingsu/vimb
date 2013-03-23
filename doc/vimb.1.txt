@@ -318,8 +318,7 @@ Holds the URI of the last closed browser window.
 .RE
 .I $XDG_CONFIG_HOME/PROJECT/history
 .RS
-This file holds the history of opened URIs. Note that this file is only
-written if last window of the browser is closed.
+This file holds the history of unique opened URIs.
 .RE
 .I $XDG_CONFIG_HOME/PROJECT/scripts.js
 .RS
