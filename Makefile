@@ -36,19 +36,19 @@ $(DTARGET): $(DOBJ)
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(DFLAGS)
 
 man:
-	@$(MAKE) -C doc man
+	@$(MAKE) $(MFLAGS) -C doc man
 
 install: $(TARGET)
 	install -d $(BINDIR)
 	install -m 755 $(TARGET) $(BINDIR)
-	@$(MAKE) -C doc install
+	@$(MAKE) $(MFLAGS) -C doc install
 
 uninstall:
 	$(RM) $(BINDIR)$(TARGET)
-	@$(MAKE) -C doc uninstall
+	@$(MAKE) $(MFLAGS) -C doc uninstall
 
 clean:
-	@$(MAKE) -C doc clean
+	@$(MAKE) $(MFLAGS) -C doc clean
 	$(RM) $(OBJ) $(DOBJ) $(TARGET) $(DTARGET) src/hint.js.h
 
 dist: distclean
