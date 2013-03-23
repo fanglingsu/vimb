@@ -129,14 +129,13 @@ static Setting default_settings[] = {
 void setting_init(void)
 {
     Setting* s;
-    guint i;
+    unsigned int i;
     vb.settings = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < LENGTH(default_settings); i++) {
         s = &default_settings[i];
         /* use alias as key if available */
         g_hash_table_insert(vb.settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
-        s->func(s, FALSE);
     }
 }
 
