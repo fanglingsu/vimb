@@ -54,7 +54,6 @@ DFLAGS += -ggdb
 DFLAGS += -g
 
 #----------------end of options----------------------
-PP        = m4
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
 DOBJ      = $(patsubst %.c, %.do, $(wildcard src/*.c))
 HEAD      = $(wildcard src/*.h)

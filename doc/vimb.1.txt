@@ -1,22 +1,22 @@
 .\" Process this file with
 .\" groff -man -Tascii vimb.1
-.TH vimb 1 "23/03/2013" "vimb/VERSION" "Vimb Manual"
+.TH PROJECT 1 "23/03/2013" "PROJECT/VERSION" "Vimb Manual"
 .SH NAME
-vimb \- A modal web browser based on webkit thats inspired by vim the great editor.
+PROJECT \- A modal web browser based on webkit thats inspired by vim the great editor.
 .SH SYNOPSIS
-.BI "vimb [" "OPTION" "] [" "URI" "]"
+.BI "PROJECT [" "OPTION" "] [" "URI" "]"
 .SH DESCRIPTION
-.B vimb
-is a webkit based web browser that behaves like the vimberator
+.B PROJECT
+is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
-of vimb is to build a completely keyboard-driven, efficient and pleasurable
+of PROJECT is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
 .BI "-e, --embed " "WINID"
 .I WINID
-of an XEmbed-aware application, that vimb will use as its parent.
+of an XEmbed-aware application, that PROJECT will use as its parent.
 .TP
 .B "-h, --help"
 Show help options.
@@ -24,7 +24,7 @@ Show help options.
 .B "-v, --version"
 Print build and version information.
 .SH MODES
-vimb is modal an has following main modes:
+PROJECT is modal an has following main modes:
 .TP
 .B Normal Mode
 The default mode. Pressing Escape always enter normal mode.
@@ -36,7 +36,7 @@ Used for editing text elements in a webpage.
 Follow links, form fields and frames via hints.
 .TP
 .B Command Mode
-Execute vimb commands from the builtin inputbox (commandline).
+Execute PROJECT commands from the builtin inputbox (commandline).
 .TP
 .B Search Mode
 Search for strings within the current displayed page.
@@ -44,7 +44,7 @@ Search for strings within the current displayed page.
 .B Insert Mode
 Used for editing text elements in a webpage.
 .SH COMMANDS
-Commands are a central part in vimb. They are used for nearly all things
+Commands are a central part in PROJECT. They are used for nearly all things
 that could be done with this browser. Commands allow to set config variables,
 to assign keybindings and much more. Also the keybindings are only shortcut
 for the commands itself.
@@ -299,29 +299,29 @@ Close the browser.
 .B source
 Toggle between normal view and source view for the current page.
 .SH FILES
-.I $XDG_CONFIG_HOME/vimb/config
+.I $XDG_CONFIG_HOME/PROJECT/config
 .RS
 Configuration file to set webkit setting, some gui styles and keybindings.
 .RE
-.I $XDG_CONFIG_HOME/vimb/cookies
+.I $XDG_CONFIG_HOME/PROJECT/cookies
 .RS
 Cookie store file.
 .RE
-.I $XDG_CONFIG_HOME/vimb/closed
+.I $XDG_CONFIG_HOME/PROJECT/closed
 .RS
 Holds the URI of the last closed browser window.
 .RE
-.I $XDG_CONFIG_HOME/vimb/history
+.I $XDG_CONFIG_HOME/PROJECT/history
 .RS
 This file holds the history of opened URIs. Note that this file is only
 written if last window of the browser is closed.
 .RE
-.I $XDG_CONFIG_HOME/vimb/scripts.js
+.I $XDG_CONFIG_HOME/PROJECT/scripts.js
 .RS
 This file can be used to run user scripts, that are injected into every paged
 that is opened.
 .RE
-.I $XDG_CONFIG_HOME/vimb/style.css
+.I $XDG_CONFIG_HOME/PROJECT/style.css
 .RS
 File for userdefined css styles. These file is used if the config variable
 'stylesheet' is enabled.

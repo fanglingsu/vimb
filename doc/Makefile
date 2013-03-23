@@ -8,10 +8,11 @@ all: man
 man: $(MAN1)
 
 %.1: %.1.txt
-	@echo "${PP} $< > $@"
-	@$(PP) -DVERSION=$(VERSION) $< > $@
+	@echo build manual page
+	@sed -e "s/VERSION/$(VERSION)/g" -e "s/PROJECT/$(PROJECT)/g" < $< > $@
 
 install: man
+	@echo install manual page
 	install -d $(MANDIR1)
 	install -m 644 $(MAN1) $(MANDIR1)$(MAN1)
 
