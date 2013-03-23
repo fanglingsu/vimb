@@ -1012,12 +1012,12 @@ int main(int argc, char* argv[])
 {
     static char* winid = NULL;
     static gboolean ver = false;
-    static gboolean print_config = false;
+    static gboolean dump = false;
     static GError* err;
     static GOptionEntry opts[] = {
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
-        {"print-config", 'D', 0, G_OPTION_ARG_NONE, &print_config, "Print the value of all configuration options to stdout", NULL},
+        {"dump-config", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump out the default configuration to stdout", NULL},
         {NULL}
     };
     /* Initialize GTK+ */
@@ -1032,7 +1032,7 @@ int main(int argc, char* argv[])
         fprintf(stdout, "%s/%s (build %s %s)\n", PROJECT, VERSION, __DATE__, __TIME__);
         return EXIT_SUCCESS;
     }
-    if (print_config) {
+    if (dump) {
         /* load default config */
         for (guint i = 0; default_config[i].command != NULL; i++) {
             fprintf(stdout, "%s\n", default_config[i].command);

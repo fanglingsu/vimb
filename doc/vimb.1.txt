@@ -21,6 +21,11 @@ of an XEmbed-aware application, that PROJECT will use as its parent.
 .B "-h, --help"
 Show help options.
 .TP
+.B "-d, --dump-config"
+Dump out the whole default configurations to stdout. This can be used to
+create a own config file in
+.I $XDG_CONFIG_HOME/PROJECT/config
+.TP
 .B "-v, --version"
 Print build and version information.
 .SH MODES
