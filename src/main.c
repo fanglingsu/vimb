@@ -805,11 +805,14 @@ static void vb_setup_signals()
     g_signal_connect_after(G_OBJECT(vb.soup_session), "request-started", G_CALLBACK(vb_new_request_cb), NULL);
 
     /* inspector */
-    /* TODO use g_object_connect instead */
-    g_signal_connect(G_OBJECT(vb.gui.inspector), "inspect-web-view", G_CALLBACK(vb_inspector_new), NULL);
-    g_signal_connect(G_OBJECT(vb.gui.inspector), "show-window", G_CALLBACK(vb_inspector_show), NULL);
-    g_signal_connect(G_OBJECT(vb.gui.inspector), "close-window", G_CALLBACK(vb_inspector_close), NULL);
-    g_signal_connect(G_OBJECT(vb.gui.inspector), "finished", G_CALLBACK(vb_inspector_finished), NULL);
+    g_object_connect(
+        G_OBJECT(vb.gui.inspector),
+        "signal::inspect-web-view", G_CALLBACK(vb_inspector_new), NULL,
+        "signal::show-window", G_CALLBACK(vb_inspector_show), NULL,
+        "signal::close-window", G_CALLBACK(vb_inspector_close), NULL,
+        "signal::finished", G_CALLBACK(vb_inspector_finished), NULL,
+        NULL
+    );
 }
 
 static void vb_init_files(void)
