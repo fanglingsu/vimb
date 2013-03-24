@@ -511,7 +511,7 @@ gboolean command_history(const Arg* arg)
 {
     const char* input = GET_TEXT();
     int step          = vb.state.count ? vb.state.count * arg->i : arg->i;
-    const char* entry;
+    const char* entry = NULL;
     char* prefix = NULL;
 
     /* use the right history type according to current input text */
