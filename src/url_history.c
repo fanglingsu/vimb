@@ -21,7 +21,7 @@
 #include "url_history.h"
 
 extern VbCore vb;
-static unsigned int url_history_add_unique(GList** list, const char* url, const char* title);
+static void url_history_add_unique(GList** list, const char* url, const char* title);
 static GList* url_history_load(void);
 static void url_history_write_to_file(GList* list);
 static void url_history_clear(GList** list);
@@ -77,10 +77,8 @@ void url_history_get_all(GList** list)
 static GList* url_history_load(void)
 {
     /* read the history items from file */
-    GList* list        = NULL;
-    char buf[512]      = {0};
-    unsigned int max   = vb.config.url_history_max;
-    unsigned int added = 0;
+    GList* list   = NULL;
+    char buf[512] = {0};
     FILE* file;
     
     if (!(file = fopen(vb.files[FILES_HISTORY], "r"))) {
@@ -88,11 +86,11 @@ static GList* url_history_load(void)
     }
 
     file_lock_set(fileno(file), F_WRLCK);
-    while (added < max && fgets(buf, sizeof(buf), file)) {
+    while (fgets(buf, sizeof(buf), file)) {
         char** argv = NULL;
         int    argc = 0;
         if (g_shell_parse_argv(buf, &argc, &argv, NULL)) {
-            added += url_history_add_unique(&list, argv[0], argc > 1 ? argv[1] : NULL);
+            url_history_add_unique(&list, argv[0], argc > 1 ? argv[1] : NULL);
         }
         g_strfreev(argv);
     }
@@ -109,16 +107,14 @@ static GList* url_history_load(void)
     return list;
 }
 
-static unsigned int url_history_add_unique(GList** list, const char* url, const char* title)
+static void url_history_add_unique(GList** list, const char* url, const char* title)
 {
-    unsigned int num_added = 1;
     /* if the url is already in history, remove this entry */
     for (GList* link = *list; link; link = link->next) {
         UrlHist* hi = (UrlHist*)link->data;
         if (!g_strcmp0(url, hi->uri)) {
             url_history_free(hi);
             *list     = g_list_delete_link(*list, link);
-            num_added = 0;
             break;
         }
     }
@@ -128,8 +124,6 @@ static unsigned int url_history_add_unique(GList** list, const char* url, const 
     item->title   = title ? g_strdup(title) : NULL;
 
     *list = g_list_prepend(*list, item);
-
-    return num_added;
 }
 
 /**
