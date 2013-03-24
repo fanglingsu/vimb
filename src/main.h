@@ -152,9 +152,9 @@ enum {
 };
 
 typedef enum {
-    VB_SEARCH_FORWARD,
-    VB_SEARCH_BACKWARD,
-    VB_SEARCH_OFF,
+    VB_SEARCH_FORWARD  = 1,
+    VB_SEARCH_BACKWARD = -1,
+    VB_SEARCH_OFF      = 0
 } SearchDirection;
 
 typedef enum {

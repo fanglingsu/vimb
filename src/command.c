@@ -526,7 +526,7 @@ gboolean command_zoom(const Arg* arg)
 gboolean command_history(const Arg* arg)
 {
     const int count = vb.state.count ? vb.state.count : 1;
-    const gint step = count * (arg->i == VB_SEARCH_BACKWARD ? -1 : 1);
+    const gint step = count * arg->i;
     const char* entry = history_get(HISTORY_COMMAND, step);
 
     if (!entry) {
