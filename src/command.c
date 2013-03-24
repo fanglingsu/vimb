@@ -28,6 +28,8 @@
 #include "history.h"
 
 extern VbCore vb;
+extern const unsigned int INPUT_LENGTH;
+
 static CommandInfo cmd_list[] = {
     /* command              function             arg                                                                                 mode */
     {"open",                command_open,        {VB_TARGET_CURRENT, ""}},
@@ -573,5 +575,5 @@ static void command_write_input(const char* str)
 
     /* insert string from arg */
     gtk_editable_insert_text(box, str, -1, &pos);
-    gtk_editable_set_position(box, -1);
+    gtk_editable_set_position(box, strlen(str) > INPUT_LENGTH ? 0 : -1);
 }

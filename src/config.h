@@ -28,6 +28,10 @@
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST  5
 
+/* number of chars in inputbox - if completion or stepping through history
+ * print values longer this value, the cursor will be placed to the beginning
+ * so that the command part will be visible */
+const unsigned int INPUT_LENGTH  = 120;
 const unsigned int MAXIMUM_HINTS = 500;
 
 const struct {
