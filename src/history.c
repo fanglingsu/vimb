@@ -25,6 +25,7 @@ extern VbCore vb;
 /* map history types to files */
 static const VbFile file_map[HISTORY_LAST] = {
     FILES_COMMAND,
+    FILES_SEARCH,
     FILES_HISTORY
 };
 
@@ -70,13 +71,13 @@ GList* history_get_all(HistoryType type)
     return history_load(history_get_file_by_type(type));
 }
 
-const char* history_get(HistoryType type, int step)
+const char* history_get(HistoryType type, int step, const char* query)
 {
     const char* command;
 
     /* get the search prefix only on start of history search */
     if (!vb.state.history_active) {
-        OVERWRITE_STRING(vb.state.history_prefix, GET_TEXT());
+        OVERWRITE_STRING(vb.state.history_prefix, query);
 
         GList* src = history_load(history_get_file_by_type(type));
 

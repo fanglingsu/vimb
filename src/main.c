@@ -430,7 +430,6 @@ static void vb_destroy_window_cb(GtkWidget* widget)
 static void vb_inputbox_activate_cb(GtkEntry *entry)
 {
     const char* text;
-    gboolean hist_save = FALSE;
     char* command  = NULL;
     guint16 length = gtk_entry_get_text_length(entry);
 
@@ -459,20 +458,16 @@ static void vb_inputbox_activate_cb(GtkEntry *entry)
             a.i = *text == '/' ? VB_SEARCH_FORWARD : VB_SEARCH_BACKWARD;
             a.s = (command + 1);
             command_search(&a);
-            hist_save = TRUE;
+            history_add(HISTORY_SEARCH, command + 1);
             break;
 
         case ':':
             completion_clean();
             vb_process_input((command + 1));
-            hist_save = TRUE;
+            history_add(HISTORY_COMMAND, command + 1);
             break;
     }
 
-    if (hist_save) {
-        /* save the command in history */
-        history_add(HISTORY_COMMAND, command);
-    }
     g_free(command);
 }
 
@@ -838,6 +833,9 @@ static void vb_init_files(void)
 
     vb.files[FILES_COMMAND] = g_build_filename(path, "command", NULL);
     util_create_file_if_not_exists(vb.files[FILES_COMMAND]);
+
+    vb.files[FILES_SEARCH] = g_build_filename(path, "search", NULL);
+    util_create_file_if_not_exists(vb.files[FILES_SEARCH]);
 
     vb.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
 

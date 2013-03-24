@@ -23,6 +23,7 @@
 typedef enum {
     HISTORY_FIRST   = 0,
     HISTORY_COMMAND = 0,
+    HISTORY_SEARCH,
     HISTORY_URL,
     HISTORY_LAST
 } HistoryType;
@@ -30,7 +31,7 @@ typedef enum {
 void history_cleanup(void);
 void history_add(HistoryType type, const char* value);
 GList* history_get_all(HistoryType type);
-const char* history_get(HistoryType type, int step);
+const char* history_get(HistoryType type, int step, const char* query);
 void history_rewind(void);
 void history_list_free(GList** list);
 

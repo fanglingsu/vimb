@@ -183,6 +183,7 @@ typedef enum {
     FILES_SCRIPT,
     FILES_HISTORY,
     FILES_COMMAND,
+    FILES_SEARCH,
     FILES_USER_STYLE,
     FILES_LAST
 } VbFile;

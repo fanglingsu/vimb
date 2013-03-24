@@ -525,14 +525,33 @@ gboolean command_zoom(const Arg* arg)
 
 gboolean command_history(const Arg* arg)
 {
-    const int count = vb.state.count ? vb.state.count : 1;
-    const gint step = count * arg->i;
-    const char* entry = history_get(HISTORY_COMMAND, step);
+    const char* input = GET_TEXT();
+    int step          = vb.state.count ? vb.state.count * arg->i : arg->i;
+    const char* entry;
+    char* prefix = NULL;
+
+    /* use the right history type according to current input text */
+    if (!strncmp(input, ":open ", 6)) {
+        entry  = history_get(HISTORY_URL, step, input + 6);
+        prefix = ":open ";
+    } else if (!strncmp(input, ":tabopen ", 9)) {
+        entry  = history_get(HISTORY_URL, step, input + 9);
+        prefix = ":tabopen ";
+    } else if (*input == ':') {
+        entry  = history_get(HISTORY_COMMAND, step, input + 1);
+        prefix = ":";
+    } else if (*input == '/' || *input == '?') {
+        entry  = history_get(HISTORY_SEARCH, step, input + 1);
+        prefix = *input == '/' ? "/" : "?";
+    }
 
     if (!entry) {
         return FALSE;
     }
-    command_write_input(entry);
+
+    char* value = g_strconcat(prefix, entry, NULL);
+    command_write_input(value);
+    g_free(value);
 
     return TRUE;
 }

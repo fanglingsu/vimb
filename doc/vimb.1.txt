@@ -325,6 +325,11 @@ This file holds the history of unique opened URIs.
 This file holds the history of commands and search queries performed via input
 box.
 .RE
+.I $XDG_CONFIG_HOME/PROJECT/search
+.RS
+This file holds the history of search queries.
+box.
+.RE
 .I $XDG_CONFIG_HOME/PROJECT/scripts.js
 .RS
 This file can be used to run user scripts, that are injected into every paged
