@@ -259,17 +259,17 @@ gboolean command_scroll(const Arg* arg)
 
 gboolean command_map(const Arg* arg)
 {
-    gboolean result;
+    char* key;
+
     vb_set_mode(VB_MODE_NORMAL, FALSE);
 
-    char **string = g_strsplit(arg->s, "=", 2);
-    if (g_strv_length(string) != 2) {
-        return FALSE;
+    if ((key = strchr(arg->s, '='))) {
+        *key = '\0';
+        if (arg->s) {
+            return keybind_add_from_string(arg->s, key + 1, arg->i);
+        }
     }
-    result = keybind_add_from_string(string[0], string[1], arg->i);
-    g_strfreev(string);
-
-    return result;
+    return FALSE;
 }
 
 gboolean command_unmap(const Arg* arg)
@@ -283,7 +283,7 @@ gboolean command_set(const Arg* arg)
 {
     gboolean success;
     char* line = NULL;
-    char** token;
+    char* param;
 
     if (!arg->s || !strlen(arg->s)) {
         return FALSE;
@@ -292,12 +292,15 @@ gboolean command_set(const Arg* arg)
     line = g_strdup(arg->s);
     g_strstrip(line);
 
-    /* split the input string into paramete and value part */
-    token = g_strsplit(line, "=", 2);
+    /* split the input string into parameter and value part */
+    if ((param = strchr(line, '='))) {
+        *param = '\0';
+        param++;
+        success = setting_run(line, param ? param : NULL);
+    } else {
+        success = setting_run(line, NULL);
+    }
     g_free(line);
-
-    success = setting_run(token[0], token[1] ? token[1] : NULL);
-    g_strfreev(token);
 
     vb_set_mode(VB_MODE_NORMAL, FALSE);
 
@@ -452,13 +455,15 @@ gboolean command_searchengine(const Arg* arg)
 {
     gboolean result;
     if (arg->i) {
-        /* add the searchengine */
-        char **string = g_strsplit(arg->s, "=", 2);
-        if (g_strv_length(string) != 2) {
+        char* handle;
+
+        if ((handle = strchr(arg->s, '='))) {
+            *handle = '\0';
+            handle++;
+            result = searchengine_add(arg->s, handle);
+        } else {
             return FALSE;
         }
-        result = searchengine_add(string[0], string[1]);
-        g_strfreev(string);
     } else {
         /* remove the search engine */
         result = searchengine_remove(arg->s);
