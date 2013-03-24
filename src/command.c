@@ -144,30 +144,7 @@ gboolean command_run(const char* name, const char* param)
 
 gboolean command_open(const Arg* arg)
 {
-    char* uri = NULL;
-    gboolean result;
-
-    if (!arg->s || arg->s[0] == '\0') {
-        Arg a = {arg->i, vb.config.home_page};
-        return vb_load_uri(&a);
-    }
-    /* check for searchengine handles */
-    /* split into handle and searchterms */
-    char **string = g_strsplit(arg->s, " ", 2);
-    if (g_strv_length(string) == 2
-        && (uri = searchengine_get_uri(string[0]))
-    ) {
-        char* term = soup_uri_encode(string[1], "&");
-        Arg a  = {arg->i, g_strdup_printf(uri, term)};
-        result = vb_load_uri(&a);
-        g_free(term);
-        g_free(a.s);
-    } else {
-        result = vb_load_uri(arg);
-    }
-    g_strfreev(string);
-
-    return result;
+    return vb_load_uri(arg);
 }
 
 /**
