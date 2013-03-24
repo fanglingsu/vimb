@@ -182,9 +182,10 @@ typedef enum {
     FILES_CLOSED,
     FILES_SCRIPT,
     FILES_HISTORY,
+    FILES_COMMAND,
     FILES_USER_STYLE,
     FILES_LAST
-} VpFile;
+} VbFile;
 
 typedef enum {
     TYPE_CHAR,
@@ -256,7 +257,6 @@ typedef struct {
     GSList*     keys;
     GString*    modkeys;
     GSList*     searchengines;
-    GList*      history;
 } Behaviour;
 
 typedef struct {
@@ -265,7 +265,7 @@ typedef struct {
     guint  max_completion_items;
     char*  home_page;
     char*  download_dir;
-    guint  url_history_max;
+    guint  history_max;
 } Config;
 
 typedef struct {

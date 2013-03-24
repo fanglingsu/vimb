@@ -677,11 +677,11 @@ static gboolean setting_user_style(const Setting* s, const SettingType type)
 static gboolean setting_history_max_items(const Setting* s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        setting_print_value(s, &vb.config.url_history_max);
+        setting_print_value(s, &vb.config.history_max);
 
         return TRUE;
     }
-    vb.config.url_history_max = s->arg.i;
+    vb.config.history_max = s->arg.i;
 
     return TRUE;
 }

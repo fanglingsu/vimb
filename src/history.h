@@ -20,9 +20,18 @@
 #ifndef _HISTORY_H
 #define _HISTORY_H
 
+typedef enum {
+    HISTORY_FIRST   = 0,
+    HISTORY_COMMAND = 0,
+    HISTORY_URL,
+    HISTORY_LAST
+} HistoryType;
+
 void history_cleanup(void);
-void history_append(const char* line);
-const char* history_get(const int step);
-void history_rewind();
+void history_add(HistoryType type, const char* value);
+GList* history_get_all(HistoryType type);
+const char* history_get(HistoryType type, int step);
+void history_rewind(void);
+void history_list_free(GList** list);
 
 #endif /* end of include guard: _HISTORY_H */

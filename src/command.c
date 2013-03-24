@@ -527,7 +527,7 @@ gboolean command_history(const Arg* arg)
 {
     const int count = vb.state.count ? vb.state.count : 1;
     const gint step = count * (arg->i == VB_SEARCH_BACKWARD ? -1 : 1);
-    const char* entry = history_get(step);
+    const char* entry = history_get(HISTORY_COMMAND, step);
 
     if (!entry) {
         return FALSE;

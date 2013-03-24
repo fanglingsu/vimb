@@ -19,7 +19,7 @@
 
 #include "completion.h"
 #include "util.h"
-#include "url_history.h"
+#include "history.h"
 
 extern VbCore vb;
 
@@ -77,24 +77,26 @@ gboolean completion_complete(gboolean back)
         vb.comps.completions = completion_init_completion(
             vb.comps.completions, source, (Comp_Func)g_str_has_prefix, &input[5], ":set "
         );
+        g_list_free(source);
     } else if (!strncmp(input, ":open ", 6)) {
-        url_history_get_all(&source);
+        source = history_get_all(HISTORY_URL);
         vb.comps.completions = completion_init_completion(
             vb.comps.completions, source, (Comp_Func)util_strcasestr, &input[6], ":open "
         );
-        g_list_free(source);
+        history_list_free(&source);
     } else if (!strncmp(input, ":tabopen ", 9)) {
-        url_history_get_all(&source);
+        source = history_get_all(HISTORY_URL);
         vb.comps.completions = completion_init_completion(
             vb.comps.completions, source, (Comp_Func)util_strcasestr, &input[9], ":tabopen "
         );
-        g_list_free(source);
+        history_list_free(&source);
     } else {
         source = g_hash_table_get_keys(vb.behave.commands);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
         vb.comps.completions = completion_init_completion(
             vb.comps.completions, source, (Comp_Func)g_str_has_prefix, &input[1], ":"
         );
+        g_list_free(source);
     }
 
     if (!vb.comps.completions) {

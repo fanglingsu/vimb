@@ -21,25 +21,56 @@
 #include "history.h"
 
 extern VbCore vb;
-extern const unsigned int COMMAND_HISTORY_SIZE;
 
+/* map history types to files */
+static const VbFile file_map[HISTORY_LAST] = {
+    FILES_COMMAND,
+    FILES_HISTORY
+};
+
+static const char* history_get_file_by_type(HistoryType type);
+static GList* history_load(const char* file);
+static void history_write_to_file(GList* list, const char* file);
+
+
+/**
+ * Makes all history items unique and force them to fit the maximum history
+ * size and writes all entries of the different history types to file.
+ */
 void history_cleanup(void)
 {
-    g_list_free_full(vb.behave.history, (GDestroyNotify)g_free);
-}
-
-void history_append(const char* line)
-{
-    if (COMMAND_HISTORY_SIZE <= g_list_length(vb.behave.history)) {
-        /* if list is too long - remove items from beginning */
-        GList* first = g_list_first(vb.behave.history);
-        g_free((char*)first->data);
-        vb.behave.history = g_list_delete_link(vb.behave.history, first);
+    for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
+        const char* file = history_get_file_by_type(i);
+        history_write_to_file(history_load(file), file);
     }
-    vb.behave.history = g_list_append(vb.behave.history, g_strdup(line));
 }
 
-const char* history_get(const int step)
+/**
+ * Write a new history entry to the end of history file.
+ */
+void history_add(HistoryType type, const char* value)
+{
+    const char* file = history_get_file_by_type(type);
+    FILE* f;
+    if ((f = fopen(file, "a+"))) {
+        file_lock_set(fileno(f), F_WRLCK);
+
+        fprintf(f, "%s\n", value);
+
+        file_lock_set(fileno(f), F_UNLCK);
+        fclose(f);
+    }
+}
+
+/**
+ * Retrieves all history entries for given history type.
+ */
+GList* history_get_all(HistoryType type)
+{
+    return history_load(history_get_file_by_type(type));
+}
+
+const char* history_get(HistoryType type, int step)
 {
     const char* command;
 
@@ -47,11 +78,13 @@ const char* history_get(const int step)
     if (!vb.state.history_active) {
         OVERWRITE_STRING(vb.state.history_prefix, GET_TEXT());
 
+        GList* src = history_load(history_get_file_by_type(type));
+
         /* generate new history list with the matching items */
-        for (GList* l = vb.behave.history; l; l = l->next) {
-            char* entry = g_strdup((char*)l->data);
-            if (g_str_has_prefix(entry, vb.state.history_prefix)) {
-                vb.state.history_active = g_list_prepend(vb.state.history_active, entry);
+        for (GList* l = src; l; l = l->next) {
+            char* value = (char*)l->data;
+            if (g_str_has_prefix(value, vb.state.history_prefix)) {
+                vb.state.history_active = g_list_prepend(vb.state.history_active, g_strdup(value));
             }
         }
 
@@ -71,7 +104,7 @@ const char* history_get(const int step)
     return command;
 }
 
-void history_rewind()
+void history_rewind(void)
 {
     if (vb.state.history_active) {
         OVERWRITE_STRING(vb.state.history_prefix, NULL);
@@ -80,4 +113,89 @@ void history_rewind()
         g_list_free_full(vb.state.history_active, (GDestroyNotify)g_free);
         vb.state.history_active = NULL;
     }
+}
+
+void history_list_free(GList** list)
+{
+    if (*list) {
+        g_list_free_full(*list, (GDestroyNotify)g_free);
+        *list = NULL;
+    }
+}
+
+static const char* history_get_file_by_type(HistoryType type)
+{
+    return vb.files[file_map[type]];
+}
+
+/**
+ * Loads history items form file but elemiate duplicates.
+ */
+static GList* history_load(const char* file)
+{
+    /* read the history items from file */
+    GList* list   = NULL;
+    char buf[512] = {0};
+    FILE* f;
+
+    if (!(f = fopen(file, "r"))) {
+        return list;
+    }
+
+    file_lock_set(fileno(f), F_WRLCK);
+    while (fgets(buf, sizeof(buf), f)) {
+        g_strstrip(buf);
+
+        /* skip empty lines */
+        if (!*buf) {
+            continue;
+        }
+        /* if the value is already in history, remove this entry */
+        for (GList* l = list; l; l = l->next) {
+            if (*buf && !g_strcmp0(buf, (char*)l->data)) {
+                g_free(l->data);
+                list = g_list_delete_link(list, l);
+                break;
+            }
+        }
+
+        list = g_list_prepend(list, g_strdup(buf));
+    }
+    file_lock_set(fileno(f), F_UNLCK);
+    fclose(f);
+
+    /* if list is too long - remove items from end (oldest entries) */
+    if (vb.config.history_max < g_list_length(list)) {
+        /* reverse to not use the slow g_list_last */
+        list = g_list_reverse(list);
+        while (vb.config.history_max < g_list_length(list)) {
+            GList* last = g_list_first(list);
+            g_free(last->data);
+            list = g_list_delete_link(list, last);
+        }
+        list = g_list_reverse(list);
+    }
+
+    return list;
+}
+
+/**
+ * Loads the entries from file, make them unique and write them back to file.
+ */
+static void history_write_to_file(GList* list, const char* file)
+{
+    FILE* f;
+    if ((f = fopen(file, "w"))) {
+        file_lock_set(fileno(f), F_WRLCK);
+
+        /* overwrite the history file with new unique history items */
+        for (GList* link = g_list_reverse(list); link; link = link->next) {
+            fprintf(f, "%s\n", (char*)link->data);
+        }
+
+        file_lock_set(fileno(f), F_UNLCK);
+        fclose(f);
+    }
+
+    history_list_free(&list);
 }

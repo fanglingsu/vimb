@@ -29,7 +29,6 @@
 #include "hints.h"
 #include "searchengine.h"
 #include "history.h"
-#include "url_history.h"
 
 /* variables */
 static char **args;
@@ -415,7 +414,7 @@ static void vb_webview_load_status_cb(WebKitWebView* view, GParamSpec* pspec)
 
             dom_check_auto_insert();
 
-            url_history_add(uri, webkit_web_view_get_title(vb.gui.webview));
+            history_add(HISTORY_URL, uri);
             break;
 
         case WEBKIT_LOAD_FAILED:
@@ -472,7 +471,7 @@ static void vb_inputbox_activate_cb(GtkEntry *entry)
 
     if (hist_save) {
         /* save the command in history */
-        history_append(command);
+        history_add(HISTORY_COMMAND, command);
     }
     g_free(command);
 }
@@ -837,6 +836,9 @@ static void vb_init_files(void)
     vb.files[FILES_HISTORY] = g_build_filename(path, "history", NULL);
     util_create_file_if_not_exists(vb.files[FILES_HISTORY]);
 
+    vb.files[FILES_COMMAND] = g_build_filename(path, "command", NULL);
+    util_create_file_if_not_exists(vb.files[FILES_COMMAND]);
+
     vb.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
 
     vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
@@ -1007,7 +1009,7 @@ static void vb_destroy_client()
     setting_cleanup();
     keybind_cleanup();
     searchengine_cleanup();
-    url_history_cleanup();
+    history_cleanup();
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
