@@ -88,8 +88,6 @@ const char* history_get(HistoryType type, int step, const char* query)
                 vb.state.history_active = g_list_prepend(vb.state.history_active, g_strdup(value));
             }
         }
-
-        vb.state.history_active = g_list_reverse(vb.state.history_active);
     }
 
     const int len = g_list_length(vb.state.history_active);
