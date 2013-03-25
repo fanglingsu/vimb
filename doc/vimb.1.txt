@@ -287,16 +287,14 @@ Zoom \fIN\fP steps in or out of the current page \- effecting all elements.
 .TP
 .B zoomreset
 Reset the zoomlevel to the default value.
-.SS Command-History
+.SS History
 .TP
-.BI [ N "]command-hist-prev, [" N "]command-hist-next"
-Prints the previous or next cammand from history into inputbox. If there is
-already text in the input box this will be used to get history items. A
-command is not a internal command, but every string entered into inputbox that
-begins with \fI[:/?]\fP. So the history contains real commands and search queries.
-.br
-Note that the history distinguishes between '/query' and '?query' what's not
-what the vim editor does.
+.BI [ N "]hist-prev, [" N "]hist-next"
+Prints the previous or next cammand or search query from history into
+inputbox. If there is already text in the input box this will be used to get
+history items. A command is not a internal command, but every string entered
+into inputbox that begins with \fI[:/?]\fP. So the history contains real
+commands and search queries.
 .SS Misc
 .TP
 .BI [ N "]search-forward, [" N "]search-backward"

@@ -94,8 +94,8 @@ static CommandInfo cmd_list[] = {
     {"zoominfull",          command_zoom,        {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
     {"zoomoutfull",         command_zoom,        {COMMAND_ZOOM_OUT | COMMAND_ZOOM_FULL}},
     {"zoomreset",           command_zoom,        {COMMAND_ZOOM_RESET}},
-    {"command-hist-next",   command_history,     {VB_SEARCH_FORWARD}},
-    {"command-hist-prev",   command_history,     {VB_SEARCH_BACKWARD}},
+    {"hist-next",           command_history,     {VB_SEARCH_FORWARD}},
+    {"hist-prev",           command_history,     {VB_SEARCH_BACKWARD}},
 };
 
 static void command_write_input(const char* str);
