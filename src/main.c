@@ -241,6 +241,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             } else if (current_mode == VB_MODE_INSERT) {
                 /* clean the input if current mode is insert to remove -- INPUT -- */
                 clean = TRUE;
+                dom_clear_focus();
             } else if (current_mode == VB_MODE_SEARCH) {
                 /* cleaup previous search */
                 command_search(&((Arg){VB_SEARCH_OFF}));

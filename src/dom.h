@@ -39,7 +39,8 @@ typedef struct {
     gulong bottom;
 } DomBoundingRect;
 
-void dom_check_auto_insert();
+void dom_check_auto_insert(void);
+void dom_clear_focus(void);
 gboolean dom_is_editable(Element* element);
 
 #endif /* end of include guard: _DOM_H */
