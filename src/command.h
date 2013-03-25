@@ -67,6 +67,7 @@ gboolean command_yank(const Arg* arg);
 gboolean command_paste(const Arg* arg);
 gboolean command_search(const Arg* arg);
 gboolean command_searchengine(const Arg* arg);
+gboolean command_searchengine_default(const Arg* arg);
 gboolean command_zoom(const Arg* arg);
 gboolean command_history(const Arg* arg);
 

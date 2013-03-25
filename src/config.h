@@ -94,6 +94,7 @@ const struct {
     {"hmap <shift-tab>=hint-focus-prev"},
     {"searchengine-add dl=https://duckduckgo.com/lite/?q=%s"},
     {"searchengine-add dd=https://duckduckgo.com/?q=%s"},
+    {"searchengine-default dl"},
     {"set images=on"},
     {"set cursivfont=serif"},
     {"set defaultencondig=utf-8"},

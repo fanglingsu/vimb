@@ -258,6 +258,7 @@ typedef struct {
     GSList*     keys;
     GString*    modkeys;
     GSList*     searchengines;
+    char*       searchengine_default;   /* handle of the default search engine */
 } Behaviour;
 
 typedef struct {

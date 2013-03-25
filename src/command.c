@@ -88,6 +88,7 @@ static CommandInfo cmd_list[] = {
     {"search-backward",     command_search,      {VB_SEARCH_BACKWARD}},
     {"searchengine-add",    command_searchengine,{1}},
     {"searchengine-remove", command_searchengine,{0}},
+    {"searchengine-default", command_searchengine_default,{0}},
     {"zoomin",              command_zoom,        {COMMAND_ZOOM_IN}},
     {"zoomout",             command_zoom,        {COMMAND_ZOOM_OUT}},
     {"zoominfull",          command_zoom,        {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
@@ -472,6 +473,13 @@ gboolean command_searchengine(const Arg* arg)
     vb_set_mode(VB_MODE_NORMAL, FALSE);
 
     return result;
+}
+
+gboolean command_searchengine_default(const Arg* arg)
+{
+    vb_set_mode(VB_MODE_NORMAL, FALSE);
+
+    return searchengine_set_default(arg->s);
 }
 
 gboolean command_zoom(const Arg* arg)

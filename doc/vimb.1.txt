@@ -255,6 +255,14 @@ Adds a searchengine with the \fISHORTCUT\fP and search \fIURI\fP. The uri must
 not contain more than one '%s' placeholder.
 
 Example: searchengine-add dl=https://duckduckgo.com/lite/?q=%s
+.TP
+.BI "searchengine-remove " "SHORTCUT"
+Remove the search engine to the given \fISHORTCUT\fP.
+.TP
+.BI "searchengine-default " "SHORTCUT"
+Set the search engine for given \fISHORTCUT\fP as the default search engine.
+It doesn't metter if the \fISHORTCUT\fP is already in use or not to be able to
+set the default search engine.
 .SS Configuration
 .TP
 .BI "set " VAR = VALUE

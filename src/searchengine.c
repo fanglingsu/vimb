@@ -22,6 +22,11 @@
 
 extern VbCore vb;
 
+typedef struct {
+    char* handle;
+    char* uri;
+} Searchengine;
+
 static GSList* searchengine_find(const char* handle);
 static gboolean searchengine_is_valid_uri(const char* uri);
 static void searchengine_free(Searchengine* se);
@@ -64,12 +69,24 @@ gboolean searchengine_remove(const char* handle)
     return FALSE;
 }
 
+gboolean searchengine_set_default(const char* handle)
+{
+    /* do not check if the search engin exists to be able to set the default
+     * before defining the search engines */
+    OVERWRITE_STRING(vb.behave.searchengine_default, handle);
+
+    return TRUE;
+}
+
 char* searchengine_get_uri(const char* handle)
 {
-    GSList* list = searchengine_find(handle);
+    char* def = vb.behave.searchengine_default;
+    GSList* l = searchengine_find(handle);
 
-    if (list) {
-        return ((Searchengine*)list->data)->uri;
+    if (l) {
+        return ((Searchengine*)l->data)->uri;
+    } else if (def && (l = searchengine_find(def))) {
+        return ((Searchengine*)l->data)->uri;
     }
 
     return NULL;
