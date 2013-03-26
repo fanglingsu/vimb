@@ -289,7 +289,7 @@ Zoom \fIN\fP steps in or out of the current page \- effecting all elements.
 Reset the zoomlevel to the default value.
 .SS History
 .TP
-.BI [ N "]hist-prev, [" N "]hist-next"
+.B hist-prev, hist-next"
 Prints the previous or next cammand or search query from history into
 inputbox. If there is already text in the input box this will be used to get
 history items. A command is not a internal command, but every string entered
