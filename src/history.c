@@ -29,6 +29,13 @@ static const VbFile file_map[HISTORY_LAST] = {
     FILES_HISTORY
 };
 
+static struct {
+    unsigned int pointer;
+    char*        prefix;
+    char*        query;
+    GList*       active;
+} history;
+
 static const char* history_get_file_by_type(HistoryType type);
 static GList* history_load(const char* file);
 static void history_write_to_file(GList* list, const char* file);
@@ -71,46 +78,81 @@ GList* history_get_all(HistoryType type)
     return history_load(history_get_file_by_type(type));
 }
 
-const char* history_get(HistoryType type, int step, const char* query)
+/**
+ * Retrieves the command from history to be shown in input box.
+ * The result must be freed by the caller.
+ */
+char* history_get(const char* input, int step)
 {
-    const char* command;
+    char* command = NULL;
+    unsigned int len;
 
     /* get the search prefix only on start of history search */
-    if (!vb.state.history_active) {
-        OVERWRITE_STRING(vb.state.history_prefix, query);
+    if (!history.active) {
+        HistoryType type;
+
+        /* get the right history type and command prefix */
+        if (!strncmp(input, ":open ", 6)) {
+            type = HISTORY_URL;
+            OVERWRITE_STRING(history.query, input + 6);
+            OVERWRITE_STRING(history.prefix, ":open ");
+        } else if (!strncmp(input, ":tabopen ", 9)) {
+            type = HISTORY_URL;
+            OVERWRITE_STRING(history.query, input + 9);
+            OVERWRITE_STRING(history.prefix, ":tabopen ");
+        } else if (*input == ':') {
+            type = HISTORY_COMMAND;
+            OVERWRITE_STRING(history.query, input + 1);
+            OVERWRITE_STRING(history.prefix, ":");
+        } else if (*input == '/' || *input == '?') {
+            type = HISTORY_SEARCH;
+            OVERWRITE_STRING(history.query, input + 1);
+            OVERWRITE_STRING(history.prefix, (*input == '/') ? "/" : "?");
+        } else {
+            return NULL;
+        }
 
         GList* src = history_load(history_get_file_by_type(type));
 
         /* generate new history list with the matching items */
         for (GList* l = src; l; l = l->next) {
             char* value = (char*)l->data;
-            if (g_str_has_prefix(value, vb.state.history_prefix)) {
-                vb.state.history_active = g_list_prepend(vb.state.history_active, g_strdup(value));
+            if (g_str_has_prefix(value, history.query)) {
+                history.active = g_list_prepend(history.active, g_strdup(value));
             }
         }
+
+        /* if the list is searched forward we would move the history pointer
+         * to the element with index 1, but we should start with 0 */
+        step = step > 0 ? step - 1 : step;
     }
 
-    const int len = g_list_length(vb.state.history_active);
+    len = g_list_length(history.active);
     if (!len) {
         return NULL;
     }
 
     /* if reached end/beginnen start at the opposit site of list again */
-    vb.state.history_pointer = (len + vb.state.history_pointer + step) % len;
+    history.pointer = (len + history.pointer + step) % len;
 
-    command = (char*)g_list_nth_data(vb.state.history_active, vb.state.history_pointer);
+    command = g_strconcat(
+        history.prefix,
+        g_list_nth_data(history.active, history.pointer),
+        NULL
+    );
 
     return command;
 }
 
 void history_rewind(void)
 {
-    if (vb.state.history_active) {
-        OVERWRITE_STRING(vb.state.history_prefix, NULL);
-        vb.state.history_pointer = 0;
+    if (history.active) {
         /* free temporary used history list */
-        g_list_free_full(vb.state.history_active, (GDestroyNotify)g_free);
-        vb.state.history_active = NULL;
+        g_list_free_full(history.active, (GDestroyNotify)g_free);
+
+        OVERWRITE_STRING(history.prefix, NULL);
+        history.active  = NULL;
+        history.pointer = 0;
     }
 }
 

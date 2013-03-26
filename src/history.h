@@ -31,7 +31,7 @@ typedef enum {
 void history_cleanup(void);
 void history_add(HistoryType type, const char* value);
 GList* history_get_all(HistoryType type);
-const char* history_get(HistoryType type, int step, const char* query);
+char* history_get(const char* input, int step);
 void history_rewind(void);
 void history_list_free(GList** list);
 
