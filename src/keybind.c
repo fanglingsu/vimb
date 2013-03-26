@@ -218,8 +218,16 @@ static guint keybind_str_to_modmask(const char* str)
 
 static guint keybind_str_to_value(const char* str)
 {
-    if (g_ascii_strcasecmp(str, "tab") == 0) {
+    if (!strcmp(str, "tab")) {
         return GDK_Tab;
+    } else if (!strcmp(str, "up")) {
+        return GDK_Up;
+    } else if (!strcmp(str, "down")) {
+        return GDK_Down;
+    } else if (!strcmp(str, "left")) {
+        return GDK_Left;
+    } else if (!strcmp(str, "right")) {
+        return GDK_Right;
     }
 
     return str[0];

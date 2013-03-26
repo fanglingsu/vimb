@@ -166,7 +166,7 @@ keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]
 
 The modkey is a single simple char like "g". The key can also contain
 special keys and modifiers and is given in format like "<ctrl-o>", "<tab>",
-"<shift-tab>" or also a simple char like "G".
+"<shift-tab>", "<up>", "<right>" or also a simple char like "G".
 
 Example:
 .br
