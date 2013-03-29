@@ -113,10 +113,15 @@ static gboolean dom_editable_focus_cb(Element *element, Event *event)
 
 static Element *dom_get_active_element(Document *doc)
 {
-    Document *d     = NULL;
-    Element *active = webkit_dom_html_document_get_active_element((void*)doc);
-    char *tagname   = webkit_dom_element_get_tag_name(active);
-    Element *result = NULL;
+    char *tagname;
+    Document *d = NULL;
+    Element *active, *result = NULL;
+
+    active = webkit_dom_html_document_get_active_element((void*)doc);
+    if (!active) {
+        return result;
+    }
+    tagname = webkit_dom_element_get_tag_name(active);
 
     if (!g_strcmp0(tagname, "FRAME")) {
         d = webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active));
