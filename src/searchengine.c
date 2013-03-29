@@ -80,10 +80,10 @@ gboolean searchengine_set_default(const char* handle)
 
 char* searchengine_get_uri(const char* handle)
 {
-    char* def = vb.behave.searchengine_default;
-    GSList* l = searchengine_find(handle);
+    const char* def = vb.behave.searchengine_default;
+    GSList* l = NULL;
 
-    if (l) {
+    if (handle && (l = searchengine_find(handle))) {
         return ((Searchengine*)l->data)->uri;
     } else if (def && (l = searchengine_find(def))) {
         return ((Searchengine*)l->data)->uri;

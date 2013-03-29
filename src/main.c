@@ -137,7 +137,6 @@ gboolean vb_eval_script(WebKitWebFrame* frame, char* script, char* file, char** 
 gboolean vb_load_uri(const Arg* arg)
 {
     char* uri;
-    char* part;
     char* path = arg->s;
     struct stat st;
 
@@ -154,18 +153,27 @@ gboolean vb_load_uri(const Arg* arg)
     if (stat(path, &st) == 0) {
         char* rp = realpath(path, NULL);
         uri = g_strdup_printf("file://%s", rp);
-    } else if (!strchr(path, '.') && (part = strchr(path, ' '))) {
-        /* look up for a searchengine */
-        *part = '\0';
-        char* search_uri = searchengine_get_uri(path);
-        char* term       = soup_uri_encode(part + 1, "&");
+    } else if (!strchr(path, '.')) {
+        char* part  = NULL;
+        char* tmpl  = NULL;
+        char* query = NULL;
 
-        if (search_uri) {
-            uri = g_strdup_printf(search_uri, term);
+        /* look up for a searchengine with handle */
+        if ((part = strchr(path, ' '))) {
+            *part = '\0';
+            tmpl  = searchengine_get_uri(path);
+            query = soup_uri_encode(part + 1, "&");
+        } else {
+            tmpl  = searchengine_get_uri(NULL);
+            query = soup_uri_encode(path, "&");
+        }
+
+        if (tmpl) {
+            uri = g_strdup_printf(tmpl, query);
         } else {
             uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
         }
-        g_free(term);
+        g_free(query);
     } else {
         uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
     }
