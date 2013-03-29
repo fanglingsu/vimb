@@ -36,6 +36,7 @@ static struct {
     GList*       active;
 } history;
 
+static GList* history_get_list(const char* input);
 static const char* history_get_file_by_type(HistoryType type);
 static GList* history_load(const char* file);
 static void history_write_to_file(GList* list, const char* file);
@@ -89,38 +90,7 @@ char* history_get(const char* input, int step)
 
     /* get the search prefix only on start of history search */
     if (!history.active) {
-        HistoryType type;
-
-        /* get the right history type and command prefix */
-        if (!strncmp(input, ":open ", 6)) {
-            type = HISTORY_URL;
-            OVERWRITE_STRING(history.query, input + 6);
-            OVERWRITE_STRING(history.prefix, ":open ");
-        } else if (!strncmp(input, ":tabopen ", 9)) {
-            type = HISTORY_URL;
-            OVERWRITE_STRING(history.query, input + 9);
-            OVERWRITE_STRING(history.prefix, ":tabopen ");
-        } else if (*input == ':') {
-            type = HISTORY_COMMAND;
-            OVERWRITE_STRING(history.query, input + 1);
-            OVERWRITE_STRING(history.prefix, ":");
-        } else if (*input == '/' || *input == '?') {
-            type = HISTORY_SEARCH;
-            OVERWRITE_STRING(history.query, input + 1);
-            OVERWRITE_STRING(history.prefix, (*input == '/') ? "/" : "?");
-        } else {
-            return NULL;
-        }
-
-        GList* src = history_load(history_get_file_by_type(type));
-
-        /* generate new history list with the matching items */
-        for (GList* l = src; l; l = l->next) {
-            char* value = (char*)l->data;
-            if (g_str_has_prefix(value, history.query)) {
-                history.active = g_list_prepend(history.active, g_strdup(value));
-            }
-        }
+        history.active = history_get_list(input);
 
         /* if the list is searched forward we would move the history pointer
          * to the element with index 1, but we should start with 0 */
@@ -132,7 +102,7 @@ char* history_get(const char* input, int step)
         return NULL;
     }
 
-    /* if reached end/beginnen start at the opposit site of list again */
+    /* if reached end/beginnen start at the opposite site of list again */
     history.pointer = (len + history.pointer + step) % len;
 
     command = g_strconcat(
@@ -162,6 +132,49 @@ void history_list_free(GList** list)
         g_list_free_full(*list, (GDestroyNotify)g_free);
         *list = NULL;
     }
+}
+
+/**
+ * Retrieves the list of matching history items.
+ * The list must be freed.
+ */
+static GList* history_get_list(const char* input)
+{
+    HistoryType type;
+    GList* result = NULL;
+
+    /* get the right history type and command prefix */
+    if (!strncmp(input, ":open ", 6)) {
+        type = HISTORY_URL;
+        OVERWRITE_STRING(history.query, input + 6);
+        OVERWRITE_STRING(history.prefix, ":open ");
+    } else if (!strncmp(input, ":tabopen ", 9)) {
+        type = HISTORY_URL;
+        OVERWRITE_STRING(history.query, input + 9);
+        OVERWRITE_STRING(history.prefix, ":tabopen ");
+    } else if (*input == ':') {
+        type = HISTORY_COMMAND;
+        OVERWRITE_STRING(history.query, input + 1);
+        OVERWRITE_STRING(history.prefix, ":");
+    } else if (*input == '/' || *input == '?') {
+        type = HISTORY_SEARCH;
+        OVERWRITE_STRING(history.query, input + 1);
+        OVERWRITE_STRING(history.prefix, (*input == '/') ? "/" : "?");
+    } else {
+        return NULL;
+    }
+
+    GList* src = history_load(history_get_file_by_type(type));
+
+    /* generate new history list with the matching items */
+    for (GList* l = src; l; l = l->next) {
+        char* value = (char*)l->data;
+        if (g_str_has_prefix(value, history.query)) {
+            result = g_list_prepend(result, g_strdup(value));
+        }
+    }
+
+    return result;
 }
 
 static const char* history_get_file_by_type(HistoryType type)
