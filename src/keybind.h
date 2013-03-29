@@ -28,8 +28,8 @@ typedef struct {
     guint  modkey;
     guint  modmask;     /* modemask for the kayval */
     guint  keyval;
-    char *command;     /* command to run */
-    char *param;
+    char   *command;    /* command to run */
+    char   *param;
 } Keybind;
 
 void keybind_init(void);
