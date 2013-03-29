@@ -88,6 +88,7 @@ void vb_echo_force(const MessageType type, const char *error, ...)
 
     vb_update_input_style(type);
     gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), message);
+    gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), strlen(message) > INPUT_LENGTH ? 0 : -1);
 }
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)

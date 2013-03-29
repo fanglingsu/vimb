@@ -98,8 +98,6 @@ static CommandInfo cmd_list[] = {
     {"hist-prev",           command_history,     {1}},
 };
 
-static void command_write_input(const char* str);
-
 
 void command_init(void)
 {
@@ -173,10 +171,10 @@ gboolean command_input(const Arg* arg)
     ) {
         /* append the current url to the input message */
         char* input = g_strconcat(arg->s, url, NULL);
-        command_write_input(input);
+        vb_echo_force(VB_MSG_NORMAL, input);
         g_free(input);
     } else {
-        command_write_input(arg->s);
+        vb_echo_force(VB_MSG_NORMAL, arg->s);
     }
 
     vb_set_mode(VB_MODE_COMMAND, FALSE);
@@ -342,7 +340,7 @@ gboolean command_inspect(const Arg* arg)
 
 gboolean command_hints(const Arg* arg)
 {
-    command_write_input(arg->s);
+    vb_echo_force(VB_MSG_NORMAL, arg->s);
     /* mode will be set in hints_create - so we don't neet to do it here */
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
@@ -524,28 +522,8 @@ gboolean command_history(const Arg* arg)
         return FALSE;
     }
 
-    command_write_input(entry);
+    vb_echo_force(VB_MSG_NORMAL, entry);
     g_free(entry);
 
     return TRUE;
-}
-
-static void command_write_input(const char* str)
-{
-    int pos = 0;
-    GtkEditable* box = GTK_EDITABLE(vb.gui.inputbox);
-    /* reset the colors and fonts to defalts */
-    vb_set_widget_font(
-        vb.gui.inputbox,
-        &vb.style.input_fg[VB_MSG_NORMAL],
-        &vb.style.input_bg[VB_MSG_NORMAL],
-        vb.style.input_font[VB_MSG_NORMAL]
-    );
-
-    /* remove content from input box */
-    gtk_editable_delete_text(box, 0, -1);
-
-    /* insert string from arg */
-    gtk_editable_insert_text(box, str, -1, &pos);
-    gtk_editable_set_position(box, strlen(str) > INPUT_LENGTH ? 0 : -1);
 }
