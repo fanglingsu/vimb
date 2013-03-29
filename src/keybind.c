@@ -25,12 +25,12 @@
 extern VbCore vb;
 
 static void keybind_rebuild_modkeys(void);
-static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval);
-static void keybind_str_to_keybind(char* str, Keybind* key);
-static guint keybind_str_to_modmask(const char* str);
-static guint keybind_str_to_value(const char* str);
-static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
-static void keybind_free(Keybind* keybind);
+static GSList *keybind_find(int mode, guint modkey, guint modmask, guint keyval);
+static void keybind_str_to_keybind(char *str, Keybind *key);
+static guint keybind_str_to_modmask(const char *str);
+static guint keybind_str_to_value(const char *str);
+static gboolean keybind_keypress_callback(WebKitWebView *webview, GdkEventKey *event);
+static void keybind_free(Keybind *keybind);
 
 
 void keybind_init(void)
@@ -49,20 +49,20 @@ void keybind_cleanup(void)
     }
 }
 
-gboolean keybind_add_from_string(char* keys, const char* command, const Mode mode)
+gboolean keybind_add_from_string(char *keys, const char *command, const Mode mode)
 {
     if (keys == NULL || *keys == '\0') {
         return FALSE;
     }
 
     /* split the input string into command and parameter part */
-    char** token = g_strsplit(command, " ", 2);
+    char **token = g_strsplit(command, " ", 2);
     if (!token[0] || !command_exists(token[0])) {
         g_strfreev(token);
         return FALSE;
     }
 
-    Keybind* keybind = g_new0(Keybind, 1);
+    Keybind *keybind = g_new0(Keybind, 1);
     keybind->mode    = mode;
     keybind->command = g_strdup(token[0]);
     keybind->param   = g_strdup(token[1]);
@@ -81,7 +81,7 @@ gboolean keybind_add_from_string(char* keys, const char* command, const Mode mod
     return TRUE;
 }
 
-gboolean keybind_remove_from_string(char* str, const Mode mode)
+gboolean keybind_remove_from_string(char *str, const Mode mode)
 {
     Keybind keybind = {.mode = mode};
 
@@ -93,7 +93,7 @@ gboolean keybind_remove_from_string(char* str, const Mode mode)
     /* fill the keybind with data from given string */
     keybind_str_to_keybind(str, &keybind);
 
-    GSList* link = keybind_find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
+    GSList *link = keybind_find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
     if (link) {
         keybind_free((Keybind*)link->data);
         vb.behave.keys = g_slist_delete_link(vb.behave.keys, link);
@@ -112,7 +112,7 @@ gboolean keybind_remove_from_string(char* str, const Mode mode)
  */
 static void keybind_rebuild_modkeys(void)
 {
-    GSList* link;
+    GSList *link;
     /* remove previous modkeys */
     if (vb.behave.modkeys) {
         g_string_free(vb.behave.modkeys, TRUE);
@@ -121,7 +121,7 @@ static void keybind_rebuild_modkeys(void)
 
     /* regenerate the modekeys */
     for (link = vb.behave.keys; link != NULL; link = link->next) {
-        Keybind* keybind = (Keybind*)link->data;
+        Keybind *keybind = (Keybind*)link->data;
         /* if not not exists - add it */
         if (keybind->modkey && strchr(vb.behave.modkeys->str, keybind->modkey) == NULL) {
             g_string_append_c(vb.behave.modkeys, keybind->modkey);
@@ -129,11 +129,11 @@ static void keybind_rebuild_modkeys(void)
     }
 }
 
-static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
+static GSList *keybind_find(int mode, guint modkey, guint modmask, guint keyval)
 {
-    GSList* link;
+    GSList *link;
     for (link = vb.behave.keys; link != NULL; link = link->next) {
-        Keybind* keybind = (Keybind*)link->data;
+        Keybind *keybind = (Keybind*)link->data;
         if (keybind->keyval == keyval
             && keybind->modmask == modmask
             && keybind->modkey == modkey
@@ -149,9 +149,9 @@ static GSList* keybind_find(int mode, guint modkey, guint modmask, guint keyval)
 /**
  * Configures the given keybind by also given string.
  */
-static void keybind_str_to_keybind(char* str, Keybind* keybind)
+static void keybind_str_to_keybind(char *str, Keybind *keybind)
 {
-    char** string = NULL;
+    char **string = NULL;
     guint len = 0;
 
     g_strstrip(str);
@@ -204,7 +204,7 @@ static void keybind_str_to_keybind(char* str, Keybind* keybind)
     }
 }
 
-static guint keybind_str_to_modmask(const char* str)
+static guint keybind_str_to_modmask(const char *str)
 {
     if (g_ascii_strcasecmp(str, "ctrl") == 0) {
         return GDK_CONTROL_MASK;
@@ -216,7 +216,7 @@ static guint keybind_str_to_modmask(const char* str)
     return 0;
 }
 
-static guint keybind_str_to_value(const char* str)
+static guint keybind_str_to_value(const char *str)
 {
     if (!strcmp(str, "tab")) {
         return GDK_Tab;
@@ -233,7 +233,7 @@ static guint keybind_str_to_value(const char* str)
     return str[0];
 }
 
-static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
+static gboolean keybind_keypress_callback(WebKitWebView *webview, GdkEventKey *event)
 {
     guint keyval = event->keyval;
     guint state  = CLEAN_STATE_WITH_SHIFT(event);
@@ -264,10 +264,10 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     }
 
     /* check for keybinding */
-    GSList* link = keybind_find(CLEAN_MODE(vb.state.mode), vb.state.modkey, state, keyval);
+    GSList *link = keybind_find(CLEAN_MODE(vb.state.mode), vb.state.modkey, state, keyval);
 
     if (link) {
-        Keybind* keybind = (Keybind*)link->data;
+        Keybind *keybind = (Keybind*)link->data;
         command_run(keybind->command, keybind->param);
 
         return TRUE;
@@ -276,7 +276,7 @@ static gboolean keybind_keypress_callback(WebKitWebView* webview, GdkEventKey* e
     return FALSE;
 }
 
-static void keybind_free(Keybind* keybind)
+static void keybind_free(Keybind *keybind)
 {
     g_free(keybind->command);
     g_free(keybind->param);

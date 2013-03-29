@@ -21,9 +21,9 @@
 #define _SEARCHENGINE_H
 
 void searchengine_cleanup(void);
-gboolean searchengine_add(const char* handle, const char* uri);
-gboolean searchengine_remove(const char* handle);
-gboolean searchengine_set_default(const char* handle);
-char* searchengine_get_uri(const char* handle);
+gboolean searchengine_add(const char *handle, const char *uri);
+gboolean searchengine_remove(const char *handle);
+gboolean searchengine_set_default(const char *handle);
+char *searchengine_get_uri(const char *handle);
 
 #endif /* end of include guard: _SEARCHENGINE_H */

@@ -29,10 +29,10 @@ typedef enum {
 } HistoryType;
 
 void history_cleanup(void);
-void history_add(HistoryType type, const char* value);
-GList* history_get_all(HistoryType type);
-char* history_get(const char* input, gboolean prev);
+void history_add(HistoryType type, const char *value);
+GList *history_get_all(HistoryType type);
+char *history_get(const char *input, gboolean prev);
 void history_rewind(void);
-void history_list_free(GList** list);
+void history_list_free(GList **list);
 
 #endif /* end of include guard: _HISTORY_H */

@@ -30,15 +30,15 @@
 extern VbCore vb;
 extern const unsigned int MAXIMUM_HINTS;
 
-static void hints_run_script(char* js);
+static void hints_run_script(char *js);
 static void hints_fire();
 static void hints_observe_input(gboolean observe);
 static gboolean hints_changed_callback(GtkEditable *entry);
-static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event);
+static gboolean hints_keypress_callback(WebKitWebView *webview, GdkEventKey *event);
 
-void hints_init(WebKitWebFrame* frame)
+void hints_init(WebKitWebFrame *frame)
 {
-    char* value = NULL;
+    char *value = NULL;
     vb_eval_script(frame, HINTS_JS, HINT_FILE, &value);
     g_free(value);
 }
@@ -47,8 +47,8 @@ void hints_clear()
 {
     hints_observe_input(FALSE);
     if (CLEAN_MODE(vb.state.mode) == VB_MODE_HINTING) {
-        char* js = g_strdup_printf("%s.clear();", HINT_VAR);
-        char* value = NULL;
+        char *js = g_strdup_printf("%s.clear();", HINT_VAR);
+        char *value = NULL;
         vb_eval_script(webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value);
         g_free(value);
         g_free(js);
@@ -57,13 +57,13 @@ void hints_clear()
     }
 }
 
-void hints_create(const char* input, guint mode, const guint prefixLength)
+void hints_create(const char *input, guint mode, const guint prefixLength)
 {
-    char* js = NULL;
+    char *js = NULL;
     if (CLEAN_MODE(vb.state.mode) != VB_MODE_HINTING) {
         vb_set_mode(VB_MODE_HINTING, FALSE);
 
-        Style* style = &vb.style;
+        Style *style = &vb.style;
         vb.hints.prefixLength = prefixLength;
         vb.hints.mode         = mode;
         vb.hints.num          = 0;
@@ -102,21 +102,21 @@ void hints_create(const char* input, guint mode, const guint prefixLength)
 
 void hints_update(const gulong num)
 {
-    char* js = g_strdup_printf("%s.update(%lu);", HINT_VAR, num);
+    char *js = g_strdup_printf("%s.update(%lu);", HINT_VAR, num);
     hints_run_script(js);
     g_free(js);
 }
 
 void hints_focus_next(const gboolean back)
 {
-    char* js = g_strdup_printf(back ? "%s.focusPrev()" : "%s.focusNext();", HINT_VAR);
+    char *js = g_strdup_printf(back ? "%s.focusPrev()" : "%s.focusNext();", HINT_VAR);
     hints_run_script(js);
     g_free(js);
 }
 
-static void hints_run_script(char* js)
+static void hints_run_script(char *js)
 {
-    char* value = NULL;
+    char *value = NULL;
     int mode = vb.hints.mode;
 
     gboolean success = vb_eval_script(
@@ -141,7 +141,7 @@ static void hints_run_script(char* js)
         vb_set_mode(VB_MODE_INSERT, FALSE);
     } else if (!strncmp(value, "DATA:", 5)) {
         Arg a = {0};
-        char* v = (value + 5);
+        char *v = (value + 5);
         if (mode & HINTS_PROCESS_INPUT) {
             a.s = g_strconcat((mode & HINTS_OPEN_NEW) ? ":tabopen " : ":open ", v, NULL);
             command_input(&a);
@@ -157,7 +157,7 @@ static void hints_run_script(char* js)
 
 static void hints_fire()
 {
-    char* js = g_strdup_printf("%s.fire();", HINT_VAR);
+    char *js = g_strdup_printf("%s.fire();", HINT_VAR);
     hints_run_script(js);
     g_free(js);
 }
@@ -181,7 +181,7 @@ static void hints_observe_input(gboolean observe)
 
 static gboolean hints_changed_callback(GtkEditable *entry)
 {
-    const char* text = GET_TEXT();
+    const char *text = GET_TEXT();
 
     /* skip hinting prefixes like '.', ',', ';y' ... */
     hints_create(text + vb.hints.prefixLength, vb.hints.mode, vb.hints.prefixLength);
@@ -189,7 +189,7 @@ static gboolean hints_changed_callback(GtkEditable *entry)
     return TRUE;
 }
 
-static gboolean hints_keypress_callback(WebKitWebView* webview, GdkEventKey* event)
+static gboolean hints_keypress_callback(WebKitWebView *webview, GdkEventKey *event)
 {
     int numval;
     guint keyval = event->keyval;

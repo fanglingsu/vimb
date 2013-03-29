@@ -22,20 +22,20 @@
 
 extern VbCore vb;
 
-static gboolean dom_auto_insert(Element* element);
-static gboolean dom_editable_focus_cb(Element* element, Event* event);
-static Element* dom_get_active_element(Document* doc);
+static gboolean dom_auto_insert(Element *element);
+static gboolean dom_editable_focus_cb(Element *element, Event *event);
+static Element *dom_get_active_element(Document *doc);
 
 
 void dom_check_auto_insert(void)
 {
-    Document* doc   = webkit_web_view_get_dom_document(vb.gui.webview);
-    Element* active = dom_get_active_element(doc);
+    Document *doc   = webkit_web_view_get_dom_document(vb.gui.webview);
+    Element *active = dom_get_active_element(doc);
 
     /* the focus was not set automatically - add event listener to track focus
      * events on the document */
     if (!dom_auto_insert(active)) {
-        HtmlElement* element = webkit_dom_document_get_body(doc);
+        HtmlElement *element = webkit_dom_document_get_body(doc);
         if (!element) {
             element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
         }
@@ -50,8 +50,8 @@ void dom_check_auto_insert(void)
  */
 void dom_clear_focus(void)
 {
-    Document* doc   = webkit_web_view_get_dom_document(vb.gui.webview);
-    Element* active = dom_get_active_element(doc);
+    Document *doc   = webkit_web_view_get_dom_document(vb.gui.webview);
+    Element *active = dom_get_active_element(doc);
 
     if (active) {
         webkit_dom_element_blur(active);
@@ -62,14 +62,14 @@ void dom_clear_focus(void)
  * Indicates if the given dom element is an editable element like text input,
  * password or textarea.
  */
-gboolean dom_is_editable(Element* element)
+gboolean dom_is_editable(Element *element)
 {
     gboolean result = FALSE;
     if (!element) {
         return result;
     }
 
-    char* tagname = webkit_dom_element_get_tag_name(element);
+    char *tagname = webkit_dom_element_get_tag_name(element);
     char *type = webkit_dom_element_get_attribute(element, "type");
     if (!g_ascii_strcasecmp(tagname, "textarea")) {
         result = TRUE;
@@ -88,7 +88,7 @@ gboolean dom_is_editable(Element* element)
     return result;
 }
 
-static gboolean dom_auto_insert(Element* element)
+static gboolean dom_auto_insert(Element *element)
 {
     if (dom_is_editable(element)) {
         vb_set_mode(VB_MODE_INSERT, FALSE);
@@ -97,24 +97,24 @@ static gboolean dom_auto_insert(Element* element)
     return FALSE;
 }
 
-static gboolean dom_editable_focus_cb(Element* element, Event* event)
+static gboolean dom_editable_focus_cb(Element *element, Event *event)
 {
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(dom_editable_focus_cb), true
     );
     if (CLEAN_MODE(vb.state.mode) != VB_MODE_INSERT) {
-        EventTarget* target = webkit_dom_event_get_target(event);
+        EventTarget *target = webkit_dom_event_get_target(event);
         dom_auto_insert((void*)target);
     }
     return FALSE;
 }
 
-static Element* dom_get_active_element(Document* doc)
+static Element *dom_get_active_element(Document *doc)
 {
-    Document* d     = NULL;
-    Element* active = webkit_dom_html_document_get_active_element((void*)doc);
-    char* tagname   = webkit_dom_element_get_tag_name(active);
-    Element* result = NULL;
+    Document *d     = NULL;
+    Element *active = webkit_dom_html_document_get_active_element((void*)doc);
+    char *tagname   = webkit_dom_element_get_tag_name(active);
+    Element *result = NULL;
 
     if (!g_strcmp0(tagname, "FRAME")) {
         d = webkit_dom_html_frame_element_get_content_document(WEBKIT_DOM_HTML_FRAME_ELEMENT(active));

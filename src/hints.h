@@ -33,8 +33,8 @@ enum {
     HINTS_OPEN_NEW      = (1 << 5),
 };
 
-void hints_init(WebKitWebFrame* frame);
-void hints_create(const char* input, guint mode, const guint prefixLength);
+void hints_init(WebKitWebFrame *frame);
+void hints_create(const char *input, guint mode, const guint prefixLength);
 void hints_update(const gulong num);
 void hints_clear();
 void hints_focus_next(const gboolean back);

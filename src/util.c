@@ -21,7 +21,7 @@
 #include "ctype.h"
 #include "util.h"
 
-char* util_get_config_dir(void)
+char *util_get_config_dir(void)
 {
     char *path = g_build_filename(g_get_user_config_dir(), "vimb", NULL);
     util_create_dir_if_not_exists(path);
@@ -29,7 +29,7 @@ char* util_get_config_dir(void)
     return path;
 }
 
-char* util_get_cache_dir(void)
+char *util_get_cache_dir(void)
 {
     char *path = g_build_filename(g_get_user_cache_dir(), "vimb", NULL);
     util_create_dir_if_not_exists(path);
@@ -37,9 +37,9 @@ char* util_get_cache_dir(void)
     return path;
 }
 
-const char* util_get_home_dir(void)
+const char *util_get_home_dir(void)
 {
-    const char* dir = g_getenv("HOME");
+    const char *dir = g_getenv("HOME");
 
     if (!dir) {
         dir = g_get_home_dir();
@@ -48,17 +48,17 @@ const char* util_get_home_dir(void)
     return dir;
 }
 
-void util_create_dir_if_not_exists(const char* dirpath)
+void util_create_dir_if_not_exists(const char *dirpath)
 {
     if (!g_file_test(dirpath, G_FILE_TEST_IS_DIR)) {
         g_mkdir_with_parents(dirpath, 0755);
     }
 }
 
-void util_create_file_if_not_exists(const char* filename)
+void util_create_file_if_not_exists(const char *filename)
 {
     if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
-        FILE* f = fopen(filename, "a");
+        FILE *f = fopen(filename, "a");
         fclose(f);
     }
 }
@@ -68,10 +68,10 @@ void util_create_file_if_not_exists(const char* filename)
  *
  * The memory of returned string have to be freed!
  */
-char* util_get_file_contents(const char* filename, gsize* length)
+char *util_get_file_contents(const char *filename, gsize *length)
 {
-    GError* error  = NULL;
-    char* content = NULL;
+    GError *error  = NULL;
+    char *content = NULL;
     if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR)
         && g_file_get_contents(filename, &content, length, &error))
     ) {
@@ -86,10 +86,10 @@ char* util_get_file_contents(const char* filename, gsize* length)
  *
  * The result have to be freed by g_strfreev().
  */
-char** util_get_lines(const char* filename)
+char **util_get_lines(const char *filename)
 {
-    char* content = util_get_file_contents(filename, NULL);
-    char** lines  = NULL;
+    char *content = util_get_file_contents(filename, NULL);
+    char **lines  = NULL;
     if (content) {
         /* split the file content into lines */
         lines = g_strsplit(content, "\n", -1);
@@ -98,7 +98,7 @@ char** util_get_lines(const char* filename)
     return lines;
 }
 
-char* util_strcasestr(const char* haystack, const char* needle)
+char *util_strcasestr(const char *haystack, const char *needle)
 {
     int nlen = strlen(needle);
     int hlen = strlen(haystack) - nlen + 1;

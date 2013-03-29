@@ -205,32 +205,32 @@ enum {
 /* structs */
 typedef struct {
     int     i;
-    char*   s;
+    char *  s;
 } Arg;
 
 /* statusbar */
 typedef struct {
-    GtkBox*     box;
-    GtkWidget*  left;
-    GtkWidget*  right;
+    GtkBox *    box;
+    GtkWidget * left;
+    GtkWidget * right;
 } StatusBar;
 
 /* gui */
 typedef struct {
-    GtkWidget*          window;
-    GtkWidget*          scroll;
-    WebKitWebView*      webview;
-    WebKitWebInspector* inspector;
-    GtkBox*             box;
-    GtkWidget*          eventbox;
-    GtkWidget*          inputbox;
-    GtkWidget*          compbox;
-    GtkWidget*          pane;
+    GtkWidget *         window;
+    GtkWidget *         scroll;
+    WebKitWebView *     webview;
+    WebKitWebInspector *inspector;
+    GtkBox *            box;
+    GtkWidget *         eventbox;
+    GtkWidget *         inputbox;
+    GtkWidget *         compbox;
+    GtkWidget *         pane;
     StatusBar           statusbar;
-    GtkScrollbar*       sb_h;
-    GtkScrollbar*       sb_v;
-    GtkAdjustment*      adjust_h;
-    GtkAdjustment*      adjust_v;
+    GtkScrollbar *      sb_h;
+    GtkScrollbar *      sb_v;
+    GtkAdjustment *     adjust_h;
+    GtkAdjustment *     adjust_v;
 } Gui;
 
 /* state */
@@ -243,52 +243,52 @@ typedef struct {
     MessageType     input_type;
     gboolean        is_inspecting;
     SearchDirection search_dir;
-    char*           search_query;
-    GList*          downloads;
+    char *          search_query;
+    GList *         downloads;
 } State;
 
 /* behaviour */
 typedef struct {
-    GHashTable* commands;
-    GSList*     keys;
-    GString*    modkeys;
-    GSList*     searchengines;
-    char*       searchengine_default;   /* handle of the default search engine */
+    GHashTable *commands;
+    GSList *    keys;
+    GString *   modkeys;
+    GSList *    searchengines;
+    char *      searchengine_default;   /* handle of the default search engine */
 } Behaviour;
 
 typedef struct {
     time_t cookie_timeout;
     int    scrollstep;
     guint  max_completion_items;
-    char*  home_page;
-    char*  download_dir;
+    char * home_page;
+    char * download_dir;
     guint  history_max;
 } Config;
 
 typedef struct {
-    GList* completions;
-    GList* active;
+    GList *completions;
+    GList *active;
     int    count;
-    char*  prefix;
+    char * prefix;
 } Completions;
 
 typedef struct {
     VbColor               input_fg[VB_MSG_LAST];
     VbColor               input_bg[VB_MSG_LAST];
-    PangoFontDescription* input_font[VB_MSG_LAST];
+    PangoFontDescription *input_font[VB_MSG_LAST];
     /* completion */
     VbColor               comp_fg[VB_COMP_LAST];
     VbColor               comp_bg[VB_COMP_LAST];
-    PangoFontDescription* comp_font;
+    PangoFontDescription *comp_font;
     /* hint style */
-    char*                 hint_bg;
-    char*                 hint_bg_focus;
-    char*                 hint_fg;
-    char*                 hint_style;
+    char *                hint_bg;
+    char *                hint_bg_focus;
+    char *                hint_fg;
+    char *                hint_style;
     /* status bar */
     VbColor               status_bg[VB_STATUS_LAST];
     VbColor               status_fg[VB_STATUS_LAST];
-    PangoFontDescription* status_font[VB_STATUS_LAST];
+    PangoFontDescription *status_font[VB_STATUS_LAST];
 } Style;
 
 typedef struct {
@@ -305,12 +305,12 @@ typedef struct {
     Completions     comps;
     Hints           hints;
 
-    char*           files[FILES_LAST];
+    char *          files[FILES_LAST];
     Config          config;
     Style           style;
     Behaviour       behave;
-    GHashTable*     settings;
-    SoupSession*    soup_session;
+    GHashTable *    settings;
+    SoupSession *   soup_session;
 #ifdef HAS_GTK3
     Window          embed;
 #else
@@ -324,14 +324,14 @@ extern VbCore core;
 /* functions */
 void vb_echo_force(const MessageType type,gboolean hide, const char *error, ...);
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...);
-gboolean vb_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value);
-gboolean vb_load_uri(const Arg* arg);
-gboolean vb_set_clipboard(const Arg* arg);
+gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value);
+gboolean vb_load_uri(const Arg *arg);
+gboolean vb_set_clipboard(const Arg *arg);
 gboolean vb_set_mode(Mode mode, gboolean clean);
-void vb_set_widget_font(GtkWidget* widget, const VbColor* fg, const VbColor* bg, PangoFontDescription* font);
+void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font);
 void vb_update_statusbar(void);
 void vb_update_status_style(void);
 void vb_update_input_style(void);
-void vb_update_urlbar(const char* uri);
+void vb_update_urlbar(const char *uri);
 
 #endif /* end of include guard: _MAIN_H */

@@ -35,7 +35,7 @@ const unsigned int INPUT_LENGTH  = 120;
 const unsigned int MAXIMUM_HINTS = 500;
 
 const struct {
-    char* command;
+    char *command;
 } default_config[] = {
     {"nmap gf=source"},
     {"nmap gF=inspect"},

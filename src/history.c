@@ -30,15 +30,15 @@ static const VbFile file_map[HISTORY_LAST] = {
 };
 
 static struct {
-    char*  prefix;
-    char*  query;
-    GList* active;
+    char  *prefix;
+    char  *query;
+    GList *active;
 } history;
 
-static GList* history_get_list(const char* input);
-static const char* history_get_file_by_type(HistoryType type);
-static GList* history_load(const char* file);
-static void history_write_to_file(GList* list, const char* file);
+static GList *history_get_list(const char *input);
+static const char *history_get_file_by_type(HistoryType type);
+static GList *history_load(const char *file);
+static void history_write_to_file(GList *list, const char *file);
 
 
 /**
@@ -48,7 +48,7 @@ static void history_write_to_file(GList* list, const char* file);
 void history_cleanup(void)
 {
     for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
-        const char* file = history_get_file_by_type(i);
+        const char *file = history_get_file_by_type(i);
         history_write_to_file(history_load(file), file);
     }
 }
@@ -56,10 +56,10 @@ void history_cleanup(void)
 /**
  * Write a new history entry to the end of history file.
  */
-void history_add(HistoryType type, const char* value)
+void history_add(HistoryType type, const char *value)
 {
-    const char* file = history_get_file_by_type(type);
-    FILE* f;
+    const char *file = history_get_file_by_type(type);
+    FILE *f;
     if ((f = fopen(file, "a+"))) {
         file_lock_set(fileno(f), F_WRLCK);
 
@@ -73,7 +73,7 @@ void history_add(HistoryType type, const char* value)
 /**
  * Retrieves all history entries for given history type.
  */
-GList* history_get_all(HistoryType type)
+GList *history_get_all(HistoryType type)
 {
     return history_load(history_get_file_by_type(type));
 }
@@ -82,9 +82,9 @@ GList* history_get_all(HistoryType type)
  * Retrieves the command from history to be shown in input box.
  * The result must be freed by the caller.
  */
-char* history_get(const char* input, gboolean prev)
+char *history_get(const char *input, gboolean prev)
 {
-    GList* new = NULL;
+    GList *new = NULL;
 
     if (!history.active) {
         history.active = history_get_list(input);
@@ -115,7 +115,7 @@ void history_rewind(void)
     }
 }
 
-void history_list_free(GList** list)
+void history_list_free(GList **list)
 {
     if (*list) {
         g_list_free_full(*list, (GDestroyNotify)g_free);
@@ -127,10 +127,10 @@ void history_list_free(GList** list)
  * Retrieves the list of matching history items.
  * The list must be freed.
  */
-static GList* history_get_list(const char* input)
+static GList *history_get_list(const char *input)
 {
     HistoryType type;
-    GList* result = NULL;
+    GList *result = NULL;
 
     /* get the right history type and command prefix */
     if (!strncmp(input, ":open ", 6)) {
@@ -153,11 +153,11 @@ static GList* history_get_list(const char* input)
         return NULL;
     }
 
-    GList* src = history_load(history_get_file_by_type(type));
+    GList *src = history_load(history_get_file_by_type(type));
 
     /* generate new history list with the matching items */
-    for (GList* l = src; l; l = l->next) {
-        char* value = (char*)l->data;
+    for (GList *l = src; l; l = l->next) {
+        char *value = (char*)l->data;
         if (g_str_has_prefix(value, history.query)) {
             result = g_list_prepend(result, g_strdup(value));
         }
@@ -166,7 +166,7 @@ static GList* history_get_list(const char* input)
     return result;
 }
 
-static const char* history_get_file_by_type(HistoryType type)
+static const char *history_get_file_by_type(HistoryType type)
 {
     return vb.files[file_map[type]];
 }
@@ -175,12 +175,12 @@ static const char* history_get_file_by_type(HistoryType type)
  * Loads history items form file but eleminate duplicates.
  * Oldest entries first.
  */
-static GList* history_load(const char* file)
+static GList *history_load(const char *file)
 {
     /* read the history items from file */
-    GList* list   = NULL;
+    GList *list   = NULL;
     char buf[512] = {0};
-    FILE* f;
+    FILE *f;
 
     if (!(f = fopen(file, "r"))) {
         return list;
@@ -195,7 +195,7 @@ static GList* history_load(const char* file)
             continue;
         }
         /* if the value is already in history, remove this entry */
-        for (GList* l = list; l; l = l->next) {
+        for (GList *l = list; l; l = l->next) {
             if (*buf && !g_strcmp0(buf, (char*)l->data)) {
                 g_free(l->data);
                 list = g_list_delete_link(list, l);
@@ -213,7 +213,7 @@ static GList* history_load(const char* file)
         /* reverse to not use the slow g_list_last */
         list = g_list_reverse(list);
         while (vb.config.history_max < g_list_length(list)) {
-            GList* last = g_list_first(list);
+            GList *last = g_list_first(list);
             g_free(last->data);
             list = g_list_delete_link(list, last);
         }
@@ -225,14 +225,14 @@ static GList* history_load(const char* file)
 /**
  * Loads the entries from file, make them unique and write them back to file.
  */
-static void history_write_to_file(GList* list, const char* file)
+static void history_write_to_file(GList *list, const char *file)
 {
-    FILE* f;
+    FILE *f;
     if ((f = fopen(file, "w"))) {
         file_lock_set(fileno(f), F_WRLCK);
 
         /* overwrite the history file with new unique history items */
-        for (GList* link = g_list_reverse(list); link; link = link->next) {
+        for (GList *link = g_list_reverse(list); link; link = link->next) {
             fprintf(f, "%s\n", (char*)link->data);
         }
 

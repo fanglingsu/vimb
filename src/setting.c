@@ -22,24 +22,24 @@
 
 extern VbCore vb;
 
-static Arg* setting_char_to_arg(const char* str, const Type type);
-static void setting_print_value(const Setting* s, void* value);
-static gboolean setting_webkit(const Setting* s, const SettingType type);
-static gboolean setting_cookie_timeout(const Setting* s, const SettingType type);
-static gboolean setting_scrollstep(const Setting* s, const SettingType type);
-static gboolean setting_status_color_bg(const Setting* s, const SettingType type);
-static gboolean setting_status_color_fg(const Setting* s, const SettingType type);
-static gboolean setting_status_font(const Setting* s, const SettingType type);
-static gboolean setting_input_style(const Setting* s, const SettingType type);
-static gboolean setting_completion_style(const Setting* s, const SettingType type);
-static gboolean setting_hint_style(const Setting* s, const SettingType type);
-static gboolean setting_strict_ssl(const Setting* s, const SettingType type);
-static gboolean setting_ca_bundle(const Setting* s, const SettingType type);
-static gboolean setting_home_page(const Setting* s, const SettingType type);
-static gboolean setting_download_path(const Setting* s, const SettingType type);
-static gboolean setting_proxy(const Setting* s, const SettingType type);
-static gboolean setting_user_style(const Setting* s, const SettingType type);
-static gboolean setting_history_max_items(const Setting* s, const SettingType type);
+static Arg *setting_char_to_arg(const char *str, const Type type);
+static void setting_print_value(const Setting *s, void *value);
+static gboolean setting_webkit(const Setting *s, const SettingType type);
+static gboolean setting_cookie_timeout(const Setting *s, const SettingType type);
+static gboolean setting_scrollstep(const Setting *s, const SettingType type);
+static gboolean setting_status_color_bg(const Setting *s, const SettingType type);
+static gboolean setting_status_color_fg(const Setting *s, const SettingType type);
+static gboolean setting_status_font(const Setting *s, const SettingType type);
+static gboolean setting_input_style(const Setting *s, const SettingType type);
+static gboolean setting_completion_style(const Setting *s, const SettingType type);
+static gboolean setting_hint_style(const Setting *s, const SettingType type);
+static gboolean setting_strict_ssl(const Setting *s, const SettingType type);
+static gboolean setting_ca_bundle(const Setting *s, const SettingType type);
+static gboolean setting_home_page(const Setting *s, const SettingType type);
+static gboolean setting_download_path(const Setting *s, const SettingType type);
+static gboolean setting_proxy(const Setting *s, const SettingType type);
+static gboolean setting_user_style(const Setting *s, const SettingType type);
+static gboolean setting_history_max_items(const Setting *s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -105,7 +105,7 @@ static Setting default_settings[] = {
 
 void setting_init(void)
 {
-    Setting* s;
+    Setting *s;
     unsigned int i;
     vb.settings = g_hash_table_new(g_str_hash, g_str_equal);
 
@@ -123,9 +123,9 @@ void setting_cleanup(void)
     }
 }
 
-gboolean setting_run(char* name, const char* param)
+gboolean setting_run(char *name, const char *param)
 {
-    Arg* a          = NULL;
+    Arg *a          = NULL;
     gboolean result = FALSE;
     gboolean get    = FALSE;
     SettingType type = SETTING_SET;
@@ -142,7 +142,7 @@ gboolean setting_run(char* name, const char* param)
         type = SETTING_GET;
     }
 
-    Setting* s = g_hash_table_lookup(vb.settings, name);
+    Setting *s = g_hash_table_lookup(vb.settings, name);
     if (!s) {
         vb_echo(VB_MSG_ERROR, TRUE, "Config '%s' not found", name);
         return FALSE;
@@ -198,13 +198,13 @@ gboolean setting_run(char* name, const char* param)
 /**
  * Converts string representing also given data type into and Arg.
  */
-static Arg* setting_char_to_arg(const char* str, const Type type)
+static Arg *setting_char_to_arg(const char *str, const Type type)
 {
     if (!str) {
         return NULL;
     }
 
-    Arg* arg = g_new0(Arg, 1);
+    Arg *arg = g_new0(Arg, 1);
     switch (type) {
         case TYPE_BOOLEAN:
             arg->i = g_ascii_strncasecmp(str, "true", 4) == 0
@@ -232,10 +232,10 @@ static Arg* setting_char_to_arg(const char* str, const Type type)
 /**
  * Print the setting value to the input box.
  */
-static void setting_print_value(const Setting* s, void* value)
+static void setting_print_value(const Setting *s, void *value)
 {
-    const char* name = s->alias ? s->alias : s->name;
-    char* string = NULL;
+    const char *name = s->alias ? s->alias : s->name;
+    char *string = NULL;
 
     switch (s->type) {
         case TYPE_BOOLEAN:
@@ -268,9 +268,9 @@ static void setting_print_value(const Setting* s, void* value)
     }
 }
 
-static gboolean setting_webkit(const Setting* s, const SettingType type)
+static gboolean setting_webkit(const Setting *s, const SettingType type)
 {
-    WebKitWebSettings* web_setting = webkit_web_view_get_settings(vb.gui.webview);
+    WebKitWebSettings *web_setting = webkit_web_view_get_settings(vb.gui.webview);
 
     switch (s->type) {
         case TYPE_BOOLEAN:
@@ -316,7 +316,7 @@ static gboolean setting_webkit(const Setting* s, const SettingType type)
         case TYPE_COLOR:
         case TYPE_FONT:
             if (type == SETTING_GET) {
-                char* value = NULL;
+                char *value = NULL;
                 g_object_get(G_OBJECT(web_setting), s->name, &value, NULL);
                 setting_print_value(s, value);
             } else {
@@ -327,7 +327,7 @@ static gboolean setting_webkit(const Setting* s, const SettingType type)
 
     return TRUE;
 }
-static gboolean setting_cookie_timeout(const Setting* s, const SettingType type)
+static gboolean setting_cookie_timeout(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         setting_print_value(s, &vb.config.cookie_timeout);
@@ -338,7 +338,7 @@ static gboolean setting_cookie_timeout(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_scrollstep(const Setting* s, const SettingType type)
+static gboolean setting_scrollstep(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         setting_print_value(s, &vb.config.scrollstep);
@@ -349,7 +349,7 @@ static gboolean setting_scrollstep(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_status_color_bg(const Setting* s, const SettingType type)
+static gboolean setting_status_color_bg(const Setting *s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -370,7 +370,7 @@ static gboolean setting_status_color_bg(const Setting* s, const SettingType type
     return TRUE;
 }
 
-static gboolean setting_status_color_fg(const Setting* s, const SettingType type)
+static gboolean setting_status_color_fg(const Setting *s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -391,7 +391,7 @@ static gboolean setting_status_color_fg(const Setting* s, const SettingType type
     return TRUE;
 }
 
-static gboolean setting_status_font(const Setting* s, const SettingType type)
+static gboolean setting_status_font(const Setting *s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -416,9 +416,9 @@ static gboolean setting_status_font(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_input_style(const Setting* s, const SettingType type)
+static gboolean setting_input_style(const Setting *s, const SettingType type)
 {
-    Style* style = &vb.style;
+    Style *style = &vb.style;
     MessageType itype = g_str_has_suffix(s->name, "normal") ? VB_MSG_NORMAL : VB_MSG_ERROR;
 
     if (s->type == TYPE_FONT) {
@@ -432,7 +432,7 @@ static gboolean setting_input_style(const Setting* s, const SettingType type)
             style->input_font[itype] = pango_font_description_from_string(s->arg.s);
         }
     } else {
-        VbColor* color = NULL;
+        VbColor *color = NULL;
         if (g_str_has_prefix(s->name, "input-bg")) {
             /* background color */
             color = &style->input_bg[itype];
@@ -454,9 +454,9 @@ static gboolean setting_input_style(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_completion_style(const Setting* s, const SettingType type)
+static gboolean setting_completion_style(const Setting *s, const SettingType type)
 {
-    Style* style = &vb.style;
+    Style *style = &vb.style;
     CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VB_COMP_NORMAL : VB_COMP_ACTIVE;
 
     if (s->type == TYPE_INTEGER) {
@@ -476,7 +476,7 @@ static gboolean setting_completion_style(const Setting* s, const SettingType typ
             style->comp_font = pango_font_description_from_string(s->arg.s);
         }
     } else {
-        VbColor* color = NULL;
+        VbColor *color = NULL;
         if (g_str_has_prefix(s->name, "completion-bg")) {
             /* completion background color */
             color = &style->comp_bg[ctype];
@@ -495,9 +495,9 @@ static gboolean setting_completion_style(const Setting* s, const SettingType typ
     return TRUE;
 }
 
-static gboolean setting_hint_style(const Setting* s, const SettingType type)
+static gboolean setting_hint_style(const Setting *s, const SettingType type)
 {
-    Style* style = &vb.style;
+    Style *style = &vb.style;
     if (!g_strcmp0(s->name, "hint-bg")) {
         if (type == SETTING_GET) {
             setting_print_value(s, style->hint_bg);
@@ -527,7 +527,7 @@ static gboolean setting_hint_style(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_strict_ssl(const Setting* s, const SettingType type)
+static gboolean setting_strict_ssl(const Setting *s, const SettingType type)
 {
     gboolean value;
     if (type != SETTING_SET) {
@@ -546,10 +546,10 @@ static gboolean setting_strict_ssl(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_ca_bundle(const Setting* s, const SettingType type)
+static gboolean setting_ca_bundle(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
-        char* value = NULL;
+        char *value = NULL;
         g_object_get(vb.soup_session, "ssl-ca-file", &value, NULL);
         setting_print_value(s, value);
         g_free(value);
@@ -560,7 +560,7 @@ static gboolean setting_ca_bundle(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_home_page(const Setting* s, const SettingType type)
+static gboolean setting_home_page(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         setting_print_value(s, vb.config.home_page);
@@ -571,7 +571,7 @@ static gboolean setting_home_page(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_download_path(const Setting* s, const SettingType type)
+static gboolean setting_download_path(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         setting_print_value(s, vb.config.download_dir);
@@ -593,10 +593,10 @@ static gboolean setting_download_path(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_proxy(const Setting* s, const SettingType type)
+static gboolean setting_proxy(const Setting *s, const SettingType type)
 {
     gboolean enabled;
-    SoupURI* proxy_uri = NULL;
+    SoupURI *proxy_uri = NULL;
 
     /* get the current status */
     if (type != SETTING_SET) {
@@ -619,9 +619,9 @@ static gboolean setting_proxy(const Setting* s, const SettingType type)
     }
 
     if (enabled) {
-        char* proxy = (char *)g_getenv("http_proxy");
+        char *proxy = (char *)g_getenv("http_proxy");
         if (proxy != NULL && strlen(proxy)) {
-            char* proxy_new = g_strrstr(proxy, "http://")
+            char *proxy_new = g_strrstr(proxy, "http://")
                 ? g_strdup(proxy)
                 : g_strdup_printf("http://%s", proxy);
             proxy_uri = soup_uri_new(proxy_new);
@@ -638,11 +638,11 @@ static gboolean setting_proxy(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_user_style(const Setting* s, const SettingType type)
+static gboolean setting_user_style(const Setting *s, const SettingType type)
 {
     gboolean enabled = FALSE;
-    char* uri = NULL;
-    WebKitWebSettings* web_setting = webkit_web_view_get_settings(vb.gui.webview);
+    char *uri = NULL;
+    WebKitWebSettings *web_setting = webkit_web_view_get_settings(vb.gui.webview);
     if (type != SETTING_SET) {
         g_object_get(web_setting, "user-stylesheet-uri", &uri, NULL);
         enabled = (uri != NULL);
@@ -673,7 +673,7 @@ static gboolean setting_user_style(const Setting* s, const SettingType type)
     return TRUE;
 }
 
-static gboolean setting_history_max_items(const Setting* s, const SettingType type)
+static gboolean setting_history_max_items(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         setting_print_value(s, &vb.config.history_max);

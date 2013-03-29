@@ -25,30 +25,30 @@ extern VbCore vb;
 
 typedef gboolean (*Comp_Func)(char*, const char*);
 typedef struct {
-    GtkWidget* label;
-    GtkWidget* event;
-    char*     prefix;
+    GtkWidget *label;
+    GtkWidget *event;
+    char      *prefix;
 } Completion;
 
-static GList* completion_init_completion(GList* target, GList* source,
-    Comp_Func func, const char* input, const char* prefix);
-static GList* completion_update(GList* completion, GList* active, gboolean back);
+static GList *completion_init_completion(GList *target, GList *source,
+    Comp_Func func, const char *input, const char *prefix);
+static GList *completion_update(GList *completion, GList *active, gboolean back);
 static void completion_show(gboolean back);
-static void completion_set_entry_text(Completion* completion);
-static char* completion_get_text(Completion* completion);
-static Completion* completion_get_new(const char* label, const char* prefix);
-static void completion_free(Completion* completion);
+static void completion_set_entry_text(Completion *completion);
+static char *completion_get_text(Completion *completion);
+static Completion *completion_get_new(const char *label, const char *prefix);
+static void completion_free(Completion *completion);
 
 gboolean completion_complete(gboolean back)
 {
-    const char* input = GET_TEXT();
-    GList* source = NULL;
+    const char *input = GET_TEXT();
+    GList *source = NULL;
 
     if (vb.comps.completions
         && vb.comps.active
         && (vb.state.mode & VB_MODE_COMPLETE)
     ) {
-        char* text = completion_get_text((Completion*)vb.comps.active->data);
+        char *text = completion_get_text((Completion*)vb.comps.active->data);
         if (!strcmp(input, text)) {
             /* updatecompletions */
             vb.comps.active = completion_update(vb.comps.completions, vb.comps.active, back);
@@ -124,11 +124,11 @@ void completion_clean()
     vb.state.mode &= ~VB_MODE_COMPLETE;
 }
 
-static GList* completion_init_completion(GList* target, GList* source,
-    Comp_Func func, const char* input, const char* prefix)
+static GList *completion_init_completion(GList *target, GList *source,
+    Comp_Func func, const char *input, const char *prefix)
 {
-    char* command = NULL;
-    char* data = NULL;
+    char *command = NULL;
+    char *data = NULL;
     gboolean match;
     char **token = NULL;
 
@@ -138,7 +138,7 @@ static GList* completion_init_completion(GList* target, GList* source,
 
     token = g_strsplit(command, " ", -1);
 
-    for (GList* l = source; l; l = l->next) {
+    for (GList *l = source; l; l = l->next) {
         data = l->data;
         match = FALSE;
         if (*command == 0) {
@@ -154,7 +154,7 @@ static GList* completion_init_completion(GList* target, GList* source,
             }
         }
         if (match) {
-            Completion* completion = completion_get_new(data, prefix);
+            Completion *completion = completion_get_new(data, prefix);
             gtk_box_pack_start(GTK_BOX(vb.gui.compbox), completion->event, TRUE, TRUE, 0);
             /* use prepend because that faster */
             target = g_list_prepend(target, completion);
@@ -167,7 +167,7 @@ static GList* completion_init_completion(GList* target, GList* source,
     return target;
 }
 
-static GList* completion_update(GList* completion, GList* active, gboolean back)
+static GList *completion_update(GList *completion, GList *active, gboolean back)
 {
     GList *old, *new;
     Completion *comp;
@@ -248,7 +248,7 @@ static void completion_show(gboolean back)
         }
     }
     if (vb.comps.active != NULL) {
-        Completion* active = (Completion*)vb.comps.active->data;
+        Completion *active = (Completion*)vb.comps.active->data;
         VB_WIDGET_SET_STATE(active->label, VB_GTK_STATE_ACTIVE);
         VB_WIDGET_SET_STATE(active->event, VB_GTK_STATE_ACTIVE);
 
@@ -257,9 +257,9 @@ static void completion_show(gboolean back)
     }
 }
 
-static void completion_set_entry_text(Completion* completion)
+static void completion_set_entry_text(Completion *completion)
 {
-    char* text = completion_get_text(completion);
+    char *text = completion_get_text(completion);
     gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), text);
     gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), -1);
     g_free(text);
@@ -268,9 +268,9 @@ static void completion_set_entry_text(Completion* completion)
 /**
  * Retrieves the full new allocated entry text for given completion item.
  */
-static char* completion_get_text(Completion* completion)
+static char *completion_get_text(Completion *completion)
 {
-    char* text = NULL;
+    char *text = NULL;
 
     /* print the previous typed command count into inputbox too */
     if (vb.comps.count) {
@@ -286,10 +286,10 @@ static char* completion_get_text(Completion* completion)
     return text;
 }
 
-static Completion* completion_get_new(const char* label, const char* prefix)
+static Completion *completion_get_new(const char *label, const char *prefix)
 {
     const int padding = 2;
-    Completion* c = g_new0(Completion, 1);
+    Completion *c = g_new0(Completion, 1);
 
     c->label  = gtk_label_new(label);
     c->event  = gtk_event_box_new();
@@ -323,7 +323,7 @@ static Completion* completion_get_new(const char* label, const char* prefix)
     return c;
 }
 
-static void completion_free(Completion* completion)
+static void completion_free(Completion *completion)
 {
     gtk_widget_destroy(completion->event);
     g_free(completion->prefix);

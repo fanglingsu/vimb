@@ -41,6 +41,6 @@ typedef struct {
 
 void dom_check_auto_insert(void);
 void dom_clear_focus(void);
-gboolean dom_is_editable(Element* element);
+gboolean dom_is_editable(Element *element);
 
 #endif /* end of include guard: _DOM_H */

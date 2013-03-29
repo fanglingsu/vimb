@@ -116,14 +116,14 @@ void command_cleanup(void)
     }
 }
 
-gboolean command_exists(const char* name)
+gboolean command_exists(const char *name)
 {
     return g_hash_table_contains(vb.behave.commands, name);
 }
 
-gboolean command_run(const char* name, const char* param)
+gboolean command_run(const char *name, const char *param)
 {
-    CommandInfo* command = NULL;
+    CommandInfo *command = NULL;
     gboolean result;
     Arg a;
     command = g_hash_table_lookup(vb.behave.commands, name);
@@ -141,7 +141,7 @@ gboolean command_run(const char* name, const char* param)
     return result;
 }
 
-gboolean command_open(const Arg* arg)
+gboolean command_open(const Arg *arg)
 {
     return vb_load_uri(arg);
 }
@@ -149,7 +149,7 @@ gboolean command_open(const Arg* arg)
 /**
  * Reopens the last closed page.
  */
-gboolean command_open_closed(const Arg* arg)
+gboolean command_open_closed(const Arg *arg)
 {
     gboolean result;
 
@@ -161,16 +161,16 @@ gboolean command_open_closed(const Arg* arg)
     return result;
 }
 
-gboolean command_input(const Arg* arg)
+gboolean command_input(const Arg *arg)
 {
-    const char* url;
+    const char *url;
 
     /* add current url if requested */
     if (VB_INPUT_CURRENT_URI == arg->i
         && (url = webkit_web_view_get_uri(vb.gui.webview))
     ) {
         /* append the current url to the input message */
-        char* input = g_strconcat(arg->s, url, NULL);
+        char *input = g_strconcat(arg->s, url, NULL);
         vb_echo_force(VB_MSG_NORMAL, FALSE, input);
         g_free(input);
     } else {
@@ -182,14 +182,14 @@ gboolean command_input(const Arg* arg)
     return TRUE;
 }
 
-gboolean command_close(const Arg* arg)
+gboolean command_close(const Arg *arg)
 {
     gtk_widget_destroy(GTK_WIDGET(vb.gui.window));
 
     return TRUE;
 }
 
-gboolean command_view_source(const Arg* arg)
+gboolean command_view_source(const Arg *arg)
 {
     gboolean mode = webkit_web_view_get_view_source_mode(vb.gui.webview);
     webkit_web_view_set_view_source_mode(vb.gui.webview, !mode);
@@ -200,9 +200,9 @@ gboolean command_view_source(const Arg* arg)
     return TRUE;
 }
 
-gboolean command_navigate(const Arg* arg)
+gboolean command_navigate(const Arg *arg)
 {
-    WebKitWebView* view = vb.gui.webview;
+    WebKitWebView *view = vb.gui.webview;
     if (arg->i <= VB_NAVIG_FORWARD) {
         int count = vb.state.count ? vb.state.count : 1;
         webkit_web_view_go_back_or_forward(
@@ -221,7 +221,7 @@ gboolean command_navigate(const Arg* arg)
     return TRUE;
 }
 
-gboolean command_scroll(const Arg* arg)
+gboolean command_scroll(const Arg *arg)
 {
     GtkAdjustment *adjust = (arg->i & VB_SCROLL_AXIS_H) ? vb.gui.adjust_h : vb.gui.adjust_v;
 
@@ -256,9 +256,9 @@ gboolean command_scroll(const Arg* arg)
     return TRUE;
 }
 
-gboolean command_map(const Arg* arg)
+gboolean command_map(const Arg *arg)
 {
-    char* key;
+    char *key;
 
     vb_set_mode(VB_MODE_NORMAL, FALSE);
 
@@ -271,18 +271,18 @@ gboolean command_map(const Arg* arg)
     return FALSE;
 }
 
-gboolean command_unmap(const Arg* arg)
+gboolean command_unmap(const Arg *arg)
 {
     vb_set_mode(VB_MODE_NORMAL, FALSE);
 
     return keybind_remove_from_string(arg->s, arg->i);
 }
 
-gboolean command_set(const Arg* arg)
+gboolean command_set(const Arg *arg)
 {
     gboolean success;
-    char* line = NULL;
-    char* param;
+    char *line = NULL;
+    char *param;
 
     if (!arg->s || !strlen(arg->s)) {
         return FALSE;
@@ -306,7 +306,7 @@ gboolean command_set(const Arg* arg)
     return success;
 }
 
-gboolean command_complete(const Arg* arg)
+gboolean command_complete(const Arg *arg)
 {
     completion_complete(arg->i ? TRUE : FALSE);
 
@@ -315,10 +315,10 @@ gboolean command_complete(const Arg* arg)
     return TRUE;
 }
 
-gboolean command_inspect(const Arg* arg)
+gboolean command_inspect(const Arg *arg)
 {
     gboolean enabled;
-    WebKitWebSettings* settings = NULL;
+    WebKitWebSettings *settings = NULL;
 
     vb_set_mode(VB_MODE_NORMAL, FALSE);
 
@@ -338,7 +338,7 @@ gboolean command_inspect(const Arg* arg)
     return FALSE;
 }
 
-gboolean command_hints(const Arg* arg)
+gboolean command_hints(const Arg *arg)
 {
     vb_echo_force(VB_MSG_NORMAL, FALSE, arg->s);
     /* mode will be set in hints_create - so we don't neet to do it here */
@@ -347,19 +347,19 @@ gboolean command_hints(const Arg* arg)
     return TRUE;
 }
 
-gboolean command_hints_focus(const Arg* arg)
+gboolean command_hints_focus(const Arg *arg)
 {
     hints_focus_next(arg->i ? TRUE : FALSE);
 
     return TRUE;
 }
 
-gboolean command_yank(const Arg* arg)
+gboolean command_yank(const Arg *arg)
 {
     vb_set_mode(VB_MODE_NORMAL, TRUE);
 
     if (arg->i & COMMAND_YANK_SELECTION) {
-        char* text = NULL;
+        char *text = NULL;
         /* copy current selection to clipboard */
         webkit_web_view_copy_clipboard(vb.gui.webview);
         text = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
@@ -394,7 +394,7 @@ gboolean command_yank(const Arg* arg)
     return FALSE;
 }
 
-gboolean command_paste(const Arg* arg)
+gboolean command_paste(const Arg *arg)
 {
     Arg a = {.i = arg->i & VB_TARGET_NEW};
     if (arg->i & VB_CLIPBOARD_PRIMARY) {
@@ -413,7 +413,7 @@ gboolean command_paste(const Arg* arg)
     return FALSE;
 }
 
-gboolean command_search(const Arg* arg)
+gboolean command_search(const Arg *arg)
 {
     gboolean forward = !(arg->i ^ vb.state.search_dir);
 
@@ -450,11 +450,11 @@ gboolean command_search(const Arg* arg)
     return TRUE;
 }
 
-gboolean command_searchengine(const Arg* arg)
+gboolean command_searchengine(const Arg *arg)
 {
     gboolean result;
     if (arg->i) {
-        char* handle;
+        char *handle;
 
         if ((handle = strchr(arg->s, '='))) {
             *handle = '\0';
@@ -473,14 +473,14 @@ gboolean command_searchengine(const Arg* arg)
     return result;
 }
 
-gboolean command_searchengine_default(const Arg* arg)
+gboolean command_searchengine_default(const Arg *arg)
 {
     vb_set_mode(VB_MODE_NORMAL, FALSE);
 
     return searchengine_set_default(arg->s);
 }
 
-gboolean command_zoom(const Arg* arg)
+gboolean command_zoom(const Arg *arg)
 {
     float step, level;
     int count;
@@ -495,7 +495,7 @@ gboolean command_zoom(const Arg* arg)
     count = vb.state.count ? vb.state.count : 1;
     level = webkit_web_view_get_zoom_level(vb.gui.webview);
 
-    WebKitWebSettings* setting = webkit_web_view_get_settings(vb.gui.webview);
+    WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
     g_object_get(G_OBJECT(setting), "zoom-step", &step, NULL);
 
     webkit_web_view_set_full_content_zoom(
@@ -513,10 +513,10 @@ gboolean command_zoom(const Arg* arg)
 
 }
 
-gboolean command_history(const Arg* arg)
+gboolean command_history(const Arg *arg)
 {
-    const char* input = GET_TEXT();
-    char* entry       = history_get(input, arg->i);
+    const char *input = GET_TEXT();
+    char *entry       = history_get(input, arg->i);
 
     if (!entry) {
         return FALSE;
