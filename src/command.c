@@ -171,10 +171,10 @@ gboolean command_input(const Arg* arg)
     ) {
         /* append the current url to the input message */
         char* input = g_strconcat(arg->s, url, NULL);
-        vb_echo_force(VB_MSG_NORMAL, input);
+        vb_echo_force(VB_MSG_NORMAL, FALSE, input);
         g_free(input);
     } else {
-        vb_echo_force(VB_MSG_NORMAL, arg->s);
+        vb_echo_force(VB_MSG_NORMAL, FALSE, arg->s);
     }
 
     vb_set_mode(VB_MODE_COMMAND, FALSE);
@@ -340,7 +340,7 @@ gboolean command_inspect(const Arg* arg)
 
 gboolean command_hints(const Arg* arg)
 {
-    vb_echo_force(VB_MSG_NORMAL, arg->s);
+    vb_echo_force(VB_MSG_NORMAL, FALSE, arg->s);
     /* mode will be set in hints_create - so we don't neet to do it here */
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
@@ -367,7 +367,7 @@ gboolean command_yank(const Arg* arg)
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
-            vb_echo_force(VB_MSG_NORMAL, "Yanked: %s", text);
+            vb_echo_force(VB_MSG_NORMAL, FALSE, "Yanked: %s", text);
             g_free(text);
 
             return TRUE;
@@ -385,7 +385,7 @@ gboolean command_yank(const Arg* arg)
     }
     if (a.s) {
         vb_set_clipboard(&a);
-        vb_echo_force(VB_MSG_NORMAL, "Yanked: %s", a.s);
+        vb_echo_force(VB_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
         g_free(a.s);
 
         return TRUE;
@@ -522,7 +522,7 @@ gboolean command_history(const Arg* arg)
         return FALSE;
     }
 
-    vb_echo_force(VB_MSG_NORMAL, entry);
+    vb_echo_force(VB_MSG_NORMAL, FALSE, entry);
     g_free(entry);
 
     return TRUE;

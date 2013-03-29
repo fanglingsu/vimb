@@ -75,9 +75,10 @@ static void vb_set_cookie(SoupCookie* cookie);
 static const char* vb_get_cookies(SoupURI *uri);
 static gboolean vb_hide_message();
 static void vb_set_status(const StatusType status);
+void vb_inputbox_print(gboolean force, const MessageType type, gboolean hide, const char* message);
 static void vb_destroy_client();
 
-void vb_echo_force(const MessageType type, const char *error, ...)
+void vb_echo_force(const MessageType type,gboolean hide, const char *error, ...)
 {
     char message[255];
     va_list arg_list;
@@ -86,9 +87,7 @@ void vb_echo_force(const MessageType type, const char *error, ...)
     vsnprintf(message, 255, error, arg_list);
     va_end(arg_list);
 
-    vb_update_input_style(type);
-    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), message);
-    gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), strlen(message) > INPUT_LENGTH ? 0 : -1);
+    vb_inputbox_print(TRUE, type, hide, message);
 }
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
@@ -100,16 +99,7 @@ void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
     vsnprintf(message, 255, error, arg_list);
     va_end(arg_list);
 
-    /* don't print message if the input is focussed */
-    if (gtk_widget_is_focus(GTK_WIDGET(vb.gui.inputbox))) {
-        return;
-    }
-
-    vb_update_input_style(type);
-    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), message);
-    if (hide) {
-        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vb_hide_message, NULL);
-    }
+    vb_inputbox_print(FALSE, type, hide, message);
 }
 
 gboolean vb_eval_script(WebKitWebFrame* frame, char* script, char* file, char** value)
@@ -641,6 +631,21 @@ static void vb_set_status(const StatusType status)
         vb.state.status = status;
         /* update the statusbar style only if the status changed */
         vb_update_status_style();
+    }
+}
+
+void vb_inputbox_print(gboolean force, const MessageType type, gboolean hide, const char* message)
+{
+    /* don't print message if the input is focussed */
+    if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.inputbox))) {
+        return;
+    }
+
+    vb_update_input_style(type);
+    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), message);
+    gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), strlen(message) > INPUT_LENGTH ? 0 : -1);
+    if (hide) {
+        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)vb_hide_message, NULL);
     }
 }
 
