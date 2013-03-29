@@ -96,6 +96,7 @@ static CommandInfo cmd_list[] = {
     {"zoomreset",           command_zoom,        {COMMAND_ZOOM_RESET}},
     {"hist-next",           command_history,     {0}},
     {"hist-prev",           command_history,     {1}},
+    {"run",                 command_run_multi,   {0}},
 };
 
 
@@ -137,6 +138,74 @@ gboolean command_run(const char *name, const char *param)
     a.s = g_strdup(param ? param : command->arg.s);
     result = command->function(&a);
     g_free(a.s);
+
+    return result;
+}
+
+/**
+ * Runs a single command form string containing the command an possible
+ * parameters.
+ */
+gboolean command_run_string(const char *input)
+{
+    gboolean success;
+    char *command = NULL, *str, **token;
+
+    if (!input || *input == '\0') {
+        return FALSE;
+    }
+
+    str =g_strdup(input);
+    g_strstrip(str);
+
+    /* get a possible command count */
+    vb.state.count = g_ascii_strtoll(str, &command, 10);
+
+    /* split the input string into command and parameter part */
+    token = g_strsplit(command, " ", 2);
+    g_free(str);
+
+    if (!token[0]) {
+        g_strfreev(token);
+        return FALSE;
+    }
+    success = command_run(token[0], token[1] ? token[1] : NULL);
+    g_strfreev(token);
+
+    return success;
+}
+
+/**
+ * Runs multiple commands that are seperated by |.
+ */
+gboolean command_run_multi(const Arg *arg)
+{
+    gboolean result = TRUE;
+    char **commands, *input;
+    unsigned int len, i;
+
+    if (!arg->s || *(arg->s) == '\0') {
+        return FALSE;
+    }
+
+    input = g_strdup(arg->s);
+    g_strstrip(input);
+
+    /* splits the commands */
+    commands = g_strsplit(input, "|", 0);
+    g_free(input);
+
+    len = g_strv_length(commands);
+    if (!len) {
+        g_strfreev(commands);
+        return FALSE;
+    }
+
+    for (i = 0; i < len; i++) {
+        /* run the single commands */
+        result = (result && command_run_string(commands[i]));
+    }
+    g_strfreev(commands);
 
     return result;
 }

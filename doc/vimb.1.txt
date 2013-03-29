@@ -2,12 +2,12 @@
 .\" groff -man -Tascii vimb.1
 .TH PROJECT 1 "23/03/2013" "PROJECT/VERSION" "Vimb Manual"
 .SH NAME
-PROJECT \- A modal web browser based on webkit thats inspired by vim the great editor.
+PROJECT \- Vim Browser - A modal web browser based on webkit thats inspired by
+vim the great editor.
 .SH SYNOPSIS
 .BI "PROJECT [" "OPTION" "] [" "URI" "]"
 .SH DESCRIPTION
-.B PROJECT
-is a webkit based web browser that behaves like the vimperator
+PROJECT is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
 of PROJECT is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
@@ -62,6 +62,7 @@ bound to the keybinding.
 For example the command "hint-focus-next" is only available in hinting mode.
 To call it, it has to be bound to a key like "hmap <tab>=hint-focus-next" to
 be used.
+
 .SS Open
 .TP
 .BI "open [" URI ]
@@ -296,6 +297,20 @@ history items. A command is not a internal command, but every string entered
 into inputbox that begins with \fI[:/?]\fP. So the history contains real
 commands and search queries.
 .SS Misc
+.TP
+.BI run " [COMMAND LIST]"
+Run is a command, that was introduced to have the ability to run multiple
+other commands with a single call. Everything after the `run' is interpreted
+as a `|' seperated list of commands and parameters.
+":run [count]command[ param[=value]]|[count]command[ param[=value]]|..."
+
+The run command allows to use fancy keybindings that set several config
+settings with only on keypress.
+
+Example:
+
+:run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown
+
 .TP
 .BI [ N "]search-forward, [" N "]search-backward"
 Search in current page forward or backward.

@@ -64,7 +64,6 @@ static void vb_request_start_cb(WebKitWebView *webview, WebKitWebFrame *frame,
     WebKitNetworkResponse *response);
 
 /* functions */
-static gboolean vb_process_input(const char *input);
 static void vb_run_user_script(WebKitWebFrame *frame);
 static char *vb_jsref_to_string(JSContextRef context, JSValueRef ref);
 static void vb_init_core(void);
@@ -474,7 +473,7 @@ static void vb_inputbox_activate_cb(GtkEntry *entry)
 
         case ':':
             completion_clean();
-            vb_process_input((command + 1));
+            command_run_string((command + 1));
             history_add(HISTORY_COMMAND, command + 1);
             break;
     }
@@ -563,35 +562,6 @@ static gboolean vb_inspector_close(WebKitWebInspector *inspector)
 static void vb_inspector_finished(WebKitWebInspector *inspector)
 {
     g_free(vb.gui.inspector);
-}
-
-/**
- * Processed input from input box without trailing : or ? /, input from config
- * file and default config.
- */
-static gboolean vb_process_input(const char *input)
-{
-    gboolean success;
-    char *command = NULL, **token;
-
-    if (!input || !strlen(input)) {
-        return FALSE;
-    }
-
-    /* get a possible command count */
-    vb.state.count = g_ascii_strtoll(input, &command, 10);
-
-    /* split the input string into command and parameter part */
-    token = g_strsplit(command, " ", 2);
-
-    if (!token[0]) {
-        g_strfreev(token);
-        return FALSE;
-    }
-    success = command_run(token[0], token[1] ? token[1] : NULL);
-    g_strfreev(token);
-
-    return success;
 }
 
 #ifdef FEATURE_COOKIE
@@ -774,7 +744,7 @@ static void vb_read_config(void)
 
     /* load default config */
     for (guint i = 0; default_config[i].command != NULL; i++) {
-        if (!vb_process_input(default_config[i].command)) {
+        if (!command_run_string(default_config[i].command)) {
             fprintf(stderr, "Invalid default config: %s\n", default_config[i].command);
         }
     }
@@ -791,7 +761,7 @@ static void vb_read_config(void)
             if (!g_ascii_isalpha(line[0])) {
                 continue;
             }
-            if (!vb_process_input(line)) {
+            if (!command_run_string(line)) {
                 fprintf(stderr, "Invalid config: %s\n", line);
             }
         }

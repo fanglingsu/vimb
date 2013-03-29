@@ -47,7 +47,9 @@ void command_init(void);
 void command_cleanup(void);
 gboolean command_exists(const char *name);
 gboolean command_run(const char *name, const char *param);
+gboolean command_run_string(const char *input);
 
+gboolean command_run_multi(const Arg *arg);
 gboolean command_open(const Arg *arg);
 gboolean command_open_home(const Arg *arg);
 gboolean command_open_closed(const Arg *arg);
