@@ -325,9 +325,9 @@ void vb_update_statusbar()
     g_string_free(status, TRUE);
 }
 
-void vb_update_status_style()
+void vb_update_status_style(void)
 {
-    StatusType type = vb.state.status;
+    StatusType type = vb.state.status_type;
     vb_set_widget_font(
         vb.gui.eventbox, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
     );
@@ -339,8 +339,9 @@ void vb_update_status_style()
     );
 }
 
-void vb_update_input_style(MessageType type)
+void vb_update_input_style(void)
 {
+    MessageType type = vb.state.input_type;
     vb_set_widget_font(
         vb.gui.inputbox, &vb.style.input_fg[type], &vb.style.input_bg[type], vb.style.input_font[type]
     );
@@ -353,7 +354,7 @@ void vb_update_urlbar(const char* uri)
 
 static gboolean vb_hide_message()
 {
-    vb_echo(VB_MSG_NORMAL, FALSE, "");
+    vb_inputbox_print(FALSE, VB_MSG_NORMAL, FALSE, "");
 
     return FALSE;
 }
@@ -627,8 +628,8 @@ static const char* vb_get_cookies(SoupURI *uri)
 
 static void vb_set_status(const StatusType status)
 {
-    if (vb.state.status != status) {
-        vb.state.status = status;
+    if (vb.state.status_type != status) {
+        vb.state.status_type = status;
         /* update the statusbar style only if the status changed */
         vb_update_status_style();
     }
@@ -641,7 +642,11 @@ void vb_inputbox_print(gboolean force, const MessageType type, gboolean hide, co
         return;
     }
 
-    vb_update_input_style(type);
+    /* apply input style only if the message type was changed */
+    if (type != vb.state.input_type) {
+        vb.state.input_type = type;
+        vb_update_input_style();
+    }
     gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), message);
     gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), strlen(message) > INPUT_LENGTH ? 0 : -1);
     if (hide) {
@@ -762,8 +767,8 @@ static void vb_init_core(void)
     keybind_init();
     vb_read_config();
 
-    vb_update_status_style();
-    vb_update_input_style(VB_MSG_NORMAL);
+    /* initially apply input style */
+    vb_update_input_style();
 
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);

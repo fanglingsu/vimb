@@ -448,8 +448,7 @@ static gboolean setting_input_style(const Setting* s, const SettingType type)
         }
     }
     if (type != SETTING_GET) {
-        /* vb_update_input_style seems to take no immediatly effect */
-        vb_echo(VB_MSG_NORMAL, FALSE, GET_TEXT());
+        vb_update_input_style();
     }
 
     return TRUE;

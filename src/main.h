@@ -239,7 +239,8 @@ typedef struct {
     char            modkey;
     guint           count;
     guint           progress;
-    StatusType      status;
+    StatusType      status_type;
+    MessageType     input_type;
     gboolean        is_inspecting;
     SearchDirection search_dir;
     char*           search_query;
@@ -330,7 +331,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean);
 void vb_set_widget_font(GtkWidget* widget, const VbColor* fg, const VbColor* bg, PangoFontDescription* font);
 void vb_update_statusbar(void);
 void vb_update_status_style(void);
-void vb_update_input_style(MessageType type);
+void vb_update_input_style(void);
 void vb_update_urlbar(const char* uri);
 
 #endif /* end of include guard: _MAIN_H */
