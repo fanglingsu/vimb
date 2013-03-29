@@ -30,10 +30,9 @@ static const VbFile file_map[HISTORY_LAST] = {
 };
 
 static struct {
-    unsigned int pointer;
-    char*        prefix;
-    char*        query;
-    GList*       active;
+    char*  prefix;
+    char*  query;
+    GList* active;
 } history;
 
 static GList* history_get_list(const char* input);
@@ -83,35 +82,26 @@ GList* history_get_all(HistoryType type)
  * Retrieves the command from history to be shown in input box.
  * The result must be freed by the caller.
  */
-char* history_get(const char* input, int step)
+char* history_get(const char* input, gboolean prev)
 {
-    char* command = NULL;
-    unsigned int len;
+    GList* new = NULL;
 
-    /* get the search prefix only on start of history search */
     if (!history.active) {
         history.active = history_get_list(input);
-
-        /* if the list is searched forward we would move the history pointer
-         * to the element with index 1, but we should start with 0 */
-        step = step > 0 ? step - 1 : step;
+        history.active = g_list_append(history.active, g_strdup(""));
+        /* start with latest added items */
+        history.active = g_list_last(history.active);
     }
 
-    len = g_list_length(history.active);
-    if (!len) {
-        return NULL;
+    if (prev) {
+        if ((new = g_list_previous(history.active))) {
+            history.active = new;
+        }
+    } else if ((new = g_list_next(history.active))) {
+        history.active = new;
     }
-
-    /* if reached end/beginnen start at the opposite site of list again */
-    history.pointer = (len + history.pointer + step) % len;
-
-    command = g_strconcat(
-        history.prefix,
-        g_list_nth_data(history.active, history.pointer),
-        NULL
-    );
-
-    return command;
+    
+    return g_strconcat(history.prefix, (char*)history.active->data, NULL);
 }
 
 void history_rewind(void)
@@ -121,8 +111,7 @@ void history_rewind(void)
         g_list_free_full(history.active, (GDestroyNotify)g_free);
 
         OVERWRITE_STRING(history.prefix, NULL);
-        history.active  = NULL;
-        history.pointer = 0;
+        history.active = NULL;
     }
 }
 
@@ -183,7 +172,8 @@ static const char* history_get_file_by_type(HistoryType type)
 }
 
 /**
- * Loads history items form file but elemiate duplicates.
+ * Loads history items form file but eleminate duplicates.
+ * Oldest entries first.
  */
 static GList* history_load(const char* file)
 {
@@ -227,7 +217,6 @@ static GList* history_load(const char* file)
             g_free(last->data);
             list = g_list_delete_link(list, last);
         }
-        list = g_list_reverse(list);
     }
 
     return list;
