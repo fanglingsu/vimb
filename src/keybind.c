@@ -51,12 +51,13 @@ void keybind_cleanup(void)
 
 gboolean keybind_add_from_string(char *keys, const char *command, const Mode mode)
 {
+    char **token = NULL;
     if (keys == NULL || *keys == '\0') {
         return FALSE;
     }
 
     /* split the input string into command and parameter part */
-    char **token = g_strsplit(command, " ", 2);
+    token = g_strsplit(command, " ", 2);
     if (!token[0] || !command_exists(token[0])) {
         g_strfreev(token);
         return FALSE;

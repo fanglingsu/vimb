@@ -127,8 +127,7 @@ gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **
 
 gboolean vb_load_uri(const Arg *arg)
 {
-    char *uri;
-    char *path = arg->s;
+    char *uri, *rp, *path = arg->s;
     struct stat st;
 
     if (!path) {
@@ -142,12 +141,10 @@ gboolean vb_load_uri(const Arg *arg)
 
     /* check if the path is a file path */
     if (stat(path, &st) == 0) {
-        char *rp = realpath(path, NULL);
+        rp  = realpath(path, NULL);
         uri = g_strdup_printf("file://%s", rp);
     } else if (!strchr(path, '.')) {
-        char *part  = NULL;
-        char *tmpl  = NULL;
-        char *query = NULL;
+        char *part  = NULL, *tmpl  = NULL, *query = NULL;
 
         /* look up for a searchengine with handle */
         if ((part = strchr(path, ' '))) {
@@ -174,8 +171,7 @@ gboolean vb_load_uri(const Arg *arg)
 
     if (arg->i == VB_TARGET_NEW) {
         guint i = 0;
-        char *cmd[5];
-        char xid[64];
+        char *cmd[5], xid[64];
 
         cmd[i++] = *args;
         if (vb.embed) {
@@ -287,6 +283,7 @@ void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg,
 
 void vb_update_statusbar()
 {
+    int max, val, num;
     GString *status = g_string_new("");
 
     /* show current count */
@@ -298,7 +295,7 @@ void vb_update_statusbar()
 
     /* show the active downloads */
     if (vb.state.downloads) {
-        int num = g_list_length(vb.state.downloads);
+        num = g_list_length(vb.state.downloads);
         g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
     }
 
@@ -308,8 +305,8 @@ void vb_update_statusbar()
     }
 
     /* show the scroll status */
-    int max = gtk_adjustment_get_upper(vb.gui.adjust_v) - gtk_adjustment_get_page_size(vb.gui.adjust_v);
-    int val = (int)(gtk_adjustment_get_value(vb.gui.adjust_v) / max * 100);
+    max = gtk_adjustment_get_upper(vb.gui.adjust_v) - gtk_adjustment_get_page_size(vb.gui.adjust_v);
+    val = (int)(gtk_adjustment_get_value(vb.gui.adjust_v) / max * 100);
 
     if (max == 0) {
         g_string_append(status, " All");
@@ -511,8 +508,7 @@ static void vb_new_request_cb(SoupSession *session, SoupMessage *message)
 
 static void vb_gotheaders_cb(SoupMessage *message)
 {
-    GSList *list = NULL;
-    GSList *p = NULL;
+    GSList *list = NULL, *p = NULL;
 
     for(p = list = soup_cookies_from_response(message); p; p = g_slist_next(p)) {
         vb_set_cookie((SoupCookie*)p->data);
@@ -576,8 +572,7 @@ static void vb_inspector_finished(WebKitWebInspector *inspector)
 static gboolean vb_process_input(const char *input)
 {
     gboolean success;
-    char *command = NULL;
-    char **token;
+    char *command = NULL, **token;
 
     if (!input || !strlen(input)) {
         return FALSE;
@@ -656,13 +651,12 @@ void vb_inputbox_print(gboolean force, const MessageType type, gboolean hide, co
 
 static void vb_run_user_script(WebKitWebFrame *frame)
 {
-    char *js      = NULL;
+    char *js = NULL, *value = NULL;
     GError *error = NULL;
 
     if (g_file_test(vb.files[FILES_SCRIPT], G_FILE_TEST_IS_REGULAR)
         && g_file_get_contents(vb.files[FILES_SCRIPT], &js, NULL, &error)
     ) {
-        char *value = NULL;
         gboolean success = vb_eval_script(frame, js, vb.files[FILES_SCRIPT], &value);
         if (!success) {
             fprintf(stderr, "%s", value);
@@ -776,6 +770,8 @@ static void vb_init_core(void)
 
 static void vb_read_config(void)
 {
+    char *line, **lines;
+
     /* load default config */
     for (guint i = 0; default_config[i].command != NULL; i++) {
         if (!vb_process_input(default_config[i].command)) {
@@ -784,8 +780,7 @@ static void vb_read_config(void)
     }
 
     /* read config from config files */
-    char **lines = util_get_lines(vb.files[FILES_CONFIG]);
-    char *line;
+    lines = util_get_lines(vb.files[FILES_CONFIG]);
 
     if (lines) {
         int length = g_strv_length(lines) - 1;
@@ -920,8 +915,9 @@ static gboolean vb_new_window_policy_cb(
 
 static void vb_hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
 {
+    char *message;
     if (link) {
-        char *message = g_strdup_printf("Link: %s", link);
+        message = g_strdup_printf("Link: %s", link);
         gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), message);
         g_free(message);
     } else {
@@ -1052,8 +1048,7 @@ static void vb_destroy_client()
 int main(int argc, char *argv[])
 {
     static char *winid = NULL;
-    static gboolean ver = false;
-    static gboolean dump = false;
+    static gboolean ver = false, dump = false;
     static GError *err;
     static GOptionEntry opts[] = {
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},

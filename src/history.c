@@ -47,8 +47,9 @@ static void history_write_to_file(GList *list, const char *file);
  */
 void history_cleanup(void)
 {
+    const char *file;
     for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
-        const char *file = history_get_file_by_type(i);
+        file = history_get_file_by_type(i);
         history_write_to_file(history_load(file), file);
     }
 }
@@ -58,8 +59,9 @@ void history_cleanup(void)
  */
 void history_add(HistoryType type, const char *value)
 {
-    const char *file = history_get_file_by_type(type);
     FILE *f;
+    const char *file = history_get_file_by_type(type);
+
     if ((f = fopen(file, "a+"))) {
         file_lock_set(fileno(f), F_WRLCK);
 

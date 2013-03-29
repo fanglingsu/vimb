@@ -127,10 +127,8 @@ void completion_clean()
 static GList *completion_init_completion(GList *target, GList *source,
     Comp_Func func, const char *input, const char *prefix)
 {
-    char *command = NULL;
-    char *data = NULL;
+    char *command = NULL, *data = NULL, **token = NULL;
     gboolean match;
-    char **token = NULL;
 
     /* remove counts before command and save it to print it later in inputbox */
     vb.comps.count  = g_ascii_strtoll(input, &command, 10);

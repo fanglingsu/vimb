@@ -225,7 +225,7 @@ gboolean command_scroll(const Arg *arg)
 {
     GtkAdjustment *adjust = (arg->i & VB_SCROLL_AXIS_H) ? vb.gui.adjust_h : vb.gui.adjust_v;
 
-    int direction  = (arg->i & (1 << 2)) ? 1 : -1;
+    int direction = (arg->i & (1 << 2)) ? 1 : -1;
 
     /* type scroll */
     if (arg->i & VB_SCROLL_TYPE_SCROLL) {
@@ -281,8 +281,7 @@ gboolean command_unmap(const Arg *arg)
 gboolean command_set(const Arg *arg)
 {
     gboolean success;
-    char *line = NULL;
-    char *param;
+    char *param = NULL, *line = NULL;
 
     if (!arg->s || !strlen(arg->s)) {
         return FALSE;

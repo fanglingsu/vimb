@@ -65,12 +65,14 @@ void dom_clear_focus(void)
 gboolean dom_is_editable(Element *element)
 {
     gboolean result = FALSE;
+    char *tagname, *type;
+
     if (!element) {
         return result;
     }
 
-    char *tagname = webkit_dom_element_get_tag_name(element);
-    char *type = webkit_dom_element_get_attribute(element, "type");
+    tagname = webkit_dom_element_get_tag_name(element);
+    type    = webkit_dom_element_get_attribute(element, "type");
     if (!g_ascii_strcasecmp(tagname, "textarea")) {
         result = TRUE;
     } else if (!g_ascii_strcasecmp(tagname, "input")

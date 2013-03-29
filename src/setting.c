@@ -125,9 +125,8 @@ void setting_cleanup(void)
 
 gboolean setting_run(char *name, const char *param)
 {
-    Arg *a          = NULL;
-    gboolean result = FALSE;
-    gboolean get    = FALSE;
+    Arg *a = NULL;
+    gboolean result = FALSE, get = FALSE;
     SettingType type = SETTING_SET;
 
     /* determine the type to names last char and param */
@@ -548,8 +547,8 @@ static gboolean setting_strict_ssl(const Setting *s, const SettingType type)
 
 static gboolean setting_ca_bundle(const Setting *s, const SettingType type)
 {
+    char *value;
     if (type == SETTING_GET) {
-        char *value = NULL;
         g_object_get(vb.soup_session, "ssl-ca-file", &value, NULL);
         setting_print_value(s, value);
         g_free(value);
@@ -596,6 +595,7 @@ static gboolean setting_download_path(const Setting *s, const SettingType type)
 static gboolean setting_proxy(const Setting *s, const SettingType type)
 {
     gboolean enabled;
+    char *proxy, *proxy_new;
     SoupURI *proxy_uri = NULL;
 
     /* get the current status */
@@ -619,9 +619,9 @@ static gboolean setting_proxy(const Setting *s, const SettingType type)
     }
 
     if (enabled) {
-        char *proxy = (char *)g_getenv("http_proxy");
+        proxy = (char *)g_getenv("http_proxy");
         if (proxy != NULL && strlen(proxy)) {
-            char *proxy_new = g_strrstr(proxy, "http://")
+            proxy_new = g_strrstr(proxy, "http://")
                 ? g_strdup(proxy)
                 : g_strdup_printf("http://%s", proxy);
             proxy_uri = soup_uri_new(proxy_new);
