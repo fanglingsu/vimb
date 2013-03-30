@@ -156,7 +156,8 @@ gboolean command_run_string(const char *input)
     }
 
     str =g_strdup(input);
-    g_strstrip(str);
+    /* remove leading whitespace */
+    g_strchug(str);
 
     /* get a possible command count */
     vb.state.count = g_ascii_strtoll(str, &command, 10);
@@ -181,19 +182,15 @@ gboolean command_run_string(const char *input)
 gboolean command_run_multi(const Arg *arg)
 {
     gboolean result = TRUE;
-    char **commands, *input;
+    char **commands;
     unsigned int len, i;
 
     if (!arg->s || *(arg->s) == '\0') {
         return false;
     }
 
-    input = g_strdup(arg->s);
-    g_strstrip(input);
-
     /* splits the commands */
-    commands = g_strsplit(input, "|", 0);
-    g_free(input);
+    commands = g_strsplit(arg->s, "|", 0);
 
     len = g_strv_length(commands);
     if (!len) {
