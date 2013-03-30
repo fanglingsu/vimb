@@ -676,6 +676,7 @@ static void vb_init_core(void)
     gui->scroll = gtk_scrolled_window_new(NULL, NULL);
     gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
     gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 
     /* Prepare the inputbox */
     gui->inputbox = gtk_entry_new();
@@ -771,6 +772,8 @@ static void vb_read_config(void)
 
 static void vb_setup_signals()
 {
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
+
     /* Set up callbacks so that if either the main window or the browser
      * instance is closed, the program will exit */
     g_signal_connect(vb.gui.window, "destroy", G_CALLBACK(vb_destroy_window_cb), NULL);
@@ -787,6 +790,9 @@ static void vb_setup_signals()
         "signal::resource-request-starting", G_CALLBACK(vb_request_start_cb), NULL,
         NULL
     );
+
+    g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
+
 
     g_object_connect(
         G_OBJECT(vb.gui.inputbox),
