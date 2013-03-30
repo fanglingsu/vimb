@@ -4,7 +4,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
 {
     "use strict";
     var hClass      = "__hint";
-    var hClassFocus = "__hint_container";
+    var hClassFocus = "__hintFocus";
     var hConts      = [];
     var hints       = [];
     var focusNum    = 1;
