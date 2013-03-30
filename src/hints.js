@@ -69,6 +69,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
                 var hint        = hintSpan.cloneNode(false);
                 hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) - 3 + "px";
                 hint.style.top  = Math.max((rect.top + win.scrollY), win.scrollY) - 3 + "px";
+                hint.className  = hClass;
                 hint.appendChild(doc.createTextNode(hCount + 1));
 
                 fragment.appendChild(hint);
@@ -176,6 +177,8 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
             if (hint.e) {
                 hint.e.style.background = hint.bg;
                 hint.e.style.color = hint.fg;
+                hint.e.classList.remove(hClassFocus);
+                hint.e.classList.remove(hClass);
                 hint.span.parentNode.removeChild(hint.span);
             }
         }
@@ -244,7 +247,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
         /* reset previous focused hint */
         var hint = _getHintByNum(focusNum);
         if (hint) {
-            hint.e.className        = hint.e.className.replace(hClassFocus, hClass);
+            hint.e.classList.remove(hClassFocus);
             hint.e.style.background = bg;
             _mouseEvent(hint.e, "mouseout");
         }
@@ -254,7 +257,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
         /* mark new hint as focused */
         hint = _getHintByNum(focusNum);
         if (hint) {
-            hint.e.className        = hint.e.className.replace(hClass, hClassFocus);
+            hint.e.classList.add(hClassFocus);
             hint.e.style.background = bgf;
             var source              = _getSrc(hint.e);
             _mouseEvent(hint.e, "mouseover");
