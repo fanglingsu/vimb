@@ -64,7 +64,7 @@ void dom_clear_focus(void)
  */
 gboolean dom_is_editable(Element *element)
 {
-    gboolean result = FALSE;
+    gboolean result = false;
     char *tagname, *type;
 
     if (!element) {
@@ -82,7 +82,7 @@ gboolean dom_is_editable(Element *element)
     ) {
         result = TRUE;
     } else {
-        result = FALSE;
+        result = false;
     }
     g_free(tagname);
     g_free(type);
@@ -93,10 +93,10 @@ gboolean dom_is_editable(Element *element)
 static gboolean dom_auto_insert(Element *element)
 {
     if (dom_is_editable(element)) {
-        vb_set_mode(VB_MODE_INSERT, FALSE);
+        vb_set_mode(VB_MODE_INSERT, false);
         return TRUE;
     }
-    return FALSE;
+    return false;
 }
 
 static gboolean dom_editable_focus_cb(Element *element, Event *event)
@@ -108,7 +108,7 @@ static gboolean dom_editable_focus_cb(Element *element, Event *event)
         EventTarget *target = webkit_dom_event_get_target(event);
         dom_auto_insert((void*)target);
     }
-    return FALSE;
+    return false;
 }
 
 static Element *dom_get_active_element(Document *doc)

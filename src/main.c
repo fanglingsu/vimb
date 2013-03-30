@@ -98,7 +98,7 @@ void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
     vsnprintf(message, 255, error, arg_list);
     va_end(arg_list);
 
-    vb_inputbox_print(FALSE, type, hide, message);
+    vb_inputbox_print(false, type, hide, message);
 }
 
 gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value)
@@ -121,7 +121,7 @@ gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **
     }
 
     *value = vb_jsref_to_string(js, exception);
-    return FALSE;
+    return false;
 }
 
 gboolean vb_load_uri(const Arg *arg)
@@ -166,7 +166,7 @@ gboolean vb_load_uri(const Arg *arg)
     }
 
     /* change state to normal mode */
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     if (arg->i == VB_TARGET_NEW) {
         guint i = 0;
@@ -194,7 +194,7 @@ gboolean vb_load_uri(const Arg *arg)
 
 gboolean vb_set_clipboard(const Arg *arg)
 {
-    gboolean result = FALSE;
+    gboolean result = false;
     if (!arg->s) {
         return result;
     }
@@ -250,7 +250,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
 
         case VB_MODE_INSERT:
             gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-            vb_echo(VB_MSG_NORMAL, FALSE, "-- INPUT --");
+            vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
             break;
 
         case VB_MODE_PATH_THROUGH:
@@ -263,7 +263,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
 
     /* echo message if given */
     if (clean) {
-        vb_echo(VB_MSG_NORMAL, FALSE, "");
+        vb_echo(VB_MSG_NORMAL, false, "");
     }
 
     vb_update_statusbar();
@@ -350,9 +350,9 @@ void vb_update_urlbar(const char *uri)
 
 static gboolean vb_hide_message()
 {
-    vb_inputbox_print(FALSE, VB_MSG_NORMAL, FALSE, "");
+    vb_inputbox_print(false, VB_MSG_NORMAL, false, "");
 
-    return FALSE;
+    return false;
 }
 
 static void vb_webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
@@ -409,7 +409,7 @@ static void vb_webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             }
 
             /* status bar is updated by vb_set_mode */
-            vb_set_mode(VB_MODE_NORMAL , FALSE);
+            vb_set_mode(VB_MODE_NORMAL , false);
             vb_update_urlbar(uri);
 
             break;
@@ -483,7 +483,7 @@ static void vb_inputbox_activate_cb(GtkEntry *entry)
 
 static gboolean vb_inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event)
 {
-    return FALSE;
+    return false;
 }
 
 static void vb_scroll_cb(GtkAdjustment *adjustment)
@@ -526,7 +526,7 @@ static gboolean vb_inspector_show(WebKitWebInspector *inspector)
     int height;
 
     if (vb.state.is_inspecting) {
-        return FALSE;
+        return false;
     }
 
     webview = webkit_web_inspector_get_web_view(inspector);
@@ -548,13 +548,13 @@ static gboolean vb_inspector_close(WebKitWebInspector *inspector)
     WebKitWebView *webview;
 
     if (!vb.state.is_inspecting) {
-        return FALSE;
+        return false;
     }
     webview = webkit_web_inspector_get_web_view(inspector);
     gtk_widget_hide(GTK_WIDGET(webview));
     gtk_widget_destroy(GTK_WIDGET(webview));
 
-    vb.state.is_inspecting = FALSE;
+    vb.state.is_inspecting = false;
 
     return TRUE;
 }
@@ -569,7 +569,7 @@ static void vb_set_cookie(SoupCookie *cookie)
 {
     SoupDate *date;
 
-    SoupCookieJar *jar = soup_cookie_jar_text_new(vb.files[FILES_COOKIE], FALSE);
+    SoupCookieJar *jar = soup_cookie_jar_text_new(vb.files[FILES_COOKIE], false);
     cookie = soup_cookie_copy(cookie);
     if (cookie->expires == NULL && vb.config.cookie_timeout) {
         date = soup_date_new_from_time_t(time(NULL) + vb.config.cookie_timeout);
@@ -680,7 +680,7 @@ static void vb_init_core(void)
     /* Prepare the inputbox */
     gui->inputbox = gtk_entry_new();
     gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
-    g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", FALSE, NULL);
+    g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", false, NULL);
 
 #ifdef HAS_GTK3
     gui->pane            = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
@@ -688,8 +688,8 @@ static void vb_init_core(void)
     gui->statusbar.box   = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
 #else
     gui->pane            = gtk_vpaned_new();
-    gui->box             = GTK_BOX(gtk_vbox_new(FALSE, 0));
-    gui->statusbar.box   = GTK_BOX(gtk_hbox_new(FALSE, 0));
+    gui->box             = GTK_BOX(gtk_vbox_new(false, 0));
+    gui->statusbar.box   = GTK_BOX(gtk_hbox_new(false, 0));
 #endif
     gui->statusbar.left  = gtk_label_new(NULL);
     gui->statusbar.right = gtk_label_new(NULL);
@@ -714,12 +714,12 @@ static void vb_init_core(void)
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.right), 1.0, 0.0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, TRUE, TRUE, 2);
-    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, FALSE, FALSE, 2);
+    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, false, false, 2);
 
     gtk_box_pack_start(gui->box, gui->scroll, TRUE, TRUE, 0);
-    gtk_box_pack_start(gui->box, gui->eventbox, FALSE, FALSE, 0);
-    gtk_entry_set_has_frame(GTK_ENTRY(gui->inputbox), FALSE);
-    gtk_box_pack_end(gui->box, gui->inputbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
+    gtk_entry_set_has_frame(GTK_ENTRY(gui->inputbox), false);
+    gtk_box_pack_end(gui->box, gui->inputbox, false, false, 0);
 
     /* Make sure that when the browser area becomes visible, it will get mouse
      * and keyboard events */
@@ -844,7 +844,7 @@ static void vb_init_files(void)
 
 static gboolean vb_button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
 {
-    gboolean propagate = FALSE;
+    gboolean propagate = false;
     WebKitHitTestResultContext context;
     Mode mode = CLEAN_MODE(vb.state.mode);
 
@@ -852,7 +852,7 @@ static gboolean vb_button_relase_cb(WebKitWebView *webview, GdkEventButton *even
 
     g_object_get(result, "context", &context, NULL);
     if (mode == VB_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-        vb_set_mode(VB_MODE_INSERT, FALSE);
+        vb_set_mode(VB_MODE_INSERT, false);
 
         propagate = TRUE;
     }
@@ -880,7 +880,7 @@ static gboolean vb_new_window_policy_cb(
         vb_load_uri(&a);
         return TRUE;
     }
-    return FALSE;
+    return false;
 }
 
 static void vb_hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
@@ -904,12 +904,12 @@ static gboolean vb_mimetype_decision_cb(WebKitWebView *webview,
     WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mime_type,
     WebKitWebPolicyDecision *decision)
 {
-    if (webkit_web_view_can_show_mime_type(webview, mime_type) == FALSE) {
+    if (webkit_web_view_can_show_mime_type(webview, mime_type) == false) {
         webkit_web_policy_decision_download(decision);
 
         return TRUE;
     }
-    return FALSE;
+    return false;
 }
 
 static gboolean vb_download_requested_cb(WebKitWebView *view, WebKitDownload *download)
@@ -929,9 +929,9 @@ static gboolean vb_download_requested_cb(WebKitWebView *view, WebKitDownload *do
 
     guint64 size = webkit_download_get_total_size(download);
     if (size > 0) {
-        vb_echo(VB_MSG_NORMAL, FALSE, "Download %s [~%uB] started ...", filename, size);
+        vb_echo(VB_MSG_NORMAL, false, "Download %s [~%uB] started ...", filename, size);
     } else {
-        vb_echo(VB_MSG_NORMAL, FALSE, "Download %s started ...", filename);
+        vb_echo(VB_MSG_NORMAL, false, "Download %s started ...", filename);
     }
 
     status = webkit_download_get_status(download);
@@ -974,9 +974,9 @@ static void vb_download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
 
     char *file = g_path_get_basename(webkit_download_get_destination_uri(download));
     if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
-        vb_echo(VB_MSG_ERROR, FALSE, "Error downloading %s", file);
+        vb_echo(VB_MSG_ERROR, false, "Error downloading %s", file);
     } else {
-        vb_echo(VB_MSG_NORMAL, FALSE, "Download %s finished", file);
+        vb_echo(VB_MSG_NORMAL, false, "Download %s finished", file);
     }
     g_free(file);
 

@@ -130,9 +130,9 @@ gboolean command_run(const char *name, const char *param)
     command = g_hash_table_lookup(vb.behave.commands, name);
     if (!command) {
         vb_echo(VB_MSG_ERROR, TRUE, "Command '%s' not found", name);
-        vb_set_mode(VB_MODE_NORMAL, FALSE);
+        vb_set_mode(VB_MODE_NORMAL, false);
 
-        return FALSE;
+        return false;
     }
     a.i = command->arg.i;
     a.s = g_strdup(param ? param : command->arg.s);
@@ -152,7 +152,7 @@ gboolean command_run_string(const char *input)
     char *command = NULL, *str, **token;
 
     if (!input || *input == '\0') {
-        return FALSE;
+        return false;
     }
 
     str =g_strdup(input);
@@ -167,7 +167,7 @@ gboolean command_run_string(const char *input)
 
     if (!token[0]) {
         g_strfreev(token);
-        return FALSE;
+        return false;
     }
     success = command_run(token[0], token[1] ? token[1] : NULL);
     g_strfreev(token);
@@ -185,7 +185,7 @@ gboolean command_run_multi(const Arg *arg)
     unsigned int len, i;
 
     if (!arg->s || *(arg->s) == '\0') {
-        return FALSE;
+        return false;
     }
 
     input = g_strdup(arg->s);
@@ -198,7 +198,7 @@ gboolean command_run_multi(const Arg *arg)
     len = g_strv_length(commands);
     if (!len) {
         g_strfreev(commands);
-        return FALSE;
+        return false;
     }
 
     for (i = 0; i < len; i++) {
@@ -240,13 +240,13 @@ gboolean command_input(const Arg *arg)
     ) {
         /* append the current url to the input message */
         char *input = g_strconcat(arg->s, url, NULL);
-        vb_echo_force(VB_MSG_NORMAL, FALSE, input);
+        vb_echo_force(VB_MSG_NORMAL, false, input);
         g_free(input);
     } else {
-        vb_echo_force(VB_MSG_NORMAL, FALSE, arg->s);
+        vb_echo_force(VB_MSG_NORMAL, false, arg->s);
     }
 
-    vb_set_mode(VB_MODE_COMMAND, FALSE);
+    vb_set_mode(VB_MODE_COMMAND, false);
 
     return TRUE;
 }
@@ -264,7 +264,7 @@ gboolean command_view_source(const Arg *arg)
     webkit_web_view_set_view_source_mode(vb.gui.webview, !mode);
     webkit_web_view_reload(vb.gui.webview);
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return TRUE;
 }
@@ -285,7 +285,7 @@ gboolean command_navigate(const Arg *arg)
         webkit_web_view_stop_loading(view);
     }
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return TRUE;
 }
@@ -320,7 +320,7 @@ gboolean command_scroll(const Arg *arg)
         gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
     }
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return TRUE;
 }
@@ -329,7 +329,7 @@ gboolean command_map(const Arg *arg)
 {
     char *key;
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     if ((key = strchr(arg->s, '='))) {
         *key = '\0';
@@ -337,12 +337,12 @@ gboolean command_map(const Arg *arg)
             return keybind_add_from_string(arg->s, key + 1, arg->i);
         }
     }
-    return FALSE;
+    return false;
 }
 
 gboolean command_unmap(const Arg *arg)
 {
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return keybind_remove_from_string(arg->s, arg->i);
 }
@@ -353,7 +353,7 @@ gboolean command_set(const Arg *arg)
     char *param = NULL, *line = NULL;
 
     if (!arg->s || !strlen(arg->s)) {
-        return FALSE;
+        return false;
     }
 
     line = g_strdup(arg->s);
@@ -369,16 +369,16 @@ gboolean command_set(const Arg *arg)
     }
     g_free(line);
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return success;
 }
 
 gboolean command_complete(const Arg *arg)
 {
-    completion_complete(arg->i ? TRUE : FALSE);
+    completion_complete(arg->i ? TRUE : false);
 
-    vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, FALSE);
+    vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
     return TRUE;
 }
@@ -388,7 +388,7 @@ gboolean command_inspect(const Arg *arg)
     gboolean enabled;
     WebKitWebSettings *settings = NULL;
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     settings = webkit_web_view_get_settings(vb.gui.webview);
     g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
@@ -403,12 +403,12 @@ gboolean command_inspect(const Arg *arg)
 
     vb_echo(VB_MSG_ERROR, TRUE, "webinspector is not enabled");
 
-    return FALSE;
+    return false;
 }
 
 gboolean command_hints(const Arg *arg)
 {
-    vb_echo_force(VB_MSG_NORMAL, FALSE, arg->s);
+    vb_echo_force(VB_MSG_NORMAL, false, arg->s);
     /* mode will be set in hints_create - so we don't neet to do it here */
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
@@ -417,7 +417,7 @@ gboolean command_hints(const Arg *arg)
 
 gboolean command_hints_focus(const Arg *arg)
 {
-    hints_focus_next(arg->i ? TRUE : FALSE);
+    hints_focus_next(arg->i ? TRUE : false);
 
     return TRUE;
 }
@@ -435,13 +435,13 @@ gboolean command_yank(const Arg *arg)
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
-            vb_echo_force(VB_MSG_NORMAL, FALSE, "Yanked: %s", text);
+            vb_echo_force(VB_MSG_NORMAL, false, "Yanked: %s", text);
             g_free(text);
 
             return TRUE;
         }
 
-        return FALSE;
+        return false;
     }
     /* use current arg.s a new clipboard content */
     Arg a = {arg->i};
@@ -453,13 +453,13 @@ gboolean command_yank(const Arg *arg)
     }
     if (a.s) {
         vb_set_clipboard(&a);
-        vb_echo_force(VB_MSG_NORMAL, FALSE, "Yanked: %s", a.s);
+        vb_echo_force(VB_MSG_NORMAL, false, "Yanked: %s", a.s);
         g_free(a.s);
 
         return TRUE;
     }
 
-    return FALSE;
+    return false;
 }
 
 gboolean command_paste(const Arg *arg)
@@ -478,7 +478,7 @@ gboolean command_paste(const Arg *arg)
 
         return TRUE;
     }
-    return FALSE;
+    return false;
 }
 
 gboolean command_search(const Arg *arg)
@@ -503,17 +503,17 @@ gboolean command_search(const Arg *arg)
 
     if (vb.state.search_query) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
-        webkit_web_view_mark_text_matches(vb.gui.webview, vb.state.search_query, FALSE, 0);
+        webkit_web_view_mark_text_matches(vb.gui.webview, vb.state.search_query, false, 0);
         webkit_web_view_set_highlight_text_matches(vb.gui.webview, TRUE);
 #endif
         /* make sure we have a count greater than 0 */
         vb.state.count = vb.state.count ? vb.state.count : 1;
         do {
-            webkit_web_view_search_text(vb.gui.webview, vb.state.search_query, FALSE, forward, TRUE);
+            webkit_web_view_search_text(vb.gui.webview, vb.state.search_query, false, forward, TRUE);
         } while (--vb.state.count);
     }
 
-    vb_set_mode(VB_MODE_SEARCH, FALSE);
+    vb_set_mode(VB_MODE_SEARCH, false);
 
     return TRUE;
 }
@@ -529,21 +529,21 @@ gboolean command_searchengine(const Arg *arg)
             handle++;
             result = searchengine_add(arg->s, handle);
         } else {
-            return FALSE;
+            return false;
         }
     } else {
         /* remove the search engine */
         result = searchengine_remove(arg->s);
     }
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return result;
 }
 
 gboolean command_searchengine_default(const Arg *arg)
 {
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return searchengine_set_default(arg->s);
 }
@@ -555,7 +555,7 @@ gboolean command_zoom(const Arg *arg)
 
     if (arg->i & COMMAND_ZOOM_RESET) {
         webkit_web_view_set_zoom_level(vb.gui.webview, 1.0);
-        vb_set_mode(VB_MODE_NORMAL, FALSE);
+        vb_set_mode(VB_MODE_NORMAL, false);
 
         return TRUE;
     }
@@ -575,7 +575,7 @@ gboolean command_zoom(const Arg *arg)
         level + (float)(count *step) * (arg->i & COMMAND_ZOOM_IN ? 1.0 : -1.0)
     );
 
-    vb_set_mode(VB_MODE_NORMAL, FALSE);
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     return TRUE;
 
@@ -587,10 +587,10 @@ gboolean command_history(const Arg *arg)
     char *entry       = history_get(input, arg->i);
 
     if (!entry) {
-        return FALSE;
+        return false;
     }
 
-    vb_echo_force(VB_MSG_NORMAL, FALSE, entry);
+    vb_echo_force(VB_MSG_NORMAL, false, entry);
     g_free(entry);
 
     return TRUE;

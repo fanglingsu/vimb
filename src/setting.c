@@ -126,7 +126,7 @@ void setting_cleanup(void)
 gboolean setting_run(char *name, const char *param)
 {
     Arg *a = NULL;
-    gboolean result = FALSE, get = FALSE;
+    gboolean result = false, get = false;
     SettingType type = SETTING_SET;
 
     /* determine the type to names last char and param */
@@ -144,7 +144,7 @@ gboolean setting_run(char *name, const char *param)
     Setting *s = g_hash_table_lookup(vb.settings, name);
     if (!s) {
         vb_echo(VB_MSG_ERROR, TRUE, "Config '%s' not found", name);
-        return FALSE;
+        return false;
     }
 
     if (type == SETTING_SET) {
@@ -153,7 +153,7 @@ gboolean setting_run(char *name, const char *param)
         a = setting_char_to_arg(param, s->type);
         if (a == NULL) {
             vb_echo(VB_MSG_ERROR, TRUE, "No valid value");
-            return FALSE;
+            return false;
         }
 
         s->arg = *a;
@@ -183,7 +183,7 @@ gboolean setting_run(char *name, const char *param)
     if (s->type != TYPE_BOOLEAN) {
         vb_echo(VB_MSG_ERROR, TRUE, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
 
-        return FALSE;
+        return false;
     }
 
     result = s->func(s, type);
@@ -238,30 +238,30 @@ static void setting_print_value(const Setting *s, void *value)
 
     switch (s->type) {
         case TYPE_BOOLEAN:
-            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, *(gboolean*)value ? "true" : "false");
+            vb_echo(VB_MSG_NORMAL, false, "  %s=%s", name, *(gboolean*)value ? "true" : "false");
             break;
 
         case TYPE_INTEGER:
-            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%d", name, *(int*)value);
+            vb_echo(VB_MSG_NORMAL, false, "  %s=%d", name, *(int*)value);
             break;
 
         case TYPE_FLOAT:
-            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%g", name, *(gfloat*)value);
+            vb_echo(VB_MSG_NORMAL, false, "  %s=%g", name, *(gfloat*)value);
             break;
 
         case TYPE_CHAR:
-            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, (char*)value);
+            vb_echo(VB_MSG_NORMAL, false, "  %s=%s", name, (char*)value);
             break;
 
         case TYPE_COLOR:
             string = VB_COLOR_TO_STRING((VbColor*)value);
-            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            vb_echo(VB_MSG_NORMAL, false, "  %s=%s", name, string);
             g_free(string);
             break;
 
         case TYPE_FONT:
             string = pango_font_description_to_string((PangoFontDescription*)value);
-            vb_echo(VB_MSG_NORMAL, FALSE, "  %s=%s", name, string);
+            vb_echo(VB_MSG_NORMAL, false, "  %s=%s", name, string);
             g_free(string);
             break;
     }
@@ -287,7 +287,7 @@ static gboolean setting_webkit(const Setting *s, const SettingType type)
                 /* print the new value */
                 setting_print_value(s, &value);
             } else {
-                g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? TRUE : FALSE, NULL);
+                g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? TRUE : false, NULL);
             }
             break;
 
@@ -538,7 +538,7 @@ static gboolean setting_strict_ssl(const Setting *s, const SettingType type)
         }
     }
 
-    value = type == SETTING_TOGGLE ? !value : (s->arg.i ? TRUE : FALSE);
+    value = type == SETTING_TOGGLE ? !value : (s->arg.i ? TRUE : false);
 
     g_object_set(vb.soup_session, "ssl-strict", value, NULL);
 
@@ -640,7 +640,7 @@ static gboolean setting_proxy(const Setting *s, const SettingType type)
 
 static gboolean setting_user_style(const Setting *s, const SettingType type)
 {
-    gboolean enabled = FALSE;
+    gboolean enabled = false;
     char *uri = NULL;
     WebKitWebSettings *web_setting = webkit_web_view_get_settings(vb.gui.webview);
     if (type != SETTING_SET) {

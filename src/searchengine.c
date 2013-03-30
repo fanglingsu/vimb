@@ -43,7 +43,7 @@ gboolean searchengine_add(const char *handle, const char *uri)
 {
     /* validate if the uri contains only one %s sequence */
     if (!searchengine_is_valid_uri(uri)) {
-        return FALSE;
+        return false;
     }
     Searchengine *s = g_new0(Searchengine, 1);
 
@@ -66,7 +66,7 @@ gboolean searchengine_remove(const char *handle)
         return TRUE;
     }
 
-    return FALSE;
+    return false;
 }
 
 gboolean searchengine_set_default(const char *handle)

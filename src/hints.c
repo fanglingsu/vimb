@@ -47,7 +47,7 @@ void hints_clear()
 {
     char *js, *value = NULL;
 
-    hints_observe_input(FALSE);
+    hints_observe_input(false);
     if (CLEAN_MODE(vb.state.mode) == VB_MODE_HINTING) {
         js = g_strdup_printf("%s.clear();", HINT_VAR);
         vb_eval_script(webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value);
@@ -62,7 +62,7 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
 {
     char *js = NULL;
     if (CLEAN_MODE(vb.state.mode) != VB_MODE_HINTING) {
-        vb_set_mode(VB_MODE_HINTING, FALSE);
+        vb_set_mode(VB_MODE_HINTING, false);
 
         Style *style = &vb.style;
         vb.hints.prefixLength = prefixLength;
@@ -127,7 +127,7 @@ static void hints_run_script(char *js)
         fprintf(stderr, "%s\n", value);
         g_free(value);
 
-        vb_set_mode(VB_MODE_NORMAL, FALSE);
+        vb_set_mode(VB_MODE_NORMAL, false);
 
         return;
     }
@@ -139,7 +139,7 @@ static void hints_run_script(char *js)
     } else if (!strncmp(value, "DONE:", 5)) {
         vb_set_mode(VB_MODE_NORMAL, TRUE);
     } else if (!strncmp(value, "INSERT:", 7)) {
-        vb_set_mode(VB_MODE_INSERT, FALSE);
+        vb_set_mode(VB_MODE_INSERT, false);
     } else if (!strncmp(value, "DATA:", 5)) {
         Arg a = {0};
         char *v = (value + 5);
@@ -215,5 +215,5 @@ static gboolean hints_keypress_callback(WebKitWebView *webview, GdkEventKey *eve
         return TRUE;
     }
 
-    return FALSE;
+    return false;
 }

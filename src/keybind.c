@@ -53,14 +53,14 @@ gboolean keybind_add_from_string(char *keys, const char *command, const Mode mod
 {
     char **token = NULL;
     if (keys == NULL || *keys == '\0') {
-        return FALSE;
+        return false;
     }
 
     /* split the input string into command and parameter part */
     token = g_strsplit(command, " ", 2);
     if (!token[0] || !command_exists(token[0])) {
         g_strfreev(token);
-        return FALSE;
+        return false;
     }
 
     Keybind *keybind = g_new0(Keybind, 1);
@@ -87,7 +87,7 @@ gboolean keybind_remove_from_string(char *str, const Mode mode)
     Keybind keybind = {.mode = mode};
 
     if (str == NULL || *str == '\0') {
-        return FALSE;
+        return false;
     }
     g_strstrip(str);
 
@@ -274,7 +274,7 @@ static gboolean keybind_keypress_callback(WebKitWebView *webview, GdkEventKey *e
         return TRUE;
     }
 
-    return FALSE;
+    return false;
 }
 
 static void keybind_free(Keybind *keybind)

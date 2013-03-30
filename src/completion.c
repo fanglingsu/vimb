@@ -68,7 +68,7 @@ gboolean completion_complete(gboolean back)
 #else
     vb.gui.compbox = gtk_vbox_new(TRUE, 0);
 #endif
-    gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, false, false, 0);
 
     /* TODO move these decision to a more generic place */
     if (!strncmp(input, ":set ", 5)) {
@@ -100,7 +100,7 @@ gboolean completion_complete(gboolean back)
     }
 
     if (!vb.comps.completions) {
-        return FALSE;
+        return false;
     }
     completion_show(back);
 
@@ -138,7 +138,7 @@ static GList *completion_init_completion(GList *target, GList *source,
 
     for (GList *l = source; l; l = l->next) {
         data = l->data;
-        match = FALSE;
+        match = false;
         if (*command == 0) {
             match = TRUE;
         } else {
@@ -146,7 +146,7 @@ static GList *completion_init_completion(GList *target, GList *source,
                 if (func(data, token[i])) {
                     match = TRUE;
                 } else {
-                    match = FALSE;
+                    match = false;
                     break;
                 }
             }
