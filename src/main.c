@@ -143,7 +143,7 @@ gboolean vb_load_uri(const Arg *arg)
         rp  = realpath(path, NULL);
         uri = g_strdup_printf("file://%s", rp);
         free(rp);
-    } else if (!strchr(path, '.')) {
+    } else if (!strchr(path, '.' && !strchr(path, '/'))) {
         char *part  = NULL, *tmpl  = NULL, *query = NULL;
 
         /* look up for a searchengine with handle */
