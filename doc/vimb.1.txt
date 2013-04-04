@@ -14,6 +14,9 @@ browsing-experience.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
+.BI "-c, --config " "CONFIG-FILE"
+Use custom configuration given as \fICONFIG-FILE\fP.
+.TP
 .BI "-e, --embed " "WINID"
 .I WINID
 of an XEmbed-aware application, that PROJECT will use as its parent.

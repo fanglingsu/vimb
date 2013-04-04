@@ -171,13 +171,17 @@ gboolean vb_load_uri(const Arg *arg)
 
     if (arg->i == VB_TARGET_NEW) {
         guint i = 0;
-        char *cmd[5], xid[64];
+        char *cmd[7], xid[64];
 
         cmd[i++] = *args;
         if (vb.embed) {
             cmd[i++] = "-e";
             snprintf(xid, LENGTH(xid), "%u", (int)vb.embed);
             cmd[i++] = xid;
+        }
+        if (vb.custom_config) {
+            cmd[i++] = "-c";
+            cmd[i++] = vb.custom_config;
         }
         cmd[i++] = uri;
         cmd[i++] = NULL;
@@ -824,8 +828,14 @@ static void vb_init_files(void)
 {
     char *path = util_get_config_dir();
 
-    vb.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_CONFIG]);
+    if (vb.custom_config) {
+        char *rp = realpath(vb.custom_config, NULL); 
+        vb.files[FILES_CONFIG] = g_strdup(rp);
+        free(rp);
+    } else {
+        vb.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
+        util_create_file_if_not_exists(vb.files[FILES_CONFIG]);
+    }
 
     vb.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
     util_create_file_if_not_exists(vb.files[FILES_COOKIE]);
@@ -1027,8 +1037,11 @@ int main(int argc, char *argv[])
     static char *winid = NULL;
     static gboolean ver = false, dump = false;
     static GError *err;
+
+    vb.custom_config = NULL;
     static GOptionEntry opts[] = {
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
+        {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.custom_config, "Custom cufiguration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"dump-config", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump out the default configuration to stdout", NULL},
         {NULL}
