@@ -25,8 +25,8 @@
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */
 #define MESSAGE_TIMEOUT             5
-#define SETTING_MAX_CONNS           25
-#define SETTING_MAX_CONNS_PER_HOST  5
+const unsigned int SETTING_MAX_CONNS          = 25;
+const unsigned int SETTING_MAX_CONNS_PER_HOST = 5;
 
 /* number of chars in inputbox - if completion or stepping through history
  * print values longer this value, the cursor will be placed to the beginning

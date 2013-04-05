@@ -29,6 +29,7 @@
 #include "hints.h"
 #include "searchengine.h"
 #include "history.h"
+#include "session.h"
 
 /* variables */
 static char **args;
@@ -42,8 +43,6 @@ static void vb_destroy_window_cb(GtkWidget *widget);
 static void vb_inputbox_activate_cb(GtkEntry *entry);
 static gboolean vb_inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event);
 static void vb_scroll_cb(GtkAdjustment *adjustment);
-static void vb_new_request_cb(SoupSession *session, SoupMessage *message);
-static void vb_gotheaders_cb(SoupMessage *message);
 static WebKitWebView *vb_inspector_new(WebKitWebInspector *inspector, WebKitWebView *webview);
 static gboolean vb_inspector_show(WebKitWebInspector *inspector);
 static gboolean vb_inspector_close(WebKitWebInspector *inspector);
@@ -70,8 +69,6 @@ static void vb_init_core(void);
 static void vb_read_config(void);
 static void vb_setup_signals();
 static void vb_init_files(void);
-static void vb_set_cookie(SoupCookie *cookie);
-static const char *vb_get_cookies(SoupURI *uri);
 static gboolean vb_hide_message();
 static void vb_set_status(const StatusType status);
 void vb_inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message);
@@ -484,30 +481,6 @@ static void vb_scroll_cb(GtkAdjustment *adjustment)
     vb_update_statusbar();
 }
 
-static void vb_new_request_cb(SoupSession *session, SoupMessage *message)
-{
-    SoupMessageHeaders *header = message->request_headers;
-    SoupURI *uri;
-    const char *cookie;
-
-    soup_message_headers_remove(header, "Cookie");
-    uri = soup_message_get_uri(message);
-    if ((cookie = vb_get_cookies(uri))) {
-        soup_message_headers_append(header, "Cookie", cookie);
-    }
-    g_signal_connect_after(G_OBJECT(message), "got-headers", G_CALLBACK(vb_gotheaders_cb), NULL);
-}
-
-static void vb_gotheaders_cb(SoupMessage *message)
-{
-    GSList *list = NULL, *p = NULL;
-
-    for(p = list = soup_cookies_from_response(message); p; p = g_slist_next(p)) {
-        vb_set_cookie((SoupCookie*)p->data);
-    }
-    soup_cookies_free(list);
-}
-
 static WebKitWebView *vb_inspector_new(WebKitWebInspector *inspector, WebKitWebView *webview)
 {
     return WEBKIT_WEB_VIEW(webkit_web_view_new());
@@ -556,30 +529,6 @@ static void vb_inspector_finished(WebKitWebInspector *inspector)
 {
     g_free(vb.gui.inspector);
 }
-
-#ifdef FEATURE_COOKIE
-static void vb_set_cookie(SoupCookie *cookie)
-{
-    SoupCookieJar *jar = soup_cookie_jar_text_new(vb.files[FILES_COOKIE], false);
-    cookie = soup_cookie_copy(cookie);
-    if (!cookie->expires && vb.config.cookie_timeout) {
-        soup_cookie_set_expires(cookie, soup_date_new_from_now(vb.config.cookie_timeout));
-    }
-    soup_cookie_jar_add_cookie(jar, cookie);
-    g_object_unref(jar);
-}
-
-static const char *vb_get_cookies(SoupURI *uri)
-{
-    const char *cookie;
-
-    SoupCookieJar *jar = soup_cookie_jar_text_new(vb.files[FILES_COOKIE], TRUE);
-    cookie = soup_cookie_jar_get_cookies(jar, uri, TRUE);
-    g_object_unref(jar);
-
-    return cookie;
-}
-#endif
 
 static void vb_set_status(const StatusType status)
 {
@@ -690,12 +639,6 @@ static void vb_init_core(void)
 
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), TRUE, TRUE);
 
-    /* init soup session */
-    vb.soup_session = webkit_get_default_session();
-    soup_session_remove_feature_by_type(vb.soup_session, soup_cookie_jar_get_type());
-    g_object_set(vb.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vb.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
-
     vb_setup_signals();
 
     /* Put all part together */
@@ -717,6 +660,7 @@ static void vb_init_core(void)
     gtk_widget_grab_focus(GTK_WIDGET(gui->webview));
 
     vb_init_files();
+    session_init();
     setting_init();
     command_init();
     keybind_init();
@@ -795,8 +739,6 @@ static void vb_setup_signals()
         "signal::value-changed", G_CALLBACK(vb_scroll_cb), NULL,
         NULL
     );
-
-    g_signal_connect_after(G_OBJECT(vb.soup_session), "request-started", G_CALLBACK(vb_new_request_cb), NULL);
 
     /* inspector */
     g_object_connect(
