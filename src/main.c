@@ -572,13 +572,10 @@ static void vb_inspector_finished(WebKitWebInspector *inspector)
 #ifdef FEATURE_COOKIE
 static void vb_set_cookie(SoupCookie *cookie)
 {
-    SoupDate *date;
-
     SoupCookieJar *jar = soup_cookie_jar_text_new(vb.files[FILES_COOKIE], false);
     cookie = soup_cookie_copy(cookie);
-    if (cookie->expires == NULL && vb.config.cookie_timeout) {
-        date = soup_date_new_from_time_t(time(NULL) + vb.config.cookie_timeout);
-        soup_cookie_set_expires(cookie, date);
+    if (!cookie->expires && vb.config.cookie_timeout) {
+        soup_cookie_set_expires(cookie, soup_date_new_from_now(vb.config.cookie_timeout));
     }
     soup_cookie_jar_add_cookie(jar, cookie);
     g_object_unref(jar);
