@@ -78,15 +78,36 @@ gboolean searchengine_set_default(const char *handle)
     return TRUE;
 }
 
-char *searchengine_get_uri(const char *handle)
+/**
+ * Retrieves the search uri for given query string.
+ * Not that the memory of the returned uri must be freed.
+ */
+char *searchengine_get_uri(const char *string)
 {
-    const char *def = vb.behave.searchengine_default;
     GSList *l = NULL;
+    char *p = NULL, *tmpl = NULL, *query = NULL, *uri = NULL;
 
-    if (handle && (l = searchengine_find(handle))) {
-        return ((Searchengine*)l->data)->uri;
-    } else if (def && (l = searchengine_find(def))) {
-        return ((Searchengine*)l->data)->uri;
+    if ((p = strchr(string, ' '))) {
+        *p = '\0';
+        /* is the first word the handle? */
+        if ((l = searchengine_find(string))) {
+            tmpl  = ((Searchengine*)l->data)->uri;
+            query = soup_uri_encode(p + 1, "&");
+        } else {
+            *p = ' ';
+        }
+    }
+
+    if (!tmpl && (l = searchengine_find(vb.behave.searchengine_default))) {
+        tmpl  = ((Searchengine*)l->data)->uri;
+        query = soup_uri_encode(string, "&");
+    }
+
+    if (tmpl) {
+        uri = g_strdup_printf(tmpl, query);
+        g_free(query);
+
+        return uri;
     }
 
     return NULL;

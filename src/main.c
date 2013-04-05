@@ -126,7 +126,7 @@ gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **
 
 gboolean vb_load_uri(const Arg *arg)
 {
-    char *uri, *rp, *path = arg->s;
+    char *uri = NULL, *rp, *path = arg->s;
     struct stat st;
 
     if (!path) {
@@ -138,32 +138,20 @@ gboolean vb_load_uri(const Arg *arg)
         path = vb.config.home_page;
     }
 
-    /* check if the path is a file path */
-    if (stat(path, &st) == 0) {
+    if (g_strrstr(path, "://")) {
+        uri = g_strdup(path);
+    } else if (stat(path, &st) == 0) {
+        /* check if the path is a file path */
         rp  = realpath(path, NULL);
         uri = g_strdup_printf("file://%s", rp);
         free(rp);
-    } else if (!strchr(path, '.' && !strchr(path, '/'))) {
-        char *part  = NULL, *tmpl  = NULL, *query = NULL;
+    } else if (!strchr(path, '.')) {
+        /* use a searchengine */
+        uri = searchengine_get_uri(path);
+    }
 
-        /* look up for a searchengine with handle */
-        if ((part = strchr(path, ' '))) {
-            *part = '\0';
-            tmpl  = searchengine_get_uri(path);
-            query = soup_uri_encode(part + 1, "&");
-        } else {
-            tmpl  = searchengine_get_uri(NULL);
-            query = soup_uri_encode(path, "&");
-        }
-
-        if (tmpl) {
-            uri = g_strdup_printf(tmpl, query);
-        } else {
-            uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
-        }
-        g_free(query);
-    } else {
-        uri = g_strrstr(path, "://") ? g_strdup(path) : g_strdup_printf("http://%s", path);
+    if (!uri) {
+        uri = g_strdup_printf("http://%s", path);
     }
 
     /* change state to normal mode */
@@ -826,7 +814,7 @@ static void vb_init_files(void)
     char *path = util_get_config_dir();
 
     if (vb.custom_config) {
-        char *rp = realpath(vb.custom_config, NULL); 
+        char *rp = realpath(vb.custom_config, NULL);
         vb.files[FILES_CONFIG] = g_strdup(rp);
         free(rp);
     } else {
