@@ -35,10 +35,10 @@ static struct {
     GList *active;
 } history;
 
-static GList *history_get_list(const char *input);
-static const char *history_get_file_by_type(HistoryType type);
-static GList *history_load(const char *file);
-static void history_write_to_file(GList *list, const char *file);
+static GList *get_list(const char *input);
+static const char *get_file_by_type(HistoryType type);
+static GList *load(const char *file);
+static void write_to_file(GList *list, const char *file);
 
 
 /**
@@ -49,8 +49,8 @@ void history_cleanup(void)
 {
     const char *file;
     for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
-        file = history_get_file_by_type(i);
-        history_write_to_file(history_load(file), file);
+        file = get_file_by_type(i);
+        write_to_file(load(file), file);
     }
 }
 
@@ -60,7 +60,7 @@ void history_cleanup(void)
 void history_add(HistoryType type, const char *value)
 {
     FILE *f;
-    const char *file = history_get_file_by_type(type);
+    const char *file = get_file_by_type(type);
 
     if ((f = fopen(file, "a+"))) {
         file_lock_set(fileno(f), F_WRLCK);
@@ -77,7 +77,7 @@ void history_add(HistoryType type, const char *value)
  */
 GList *history_get_all(HistoryType type)
 {
-    return history_load(history_get_file_by_type(type));
+    return load(get_file_by_type(type));
 }
 
 /**
@@ -89,7 +89,7 @@ char *history_get(const char *input, gboolean prev)
     GList *new = NULL;
 
     if (!history.active) {
-        history.active = history_get_list(input);
+        history.active = get_list(input);
         history.active = g_list_append(history.active, g_strdup(""));
         /* start with latest added items */
         history.active = g_list_last(history.active);
@@ -129,7 +129,7 @@ void history_list_free(GList **list)
  * Retrieves the list of matching history items.
  * The list must be freed.
  */
-static GList *history_get_list(const char *input)
+static GList *get_list(const char *input)
 {
     HistoryType type;
     GList *result = NULL;
@@ -155,7 +155,7 @@ static GList *history_get_list(const char *input)
         return NULL;
     }
 
-    GList *src = history_load(history_get_file_by_type(type));
+    GList *src = load(get_file_by_type(type));
 
     /* generate new history list with the matching items */
     for (GList *l = src; l; l = l->next) {
@@ -168,7 +168,7 @@ static GList *history_get_list(const char *input)
     return result;
 }
 
-static const char *history_get_file_by_type(HistoryType type)
+static const char *get_file_by_type(HistoryType type)
 {
     return vb.files[file_map[type]];
 }
@@ -177,7 +177,7 @@ static const char *history_get_file_by_type(HistoryType type)
  * Loads history items form file but eleminate duplicates.
  * Oldest entries first.
  */
-static GList *history_load(const char *file)
+static GList *load(const char *file)
 {
     /* read the history items from file */
     GList *list   = NULL;
@@ -227,7 +227,7 @@ static GList *history_load(const char *file)
 /**
  * Loads the entries from file, make them unique and write them back to file.
  */
-static void history_write_to_file(GList *list, const char *file)
+static void write_to_file(GList *list, const char *file)
 {
     FILE *f;
     if ((f = fopen(file, "w"))) {

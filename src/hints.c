@@ -30,11 +30,11 @@
 extern VbCore vb;
 extern const unsigned int MAXIMUM_HINTS;
 
-static void hints_run_script(char *js);
-static void hints_fire();
-static void hints_observe_input(gboolean observe);
-static gboolean hints_changed_callback(GtkEditable *entry);
-static gboolean hints_keypress_callback(WebKitWebView *webview, GdkEventKey *event);
+static void run_script(char *js);
+static void fire();
+static void observe_input(gboolean observe);
+static gboolean changed_cb(GtkEditable *entry);
+static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event);
 
 void hints_init(WebKitWebFrame *frame)
 {
@@ -47,7 +47,7 @@ void hints_clear()
 {
     char *js, *value = NULL;
 
-    hints_observe_input(false);
+    observe_input(false);
     if (CLEAN_MODE(vb.state.mode) == VB_MODE_HINTING) {
         js = g_strdup_printf("%s.clear();", HINT_VAR);
         vb_eval_script(webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value);
@@ -89,33 +89,33 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
             MAXIMUM_HINTS
         );
 
-        hints_observe_input(TRUE);
+        observe_input(TRUE);
 
-        hints_run_script(js);
+        run_script(js);
         g_free(js);
     }
 
 
     js = g_strdup_printf("%s.create('%s');", HINT_VAR, input ? input : "");
-    hints_run_script(js);
+    run_script(js);
     g_free(js);
 }
 
 void hints_update(const gulong num)
 {
     char *js = g_strdup_printf("%s.update(%lu);", HINT_VAR, num);
-    hints_run_script(js);
+    run_script(js);
     g_free(js);
 }
 
 void hints_focus_next(const gboolean back)
 {
     char *js = g_strdup_printf(back ? "%s.focusPrev()" : "%s.focusNext();", HINT_VAR);
-    hints_run_script(js);
+    run_script(js);
     g_free(js);
 }
 
-static void hints_run_script(char *js)
+static void run_script(char *js)
 {
     char *value = NULL;
     int mode = vb.hints.mode;
@@ -156,21 +156,21 @@ static void hints_run_script(char *js)
     g_free(value);
 }
 
-static void hints_fire()
+static void fire()
 {
     char *js = g_strdup_printf("%s.fire();", HINT_VAR);
-    hints_run_script(js);
+    run_script(js);
     g_free(js);
 }
 
-static void hints_observe_input(gboolean observe)
+static void observe_input(gboolean observe)
 {
     if (observe) {
         vb.hints.change_handler = g_signal_connect(
-            G_OBJECT(vb.gui.inputbox), "changed", G_CALLBACK(hints_changed_callback), NULL
+            G_OBJECT(vb.gui.inputbox), "changed", G_CALLBACK(changed_cb), NULL
         );
         vb.hints.keypress_handler = g_signal_connect(
-            G_OBJECT(vb.gui.inputbox), "key-press-event", G_CALLBACK(hints_keypress_callback), NULL
+            G_OBJECT(vb.gui.inputbox), "key-press-event", G_CALLBACK(keypress_cb), NULL
         );
     } else if (vb.hints.change_handler && vb.hints.keypress_handler) {
         g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), vb.hints.change_handler);
@@ -180,7 +180,7 @@ static void hints_observe_input(gboolean observe)
     }
 }
 
-static gboolean hints_changed_callback(GtkEditable *entry)
+static gboolean changed_cb(GtkEditable *entry)
 {
     const char *text = GET_TEXT();
 
@@ -190,14 +190,14 @@ static gboolean hints_changed_callback(GtkEditable *entry)
     return TRUE;
 }
 
-static gboolean hints_keypress_callback(WebKitWebView *webview, GdkEventKey *event)
+static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 {
     int numval;
     guint keyval = event->keyval;
     guint state  = CLEAN_STATE_WITH_SHIFT(event);
 
     if (keyval == GDK_Return) {
-        hints_fire();
+        fire();
         return TRUE;
     }
     if (keyval == GDK_BackSpace && (state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {

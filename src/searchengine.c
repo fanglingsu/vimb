@@ -27,22 +27,22 @@ typedef struct {
     char *uri;
 } Searchengine;
 
-static GSList *searchengine_find(const char *handle);
-static gboolean searchengine_is_valid_uri(const char *uri);
-static void searchengine_free(Searchengine *se);
+static GSList *find(const char *handle);
+static gboolean is_valid_uri(const char *uri);
+static void free_searchengine(Searchengine *se);
 
 
 void searchengine_cleanup(void)
 {
     if (vb.behave.searchengines) {
-        g_slist_free_full(vb.behave.searchengines, (GDestroyNotify)searchengine_free);
+        g_slist_free_full(vb.behave.searchengines, (GDestroyNotify)free_searchengine);
     }
 }
 
 gboolean searchengine_add(const char *handle, const char *uri)
 {
     /* validate if the uri contains only one %s sequence */
-    if (!searchengine_is_valid_uri(uri)) {
+    if (!is_valid_uri(uri)) {
         return false;
     }
     Searchengine *s = g_new0(Searchengine, 1);
@@ -57,10 +57,10 @@ gboolean searchengine_add(const char *handle, const char *uri)
 
 gboolean searchengine_remove(const char *handle)
 {
-    GSList *list = searchengine_find(handle);
+    GSList *list = find(handle);
 
     if (list) {
-        searchengine_free((Searchengine*)list->data);
+        free_searchengine((Searchengine*)list->data);
         vb.behave.searchengines = g_slist_delete_link(vb.behave.searchengines, list);
 
         return TRUE;
@@ -90,7 +90,7 @@ char *searchengine_get_uri(const char *string)
     if ((p = strchr(string, ' '))) {
         *p = '\0';
         /* is the first word the handle? */
-        if ((l = searchengine_find(string))) {
+        if ((l = find(string))) {
             tmpl  = ((Searchengine*)l->data)->uri;
             query = soup_uri_encode(p + 1, "&");
         } else {
@@ -98,7 +98,7 @@ char *searchengine_get_uri(const char *string)
         }
     }
 
-    if (!tmpl && (l = searchengine_find(vb.behave.searchengine_default))) {
+    if (!tmpl && (l = find(vb.behave.searchengine_default))) {
         tmpl  = ((Searchengine*)l->data)->uri;
         query = soup_uri_encode(string, "&");
     }
@@ -113,7 +113,7 @@ char *searchengine_get_uri(const char *string)
     return NULL;
 }
 
-static GSList *searchengine_find(const char *handle)
+static GSList *find(const char *handle)
 {
     GSList *s;
     for (s = vb.behave.searchengines; s != NULL; s = s->next) {
@@ -125,7 +125,7 @@ static GSList *searchengine_find(const char *handle)
     return NULL;
 }
 
-static gboolean searchengine_is_valid_uri(const char *uri)
+static gboolean is_valid_uri(const char *uri)
 {
     int count = 0;
 
@@ -141,7 +141,7 @@ static gboolean searchengine_is_valid_uri(const char *uri)
     return count == 1;
 }
 
-static void searchengine_free(Searchengine *se)
+static void free_searchengine(Searchengine *se)
 {
     g_free(se->uri);
     g_free(se->handle);

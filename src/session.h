@@ -20,23 +20,6 @@
 #ifndef _SESSION_H
 #define _SESSION_H
 
-#include <glib.h>
-#include <libsoup/soup.h>
-
-#define SESSION_COOKIEJAR_TYPE (session_cookiejar_get_type())
-#define SESSION_COOKIEJAR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), SESSION_COOKIEJAR_TYPE, SessionCookieJar))
-
-typedef struct {
-    SoupCookieJarText parent_instance;
-    int lock;
-} SessionCookieJar;
-
-typedef struct {
-    SoupCookieJarTextClass parent_class;
-} SessionCookieJarClass;
-
-GType session_cookiejar_get_type(void);
-
 void session_init(void);
 
 #endif /* end of include guard: _SESSION_H */
