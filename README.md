@@ -26,6 +26,7 @@ browsing-experience with low memory and cpu usage.
 - webinspector that opens ad the bottom of the browser window like in some
   other fat browsers
 - ssl validation against ca-certificate file
+- custom configuration files
 
 ## Dependencies
 - libwebkit-1.0
