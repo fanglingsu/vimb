@@ -33,7 +33,6 @@ typedef struct {
 
 static GList *filter_list(GList *target, GList *source, Comp_Func func, const char *input);
 static GList *init_completion(GList *target, GList *source, const char *prefix);
-static GList *prepend_bookmark_completion(GList *target, GList *source);
 static GList *update(GList *completion, GList *active, gboolean back);
 static void show(gboolean back);
 static void set_entry_text(Completion *completion);
@@ -86,7 +85,7 @@ gboolean completion_complete(gboolean back)
         source = history_get_all(HISTORY_URL);
         tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[6]),
         /* prepend the bookmark items */
-        tmp = prepend_bookmark_completion(tmp, bookmark_get_by_tags(&input[6]));
+        tmp = g_list_concat(bookmark_get_by_tags(&input[6]), tmp);
         vb.comps.completions = init_completion(
             vb.comps.completions,
             tmp,
@@ -98,7 +97,7 @@ gboolean completion_complete(gboolean back)
         source = history_get_all(HISTORY_URL);
         tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[9]),
         /* prepend the bookmark items */
-        tmp = prepend_bookmark_completion(tmp, bookmark_get_by_tags(&input[9]));
+        tmp = g_list_concat(bookmark_get_by_tags(&input[9]), tmp);
         vb.comps.completions = init_completion(
             vb.comps.completions,
             tmp,
@@ -167,15 +166,6 @@ static GList *init_completion(GList *target, GList *source, const char *prefix)
     }
 
     target = g_list_reverse(target);
-
-    return target;
-}
-
-static GList *prepend_bookmark_completion(GList *target, GList *source)
-{
-    for (GList *l = source; l; l = l->next) {
-        target = g_list_prepend(target, l->data);
-    }
 
     return target;
 }
