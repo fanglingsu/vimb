@@ -188,7 +188,7 @@ static GList *load(const char *file)
         return list;
     }
 
-    file_lock_set(fileno(f), F_WRLCK);
+    file_lock_set(fileno(f), F_RDLCK);
     while (fgets(buf, sizeof(buf), f)) {
         g_strstrip(buf);
 
