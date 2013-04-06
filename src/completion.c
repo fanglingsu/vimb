@@ -142,36 +142,16 @@ void completion_clean()
     vb.state.mode &= ~VB_MODE_COMPLETE;
 }
 
-/* TODO remove none matching entries from given source list */
 static GList *filter_list(GList *target, GList *source, Comp_Func func, const char *input)
 {
-    char **token = NULL;
-    gboolean match;
-
-    token = g_strsplit(input, " ", 0);
-
     for (GList *l = source; l; l = l->next) {
         char *data  = l->data;
-        match = false;
-        if (*input == 0) {
-            match = TRUE;
-        } else {
-            for (int i = 0; token[i]; i++) {
-                if (func(data, token[i])) {
-                    match = TRUE;
-                } else {
-                    match = false;
-                    break;
-                }
-            }
-        }
-        if (match) {
+        if (func(data, input)) {
             target = g_list_prepend(target, data);
         }
     }
 
     target = g_list_reverse(target);
-    g_strfreev(token);
 
     return target;
 }
