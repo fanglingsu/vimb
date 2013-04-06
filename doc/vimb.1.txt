@@ -217,7 +217,23 @@ Remove a Search Mode keybinding.
 .TP
 .B complete
 Start a completion according to the current first chars in the inputbox. If
-complation is already started, switch to the next completion item.
+completion is already started, switch to the next completion item.
+
+Following completions are available:
+.RS
+.nr step 1 1
+.IP \n[step] 3
+Commands `:'
+.IP \n+[step]
+Settings `:set '
+.IP \n+[step]
+Url-History and Bookmarks `:open \fIQUERY\fP' or `:tabopen \fIQUERY\fP'.
+If \fIQUERY\fP is given, this will be used to fetch matching urls from history
+file, or to find bookmarks from bookmark file. The urls from history will only
+be matched by their url, the bookmarks only by their tags. If multiple tags
+are given to get the bookmarks, only those bookmarks will be returned, that
+matches all the given tags or that don't have any tag set.
+.RE
 .TP
 .B complete-back
 If complation is already started, switch to the previous completion item.

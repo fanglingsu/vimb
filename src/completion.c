@@ -20,6 +20,7 @@
 #include "completion.h"
 #include "util.h"
 #include "history.h"
+#include "bookmark.h"
 
 extern VbCore vb;
 
@@ -32,6 +33,8 @@ typedef struct {
 
 static GList *init_completion(GList *target, GList *source,
     Comp_Func func, const char *input, const char *prefix);
+static GList *prepend_bookmark_completion(GList *target, GList *source, const char *prefix);
+static void pack_boxes(GList *list);
 static GList *update(GList *completion, GList *active, gboolean back);
 static void show(gboolean back);
 static void set_entry_text(Completion *completion);
@@ -71,6 +74,8 @@ gboolean completion_complete(gboolean back)
     gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, false, false, 0);
 
     /* TODO move these decision to a more generic place */
+    /* TODO simplify this logic - seperate the list preparation, filtering and
+     * gtk box creation from another */
     if (!strncmp(input, ":set ", 5)) {
         source = g_hash_table_get_keys(vb.settings);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
@@ -84,10 +89,24 @@ gboolean completion_complete(gboolean back)
             vb.comps.completions, source, (Comp_Func)util_strcasestr, &input[6], ":open "
         );
         history_list_free(&source);
+
+        /* prepend the bookmark items */
+        source = bookmark_get_by_tags(&input[6]);
+        vb.comps.completions = prepend_bookmark_completion(
+            vb.comps.completions, source, ":open "
+        );
+        history_list_free(&source);
     } else if (!strncmp(input, ":tabopen ", 9)) {
         source = history_get_all(HISTORY_URL);
         vb.comps.completions = init_completion(
             vb.comps.completions, source, (Comp_Func)util_strcasestr, &input[9], ":tabopen "
+        );
+        history_list_free(&source);
+
+        /* prepend the bookmark items */
+        source = bookmark_get_by_tags(&input[9]);
+        vb.comps.completions = prepend_bookmark_completion(
+            vb.comps.completions, source, ":tabopen "
         );
         history_list_free(&source);
     } else {
@@ -102,6 +121,7 @@ gboolean completion_complete(gboolean back)
     if (!vb.comps.completions) {
         return false;
     }
+    pack_boxes(vb.comps.completions);
     show(back);
 
     return TRUE;
@@ -152,10 +172,8 @@ static GList *init_completion(GList *target, GList *source,
             }
         }
         if (match) {
-            Completion *completion = get_new(data, prefix);
-            gtk_box_pack_start(GTK_BOX(vb.gui.compbox), completion->event, TRUE, TRUE, 0);
             /* use prepend because that faster */
-            target = g_list_prepend(target, completion);
+            target = g_list_prepend(target, get_new(data, prefix));
         }
     }
 
@@ -163,6 +181,23 @@ static GList *init_completion(GList *target, GList *source,
     g_strfreev(token);
 
     return target;
+}
+
+static GList *prepend_bookmark_completion(GList *target, GList *source, const char *prefix)
+{
+    for (GList *l = source; l; l = l->next) {
+        target = g_list_prepend(target, get_new(l->data, prefix));
+    }
+
+    return target;
+}
+
+static void pack_boxes(GList *list)
+{
+    for (GList *l = list; l; l = l->next) {
+        Completion *c = (Completion*)l->data;
+        gtk_box_pack_start(GTK_BOX(vb.gui.compbox), c->event, TRUE, TRUE, 0);
+    }
 }
 
 static GList *update(GList *completion, GList *active, gboolean back)
