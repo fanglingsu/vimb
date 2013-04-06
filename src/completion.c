@@ -31,10 +31,9 @@ typedef struct {
     char      *prefix;
 } Completion;
 
-static GList *init_completion(GList *target, GList *source,
-    Comp_Func func, const char *input, const char *prefix);
-static GList *prepend_bookmark_completion(GList *target, GList *source, const char *prefix);
-static void pack_boxes(GList *list);
+static GList *filter_list(GList *target, GList *source, Comp_Func func, const char *input);
+static GList *init_completion(GList *target, GList *source, const char *prefix);
+static GList *prepend_bookmark_completion(GList *target, GList *source);
 static GList *update(GList *completion, GList *active, gboolean back);
 static void show(gboolean back);
 static void set_entry_text(Completion *completion);
@@ -45,7 +44,7 @@ static void free_completion(Completion *completion);
 gboolean completion_complete(gboolean back)
 {
     const char *input = GET_TEXT();
-    GList *source = NULL;
+    GList *source = NULL, *tmp = NULL;
 
     if (vb.comps.completions
         && vb.comps.active
@@ -74,46 +73,46 @@ gboolean completion_complete(gboolean back)
     gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, false, false, 0);
 
     /* TODO move these decision to a more generic place */
-    /* TODO simplify this logic - seperate the list preparation, filtering and
-     * gtk box creation from another */
     if (!strncmp(input, ":set ", 5)) {
         source = g_hash_table_get_keys(vb.settings);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
         vb.comps.completions = init_completion(
-            vb.comps.completions, source, (Comp_Func)g_str_has_prefix, &input[5], ":set "
+            vb.comps.completions,
+            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[5]),
+            ":set "
         );
         g_list_free(source);
     } else if (!strncmp(input, ":open ", 6)) {
         source = history_get_all(HISTORY_URL);
-        vb.comps.completions = init_completion(
-            vb.comps.completions, source, (Comp_Func)util_strcasestr, &input[6], ":open "
-        );
-        history_list_free(&source);
-
+        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[6]),
         /* prepend the bookmark items */
-        source = bookmark_get_by_tags(&input[6]);
-        vb.comps.completions = prepend_bookmark_completion(
-            vb.comps.completions, source, ":open "
+        tmp = prepend_bookmark_completion(tmp, bookmark_get_by_tags(&input[6]));
+        vb.comps.completions = init_completion(
+            vb.comps.completions,
+            tmp,
+            ":open "
         );
+
         history_list_free(&source);
     } else if (!strncmp(input, ":tabopen ", 9)) {
         source = history_get_all(HISTORY_URL);
-        vb.comps.completions = init_completion(
-            vb.comps.completions, source, (Comp_Func)util_strcasestr, &input[9], ":tabopen "
-        );
-        history_list_free(&source);
-
+        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[9]),
         /* prepend the bookmark items */
-        source = bookmark_get_by_tags(&input[9]);
-        vb.comps.completions = prepend_bookmark_completion(
-            vb.comps.completions, source, ":tabopen "
+        tmp = prepend_bookmark_completion(tmp, bookmark_get_by_tags(&input[9]));
+        vb.comps.completions = init_completion(
+            vb.comps.completions,
+            tmp,
+            ":tabopen "
         );
+
         history_list_free(&source);
     } else {
         source = g_hash_table_get_keys(vb.behave.commands);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
         vb.comps.completions = init_completion(
-            vb.comps.completions, source, (Comp_Func)g_str_has_prefix, &input[1], ":"
+            vb.comps.completions,
+            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[1]),
+            ":"
         );
         g_list_free(source);
     }
@@ -121,7 +120,6 @@ gboolean completion_complete(gboolean back)
     if (!vb.comps.completions) {
         return false;
     }
-    pack_boxes(vb.comps.completions);
     show(back);
 
     return TRUE;
@@ -144,22 +142,18 @@ void completion_clean()
     vb.state.mode &= ~VB_MODE_COMPLETE;
 }
 
-static GList *init_completion(GList *target, GList *source,
-    Comp_Func func, const char *input, const char *prefix)
+/* TODO remove none matching entries from given source list */
+static GList *filter_list(GList *target, GList *source, Comp_Func func, const char *input)
 {
-    char *command = NULL, *data = NULL, **token = NULL;
+    char **token = NULL;
     gboolean match;
 
-    /* remove counts before command and save it to print it later in inputbox */
-    vb.comps.count  = g_ascii_strtoll(input, &command, 10);
-    OVERWRITE_STRING(vb.comps.prefix, prefix);
-
-    token = g_strsplit(command, " ", -1);
+    token = g_strsplit(input, " ", 0);
 
     for (GList *l = source; l; l = l->next) {
-        data = l->data;
+        char *data  = l->data;
         match = false;
-        if (*command == 0) {
+        if (*input == 0) {
             match = TRUE;
         } else {
             for (int i = 0; token[i]; i++) {
@@ -172,8 +166,7 @@ static GList *init_completion(GList *target, GList *source,
             }
         }
         if (match) {
-            /* use prepend because that faster */
-            target = g_list_prepend(target, get_new(data, prefix));
+            target = g_list_prepend(target, data);
         }
     }
 
@@ -183,21 +176,28 @@ static GList *init_completion(GList *target, GList *source,
     return target;
 }
 
-static GList *prepend_bookmark_completion(GList *target, GList *source, const char *prefix)
+static GList *init_completion(GList *target, GList *source, const char *prefix)
 {
+    OVERWRITE_STRING(vb.comps.prefix, prefix);
+
     for (GList *l = source; l; l = l->next) {
-        target = g_list_prepend(target, get_new(l->data, prefix));
+        Completion *c = get_new(l->data, prefix);
+        target        = g_list_prepend(target, c);
+        gtk_box_pack_start(GTK_BOX(vb.gui.compbox), c->event, TRUE, TRUE, 0);
     }
+
+    target = g_list_reverse(target);
 
     return target;
 }
 
-static void pack_boxes(GList *list)
+static GList *prepend_bookmark_completion(GList *target, GList *source)
 {
-    for (GList *l = list; l; l = l->next) {
-        Completion *c = (Completion*)l->data;
-        gtk_box_pack_start(GTK_BOX(vb.gui.compbox), c->event, TRUE, TRUE, 0);
+    for (GList *l = source; l; l = l->next) {
+        target = g_list_prepend(target, l->data);
     }
+
+    return target;
 }
 
 static GList *update(GList *completion, GList *active, gboolean back)
