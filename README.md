@@ -27,6 +27,7 @@ browsing-experience with low memory and cpu usage.
   other fat browsers
 - ssl validation against ca-certificate file
 - custom configuration files
+- tagged bookmarks
 
 ## Dependencies
 - libwebkit-1.0
