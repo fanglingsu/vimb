@@ -299,6 +299,10 @@ inputbox. If there is already text in the input box this will be used to get
 history items. A command is not a internal command, but every string entered
 into inputbox that begins with \fI[:/?]\fP. So the history contains real
 commands and search queries.
+.SS Bookmark
+.TP
+.BI "bookmark-add [" TAGS "]"
+Save the current opened uri with \fITAGS\fP to the bookmark file.
 .SS Misc
 .TP
 .BI run " [COMMAND LIST]"
@@ -353,6 +357,10 @@ box.
 .RS
 This file holds the history of search queries.
 box.
+.RE
+.I $XDG_CONFIG_HOME/PROJECT/bookmark
+.RS
+Holds the bookmarks saved with command `bookmark-add'.
 .RE
 .I $XDG_CONFIG_HOME/PROJECT/scripts.js
 .RS

@@ -779,6 +779,9 @@ static void init_files(void)
     vb.files[FILES_SEARCH] = g_build_filename(path, "search", NULL);
     util_create_file_if_not_exists(vb.files[FILES_SEARCH]);
 
+    vb.files[FILES_BOOKMARK] = g_build_filename(path, "bookmark", NULL);
+    util_create_file_if_not_exists(vb.files[FILES_BOOKMARK]);
+
     vb.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
 
     vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
