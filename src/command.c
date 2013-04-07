@@ -31,6 +31,7 @@
 extern VbCore vb;
 extern const unsigned int INPUT_LENGTH;
 
+static GHashTable *commands;
 static CommandInfo cmd_list[] = {
     /* command               function                      mode */
     {"open",                 command_open,                 {VB_TARGET_CURRENT, ""}},
@@ -105,23 +106,28 @@ static CommandInfo cmd_list[] = {
 void command_init(void)
 {
     guint i;
-    vb.behave.commands = g_hash_table_new(g_str_hash, g_str_equal);
+    commands = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < LENGTH(cmd_list); i++) {
-        g_hash_table_insert(vb.behave.commands, (gpointer)cmd_list[i].name, &cmd_list[i]);
+        g_hash_table_insert(commands, (gpointer)cmd_list[i].name, &cmd_list[i]);
     }
+}
+
+GList *command_get_all(void)
+{
+    return g_hash_table_get_keys(commands);
 }
 
 void command_cleanup(void)
 {
-    if (vb.behave.commands) {
-        g_hash_table_destroy(vb.behave.commands);
+    if (commands) {
+        g_hash_table_destroy(commands);
     }
 }
 
 gboolean command_exists(const char *name)
 {
-    return g_hash_table_contains(vb.behave.commands, name);
+    return g_hash_table_contains(commands, name);
 }
 
 gboolean command_run(const char *name, const char *param)
@@ -129,7 +135,7 @@ gboolean command_run(const char *name, const char *param)
     CommandInfo *command = NULL;
     gboolean result;
     Arg a;
-    command = g_hash_table_lookup(vb.behave.commands, name);
+    command = g_hash_table_lookup(commands, name);
     if (!command) {
         vb_echo(VB_MSG_ERROR, true, "Command '%s' not found", name);
         vb_set_mode(VB_MODE_NORMAL, false);

@@ -21,6 +21,7 @@
 #include "util.h"
 #include "history.h"
 #include "bookmark.h"
+#include "command.h"
 
 extern VbCore vb;
 
@@ -112,8 +113,7 @@ gboolean completion_complete(gboolean back)
 
         history_list_free(&source);
     } else {
-        source = g_hash_table_get_keys(vb.behave.commands);
-        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
+        source = g_list_sort(command_get_all(), (GCompareFunc)g_strcmp0);
         comps.completions = init_completion(
             comps.completions,
             filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[1]),

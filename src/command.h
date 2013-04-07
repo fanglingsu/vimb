@@ -44,6 +44,7 @@ typedef struct {
 
 
 void command_init(void);
+GList *command_get_all(void);
 void command_cleanup(void);
 gboolean command_exists(const char *name);
 gboolean command_run(const char *name, const char *param);

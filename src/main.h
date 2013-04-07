@@ -252,7 +252,6 @@ typedef struct {
 
 /* behaviour */
 typedef struct {
-    GHashTable *commands;
     GSList     *keys;
     GString    *modkeys;
     GSList     *searchengines;
