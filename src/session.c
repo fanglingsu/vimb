@@ -21,6 +21,8 @@
 #include "main.h"
 #include "session.h"
 
+#ifdef FEATURE_COOKIE
+
 #define COOKIEJAR_TYPE (cookiejar_get_type())
 #define COOKIEJAR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), COOKIEJAR_TYPE, CookieJar))
 
@@ -44,6 +46,7 @@ static void cookiejar_finalize(GObject *self);
 static void cookiejar_init(CookieJar *self);
 static void cookiejar_set_property(GObject *self, guint prop_id,
     const GValue *value, GParamSpec *pspec);
+#endif
 
 extern VbCore vb;
 extern const unsigned int SETTING_MAX_CONNS;
@@ -54,15 +57,18 @@ void session_init(void)
 {
     /* init soup session */
     vb.soup_session = webkit_get_default_session();
+    g_object_set(vb.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(vb.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
+
+#ifdef FEATURE_COOKIE
     soup_session_add_feature(
         vb.soup_session,
         SOUP_SESSION_FEATURE(cookiejar_new(vb.files[FILES_COOKIE], false))
     );
-    g_object_set(vb.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vb.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
-
+#endif
 }
 
+#ifdef FEATURE_COOKIE
 static SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
 {
     return g_object_new(
@@ -107,3 +113,4 @@ static void cookiejar_set_property(GObject *self, guint prop_id, const
     G_OBJECT_CLASS(cookiejar_parent_class)->set_property(self, prop_id, value, pspec);
     flock(COOKIEJAR(self)->lock, LOCK_UN);
 }
+#endif

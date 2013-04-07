@@ -767,8 +767,10 @@ static void init_files(void)
         util_create_file_if_not_exists(vb.files[FILES_CONFIG]);
     }
 
+#ifdef FEATURE_COOKIE
     vb.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
     util_create_file_if_not_exists(vb.files[FILES_COOKIE]);
+#endif
 
     vb.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
     util_create_file_if_not_exists(vb.files[FILES_CLOSED]);

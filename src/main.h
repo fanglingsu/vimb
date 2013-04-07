@@ -178,7 +178,9 @@ typedef enum {
 
 typedef enum {
     FILES_CONFIG,
+#ifdef FEATURE_COOKIE
     FILES_COOKIE,
+#endif
     FILES_CLOSED,
     FILES_SCRIPT,
     FILES_HISTORY,
