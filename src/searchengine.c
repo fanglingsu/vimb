@@ -27,6 +27,9 @@ typedef struct {
     char *uri;
 } Searchengine;
 
+static GSList *searchengines;
+static char   *default_handle = NULL;
+
 static GSList *find(const char *handle);
 static gboolean is_valid_uri(const char *uri);
 static void free_searchengine(Searchengine *se);
@@ -34,8 +37,8 @@ static void free_searchengine(Searchengine *se);
 
 void searchengine_cleanup(void)
 {
-    if (vb.behave.searchengines) {
-        g_slist_free_full(vb.behave.searchengines, (GDestroyNotify)free_searchengine);
+    if (searchengines) {
+        g_slist_free_full(searchengines, (GDestroyNotify)free_searchengine);
     }
 }
 
@@ -50,7 +53,7 @@ gboolean searchengine_add(const char *handle, const char *uri)
     s->handle = g_strdup(handle);
     s->uri    = g_strdup(uri);
 
-    vb.behave.searchengines = g_slist_prepend(vb.behave.searchengines, s);
+    searchengines = g_slist_prepend(searchengines, s);
 
     return true;
 }
@@ -61,7 +64,7 @@ gboolean searchengine_remove(const char *handle)
 
     if (list) {
         free_searchengine((Searchengine*)list->data);
-        vb.behave.searchengines = g_slist_delete_link(vb.behave.searchengines, list);
+        searchengines = g_slist_delete_link(searchengines, list);
 
         return true;
     }
@@ -73,7 +76,7 @@ gboolean searchengine_set_default(const char *handle)
 {
     /* do not check if the search engin exists to be able to set the default
      * before defining the search engines */
-    OVERWRITE_STRING(vb.behave.searchengine_default, handle);
+    OVERWRITE_STRING(default_handle, handle);
 
     return true;
 }
@@ -98,7 +101,7 @@ char *searchengine_get_uri(const char *string)
         }
     }
 
-    if (!tmpl && (l = find(vb.behave.searchengine_default))) {
+    if (!tmpl && (l = find(default_handle))) {
         tmpl  = ((Searchengine*)l->data)->uri;
         query = soup_uri_encode(string, "&");
     }
@@ -116,7 +119,7 @@ char *searchengine_get_uri(const char *string)
 static GSList *find(const char *handle)
 {
     GSList *s;
-    for (s = vb.behave.searchengines; s != NULL; s = s->next) {
+    for (s = searchengines; s != NULL; s = s->next) {
         if (!strcmp(((Searchengine*)s->data)->handle, handle)) {
             return s;
         }

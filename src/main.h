@@ -250,12 +250,6 @@ typedef struct {
     GList           *downloads;
 } State;
 
-/* behaviour */
-typedef struct {
-    GSList     *searchengines;
-    char       *searchengine_default;   /* handle of the default search engine */
-} Behaviour;
-
 typedef struct {
     time_t cookie_timeout;
     int    scrollstep;
@@ -291,7 +285,6 @@ typedef struct {
     char            *files[FILES_LAST];
     Config          config;
     Style           style;
-    Behaviour       behave;
     GHashTable      *settings;
     SoupSession     *soup_session;
 #ifdef HAS_GTK3
