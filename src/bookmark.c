@@ -24,12 +24,11 @@ extern VbCore vb;
 
 typedef struct {
     char *uri;
-    char **argv;
-    int  argc;
+    char **tags;
 } Bookmark;
 
 static GList *load(const char *file);
-static gboolean contains_all_args(char **argv_src, unsigned int s, char **argv_query, unsigned int q);
+static gboolean comtains_all_tags(char **src, unsigned int s, char **query, unsigned int q);
 static void free_bookmark(Bookmark *bm);
 
 /**
@@ -37,32 +36,19 @@ static void free_bookmark(Bookmark *bm);
  */
 void bookmark_add(const char *uri, const char *tags)
 {
-    char **parts, *t = NULL;
-    unsigned int len, i;
-    GString *string = g_string_new(uri);
     FILE *f;
 
     if ((f = fopen(vb.files[FILES_BOOKMARK], "a+"))) {
-        if (tags) {
-            /* splits the tags by space char */
-            parts = g_strsplit(tags, " ", 0);
-            len   = g_strv_length(parts);
-
-            for (i = 0; i < len; i++) {
-                t = g_shell_quote(parts[i]);
-                g_string_append_printf(string, " %s", t);
-                g_free(t);
-            }
-        }
-
         file_lock_set(fileno(f), F_WRLCK);
 
-        fprintf(f, "%s\n", string->str);
+        if (tags) {
+            fprintf(f, "%s %s\n", uri, tags);
+        } else {
+            fprintf(f, "%s\n", uri);
+        }
 
         file_lock_set(fileno(f), F_UNLCK);
         fclose(f);
-
-        g_string_free(string, true);
     }
 }
 
@@ -82,7 +68,7 @@ GList *bookmark_get_by_tags(const char *tags)
 
     for (GList *l = src; l; l = l->next) {
         Bookmark *bm = (Bookmark*)l->data;
-        if (contains_all_args(bm->argv, bm->argc, parts, len)) {
+        if (comtains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)) {
             res = g_list_prepend(res, g_strdup(bm->uri));
         }
     }
@@ -97,8 +83,7 @@ static GList *load(const char *file)
 {
     /* read the items from file */
     GList *list   = NULL;
-    char buf[512] = {0}, **argv = NULL;
-    int argc      = 0;
+    char buf[512] = {0};
     FILE *f;
 
     if (!(f = fopen(file, "r"))) {
@@ -120,18 +105,11 @@ static GList *load(const char *file)
         bm = g_new(Bookmark, 1);
         if ((p = strchr(buf, ' '))) {
             *p = '\0';
-            /* parse tags */
-            if (g_shell_parse_argv(p + 1, &argc, &argv, NULL)) {
-                bm->uri  = g_strdup(buf);
-                bm->argv = argv;
-                bm->argc = argc;
-            } else {
-                continue;
-            }
+            bm->uri  = g_strdup(buf);
+            bm->tags = g_strsplit(p + 1, " ", 0);
         } else {
             bm->uri  = g_strdup(buf);
-            bm->argv = NULL;
-            bm->argc = 0;
+            bm->tags = NULL;
         }
 
         list = g_list_prepend(list, bm);
@@ -146,7 +124,7 @@ static GList *load(const char *file)
  * Checks if the given source array of pointer contains all those entries
  * given as array of search strings.
  */
-static gboolean contains_all_args(char **argv_src, unsigned int s, char **argv_query, unsigned int q)
+static gboolean comtains_all_tags(char **src, unsigned int s, char **query, unsigned int q)
 {
     unsigned int i, n;
 
@@ -158,7 +136,7 @@ static gboolean contains_all_args(char **argv_src, unsigned int s, char **argv_q
     for (i = 0; i < q; i++) {
         gboolean found = false;
         for (n = 0; n < s; n++) {
-            if (!strcmp(argv_query[i], argv_src[n])) {
+            if (!strcmp(query[i], src[n])) {
                 found = true;
                 break;
             }
@@ -174,6 +152,6 @@ static gboolean contains_all_args(char **argv_src, unsigned int s, char **argv_q
 static void free_bookmark(Bookmark *bm)
 {
     g_free(bm->uri);
-    g_strfreev(bm->argv);
+    g_strfreev(bm->tags);
     g_free(bm);
 }
