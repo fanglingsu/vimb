@@ -615,7 +615,10 @@ static void init_core(void)
     gui->scroll = gtk_scrolled_window_new(NULL, NULL);
     gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
     gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
+
+#ifndef HAS_GTK3
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+#endif
 
     /* Prepare the inputbox */
     gui->inputbox = gtk_entry_new();
@@ -638,6 +641,7 @@ static void init_core(void)
     gui->eventbox = gtk_event_box_new();
 
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), TRUE, TRUE);
+    gtk_widget_show_all(gui->window);
 
     setup_signals();
 
@@ -668,7 +672,6 @@ static void init_core(void)
 
     /* initially apply input style */
     vb_update_input_style();
-
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
 }

@@ -316,8 +316,8 @@ typedef struct {
     Window          embed;
 #else
     GdkNativeWindow embed;
-    char            *custom_config;
 #endif
+    char            *custom_config;
 } VbCore;
 
 /* main object */
