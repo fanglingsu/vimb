@@ -24,6 +24,9 @@
 
 extern VbCore vb;
 
+static GSList  *keys;
+static GString *modkeys;
+
 static void rebuild_modkeys(void);
 static GSList *find(int mode, guint modkey, guint modmask, guint keyval);
 static void string_to_keybind(char *str, Keybind *key);
@@ -35,24 +38,24 @@ static void free_keybind(Keybind *keybind);
 
 void keybind_init(void)
 {
-    vb.behave.modkeys = g_string_new("");
+    modkeys = g_string_new("");
     g_signal_connect(G_OBJECT(vb.gui.box), "key-press-event", G_CALLBACK(keypress_cb), NULL);
 }
 
 void keybind_cleanup(void)
 {
-    if (vb.behave.keys) {
-        g_slist_free_full(vb.behave.keys, (GDestroyNotify)free_keybind);
+    if (keys) {
+        g_slist_free_full(keys, (GDestroyNotify)free_keybind);
     }
-    if (vb.behave.modkeys) {
-        g_string_free(vb.behave.modkeys, true);
+    if (modkeys) {
+        g_string_free(modkeys, true);
     }
 }
 
-gboolean keybind_add_from_string(char *keys, const char *command, const Mode mode)
+gboolean keybind_add_from_string(char *keystring, const char *command, const Mode mode)
 {
     char **token = NULL;
-    if (keys == NULL || *keys == '\0') {
+    if (keystring == NULL || *keystring == '\0') {
         return false;
     }
 
@@ -69,14 +72,14 @@ gboolean keybind_add_from_string(char *keys, const char *command, const Mode mod
     keybind->param   = g_strdup(token[1]);
     g_strfreev(token);
 
-    string_to_keybind(keys, keybind);
+    string_to_keybind(keystring, keybind);
 
     /* add the keybinding to the list */
-    vb.behave.keys = g_slist_prepend(vb.behave.keys, keybind);
+    keys = g_slist_prepend(keys, keybind);
 
     /* save the modkey also in the modkey string if not exists already */
-    if (keybind->modkey && strchr(vb.behave.modkeys->str, keybind->modkey) == NULL) {
-        g_string_append_c(vb.behave.modkeys, keybind->modkey);
+    if (keybind->modkey && strchr(modkeys->str, keybind->modkey) == NULL) {
+        g_string_append_c(modkeys, keybind->modkey);
     }
 
     return true;
@@ -97,10 +100,10 @@ gboolean keybind_remove_from_string(char *str, const Mode mode)
     GSList *link = find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
     if (link) {
         free_keybind((Keybind*)link->data);
-        vb.behave.keys = g_slist_delete_link(vb.behave.keys, link);
+        keys = g_slist_delete_link(keys, link);
     }
 
-    if (keybind.modkey && strchr(vb.behave.modkeys->str, keybind.modkey) != NULL) {
+    if (keybind.modkey && strchr(modkeys->str, keybind.modkey) != NULL) {
         /* remove eventually no more used modkeys */
         rebuild_modkeys();
     }
@@ -115,17 +118,17 @@ static void rebuild_modkeys(void)
 {
     GSList *link;
     /* remove previous modkeys */
-    if (vb.behave.modkeys) {
-        g_string_free(vb.behave.modkeys, true);
-        vb.behave.modkeys = g_string_new("");
+    if (modkeys) {
+        g_string_free(modkeys, true);
+        modkeys = g_string_new("");
     }
 
     /* regenerate the modekeys */
-    for (link = vb.behave.keys; link != NULL; link = link->next) {
+    for (link = keys; link != NULL; link = link->next) {
         Keybind *keybind = (Keybind*)link->data;
         /* if not not exists - add it */
-        if (keybind->modkey && strchr(vb.behave.modkeys->str, keybind->modkey) == NULL) {
-            g_string_append_c(vb.behave.modkeys, keybind->modkey);
+        if (keybind->modkey && strchr(modkeys->str, keybind->modkey) == NULL) {
+            g_string_append_c(modkeys, keybind->modkey);
         }
     }
 }
@@ -133,7 +136,7 @@ static void rebuild_modkeys(void)
 static GSList *find(int mode, guint modkey, guint modmask, guint keyval)
 {
     GSList *link;
-    for (link = vb.behave.keys; link != NULL; link = link->next) {
+    for (link = keys; link != NULL; link = link->next) {
         Keybind *keybind = (Keybind*)link->data;
         if (keybind->keyval == keyval
             && keybind->modmask == modmask
@@ -256,7 +259,7 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
             return true;
         }
-        if (strchr(vb.behave.modkeys->str, keyval) && vb.state.modkey != keyval) {
+        if (strchr(modkeys->str, keyval) && vb.state.modkey != keyval) {
             vb.state.modkey = (char)keyval;
             vb_update_statusbar();
 
