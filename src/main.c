@@ -681,9 +681,9 @@ static void read_config(void)
     char *line, **lines;
 
     /* load default config */
-    for (guint i = 0; default_config[i].command != NULL; i++) {
-        if (!command_run_string(default_config[i].command)) {
-            fprintf(stderr, "Invalid default config: %s\n", default_config[i].command);
+    for (guint i = 0; default_config[i] != NULL; i++) {
+        if (!command_run_string(default_config[i])) {
+            fprintf(stderr, "Invalid default config: %s\n", default_config[i]);
         }
     }
 
@@ -995,8 +995,8 @@ int main(int argc, char *argv[])
     }
     if (dump) {
         /* load default config */
-        for (guint i = 0; default_config[i].command != NULL; i++) {
-            fprintf(stdout, "%s\n", default_config[i].command);
+        for (guint i = 0; default_config[i] != NULL; i++) {
+            fprintf(stdout, "%s\n", default_config[i]);
         }
         return EXIT_SUCCESS;
     }
