@@ -40,6 +40,7 @@ struct _Setting {
 };
 
 void setting_init(void);
+GList* setting_get_all(void);
 void setting_cleanup(void);
 gboolean setting_run(char* name, const char* param);
 

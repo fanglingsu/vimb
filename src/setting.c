@@ -20,6 +20,8 @@
 #include "setting.h"
 #include "util.h"
 
+static GHashTable *settings;
+
 extern VbCore vb;
 
 static Arg *char_to_arg(const char *str, const Type type);
@@ -107,19 +109,24 @@ void setting_init(void)
 {
     Setting *s;
     unsigned int i;
-    vb.settings = g_hash_table_new(g_str_hash, g_str_equal);
+    settings = g_hash_table_new(g_str_hash, g_str_equal);
 
     for (i = 0; i < LENGTH(default_settings); i++) {
         s = &default_settings[i];
         /* use alias as key if available */
-        g_hash_table_insert(vb.settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
+        g_hash_table_insert(settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
     }
+}
+
+GList* setting_get_all(void)
+{
+    return g_hash_table_get_keys(settings);
 }
 
 void setting_cleanup(void)
 {
-    if (vb.settings) {
-        g_hash_table_destroy(vb.settings);
+    if (settings) {
+        g_hash_table_destroy(settings);
     }
 }
 
@@ -141,7 +148,7 @@ gboolean setting_run(char *name, const char *param)
         type = SETTING_GET;
     }
 
-    Setting *s = g_hash_table_lookup(vb.settings, name);
+    Setting *s = g_hash_table_lookup(settings, name);
     if (!s) {
         vb_echo(VB_MSG_ERROR, true, "Config '%s' not found", name);
         return false;

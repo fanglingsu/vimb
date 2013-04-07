@@ -285,7 +285,6 @@ typedef struct {
     char            *files[FILES_LAST];
     Config          config;
     Style           style;
-    GHashTable      *settings;
     SoupSession     *session;
 #ifdef HAS_GTK3
     Window          embed;

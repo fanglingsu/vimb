@@ -22,6 +22,7 @@
 #include "history.h"
 #include "bookmark.h"
 #include "command.h"
+#include "setting.h"
 
 extern VbCore vb;
 
@@ -80,8 +81,7 @@ gboolean completion_complete(gboolean back)
 
     /* TODO move these decision to a more generic place */
     if (!strncmp(input, ":set ", 5)) {
-        source = g_hash_table_get_keys(vb.settings);
-        source = g_list_sort(source, (GCompareFunc)g_strcmp0);
+        source = g_list_sort(setting_get_all(), (GCompareFunc)g_strcmp0);
         comps.completions = init_completion(
             comps.completions,
             filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[5]),
