@@ -286,7 +286,7 @@ typedef struct {
     Config          config;
     Style           style;
     GHashTable      *settings;
-    SoupSession     *soup_session;
+    SoupSession     *session;
 #ifdef HAS_GTK3
     Window          embed;
 #else

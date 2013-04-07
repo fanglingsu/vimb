@@ -530,7 +530,7 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
 {
     gboolean value;
     if (type != SETTING_SET) {
-        g_object_get(vb.soup_session, "ssl-strict", &value, NULL);
+        g_object_get(vb.session, "ssl-strict", &value, NULL);
         if (type == SETTING_GET) {
             print_value(s, &value);
 
@@ -540,7 +540,7 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
 
     value = type == SETTING_TOGGLE ? !value : (s->arg.i ? true : false);
 
-    g_object_set(vb.soup_session, "ssl-strict", value, NULL);
+    g_object_set(vb.session, "ssl-strict", value, NULL);
 
     return true;
 }
@@ -549,11 +549,11 @@ static gboolean ca_bundle(const Setting *s, const SettingType type)
 {
     char *value;
     if (type == SETTING_GET) {
-        g_object_get(vb.soup_session, "ssl-ca-file", &value, NULL);
+        g_object_get(vb.session, "ssl-ca-file", &value, NULL);
         print_value(s, value);
         g_free(value);
     } else {
-        g_object_set(vb.soup_session, "ssl-ca-file", s->arg.s, NULL);
+        g_object_set(vb.session, "ssl-ca-file", s->arg.s, NULL);
     }
 
     return true;
@@ -600,7 +600,7 @@ static gboolean proxy(const Setting *s, const SettingType type)
 
     /* get the current status */
     if (type != SETTING_SET) {
-        g_object_get(vb.soup_session, "proxy-uri", &proxy_uri, NULL);
+        g_object_get(vb.session, "proxy-uri", &proxy_uri, NULL);
         enabled = (proxy_uri != NULL);
 
         if (type == SETTING_GET) {
@@ -626,13 +626,13 @@ static gboolean proxy(const Setting *s, const SettingType type)
                 : g_strdup_printf("http://%s", proxy);
             proxy_uri = soup_uri_new(proxy_new);
 
-            g_object_set(vb.soup_session, "proxy-uri", proxy_uri, NULL);
+            g_object_set(vb.session, "proxy-uri", proxy_uri, NULL);
 
             soup_uri_free(proxy_uri);
             g_free(proxy_new);
         }
     } else {
-        g_object_set(vb.soup_session, "proxy-uri", NULL, NULL);
+        g_object_set(vb.session, "proxy-uri", NULL, NULL);
     }
 
     return true;

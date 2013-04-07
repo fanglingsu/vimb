@@ -56,13 +56,13 @@ extern const unsigned int SETTING_MAX_CONNS_PER_HOST;
 void session_init(void)
 {
     /* init soup session */
-    vb.soup_session = webkit_get_default_session();
-    g_object_set(vb.soup_session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vb.soup_session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
+    vb.session = webkit_get_default_session();
+    g_object_set(vb.session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(vb.session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
 
 #ifdef FEATURE_COOKIE
     soup_session_add_feature(
-        vb.soup_session,
+        vb.session,
         SOUP_SESSION_FEATURE(cookiejar_new(vb.files[FILES_COOKIE], false))
     );
 #endif
