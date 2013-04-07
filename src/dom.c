@@ -74,13 +74,13 @@ gboolean dom_is_editable(Element *element)
     tagname = webkit_dom_element_get_tag_name(element);
     type    = webkit_dom_element_get_attribute(element, "type");
     if (!g_ascii_strcasecmp(tagname, "textarea")) {
-        result = TRUE;
+        result = true;
     } else if (!g_ascii_strcasecmp(tagname, "input")
         && g_ascii_strcasecmp(type, "submit")
         && g_ascii_strcasecmp(type, "reset")
         && g_ascii_strcasecmp(type, "image")
     ) {
-        result = TRUE;
+        result = true;
     } else {
         result = false;
     }
@@ -94,7 +94,7 @@ static gboolean auto_insert(Element *element)
 {
     if (dom_is_editable(element)) {
         vb_set_mode(VB_MODE_INSERT, false);
-        return TRUE;
+        return true;
     }
     return false;
 }

@@ -89,7 +89,7 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
             MAXIMUM_HINTS
         );
 
-        observe_input(TRUE);
+        observe_input(true);
 
         run_script(js);
         g_free(js);
@@ -137,7 +137,7 @@ static void run_script(char *js)
             vb.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
         );
     } else if (!strncmp(value, "DONE:", 5)) {
-        vb_set_mode(VB_MODE_NORMAL, TRUE);
+        vb_set_mode(VB_MODE_NORMAL, true);
     } else if (!strncmp(value, "INSERT:", 7)) {
         vb_set_mode(VB_MODE_INSERT, false);
     } else if (!strncmp(value, "DATA:", 5)) {
@@ -187,7 +187,7 @@ static gboolean changed_cb(GtkEditable *entry)
     /* skip hinting prefixes like '.', ',', ';y' ... */
     hints_create(text + vb.hints.prefixLength, vb.hints.mode, vb.hints.prefixLength);
 
-    return TRUE;
+    return true;
 }
 
 static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
@@ -198,13 +198,13 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
     if (keyval == GDK_Return) {
         fire();
-        return TRUE;
+        return true;
     }
     if (keyval == GDK_BackSpace && (state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {
         vb.hints.num /= 10;
         hints_update(vb.hints.num);
 
-        return TRUE;
+        return true;
     }
     numval = g_unichar_digit_value((gunichar)gdk_keyval_to_unicode(keyval));
     if ((numval >= 1 && numval <= 9) || (numval == 0 && vb.hints.num)) {
@@ -212,7 +212,7 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
         vb.hints.num = (vb.hints.num ? vb.hints.num * 10 : 0) + numval;
         hints_update(vb.hints.num);
 
-        return TRUE;
+        return true;
     }
 
     return false;

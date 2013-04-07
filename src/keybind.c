@@ -45,7 +45,7 @@ void keybind_cleanup(void)
         g_slist_free_full(vb.behave.keys, (GDestroyNotify)free_keybind);
     }
     if (vb.behave.modkeys) {
-        g_string_free(vb.behave.modkeys, TRUE);
+        g_string_free(vb.behave.modkeys, true);
     }
 }
 
@@ -79,7 +79,7 @@ gboolean keybind_add_from_string(char *keys, const char *command, const Mode mod
         g_string_append_c(vb.behave.modkeys, keybind->modkey);
     }
 
-    return TRUE;
+    return true;
 }
 
 gboolean keybind_remove_from_string(char *str, const Mode mode)
@@ -104,7 +104,7 @@ gboolean keybind_remove_from_string(char *str, const Mode mode)
         /* remove eventually no more used modkeys */
         rebuild_modkeys();
     }
-    return TRUE;
+    return true;
 }
 
 /**
@@ -116,7 +116,7 @@ static void rebuild_modkeys(void)
     GSList *link;
     /* remove previous modkeys */
     if (vb.behave.modkeys) {
-        g_string_free(vb.behave.modkeys, TRUE);
+        g_string_free(vb.behave.modkeys, true);
         vb.behave.modkeys = g_string_new("");
     }
 
@@ -242,9 +242,9 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
         /* switch to normal mode and clear the input box */
-        vb_set_mode(VB_MODE_NORMAL, TRUE);
+        vb_set_mode(VB_MODE_NORMAL, true);
 
-        return TRUE;
+        return true;
     }
     /* allow mode keys and counts only in normal mode */
     if ((VB_MODE_SEARCH | VB_MODE_NORMAL) & vb.state.mode) {
@@ -254,13 +254,13 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
             vb.state.count = (vb.state.count ? vb.state.count * 10 : 0) + (keyval - GDK_0);
             vb_update_statusbar();
 
-            return TRUE;
+            return true;
         }
         if (strchr(vb.behave.modkeys->str, keyval) && vb.state.modkey != keyval) {
             vb.state.modkey = (char)keyval;
             vb_update_statusbar();
 
-            return TRUE;
+            return true;
         }
     }
 
@@ -271,7 +271,7 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
         Keybind *keybind = (Keybind*)link->data;
         command_run(keybind->command, keybind->param);
 
-        return TRUE;
+        return true;
     }
 
     return false;

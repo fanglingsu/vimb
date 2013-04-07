@@ -83,7 +83,7 @@ void vb_echo_force(const MessageType type,gboolean hide, const char *error, ...)
     vsnprintf(message, 255, error, arg_list);
     va_end(arg_list);
 
-    inputbox_print(TRUE, type, hide, message);
+    inputbox_print(true, type, hide, message);
 }
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
@@ -114,7 +114,7 @@ gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **
 
     if (result) {
         *value = jsref_to_string(js, result);
-        return TRUE;
+        return true;
     }
 
     *value = jsref_to_string(js, exception);
@@ -179,7 +179,7 @@ gboolean vb_load_uri(const Arg *arg)
     }
     g_free(uri);
 
-    return TRUE;
+    return true;
 }
 
 gboolean vb_set_clipboard(const Arg *arg)
@@ -191,11 +191,11 @@ gboolean vb_set_clipboard(const Arg *arg)
 
     if (arg->i & VB_CLIPBOARD_PRIMARY) {
         gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), arg->s, -1);
-        result = TRUE;
+        result = true;
     }
     if (arg->i & VB_CLIPBOARD_SECONDARY) {
         gtk_clipboard_set_text(SECONDARY_CLIPBOARD(), arg->s, -1);
-        result = TRUE;
+        result = true;
     }
 
     return result;
@@ -224,7 +224,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
                 hints_clear();
             } else if (current_mode == VB_MODE_INSERT) {
                 /* clean the input if current mode is insert to remove -- INPUT -- */
-                clean = TRUE;
+                clean = true;
                 dom_clear_focus();
             } else if (current_mode == VB_MODE_SEARCH) {
                 /* cleaup previous search */
@@ -258,7 +258,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
 
     vb_update_statusbar();
 
-    return TRUE;
+    return true;
 }
 
 void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font)
@@ -308,7 +308,7 @@ void vb_update_statusbar()
     }
 
     gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.right), status->str);
-    g_string_free(status, TRUE);
+    g_string_free(status, true);
 }
 
 void vb_update_status_style(void)
@@ -501,12 +501,12 @@ static gboolean inspector_show(WebKitWebInspector *inspector)
     gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     gtk_paned_set_position(GTK_PANED(vb.gui.pane), 2 * height / 3);
 
-    gtk_paned_pack2(GTK_PANED(vb.gui.pane), GTK_WIDGET(webview), TRUE, TRUE);
+    gtk_paned_pack2(GTK_PANED(vb.gui.pane), GTK_WIDGET(webview), true, true);
     gtk_widget_show(GTK_WIDGET(webview));
 
-    vb.state.is_inspecting = TRUE;
+    vb.state.is_inspecting = true;
 
-    return TRUE;
+    return true;
 }
 
 static gboolean inspector_close(WebKitWebInspector *inspector)
@@ -522,7 +522,7 @@ static gboolean inspector_close(WebKitWebInspector *inspector)
 
     vb.state.is_inspecting = false;
 
-    return TRUE;
+    return true;
 }
 
 static void inspector_finished(WebKitWebInspector *inspector)
@@ -640,7 +640,7 @@ static void init_core(void)
     /* Prepare the event box */
     gui->eventbox = gtk_event_box_new();
 
-    gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), TRUE, TRUE);
+    gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), true, true);
     gtk_widget_show_all(gui->window);
 
     setup_signals();
@@ -651,10 +651,10 @@ static void init_core(void)
     gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->pane));
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.right), 1.0, 0.0);
-    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, TRUE, TRUE, 2);
+    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, true, true, 2);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, false, false, 2);
 
-    gtk_box_pack_start(gui->box, gui->scroll, TRUE, TRUE, 0);
+    gtk_box_pack_start(gui->box, gui->scroll, true, true, 0);
     gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
     gtk_entry_set_has_frame(GTK_ENTRY(gui->inputbox), false);
     gtk_box_pack_end(gui->box, gui->inputbox, false, false, 0);
@@ -804,7 +804,7 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
     if (mode == VB_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
         vb_set_mode(VB_MODE_INSERT, false);
 
-        propagate = TRUE;
+        propagate = true;
     }
     /* middle mouse click onto link */
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
@@ -812,7 +812,7 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
         g_object_get(result, "link-uri", &a.s, NULL);
         vb_load_uri(&a);
 
-        propagate = TRUE;
+        propagate = true;
     }
     g_object_unref(result);
 
@@ -828,7 +828,7 @@ static gboolean new_window_policy_cb(
         /* open in a new window */
         Arg a = {VB_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
         vb_load_uri(&a);
-        return TRUE;
+        return true;
     }
     return false;
 }
@@ -857,7 +857,7 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
     if (webkit_web_view_can_show_mime_type(webview, mime_type) == false) {
         webkit_web_policy_decision_download(decision);
 
-        return TRUE;
+        return true;
     }
     return false;
 }
@@ -898,7 +898,7 @@ static gboolean download_requested_cb(WebKitWebView *view, WebKitDownload *downl
 
     vb_update_statusbar();
 
-    return TRUE;
+    return true;
 }
 
 /**

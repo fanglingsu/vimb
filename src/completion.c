@@ -54,7 +54,7 @@ gboolean completion_complete(gboolean back)
             /* updatecompletions */
             vb.comps.active = update(vb.comps.completions, vb.comps.active, back);
             g_free(text);
-            return TRUE;
+            return true;
         } else {
             g_free(text);
             /* if current input isn't the content of the completion item */
@@ -65,9 +65,9 @@ gboolean completion_complete(gboolean back)
     /* create new completion */
 #ifdef HAS_GTK3
     vb.gui.compbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_set_homogeneous(GTK_BOX(vb.gui.compbox), TRUE);
+    gtk_box_set_homogeneous(GTK_BOX(vb.gui.compbox), true);
 #else
-    vb.gui.compbox = gtk_vbox_new(TRUE, 0);
+    vb.gui.compbox = gtk_vbox_new(true, 0);
 #endif
     gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, false, false, 0);
 
@@ -121,7 +121,7 @@ gboolean completion_complete(gboolean back)
     }
     show(back);
 
-    return TRUE;
+    return true;
 }
 
 void completion_clean()
@@ -162,7 +162,7 @@ static GList *init_completion(GList *target, GList *source, const char *prefix)
     for (GList *l = source; l; l = l->next) {
         Completion *c = get_new(l->data, prefix);
         target        = g_list_prepend(target, c);
-        gtk_box_pack_start(GTK_BOX(vb.gui.compbox), c->event, TRUE, TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(vb.gui.compbox), c->event, true, true, 0);
     }
 
     target = g_list_reverse(target);
@@ -300,12 +300,12 @@ static Completion *get_new(const char *label, const char *prefix)
 
 #ifdef HAS_GTK3
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_set_homogeneous(GTK_BOX(hbox), TRUE);
+    gtk_box_set_homogeneous(GTK_BOX(hbox), true);
 #else
-    GtkWidget *hbox = gtk_hbox_new(TRUE, 0);
+    GtkWidget *hbox = gtk_hbox_new(true, 0);
 #endif
 
-    gtk_box_pack_start(GTK_BOX(hbox), c->label, TRUE, TRUE, 5);
+    gtk_box_pack_start(GTK_BOX(hbox), c->label, true, true, 5);
     gtk_label_set_ellipsize(GTK_LABEL(c->label), PANGO_ELLIPSIZE_MIDDLE);
     gtk_misc_set_alignment(GTK_MISC(c->label), 0.0, 0.5);
 

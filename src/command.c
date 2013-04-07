@@ -131,7 +131,7 @@ gboolean command_run(const char *name, const char *param)
     Arg a;
     command = g_hash_table_lookup(vb.behave.commands, name);
     if (!command) {
-        vb_echo(VB_MSG_ERROR, TRUE, "Command '%s' not found", name);
+        vb_echo(VB_MSG_ERROR, true, "Command '%s' not found", name);
         vb_set_mode(VB_MODE_NORMAL, false);
 
         return false;
@@ -183,7 +183,7 @@ gboolean command_run_string(const char *input)
  */
 gboolean command_run_multi(const Arg *arg)
 {
-    gboolean result = TRUE;
+    gboolean result = true;
     char **commands;
     unsigned int len, i;
 
@@ -247,14 +247,14 @@ gboolean command_input(const Arg *arg)
 
     vb_set_mode(VB_MODE_COMMAND, false);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_close(const Arg *arg)
 {
     gtk_widget_destroy(GTK_WIDGET(vb.gui.window));
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_view_source(const Arg *arg)
@@ -265,7 +265,7 @@ gboolean command_view_source(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_navigate(const Arg *arg)
@@ -286,7 +286,7 @@ gboolean command_navigate(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_scroll(const Arg *arg)
@@ -321,7 +321,7 @@ gboolean command_scroll(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_map(const Arg *arg)
@@ -375,11 +375,11 @@ gboolean command_set(const Arg *arg)
 
 gboolean command_complete(const Arg *arg)
 {
-    completion_complete(arg->i ? TRUE : false);
+    completion_complete(arg->i ? true : false);
 
     vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_inspect(const Arg *arg)
@@ -397,10 +397,10 @@ gboolean command_inspect(const Arg *arg)
         } else {
             webkit_web_inspector_show(vb.gui.inspector);
         }
-        return TRUE;
+        return true;
     }
 
-    vb_echo(VB_MSG_ERROR, TRUE, "webinspector is not enabled");
+    vb_echo(VB_MSG_ERROR, true, "webinspector is not enabled");
 
     return false;
 }
@@ -411,19 +411,19 @@ gboolean command_hints(const Arg *arg)
     /* mode will be set in hints_create - so we don't neet to do it here */
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_hints_focus(const Arg *arg)
 {
-    hints_focus_next(arg->i ? TRUE : false);
+    hints_focus_next(arg->i ? true : false);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_yank(const Arg *arg)
 {
-    vb_set_mode(VB_MODE_NORMAL, TRUE);
+    vb_set_mode(VB_MODE_NORMAL, true);
 
     if (arg->i & COMMAND_YANK_SELECTION) {
         char *text = NULL;
@@ -437,7 +437,7 @@ gboolean command_yank(const Arg *arg)
             vb_echo_force(VB_MSG_NORMAL, false, "Yanked: %s", text);
             g_free(text);
 
-            return TRUE;
+            return true;
         }
 
         return false;
@@ -455,7 +455,7 @@ gboolean command_yank(const Arg *arg)
         vb_echo_force(VB_MSG_NORMAL, false, "Yanked: %s", a.s);
         g_free(a.s);
 
-        return TRUE;
+        return true;
     }
 
     return false;
@@ -475,7 +475,7 @@ gboolean command_paste(const Arg *arg)
         vb_load_uri(&a);
         g_free(a.s);
 
-        return TRUE;
+        return true;
     }
     return false;
 }
@@ -490,7 +490,7 @@ gboolean command_search(const Arg *arg)
         webkit_web_view_unmark_text_matches(vb.gui.webview);
 #endif
 
-        return TRUE;
+        return true;
     }
 
     /* copy search query for later use */
@@ -503,18 +503,18 @@ gboolean command_search(const Arg *arg)
     if (vb.state.search_query) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_mark_text_matches(vb.gui.webview, vb.state.search_query, false, 0);
-        webkit_web_view_set_highlight_text_matches(vb.gui.webview, TRUE);
+        webkit_web_view_set_highlight_text_matches(vb.gui.webview, true);
 #endif
         /* make sure we have a count greater than 0 */
         vb.state.count = vb.state.count ? vb.state.count : 1;
         do {
-            webkit_web_view_search_text(vb.gui.webview, vb.state.search_query, false, forward, TRUE);
+            webkit_web_view_search_text(vb.gui.webview, vb.state.search_query, false, forward, true);
         } while (--vb.state.count);
     }
 
     vb_set_mode(VB_MODE_SEARCH, false);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_searchengine(const Arg *arg)
@@ -556,7 +556,7 @@ gboolean command_zoom(const Arg *arg)
         webkit_web_view_set_zoom_level(vb.gui.webview, 1.0);
         vb_set_mode(VB_MODE_NORMAL, false);
 
-        return TRUE;
+        return true;
     }
 
     count = vb.state.count ? vb.state.count : 1;
@@ -576,7 +576,7 @@ gboolean command_zoom(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    return TRUE;
+    return true;
 
 }
 
@@ -592,12 +592,12 @@ gboolean command_history(const Arg *arg)
     vb_echo_force(VB_MSG_NORMAL, false, entry);
     g_free(entry);
 
-    return TRUE;
+    return true;
 }
 
 gboolean command_bookmark(const Arg *arg)
 {
     bookmark_add(webkit_web_view_get_uri(vb.gui.webview), arg->s);
     vb_set_mode(VB_MODE_NORMAL, false);
-    return TRUE;
+    return true;
 }

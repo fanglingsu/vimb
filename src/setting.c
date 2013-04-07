@@ -143,7 +143,7 @@ gboolean setting_run(char *name, const char *param)
 
     Setting *s = g_hash_table_lookup(vb.settings, name);
     if (!s) {
-        vb_echo(VB_MSG_ERROR, TRUE, "Config '%s' not found", name);
+        vb_echo(VB_MSG_ERROR, true, "Config '%s' not found", name);
         return false;
     }
 
@@ -152,7 +152,7 @@ gboolean setting_run(char *name, const char *param)
          * it to the arg of the setting */
         a = char_to_arg(param, s->type);
         if (a == NULL) {
-            vb_echo(VB_MSG_ERROR, TRUE, "No valid value");
+            vb_echo(VB_MSG_ERROR, true, "No valid value");
             return false;
         }
 
@@ -164,7 +164,7 @@ gboolean setting_run(char *name, const char *param)
         g_free(a);
 
         if (!result) {
-            vb_echo(VB_MSG_ERROR, TRUE, "Could not set %s", s->alias ? s->alias : s->name);
+            vb_echo(VB_MSG_ERROR, true, "Could not set %s", s->alias ? s->alias : s->name);
         }
 
         return result;
@@ -173,7 +173,7 @@ gboolean setting_run(char *name, const char *param)
     if (type == SETTING_GET) {
         result = s->func(s, type);
         if (!result) {
-            vb_echo(VB_MSG_ERROR, TRUE, "Could not get %s", s->alias ? s->alias : s->name);
+            vb_echo(VB_MSG_ERROR, true, "Could not get %s", s->alias ? s->alias : s->name);
         }
 
         return result;
@@ -181,14 +181,14 @@ gboolean setting_run(char *name, const char *param)
 
     /* toggle bolean vars */
     if (s->type != TYPE_BOOLEAN) {
-        vb_echo(VB_MSG_ERROR, TRUE, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
+        vb_echo(VB_MSG_ERROR, true, "Could not toggle none boolean %s", s->alias ? s->alias : s->name);
 
         return false;
     }
 
     result = s->func(s, type);
     if (!result) {
-        vb_echo(VB_MSG_ERROR, TRUE, "Could not toggle %s", s->alias ? s->alias : s->name);
+        vb_echo(VB_MSG_ERROR, true, "Could not toggle %s", s->alias ? s->alias : s->name);
     }
 
     return result;
@@ -287,7 +287,7 @@ static gboolean webkit(const Setting *s, const SettingType type)
                 /* print the new value */
                 print_value(s, &value);
             } else {
-                g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? TRUE : false, NULL);
+                g_object_set(G_OBJECT(web_setting), s->name, s->arg.i ? true : false, NULL);
             }
             break;
 
@@ -324,7 +324,7 @@ static gboolean webkit(const Setting *s, const SettingType type)
             break;
     }
 
-    return TRUE;
+    return true;
 }
 static gboolean cookie_timeout(const Setting *s, const SettingType type)
 {
@@ -334,7 +334,7 @@ static gboolean cookie_timeout(const Setting *s, const SettingType type)
         vb.config.cookie_timeout = s->arg.i;
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean scrollstep(const Setting *s, const SettingType type)
@@ -345,7 +345,7 @@ static gboolean scrollstep(const Setting *s, const SettingType type)
         vb.config.scrollstep = s->arg.i;
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean status_color_bg(const Setting *s, const SettingType type)
@@ -366,7 +366,7 @@ static gboolean status_color_bg(const Setting *s, const SettingType type)
         vb_update_status_style();
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean status_color_fg(const Setting *s, const SettingType type)
@@ -387,7 +387,7 @@ static gboolean status_color_fg(const Setting *s, const SettingType type)
         vb_update_status_style();
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean status_font(const Setting *s, const SettingType type)
@@ -412,7 +412,7 @@ static gboolean status_font(const Setting *s, const SettingType type)
         vb_update_status_style();
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean input_style(const Setting *s, const SettingType type)
@@ -450,7 +450,7 @@ static gboolean input_style(const Setting *s, const SettingType type)
         vb_update_input_style();
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean completion_style(const Setting *s, const SettingType type)
@@ -491,7 +491,7 @@ static gboolean completion_style(const Setting *s, const SettingType type)
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean hint_style(const Setting *s, const SettingType type)
@@ -523,7 +523,7 @@ static gboolean hint_style(const Setting *s, const SettingType type)
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean strict_ssl(const Setting *s, const SettingType type)
@@ -534,15 +534,15 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
         if (type == SETTING_GET) {
             print_value(s, &value);
 
-            return TRUE;
+            return true;
         }
     }
 
-    value = type == SETTING_TOGGLE ? !value : (s->arg.i ? TRUE : false);
+    value = type == SETTING_TOGGLE ? !value : (s->arg.i ? true : false);
 
     g_object_set(vb.soup_session, "ssl-strict", value, NULL);
 
-    return TRUE;
+    return true;
 }
 
 static gboolean ca_bundle(const Setting *s, const SettingType type)
@@ -556,7 +556,7 @@ static gboolean ca_bundle(const Setting *s, const SettingType type)
         g_object_set(vb.soup_session, "ssl-ca-file", s->arg.s, NULL);
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean home_page(const Setting *s, const SettingType type)
@@ -567,7 +567,7 @@ static gboolean home_page(const Setting *s, const SettingType type)
         OVERWRITE_STRING(vb.config.home_page, s->arg.s);
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean download_path(const Setting *s, const SettingType type)
@@ -589,7 +589,7 @@ static gboolean download_path(const Setting *s, const SettingType type)
         util_create_dir_if_not_exists(vb.config.download_dir);
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean proxy(const Setting *s, const SettingType type)
@@ -606,7 +606,7 @@ static gboolean proxy(const Setting *s, const SettingType type)
         if (type == SETTING_GET) {
             print_value(s, &enabled);
 
-            return TRUE;
+            return true;
         }
     }
 
@@ -635,7 +635,7 @@ static gboolean proxy(const Setting *s, const SettingType type)
         g_object_set(vb.soup_session, "proxy-uri", NULL, NULL);
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean user_style(const Setting *s, const SettingType type)
@@ -650,7 +650,7 @@ static gboolean user_style(const Setting *s, const SettingType type)
         if (type == SETTING_GET) {
             print_value(s, &enabled);
 
-            return TRUE;
+            return true;
         }
     }
 
@@ -670,7 +670,7 @@ static gboolean user_style(const Setting *s, const SettingType type)
         g_object_set(web_setting, "user-stylesheet-uri", NULL, NULL);
     }
 
-    return TRUE;
+    return true;
 }
 
 static gboolean history_max_items(const Setting *s, const SettingType type)
@@ -678,9 +678,9 @@ static gboolean history_max_items(const Setting *s, const SettingType type)
     if (type == SETTING_GET) {
         print_value(s, &vb.config.history_max);
 
-        return TRUE;
+        return true;
     }
     vb.config.history_max = s->arg.i;
 
-    return TRUE;
+    return true;
 }

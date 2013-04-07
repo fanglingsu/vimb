@@ -52,7 +52,7 @@ gboolean searchengine_add(const char *handle, const char *uri)
 
     vb.behave.searchengines = g_slist_prepend(vb.behave.searchengines, s);
 
-    return TRUE;
+    return true;
 }
 
 gboolean searchengine_remove(const char *handle)
@@ -63,7 +63,7 @@ gboolean searchengine_remove(const char *handle)
         free_searchengine((Searchengine*)list->data);
         vb.behave.searchengines = g_slist_delete_link(vb.behave.searchengines, list);
 
-        return TRUE;
+        return true;
     }
 
     return false;
@@ -75,7 +75,7 @@ gboolean searchengine_set_default(const char *handle)
      * before defining the search engines */
     OVERWRITE_STRING(vb.behave.searchengine_default, handle);
 
-    return TRUE;
+    return true;
 }
 
 /**
