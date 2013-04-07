@@ -27,6 +27,14 @@
 #define HINT_VAR "VpHint"
 #define HINT_FILE "hints.js"
 
+static struct {
+    gulong num;
+    guint  mode;
+    guint  prefixLength;
+    gulong change_handler;
+    gulong keypress_handler;
+} hints;
+
 extern VbCore vb;
 extern const unsigned int MAXIMUM_HINTS;
 
@@ -65,9 +73,9 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
         vb_set_mode(VB_MODE_HINTING, false);
 
         Style *style = &vb.style;
-        vb.hints.prefixLength = prefixLength;
-        vb.hints.mode         = mode;
-        vb.hints.num          = 0;
+        hints.prefixLength = prefixLength;
+        hints.mode         = mode;
+        hints.num          = 0;
 
         char type, usage;
         /* convert the mode into the type chare used in the hint script */
@@ -118,7 +126,7 @@ void hints_focus_next(const gboolean back)
 static void run_script(char *js)
 {
     char *value = NULL;
-    int mode = vb.hints.mode;
+    int mode = hints.mode;
 
     gboolean success = vb_eval_script(
         webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value
@@ -166,17 +174,17 @@ static void fire()
 static void observe_input(gboolean observe)
 {
     if (observe) {
-        vb.hints.change_handler = g_signal_connect(
+        hints.change_handler = g_signal_connect(
             G_OBJECT(vb.gui.inputbox), "changed", G_CALLBACK(changed_cb), NULL
         );
-        vb.hints.keypress_handler = g_signal_connect(
+        hints.keypress_handler = g_signal_connect(
             G_OBJECT(vb.gui.inputbox), "key-press-event", G_CALLBACK(keypress_cb), NULL
         );
-    } else if (vb.hints.change_handler && vb.hints.keypress_handler) {
-        g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), vb.hints.change_handler);
-        g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), vb.hints.keypress_handler);
+    } else if (hints.change_handler && hints.keypress_handler) {
+        g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), hints.change_handler);
+        g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), hints.keypress_handler);
 
-        vb.hints.change_handler = vb.hints.keypress_handler = 0;
+        hints.change_handler = hints.keypress_handler = 0;
     }
 }
 
@@ -185,7 +193,7 @@ static gboolean changed_cb(GtkEditable *entry)
     const char *text = GET_TEXT();
 
     /* skip hinting prefixes like '.', ',', ';y' ... */
-    hints_create(text + vb.hints.prefixLength, vb.hints.mode, vb.hints.prefixLength);
+    hints_create(text + hints.prefixLength, hints.mode, hints.prefixLength);
 
     return true;
 }
@@ -201,16 +209,16 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
         return true;
     }
     if (keyval == GDK_BackSpace && (state & GDK_SHIFT_MASK) && (state & GDK_CONTROL_MASK)) {
-        vb.hints.num /= 10;
-        hints_update(vb.hints.num);
+        hints.num /= 10;
+        hints_update(hints.num);
 
         return true;
     }
     numval = g_unichar_digit_value((gunichar)gdk_keyval_to_unicode(keyval));
-    if ((numval >= 1 && numval <= 9) || (numval == 0 && vb.hints.num)) {
+    if ((numval >= 1 && numval <= 9) || (numval == 0 && hints.num)) {
         /* allow a zero as non-first number */
-        vb.hints.num = (vb.hints.num ? vb.hints.num * 10 : 0) + numval;
-        hints_update(vb.hints.num);
+        hints.num = (hints.num ? hints.num * 10 : 0) + numval;
+        hints_update(hints.num);
 
         return true;
     }

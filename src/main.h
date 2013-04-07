@@ -288,17 +288,8 @@ typedef struct {
 } Style;
 
 typedef struct {
-    gulong num;
-    guint  mode;
-    guint  prefixLength;
-    gulong change_handler;
-    gulong keypress_handler;
-} Hints;
-
-typedef struct {
     Gui             gui;
     State           state;
-    Hints           hints;
 
     char            *files[FILES_LAST];
     Config          config;
