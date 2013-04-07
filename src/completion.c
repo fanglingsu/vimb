@@ -31,6 +31,13 @@ typedef struct {
     char      *prefix;
 } Completion;
 
+static struct {
+    GList *completions;
+    GList *active;
+    int   count;
+    char  *prefix;
+} comps;
+
 static GList *filter_list(GList *target, GList *source, Comp_Func func, const char *input);
 static GList *init_completion(GList *target, GList *source, const char *prefix);
 static GList *update(GList *completion, GList *active, gboolean back);
@@ -45,14 +52,13 @@ gboolean completion_complete(gboolean back)
     const char *input = GET_TEXT();
     GList *source = NULL, *tmp = NULL;
 
-    if (vb.comps.completions
-        && vb.comps.active
+    if (comps.completions && comps.active
         && (vb.state.mode & VB_MODE_COMPLETE)
     ) {
-        char *text = get_text((Completion*)vb.comps.active->data);
+        char *text = get_text((Completion*)comps.active->data);
         if (!strcmp(input, text)) {
             /* updatecompletions */
-            vb.comps.active = update(vb.comps.completions, vb.comps.active, back);
+            comps.active = update(comps.completions, comps.active, back);
             g_free(text);
             return true;
         } else {
@@ -75,8 +81,8 @@ gboolean completion_complete(gboolean back)
     if (!strncmp(input, ":set ", 5)) {
         source = g_hash_table_get_keys(vb.settings);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
-        vb.comps.completions = init_completion(
-            vb.comps.completions,
+        comps.completions = init_completion(
+            comps.completions,
             filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[5]),
             ":set "
         );
@@ -86,8 +92,8 @@ gboolean completion_complete(gboolean back)
         tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[6]),
         /* prepend the bookmark items */
         tmp = g_list_concat(bookmark_get_by_tags(&input[6]), tmp);
-        vb.comps.completions = init_completion(
-            vb.comps.completions,
+        comps.completions = init_completion(
+            comps.completions,
             tmp,
             ":open "
         );
@@ -98,8 +104,8 @@ gboolean completion_complete(gboolean back)
         tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[9]),
         /* prepend the bookmark items */
         tmp = g_list_concat(bookmark_get_by_tags(&input[9]), tmp);
-        vb.comps.completions = init_completion(
-            vb.comps.completions,
+        comps.completions = init_completion(
+            comps.completions,
             tmp,
             ":tabopen "
         );
@@ -108,15 +114,15 @@ gboolean completion_complete(gboolean back)
     } else {
         source = g_hash_table_get_keys(vb.behave.commands);
         source = g_list_sort(source, (GCompareFunc)g_strcmp0);
-        vb.comps.completions = init_completion(
-            vb.comps.completions,
+        comps.completions = init_completion(
+            comps.completions,
             filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[1]),
             ":"
         );
         g_list_free(source);
     }
 
-    if (!vb.comps.completions) {
+    if (!comps.completions) {
         return false;
     }
     show(back);
@@ -126,16 +132,16 @@ gboolean completion_complete(gboolean back)
 
 void completion_clean()
 {
-    g_list_free_full(vb.comps.completions, (GDestroyNotify)free_completion);
-    vb.comps.completions = NULL;
+    g_list_free_full(comps.completions, (GDestroyNotify)free_completion);
+    comps.completions = NULL;
 
     if (vb.gui.compbox) {
         gtk_widget_destroy(vb.gui.compbox);
         vb.gui.compbox = NULL;
     }
-    OVERWRITE_STRING(vb.comps.prefix, NULL);
-    vb.comps.active = NULL;
-    vb.comps.count  = 0;
+    OVERWRITE_STRING(comps.prefix, NULL);
+    comps.active = NULL;
+    comps.count  = 0;
 
     /* remove completion flag from mode */
     vb.state.mode &= ~VB_MODE_COMPLETE;
@@ -157,7 +163,7 @@ static GList *filter_list(GList *target, GList *source, Comp_Func func, const ch
 
 static GList *init_completion(GList *target, GList *source, const char *prefix)
 {
-    OVERWRITE_STRING(vb.comps.prefix, prefix);
+    OVERWRITE_STRING(comps.prefix, prefix);
 
     for (GList *l = source; l; l = l->next) {
         Completion *c = get_new(l->data, prefix);
@@ -240,18 +246,18 @@ static void show(gboolean back)
     guint max = vb.config.max_completion_items;
     int i = 0;
     if (back) {
-        vb.comps.active = g_list_last(vb.comps.completions);
-        for (GList *l = vb.comps.active; l && i < max; l = l->prev, i++) {
+        comps.active = g_list_last(comps.completions);
+        for (GList *l = comps.active; l && i < max; l = l->prev, i++) {
             gtk_widget_show_all(((Completion*)l->data)->event);
         }
     } else {
-        vb.comps.active = g_list_first(vb.comps.completions);
-        for (GList *l = vb.comps.active; l && i < max; l = l->next, i++) {
+        comps.active = g_list_first(comps.completions);
+        for (GList *l = comps.active; l && i < max; l = l->next, i++) {
             gtk_widget_show_all(((Completion*)l->data)->event);
         }
     }
-    if (vb.comps.active != NULL) {
-        Completion *active = (Completion*)vb.comps.active->data;
+    if (comps.active != NULL) {
+        Completion *active = (Completion*)comps.active->data;
         VB_WIDGET_SET_STATE(active->label, VB_GTK_STATE_ACTIVE);
         VB_WIDGET_SET_STATE(active->event, VB_GTK_STATE_ACTIVE);
 
@@ -276,9 +282,9 @@ static char *get_text(Completion *completion)
     char *text = NULL;
 
     /* print the previous typed command count into inputbox too */
-    if (vb.comps.count) {
+    if (comps.count) {
         text = g_strdup_printf(
-            "%s%d%s", completion->prefix, vb.comps.count, gtk_label_get_text(GTK_LABEL(completion->label))
+            "%s%d%s", completion->prefix, comps.count, gtk_label_get_text(GTK_LABEL(completion->label))
         );
     } else {
         text = g_strdup_printf(

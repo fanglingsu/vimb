@@ -269,13 +269,6 @@ typedef struct {
 } Config;
 
 typedef struct {
-    GList *completions;
-    GList *active;
-    int   count;
-    char  *prefix;
-} Completions;
-
-typedef struct {
     VbColor              input_fg[VB_MSG_LAST];
     VbColor              input_bg[VB_MSG_LAST];
     PangoFontDescription *input_font[VB_MSG_LAST];
@@ -305,7 +298,6 @@ typedef struct {
 typedef struct {
     Gui             gui;
     State           state;
-    Completions     comps;
     Hints           hints;
 
     char            *files[FILES_LAST];
