@@ -347,6 +347,10 @@ Close the browser.
 .TP
 .B source
 Toggle between normal view and source view for the current page.
+.TP
+.BI eval " JAVASCRIPT"
+Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated
+value.
 .SH FILES
 .I $XDG_CONFIG_HOME/PROJECT/config
 .RS

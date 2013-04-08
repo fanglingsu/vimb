@@ -74,5 +74,6 @@ gboolean command_searchengine_default(const Arg *arg);
 gboolean command_zoom(const Arg *arg);
 gboolean command_history(const Arg *arg);
 gboolean command_bookmark(const Arg *arg);
+gboolean command_eval(const Arg *arg);
 
 #endif /* end of include guard: _COMMAND_H */

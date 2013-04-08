@@ -100,6 +100,7 @@ static CommandInfo cmd_list[] = {
     {"hist-prev",            command_history,              {1}},
     {"run",                  command_run_multi,            {0}},
     {"bookmark-add",         command_bookmark,             {1}},
+    {"eval",                 command_eval,                 {0}},
 };
 
 
@@ -606,4 +607,23 @@ gboolean command_bookmark(const Arg *arg)
     bookmark_add(webkit_web_view_get_uri(vb.gui.webview), arg->s);
     vb_set_mode(VB_MODE_NORMAL, false);
     return true;
+}
+
+gboolean command_eval(const Arg *arg)
+{
+    gboolean success;
+    char *value = NULL;
+
+    success = vb_eval_script(
+        webkit_web_view_get_main_frame(vb.gui.webview), arg->s, NULL, &value
+    );
+    if (success) {
+        vb_echo_force(VB_MSG_NORMAL, false, value);
+    } else {
+        vb_echo_force(VB_MSG_ERROR, true, value);
+    }
+    g_free(value);
+    vb_set_mode(VB_MODE_NORMAL, false);
+
+    return success;
 }
