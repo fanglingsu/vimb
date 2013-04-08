@@ -39,6 +39,7 @@ static void free_keybind(Keybind *keybind);
 void keybind_init(void)
 {
     modkeys = g_string_new("");
+    g_signal_connect(G_OBJECT(vb.gui.webview), "key-press-event", G_CALLBACK(keypress_cb), NULL);
     g_signal_connect(G_OBJECT(vb.gui.box), "key-press-event", G_CALLBACK(keypress_cb), NULL);
 }
 
