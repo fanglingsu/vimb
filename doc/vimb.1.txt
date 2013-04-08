@@ -393,6 +393,15 @@ that is opened.
 File for userdefined css styles. These file is used if the config variable
 'stylesheet' is enabled.
 .RE
+.SH ENVIRONMENT
+.TP
+.B HOME
+If this is set and not empty this will be used to get the path of the home
+directory. If not set the entry out of the passwd file will be used instead.
+.TP
+.B http_proxy
+If this variable is set to an none empty value, and the configuration option
+`proxy' is enabled, this will be used as http proxy.
 .SH "REPORTING BUGS"
 Report bugs to the main project page on
 .IR https://github.com/fanglingsu/vimb/issues .
