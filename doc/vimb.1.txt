@@ -324,16 +324,14 @@ Save the current opened uri with \fITAGS\fP to the bookmark file.
 .BI run " [COMMAND LIST]"
 Run is a command, that was introduced to have the ability to run multiple
 other commands with a single call. Everything after the `run' is interpreted
-as a `|' seperated list of commands and parameters.
+as a `|' seperated list of commands and parameters. The run command allows to
+use fancy keybindings that set several config settings with only on keypress.
+
+Format:
 ":run [count]command[ param[=value]]|[count]command[ param[=value]]|..."
 
-The run command allows to use fancy keybindings that set several config
-settings with only on keypress.
-
 Example:
-
-:run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown
-
+":run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown"
 .TP
 .BI [ N "]search-forward, [" N "]search-backward"
 Search in current page forward or backward.
@@ -351,6 +349,9 @@ Toggle between normal view and source view for the current page.
 .BI eval " JAVASCRIPT"
 Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated
 value.
+
+Example:
+":eval document.cookie"
 .SH FILES
 .I $XDG_CONFIG_HOME/PROJECT/config
 .RS
