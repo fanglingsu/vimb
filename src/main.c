@@ -207,22 +207,23 @@ gboolean vb_set_clipboard(const Arg *arg)
  */
 gboolean vb_set_mode(Mode mode, gboolean clean)
 {
+    /* TODO this function should be implemented easier */
+    int current_mode = CLEAN_MODE(vb.state.mode);
     if ((vb.state.mode & VB_MODE_COMPLETE)
         && !(mode & VB_MODE_COMPLETE)
     ) {
         completion_clean();
+    } else if (current_mode == VB_MODE_HINTING) {
+        /* if previous mode was hinting clear the hints */
+        hints_clear();
     }
-    int current_mode = CLEAN_MODE(vb.state.mode);
     switch (CLEAN_MODE(mode)) {
         case VB_MODE_NORMAL:
             /* do this only if the mode is really switched */
             if (current_mode != VB_MODE_NORMAL) {
                 history_rewind();
             }
-            if (current_mode == VB_MODE_HINTING) {
-                /* if previous mode was hinting clear the hints */
-                hints_clear();
-            } else if (current_mode == VB_MODE_INSERT) {
+            if (current_mode == VB_MODE_INSERT) {
                 /* clean the input if current mode is insert to remove -- INPUT -- */
                 clean = true;
                 dom_clear_focus();
