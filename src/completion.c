@@ -113,10 +113,14 @@ gboolean completion_complete(gboolean back)
 
         history_list_free(&source);
     } else {
+        char *command = NULL;
+        /* remove counts before command and save it to print it later in inputbox */
+        comps.count = g_ascii_strtoll(&input[1], &command, 10);
+
         source = g_list_sort(command_get_all(), (GCompareFunc)g_strcmp0);
         comps.completions = init_completion(
             comps.completions,
-            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[1]),
+            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, command),
             ":"
         );
         g_list_free(source);
