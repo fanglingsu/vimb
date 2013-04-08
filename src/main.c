@@ -207,30 +207,40 @@ gboolean vb_set_clipboard(const Arg *arg)
  */
 gboolean vb_set_mode(Mode mode, gboolean clean)
 {
-    /* TODO this function should be implemented easier */
-    int current_mode = CLEAN_MODE(vb.state.mode);
-    if ((vb.state.mode & VB_MODE_COMPLETE)
-        && !(mode & VB_MODE_COMPLETE)
-    ) {
-        completion_clean();
-    } else if (current_mode == VB_MODE_HINTING) {
-        /* if previous mode was hinting clear the hints */
-        hints_clear();
+    int clean_old = CLEAN_MODE(vb.state.mode);
+    int clean_new = CLEAN_MODE(mode);
+
+    vb.state.modkey = vb.state.count  = 0;
+
+    /* skip further processing if mode isn't really switched */
+    if (vb.state.mode == mode) {
+        vb_update_statusbar();
+        return true;
     }
-    switch (CLEAN_MODE(mode)) {
+
+    /* leaf the old mode */
+    if ((vb.state.mode & VB_MODE_COMPLETE) && !(mode & VB_MODE_COMPLETE)) {
+        completion_clean();
+    }
+    switch (clean_old) {
+        case VB_MODE_INSERT:
+            clean = true;
+            dom_clear_focus();
+            break;
+
+        case VB_MODE_HINTING:
+            hints_clear();
+            break;
+
+        case VB_MODE_SEARCH:
+            command_search(&((Arg){VB_SEARCH_OFF}));
+            break;
+    }
+
+    /* enter the new mode */
+    switch (clean_new) {
         case VB_MODE_NORMAL:
-            /* do this only if the mode is really switched */
-            if (current_mode != VB_MODE_NORMAL) {
-                history_rewind();
-            }
-            if (current_mode == VB_MODE_INSERT) {
-                /* clean the input if current mode is insert to remove -- INPUT -- */
-                clean = true;
-                dom_clear_focus();
-            } else if (current_mode == VB_MODE_SEARCH) {
-                /* cleaup previous search */
-                command_search(&((Arg){VB_SEARCH_OFF}));
-            }
+            history_rewind();
             gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
             break;
 
@@ -240,6 +250,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             break;
 
         case VB_MODE_INSERT:
+            clean = false;
             gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
             vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
             break;
@@ -250,7 +261,6 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
     }
 
     vb.state.mode = mode;
-    vb.state.modkey = vb.state.count  = 0;
 
     /* echo message if given */
     if (clean) {
