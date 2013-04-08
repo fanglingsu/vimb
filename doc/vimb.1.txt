@@ -2,7 +2,7 @@
 .\" groff -man -Tascii vimb.1
 .TH PROJECT 1 "06/04/2013" "PROJECT/VERSION" "Vimb Manual"
 .SH NAME
-PROJECT \- Vim Browser - A modal web browser based on webkit thats inspired by
+PROJECT - Vim Browser - A modal web browser based on webkit thats inspired by
 vim the great editor.
 .SH SYNOPSIS
 .BI "PROJECT [" "OPTION" "] [" "URI" "]"
@@ -14,22 +14,22 @@ browsing-experience.
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
-.BI "-c, --config " "CONFIG-FILE"
+.BI "\-c, \--config " "CONFIG-FILE"
 Use custom configuration given as \fICONFIG-FILE\fP.
 .TP
-.BI "-e, --embed " "WINID"
+.BI "\-e, \-\-embed " "WINID"
 .I WINID
 of an XEmbed-aware application, that PROJECT will use as its parent.
 .TP
-.B "-h, --help"
+.B "\-h, \-\-help"
 Show help options.
 .TP
-.B "-d, --dump-config"
+.B "\-d, \-\-dump-config"
 Dump out the whole default configurations to stdout. This can be used to
 create a own config file in
 .I $XDG_CONFIG_HOME/PROJECT/config
 .TP
-.B "-v, --version"
+.B "\-v, \-\-version"
 Print build and version information.
 .SH MODES
 PROJECT is modal an has following main modes:
@@ -169,16 +169,16 @@ To bind a command to a key sequence use the {n,i,c,h}map command. To map a
 keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]".
 
 The modkey is a single simple char like "g". The key can also contain
-special keys and modifiers and is given in format like "<ctrl-o>", "<tab>",
-"<shift-tab>", "<up>", "<right>" or also a simple char like "G".
+special keys and modifiers and is given in format like "<ctrl\-o>", "<tab>",
+"<shift\-tab>", "<up>", "<right>" or also a simple char like "G".
 
 Example:
 .br
-"hmap <shift-tab>=hint-focus-prev" to add focus next in in Hinting Mode.
+"hmap <shift\-tab>=hint\-focus\-prev" to add focus next in in Hinting Mode.
 .br
-"nmap <shift-?>=input :foo" to write :foo into input box and switch to Command Mode.
+"nmap <shift\-?>=input :foo" to write :foo into input box and switch to Command Mode.
 .br
-"hunmap <shift-tab>" To remove this keybinding use.
+"hunmap <shift\-tab>" To remove this keybinding use.
 
 If a keybinding is added, for the same key-sequence like another keybinding,
 the later added have precedence. If a keybinding is removed only that with the
@@ -300,10 +300,10 @@ Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 .SS Zoom
 .TP
 .BI [ N "]zoomin, [" N "]zoomout"
-Zoom \fIN\fP steps in or out of the current page \- effects only the text.
+Zoom \fIN\fP steps in or out of the current page - effects only the text.
 .TP
 .BI [ N "]zoominfullt, [" N "]zoomoutfull"
-Zoom \fIN\fP steps in or out of the current page \- effecting all elements.
+Zoom \fIN\fP steps in or out of the current page - effecting all elements.
 .TP
 .B zoomreset
 Reset the zoomlevel to the default value.
@@ -352,6 +352,183 @@ value.
 
 Example:
 ":eval document.cookie"
+.SH KEYBINDINGS
+If the commands used by a keybinding, the keybindings can also user together
+with a count. The count hase to typed just before the keybinding.
+
+Example:
+"25G" to got to 25% of the page.
+.TP
+.B esc
+Got back to normal mode indipendent from current mode.
+.SS NORMAL_MODE
+.TP
+.B g\-f
+Toggle show html source of current page.
+.TP
+.B g\-F
+Opend the Web Inspector for current page.
+.TP
+.B :
+Start command mode and print `:' to the input box.
+.TP
+.B /
+Start command mode and print `/' to inputbox to start searching forward.
+.TP
+.B ?
+Start command mode and print `?' to inputbox to start searching backward.
+.TP
+.B o
+Start command mode and print `:open ' to input box.
+.TP
+.B O
+Start command mode and print `:open CURRENT_URI' to input box.
+.TP
+.B t
+Start command mode and print `:tabopen ' to input box.
+.TP
+.B T
+Start command mode and print `:tabopen CURRENT_URI' to input box.
+.TP
+.B g\-h
+Opend the configured home-page.
+.TP
+.B g\-H
+Opend the configured home-page into new window.
+.TP
+.B u
+Open the last closed page.
+.TP
+.B U
+Open the last closed page into a new window.
+.TP
+.B d
+Quit the browser.
+.TP
+.BI [ N ]ctrl\-o
+Go back \fIN\fP steps in the browser history.
+.TP
+.BI [ N ]ctrl\-i
+Go forward \fIN\fP steps in the browser history.
+.TP
+.B r
+Reload the website.
+.TP
+.B R
+Reload the website witout using caches.
+.TP
+.B C
+Stop loading the current page.
+.TP
+.BI [ N ]ctrl\-f
+Scroll \fIN\fP pages down.
+.TP
+.BI [ N ]ctrl\-b
+Scroll \fIN\fP pages up.
+.TP
+.BI [ N ]ctrl\-d
+Scroll \fIN\fP half pages down.
+.TP
+.BI [ N ]ctrl\-u
+Scroll \fIN\fP half pages up.
+.TP
+.BI [ N ]g\-g
+Scroll to the top of the current page. Or if \fIN\fP is given to \fIN\fP% of the page.
+.TP
+.BI [ N ]G
+Scroll to the bottom of the current page. Or if \fIN\fP is given to \fIN\fP% of the page.
+.TP
+.BI [ N ]0
+Scroll \fIN\fP steps to the left of current page.
+.TP
+.BI [ N ]$
+Scroll \fIN\fP steps to the right of current page.
+.TP
+.BI [ N ]h
+Scroll \fIN\fP steps to the left of page.
+.TP
+.BI [ N ]l
+Scroll \fIN\fP steps to the right of page.
+.TP
+.BI [ N ]j
+Scroll page \fIN\fP steps down.
+.TP
+.BI [ N ]k
+Scroll page \fIN\fP steps up.
+.TP
+.B f
+Start hinting for links.
+.TP
+.B F
+Start hinting for links to open them in new window.
+.TP
+.B ;\-o
+Start hinting to build :open command with hinted source.
+.TP
+.B ;\-t
+Start hinting to build :tabopen command with hinted source.
+.TP
+.B ;\-y
+Start hinting to yank hinted element URI into clipboard.
+.TP
+.B ;\-i
+Start hinting to open images.
+.TP
+.B ;\-I
+Start hinting to open images into new window.
+.TP
+.B y
+Yank the URI or current page into clipboard.
+.TP
+.B Y
+Yank the current selection into clipboard.
+.TP
+.B p
+Open the url out of the clipboard.
+.TP
+.B P
+Open the url out of the clipboard into new window.
+.TP
+.BI [ N ]z\-i
+Zoom-In the text of the page by \fIN\fP steps.
+.TP
+.BI [ N ]z\-o
+Zoom-Out the text of the page by \fIN\fP steps.
+.TP
+.BI [ N ]z\-I
+Fullcontent Zoom-In the page by \fIN\fP steps.
+.TP
+.BI [ N ]z\-O
+Fullcontent Zoom-Out the page by \fIN\fP steps.
+.TP
+.B z\-z
+Reset Zoom.
+.SS COMMAND_MODE
+.TP
+.B tab
+Complete different sources in the inputbox.
+.TP
+.B shift\-tab
+Complete backward different sources in the inputbox.
+.TP
+.B ctrl\-p, up
+Step through hinstory backward.
+.TP
+.B ctrl\-n, down
+Step through hinstory forward.
+.TP
+.B tab
+Foxus the next hint.
+.TP
+.B shift\-tab
+Foxus the previous hint.
+.SS SEARCH_MODE
+.TP
+.BI [ N ]n
+Search for \fIN\fPnth next search result.
+.TP
+.BI [ N ]N
+Search for \fIN\fPnth previous search result.
 .SH FILES
 .I $XDG_CONFIG_HOME/PROJECT/config
 .RS
