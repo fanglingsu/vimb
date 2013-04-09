@@ -133,8 +133,6 @@ static Element *get_active_element(Document *doc)
     g_free(tagname);
 
     if (result) {
-        g_free(active);
-
         return result;
     }
 
