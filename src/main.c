@@ -225,7 +225,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
     switch (clean_old) {
         case VB_MODE_INSERT:
             clean = true;
-            dom_clear_focus();
+            dom_clear_focus(vb.gui.webview);
             break;
 
         case VB_MODE_HINTING:
@@ -423,7 +423,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             vb.state.progress = 100;
             vb_update_statusbar();
 
-            dom_check_auto_insert();
+            dom_check_auto_insert(view);
 
             history_add(HISTORY_URL, uri);
             break;

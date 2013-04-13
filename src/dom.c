@@ -27,9 +27,9 @@ static gboolean editable_focus_cb(Element *element, Event *event);
 static Element *get_active_element(Document *doc);
 
 
-void dom_check_auto_insert(void)
+void dom_check_auto_insert(WebKitWebView *view)
 {
-    Document *doc   = webkit_web_view_get_dom_document(vb.gui.webview);
+    Document *doc   = webkit_web_view_get_dom_document(view);
     Element *active = get_active_element(doc);
 
     /* the focus was not set automatically - add event listener to track focus
@@ -48,11 +48,9 @@ void dom_check_auto_insert(void)
 /**
  * Remove focus from active and editable elements.
  */
-void dom_clear_focus(void)
+void dom_clear_focus(WebKitWebView *view)
 {
-    Document *doc   = webkit_web_view_get_dom_document(vb.gui.webview);
-    Element *active = get_active_element(doc);
-
+    Element *active = dom_get_active_element(view);
     if (active) {
         webkit_dom_element_blur(active);
     }
@@ -88,6 +86,11 @@ gboolean dom_is_editable(Element *element)
     g_free(type);
 
     return result;
+}
+
+Element *dom_get_active_element(WebKitWebView *view)
+{
+    return get_active_element(webkit_web_view_get_dom_document(view));
 }
 
 static gboolean auto_insert(Element *element)

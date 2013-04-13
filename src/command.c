@@ -27,6 +27,7 @@
 #include "searchengine.h"
 #include "history.h"
 #include "bookmark.h"
+#include "dom.h"
 
 extern VbCore vb;
 extern const unsigned int INPUT_LENGTH;

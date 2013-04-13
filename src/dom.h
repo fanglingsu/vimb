@@ -39,8 +39,9 @@ typedef struct {
     gulong bottom;
 } DomBoundingRect;
 
-void dom_check_auto_insert(void);
-void dom_clear_focus(void);
+void dom_check_auto_insert(WebKitWebView *view);
+void dom_clear_focus(WebKitWebView *view);
 gboolean dom_is_editable(Element *element);
+Element *dom_get_active_element(WebKitWebView *view);
 
 #endif /* end of include guard: _DOM_H */
