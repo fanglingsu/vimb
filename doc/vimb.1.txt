@@ -256,6 +256,10 @@ clipboard. If \fIPREFIX\fP is given, print this into the inputbox, default ';y'.
 Start hinting to open images into current or new window. If \fIPREFIX\fP is
 given, print this into the inputbox, default ';i' and ';I'.
 .TP
+.BI "hint-editor [" PREFIX "]"
+Start hinting to open inputboxes or textareas with external editor. If
+\fIPREFIX\fP is given, print this into the inputbox, default ';e'.
+.TP
 .B hint-focus-nex, hint-focus-prevt
 Focus next or previous hint.
 .SS Yank
@@ -476,6 +480,9 @@ Start hinting to open images.
 .TP
 .B ;\-I
 Start hinting to open images into new window.
+.TP
+.B ;\-e
+Start hinting to open editable form fileds with external editor.
 .TP
 .B y
 Yank the URI or current page into clipboard.

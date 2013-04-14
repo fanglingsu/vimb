@@ -88,6 +88,7 @@ static CommandInfo cmd_list[] = {
     {"hint-yank",            command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_YANK, ";y"}},
     {"hint-image-open",      command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN, ";i"}},
     {"hint-image-tabopen",   command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW, ";I"}},
+    {"hint-editor",          command_hints,                {HINTS_TYPE_EDITABLE, ";e"}},
     {"hint-focus-next",      command_hints_focus,          {0}},
     {"hint-focus-prev",      command_hints_focus,          {1}},
     {"yank-uri",             command_yank,                 {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI}},

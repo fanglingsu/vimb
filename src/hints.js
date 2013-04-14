@@ -1,4 +1,4 @@
-/* mode: l - links, i - images */
+/* mode: l - links, i - images, e - editables */
 /* usage: O - open, T - open in new window, U - use source */
 function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
 {
@@ -333,6 +333,12 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
                     return "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href] | //input[not(@type='hidden')] | //a[href] | //area | //textarea | //button | //select";
                 } else {
                     return "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and contains(., '" + s + "')] | //input[not(@type='hidden') and contains(., '" + s + "')] | //a[@href and contains(., '" + s + "')] | //area[contains(., '" + s + "')] |  //textarea[contains(., '" + s + "')] | //button[contains(@value, '" + s + "')] | //select[contains(., '" + s + "')]";
+                }
+            case "e":
+                if (s === "") {
+                    return "//input[@type='text'] | //textarea";
+                } else {
+                    return "//input[@type='text' and contains(., '" + s + "')] | //textarea[contains(., '" + s + "')]";
                 }
             case "i":
                 if (s === "") {

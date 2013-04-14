@@ -22,11 +22,12 @@
 
 #include "main.h"
 
-#define HINTS_GET_TYPE(n) ((n) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE))
+#define HINTS_GET_TYPE(n) ((n) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE | HINTS_TYPE_EDITABLE))
 
 enum {
     HINTS_TYPE_LINK     = 1,
     HINTS_TYPE_IMAGE    = 2,
+    HINTS_TYPE_EDITABLE = 3,
     HINTS_PROCESS_INPUT = (1 << 2),
     HINTS_PROCESS_YANK  = (1 << 3),
     HINTS_PROCESS_OPEN  = (1 << 4),

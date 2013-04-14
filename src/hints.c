@@ -79,7 +79,13 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
 
         char type, usage;
         /* convert the mode into the type chare used in the hint script */
-        type = mode & HINTS_TYPE_LINK ? 'l' : 'i';
+        if (HINTS_GET_TYPE(mode) == HINTS_TYPE_LINK) {
+            type = 'l';
+        } else if (HINTS_GET_TYPE(mode) == HINTS_TYPE_EDITABLE) {
+            type = 'e';
+        } else {
+            type = 'i';
+        }
 
         if (mode & HINTS_PROCESS_OPEN) {
             usage = mode & HINTS_OPEN_NEW ? 'T' : 'O';
@@ -148,6 +154,9 @@ static void run_script(char *js)
         vb_set_mode(VB_MODE_NORMAL, true);
     } else if (!strncmp(value, "INSERT:", 7)) {
         vb_set_mode(VB_MODE_INSERT, false);
+        if (HINTS_GET_TYPE(mode) == HINTS_TYPE_EDITABLE) {
+            command_editor(NULL);
+        }
     } else if (!strncmp(value, "DATA:", 5)) {
         Arg a = {0};
         char *v = (value + 5);
