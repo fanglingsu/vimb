@@ -28,6 +28,7 @@ browsing-experience with low memory and cpu usage.
 - ssl validation against ca-certificate file
 - custom configuration files
 - tagged bookmarks
+- open input or teaxteaeas with configurable external editor
 
 ## Dependencies
 - libwebkit-1.0
