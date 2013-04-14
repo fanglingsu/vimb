@@ -19,6 +19,7 @@
 
 #include "main.h"
 #include "searchengine.h"
+#include "util.h"
 
 extern VbCore vb;
 
@@ -31,7 +32,6 @@ static GSList *searchengines;
 static char   *default_handle = NULL;
 
 static GSList *find(const char *handle);
-static gboolean is_valid_uri(const char *uri);
 static void free_searchengine(Searchengine *se);
 
 
@@ -45,7 +45,7 @@ void searchengine_cleanup(void)
 gboolean searchengine_add(const char *handle, const char *uri)
 {
     /* validate if the uri contains only one %s sequence */
-    if (!is_valid_uri(uri)) {
+    if (!util_valid_format_string(uri, 's', 1)) {
         return false;
     }
     Searchengine *s = g_new0(Searchengine, 1);
@@ -126,22 +126,6 @@ static GSList *find(const char *handle)
     }
 
     return NULL;
-}
-
-static gboolean is_valid_uri(const char *uri)
-{
-    int count = 0;
-
-    for (; *uri; uri++) {
-        if (*uri == '%') {
-            uri++;
-            if (*uri == 's') {
-                count++;
-            }
-        }
-    }
-
-    return count == 1;
 }
 
 static void free_searchengine(Searchengine *se)

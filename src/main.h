@@ -257,6 +257,7 @@ typedef struct {
     char   *home_page;
     char   *download_dir;
     guint  history_max;
+    char   *editor_command;
 } Config;
 
 typedef struct {

@@ -42,6 +42,7 @@ static gboolean download_path(const Setting *s, const SettingType type);
 static gboolean proxy(const Setting *s, const SettingType type);
 static gboolean user_style(const Setting *s, const SettingType type);
 static gboolean history_max_items(const Setting *s, const SettingType type);
+static gboolean editor_command(const Setting *s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -103,6 +104,7 @@ static Setting default_settings[] = {
     {NULL, "home-page", TYPE_CHAR, home_page, {0}},
     {NULL, "download-path", TYPE_CHAR, download_path, {0}},
     {NULL, "history-max-items", TYPE_INTEGER, history_max_items, {0}},
+    {NULL, "editor-command", TYPE_CHAR, editor_command, {0}},
 };
 
 void setting_init(void)
@@ -688,6 +690,22 @@ static gboolean history_max_items(const Setting *s, const SettingType type)
         return true;
     }
     vb.config.history_max = s->arg.i;
+
+    return true;
+}
+
+static gboolean editor_command(const Setting *s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        print_value(s, vb.config.editor_command);
+
+        return true;
+    }
+
+    if (!util_valid_format_string(s->arg.s, 's', 1)) {
+        return false;
+    }
+    OVERWRITE_STRING(vb.config.editor_command, s->arg.s);
 
     return true;
 }

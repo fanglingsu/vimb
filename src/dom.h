@@ -23,11 +23,14 @@
 #include <webkit/webkit.h>
 
 // Types
-#define Document       WebKitDOMDocument
-#define HtmlElement    WebKitDOMHTMLElement
-#define Element        WebKitDOMElement
-#define Event          WebKitDOMEvent
-#define EventTarget    WebKitDOMEventTarget
+#define Document            WebKitDOMDocument
+#define HtmlElement         WebKitDOMHTMLElement
+#define Element             WebKitDOMElement
+#define Node                WebKitDOMNode
+#define Event               WebKitDOMEvent
+#define EventTarget         WebKitDOMEventTarget
+#define HtmlInputElement    WebKitDOMHTMLInputElement
+#define HtmlTextareaElement WebKitDOMHTMLTextAreaElement
 
 // style 
 #define style_compare_property(style, name, value)    (!strcmp(webkit_dom_css_style_declaration_get_property_value(style, name), value))
@@ -43,5 +46,8 @@ void dom_check_auto_insert(WebKitWebView *view);
 void dom_clear_focus(WebKitWebView *view);
 gboolean dom_is_editable(Element *element);
 Element *dom_get_active_element(WebKitWebView *view);
+const char *dom_editable_element_get_value(Element *element);
+void dom_editable_element_set_value(Element *element, const char *value);
+void dom_editable_element_set_disable(Element *element, gboolean value);
 
 #endif /* end of include guard: _DOM_H */

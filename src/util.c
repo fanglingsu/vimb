@@ -119,3 +119,58 @@ next:
     }
     return NULL;
 }
+
+/**
+ * Checks if given printf style format string is valid. That means that it
+ * contains only one defined placeholder given as char.
+ */
+gboolean util_valid_format_string(const char *format, char type, unsigned int count)
+{
+    unsigned int c;
+    for (c = 0; *format; format++) {
+        if (*format == '%') {
+            format++;
+            if (*format == type) {
+                c++;
+            }
+        }
+    }
+
+    return c == count;
+}
+
+/**
+ * Creates a temporary file with given content.
+ *
+ * Upon success, and if file is non-NULL, the actual file path used is
+ * returned in file. This string should be freed with g_free() when not
+ * needed any longer.
+ */
+gboolean util_create_tmp_file(const char *content, char **file)
+{
+    int fp;
+    ssize_t bytes, len;
+
+    fp = g_file_open_tmp(PROJECT "-XXXXXX", file, NULL);
+    if (fp == -1) {
+        fprintf(stderr, "Could not create temporary file %s", *file);
+        g_free(*file);
+        return false;
+    }
+
+    len = strlen(content);
+
+    /* write content into temporary file */
+    bytes = write(fp, content, len);
+    if (bytes < len) {
+        close(fp);
+        unlink(*file);
+        fprintf(stderr, "Could not write temporary file %s", *file);
+        g_free(*file);
+
+        return false;
+    }
+    close(fp);
+
+    return true;
+}

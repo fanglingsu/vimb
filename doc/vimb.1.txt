@@ -529,6 +529,12 @@ Search for \fIN\fPnth next search result.
 .TP
 .BI [ N ]N
 Search for \fIN\fPnth previous search result.
+.SS INSERT_MODE
+.TP
+.B ctrl-t
+If the current active form element is an inputbox or textarea, the content is
+copied to temporary file and the file openen with the configured external
+editor (setting `editor-command').
 .SH FILES
 .I $XDG_CONFIG_HOME/PROJECT/config
 .RS

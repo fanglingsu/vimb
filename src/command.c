@@ -29,6 +29,13 @@
 #include "bookmark.h"
 #include "dom.h"
 
+typedef struct {
+    char    *file;
+    Element *element;
+} OpenEditorData;
+
+static void editor_resume(GPid pid, int status, OpenEditorData *data);
+
 extern VbCore vb;
 extern const unsigned int INPUT_LENGTH;
 
@@ -102,6 +109,7 @@ static CommandInfo cmd_list[] = {
     {"run",                  command_run_multi,            {0}},
     {"bookmark-add",         command_bookmark,             {1}},
     {"eval",                 command_eval,                 {0}},
+    {"editor",               command_editor,               {0}},
 };
 
 
@@ -627,4 +635,83 @@ gboolean command_eval(const Arg *arg)
     vb_set_mode(VB_MODE_NORMAL, false);
 
     return success;
+}
+
+gboolean command_editor(const Arg *arg)
+{
+    char *file_path = NULL;
+    const char *text;
+    char **argv;
+    int argc;
+    GPid pid;
+    gboolean success;
+
+    if (!vb.config.editor_command) {
+        vb_echo(VB_MSG_ERROR, true, "No editor-command configured");
+        return false;
+    }
+    Element* active = dom_get_active_element(vb.gui.webview);
+
+    /* check if element is suitable for editing */
+    if (!active || !dom_is_editable(active)) {
+        return false;
+    }
+
+    text = dom_editable_element_get_value(active);
+    if (!text) {
+        return false;
+    }
+
+    if (!util_create_tmp_file(text, &file_path)) {
+        return false;
+    }
+
+    /* spawn editor */
+    char* command = g_strdup_printf(vb.config.editor_command, file_path);
+    if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
+        fprintf(stderr, "Could not parse editor-command");
+        g_free(command);
+        return false;
+    }
+    g_free(command);
+
+    success = g_spawn_async(
+        NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
+        NULL, NULL, &pid, NULL
+    );
+    g_strfreev(argv);
+
+    if (!success) {
+        unlink(file_path);
+        g_free(file_path);
+        return false;
+    }
+
+    /* disable the active element */
+    dom_editable_element_set_disable(active, true);
+
+    OpenEditorData *data = g_new0(OpenEditorData, 1);
+    data->file    = file_path;
+    data->element = active;
+
+    g_child_watch_add(pid, (GChildWatchFunc)editor_resume, data);
+
+    return true;
+}
+
+static void editor_resume(GPid pid, int status, OpenEditorData *data)
+{
+    char *text;
+    if (status == 0) {
+        text = util_get_file_contents(data->file, NULL);
+        if (text) {
+            dom_editable_element_set_value(data->element, text);
+        }
+        g_free(text);
+    }
+    dom_editable_element_set_disable(data->element, false);
+
+    g_free(data->file);
+    g_free(data);
+    g_spawn_close_pid(pid);
 }

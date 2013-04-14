@@ -30,5 +30,7 @@ void util_create_file_if_not_exists(const char* filename);
 char* util_get_file_contents(const char* filename, gsize* length);
 char** util_get_lines(const char* filename);
 char* util_strcasestr(const char* haystack, const char* needle);
+gboolean util_valid_format_string(const char *format, char type, unsigned int count);
+gboolean util_create_tmp_file(const char *content, char **file);
 
 #endif /* end of include guard: _UTIL_H */

@@ -92,6 +92,7 @@ const char *default_config[] = {
     "cmap <down>=hist-next",
     "hmap <tab>=hint-focus-next",
     "hmap <shift-tab>=hint-focus-prev",
+    "imap <ctrl-t>=editor",
     "searchengine-add dl=https://duckduckgo.com/lite/?q=%s",
     "searchengine-add dd=https://duckduckgo.com/?q=%s",
     "searchengine-default dl",
@@ -148,6 +149,7 @@ const char *default_config[] = {
     "set home-page=https://github.com/fanglingsu/vimb",
     "set download-path=/tmp/vimb",
     "set history-max-items=2000",
+    "set editor-command=x-terminal-emulator -e vi %s",
     NULL
 };
 

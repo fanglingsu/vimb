@@ -93,6 +93,39 @@ Element *dom_get_active_element(WebKitWebView *view)
     return get_active_element(webkit_web_view_get_dom_document(view));
 }
 
+const char *dom_editable_element_get_value(Element *element)
+{
+    const char *value = NULL;
+
+    if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT((HtmlInputElement*)element)) {
+        value = webkit_dom_html_input_element_get_value((HtmlInputElement*)element);
+    } else {
+        /* we should check WEBKIT_DOM_IS_HTML_TEXT_AREA_ELEMENT, but this
+         * seems to return alway false */
+        value = webkit_dom_html_text_area_element_get_value((HtmlTextareaElement*)element);
+    }
+
+    return value;
+}
+
+void dom_editable_element_set_value(Element *element, const char *value)
+{
+    if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(element)) {
+        webkit_dom_html_input_element_set_value((HtmlInputElement*)element, value);
+    } else {
+        webkit_dom_html_text_area_element_set_value((HtmlTextareaElement*)element, value);
+    }
+}
+
+void dom_editable_element_set_disable(Element *element, gboolean value)
+{
+    if (WEBKIT_DOM_IS_HTML_INPUT_ELEMENT(element)) {
+        webkit_dom_html_input_element_set_disabled((HtmlInputElement*)element, value);
+    } else {
+        webkit_dom_html_text_area_element_set_disabled((HtmlTextareaElement*)element, value);
+    }
+}
+
 static gboolean auto_insert(Element *element)
 {
     if (dom_is_editable(element)) {
