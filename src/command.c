@@ -247,10 +247,10 @@ gboolean command_input(const Arg *arg)
     ) {
         /* append the current url to the input message */
         char *input = g_strconcat(arg->s, url, NULL);
-        vb_echo_force(VB_MSG_NORMAL, false, input);
+        vb_echo_force(VB_MSG_NORMAL, false, "%s", input);
         g_free(input);
     } else {
-        vb_echo_force(VB_MSG_NORMAL, false, arg->s);
+        vb_echo_force(VB_MSG_NORMAL, false, "%s", arg->s);
     }
 
     vb_set_mode(VB_MODE_COMMAND, false);
@@ -415,7 +415,7 @@ gboolean command_inspect(const Arg *arg)
 
 gboolean command_hints(const Arg *arg)
 {
-    vb_echo_force(VB_MSG_NORMAL, false, arg->s);
+    vb_echo_force(VB_MSG_NORMAL, false, "%s", arg->s);
     /* mode will be set in hints_create - so we don't neet to do it here */
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
 
@@ -597,7 +597,7 @@ gboolean command_history(const Arg *arg)
         return false;
     }
 
-    vb_echo_force(VB_MSG_NORMAL, false, entry);
+    vb_echo_force(VB_MSG_NORMAL, false, "%s", entry);
     g_free(entry);
 
     return true;
@@ -619,9 +619,9 @@ gboolean command_eval(const Arg *arg)
         webkit_web_view_get_main_frame(vb.gui.webview), arg->s, NULL, &value
     );
     if (success) {
-        vb_echo_force(VB_MSG_NORMAL, false, value);
+        vb_echo_force(VB_MSG_NORMAL, false, "%s", value);
     } else {
-        vb_echo_force(VB_MSG_ERROR, true, value);
+        vb_echo_force(VB_MSG_ERROR, true, "%s", value);
     }
     g_free(value);
     vb_set_mode(VB_MODE_NORMAL, false);

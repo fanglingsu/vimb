@@ -74,7 +74,7 @@ static void set_status(const StatusType status);
 void inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message);
 static void destroy_client();
 
-void vb_echo_force(const MessageType type,gboolean hide, const char *error, ...)
+void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
 {
     char message[255];
     va_list arg_list;
