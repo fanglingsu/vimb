@@ -72,7 +72,11 @@ void session_init(void)
 static SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
 {
     return g_object_new(
-        COOKIEJAR_TYPE, SOUP_COOKIE_JAR_TEXT_FILENAME, file, SOUP_COOKIE_JAR_READ_ONLY, ro, NULL
+        COOKIEJAR_TYPE,
+        SOUP_COOKIE_JAR_TEXT_FILENAME, file,
+        SOUP_COOKIE_JAR_READ_ONLY, ro,
+        SOUP_COOKIE_JAR_ACCEPT_POLICY, SOUP_COOKIE_JAR_ACCEPT_NO_THIRD_PARTY,
+        NULL
     );
 }
 
