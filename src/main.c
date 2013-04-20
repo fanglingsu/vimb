@@ -18,6 +18,7 @@
  */
 
 #include <sys/stat.h>
+#include <math.h>
 #include "main.h"
 #include "util.h"
 #include "command.h"
@@ -306,7 +307,7 @@ void vb_update_statusbar()
 
     /* show the scroll status */
     max = gtk_adjustment_get_upper(vb.gui.adjust_v) - gtk_adjustment_get_page_size(vb.gui.adjust_v);
-    val = (int)(gtk_adjustment_get_value(vb.gui.adjust_v) / max * 100);
+    val = (int)floor(0.5 + (gtk_adjustment_get_value(vb.gui.adjust_v) / max * 100));
 
     if (max == 0) {
         g_string_append(status, " All");
