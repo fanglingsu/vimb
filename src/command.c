@@ -308,10 +308,11 @@ gboolean command_navigate(const Arg *arg)
 
 gboolean command_scroll(const Arg *arg)
 {
+    gdouble max, new;
+    int direction = (arg->i & (1 << 2)) ? 1 : -1;
     GtkAdjustment *adjust = (arg->i & VB_SCROLL_AXIS_H) ? vb.gui.adjust_h : vb.gui.adjust_v;
 
-    int direction = (arg->i & (1 << 2)) ? 1 : -1;
-
+    max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
     /* type scroll */
     if (arg->i & VB_SCROLL_TYPE_SCROLL) {
         gdouble value;
@@ -323,18 +324,18 @@ gboolean command_scroll(const Arg *arg)
         } else {
             value = gtk_adjustment_get_page_size(adjust);
         }
-        gtk_adjustment_set_value(adjust, gtk_adjustment_get_value(adjust) + direction * value * count);
+        new = gtk_adjustment_get_value(adjust) + direction * value * count;
     } else if (vb.state.count) {
         /* jump - if count is set to count% of page */
-        gdouble max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-        gtk_adjustment_set_value(adjust, max * vb.state.count / 100);
+        new = max * vb.state.count / 100;
     } else if (direction == 1) {
         /* jump to top */
-        gtk_adjustment_set_value(adjust, gtk_adjustment_get_upper(adjust));
+        new = gtk_adjustment_get_upper(adjust);
     } else {
         /* jump to bottom */
-        gtk_adjustment_set_value(adjust, gtk_adjustment_get_lower(adjust));
+        new = gtk_adjustment_get_lower(adjust);
     }
+    gtk_adjustment_set_value(adjust, new > max ? max : new);
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
