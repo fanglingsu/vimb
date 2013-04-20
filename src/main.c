@@ -737,6 +737,7 @@ static void setup_signals()
         "signal::mime-type-policy-decision-requested", G_CALLBACK(mimetype_decision_cb), NULL,
         "signal::download-requested", G_CALLBACK(download_requested_cb), NULL,
         "signal::resource-request-starting", G_CALLBACK(request_start_cb), NULL,
+        "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
         NULL
     );
 
