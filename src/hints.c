@@ -56,7 +56,7 @@ void hints_clear()
     char *js, *value = NULL;
 
     observe_input(false);
-    if (CLEAN_MODE(vb.state.mode) == VB_MODE_HINTING) {
+    if (vb.state.mode & VB_MODE_HINTING) {
         js = g_strdup_printf("%s.clear();", HINT_VAR);
         vb_eval_script(webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value);
         g_free(value);
@@ -69,8 +69,8 @@ void hints_clear()
 void hints_create(const char *input, guint mode, const guint prefixLength)
 {
     char *js = NULL;
-    if (CLEAN_MODE(vb.state.mode) != VB_MODE_HINTING) {
-        vb_set_mode(VB_MODE_HINTING, false);
+    if (!(vb.state.mode & VB_MODE_HINTING)) {
+        vb_set_mode(VB_MODE_COMMAND | VB_MODE_HINTING, false);
 
         Style *style = &vb.style;
         hints.prefixLength = prefixLength;

@@ -70,13 +70,9 @@ static CommandInfo cmd_list[] = {
     {"nmap",                 command_map,                  {VB_MODE_NORMAL}},
     {"imap",                 command_map,                  {VB_MODE_INSERT}},
     {"cmap",                 command_map,                  {VB_MODE_COMMAND}},
-    {"hmap",                 command_map,                  {VB_MODE_HINTING}},
-    {"smap",                 command_map,                  {VB_MODE_SEARCH}},
     {"nunmap",               command_unmap,                {VB_MODE_NORMAL}},
     {"iunmap",               command_unmap,                {VB_MODE_INSERT}},
     {"cunmap",               command_unmap,                {VB_MODE_COMMAND}},
-    {"hunmap",               command_unmap,                {VB_MODE_HINTING}},
-    {"sunmap",               command_map,                  {VB_MODE_SEARCH}},
     {"set",                  command_set,                  {0}},
     {"complete",             command_complete,             {0}},
     {"complete-back",        command_complete,             {1}},
@@ -337,7 +333,8 @@ gboolean command_scroll(const Arg *arg)
     }
     gtk_adjustment_set_value(adjust, new > max ? max : new);
 
-    vb_set_mode(VB_MODE_NORMAL, false);
+    /* keep possible search mode */
+    vb_set_mode(VB_MODE_NORMAL | (vb.state.mode & VB_MODE_SEARCH), false);
 
     return true;
 }
@@ -502,12 +499,10 @@ gboolean command_search(const Arg *arg)
 {
     gboolean forward = !(arg->i ^ vb.state.search_dir);
 
-    if (arg->i == VB_SEARCH_OFF && vb.state.search_query) {
-        OVERWRITE_STRING(vb.state.search_query, NULL);
+    if (arg->i == VB_SEARCH_OFF) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_unmark_text_matches(vb.gui.webview);
 #endif
-
         return true;
     }
 
@@ -530,7 +525,7 @@ gboolean command_search(const Arg *arg)
         } while (--vb.state.count);
     }
 
-    vb_set_mode(VB_MODE_SEARCH, false);
+    vb_set_mode(VB_MODE_NORMAL | VB_MODE_SEARCH, false);
 
     return true;
 }

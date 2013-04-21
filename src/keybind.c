@@ -250,8 +250,8 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
         return true;
     }
-    /* allow mode keys and counts only in normal mode */
-    if ((VB_MODE_SEARCH | VB_MODE_NORMAL) & vb.state.mode) {
+    /* allow mode keys and counts only in normal mode and search mode */
+    if (vb.state.mode == VB_MODE_NORMAL || vb.state.mode & VB_MODE_SEARCH) {
         if (vb.state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
                 || (keyval == GDK_0 && vb.state.count))) {
             /* append the new entered count to previous one */

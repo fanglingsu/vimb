@@ -40,17 +40,8 @@ The default mode. Pressing Escape always enter normal mode.
 .B Insert Mode
 Used for editing text elements in a webpage.
 .TP
-.B Hint Mode
-Follow links, form fields and frames via hints.
-.TP
 .B Command Mode
 Execute PROJECT commands from the builtin inputbox (commandline).
-.TP
-.B Search Mode
-Search for strings within the current displayed page.
-.TP
-.B Insert Mode
-Used for editing text elements in a webpage.
 .SH COMMANDS
 Commands are a central part in PROJECT. They are used for nearly all things
 that could be done with this browser. Commands allow to set config variables,
@@ -165,7 +156,7 @@ Scroll the page \fIN\fP times the "scrollstep" to the top.
 .BI [ N "]scrolldown"
 Scroll the page \fIN\fP times the "scrollstep" to the end.
 .SS Keybinding
-To bind a command to a key sequence use the {n,i,c,h}map command. To map a
+To bind a command to a key sequence use the {n,i,c}map command. To map a
 keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]".
 
 The modkey is a single simple char like "g". The key can also contain
@@ -173,8 +164,6 @@ special keys and modifiers and is given in format like "<ctrl\-o>", "<tab>",
 "<shift\-tab>", "<up>", "<right>" or also a simple char like "G".
 
 Example:
-.br
-"hmap <shift\-tab>=hint\-focus\-prev" to add focus next in in Hinting Mode.
 .br
 "nmap <shift\-?>=input :foo" to write :foo into input box and switch to Command Mode.
 .br
@@ -193,12 +182,6 @@ Add a keybinding used in Input Mode.
 .B cmap
 Add a keybinding used in Command Mode.
 .TP
-.B hmap
-Add a keybinding used in Hint Mode.
-.TP
-.B smap
-Add keybinding used in Search Mode.
-.TP
 .B nunmap
 Remove a Normal Mode keybinding.
 .TP
@@ -208,11 +191,6 @@ Remove a Input Mode keybinding.
 .B cunmap
 Remove a Command Mode keybinding.
 .TP
-.B hunmap
-Remove a Hint Mode keybinding.
-.TP
-.B sunmap
-Remove a Search Mode keybinding.
 .SS Complete
 .TP
 .B complete
@@ -260,7 +238,7 @@ given, print this into the inputbox, default ';i' and ';I'.
 Start hinting to open inputboxes or textareas with external editor. If
 \fIPREFIX\fP is given, print this into the inputbox, default ';e'.
 .TP
-.B hint-focus-nex, hint-focus-prevt
+.B hint-focus-nex, hint-focus-prev
 Focus next or previous hint.
 .SS Yank
 .TP
@@ -510,6 +488,18 @@ Fullcontent Zoom-Out the page by \fIN\fP steps.
 .TP
 .B z\-z
 Reset Zoom.
+.TP
+.BI [ N ]n
+Search for \fIN\fPnth next search result.
+.TP
+.BI [ N ]N
+Search for \fIN\fPnth previous search result.
+.TP
+.B <tab>
+Hint to the next element.
+.TP
+.B <shift-tab>
+Hint the previous element.
 .SS COMMAND_MODE
 .TP
 .B tab
@@ -518,24 +508,17 @@ Complete different sources in the inputbox.
 .B shift\-tab
 Complete backward different sources in the inputbox.
 .TP
-.B ctrl\-p, up
+.B up
 Step through hinstory backward.
 .TP
-.B ctrl\-n, down
+.B down
 Step through hinstory forward.
 .TP
-.B tab
+.B ctrl\-n
 Foxus the next hint.
 .TP
-.B shift\-tab
+.B ctrl\-p
 Foxus the previous hint.
-.SS SEARCH_MODE
-.TP
-.BI [ N ]n
-Search for \fIN\fPnth next search result.
-.TP
-.BI [ N ]N
-Search for \fIN\fPnth previous search result.
 .SS INSERT_MODE
 .TP
 .B ctrl-t

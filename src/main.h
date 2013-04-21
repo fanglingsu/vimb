@@ -52,7 +52,7 @@
 #endif
 
 #define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox)))
-#define CLEAN_MODE(mode) ((mode) & ~(VB_MODE_COMPLETE))
+#define CLEAN_MODE(mode) ((mode) & ~(VB_MODE_COMPLETE | VB_MODE_SEARCH | VB_MODE_HINTING))
 #define CLEAR_INPUT() (vb_echo(VB_MSG_NORMAL, ""))
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
@@ -101,13 +101,14 @@
 
 /* enums */
 typedef enum _vb_mode {
+    /* main modes */
     VB_MODE_NORMAL        = 1<<0,
     VB_MODE_COMMAND       = 1<<1,
-    VB_MODE_PATH_THROUGH  = 1<<2,
-    VB_MODE_INSERT        = 1<<3,
-    VB_MODE_SEARCH        = 1<<4,
-    VB_MODE_COMPLETE      = 1<<5,
-    VB_MODE_HINTING       = 1<<6,
+    VB_MODE_INSERT        = 1<<2,
+    /* sub modes */
+    VB_MODE_SEARCH        = 1<<3, /* normal mode */
+    VB_MODE_COMPLETE      = 1<<4, /* command mode */
+    VB_MODE_HINTING       = 1<<5, /* command mode */
 } Mode;
 
 enum {

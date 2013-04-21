@@ -222,20 +222,13 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
     /* leaf the old mode */
     if ((vb.state.mode & VB_MODE_COMPLETE) && !(mode & VB_MODE_COMPLETE)) {
         completion_clean();
-    }
-    switch (clean_old) {
-        case VB_MODE_INSERT:
-            clean = true;
-            dom_clear_focus(vb.gui.webview);
-            break;
-
-        case VB_MODE_HINTING:
-            hints_clear();
-            break;
-
-        case VB_MODE_SEARCH:
-            command_search(&((Arg){VB_SEARCH_OFF}));
-            break;
+    } else if ((vb.state.mode & VB_MODE_SEARCH) && !(mode & VB_MODE_SEARCH)) {
+        command_search(&((Arg){VB_SEARCH_OFF}));
+    } else if ((vb.state.mode & VB_MODE_HINTING) && !(mode & VB_MODE_HINTING)) {
+        hints_clear();
+    } else if (clean_old == VB_MODE_INSERT) {
+        clean = true;
+        dom_clear_focus(vb.gui.webview);
     }
 
     /* enter the new mode */
@@ -246,7 +239,6 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             break;
 
         case VB_MODE_COMMAND:
-        case VB_MODE_HINTING:
             gtk_widget_grab_focus(GTK_WIDGET(vb.gui.inputbox));
             break;
 
@@ -254,10 +246,6 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             clean = false;
             gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
             vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
-            break;
-
-        case VB_MODE_PATH_THROUGH:
-            gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
             break;
     }
 
