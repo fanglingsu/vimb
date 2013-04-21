@@ -148,7 +148,7 @@ const char *default_config[] = {
     "set hint-style=position:absolute;z-index:100000;font-family:monospace;font-weight:bold;font-size:10px;color:#000;background-color:#fff;margin:0;padding:0px 1px;border:1px solid #444;opacity:0.7;",
     "set ca-bundle=/etc/ssl/certs/ca-certificates.crt",
     "set home-page=https://github.com/fanglingsu/vimb",
-    "set download-path=/tmp/vimb",
+    "set download-path=",
     "set history-max-items=2000",
     "set editor-command=x-terminal-emulator -e vi %s",
     NULL
