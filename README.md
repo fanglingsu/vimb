@@ -21,6 +21,7 @@ browsing-experience with low memory and cpu usage.
   - commands
   - urls
   - variable names of settings
+  - search-queries
 - hinting - marks links, form fields and other clickable elements to be
   clicked, opened or inspected
 - webinspector that opens ad the bottom of the browser window like in some

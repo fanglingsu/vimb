@@ -118,7 +118,7 @@ gboolean completion_complete(gboolean back)
         );
 
         history_list_free(&source);
-    } else {
+    } else if (*input == ':') {
         char *command = NULL;
         /* remove counts before command and save it to print it later in inputbox */
         comps.count = g_ascii_strtoll(&input[1], &command, 10);
@@ -128,6 +128,14 @@ gboolean completion_complete(gboolean back)
             comps.completions,
             filter_list(tmp, source, (Comp_Func)g_str_has_prefix, command),
             ":"
+        );
+        g_list_free(source);
+    } else if (*input == '/' || *input == '?') {
+        source = g_list_sort(history_get_all(HISTORY_SEARCH), (GCompareFunc)g_strcmp0);
+        comps.completions = init_completion(
+            comps.completions,
+            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[1]),
+            *input == '/' ? "/" : "?"
         );
         g_list_free(source);
     }

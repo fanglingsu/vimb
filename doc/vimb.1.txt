@@ -211,6 +211,8 @@ file, or to find bookmarks from bookmark file. The urls from history will only
 be matched by their url, the bookmarks only by their tags. If multiple tags
 are given to get the bookmarks, only those bookmarks will be returned, that
 matches all the given tags or that don't have any tag set.
+.IP \n+[step]
+Searchqueries `/' or `?'
 .RE
 .TP
 .B complete-back
