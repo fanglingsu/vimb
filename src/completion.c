@@ -70,6 +70,12 @@ gboolean completion_complete(gboolean back)
         }
     }
 
+    /* don't disturb other command sub modes - complate only if no sub mode
+     * is set before */
+    if (vb.state.mode != VB_MODE_COMMAND) {
+        return false;
+    }
+
     /* create new completion */
 #ifdef HAS_GTK3
     vb.gui.compbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -129,6 +135,9 @@ gboolean completion_complete(gboolean back)
     if (!comps.completions) {
         return false;
     }
+
+    vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
+
     show(back);
 
     return true;

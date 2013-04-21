@@ -390,9 +390,8 @@ gboolean command_set(const Arg *arg)
 
 gboolean command_complete(const Arg *arg)
 {
+    /* mode will be set in completion_complete */
     completion_complete(arg->i ? true : false);
-
-    vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
     return true;
 }
