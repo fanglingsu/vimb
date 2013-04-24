@@ -111,6 +111,16 @@ typedef enum _vb_mode {
     VB_MODE_HINTING       = 1<<5, /* command mode */
 } Mode;
 
+typedef enum {
+    VB_INPUT_UNKNOWN,
+    VB_INPUT_SET,
+    VB_INPUT_OPEN,
+    VB_INPUT_TABOPEN,
+    VB_INPUT_COMMAND,
+    VB_INPUT_SEARCH_FORWARD,
+    VB_INPUT_SEARCH_BACKWARD
+} VbInputType;
+
 enum {
     VB_NAVIG_BACK,
     VB_NAVIG_FORWARD,
@@ -311,5 +321,6 @@ void vb_update_statusbar(void);
 void vb_update_status_style(void);
 void vb_update_input_style(void);
 void vb_update_urlbar(const char *uri);
+VbInputType vb_get_input_parts(const char* input, const char **prefix, const char **clean);
 
 #endif /* end of include guard: _MAIN_H */

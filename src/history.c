@@ -102,7 +102,7 @@ char *history_get(const char *input, gboolean prev)
     } else if ((new = g_list_next(history.active))) {
         history.active = new;
     }
-    
+
     return g_strconcat(history.prefix, (char*)history.active->data, NULL);
 }
 
@@ -131,26 +131,30 @@ void history_list_free(GList **list)
  */
 static GList *get_list(const char *input)
 {
+    VbInputType input_type;
     HistoryType type;
     GList *result = NULL;
+    const char *prefix, *suffix;
+
+    input_type = vb_get_input_parts(input, &prefix, &suffix);
 
     /* get the right history type and command prefix */
-    if (!strncmp(input, ":open ", 6)) {
+    if (input_type == VB_INPUT_OPEN
+        || input_type == VB_INPUT_TABOPEN
+    ) {
         type = HISTORY_URL;
-        OVERWRITE_STRING(history.query, input + 6);
-        OVERWRITE_STRING(history.prefix, ":open ");
-    } else if (!strncmp(input, ":tabopen ", 9)) {
-        type = HISTORY_URL;
-        OVERWRITE_STRING(history.query, input + 9);
-        OVERWRITE_STRING(history.prefix, ":tabopen ");
-    } else if (*input == ':') {
+        OVERWRITE_STRING(history.query, suffix);
+        OVERWRITE_STRING(history.prefix, prefix);
+    } else if (input_type == VB_INPUT_COMMAND) {
         type = HISTORY_COMMAND;
-        OVERWRITE_STRING(history.query, input + 1);
-        OVERWRITE_STRING(history.prefix, ":");
-    } else if (*input == '/' || *input == '?') {
+        OVERWRITE_STRING(history.query, suffix);
+        OVERWRITE_STRING(history.prefix, prefix);
+    } else if (input_type == VB_INPUT_SEARCH_FORWARD
+        || input_type == VB_INPUT_SEARCH_BACKWARD
+    ) {
         type = HISTORY_SEARCH;
-        OVERWRITE_STRING(history.query, input + 1);
-        OVERWRITE_STRING(history.prefix, (*input == '/') ? "/" : "?");
+        OVERWRITE_STRING(history.query, suffix);
+        OVERWRITE_STRING(history.prefix, prefix);
     } else {
         return NULL;
     }

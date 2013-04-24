@@ -17,6 +17,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "main.h"
 #include "completion.h"
 #include "util.h"
 #include "history.h"
@@ -51,8 +52,12 @@ static void free_completion(Completion *completion);
 
 gboolean completion_complete(gboolean back)
 {
-    const char *input = GET_TEXT();
+    VbInputType type;
+    const char *input, *prefix, *suffix;
     GList *source = NULL, *tmp = NULL;
+
+    input = GET_TEXT();
+    type  = vb_get_input_parts(input, &prefix, &suffix);
 
     if (comps.completions && comps.active
         && (vb.state.mode & VB_MODE_COMPLETE)
@@ -85,57 +90,40 @@ gboolean completion_complete(gboolean back)
 #endif
     gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, false, false, 0);
 
-    /* TODO move these decision to a more generic place */
-    if (!strncmp(input, ":set ", 5)) {
+    if (type == VB_INPUT_SET) {
         source = g_list_sort(setting_get_all(), (GCompareFunc)g_strcmp0);
         comps.completions = init_completion(
             comps.completions,
-            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[5]),
-            ":set "
+            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, suffix),
+            prefix
         );
         g_list_free(source);
-    } else if (!strncmp(input, ":open ", 6)) {
+    } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
         source = history_get_all(HISTORY_URL);
-        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[6]),
+        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, suffix),
         /* prepend the bookmark items */
-        tmp = g_list_concat(bookmark_get_by_tags(&input[6]), tmp);
-        comps.completions = init_completion(
-            comps.completions,
-            tmp,
-            ":open "
-        );
+        tmp = g_list_concat(bookmark_get_by_tags(suffix), tmp);
+        comps.completions = init_completion(comps.completions, tmp, prefix);
 
         history_list_free(&source);
-    } else if (!strncmp(input, ":tabopen ", 9)) {
-        source = history_get_all(HISTORY_URL);
-        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, &input[9]),
-        /* prepend the bookmark items */
-        tmp = g_list_concat(bookmark_get_by_tags(&input[9]), tmp);
-        comps.completions = init_completion(
-            comps.completions,
-            tmp,
-            ":tabopen "
-        );
-
-        history_list_free(&source);
-    } else if (*input == ':') {
+    } else if (type == VB_INPUT_COMMAND) {
         char *command = NULL;
         /* remove counts before command and save it to print it later in inputbox */
-        comps.count = g_ascii_strtoll(&input[1], &command, 10);
+        comps.count = g_ascii_strtoll(suffix, &command, 10);
 
         source = g_list_sort(command_get_all(), (GCompareFunc)g_strcmp0);
         comps.completions = init_completion(
             comps.completions,
             filter_list(tmp, source, (Comp_Func)g_str_has_prefix, command),
-            ":"
+            prefix
         );
         g_list_free(source);
-    } else if (*input == '/' || *input == '?') {
+    } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
         source = g_list_sort(history_get_all(HISTORY_SEARCH), (GCompareFunc)g_strcmp0);
         comps.completions = init_completion(
             comps.completions,
-            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, &input[1]),
-            *input == '/' ? "/" : "?"
+            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, suffix),
+            prefix
         );
         g_list_free(source);
     }

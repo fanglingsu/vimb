@@ -72,7 +72,7 @@ static void setup_signals();
 static void init_files(void);
 static gboolean hide_message();
 static void set_status(const StatusType status);
-void inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message);
+static void inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message);
 static void destroy_client();
 
 void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
@@ -338,6 +338,48 @@ void vb_update_urlbar(const char *uri)
     gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), uri);
 }
 
+/**
+ * Analyzes the given input string for known prefixes (':set ', ':open ', '/',
+ * ...) and set the given prefix pointer to the found prefix and the given
+ * suffix pointer to the suffix.
+ */
+VbInputType vb_get_input_parts(const char* input, const char **prefix, const char **clean)
+{
+    if (!strncmp(input, ":open ", 6)) {
+        *prefix = ":open ";
+        *clean  = input + 6;
+        return VB_INPUT_OPEN;
+    }
+    if (!strncmp(input, ":tabopen ", 9)) {
+        *prefix = ":tabopen ";
+        *clean  = input + 9;
+        return VB_INPUT_TABOPEN;
+    }
+    if (!strncmp(input, ":set ", 5)) {
+        *prefix = ":set ";
+        *clean  = input + 5;
+        return VB_INPUT_SET;
+    }
+    if (*input == ':') {
+        *prefix = ":";
+        *clean  = input + 1;
+        return VB_INPUT_COMMAND;
+    }
+    if (*input == '/') {
+        *prefix = "/";
+        *clean  = input + 1;
+        return VB_INPUT_SEARCH_FORWARD;
+    }
+    if (*input == '?') {
+        *prefix = "?";
+        *clean  = input + 1;
+        return VB_INPUT_SEARCH_BACKWARD;
+    }
+    *prefix = NULL;
+    *clean  = input;
+    return VB_INPUT_UNKNOWN;
+}
+
 static gboolean hide_message()
 {
     inputbox_print(false, VB_MSG_NORMAL, false, "");
@@ -539,7 +581,7 @@ static void set_status(const StatusType status)
     }
 }
 
-void inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message)
+static void inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message)
 {
     /* don't print message if the input is focussed */
     if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.inputbox))) {
