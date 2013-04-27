@@ -26,6 +26,9 @@ extern VbCore vb;
 static GHashTable *shortcuts = NULL;
 static char *default_key = NULL;
 
+static const char *shortcut_lookup(const char *string, const char **query);
+
+
 void shortcut_init(void)
 {
     shortcuts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -74,28 +77,44 @@ gboolean shortcut_set_default(const char *key)
  */
 char *shortcut_get_uri(const char *string)
 {
-    char *p = NULL, *tmpl = NULL, *query = NULL, *uri = NULL;
+    const char *tmpl, *query = NULL;
+    if ((tmpl = shortcut_lookup(string, &query))) {
+        char *qs, *uri;
 
-    if ((p = strchr(string, ' '))) {
-        *p = '\0';
-        /* is the first word the key? */
-        if ((tmpl = g_hash_table_lookup(shortcuts, string))) {
-            query = soup_uri_encode(p + 1, "&");
-        } else {
-            *p = ' ';
-        }
-    }
-
-    if (!tmpl && (tmpl = g_hash_table_lookup(shortcuts, default_key))) {
-        query = soup_uri_encode(string, "&");
-    }
-
-    if (tmpl) {
-        uri = g_strdup_printf(tmpl, query);
-        g_free(query);
+        qs  = soup_uri_encode(query, "&");
+        uri = g_strdup_printf(tmpl, qs);
+        g_free(qs);
 
         return uri;
     }
 
     return NULL;
+}
+
+/**
+ * Retrieves the shortcut uri template for given string.
+ * If the string contains the shortcut key the shortcut for this wee be
+ * returned, else the default shortcur uri well be returned.
+ * In given query pointer will be filled with the query part of the string,
+ * thats the string without a possible shortcut key.
+ */
+static const char *shortcut_lookup(const char *string, const char **query)
+{
+    char *p, *uri = NULL;
+
+    if ((p = strchr(string, ' '))) {
+        *p = '\0';
+        /* is the first word the key? */
+        if ((uri = g_hash_table_lookup(shortcuts, string))) {
+            *query = p + 1;
+        } else {
+            *p = ' ';
+        }
+    }
+
+    if (!uri && (uri = g_hash_table_lookup(shortcuts, default_key))) {
+        *query = string;
+    }
+
+    return uri;
 }
