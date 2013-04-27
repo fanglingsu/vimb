@@ -23,53 +23,40 @@
 
 extern VbCore vb;
 
-typedef struct {
-    char *handle;
-    char *uri;
-} Shortcut;
+static GHashTable *shortcuts = NULL;
+static char *default_handle = NULL;
 
-static GSList *shortcuts;
-static char   *default_handle = NULL;
-
-static GSList *find(const char *handle);
-static void free_shortcut(Shortcut *se);
-
+void shortcut_init(void)
+{
+    shortcuts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+}
 
 void shortcut_cleanup(void)
 {
     if (shortcuts) {
-        g_slist_free_full(shortcuts, (GDestroyNotify)free_shortcut);
+        g_hash_table_destroy(shortcuts);
     }
 }
 
 gboolean shortcut_add(const char *handle, const char *uri)
 {
+    char *sc_key, *sc_uri;
     /* validate if the uri contains only one %s sequence */
     if (!util_valid_format_string(uri, 's', 1)) {
         return false;
     }
-    Shortcut *s = g_new0(Shortcut, 1);
 
-    s->handle = g_strdup(handle);
-    s->uri    = g_strdup(uri);
+    sc_key = g_strdup(handle);
+    sc_uri = g_strdup(uri);
 
-    shortcuts = g_slist_prepend(shortcuts, s);
+    g_hash_table_insert(shortcuts, sc_key, sc_uri);
 
     return true;
 }
 
 gboolean shortcut_remove(const char *handle)
 {
-    GSList *list = find(handle);
-
-    if (list) {
-        free_shortcut((Shortcut*)list->data);
-        shortcuts = g_slist_delete_link(shortcuts, list);
-
-        return true;
-    }
-
-    return false;
+    return g_hash_table_remove(shortcuts, handle);
 }
 
 gboolean shortcut_set_default(const char *handle)
@@ -87,22 +74,19 @@ gboolean shortcut_set_default(const char *handle)
  */
 char *shortcut_get_uri(const char *string)
 {
-    GSList *l = NULL;
     char *p = NULL, *tmpl = NULL, *query = NULL, *uri = NULL;
 
     if ((p = strchr(string, ' '))) {
         *p = '\0';
         /* is the first word the handle? */
-        if ((l = find(string))) {
-            tmpl  = ((Shortcut*)l->data)->uri;
+        if ((tmpl = g_hash_table_lookup(shortcuts, string))) {
             query = soup_uri_encode(p + 1, "&");
         } else {
             *p = ' ';
         }
     }
 
-    if (!tmpl && (l = find(default_handle))) {
-        tmpl  = ((Shortcut*)l->data)->uri;
+    if (!tmpl && (tmpl = g_hash_table_lookup(shortcuts, default_handle))) {
         query = soup_uri_encode(string, "&");
     }
 
@@ -114,23 +98,4 @@ char *shortcut_get_uri(const char *string)
     }
 
     return NULL;
-}
-
-static GSList *find(const char *handle)
-{
-    GSList *s;
-    for (s = shortcuts; s != NULL; s = s->next) {
-        if (!strcmp(((Shortcut*)s->data)->handle, handle)) {
-            return s;
-        }
-    }
-
-    return NULL;
-}
-
-static void free_shortcut(Shortcut *se)
-{
-    g_free(se->uri);
-    g_free(se->handle);
-    g_free(se);
 }

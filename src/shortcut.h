@@ -20,6 +20,7 @@
 #ifndef _SHORTCUT_H
 #define _SHORTCUT_H
 
+void shortcut_init(void);
 void shortcut_cleanup(void);
 gboolean shortcut_add(const char *handle, const char *uri);
 gboolean shortcut_remove(const char *handle);

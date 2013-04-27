@@ -705,6 +705,7 @@ static void init_core(void)
     setting_init();
     command_init();
     keybind_init();
+    shortcut_init();
     read_config();
 
     /* initially apply input style */
