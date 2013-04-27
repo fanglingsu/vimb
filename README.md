@@ -30,6 +30,7 @@ browsing-experience with low memory and cpu usage.
 - custom configuration files
 - tagged bookmarks
 - open input or teaxteaeas with configurable external editor
+- user defined URL-shortcuts with placeholders
 
 ## Dependencies
 - libwebkit-1.0

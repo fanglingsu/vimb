@@ -17,13 +17,13 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _SEARCHENGINE_H
-#define _SEARCHENGINE_H
+#ifndef _SHORTCUT_H
+#define _SHORTCUT_H
 
-void searchengine_cleanup(void);
-gboolean searchengine_add(const char *handle, const char *uri);
-gboolean searchengine_remove(const char *handle);
-gboolean searchengine_set_default(const char *handle);
-char *searchengine_get_uri(const char *handle);
+void shortcut_cleanup(void);
+gboolean shortcut_add(const char *handle, const char *uri);
+gboolean shortcut_remove(const char *handle);
+gboolean shortcut_set_default(const char *handle);
+char *shortcut_get_uri(const char *handle);
 
-#endif /* end of include guard: _SEARCHENGINE_H */
+#endif /* end of include guard: _SHORTCUT_H */

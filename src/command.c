@@ -24,7 +24,7 @@
 #include "completion.h"
 #include "hints.h"
 #include "util.h"
-#include "searchengine.h"
+#include "shortcut.h"
 #include "history.h"
 #include "bookmark.h"
 #include "dom.h"
@@ -93,9 +93,9 @@ static CommandInfo cmd_list[] = {
     {"tabopen-clipboard",    command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_NEW}},
     {"search-forward",       command_search,               {VB_SEARCH_FORWARD}},
     {"search-backward",      command_search,               {VB_SEARCH_BACKWARD}},
-    {"searchengine-add",     command_searchengine,         {1}},
-    {"searchengine-remove",  command_searchengine,         {0}},
-    {"searchengine-default", command_searchengine_default, {0}},
+    {"shortcut-add",         command_shortcut,             {1}},
+    {"shortcut-remove",      command_shortcut,             {0}},
+    {"shortcut-default",     command_shortcut_default,     {0}},
     {"zoomin",               command_zoom,                 {COMMAND_ZOOM_IN}},
     {"zoomout",              command_zoom,                 {COMMAND_ZOOM_OUT}},
     {"zoominfull",           command_zoom,                 {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
@@ -529,7 +529,7 @@ gboolean command_search(const Arg *arg)
     return true;
 }
 
-gboolean command_searchengine(const Arg *arg)
+gboolean command_shortcut(const Arg *arg)
 {
     gboolean result;
     if (arg->i) {
@@ -538,13 +538,13 @@ gboolean command_searchengine(const Arg *arg)
         if ((handle = strchr(arg->s, '='))) {
             *handle = '\0';
             handle++;
-            result = searchengine_add(arg->s, handle);
+            result = shortcut_add(arg->s, handle);
         } else {
             return false;
         }
     } else {
-        /* remove the search engine */
-        result = searchengine_remove(arg->s);
+        /* remove the shortcut */
+        result = shortcut_remove(arg->s);
     }
 
     vb_set_mode(VB_MODE_NORMAL, false);
@@ -552,11 +552,11 @@ gboolean command_searchengine(const Arg *arg)
     return result;
 }
 
-gboolean command_searchengine_default(const Arg *arg)
+gboolean command_shortcut_default(const Arg *arg)
 {
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    return searchengine_set_default(arg->s);
+    return shortcut_set_default(arg->s);
 }
 
 gboolean command_zoom(const Arg *arg)

@@ -28,7 +28,7 @@
 #include "completion.h"
 #include "dom.h"
 #include "hints.h"
-#include "searchengine.h"
+#include "shortcut.h"
 #include "history.h"
 #include "session.h"
 
@@ -144,8 +144,8 @@ gboolean vb_load_uri(const Arg *arg)
         uri = g_strdup_printf("file://%s", rp);
         free(rp);
     } else if (!strchr(path, '.')) {
-        /* use a searchengine */
-        uri = searchengine_get_uri(path);
+        /* use a shortcut */
+        uri = shortcut_get_uri(path);
     }
 
     if (!uri) {
@@ -1000,7 +1000,7 @@ static void destroy_client()
     command_cleanup();
     setting_cleanup();
     keybind_cleanup();
-    searchengine_cleanup();
+    shortcut_cleanup();
     history_cleanup();
 
     for (int i = 0; i < FILES_LAST; i++) {
