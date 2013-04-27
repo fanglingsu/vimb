@@ -24,7 +24,7 @@
 extern VbCore vb;
 
 static GHashTable *shortcuts = NULL;
-static char *default_handle = NULL;
+static char *default_key = NULL;
 
 void shortcut_init(void)
 {
@@ -38,7 +38,7 @@ void shortcut_cleanup(void)
     }
 }
 
-gboolean shortcut_add(const char *handle, const char *uri)
+gboolean shortcut_add(const char *key, const char *uri)
 {
     char *sc_key, *sc_uri;
     /* validate if the uri contains only one %s sequence */
@@ -46,7 +46,7 @@ gboolean shortcut_add(const char *handle, const char *uri)
         return false;
     }
 
-    sc_key = g_strdup(handle);
+    sc_key = g_strdup(key);
     sc_uri = g_strdup(uri);
 
     g_hash_table_insert(shortcuts, sc_key, sc_uri);
@@ -54,16 +54,16 @@ gboolean shortcut_add(const char *handle, const char *uri)
     return true;
 }
 
-gboolean shortcut_remove(const char *handle)
+gboolean shortcut_remove(const char *key)
 {
-    return g_hash_table_remove(shortcuts, handle);
+    return g_hash_table_remove(shortcuts, key);
 }
 
-gboolean shortcut_set_default(const char *handle)
+gboolean shortcut_set_default(const char *key)
 {
     /* do not check if the shotcut exists to be able to set the default
      * before defining the shotcut */
-    OVERWRITE_STRING(default_handle, handle);
+    OVERWRITE_STRING(default_key, key);
 
     return true;
 }
@@ -78,7 +78,7 @@ char *shortcut_get_uri(const char *string)
 
     if ((p = strchr(string, ' '))) {
         *p = '\0';
-        /* is the first word the handle? */
+        /* is the first word the key? */
         if ((tmpl = g_hash_table_lookup(shortcuts, string))) {
             query = soup_uri_encode(p + 1, "&");
         } else {
@@ -86,7 +86,7 @@ char *shortcut_get_uri(const char *string)
         }
     }
 
-    if (!tmpl && (tmpl = g_hash_table_lookup(shortcuts, default_handle))) {
+    if (!tmpl && (tmpl = g_hash_table_lookup(shortcuts, default_key))) {
         query = soup_uri_encode(string, "&");
     }
 

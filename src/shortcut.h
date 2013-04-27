@@ -22,9 +22,9 @@
 
 void shortcut_init(void);
 void shortcut_cleanup(void);
-gboolean shortcut_add(const char *handle, const char *uri);
-gboolean shortcut_remove(const char *handle);
-gboolean shortcut_set_default(const char *handle);
-char *shortcut_get_uri(const char *handle);
+gboolean shortcut_add(const char *key, const char *uri);
+gboolean shortcut_remove(const char *key);
+gboolean shortcut_set_default(const char *key);
+char *shortcut_get_uri(const char *key);
 
 #endif /* end of include guard: _SHORTCUT_H */
