@@ -121,22 +121,20 @@ next:
 }
 
 /**
- * Checks if given printf style format string is valid. That means that it
- * contains only one defined placeholder given as char.
+ * Replaces appearances of search in string by given replace.
+ * Returne a new allocated string of search was found.
  */
-gboolean util_valid_format_string(const char *format, char type, unsigned int count)
+char *util_str_replace(const char* search, const char* replace, const char* string)
 {
-    unsigned int c;
-    for (c = 0; *format; format++) {
-        if (*format == '%') {
-            format++;
-            if (*format == type) {
-                c++;
-            }
-        }
+    if (!string) {
+        return NULL;
     }
 
-    return c == count;
+    char **buf = g_strsplit(string, search, -1);
+    char *ret  = g_strjoinv(replace, buf);
+    g_strfreev(buf);
+
+    return ret;
 }
 
 /**

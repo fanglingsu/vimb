@@ -251,26 +251,32 @@ Yank the current url to the primary and secondary clipboard.
 .B yank-selection
 Yank the selected text into the primary and secondary clipboard.
 .SS Shortcuts
-Shortcuts allows to open URL build up from a named tamplate with additional
-parameters. If a sortcut named 'dd' is defined, you can use it with `:open dd
+Shortcuts allows to open URL build up from a named template with additional
+parameters. If a shortcut named 'dd' is defined, you can use it with `:open dd
 list of parameters' to open the generated URL.
 
-Shortcuts are a good to use searchengines where the URL is nearly the same but
-a single parameter is user diefined.
+Shortcuts are a good to use with search engines where the URL is nearly the
+same but a single parameter is user defined.
 .TP
 .BI "shortcut-add " "SHORTCUT" "=" "URI"
-Adds a shortcut with the \fISHORTCUT\fP and search \fIURI\fP. The uri must
-not contain more than one '%s' placeholder.
+Adds a shortcut with the \fISHORTCUT\fP and search \fIURI\fP. The \fIURI\fP
+can contain multiple placeholders $0-$9 that will be filled by the parameters
+given when the shortcut is called. The $0 placeholder will be filled with all
+given parameters (this is useful for search engines), all other placeholders $1
+to $9 will be replaced by the numbered argument.
 
-Example: shortcut-add dl=https://duckduckgo.com/lite/?q=%s
+Example 1: shortcut-add dl=https://duckduckgo.com/lite/?q=$0 to setup a
+search engine. Can be called by `:open dl my search phrase'.
+
+Example 2: shortcut-add gh=https://github.com/$1/$2 to build urls from given
+parameters. Can be called `:open gh fanglingsu vimb'.
 .TP
 .BI "shortcut-remove " "SHORTCUT"
 Remove the search engine to the given \fISHORTCUT\fP.
 .TP
 .BI "shortcut-default " "SHORTCUT"
-Set the search engine for given \fISHORTCUT\fP as the default search engine.
-It doesn't metter if the \fISHORTCUT\fP is already in use or not to be able to
-set the default search engine.
+Set the shortcut for given \fISHORTCUT\fP as the default. It doesn't matter if
+the \fISHORTCUT\fP is already in use or not to be able to set it.
 .SS Configuration
 .TP
 .BI "set " VAR = VALUE

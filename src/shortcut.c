@@ -26,6 +26,7 @@ extern VbCore vb;
 static GHashTable *shortcuts = NULL;
 static char *default_key = NULL;
 
+static int get_max_placeholder(const char *str);
 static const char *shortcut_lookup(const char *string, const char **query);
 
 
@@ -43,16 +44,7 @@ void shortcut_cleanup(void)
 
 gboolean shortcut_add(const char *key, const char *uri)
 {
-    char *sc_key, *sc_uri;
-    /* validate if the uri contains only one %s sequence */
-    if (!util_valid_format_string(uri, 's', 1)) {
-        return false;
-    }
-
-    sc_key = g_strdup(key);
-    sc_uri = g_strdup(uri);
-
-    g_hash_table_insert(shortcuts, sc_key, sc_uri);
+    g_hash_table_insert(shortcuts, g_strdup(key), g_strdup(uri));
 
     return true;
 }
@@ -78,17 +70,62 @@ gboolean shortcut_set_default(const char *key)
 char *shortcut_get_uri(const char *string)
 {
     const char *tmpl, *query = NULL;
-    if ((tmpl = shortcut_lookup(string, &query))) {
-        char *qs, *uri;
 
-        qs  = soup_uri_encode(query, "&");
-        uri = g_strdup_printf(tmpl, qs);
-        g_free(qs);
+    tmpl = shortcut_lookup(string, &query);
+    if (!tmpl) {
+        return NULL;
+    }
 
+    char *qs, *uri, **parts, ph[3] = "$0";
+    unsigned int len;
+
+    /* replace $0 with all parameters */
+    qs = soup_uri_encode(query, "&");
+    uri = util_str_replace(ph, qs, tmpl);
+    g_free(qs);
+
+    int max = get_max_placeholder(tmpl);
+    /* skip if no placeholders found */
+    if (max < 0) {
         return uri;
     }
 
-    return NULL;
+    /* split the parameters */
+    parts = g_strsplit(query, " ", max + 1);
+    len   = g_strv_length(parts);
+
+    for (unsigned int n = 0; n < len; n++) {
+        char *new;
+        ph[1] = n + '1';
+        qs  = soup_uri_encode(parts[n], "&");
+        new = util_str_replace(ph, qs, uri);
+        g_free(qs);
+        g_free(uri);
+        uri = new;
+    }
+    g_strfreev(parts);
+
+    return uri;
+}
+
+/**
+ * Retrieves th highest placesholder number used in given string.
+ * If no placeholder is found -1 is returned.
+ */
+static int get_max_placeholder(const char *str)
+{
+    int n, res;
+
+    for (n = 0, res = -1; *str; str++) {
+        if (*str == '$') {
+            n = *(++str) - '0';
+            if (0 <= n && n <= 9 && n > res) {
+                res = n;
+            }
+        }
+    }
+
+    return res;
 }
 
 /**

@@ -702,9 +702,6 @@ static gboolean editor_command(const Setting *s, const SettingType type)
         return true;
     }
 
-    if (!util_valid_format_string(s->arg.s, 's', 1)) {
-        return false;
-    }
     OVERWRITE_STRING(vb.config.editor_command, s->arg.s);
 
     return true;
