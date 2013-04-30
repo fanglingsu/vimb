@@ -4,6 +4,9 @@ paradigms from dwb and hopefully a cleaner code base. The goal of Vimb is to
 build a completely keyboard-driven, efficient and pleasurable
 browsing-experience with low memory and cpu usage.
 
+More informatio and some screenshots of vimb browser in action can be found on
+the [vimb project page][vimb].
+
 ## Features
 - vim-like modal
 - vim-like keybindings
@@ -39,3 +42,5 @@ browsing-experience with low memory and cpu usage.
 
 # License
 Information about the license are found in the file LICENSE.
+
+[vimb]: http://fanglingsu.github.io/vimb/ "vimb - vim-like webkit browser project page"
