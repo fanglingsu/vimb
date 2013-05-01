@@ -143,8 +143,8 @@ gboolean vb_load_uri(const Arg *arg)
         rp  = realpath(path, NULL);
         uri = g_strdup_printf("file://%s", rp);
         free(rp);
-    } else if (!strchr(path, '.')) {
-        /* use a shortcut */
+    } else if (strchr(path, ' ') || !strchr(path, '.')) {
+        /* use a shortcut if path contains spaces or no dot */
         uri = shortcut_get_uri(path);
     }
 
