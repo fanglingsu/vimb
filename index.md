@@ -1,23 +1,23 @@
 ---
 title:  Vimb - Vim-Like Webkit Browser
 layout: default
-meta:   vimb browser is a fast, keyboard driven and lightweight webbrowser
+meta:   vimb browser is a fast, keyboard driven and lightweight browser
 ---
 
 # vimb - a vim-like webkit browser
 
 vimb is a fast and lightweight web browser based on the webkit web browser
-engine and the gtk toolkit. vimb is modal like the great vim eidtor and also
+engine and the gtk toolkit. vimb is modal like the great vim editor and also
 easy configurable during runtime. vimb is mostly keyboard driven and does not
 detract you from your daily work.
 
 ## features
 - modal like vim
-- vim oriented keybindings
+- vim oriented [keybindings](doc.html#default-keys)
 - follow links via keyboard hints
 - bookmarks
 - cookie support
-- userscript support
+- userscripts support
 - customer stylesheet support
 - completions for
   - commands
@@ -31,11 +31,11 @@ detract you from your daily work.
   - search queries
 - open textareas with configurable editor
 - user defined url shortcuts with up to 9 placeholders
-- xembed - so vimb can be used togeter with [tabbed][]
+- xembed - so vimb can be used together with [tabbed][]
 
 ## download
 
-- You can get [vimb][] from github with following comman.
+- You can get [vimb][] from github with following command.
 
       git clone git://github.com/fanglingsu/vimb.git vimb
 
