@@ -168,7 +168,7 @@ Example:
 .br
 "nmap <shift\-?>=input :foo" to write :foo into input box and switch to Command Mode.
 .br
-"hunmap <shift\-tab>" To remove this keybinding use.
+"cunmap <shift\-tab>" To remove this keybinding use.
 
 If a keybinding is added, for the same key-sequence like another keybinding,
 the later added have precedence. If a keybinding is removed only that with the
@@ -191,8 +191,6 @@ Remove a Input Mode keybinding.
 .TP
 .B cunmap
 Remove a Command Mode keybinding.
-.TP
-.SS Complete
 .TP
 .B complete
 Start a completion according to the current first chars in the inputbox. If
@@ -507,11 +505,11 @@ Search for \fIN\fPnth next search result.
 .BI [ N ]N
 Search for \fIN\fPnth previous search result.
 .TP
-.B <tab>
-Hint to the next element.
+.B ctrl\-n
+Foxus the next hint.
 .TP
-.B <shift-tab>
-Hint the previous element.
+.B ctrl\-p
+Foxus the previous hint.
 .SS COMMAND_MODE
 .TP
 .B tab
@@ -521,16 +519,10 @@ Complete different sources in the inputbox.
 Complete backward different sources in the inputbox.
 .TP
 .B up
-Step through hinstory backward.
+Step through history backward.
 .TP
 .B down
-Step through hinstory forward.
-.TP
-.B ctrl\-n
-Foxus the next hint.
-.TP
-.B ctrl\-p
-Foxus the previous hint.
+Step through history forward.
 .SS INSERT_MODE
 .TP
 .B ctrl-t
