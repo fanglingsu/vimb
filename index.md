@@ -1,6 +1,7 @@
 ---
 title:  Vimb - Vim-Like Webkit Browser
 layout: default
+meta:   vimb browser is a fast, keyboard driven and lightweight webbrowser
 ---
 
 # vimb - a vim-like webkit browser
@@ -30,7 +31,7 @@ detract you from your daily work.
   - search queries
 - open textareas with configurable editor
 - user defined url shortcuts with up to 9 placeholders
-- xembed
+- xembed - so vimb can be used togeter with [tabbed][]
 
 ## download
 
@@ -45,11 +46,6 @@ detract you from your daily work.
 - libwebkit-1.0
 - libgtk+-2.0
 - libsoup-2.4
-
-## screenshots
-
-[![link hinting](media/tn/vimb-hints.png "link hinting")](media/vimb-hints.png)
-[![setting completion of vimb](media/tn/vimb-completion.png "completion of settings")](media/vimb-completion.png)
 
 ## bugs
 
@@ -69,3 +65,4 @@ If you find a misbehaviour or have feature requests use the
 [surf]: http://surf.suckless.org/
 [vimb]: https://github.com/fanglingsu/vimb "vimb browser project"
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
+[tabbed]:      http://tools.suckless.org/tabbed/
