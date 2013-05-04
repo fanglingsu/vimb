@@ -1,7 +1,7 @@
 .\" vim: ft=groff
 .\" Process this file with
 .\" groff -man -Tascii vimb.1
-.TH PROJECT 1 "06/04/2013" "PROJECT/VERSION" "Vimb Manual"
+.TH PROJECT 1 "DATE" "PROJECT/VERSION" "Vimb Manual"
 .SH NAME
 PROJECT - Vim Browser - A modal web browser based on webkit thats inspired by
 vim the great editor.
