@@ -70,21 +70,17 @@ gboolean shortcut_set_default(const char *key)
 char *shortcut_get_uri(const char *string)
 {
     const char *tmpl, *query = NULL;
+    char *uri, **parts, ph[3] = "$0";
+    unsigned int len;
+    int max;
 
     tmpl = shortcut_lookup(string, &query);
     if (!tmpl) {
         return NULL;
     }
 
-    char *qs, *uri, **parts, ph[3] = "$0";
-    unsigned int len;
-
-    /* replace $0 with all parameters */
-    qs = soup_uri_encode(query, "&");
-    uri = util_str_replace(ph, qs, tmpl);
-    g_free(qs);
-
-    int max = get_max_placeholder(tmpl);
+    uri = g_strdup(tmpl);
+    max = get_max_placeholder(tmpl);
     /* skip if no placeholders found */
     if (max < 0) {
         return uri;
@@ -95,8 +91,8 @@ char *shortcut_get_uri(const char *string)
     len   = g_strv_length(parts);
 
     for (unsigned int n = 0; n < len; n++) {
-        char *new;
-        ph[1] = n + '1';
+        char *new, *qs;
+        ph[1] = n + '0';
         qs  = soup_uri_encode(parts[n], "&");
         new = util_str_replace(ph, qs, uri);
         g_free(qs);

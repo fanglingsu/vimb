@@ -257,16 +257,16 @@ Shortcuts are a good to use with search engines where the URL is nearly the
 same but a single parameter is user defined.
 .TP
 .BI "shortcut-add " "SHORTCUT" "=" "URI"
-Adds a shortcut with the \fISHORTCUT\fP and search \fIURI\fP. The \fIURI\fP
+Adds a shortcut with the \fISHORTCUT\fP and \fIURI\fP template. The \fIURI\fP
 can contain multiple placeholders $0-$9 that will be filled by the parameters
-given when the shortcut is called. The $0 placeholder will be filled with all
-given parameters (this is useful for search engines), all other placeholders $1
-to $9 will be replaced by the numbered argument.
+given when the shortcut is called. The parameters given when the shortcut is
+called will be split into as many parameters like the highest used
+placeholder.
 
 Example 1: shortcut-add dl=https://duckduckgo.com/lite/?q=$0 to setup a
 search engine. Can be called by `:open dl my search phrase'.
 
-Example 2: shortcut-add gh=https://github.com/$1/$2 to build urls from given
+Example 2: shortcut-add gh=https://github.com/$0/$1 to build urls from given
 parameters. Can be called `:open gh fanglingsu vimb'.
 .TP
 .BI "shortcut-remove " "SHORTCUT"
