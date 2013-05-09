@@ -294,7 +294,7 @@ Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 .BI [ N "]zoomin, [" N "]zoomout"
 Zoom \fIN\fP steps in or out of the current page - effects only the text.
 .TP
-.BI [ N "]zoominfullt, [" N "]zoomoutfull"
+.BI [ N "]zoominfull, [" N "]zoomoutfull"
 Zoom \fIN\fP steps in or out of the current page - effecting all elements.
 .TP
 .B zoomreset
