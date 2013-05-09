@@ -54,10 +54,6 @@ Commands can be called in Insert Mode from the inputbox in the way like
 Command Mode and therefore not callable directly. To use them too, they must be
 bound to the keybinding.
 
-For example the command "hint-focus-next" is only available in hinting mode.
-To call it, it has to be bound to a key like "hmap <tab>=hint-focus-next" to
-be used.
-
 .SS Open
 .TP
 .BI "open [" URI ]
