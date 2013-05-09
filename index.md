@@ -13,7 +13,7 @@ detract you from your daily work.
 
 ## features
 - modal like vim
-- vim oriented [keybindings](doc.html#default-keys)
+- vim oriented [keybindings][]
 - follow links via keyboard hints
 - bookmarks
 - cookie support
@@ -66,3 +66,4 @@ If you find a misbehaviour or have feature requests use the
 [vimb]: https://github.com/fanglingsu/vimb "vimb browser project"
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
+[keybindings]: keybindings.html#default-keys

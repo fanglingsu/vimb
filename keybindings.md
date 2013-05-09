@@ -1,10 +1,10 @@
 ---
-title:  vimb - documentation
+title:  vimb - keybindings
 layout: default
-meta:   vimb documentation of the features
+meta:   add/remove keybindngs in vimb borwser - list of predefined keybindngs
 ---
 
-# vimb documentation
+# vimb keybindings
 
 ## add and remove keybindings
 
@@ -230,3 +230,4 @@ ctrl-t
 : If the current active form element is an inputbox or textarea, the content is
   copied to temporary file and the file openen with the configured external
   editor.
+
