@@ -1,6 +1,6 @@
 *{margin:0;padding:0}
-html{background-color:#e0ddda;font-size:1em}
-body{color:#333;font-family:"Dejavu sans-serif",sans-serif;margin:0;padding:0;line-height:1.5em;font-size:.9em}
+html{background-color:#e0ddda}
+body{color:#333;font-family:"Dejavu sans-serif",sans-serif;margin:0;padding:0;line-height:1.5em}
 #content{background-color:#fff;margin:1em auto;padding:2.5em 2em 1.5em;max-width:60em;min-width:30em;border:.13em solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
 #head{font-size:1.2em;position:absolute;top:2em}
 #head h3{display:none}
