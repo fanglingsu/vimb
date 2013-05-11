@@ -62,10 +62,8 @@ gboolean command_scroll(const Arg *arg);
 gboolean command_map(const Arg *arg);
 gboolean command_unmap(const Arg *arg);
 gboolean command_set(const Arg *arg);
-gboolean command_complete(const Arg *arg);
 gboolean command_inspect(const Arg *arg);
 gboolean command_hints(const Arg *arg);
-gboolean command_hints_focus(const Arg *arg);
 gboolean command_yank(const Arg *arg);
 gboolean command_paste(const Arg *arg);
 gboolean command_search(const Arg *arg);
@@ -76,5 +74,6 @@ gboolean command_history(const Arg *arg);
 gboolean command_bookmark(const Arg *arg);
 gboolean command_eval(const Arg *arg);
 gboolean command_editor(const Arg *arg);
+gboolean command_nextprev(const Arg *arg);
 
 #endif /* end of include guard: _COMMAND_H */

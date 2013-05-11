@@ -74,8 +74,6 @@ static CommandInfo cmd_list[] = {
     {"iunmap",               command_unmap,                {VB_MODE_INSERT}},
     {"cunmap",               command_unmap,                {VB_MODE_COMMAND}},
     {"set",                  command_set,                  {0}},
-    {"complete",             command_complete,             {0}},
-    {"complete-back",        command_complete,             {1}},
     {"inspect",              command_inspect,              {0}},
     {"hint-link",            command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN, "."}},
     {"hint-link-new",        command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW, ","}},
@@ -85,8 +83,6 @@ static CommandInfo cmd_list[] = {
     {"hint-image-open",      command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN, ";i"}},
     {"hint-image-tabopen",   command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW, ";I"}},
     {"hint-editor",          command_hints,                {HINTS_TYPE_EDITABLE, ";e"}},
-    {"hint-focus-next",      command_hints_focus,          {0}},
-    {"hint-focus-prev",      command_hints_focus,          {1}},
     {"yank-uri",             command_yank,                 {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",       command_yank,                 {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION}},
     {"open-clipboard",       command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_CURRENT}},
@@ -107,6 +103,8 @@ static CommandInfo cmd_list[] = {
     {"bookmark-add",         command_bookmark,             {1}},
     {"eval",                 command_eval,                 {0}},
     {"editor",               command_editor,               {0}},
+    {"next",                 command_nextprev,             {0}},
+    {"prev",                 command_nextprev,             {1}},
 };
 
 
@@ -388,14 +386,6 @@ gboolean command_set(const Arg *arg)
     return success;
 }
 
-gboolean command_complete(const Arg *arg)
-{
-    /* mode will be set in completion_complete */
-    completion_complete(arg->i ? true : false);
-
-    return true;
-}
-
 gboolean command_inspect(const Arg *arg)
 {
     gboolean enabled;
@@ -424,13 +414,6 @@ gboolean command_hints(const Arg *arg)
     vb_echo_force(VB_MSG_NORMAL, false, "%s", arg->s);
     /* mode will be set in hints_create - so we don't neet to do it here */
     hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
-
-    return true;
-}
-
-gboolean command_hints_focus(const Arg *arg)
-{
-    hints_focus_next(arg->i ? true : false);
 
     return true;
 }
@@ -691,6 +674,18 @@ gboolean command_editor(const Arg *arg)
     data->element = active;
 
     g_child_watch_add(pid, (GChildWatchFunc)editor_resume, data);
+
+    return true;
+}
+
+gboolean command_nextprev(const Arg *arg)
+{
+    if (vb.state.mode & VB_MODE_HINTING) {
+        hints_focus_next(arg->i ? true : false);
+    } else {
+        /* mode will be set in completion_complete */
+        completion_complete(arg->i ? true : false);
+    }
 
     return true;
 }

@@ -187,31 +187,6 @@ Remove a Input Mode keybinding.
 .TP
 .B cunmap
 Remove a Command Mode keybinding.
-.TP
-.B complete
-Start a completion according to the current first chars in the inputbox. If
-completion is already started, switch to the next completion item.
-
-Following completions are available:
-.RS
-.nr step 1 1
-.IP \n[step] 3
-Commands `:'
-.IP \n+[step]
-Settings `:set '
-.IP \n+[step]
-Url-History and Bookmarks `:open \fIQUERY\fP' or `:tabopen \fIQUERY\fP'.
-If \fIQUERY\fP is given, this will be used to fetch matching urls from history
-file, or to find bookmarks from bookmark file. The urls from history will only
-be matched by their url, the bookmarks only by their tags. If multiple tags
-are given to get the bookmarks, only those bookmarks will be returned, that
-matches all the given tags or that don't have any tag set.
-.IP \n+[step]
-Searchqueries `/' or `?'
-.RE
-.TP
-.B complete-back
-If complation is already started, switch to the previous completion item.
 .SS Hints
 .TP
 .BI "hint-link [" PREFIX "], hint-link-new [" PREFIX ]
@@ -234,9 +209,6 @@ given, print this into the inputbox, default ';i' and ';I'.
 .BI "hint-editor [" PREFIX "]"
 Start hinting to open inputboxes or textareas with external editor. If
 \fIPREFIX\fP is given, print this into the inputbox, default ';e'.
-.TP
-.B hint-focus-nex, hint-focus-prev
-Focus next or previous hint.
 .SS Yank
 .TP
 .B yank-uri
@@ -308,6 +280,28 @@ commands and search queries.
 .BI "bookmark-add [" TAGS "]"
 Save the current opened uri with \fITAGS\fP to the bookmark file.
 .SS Misc
+.TP
+.B next, prev
+This are wrapper commands to start completion and to step through the
+completion items, or to focus previous or next hints if hinting is active.
+
+Following completions are available:
+.RS
+.nr step 1 1
+.IP \n[step] 3
+Commands `:'
+.IP \n+[step]
+Settings `:set '
+.IP \n+[step]
+Url-History and Bookmarks `:open \fIQUERY\fP' or `:tabopen \fIQUERY\fP'.
+If \fIQUERY\fP is given, this will be used to fetch matching urls from history
+file, or to find bookmarks from bookmark file. The urls from history will only
+be matched by their url, the bookmarks only by their tags. If multiple tags
+are given to get the bookmarks, only those bookmarks will be returned, that
+matches all the given tags or that don't have any tag set.
+.IP \n+[step]
+Searchqueries `/' or `?'
+.RE
 .TP
 .BI run " [COMMAND LIST]"
 Run is a command, that was introduced to have the ability to run multiple
@@ -500,19 +494,15 @@ Search for \fIN\fPnth next search result.
 .TP
 .BI [ N ]N
 Search for \fIN\fPnth previous search result.
-.TP
-.B ctrl\-n
-Foxus the next hint.
-.TP
-.B ctrl\-p
-Foxus the previous hint.
 .SS COMMAND_MODE
 .TP
 .B tab
-Complete different sources in the inputbox.
+Complete different sources in the inputbox or if hinting is active, focus next
+hint.
 .TP
 .B shift\-tab
-Complete backward different sources in the inputbox.
+Complete backward different sources in the inputbox or if hinting is active,
+focus previous hint.
 .TP
 .B up
 Step through history backward.
