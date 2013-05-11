@@ -131,13 +131,11 @@ More about the [keybindings][].
 
 ## hints
 
-hint-link [PREFIX]
-hint-link-new [PREFIX]
+hint-link [PREFIX], hint-link-new [PREFIX]
 : Start hinting to open link into current or new window. If PREFIX is given,
   print this into the inputbox, default `.` and `,`.
 
-hint-input-open [PREFIX]
-hint-input-tabopen [PREFIX]
+hint-input-open [PREFIX], hint-input-tabopen [PREFIX]
 : Start hinting to fill the inputbox with `:open {hintedLinkUrl}` or `:tabopen
   {hintedLinkUrl}`. If PREFIX is given, print this into the inputbox, default
   `;o` and `;t`.
@@ -146,8 +144,7 @@ hint-yank [PREFIX]
 : Start hinting to yank the hinted link url into the primary and secondary
   clipboard. If PREFIX is given, print this into the inputbox, default `;y`.
 
-hint-image-open [PREFIX]
-hint-image-tabopen [PREFIX]
+hint-image-open [PREFIX], hint-image-tabopen [PREFIX]
 : Start hinting to open images into current or new window. If PREFIX is given,
   print this into the inputbox, default `;i` and `;I`.
 
@@ -155,9 +152,8 @@ hint-editor [PREFIX]
 : Start hinting to open inputboxes or textareas with external editor. If PREFIX
   is given, print this into the inputbox, default `;e`.
 
-hint-focus-nex
-hint-focus-prev
-: Focus next or previous hint.
+next, prev
+: Focus next or previous hint if hinting mode is active.
 
 ## yank
 
@@ -210,12 +206,10 @@ set VAR!
 
 ## zoom
 
-[N]zoomin
-[N]zoomout
+[N]zoomin, [N]zoomout
 : Zoom N steps in or out of the current page - effects only the text.
 
-[N]zoominfull
-[N]zoomoutfull
+[N]zoominfull, [N]zoomoutfull
 : Zoom N steps in or out of the current page - effecting all elements.
 
 zoomreset
@@ -223,8 +217,7 @@ zoomreset
 
 ## history
 
-hist-prev
-hist-next
+hist-prev, hist-next
 : Prints the previous or next cammand or search query from history into
   inputbox. If there is already text in the input box this will be used to get
   history items. A command is not a internal command, but every string entered
@@ -237,6 +230,22 @@ bookmark-add [TAGS]
 : Save the current opened uri with TAGS to the bookmark file.
 
 ## misc
+next, prev
+: This are wrapper commands to start completion and to step through the
+  completion items, or to focus previous or next hints if hinting is active.
+
+  Following completions are available:
+
+  1. Commands `:`
+  2. Settings `:set `
+  3. Url-History and Bookmarks `:open QUERY` or `:tabopen QUERY`. If QUERY is
+     given, this will be used to fetch matching urls from history file, or to find
+     bookmarks from bookmark file. The urls from history will only be matched by
+     their url, the bookmarks only by their tags. If multiple tags are given to get
+     the bookmarks, only those bookmarks will be returned, that matches all the
+     given tags or that don't have any tag set.
+  4. Searchqueries `/` or `?`
+
 run [COMMAND LIST]
 : Run is a command, that was introduced to have the ability to run multiple
   other commands with a single call. Everything after the `run` is interpreted as
@@ -247,8 +256,7 @@ run [COMMAND LIST]
 
   Example: `:run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown`
 
-[N]search-forward
-[N]search-backward
+[N]search-forward, [N]search-backward
 : Search in current page forward or backward.
 
 inspect

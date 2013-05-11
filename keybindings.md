@@ -195,27 +195,21 @@ z-z
 
 ---
 
-ctrl-n
-: Hint to the next element.
-
-ctrl-p
-: Hint the previous element.
-
----
-
 g-f
 : Toggle show html source of current page.
 
 g-F
 : Opend the Web Inspector for current page.
 
-### command mode
+### command/hint mode
 
 tab
-: Complete different sources in the inputbox.
+: Complete different sources in the inputbox or focus next hint if hinting is
+  active.
 
 shift-tab
-: Complete backward different sources in the inputbox.
+: Complete backward different sources in the inputbox or focus previous hint if
+  hinting is active.
 
 ---
 up
