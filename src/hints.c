@@ -165,7 +165,7 @@ static void run_script(char *js)
             command_input(&a);
             g_free(a.s);
         } else {
-            a.i = COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY;
+            a.i = VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY;
             a.s = v;
             command_yank(&a);
         }

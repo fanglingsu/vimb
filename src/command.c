@@ -29,6 +29,32 @@
 #include "bookmark.h"
 #include "dom.h"
 
+/*
+bitmap
+1: primary cliboard
+2: secondary cliboard
+3: yank uri
+4: yank selection
+*/
+enum {
+    COMMAND_YANK_URI       = (VB_CLIPBOARD_SECONDARY<<1),
+    COMMAND_YANK_SELECTION = (VB_CLIPBOARD_SECONDARY<<2)
+};
+
+enum {
+    COMMAND_ZOOM_OUT,
+    COMMAND_ZOOM_IN,
+    COMMAND_ZOOM_FULL  = (1<<1),
+    COMMAND_ZOOM_RESET = (1<<2)
+};
+
+typedef gboolean (*Command)(const Arg *arg);
+typedef struct {
+    const char *name;
+    Command    function;
+    const Arg  arg;       /* arguments to call the command with */
+} CommandInfo;
+
 typedef struct {
     char    *file;
     Element *element;
@@ -41,7 +67,7 @@ extern const unsigned int INPUT_LENGTH;
 
 static GHashTable *commands;
 static CommandInfo cmd_list[] = {
-    /* command               function                      mode */
+    /* command               function                      arg */
     {"open",                 command_open,                 {VB_TARGET_CURRENT, ""}},
     {"tabopen",              command_open,                 {VB_TARGET_NEW, ""}},
     {"open-closed",          command_open_closed,          {VB_TARGET_CURRENT}},
@@ -83,8 +109,8 @@ static CommandInfo cmd_list[] = {
     {"hint-image-open",      command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN, ";i"}},
     {"hint-image-tabopen",   command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW, ";I"}},
     {"hint-editor",          command_hints,                {HINTS_TYPE_EDITABLE, ";e"}},
-    {"yank-uri",             command_yank,                 {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_URI}},
-    {"yank-selection",       command_yank,                 {COMMAND_YANK_PRIMARY | COMMAND_YANK_SECONDARY | COMMAND_YANK_SELECTION}},
+    {"yank-uri",             command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
+    {"yank-selection",       command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},
     {"open-clipboard",       command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_CURRENT}},
     {"tabopen-clipboard",    command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_NEW}},
     {"search-forward",       command_search,               {VB_SEARCH_FORWARD}},

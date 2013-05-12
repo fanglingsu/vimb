@@ -20,29 +20,6 @@
 #ifndef _COMMAND_H
 #define _COMMAND_H
 
-enum {
-    COMMAND_YANK_PRIMARY   = VB_CLIPBOARD_PRIMARY,
-    COMMAND_YANK_SECONDARY = VB_CLIPBOARD_SECONDARY,
-    COMMAND_YANK_URI       = (COMMAND_YANK_SECONDARY<<1),
-    COMMAND_YANK_SELECTION = (COMMAND_YANK_SECONDARY<<2)
-};
-
-enum {
-    COMMAND_ZOOM_OUT,
-    COMMAND_ZOOM_IN,
-    COMMAND_ZOOM_FULL  = (1<<1),
-    COMMAND_ZOOM_RESET = (1<<2)
-};
-
-typedef gboolean (*Command)(const Arg *arg);
-
-typedef struct {
-    const char *name;
-    Command    function;
-    const Arg  arg;       /* arguments to call the command with */
-} CommandInfo;
-
-
 void command_init(void);
 GList *command_get_all(void);
 void command_cleanup(void);
