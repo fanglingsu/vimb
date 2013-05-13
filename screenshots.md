@@ -1,7 +1,7 @@
 ---
 title:  vimb screenshots
 layout: default
-meta:   screenshots of vimb browser in action
+meta:   screenshots of vimb the vim browser in action
 ---
 
 # vimb - screenshots

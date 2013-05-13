@@ -1,7 +1,7 @@
 ---
 title:  vimb - keybindings
 layout: default
-meta:   add/remove keybindngs in vimb borwser - list of predefined keybindngs
+meta:   add/remove keybindngs in vimb the vim browser - list of predefined keybindngs
 ---
 
 # vimb keybindings
