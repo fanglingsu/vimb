@@ -56,24 +56,24 @@ bound to the keybinding.
 
 .SS Open
 .TP
-.BI "open [" URI ]
+.BI "open [" URI "], o [" URI ]
 Open the give \fIURI\fP into current window. If \fIURI\fP is empty the
 configured 'home-page' is opened.
 .TP
-.BI "tabopen [" URI ]
+.BI "tabopen [" URI "], t [" URI ]
 Open the give \fIURI\fP into a new window. If \fIURI\fP is empty the
 configured 'home-page' is opened.
 .TP
 .B (tab)open-closed
 Open the last closed page.
 .TP
-.B (tab)open-clipboard
+.B (tab)open-clipboard, (t)oc
 Open the url from clipboard.
 .SS Input
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
 .TP
-.BI "input [" "TEXT" "]"
+.BI "input [" TEXT "], in [" TEXT ]
 Writes
 .I TEXT
 into to inputbox and switch to command mode. If no
@@ -90,21 +90,21 @@ is not given use ':' instead.
 .SS Navigate
 Following commands are used to navigate within the browser history.
 .TP
-.BI [ N "]back"
+.BI [ N "]back, [" N "]ba"
 Move
 . I N
 steps back in browser history.
 .TP
-.BI [ N "]forward"
+.BI [ N "]forward, [" N "]fo"
 Move \fIN\fP steps back in browser history.
 .TP
-.B reload
+.B reload, re
 Reload the current viewed url.
 .TP
-.B reload!
+.B reload!, re!
 Discard any caches and reload the current viewed url.
 .TP
-.B stop
+.B stop, st
 Stop loading the current url.
 .SS Scroll
 Following commands are used to scroll ad jump within the current view.
@@ -211,10 +211,10 @@ Start hinting to open inputboxes or textareas with external editor. If
 \fIPREFIX\fP is given, print this into the inputbox, default ';e'.
 .SS Yank
 .TP
-.B yank-uri
+.B yank-uri, yu
 Yank the current url to the primary and secondary clipboard.
 .TP
-.B yank-selection
+.B yank-selection, ys
 Yank the selected text into the primary and secondary clipboard.
 .SS Shortcuts
 Shortcuts allows to open URL build up from a named template with additional
@@ -259,13 +259,19 @@ Show the current set value of variable
 Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 .SS Zoom
 .TP
-.BI [ N "]zoomin, [" N "]zoomout"
-Zoom \fIN\fP steps in or out of the current page - effects only the text.
+.BI [ N "]zoomin, [" N "]zi"
+Zoom \fIN\fP steps in of the current page - effects only the text.
 .TP
-.BI [ N "]zoominfull, [" N "]zoomoutfull"
-Zoom \fIN\fP steps in or out of the current page - effecting all elements.
+.BI [ N "]zoomout, [" N "]zo"
+Zoom \fIN\fP steps out of the current page - effects only the text.
 .TP
-.B zoomreset
+.BI [ N "]zoominfull, [" N "]zif"
+Zoom \fIN\fP steps in of the current page - effecting all elements.
+.TP
+.BI [ N "]zoomoutfull, [" N "]zof"
+Zoom \fIN\fP steps out of the current page - effecting all elements.
+.TP
+.B zoomreset, zr
 Reset the zoomlevel to the default value.
 .SS History
 .TP
@@ -277,11 +283,11 @@ into inputbox that begins with \fI[:/?]\fP. So the history contains real
 commands and search queries.
 .SS Bookmark
 .TP
-.BI "bookmark-add [" TAGS "]"
+.BI "bookmark-add [" TAGS "], bma [" TAGS ]
 Save the current opened uri with \fITAGS\fP to the bookmark file.
 .SS Misc
 .TP
-.B next, prev
+.B next, n, prev, p
 This are wrapper commands to start completion and to step through the
 completion items, or to focus previous or next hints if hinting is active.
 
@@ -322,13 +328,13 @@ Search in current page forward or backward.
 Toggles the webinspector for current page. This is only available if the config
 "webinspector" is enabled.
 .TP
-.B quit
+.B quit, q
 Close the browser.
 .TP
 .B source
 Toggle between normal view and source view for the current page.
 .TP
-.BI eval " JAVASCRIPT"
+.BI eval " JAVASCRIPT" ", e" " JAVASCRIPT"
 Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated
 value.
 
