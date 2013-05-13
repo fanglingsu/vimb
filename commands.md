@@ -16,18 +16,18 @@ Command Mode and therefore not callable directly. To use them too, they must be
 bound to the keybinding.
 
 ## open
-open [URI]
+open [URI], o [URI]
 : Open the give URI into current window. If URI is empty the configured
   `home-page` is opened.
 
-tabopen [URI]
+tabopen [URI], t [URI]
 : Open the give URI into a new window. If URI is empty the configured
   `home-page` is opened.
 
 (tab)open-closed
 : Open the last closed page.
 
-(tab)open-clipboard
+(tab)open-clipboard, (t)oc
 : Open the url from clipboard.
 
 ## input
@@ -35,7 +35,7 @@ tabopen [URI]
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
 
-input [TEXT]
+input [TEXT], in [TEXT]
 : Writes TEXT into to inputbox and switch to command mode. If no TEXT is given,
   print `:` into the inputbox.
 
@@ -48,19 +48,19 @@ inputuri [TEXT]
 
 Following commands are used to navigate within the browser history.
 
-[N]back
+[N]back, [N]ba
 : Move N steps back in browser history.
 
-[N]forward
+[N]forward, [N]fo
 : Move N steps back in browser history.
 
-reload
+reload, re
 : Reload the current viewed url.
 
-reload!
+reload!, re!
 : Discard any caches and reload the current viewed url.
 
-stop
+stop, st
 : Stop loading the current url.
 
 ## scroll
@@ -152,15 +152,16 @@ hint-editor [PREFIX]
 : Start hinting to open inputboxes or textareas with external editor. If PREFIX
   is given, print this into the inputbox, default `;e`.
 
-next, prev
+next, n
+prev, p
 : Focus next or previous hint if hinting mode is active.
 
 ## yank
 
-yank-uri
+yank-uri, yu
 : Yank the current url to the primary and secondary clipboard.
 
-yank-selection
+yank-selection, ys
 : Yank the selected text into the primary and secondary clipboard.
 
 ## shortcuts
@@ -206,13 +207,19 @@ set VAR!
 
 ## zoom
 
-[N]zoomin, [N]zoomout
-: Zoom N steps in or out of the current page - effects only the text.
+[N]zoomin, [N]zi
+: Zoom N steps in of the current page - effects only the text.
 
-[N]zoominfull, [N]zoomoutfull
-: Zoom N steps in or out of the current page - effecting all elements.
+[N]zoomout, [N]zo
+: Zoom N steps out of the current page - effects only the text.
 
-zoomreset
+[N]zoominfull, [N]zif
+: Zoom N steps in of the current page - effecting all elements.
+
+[N]zoomoutfull, [N]zof
+: Zoom N steps out of the current page - effecting all elements.
+
+zoomreset, zr
 : Reset the zoomlevel to the default value.
 
 ## history
@@ -226,11 +233,12 @@ hist-prev, hist-next
 
 ## bookmark
 
-bookmark-add [TAGS]
+bookmark-add [TAGS], bma [TAGS]
 : Save the current opened uri with TAGS to the bookmark file.
 
 ## misc
-next, prev
+next, n
+prev, p
 : This are wrapper commands to start completion and to step through the
   completion items, or to focus previous or next hints if hinting is active.
 
@@ -263,13 +271,13 @@ inspect
 : Toggles the webinspector for current page. This is only available if the
   config `webinspector` is enabled.
 
-quit
+quit, q
 : Close the browser.
 
 source
 : Toggle between normal view and source view for the current page.
 
-eval JAVASCRIPT
+eval JAVASCRIPT, e JAVASCRIPT
 : Runs the given JAVASCRIPT in the current page and display the evaluated value.
 
   Example: `:eval document.cookie`
