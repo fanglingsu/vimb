@@ -340,36 +340,28 @@ void vb_update_urlbar(const char *uri)
  */
 VbInputType vb_get_input_parts(const char* input, const char **prefix, const char **clean)
 {
-    if (!strncmp(input, ":open ", 6)) {
-        *prefix = ":open ";
-        *clean  = input + 6;
-        return VB_INPUT_OPEN;
+    static const struct {
+        VbInputType type;
+        const char *prefix;
+        unsigned int len; 
+    } types[] = {
+        {VB_INPUT_OPEN, ":o ", 3},
+        {VB_INPUT_TABOPEN, ":t ", 3},
+        {VB_INPUT_OPEN, ":open ", 6},
+        {VB_INPUT_TABOPEN, ":tabopen ", 9},
+        {VB_INPUT_SET, ":set ", 5},
+        {VB_INPUT_COMMAND, ":", 1},
+        {VB_INPUT_SEARCH_FORWARD, "/", 1},
+        {VB_INPUT_SEARCH_BACKWARD, "?", 1},
+    };
+    for (unsigned int i = 0; i < LENGTH(types); i++) {
+        if (!strncmp(input, types[i].prefix, types[i].len)) {
+            *prefix = types[i].prefix;
+            *clean  = input + types[i].len;
+            return types[i].type;
+        }
     }
-    if (!strncmp(input, ":tabopen ", 9)) {
-        *prefix = ":tabopen ";
-        *clean  = input + 9;
-        return VB_INPUT_TABOPEN;
-    }
-    if (!strncmp(input, ":set ", 5)) {
-        *prefix = ":set ";
-        *clean  = input + 5;
-        return VB_INPUT_SET;
-    }
-    if (*input == ':') {
-        *prefix = ":";
-        *clean  = input + 1;
-        return VB_INPUT_COMMAND;
-    }
-    if (*input == '/') {
-        *prefix = "/";
-        *clean  = input + 1;
-        return VB_INPUT_SEARCH_FORWARD;
-    }
-    if (*input == '?') {
-        *prefix = "?";
-        *clean  = input + 1;
-        return VB_INPUT_SEARCH_BACKWARD;
-    }
+
     *prefix = NULL;
     *clean  = input;
     return VB_INPUT_UNKNOWN;
