@@ -343,7 +343,7 @@ VbInputType vb_get_input_parts(const char* input, const char **prefix, const cha
     static const struct {
         VbInputType type;
         const char *prefix;
-        unsigned int len; 
+        unsigned int len;
     } types[] = {
         {VB_INPUT_OPEN, ":o ", 3},
         {VB_INPUT_TABOPEN, ":t ", 3},
@@ -1042,14 +1042,7 @@ int main(int argc, char *argv[])
     init_core();
 
     /* command line argument: URL */
-    Arg arg = {VB_TARGET_CURRENT};
-    if (argc > 1) {
-        arg.s = g_strdup(argv[argc - 1]);
-    } else {
-        arg.s = g_strdup(vb.config.home_page);
-    }
-    vb_load_uri(&arg);
-    g_free(arg.s);
+    vb_load_uri(&(Arg){VB_TARGET_CURRENT, argc > 1 ? argv[argc - 1] : vb.config.home_page});
 
     /* Run the main GTK+ event loop */
     gtk_main();
