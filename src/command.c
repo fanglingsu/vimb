@@ -655,6 +655,18 @@ gboolean command_eval(const Arg *arg)
     return success;
 }
 
+gboolean command_nextprev(const Arg *arg)
+{
+    if (vb.state.mode & VB_MODE_HINTING) {
+        hints_focus_next(arg->i ? true : false);
+    } else {
+        /* mode will be set in completion_complete */
+        completion_complete(arg->i ? true : false);
+    }
+
+    return true;
+}
+
 gboolean command_editor(const Arg *arg)
 {
     char *file_path = NULL;
@@ -713,18 +725,6 @@ gboolean command_editor(const Arg *arg)
     data->element = active;
 
     g_child_watch_add(pid, (GChildWatchFunc)editor_resume, data);
-
-    return true;
-}
-
-gboolean command_nextprev(const Arg *arg)
-{
-    if (vb.state.mode & VB_MODE_HINTING) {
-        hints_focus_next(arg->i ? true : false);
-    } else {
-        /* mode will be set in completion_complete */
-        completion_complete(arg->i ? true : false);
-    }
 
     return true;
 }
