@@ -40,7 +40,7 @@ void dom_check_auto_insert(WebKitWebView *view)
             element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
         }
         webkit_dom_event_target_add_event_listener(
-            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), true, NULL
+            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), false, NULL
         );
     }
 }
@@ -138,7 +138,7 @@ static gboolean auto_insert(Element *element)
 static gboolean editable_focus_cb(Element *element, Event *event)
 {
     webkit_dom_event_target_remove_event_listener(
-        WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), true
+        WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), false
     );
     if (CLEAN_MODE(vb.state.mode) != VB_MODE_INSERT) {
         EventTarget *target = webkit_dom_event_get_target(event);
