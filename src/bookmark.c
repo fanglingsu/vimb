@@ -28,7 +28,7 @@ typedef struct {
 } Bookmark;
 
 static GList *load(const char *file);
-static gboolean comtains_all_tags(char **src, unsigned int s, char **query, unsigned int q);
+static gboolean contains_all_tags(char **src, unsigned int s, char **query, unsigned int q);
 static void free_bookmark(Bookmark *bm);
 
 /**
@@ -72,7 +72,9 @@ GList *bookmark_get_by_tags(const char *tags)
 
     for (GList *l = src; l; l = l->next) {
         Bookmark *bm = (Bookmark*)l->data;
-        if (comtains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)) {
+        if (bm->tags
+            && contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
+        ) {
             res = g_list_prepend(res, g_strdup(bm->uri));
         }
     }
@@ -128,7 +130,7 @@ static GList *load(const char *file)
  * Checks if the given source array of pointer contains all those entries
  * given as array of search strings.
  */
-static gboolean comtains_all_tags(char **src, unsigned int s, char **query, unsigned int q)
+static gboolean contains_all_tags(char **src, unsigned int s, char **query, unsigned int q)
 {
     unsigned int i, n;
 

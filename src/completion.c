@@ -100,7 +100,7 @@ gboolean completion_complete(gboolean back)
         g_list_free(source);
     } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
         source = history_get_all(HISTORY_URL);
-        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, suffix),
+        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, suffix);
         /* prepend the bookmark items */
         tmp = g_list_concat(bookmark_get_by_tags(suffix), tmp);
         comps.completions = init_completion(comps.completions, tmp, prefix);
