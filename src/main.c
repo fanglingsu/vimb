@@ -124,19 +124,15 @@ gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **
 
 gboolean vb_load_uri(const Arg *arg)
 {
-    char *uri = NULL, *rp, *path = arg->s;
+    char *uri = NULL, *rp, *path = arg->s ? arg->s : "";
     struct stat st;
 
-    if (!path) {
-        path = vb.config.home_page;
-    }
-
     g_strstrip(path);
-    if (!strlen(path)) {
+    if (*path == '\0') {
         path = vb.config.home_page;
     }
 
-    if (g_strrstr(path, "://")) {
+    if (g_strrstr(path, "://") || !strncmp(path, "about:", 6)) {
         uri = g_strdup(path);
     } else if (stat(path, &st) == 0) {
         /* check if the path is a file path */

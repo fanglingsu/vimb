@@ -573,7 +573,10 @@ static gboolean home_page(const Setting *s, const SettingType type)
     if (type == SETTING_GET) {
         print_value(s, vb.config.home_page);
     } else {
-        OVERWRITE_STRING(vb.config.home_page, s->arg.s);
+        OVERWRITE_STRING(
+            vb.config.home_page,
+            *(s->arg.s) == '\0' ? "about:blank" : s->arg.s
+        );
     }
 
     return true;
