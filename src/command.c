@@ -382,11 +382,12 @@ gboolean command_map(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    if (arg->s && (key = strchr(arg->s, '='))) {
+    if (!arg->s) {
+        return false;
+    }
+    if ((key = strchr(arg->s, '='))) {
         *key = '\0';
-        if (arg->s) {
-            return keybind_add_from_string(arg->s, key + 1, arg->i);
-        }
+        return keybind_add_from_string(arg->s, key + 1, arg->i);
     }
     return false;
 }
@@ -557,7 +558,7 @@ gboolean command_shortcut(const Arg *arg)
     if (arg->i) {
         char *handle;
 
-        if ((handle = strchr(arg->s, '='))) {
+        if (arg->s && (handle = strchr(arg->s, '='))) {
             *handle = '\0';
             handle++;
             result = shortcut_add(arg->s, handle);
