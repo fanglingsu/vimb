@@ -34,7 +34,7 @@ CFLAGS += -Wmissing-parameter-type
 CFLAGS += -Wno-overlength-strings
 #CFLAGS += -Wstrict-prototypes
 
-LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext
+LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
 
 # features
 CPPFLAGS += -DFEATURE_COOKIE
