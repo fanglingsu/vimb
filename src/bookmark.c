@@ -62,7 +62,7 @@ GList *bookmark_get_by_tags(const char *tags)
     char **parts;
     unsigned int len;
 
-    if (!tags) {
+    if (!tags || *tags == '\0') {
         return NULL;
     }
 
