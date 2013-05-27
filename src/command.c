@@ -382,7 +382,7 @@ gboolean command_map(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    if ((key = strchr(arg->s, '='))) {
+    if (arg->s && (key = strchr(arg->s, '='))) {
         *key = '\0';
         if (arg->s) {
             return keybind_add_from_string(arg->s, key + 1, arg->i);

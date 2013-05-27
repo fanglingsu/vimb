@@ -58,11 +58,15 @@ void bookmark_add(const char *uri, const char *tags)
  */
 GList *bookmark_get_by_tags(const char *tags)
 {
-    GList *res = NULL;
-    GList *src = load(vb.files[FILES_BOOKMARK]);
+    GList *res = NULL, *src = NULL;
     char **parts;
     unsigned int len;
 
+    if (!tags) {
+        return NULL;
+    }
+
+    src   = load(vb.files[FILES_BOOKMARK]);
     parts = g_strsplit(tags, " ", 0);
     len   = g_strv_length(parts);
 
