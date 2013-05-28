@@ -91,7 +91,7 @@ static CommandInfo cmd_list[] = {
     {"pageup",               NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_PAGE}},
     {"pagedown",             NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_PAGE}},
     {"halfpageup",           NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_HALFPAGE}},
-    {"halfpagedown",         NULL,   command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_HALFPAGE}},
+    {"halfpagedown",         NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_HALFPAGE}},
     {"scrollleft",           NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_LEFT | VB_SCROLL_UNIT_LINE}},
     {"scrollright",          NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_RIGHT | VB_SCROLL_UNIT_LINE}},
     {"scrollup",             NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_LINE}},
@@ -195,7 +195,7 @@ gboolean command_run(const char *name, const char *param)
 }
 
 /**
- * Runs a single command form string containing the command an possible
+ * Runs a single command form string containing the command and possible
  * parameters.
  */
 gboolean command_run_string(const char *input)
@@ -203,11 +203,13 @@ gboolean command_run_string(const char *input)
     gboolean success;
     char *command = NULL, *str, **token;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     if (!input || *input == '\0') {
         return false;
     }
 
-    str =g_strdup(input);
+    str = g_strdup(input);
     /* remove leading whitespace */
     g_strchug(str);
 
@@ -237,6 +239,7 @@ gboolean command_run_multi(const Arg *arg)
     char **commands;
     unsigned int len, i;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
     if (!arg->s || *(arg->s) == '\0') {
         return false;
     }
@@ -309,17 +312,19 @@ gboolean command_close(const Arg *arg)
 
 gboolean command_view_source(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     gboolean mode = webkit_web_view_get_view_source_mode(vb.gui.webview);
     webkit_web_view_set_view_source_mode(vb.gui.webview, !mode);
     webkit_web_view_reload(vb.gui.webview);
-
-    vb_set_mode(VB_MODE_NORMAL, false);
 
     return true;
 }
 
 gboolean command_navigate(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     WebKitWebView *view = vb.gui.webview;
     if (arg->i <= VB_NAVIG_FORWARD) {
         int count = vb.state.count ? vb.state.count : 1;
@@ -334,8 +339,6 @@ gboolean command_navigate(const Arg *arg)
         webkit_web_view_stop_loading(view);
     }
 
-    vb_set_mode(VB_MODE_NORMAL, false);
-
     return true;
 }
 
@@ -344,6 +347,9 @@ gboolean command_scroll(const Arg *arg)
     gdouble max, new;
     int direction = (arg->i & (1 << 2)) ? 1 : -1;
     GtkAdjustment *adjust = (arg->i & VB_SCROLL_AXIS_H) ? vb.gui.adjust_h : vb.gui.adjust_v;
+
+    /* keep possible search mode */
+    vb_set_mode(VB_MODE_NORMAL | (vb.state.mode & VB_MODE_SEARCH), false);
 
     max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
     /* type scroll */
@@ -369,9 +375,6 @@ gboolean command_scroll(const Arg *arg)
         new = gtk_adjustment_get_lower(adjust);
     }
     gtk_adjustment_set_value(adjust, new > max ? max : new);
-
-    /* keep possible search mode */
-    vb_set_mode(VB_MODE_NORMAL | (vb.state.mode & VB_MODE_SEARCH), false);
 
     return true;
 }
@@ -404,7 +407,8 @@ gboolean command_set(const Arg *arg)
     gboolean success;
     char *param = NULL, *line = NULL;
 
-    if (!arg->s || !strlen(arg->s)) {
+    vb_set_mode(VB_MODE_NORMAL, false);
+    if (!arg->s || *(arg->s) == '\0') {
         return false;
     }
 
@@ -420,8 +424,6 @@ gboolean command_set(const Arg *arg)
         success = setting_run(line, NULL);
     }
     g_free(line);
-
-    vb_set_mode(VB_MODE_NORMAL, false);
 
     return success;
 }
@@ -555,6 +557,9 @@ gboolean command_search(const Arg *arg)
 gboolean command_shortcut(const Arg *arg)
 {
     gboolean result;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     if (arg->i) {
         char *handle;
 
@@ -569,8 +574,6 @@ gboolean command_shortcut(const Arg *arg)
         /* remove the shortcut */
         result = shortcut_remove(arg->s);
     }
-
-    vb_set_mode(VB_MODE_NORMAL, false);
 
     return result;
 }
@@ -587,9 +590,10 @@ gboolean command_zoom(const Arg *arg)
     float step, level;
     int count;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     if (arg->i & COMMAND_ZOOM_RESET) {
         webkit_web_view_set_zoom_level(vb.gui.webview, 1.0);
-        vb_set_mode(VB_MODE_NORMAL, false);
 
         return true;
     }
@@ -609,10 +613,7 @@ gboolean command_zoom(const Arg *arg)
         level + (float)(count *step) * (arg->i & COMMAND_ZOOM_IN ? 1.0 : -1.0)
     );
 
-    vb_set_mode(VB_MODE_NORMAL, false);
-
     return true;
-
 }
 
 gboolean command_history(const Arg *arg)
@@ -632,8 +633,9 @@ gboolean command_history(const Arg *arg)
 
 gboolean command_bookmark(const Arg *arg)
 {
-    bookmark_add(webkit_web_view_get_uri(vb.gui.webview), arg->s);
     vb_set_mode(VB_MODE_NORMAL, false);
+
+    bookmark_add(webkit_web_view_get_uri(vb.gui.webview), arg->s);
     return true;
 }
 
@@ -641,6 +643,8 @@ gboolean command_eval(const Arg *arg)
 {
     gboolean success;
     char *value = NULL;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     success = vb_eval_script(
         webkit_web_view_get_main_frame(vb.gui.webview), arg->s, NULL, &value
@@ -651,7 +655,6 @@ gboolean command_eval(const Arg *arg)
         vb_echo_force(VB_MSG_ERROR, true, "%s", value);
     }
     g_free(value);
-    vb_set_mode(VB_MODE_NORMAL, false);
 
     return success;
 }

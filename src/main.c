@@ -464,10 +464,6 @@ static void inputbox_activate_cb(GtkEntry *entry)
 
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
 
-    if (length <= 1) {
-        return;
-    }
-
     /* do not free or modify text */
     text = GET_TEXT();
 
