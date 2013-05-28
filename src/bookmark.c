@@ -62,25 +62,30 @@ GList *bookmark_get_by_tags(const char *tags)
     char **parts;
     unsigned int len;
 
+    src = load(vb.files[FILES_BOOKMARK]);
     if (!tags || *tags == '\0') {
-        return NULL;
-    }
-
-    src   = load(vb.files[FILES_BOOKMARK]);
-    parts = g_strsplit(tags, " ", 0);
-    len   = g_strv_length(parts);
-
-    for (GList *l = src; l; l = l->next) {
-        Bookmark *bm = (Bookmark*)l->data;
-        if (bm->tags
-            && contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
-        ) {
-            res = g_list_prepend(res, g_strdup(bm->uri));
+        for (GList *l = src; l; l = l->next) {
+            Bookmark *bm = (Bookmark*)l->data;
+            if (!bm->tags) {
+                res = g_list_prepend(res, g_strdup(bm->uri));
+            }
         }
+    } else {
+        parts = g_strsplit(tags, " ", 0);
+        len   = g_strv_length(parts);
+
+        for (GList *l = src; l; l = l->next) {
+            Bookmark *bm = (Bookmark*)l->data;
+            if (bm->tags
+                && contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
+            ) {
+                res = g_list_prepend(res, g_strdup(bm->uri));
+            }
+        }
+        g_strfreev(parts);
     }
 
     g_list_free_full(src, (GDestroyNotify)free_bookmark);
-    g_strfreev(parts);
 
     return res;
 }
