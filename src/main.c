@@ -52,6 +52,8 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event);
 static gboolean new_window_policy_cb(
     WebKitWebView *view, WebKitWebFrame *frame, WebKitNetworkRequest *request,
     WebKitWebNavigationAction *navig, WebKitWebPolicyDecision *policy);
+static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *frame);
+static void create_web_view_received_uri_cb(WebKitWebView *view);
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link);
 static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title);
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
@@ -742,6 +744,7 @@ static void setup_signals()
         "signal::notify::load-status", G_CALLBACK(webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(button_relase_cb), NULL,
         "signal::new-window-policy-decision-requested", G_CALLBACK(new_window_policy_cb), NULL,
+        "signal::create-web-view", G_CALLBACK(create_web_view_cb), NULL,
         "signal::hovering-over-link", G_CALLBACK(hover_link_cb), NULL,
         "signal::title-changed", G_CALLBACK(title_changed_cb), NULL,
         "signal::mime-type-policy-decision-requested", G_CALLBACK(mimetype_decision_cb), NULL,
@@ -856,6 +859,25 @@ static gboolean new_window_policy_cb(
         return true;
     }
     return false;
+}
+
+static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *frame)
+{
+    WebKitWebView *new = WEBKIT_WEB_VIEW(webkit_web_view_new());
+
+    /* wait until the new webview receives its new URI */
+    g_signal_connect(new, "notify::uri", G_CALLBACK(create_web_view_received_uri_cb), NULL);
+
+    return new;
+}
+
+static void create_web_view_received_uri_cb(WebKitWebView *view)
+{
+    Arg a = {VB_TARGET_NEW, (char*)webkit_web_view_get_uri(view)};
+    /* destroy temporary webview */
+    webkit_web_view_stop_loading(view);
+    gtk_widget_destroy(GTK_WIDGET(view));
+    vb_load_uri(&a);
 }
 
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
