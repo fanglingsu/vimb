@@ -20,8 +20,8 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
 
         function _helper(win, offsetX, offsetY)
         {
-            /* document may be undefined for frames out of the same origin
-             * policy and will break the whole code - so we check this before */
+            /* document may be undefined for frames out of the same origin */
+            /* policy and will break the whole code - so we check this before */
             if (typeof(win.document) === 'undefined') {
                 return;
             }
