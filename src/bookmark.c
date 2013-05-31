@@ -19,6 +19,7 @@
 
 #include "main.h"
 #include "bookmark.h"
+#include "util.h"
 
 extern VbCore vb;
 
@@ -28,7 +29,6 @@ typedef struct {
 } Bookmark;
 
 static GList *load(const char *file);
-static gboolean contains_all_tags(char **src, unsigned int s, char **query, unsigned int q);
 static void free_bookmark(Bookmark *bm);
 
 /**
@@ -64,11 +64,10 @@ GList *bookmark_get_by_tags(const char *tags)
 
     src = load(vb.files[FILES_BOOKMARK]);
     if (!tags || *tags == '\0') {
+        /* without any tags return all bookmarked items */
         for (GList *l = src; l; l = l->next) {
             Bookmark *bm = (Bookmark*)l->data;
-            if (!bm->tags) {
-                res = g_list_prepend(res, g_strdup(bm->uri));
-            }
+            res = g_list_prepend(res, g_strdup(bm->uri));
         }
     } else {
         parts = g_strsplit(tags, " ", 0);
@@ -77,7 +76,7 @@ GList *bookmark_get_by_tags(const char *tags)
         for (GList *l = src; l; l = l->next) {
             Bookmark *bm = (Bookmark*)l->data;
             if (bm->tags
-                && contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
+                && util_array_contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
             ) {
                 res = g_list_prepend(res, g_strdup(bm->uri));
             }
@@ -129,35 +128,6 @@ static GList *load(const char *file)
     fclose(f);
 
     return list;
-}
-
-/**
- * Checks if the given source array of pointer contains all those entries
- * given as array of search strings.
- */
-static gboolean contains_all_tags(char **src, unsigned int s, char **query, unsigned int q)
-{
-    unsigned int i, n;
-
-    if (!s || !q) {
-        return true;
-    }
-
-    /* iterate over all query parts */
-    for (i = 0; i < q; i++) {
-        gboolean found = false;
-        for (n = 0; n < s; n++) {
-            if (!strcmp(query[i], src[n])) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 static void free_bookmark(Bookmark *bm)

@@ -153,10 +153,27 @@ void command_init(void)
     }
 }
 
-GList *command_get_all(void)
+GList *command_get_by_prefix(const char *prefix)
 {
+    GList *res = NULL;
     /* according to vim we return only the long commands here */
-    return g_hash_table_get_keys(commands);
+    GList *src = g_hash_table_get_keys(commands);
+
+    if (!prefix || prefix == '\0') {
+        for (GList *l = src; l; l = l->next) {
+            res = g_list_prepend(res, l->data);
+        }
+    } else {
+        for (GList *l = src; l; l = l->next) {
+            char *value = (char*)l->data;
+            if (g_str_has_prefix(value, prefix)) {
+                res = g_list_prepend(res, value);
+            }
+        }
+    }
+    g_list_free(src);
+
+    return res;
 }
 
 void command_cleanup(void)

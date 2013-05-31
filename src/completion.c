@@ -25,9 +25,10 @@
 #include "command.h"
 #include "setting.h"
 
+#define TAG_INDICATOR '!'
+
 extern VbCore vb;
 
-typedef gboolean (*Comp_Func)(char*, const char*);
 typedef struct {
     GtkWidget *label;
     GtkWidget *event;
@@ -41,7 +42,6 @@ static struct {
     char  *prefix;
 } comps;
 
-static GList *filter_list(GList *target, GList *source, Comp_Func func, const char *input);
 static GList *init_completion(GList *target, GList *source, const char *prefix);
 static GList *update(GList *completion, GList *active, gboolean back);
 static void show(gboolean back);
@@ -54,7 +54,7 @@ gboolean completion_complete(gboolean back)
 {
     VbInputType type;
     const char *input, *prefix, *suffix;
-    GList *source = NULL, *tmp = NULL;
+    GList *source = NULL;
 
     input = GET_TEXT();
     type  = vb_get_input_parts(input, &prefix, &suffix);
@@ -91,41 +91,31 @@ gboolean completion_complete(gboolean back)
     gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, false, false, 0);
 
     if (type == VB_INPUT_SET) {
-        source = g_list_sort(setting_get_all(), (GCompareFunc)g_strcmp0);
-        comps.completions = init_completion(
-            comps.completions,
-            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, suffix),
-            prefix
-        );
+        source = g_list_sort(setting_get_by_prefix(suffix), (GCompareFunc)g_strcmp0);
+        comps.completions = init_completion(comps.completions, source, prefix);
         g_list_free(source);
     } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
-        source = history_get_all(HISTORY_URL);
-        tmp = filter_list(tmp, source, (Comp_Func)util_strcasestr, suffix);
-        /* prepend the bookmark items */
-        tmp = g_list_concat(bookmark_get_by_tags(suffix), tmp);
-        comps.completions = init_completion(comps.completions, tmp, prefix);
-
-        history_list_free(&source);
+        /* if search string begins with TAG_INDICATOR lookup the bookmarks */
+        if (suffix && *suffix == TAG_INDICATOR) {
+            source = bookmark_get_by_tags(suffix + 1);
+            comps.completions = init_completion(comps.completions, source, prefix);
+        } else {
+            source = history_get_by_tags(HISTORY_URL, suffix);
+            comps.completions = init_completion(comps.completions, source, prefix);
+        }
+        g_list_free_full(source, (GDestroyNotify)g_free);
     } else if (type == VB_INPUT_COMMAND) {
         char *command = NULL;
         /* remove counts before command and save it to print it later in inputbox */
         comps.count = g_ascii_strtoll(suffix, &command, 10);
 
-        source = g_list_sort(command_get_all(), (GCompareFunc)g_strcmp0);
-        comps.completions = init_completion(
-            comps.completions,
-            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, command),
-            prefix
-        );
+        source = g_list_sort(command_get_by_prefix(suffix), (GCompareFunc)g_strcmp0);
+        comps.completions = init_completion(comps.completions, source, prefix);
         g_list_free(source);
     } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
-        source = g_list_sort(history_get_all(HISTORY_SEARCH), (GCompareFunc)g_strcmp0);
-        comps.completions = init_completion(
-            comps.completions,
-            filter_list(tmp, source, (Comp_Func)g_str_has_prefix, suffix),
-            prefix
-        );
-        g_list_free(source);
+        source = g_list_sort(history_get_by_tags(HISTORY_SEARCH, suffix), (GCompareFunc)g_strcmp0);
+        comps.completions = init_completion(comps.completions, source, prefix);
+        g_list_free_full(source, (GDestroyNotify)g_free);
     }
 
     if (!comps.completions) {
@@ -154,20 +144,6 @@ void completion_clean()
 
     /* remove completion flag from mode */
     vb.state.mode &= ~VB_MODE_COMPLETE;
-}
-
-static GList *filter_list(GList *target, GList *source, Comp_Func func, const char *input)
-{
-    for (GList *l = source; l; l = l->next) {
-        char *data  = l->data;
-        if (func(data, input)) {
-            target = g_list_prepend(target, data);
-        }
-    }
-
-    target = g_list_reverse(target);
-
-    return target;
 }
 
 static GList *init_completion(GList *target, GList *source, const char *prefix)

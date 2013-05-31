@@ -19,6 +19,7 @@
 
 #include "main.h"
 #include "history.h"
+#include "util.h"
 
 extern VbCore vb;
 
@@ -73,11 +74,36 @@ void history_add(HistoryType type, const char *value)
 }
 
 /**
- * Retrieves all history entries for given history type.
+ * Retrieves the list of matching history items to given tag string.
+ * Returned list must be freed.
  */
-GList *history_get_all(HistoryType type)
+GList *history_get_by_tags(HistoryType type, const char *tags)
 {
-    return load(get_file_by_type(type));
+    GList *res = NULL, *src = NULL;
+    char **parts;
+    unsigned int len;
+
+    src = load(get_file_by_type(type));
+    if (!tags || *tags == '\0') {
+        /* without any tags return all items */
+        for (GList *l = src; l; l = l->next) {
+            res = g_list_prepend(res, g_strdup((char*)l->data));
+        }
+    } else {
+        parts = g_strsplit(tags, " ", 0);
+        len   = g_strv_length(parts);
+
+        for (GList *l = src; l; l = l->next) {
+            char *value = (char*)l->data;
+            if (util_string_contains_all_tags(value, parts, len)) {
+                res = g_list_prepend(res, g_strdup(value));
+            }
+        }
+        g_strfreev(parts);
+    }
+    g_list_free_full(src, (GDestroyNotify)g_free);
+
+    return res;
 }
 
 /**
@@ -114,14 +140,6 @@ void history_rewind(void)
 
         OVERWRITE_STRING(history.prefix, NULL);
         history.active = NULL;
-    }
-}
-
-void history_list_free(GList **list)
-{
-    if (*list) {
-        g_list_free_full(*list, (GDestroyNotify)g_free);
-        *list = NULL;
     }
 }
 
@@ -246,5 +264,5 @@ static void write_to_file(GList *list, const char *file)
         fclose(f);
     }
 
-    history_list_free(&list);
+    g_list_free_full(list, (GDestroyNotify)g_free);
 }

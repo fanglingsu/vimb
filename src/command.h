@@ -21,7 +21,7 @@
 #define _COMMAND_H
 
 void command_init(void);
-GList *command_get_all(void);
+GList *command_get_by_prefix(const char *prefix);
 void command_cleanup(void);
 gboolean command_exists(const char *name);
 gboolean command_run(const char *name, const char *param);

@@ -22,6 +22,8 @@
 
 #include "main.h"
 
+typedef gboolean (*Util_Comp_Func)(const char*, const char*);
+
 char* util_get_config_dir(void);
 char* util_get_cache_dir(void);
 const char* util_get_home_dir(void);
@@ -30,6 +32,8 @@ void util_create_file_if_not_exists(const char* filename);
 char* util_get_file_contents(const char* filename, gsize* length);
 char** util_get_lines(const char* filename);
 char* util_strcasestr(const char* haystack, const char* needle);
+gboolean util_array_contains_all_tags(char **src, unsigned int s, char **query, unsigned int q);
+gboolean util_string_contains_all_tags(char *src, char **query, unsigned int q);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 gboolean util_create_tmp_file(const char *content, char **file);
 
