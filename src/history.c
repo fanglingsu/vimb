@@ -89,7 +89,7 @@ GList *history_get_by_tags(HistoryType type, const char *tags)
         for (GList *l = src; l; l = l->next) {
             res = g_list_prepend(res, g_strdup((char*)l->data));
         }
-    } else {
+    } else if (HISTORY_URL == type) {
         parts = g_strsplit(tags, " ", 0);
         len   = g_strv_length(parts);
 
@@ -100,6 +100,13 @@ GList *history_get_by_tags(HistoryType type, const char *tags)
             }
         }
         g_strfreev(parts);
+    } else {
+        for (GList *l = src; l; l = l->next) {
+            char *value = (char*)l->data;
+            if (g_str_has_prefix(value, tags)) {
+                res = g_list_prepend(res, g_strdup(value));
+            }
+        }
     }
     g_list_free_full(src, (GDestroyNotify)g_free);
 
