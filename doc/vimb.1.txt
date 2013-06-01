@@ -291,23 +291,6 @@ Save the current opened uri with \fITAGS\fP to the bookmark file.
 This are wrapper commands to start completion and to step through the
 completion items, or to focus previous or next hints if hinting is active.
 
-Following completions are available:
-.RS
-.nr step 1 1
-.IP \n[step] 3
-Commands `:'
-.IP \n+[step]
-Settings `:set '
-.IP \n+[step]
-Url-History and Bookmarks `:open \fIQUERY\fP' or `:tabopen \fIQUERY\fP'.
-If \fIQUERY\fP is given, this will be used to fetch matching urls from history
-file, or to find bookmarks from bookmark file. The urls from history will only
-be matched by their url, the bookmarks only by their tags. If multiple tags
-are given to get the bookmarks, only those bookmarks will be returned, that
-matches all the given tags or that don't have any tag set.
-.IP \n+[step]
-Searchqueries `/' or `?'
-.RE
 .TP
 .BI run " [COMMAND LIST]"
 Run is a command, that was introduced to have the ability to run multiple
@@ -340,6 +323,47 @@ value.
 
 Example:
 ":eval document.cookie"
+
+.SH COMPLETIONS
+The completions are triggered by pressing `<tab>` or `<shift-tab>` in the
+activated inputbox. Depending of the current inserted content different
+complations are started. The complation takes additional typed chars to filter
+the completion list that is shown.
+.TP
+.B commands
+The completion for commands are started when at least `:` is shown in the
+inputbox. If there are given some sore chars the completion will lookup those
+commands that starts with the given chars.
+.TP
+.B settings
+The setting name completion ist started if at least `:set ` is shown in
+inputbox and does also match settings that begins with slready typed setting
+prefix.
+.TP
+.B history
+The history of URLs is shown for the `:open ` and `:tabopen ` commands. This
+completion looks up for every given word in the list of the url history. Only
+those completion are shown that match every given word.
+
+Example:
+":open foo bar<tab>" will complete only URLs that contain the words foo and
+bar.
+.TP
+.B bookmarks
+The bookmark completion is similar to the history completion, but does match
+only the tags of the bookmarks. The bookmark completion ist started by `:open
+\fB!\fP` or `:tabopen \fB!\fP` and does a prefix search for all given words in
+the bookmark tags.
+
+Example:
+":open \fB!\fPfoo ba" will match all bookmark that have the tags "foo" or
+"foot" and tags starting with "ba" like "ball".
+.TP
+.B search
+The search completion allow to get a filtered list of already done searches.
+This completion starts by `/` or `?` in inputbox and performs a prefix
+comparison for further typed chars.
+
 .SH KEYBINDINGS
 If the commands used by a keybinding, the keybindings can also user together
 with a count. The count hase to typed just before the keybinding.
