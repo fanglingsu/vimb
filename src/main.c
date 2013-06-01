@@ -206,12 +206,9 @@ gboolean vb_set_clipboard(const Arg *arg)
  */
 gboolean vb_set_mode(Mode mode, gboolean clean)
 {
-    int clean_old = CLEAN_MODE(vb.state.mode);
-    int clean_new = CLEAN_MODE(mode);
-
     vb.state.modkey = vb.state.count  = 0;
 
-    /* prcess only if mode has changed */
+    /* process only if mode has changed */
     if (vb.state.mode != mode) {
         /* leaf the old mode */
         if ((vb.state.mode & VB_MODE_COMPLETE) && !(mode & VB_MODE_COMPLETE)) {
@@ -220,13 +217,13 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             command_search(&((Arg){VB_SEARCH_OFF}));
         } else if ((vb.state.mode & VB_MODE_HINTING) && !(mode & VB_MODE_HINTING)) {
             hints_clear();
-        } else if (clean_old == VB_MODE_INSERT) {
+        } else if (CLEAN_MODE(vb.state.mode) == VB_MODE_INSERT) {
             clean = true;
             dom_clear_focus(vb.gui.webview);
         }
 
         /* enter the new mode */
-        switch (clean_new) {
+        switch (CLEAN_MODE(mode)) {
             case VB_MODE_NORMAL:
                 history_rewind();
                 gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));

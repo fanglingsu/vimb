@@ -46,7 +46,6 @@ ifeq ($(USEGTK3), 1)
 CPPFLAGS += -DHAS_GTK3
 endif
 
-
 #----------------developer options-------------------
 DFLAGS += $(CFLAGS)
 DFLAGS += -DDEBUG
