@@ -72,7 +72,7 @@ u
 U
 : Open the last closed page into a new window.
 
-d
+ctrl-q
 : Quit the browser.
 
 [N]ctrl-o
