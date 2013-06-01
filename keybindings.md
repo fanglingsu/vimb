@@ -38,25 +38,25 @@ c(un)map
 ### normal mode
 
  :
-: Start command mode and print `:' to the input box.
+: Start command mode and print `:` to the input box.
 
 /
-: Start command mode and print `/' to inputbox to start searching forward.
+: Start command mode and print `/` to inputbox to start searching forward.
 
 ?
-: Start command mode and print `?' to inputbox to start searching backward.
+: Start command mode and print `?` to inputbox to start searching backward.
 
 o
-: Start command mode and print `:open ' to input box.
+: Start command mode and print `:open ` to input box.
 
 O
-: Start command mode and print `:open CURRENT_URI' to input box.
+: Start command mode and print `:open CURRENT_URI` to input box.
 
 t
-: Start command mode and print `:tabopen ' to input box.
+: Start command mode and print `:tabopen ` to input box.
 
 T
-: Start command mode and print `:tabopen CURRENT_URI' to input box.
+: Start command mode and print `:tabopen CURRENT_URI` to input box.
 
 ---
 
@@ -137,10 +137,10 @@ F
 : Start hinting for links to open them in new window.
 
 ;-o
-: Start hinting to build :open command with hinted source.
+: Start hinting to build `:open` command with hinted source.
 
 ;-t
-: Start hinting to build :tabopen command with hinted source.
+: Start hinting to build `:tabopen` command with hinted source.
 
 ;-y
 : Start hinting to yank hinted element URI into clipboard.
