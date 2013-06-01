@@ -414,7 +414,7 @@ Open the last closed page.
 .B U
 Open the last closed page into a new window.
 .TP
-.B d
+.B ctrl\-q
 Quit the browser.
 .TP
 .BI [ N ]ctrl\-o
