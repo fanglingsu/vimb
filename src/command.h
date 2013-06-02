@@ -52,5 +52,6 @@ gboolean command_bookmark(const Arg *arg);
 gboolean command_eval(const Arg *arg);
 gboolean command_editor(const Arg *arg);
 gboolean command_nextprev(const Arg *arg);
+gboolean command_descent(const Arg *arg);
 
 #endif /* end of include guard: _COMMAND_H */

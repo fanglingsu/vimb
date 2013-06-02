@@ -132,6 +132,8 @@ static CommandInfo cmd_list[] = {
     {"editor",               NULL,    command_editor,               {0}},
     {"next",                 "n",     command_nextprev,             {0}},
     {"prev",                 "p",     command_nextprev,             {1}},
+    {"descent",              NULL,    command_descent,              {0}},
+    {"descent!",             NULL,    command_descent,              {1}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -685,6 +687,58 @@ gboolean command_nextprev(const Arg *arg)
     }
 
     return true;
+}
+
+gboolean command_descent(const Arg *arg)
+{
+    gboolean result;
+    int count = vb.state.count ? vb.state.count : 1;
+    const char *uri, *p = NULL, *domain = NULL;
+
+    uri = webkit_web_view_get_uri(vb.gui.webview);
+
+    vb_set_mode(VB_MODE_NORMAL, false);
+    if (!uri || *uri == '\0') {
+        return false;
+    }
+
+    /* get domain part */
+    if (!(domain = strstr(uri, "://")) || !(domain = strchr(domain + 3, '/'))) {
+        return false;
+    }
+
+    if (arg->i) {
+        p = domain;
+    } else {
+        /* start at the end */
+        p = uri + strlen(uri);
+        /* if last char is / increment count to step over this first */
+        if (*(p - 1) == '/') {
+            count++;
+        }
+        for (int i = 0; i < count; i++) {
+            while (*(p--) != '/') {
+                if (p == uri) {
+                    /* reach the beginning */
+                    return false;
+                }
+            }
+        }
+        /* keep the last / in uri */
+        p++;
+    }
+
+    /* if the url is shorter than the domain use the domain instead */
+    if (p < domain) {
+        p = domain;
+    }
+
+    Arg a = {VB_TARGET_CURRENT};
+    a.s = g_strndup(uri, p - uri + 1);
+    result = vb_load_uri(&a);
+    g_free(a.s);
+
+    return result;
 }
 
 gboolean command_editor(const Arg *arg)

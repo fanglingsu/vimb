@@ -2,16 +2,20 @@
 .\" Process this file with
 .\" groff -man -Tascii vimb.1
 .TH PROJECT 1 "DATE" "PROJECT/VERSION" "Vimb Manual"
+
 .SH NAME
 PROJECT - Vim Browser - A modal web browser based on webkit thats inspired by
 vim the great editor.
+
 .SH SYNOPSIS
 .BI "PROJECT [" "OPTION" "] [" "URI" "]"
+
 .SH DESCRIPTION
 PROJECT is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
 of PROJECT is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
+
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
@@ -32,6 +36,7 @@ create a own config file in
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
+
 .SH MODES
 PROJECT is modal an has following main modes:
 .TP
@@ -43,6 +48,7 @@ Used for editing text elements in a webpage.
 .TP
 .B Command Mode
 Execute PROJECT commands from the builtin inputbox (commandline).
+
 .SH COMMANDS
 Commands are a central part in PROJECT. They are used for nearly all things
 that could be done with this browser. Commands allow to set config variables,
@@ -69,6 +75,7 @@ Open the last closed page.
 .TP
 .B (tab)open-clipboard, (t)oc
 Open the url from clipboard.
+
 .SS Input
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
@@ -87,6 +94,7 @@ into to inputbox where {URL} is the current used url. This can be used to add
 keybindings to generate the tabopen command with current uri prefilled. If
 .I TEXT
 is not given use ':' instead.
+
 .SS Navigate
 Following commands are used to navigate within the browser history.
 .TP
@@ -106,6 +114,13 @@ Discard any caches and reload the current viewed url.
 .TP
 .B stop, st
 Stop loading the current url.
+.TP
+.BI [ N "]descent"
+Go to the \fIN\fPth descendent directory of the current opened.
+.TP
+.B descent!
+Go to the domain of the current opened page.
+
 .SS Scroll
 Following commands are used to scroll ad jump within the current view.
 .TP
@@ -152,6 +167,7 @@ Scroll the page \fIN\fP times the "scrollstep" to the top.
 .TP
 .BI [ N "]scrolldown"
 Scroll the page \fIN\fP times the "scrollstep" to the end.
+
 .SS Keybinding
 To bind a command to a key sequence use the {n,i,c}map command. To map a
 keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]".
@@ -187,6 +203,7 @@ Remove a Input Mode keybinding.
 .TP
 .B cunmap
 Remove a Command Mode keybinding.
+
 .SS Hints
 .TP
 .BI "hint-link [" PREFIX "], hint-link-new [" PREFIX ]
@@ -209,6 +226,7 @@ given, print this into the inputbox, default ';i' and ';I'.
 .BI "hint-editor [" PREFIX "]"
 Start hinting to open inputboxes or textareas with external editor. If
 \fIPREFIX\fP is given, print this into the inputbox, default ';e'.
+
 .SS Yank
 .TP
 .B yank-uri, yu
@@ -216,6 +234,7 @@ Yank the current url to the primary and secondary clipboard.
 .TP
 .B yank-selection, ys
 Yank the selected text into the primary and secondary clipboard.
+
 .SS Shortcuts
 Shortcuts allows to open URL build up from a named template with additional
 parameters. If a shortcut named 'dd' is defined, you can use it with `:open dd
@@ -243,6 +262,7 @@ Remove the search engine to the given \fISHORTCUT\fP.
 .BI "shortcut-default " "SHORTCUT"
 Set the shortcut for given \fISHORTCUT\fP as the default. It doesn't matter if
 the \fISHORTCUT\fP is already in use or not to be able to set it.
+
 .SS Configuration
 .TP
 .BI "set " VAR = VALUE
@@ -257,6 +277,7 @@ Show the current set value of variable
 .TP
 .BI "set " VAR !
 Toggle the value of boolean variable \fIVAR\fP and display the new set value.
+
 .SS Zoom
 .TP
 .BI [ N "]zoomin, [" N "]zi"
@@ -273,6 +294,7 @@ Zoom \fIN\fP steps out of the current page - effecting all elements.
 .TP
 .B zoomreset, zr
 Reset the zoomlevel to the default value.
+
 .SS History
 .TP
 .B hist-prev, hist-next"
@@ -281,10 +303,12 @@ inputbox. If there is already text in the input box this will be used to get
 history items. A command is not a internal command, but every string entered
 into inputbox that begins with \fI[:/?]\fP. So the history contains real
 commands and search queries.
+
 .SS Bookmark
 .TP
 .BI "bookmark-add [" TAGS "], bma [" TAGS ]
 Save the current opened uri with \fITAGS\fP to the bookmark file.
+
 .SS Misc
 .TP
 .B next, n, prev, p
@@ -373,6 +397,7 @@ Example:
 .TP
 .B esc
 Got back to normal mode indipendent from current mode.
+
 .SS NORMAL_MODE
 .TP
 .B g\-f
@@ -422,6 +447,12 @@ Go back \fIN\fP steps in the browser history.
 .TP
 .BI [ N ]ctrl\-i
 Go forward \fIN\fP steps in the browser history.
+.TP
+.BI [ N ]gu
+Go to the \fIN\fPth descendent directory of the current opened URL.
+.TP
+.B gU
+Go to the domain of the current opened page.
 .TP
 .B r
 Reload the website.
@@ -524,6 +555,7 @@ Search for \fIN\fPnth next search result.
 .TP
 .BI [ N ]N
 Search for \fIN\fPnth previous search result.
+
 .SS COMMAND_MODE
 .TP
 .B tab
@@ -539,12 +571,14 @@ Step through history backward.
 .TP
 .B down
 Step through history forward.
+
 .SS INSERT_MODE
 .TP
 .B ctrl-t
 If the current active form element is an inputbox or textarea, the content is
 copied to temporary file and the file openen with the configured external
 editor (setting `editor-command').
+
 .SH FILES
 .I $XDG_CONFIG_HOME/PROJECT/config
 .RS
@@ -586,6 +620,7 @@ that is opened.
 File for userdefined css styles. These file is used if the config variable
 'stylesheet' is enabled.
 .RE
+
 .SH ENVIRONMENT
 .TP
 .B HOME
@@ -595,8 +630,10 @@ directory. If not set the entry out of the passwd file will be used instead.
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
 `proxy' is enabled, this will be used as http proxy.
+
 .SH "REPORTING BUGS"
 Report bugs to the main project page on
 .IR https://github.com/fanglingsu/vimb/issues .
+
 .SH AUTHOR
 Daniel Carl
