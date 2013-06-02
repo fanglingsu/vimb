@@ -250,6 +250,8 @@ static GList *load(const char *file)
         }
     }
 
+    list = g_list_reverse(list);
+
     return list;
 }
 
