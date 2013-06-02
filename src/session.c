@@ -59,6 +59,7 @@ void session_init(void)
     vb.session = webkit_get_default_session();
     g_object_set(vb.session, "max-conns", SETTING_MAX_CONNS , NULL);
     g_object_set(vb.session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
+    g_object_set(vb.session, "accept-language-auto", true, NULL);
 
 #ifdef FEATURE_COOKIE
     soup_session_add_feature(
