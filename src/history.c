@@ -265,7 +265,7 @@ static void write_to_file(GList *list, const char *file)
         file_lock_set(fileno(f), F_WRLCK);
 
         /* overwrite the history file with new unique history items */
-        for (GList *link = g_list_reverse(list); link; link = link->next) {
+        for (GList *link = list; link; link = link->next) {
             fprintf(f, "%s\n", (char*)link->data);
         }
 
