@@ -81,6 +81,12 @@ ctrl-q
 [N]ctrl-i
 : Go forward N steps in the browser history.
 
+[N]gu
+: Go to the Nth descendent directory of the current one.
+
+gU
+: Go to the domain of the current opened URL.
+
 r
 : Reload the website.
 

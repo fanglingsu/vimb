@@ -63,6 +63,12 @@ reload!, re!
 stop, st
 : Stop loading the current url.
 
+[N]descent
+: Go to the Nth descendent directory of the current opened.
+
+descent!
+: Go to the domain of the current opened page.
+
 ## scroll
 
 Following commands are used to scroll ad jump within the current view.
