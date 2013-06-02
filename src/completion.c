@@ -109,7 +109,7 @@ gboolean completion_complete(gboolean back)
         /* remove counts before command and save it to print it later in inputbox */
         comps.count = g_ascii_strtoll(suffix, &command, 10);
 
-        source = g_list_sort(command_get_by_prefix(suffix), (GCompareFunc)g_strcmp0);
+        source = g_list_sort(command_get_by_prefix(command), (GCompareFunc)g_strcmp0);
         comps.completions = init_completion(comps.completions, source, prefix);
         g_list_free(source);
     } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
