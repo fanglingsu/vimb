@@ -340,11 +340,11 @@ gboolean command_view_source(const Arg *arg)
 
 gboolean command_navigate(const Arg *arg)
 {
+    int count = vb.state.count ? vb.state.count : 1;
     vb_set_mode(VB_MODE_NORMAL, false);
 
     WebKitWebView *view = vb.gui.webview;
     if (arg->i <= VB_NAVIG_FORWARD) {
-        int count = vb.state.count ? vb.state.count : 1;
         webkit_web_view_go_back_or_forward(
             view, (arg->i == VB_NAVIG_BACK ? -count : count)
         );
@@ -362,6 +362,7 @@ gboolean command_navigate(const Arg *arg)
 gboolean command_scroll(const Arg *arg)
 {
     gdouble max, new;
+    int count = vb.state.count ? vb.state.count : 1;
     int direction = (arg->i & (1 << 2)) ? 1 : -1;
     GtkAdjustment *adjust = (arg->i & VB_SCROLL_AXIS_H) ? vb.gui.adjust_h : vb.gui.adjust_v;
 
@@ -372,7 +373,6 @@ gboolean command_scroll(const Arg *arg)
     /* type scroll */
     if (arg->i & VB_SCROLL_TYPE_SCROLL) {
         gdouble value;
-        int count = vb.state.count ? vb.state.count : 1;
         if (arg->i & VB_SCROLL_UNIT_LINE) {
             value = vb.config.scrollstep;
         } else if (arg->i & VB_SCROLL_UNIT_HALFPAGE) {
@@ -605,7 +605,7 @@ gboolean command_shortcut_default(const Arg *arg)
 gboolean command_zoom(const Arg *arg)
 {
     float step, level;
-    int count;
+    int count = vb.state.count ? vb.state.count : 1;
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
@@ -615,7 +615,6 @@ gboolean command_zoom(const Arg *arg)
         return true;
     }
 
-    count = vb.state.count ? vb.state.count : 1;
     level = webkit_web_view_get_zoom_level(vb.gui.webview);
 
     WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
