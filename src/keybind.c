@@ -193,28 +193,20 @@ static void string_to_keybind(char *str, Keybind *keybind)
         g_strfreev(string);
     }
 
-    /* set the shift mask for uppercase keys like 'G' */
-    guint32 ukval = gdk_keyval_to_unicode(keybind->keyval);
-    if (g_unichar_isgraph(ukval)
-        /* ignore SHIFT if key is not subject to case */
-        && (gdk_keyval_is_upper(keybind->keyval) && !gdk_keyval_is_lower(keybind->keyval))
-    ) {
-        keybind->modmask = GDK_SHIFT_MASK;
-    }
-
-    /* post process the keybinding */
     /* special handling for shift tab */
     if (keybind->keyval == GDK_Tab && keybind->modmask == GDK_SHIFT_MASK) {
+        /* remove the none needed shoft mask */
+        keybind->modmask &= ~GDK_SHIFT_MASK;
         keybind->keyval = GDK_ISO_Left_Tab;
     }
 }
 
 static guint string_to_modmask(const char *str)
 {
-    if (g_ascii_strcasecmp(str, "ctrl") == 0) {
+    if (!strncmp(str, "ctrl", 4)) {
         return GDK_CONTROL_MASK;
     }
-    if (g_ascii_strcasecmp(str, "shift") == 0) {
+    if (!strncmp(str, "shift", 5)) {
         return GDK_SHIFT_MASK;
     }
 
@@ -223,15 +215,15 @@ static guint string_to_modmask(const char *str)
 
 static guint string_to_value(const char *str)
 {
-    if (!strcmp(str, "tab")) {
+    if (!strncmp(str, "tab", 3)) {
         return GDK_Tab;
-    } else if (!strcmp(str, "up")) {
+    } else if (!strncmp(str, "up", 2)) {
         return GDK_Up;
-    } else if (!strcmp(str, "down")) {
+    } else if (!strncmp(str, "down", 4)) {
         return GDK_Down;
-    } else if (!strcmp(str, "left")) {
+    } else if (!strncmp(str, "left", 4)) {
         return GDK_Left;
-    } else if (!strcmp(str, "right")) {
+    } else if (!strncmp(str, "right", 5)) {
         return GDK_Right;
     }
 
@@ -240,8 +232,16 @@ static guint string_to_value(const char *str)
 
 static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 {
-    guint keyval = event->keyval;
-    guint state  = CLEAN_STATE_WITH_SHIFT(event);
+    guint keyval, state;
+    static GdkKeymap *keymap;
+    GdkModifierType irrelevant;
+
+    keymap = gdk_keymap_get_default();
+    gdk_keymap_translate_keyboard_state(keymap, event->hardware_keycode,
+        event->state, event->group, &keyval, NULL, NULL, &irrelevant);
+
+    /* remove modifiers that doesn't matter for the current event */
+    state = CLEAN_STATE_WITH_SHIFT(event) & ~irrelevant;
 
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
