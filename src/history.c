@@ -123,16 +123,16 @@ char *history_get(const char *input, gboolean prev)
 
     if (!history.active) {
         history.active = get_list(input);
-        history.active = g_list_append(history.active, g_strdup(""));
         /* start with latest added items */
-        history.active = g_list_last(history.active);
+        history.active = g_list_first(history.active);
+        history.active = g_list_prepend(history.active, g_strdup(""));
     }
 
     if (prev) {
-        if ((new = g_list_previous(history.active))) {
+        if ((new = g_list_next(history.active))) {
             history.active = new;
         }
-    } else if ((new = g_list_next(history.active))) {
+    } else if ((new = g_list_previous(history.active))) {
         history.active = new;
     }
 
@@ -203,8 +203,7 @@ static const char *get_file_by_type(HistoryType type)
 }
 
 /**
- * Loads history items form file but eleminate duplicates.
- * Oldest entries first.
+ * Loads history items form file but eleminate duplicates in FIFO order.
  */
 static GList *load(const char *file)
 {
@@ -239,18 +238,17 @@ static GList *load(const char *file)
     file_lock_set(fileno(f), F_UNLCK);
     fclose(f);
 
+    /* reverse to not use the slow g_list_last */
+    list = g_list_reverse(list);
+
     /* if list is too long - remove items from end (oldest entries) */
     if (vb.config.history_max < g_list_length(list)) {
-        /* reverse to not use the slow g_list_last */
-        list = g_list_reverse(list);
         while (vb.config.history_max < g_list_length(list)) {
             GList *last = g_list_first(list);
             g_free(last->data);
             list = g_list_delete_link(list, last);
         }
     }
-
-    list = g_list_reverse(list);
 
     return list;
 }
