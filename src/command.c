@@ -29,25 +29,6 @@
 #include "bookmark.h"
 #include "dom.h"
 
-/*
-bitmap
-1: primary cliboard
-2: secondary cliboard
-3: yank uri
-4: yank selection
-*/
-enum {
-    COMMAND_YANK_URI       = (VB_CLIPBOARD_SECONDARY<<1),
-    COMMAND_YANK_SELECTION = (VB_CLIPBOARD_SECONDARY<<2)
-};
-
-enum {
-    COMMAND_ZOOM_OUT,
-    COMMAND_ZOOM_IN,
-    COMMAND_ZOOM_FULL  = (1<<1),
-    COMMAND_ZOOM_RESET = (1<<2)
-};
-
 typedef struct {
     char    *file;
     Element *element;
@@ -112,6 +93,7 @@ static CommandInfo cmd_list[] = {
     {"hint-image-open",      NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN, ";i"}},
     {"hint-image-tabopen",   NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW, ";I"}},
     {"hint-editor",          NULL,    command_hints,                {HINTS_TYPE_EDITABLE, ";e"}},
+    {"hint-save",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE, ";s"}},
     {"yank-uri",             "yu",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",       "ys",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},
     {"search-forward",       NULL,    command_search,               {VB_SEARCH_FORWARD}},
@@ -134,7 +116,7 @@ static CommandInfo cmd_list[] = {
     {"prev",                 "p",     command_nextprev,             {1}},
     {"descent",              NULL,    command_descent,              {0}},
     {"descent!",             NULL,    command_descent,              {1}},
-    {"save",                 NULL,    command_save,                 {0}},
+    {"save",                 NULL,    command_save,                 {COMMAND_SAVE_CURRENT}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -745,14 +727,25 @@ gboolean command_descent(const Arg *arg)
 gboolean command_save(const Arg *arg)
 {
     WebKitDownload *download;
-    const char *uri = webkit_web_view_get_uri(vb.gui.webview);
+    const char *uri, *path = NULL;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
+    if (arg->i == COMMAND_SAVE_CURRENT) {
+        uri = webkit_web_view_get_uri(vb.gui.webview);
+        /* given string is the path to save the download to */
+        if (arg->s && *(arg->s) != '\0') {
+            path = arg->s;
+        }
+    } else {
+        uri = arg->s;
+    }
 
     if (!uri || *uri == '\0') {
         return false;
     }
 
     download = webkit_download_new(webkit_network_request_new(uri));
-    vb_download(vb.gui.webview, download, arg->s ? arg->s : NULL);
+    vb_download(vb.gui.webview, download, path);
 
     return true;
 }

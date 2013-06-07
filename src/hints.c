@@ -164,6 +164,10 @@ static void run_script(char *js)
             a.s = g_strconcat((mode & HINTS_OPEN_NEW) ? ":tabopen " : ":open ", v, NULL);
             command_input(&a);
             g_free(a.s);
+        } else if (mode & HINTS_PROCESS_SAVE) {
+            a.s = v;
+            a.i = COMMAND_SAVE_URI;
+            command_save(&a);
         } else {
             a.i = VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY;
             a.s = v;

@@ -226,6 +226,10 @@ given, print this into the inputbox, default ';i' and ';I'.
 .BI "hint-editor [" PREFIX "]"
 Start hinting to open inputboxes or textareas with external editor. If
 \fIPREFIX\fP is given, print this into the inputbox, default ';e'.
+.TP
+.BI "hint-save [" PREFIX "]"
+Start hinting to download hinted links into configured download directory. If
+\fIPREFIX\fP is given, print this into the inputbox, default ';s'.
 
 .SS Yank
 .TP
@@ -528,6 +532,9 @@ Start hinting to open images into new window.
 .TP
 .B ;\-e
 Start hinting to open editable form fileds with external editor.
+.TP
+.B ;\-s
+Start hinting to download the linkes resource.
 .TP
 .B y
 Yank the URI or current page into clipboard.

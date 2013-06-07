@@ -31,7 +31,8 @@ enum {
     HINTS_PROCESS_INPUT = (1 << 2),
     HINTS_PROCESS_YANK  = (1 << 3),
     HINTS_PROCESS_OPEN  = (1 << 4),
-    HINTS_OPEN_NEW      = (1 << 5),
+    HINTS_PROCESS_SAVE  = (1 << 5),
+    HINTS_OPEN_NEW      = (1 << 6),
 };
 
 void hints_init(WebKitWebFrame *frame);

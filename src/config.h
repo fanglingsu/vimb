@@ -76,6 +76,7 @@ const char *default_config[] = {
     "nmap ;i=hint-image-open",
     "nmap ;I=hint-image-tabopen",
     "nmap ;e=hint-editor",
+    "nmap ;s=hint-save",
     "nmap y=yank-uri",
     "nmap Y=yank-selection",
     "nmap p=open-clipboard",

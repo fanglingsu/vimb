@@ -20,6 +20,30 @@
 #ifndef _COMMAND_H
 #define _COMMAND_H
 
+/*
+bitmap
+1: primary cliboard
+2: secondary cliboard
+3: yank uri
+4: yank selection
+*/
+enum {
+    COMMAND_YANK_URI       = (VB_CLIPBOARD_SECONDARY<<1),
+    COMMAND_YANK_SELECTION = (VB_CLIPBOARD_SECONDARY<<2)
+};
+
+enum {
+    COMMAND_ZOOM_OUT,
+    COMMAND_ZOOM_IN,
+    COMMAND_ZOOM_FULL  = (1<<1),
+    COMMAND_ZOOM_RESET = (1<<2)
+};
+
+enum {
+    COMMAND_SAVE_CURRENT,
+    COMMAND_SAVE_URI
+};
+
 void command_init(void);
 GList *command_get_by_prefix(const char *prefix);
 void command_cleanup(void);
