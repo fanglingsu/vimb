@@ -222,3 +222,38 @@ gboolean util_create_tmp_file(const char *content, char **file)
 
     return true;
 }
+
+/**
+ * Build the absolute file path of given path and possible given directory.
+ * If the path is already absolute or uses ~/ for the home directory, the
+ * directory is ignored.
+ *
+ * Returned path must be freed.
+ */
+char *util_buil_path(const char *path, const char *dir)
+{
+    char *fullPath, *p;
+
+    /* creating directory */
+    if (path[0] == '/') {
+        fullPath = g_strdup(path);
+    } else if (path[0] == '~') {
+        if (path[1] == '/') {
+            fullPath = g_strconcat(g_get_home_dir(), &path[1], NULL);
+        } else {
+            fullPath = g_strconcat(g_get_home_dir(), "/", &path[1], NULL);
+        }
+    } else if (dir) {
+        fullPath = g_strconcat(dir, "/", path, NULL);
+    } else {
+        fullPath = g_strconcat(g_get_current_dir(), "/", path, NULL);
+    }
+
+    if ((p = strrchr(fullPath, '/'))) {
+        *p = '\0';
+        g_mkdir_with_parents(fullPath, 0700);
+        *p = '/';
+    }
+
+    return fullPath;
+}

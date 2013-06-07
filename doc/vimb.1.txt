@@ -316,7 +316,7 @@ This are wrapper commands to start completion and to step through the
 completion items, or to focus previous or next hints if hinting is active.
 
 .TP
-.BI run " [COMMAND LIST]"
+.BI "run [" "COMMAND LIST" ]
 Run is a command, that was introduced to have the ability to run multiple
 other commands with a single call. Everything after the `run' is interpreted
 as a `|' seperated list of commands and parameters. The run command allows to
@@ -330,6 +330,12 @@ Example:
 .TP
 .BI [ N "]search-forward, [" N "]search-backward"
 Search in current page forward or backward.
+.TP
+.BI "save [" PATH "]"
+Download current opened page into configured download directory. If \fIPATH\fP
+is given, download under this file name or path. Possible value for PATH are
+`page.html', `subdir/img1.png', `~/downlod.html' or absolute pathes
+`/tmp/file.html'.
 .TP
 .B inspect
 Toggles the webinspector for current page. This is only available if the config

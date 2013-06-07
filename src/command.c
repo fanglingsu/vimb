@@ -134,6 +134,7 @@ static CommandInfo cmd_list[] = {
     {"prev",                 "p",     command_nextprev,             {1}},
     {"descent",              NULL,    command_descent,              {0}},
     {"descent!",             NULL,    command_descent,              {1}},
+    {"save",                 NULL,    command_save,                 {0}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -739,6 +740,21 @@ gboolean command_descent(const Arg *arg)
     g_free(a.s);
 
     return result;
+}
+
+gboolean command_save(const Arg *arg)
+{
+    WebKitDownload *download;
+    const char *uri = webkit_web_view_get_uri(vb.gui.webview);
+
+    if (!uri || *uri == '\0') {
+        return false;
+    }
+
+    download = webkit_download_new(webkit_network_request_new(uri));
+    vb_download(vb.gui.webview, download, arg->s ? arg->s : NULL);
+
+    return true;
 }
 
 gboolean command_editor(const Arg *arg)

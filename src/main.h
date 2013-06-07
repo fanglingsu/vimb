@@ -322,5 +322,6 @@ void vb_update_status_style(void);
 void vb_update_input_style(void);
 void vb_update_urlbar(const char *uri);
 VbInputType vb_get_input_parts(const char* input, const char **prefix, const char **clean);
+gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);
 
 #endif /* end of include guard: _MAIN_H */

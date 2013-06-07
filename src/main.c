@@ -59,7 +59,6 @@ static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, cons
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
     WebKitWebFrame *frame, WebKitNetworkRequest *request, char*
     mime_type, WebKitWebPolicyDecision *decision);
-static gboolean download_requested_cb(WebKitWebView *view, WebKitDownload *download);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 static void request_start_cb(WebKitWebView *webview, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
@@ -745,7 +744,7 @@ static void setup_signals()
         "signal::hovering-over-link", G_CALLBACK(hover_link_cb), NULL,
         "signal::title-changed", G_CALLBACK(title_changed_cb), NULL,
         "signal::mime-type-policy-decision-requested", G_CALLBACK(mimetype_decision_cb), NULL,
-        "signal::download-requested", G_CALLBACK(download_requested_cb), NULL,
+        "signal::download-requested", G_CALLBACK(vb_download), NULL,
         "signal::resource-request-starting", G_CALLBACK(request_start_cb), NULL,
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
         NULL
@@ -906,26 +905,33 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
     return false;
 }
 
-static gboolean download_requested_cb(WebKitWebView *view, WebKitDownload *download)
+gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path)
 {
     WebKitDownloadStatus status;
-    char *uri = NULL;
+    char *uri, *file;
 
-    const char *filename = webkit_download_get_suggested_filename(download);
-    if (!filename) {
-        filename = "vimb_donwload";
+    /* prepare the path to save the donwload */
+    if (path) {
+        file = util_buil_path(path, vb.config.download_dir);
+    } else {
+        path = webkit_download_get_suggested_filename(download);
+        if (!path) {
+            path = "vimb_donwload";
+        }
+        file = util_buil_path(path, vb.config.download_dir);
     }
 
-    /* prepare the download target path */
-    uri = g_strdup_printf("file://%s%c%s", vb.config.download_dir, G_DIR_SEPARATOR, filename);
+    /* build the file uri from file path */
+    uri = g_filename_to_uri(file, NULL, NULL);
     webkit_download_set_destination_uri(download, uri);
+    g_free(file);
     g_free(uri);
 
     guint64 size = webkit_download_get_total_size(download);
     if (size > 0) {
-        vb_echo(VB_MSG_NORMAL, false, "Download %s [~%uB] started ...", filename, size);
+        vb_echo(VB_MSG_NORMAL, false, "Download %s [~%uB] started ...", path, size);
     } else {
-        vb_echo(VB_MSG_NORMAL, false, "Download %s started ...", filename);
+        vb_echo(VB_MSG_NORMAL, false, "Download %s started ...", path);
     }
 
     status = webkit_download_get_status(download);
