@@ -158,6 +158,10 @@ hint-editor [PREFIX]
 : Start hinting to open inputboxes or textareas with external editor. If PREFIX
   is given, print this into the inputbox, default `;e`.
 
+hint-save [PREFIX]
+: Start hinting to download hinted links into configured download directory.
+  If PREFIX is given, print this into the inputbox, default `;s`.
+
 next, n
 prev, p
 : Focus next or previous hint if hinting mode is active.
@@ -272,6 +276,12 @@ run [COMMAND LIST]
 
 [N]search-forward, [N]search-backward
 : Search in current page forward or backward.
+
+save [PATH]
+: Download current opened page into configured download directory. If PATH is
+  given, download under this file name  or path. Possible value for PATH are
+  `page.html`, `subdir/img1.png`, `~/downlod.html` or absolute pathes
+  `/tmp/file.html`.
 
 inspect
 : Toggles the webinspector for current page. This is only available if the

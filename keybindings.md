@@ -160,6 +160,9 @@ F
 ;-e
 : Start hinting to open editable form fileds with external editor.
 
+;-s
+: Start hinting to download the linkes resource.
+
 ---
 
 y
