@@ -1,11 +1,11 @@
 *{margin:0;padding:0}
 html{background-color:#e0ddda}
 body{color:#333;font-family:"Dejavu sans-serif",sans-serif;margin:0;padding:0;line-height:1.5em}
-#content{background-color:#fff;margin:1em auto;padding:2.5em 2em 1.5em;max-width:60em;min-width:30em;border:.13em solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
-#head{font-size:1.2em;position:absolute;top:2em}
+#content{background-color:#fff;margin:1em auto;padding:4em 4em 2.5em;max-width:50em;min-width:30em;border:.13em solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
+#head{font-size:1.4em;position:absolute;top:2.5em}
 #head h3{display:none}
 #head ul{margin:0;padding:0}
-#head ul li{list-style:none;float:left;margin:0 1em 0 0;padding:0}
+#head ul li{list-style:none;display:inline;margin:0 .5em 0 0;padding:0}
 h1,h2,h3{font-family:inherit;font-weight:normal;padding:1.2em 0 .1em}
 h1{font-size:2em}
 h2{font-size:1.5em}
