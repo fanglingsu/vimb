@@ -2,6 +2,7 @@
 title:  vimb screenshots
 layout: default
 meta:   screenshots of vimb the vim browser in action
+active: screenshots
 ---
 
 # vimb - screenshots

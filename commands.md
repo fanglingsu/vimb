@@ -2,6 +2,7 @@
 title:  vimb - commands
 layout: default
 meta:   list of commands available in vimb the vim browser
+active: commands
 ---
 
 # vimb commands
