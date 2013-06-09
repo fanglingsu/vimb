@@ -29,6 +29,5 @@ table{border-collapse:collapse}
 th,td{border:.13em solid #ccc;padding:.3em}
 th{background-color:#eee}
 hr{border:none;border-top:.13em solid #ccc;width:100%}
-::selection{background-color:#bbb}
 dl{width:100%}
 dd{margin:0 0 .4em 4em}
