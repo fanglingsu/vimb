@@ -275,6 +275,12 @@ run [COMMAND LIST]
 
   Example: `:run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown`
 
+shellcmd CMD
+: Runs given shell CMD syncron and print the output into inputbox. The CMD can
+  contain multiple `%` chars that are expanded to the current opened uri.
+
+  Example: ``:shellcmd echo "`date` %" >> myhistory.txt``
+
 [N]search-forward, [N]search-backward
 : Search in current page forward or backward.
 
