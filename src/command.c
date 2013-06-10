@@ -29,6 +29,8 @@
 #include "bookmark.h"
 #include "dom.h"
 
+#define SHELL_CMD "/bin/sh -c '%s'"
+
 typedef struct {
     char    *file;
     Element *element;
@@ -117,10 +119,12 @@ static CommandInfo cmd_list[] = {
     {"descent",              NULL,    command_descent,              {0}},
     {"descent!",             NULL,    command_descent,              {1}},
     {"save",                 NULL,    command_save,                 {COMMAND_SAVE_CURRENT}},
+    {"shellcmd",             NULL,    command_shellcmd,             {0}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
 static CommandInfo *command_lookup(const char* name);
+static char *expand_string(const char *str);
 
 
 void command_init(void)
@@ -750,6 +754,38 @@ gboolean command_save(const Arg *arg)
     return true;
 }
 
+gboolean command_shellcmd(const Arg *arg)
+{
+    int status, argc;
+    char *cmd, *exp, *error = NULL, *out = NULL, **argv;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
+    if (!arg->s || *(arg->s) == '\0') {
+        return false;
+    }
+
+    exp = expand_string(arg->s);
+    cmd = g_strdup_printf(SHELL_CMD, exp);
+    g_free(exp);
+    if (!g_shell_parse_argv(cmd, &argc, &argv, NULL)) {
+        vb_echo(VB_MSG_ERROR, true, "Could not parse command args");
+        g_free(cmd);
+
+        return false;
+    }
+    g_free(cmd);
+
+    g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, &out, &error, &status, NULL);
+    g_strfreev(argv);
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+        vb_echo(VB_MSG_NORMAL, true, "  %s", out);
+        return true;
+    }
+
+    vb_echo(VB_MSG_ERROR, true, "[%d] %s", WEXITSTATUS(status), error);
+    return false;
+}
+
 gboolean command_editor(const Arg *arg)
 {
     char *file_path = NULL;
@@ -838,4 +874,19 @@ static CommandInfo *command_lookup(const char* name)
     }
 
     return c;
+}
+
+/**
+ * Expands paceholders in given string.
+ * % - expanded to current uri
+ * TODO allow modifiers like :p :h :e :r like in vim expand()
+ *
+ * Returned string must be freed.
+ */
+static char *expand_string(const char *str)
+{
+    if (!str) {
+        return NULL;
+    }
+    return util_str_replace("%", webkit_web_view_get_uri(vb.gui.webview), str);
 }

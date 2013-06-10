@@ -332,6 +332,14 @@ Format:
 Example:
 ":run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown"
 .TP
+.BI "shellcmd " CMD
+Runs given shell \fICMD\fP syncron and print the output into inputbox. The
+\fICMD\fP can contain multiple '%' chars that are expanded to the current
+opened uri.
+
+Example:
+`:shellcmd echo "`date` %" >> myhistory.txt'
+.TP
 .BI [ N "]search-forward, [" N "]search-backward"
 Search in current page forward or backward.
 .TP
