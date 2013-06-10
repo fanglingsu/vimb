@@ -52,6 +52,7 @@
 #endif
 
 #define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox)))
+#define GET_URI() (webkit_web_view_get_uri(vb.gui.webview))
 #define CLEAN_MODE(mode) ((mode) & ~(VB_MODE_COMPLETE | VB_MODE_SEARCH | VB_MODE_HINTING))
 #define CLEAR_INPUT() (vb_echo(VB_MSG_NORMAL, ""))
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)

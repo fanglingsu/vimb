@@ -389,7 +389,7 @@ static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec)
 
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 {
-    const char *uri = webkit_web_view_get_uri(vb.gui.webview);
+    const char *uri = GET_URI();
 
     switch (webkit_web_view_get_load_status(vb.gui.webview)) {
         case WEBKIT_LOAD_PROVISIONAL:
@@ -869,7 +869,7 @@ static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *fr
 
 static void create_web_view_received_uri_cb(WebKitWebView *view)
 {
-    Arg a = {VB_TARGET_NEW, (char*)webkit_web_view_get_uri(view)};
+    Arg a = {VB_TARGET_NEW, (char*)GET_URI()};
     /* destroy temporary webview */
     webkit_web_view_stop_loading(view);
     gtk_widget_destroy(GTK_WIDGET(view));
@@ -988,7 +988,7 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
 
 static void destroy_client()
 {
-    const char *uri = webkit_web_view_get_uri(vb.gui.webview);
+    const char *uri = GET_URI();
     /* write last URL into file for recreation */
     if (uri) {
         g_file_set_contents(vb.files[FILES_CLOSED], uri, -1, NULL);

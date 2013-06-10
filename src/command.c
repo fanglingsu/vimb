@@ -293,9 +293,7 @@ gboolean command_input(const Arg *arg)
     const char *url;
 
     /* add current url if requested */
-    if (VB_INPUT_CURRENT_URI == arg->i
-        && (url = webkit_web_view_get_uri(vb.gui.webview))
-    ) {
+    if (VB_INPUT_CURRENT_URI == arg->i && (url = GET_URI())) {
         /* append the current url to the input message */
         char *input = g_strconcat(arg->s, url, NULL);
         vb_echo_force(VB_MSG_NORMAL, false, "%s", input);
@@ -491,7 +489,7 @@ gboolean command_yank(const Arg *arg)
     Arg a = {arg->i};
     if (arg->i & COMMAND_YANK_URI) {
         /* yank current url */
-        a.s = g_strdup(webkit_web_view_get_uri(vb.gui.webview));
+        a.s = g_strdup(GET_URI());
     } else {
         a.s = arg->s ? g_strdup(arg->s) : NULL;
     }
@@ -640,7 +638,7 @@ gboolean command_bookmark(const Arg *arg)
 {
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    bookmark_add(webkit_web_view_get_uri(vb.gui.webview), arg->s);
+    bookmark_add(GET_URI(), arg->s);
     return true;
 }
 
@@ -682,7 +680,7 @@ gboolean command_descent(const Arg *arg)
     int count = vb.state.count ? vb.state.count : 1;
     const char *uri, *p = NULL, *domain = NULL;
 
-    uri = webkit_web_view_get_uri(vb.gui.webview);
+    uri = GET_URI();
 
     vb_set_mode(VB_MODE_NORMAL, false);
     if (!uri || *uri == '\0') {
@@ -735,7 +733,7 @@ gboolean command_save(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
     if (arg->i == COMMAND_SAVE_CURRENT) {
-        uri = webkit_web_view_get_uri(vb.gui.webview);
+        uri = GET_URI();
         /* given string is the path to save the download to */
         if (arg->s && *(arg->s) != '\0') {
             path = arg->s;
@@ -888,5 +886,5 @@ static char *expand_string(const char *str)
     if (!str) {
         return NULL;
     }
-    return util_str_replace("%", webkit_web_view_get_uri(vb.gui.webview), str);
+    return util_str_replace("%", GET_URI(), str);
 }
