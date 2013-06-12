@@ -149,9 +149,6 @@ gboolean vb_load_uri(const Arg *arg)
         uri = g_strdup_printf("http://%s", path);
     }
 
-    /* change state to normal mode */
-    vb_set_mode(VB_MODE_NORMAL, false);
-
     if (arg->i == VB_TARGET_NEW) {
         guint i = 0;
         char *cmd[7], xid[64];
@@ -205,8 +202,6 @@ gboolean vb_set_clipboard(const Arg *arg)
  */
 gboolean vb_set_mode(Mode mode, gboolean clean)
 {
-    vb.state.modkey = vb.state.count  = 0;
-
     /* process only if mode has changed */
     if (vb.state.mode != mode) {
         /* leaf the old mode */
@@ -421,8 +416,12 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 run_user_script(frame);
             }
 
-            /* status bar is updated by vb_set_mode */
-            vb_set_mode(VB_MODE_NORMAL , false);
+            if (vb.state.mode & VB_MODE_INSERT) {
+                /* status bar is updated by vb_set_mode */
+                vb_set_mode(VB_MODE_NORMAL, false);
+            } else {
+                vb_update_statusbar();
+            }
             vb_update_urlbar(uri);
 
             break;

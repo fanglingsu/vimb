@@ -245,6 +245,7 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
+        vb.state.modkey = vb.state.count = 0;
         /* switch to normal mode and clear the input box */
         vb_set_mode(VB_MODE_NORMAL, true);
 
@@ -274,6 +275,9 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
     if (link) {
         Keybind *keybind = (Keybind*)link->data;
         command_run(keybind->command, keybind->param);
+
+        vb.state.modkey = vb.state.count = 0;
+        vb_update_statusbar();
 
         return true;
     }
