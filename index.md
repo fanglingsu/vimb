@@ -9,8 +9,8 @@ active: home
 
 vimb is a fast and lightweight web browser based on the webkit web browser
 engine and the gtk toolkit. vimb is modal like the great vim editor and also
-easy configurable during runtime. vimb is mostly keyboard driven and does not
-detract you from your daily work.
+easily configurable during runtime. vimb is mostly keyboard driven and does
+not detract you from your daily work.
 
 ## features
 - modal like vim
