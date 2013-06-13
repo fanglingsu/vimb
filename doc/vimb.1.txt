@@ -183,8 +183,7 @@ Example:
 "cunmap <shift\-tab>" To remove this keybinding use.
 
 If a keybinding is added, for the same key-sequence like another keybinding,
-the later added have precedence. If a keybinding is removed only that with the
-highest precedence will be removed and all other will still be active.
+the previous keybinding will be removed.
 .TP
 .B nmap
 Add a keybinding used in Normal Mode.

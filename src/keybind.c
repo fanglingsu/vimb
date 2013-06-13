@@ -27,6 +27,7 @@ extern VbCore vb;
 static GSList  *keys;
 static GString *modkeys;
 
+static void keybind_remove(Keybind *kb);
 static void rebuild_modkeys(void);
 static GSList *find(int mode, guint modkey, guint modmask, guint keyval);
 static void string_to_keybind(char *str, Keybind *key);
@@ -75,6 +76,9 @@ gboolean keybind_add_from_string(char *keystring, const char *command, const Mod
 
     string_to_keybind(keystring, keybind);
 
+    /* remove possible existing keybinding */
+    keybind_remove(keybind);
+
     /* add the keybinding to the list */
     keys = g_slist_prepend(keys, keybind);
 
@@ -98,17 +102,22 @@ gboolean keybind_remove_from_string(char *str, const Mode mode)
     /* fill the keybind with data from given string */
     string_to_keybind(str, &keybind);
 
-    GSList *link = find(keybind.mode, keybind.modkey, keybind.modmask, keybind.keyval);
+    keybind_remove(&keybind);
+
+    return true;
+}
+
+static void keybind_remove(Keybind *kb)
+{
+    GSList *link = find(kb->mode, kb->modkey, kb->modmask, kb->keyval);
     if (link) {
         free_keybind((Keybind*)link->data);
         keys = g_slist_delete_link(keys, link);
+        if (kb->modkey && strchr(modkeys->str, kb->modkey)) {
+            /* remove eventually no more used modkeys */
+            rebuild_modkeys();
+        }
     }
-
-    if (keybind.modkey && strchr(modkeys->str, keybind.modkey) != NULL) {
-        /* remove eventually no more used modkeys */
-        rebuild_modkeys();
-    }
-    return true;
 }
 
 /**
