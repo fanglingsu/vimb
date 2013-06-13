@@ -21,8 +21,7 @@ keys and modifiers and is given in format like `<ctrl-o>`, `<tab>`,
 `<shift-tab>`, `<up>`, `<right>` or also a simple char like "G".
 
 If a keybinding is added, for the same key-sequence like another keybinding,
-the later added have precedence. If a keybinding is removed only that with the
-highest precedence will be removed and all other will still be active.
+the previous keybinding will be removed.
 
 n(un)map
 : Add (Remove) a keybinding used in Normal Mode.
