@@ -273,11 +273,11 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
     GSList *link = find(CLEAN_MODE(vb.state.mode), vb.state.modkey, state, keyval);
 
     if (link) {
-        Keybind *keybind = (Keybind*)link->data;
-        command_run(keybind->command, keybind->param);
-
         vb.state.modkey = vb.state.count = 0;
         vb_update_statusbar();
+
+        Keybind *keybind = (Keybind*)link->data;
+        command_run(keybind->command, keybind->param);
 
         return true;
     }
