@@ -178,6 +178,7 @@ void command_cleanup(void)
  * Parses given string and put corresponding command arg and command count in
  * also given pointers.
  * Returns true if parsing was successful.
+ * Dont forget to g_free arg->s.
  */
 gboolean command_parse_from_string(const char *input, Command *func, Arg *arg, guint *count)
 {
@@ -228,13 +229,17 @@ gboolean command_parse_from_string(const char *input, Command *func, Arg *arg, g
  */
 gboolean command_run_string(const char *input)
 {
+    gboolean success;
     Command command = NULL;
     Arg arg = {0};
     if (!command_parse_from_string(input, &command, &arg, &vb.state.count)) {
         return false;
     }
 
-    return command(&arg);
+    success = command(&arg);
+    g_free(arg.s);
+    
+    return success;
 }
 
 /**
