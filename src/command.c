@@ -317,8 +317,7 @@ gboolean command_input(const Arg *arg)
 
 gboolean command_close(const Arg *arg)
 {
-    gtk_widget_destroy(GTK_WIDGET(vb.gui.window));
-
+    vb_quit();
     return true;
 }
 

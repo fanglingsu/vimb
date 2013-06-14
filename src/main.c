@@ -355,6 +355,31 @@ VbInputType vb_get_input_parts(const char* input, const char **prefix, const cha
     return VB_INPUT_UNKNOWN;
 }
 
+void vb_quit(void)
+{
+    const char *uri = GET_URI();
+    /* write last URL into file for recreation */
+    if (uri) {
+        g_file_set_contents(vb.files[FILES_CLOSED], uri, -1, NULL);
+    }
+
+    completion_clean();
+
+    webkit_web_view_stop_loading(vb.gui.webview);
+
+    command_cleanup();
+    setting_cleanup();
+    keybind_cleanup();
+    shortcut_cleanup();
+    history_cleanup();
+
+    for (int i = 0; i < FILES_LAST; i++) {
+        g_free(vb.files[i]);
+    }
+
+    gtk_main_quit();
+}
+
 static gboolean hide_message()
 {
     inputbox_print(false, VB_MSG_NORMAL, false, "");
@@ -445,31 +470,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
 static void destroy_window_cb(GtkWidget *widget)
 {
-    const char *uri = GET_URI();
-    /* write last URL into file for recreation */
-    if (uri) {
-        g_file_set_contents(vb.files[FILES_CLOSED], uri, -1, NULL);
-    }
-
-    completion_clean();
-
-    webkit_web_view_stop_loading(vb.gui.webview);
-    gtk_widget_destroy(GTK_WIDGET(vb.gui.webview));
-    gtk_widget_destroy(GTK_WIDGET(vb.gui.scroll));
-    gtk_widget_destroy(GTK_WIDGET(vb.gui.box));
-    gtk_widget_destroy(GTK_WIDGET(vb.gui.window));
-
-    command_cleanup();
-    setting_cleanup();
-    keybind_cleanup();
-    shortcut_cleanup();
-    history_cleanup();
-
-    for (int i = 0; i < FILES_LAST; i++) {
-        g_free(vb.files[i]);
-    }
-
-    gtk_main_quit();
+    vb_quit();
 }
 
 static void inputbox_activate_cb(GtkEntry *entry)
