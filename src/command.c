@@ -36,7 +36,6 @@ typedef struct {
     Element *element;
 } OpenEditorData;
 
-typedef gboolean (*Command)(const Arg *arg);
 typedef struct {
     const char *name;
     const char *alias;
@@ -175,41 +174,15 @@ void command_cleanup(void)
     }
 }
 
-gboolean command_exists(const char *name)
-{
-    return g_hash_table_contains(short_commands, name)
-        || g_hash_table_contains(commands, name);
-}
-
-gboolean command_run(const char *name, const char *param)
-{
-    gboolean result;
-    Arg a;
-    CommandInfo *command = command_lookup(name);
-    if (!command) {
-        vb_echo(VB_MSG_ERROR, true, "Command '%s' not found", name);
-        vb_set_mode(VB_MODE_NORMAL, false);
-
-        return false;
-    }
-    a.i = command->arg.i;
-    a.s = g_strdup(param ? param : command->arg.s);
-    result = command->function(&a);
-    g_free(a.s);
-
-    return result;
-}
-
 /**
- * Runs a single command form string containing the command and possible
- * parameters.
+ * Parses given string and put corresponding command arg and command count in
+ * also given pointers.
+ * Returns true if parsing was successful.
  */
-gboolean command_run_string(const char *input)
+gboolean command_parse_from_string(const char *input, Command *func, Arg *arg, guint *count)
 {
-    gboolean success;
-    char *command = NULL, *str, **token;
-
-    vb_set_mode(VB_MODE_NORMAL, false);
+    char *command, *name, *str, **token;
+    CommandInfo *info;
 
     if (!input || *input == '\0') {
         return false;
@@ -220,7 +193,7 @@ gboolean command_run_string(const char *input)
     g_strchug(str);
 
     /* get a possible command count */
-    vb.state.count = g_ascii_strtoll(str, &command, 10);
+    *count = g_ascii_strtoll(str, &command, 10);
 
     /* split the input string into command and parameter part */
     token = g_strsplit(command, " ", 2);
@@ -230,10 +203,38 @@ gboolean command_run_string(const char *input)
         g_strfreev(token);
         return false;
     }
-    success = command_run(token[0], token[1] ? token[1] : NULL);
+
+    name = token[0];
+    info = command_lookup(name);
+    if (!info) {
+        vb_echo(VB_MSG_ERROR, true, "Command '%s' not found", name);
+        g_strfreev(token);
+        return false;
+    }
+
+    /* assigne the data to given pointers */
+    arg->i = info->arg.i;
+    arg->s = g_strdup(token[1] ? token[1] : info->arg.s);
+    *func = info->function;
+
     g_strfreev(token);
 
-    return success;
+    return true;
+}
+
+/**
+ * Runs a single command form string containing the command and possible
+ * parameters.
+ */
+gboolean command_run_string(const char *input)
+{
+    Command command = NULL;
+    Arg arg = {0};
+    if (!command_parse_from_string(input, &command, &arg, &vb.state.count)) {
+        return false;
+    }
+
+    return command(&arg);
 }
 
 /**

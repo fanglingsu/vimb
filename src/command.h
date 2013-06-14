@@ -44,14 +44,15 @@ enum {
     COMMAND_SAVE_URI
 };
 
+typedef gboolean (*Command)(const Arg *arg);
+
 void command_init(void);
 GList *command_get_by_prefix(const char *prefix);
 void command_cleanup(void);
-gboolean command_exists(const char *name);
-gboolean command_run(const char *name, const char *param);
+gboolean command_parse_from_string(const char *input, Command *func, Arg *arg, guint *count);
 gboolean command_run_string(const char *input);
-
 gboolean command_run_multi(const Arg *arg);
+
 gboolean command_open(const Arg *arg);
 gboolean command_open_home(const Arg *arg);
 gboolean command_open_closed(const Arg *arg);

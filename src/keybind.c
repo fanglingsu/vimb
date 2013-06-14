@@ -56,35 +56,28 @@ void keybind_cleanup(void)
 
 gboolean keybind_add_from_string(char *keystring, const char *command, const Mode mode)
 {
-    char **token = NULL;
+    guint count;
     if (keystring == NULL || *keystring == '\0') {
         return false;
     }
 
-    /* split the input string into command and parameter part */
-    token = g_strsplit(command, " ", 2);
-    if (!token[0] || !command_exists(token[0])) {
-        g_strfreev(token);
+    Keybind *kb = g_new0(Keybind, 1);
+    kb->mode    = mode;
+    if (!command_parse_from_string(command, &kb->func, &kb->arg, &count)) {
         return false;
     }
 
-    Keybind *keybind = g_new0(Keybind, 1);
-    keybind->mode    = mode;
-    keybind->command = g_strdup(token[0]);
-    keybind->param   = g_strdup(token[1]);
-    g_strfreev(token);
+    string_to_keybind(keystring, kb);
 
-    string_to_keybind(keystring, keybind);
+    /* remove possible existing kbing */
+    keybind_remove(kb);
 
-    /* remove possible existing keybinding */
-    keybind_remove(keybind);
-
-    /* add the keybinding to the list */
-    keys = g_slist_prepend(keys, keybind);
+    /* add the kbing to the list */
+    keys = g_slist_prepend(keys, kb);
 
     /* save the modkey also in the modkey string if not exists already */
-    if (keybind->modkey && strchr(modkeys->str, keybind->modkey) == NULL) {
-        g_string_append_c(modkeys, keybind->modkey);
+    if (kb->modkey && strchr(modkeys->str, kb->modkey) == NULL) {
+        g_string_append_c(modkeys, kb->modkey);
     }
 
     return true;
@@ -286,7 +279,7 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
         vb_update_statusbar();
 
         Keybind *keybind = (Keybind*)link->data;
-        command_run(keybind->command, keybind->param);
+        keybind->func(&keybind->arg);
 
         return true;
     }
@@ -296,7 +289,6 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
 static void free_keybind(Keybind *keybind)
 {
-    g_free(keybind->command);
-    g_free(keybind->param);
+    g_free(keybind->arg.s);
     g_free(keybind);
 }

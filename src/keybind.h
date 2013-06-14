@@ -20,16 +20,17 @@
 #ifndef _KEYBIND_H
 #define _KEYBIND_H
 
+#include "command.h"
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 
 typedef struct {
-    int    mode;        /* mode maks for allowed browser modes */
-    guint  modkey;
-    guint  modmask;     /* modemask for the kayval */
-    guint  keyval;
-    char   *command;    /* command to run */
-    char   *param;
+    int     mode;        /* mode maks for allowed browser modes */
+    guint   modkey;
+    guint   modmask;     /* modemask for the kayval */
+    guint   keyval;
+    Command func;
+    Arg     arg;
 } Keybind;
 
 void keybind_init(void);
