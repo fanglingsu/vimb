@@ -324,28 +324,37 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     /* retrieves the xpath expression according to mode */
     function _getXpath(s)
     {
+        var x, l;
         if (typeof(s) === "undefined") {
             s = "";
         }
         switch (mode) {
             case "l":
-                if (s === "") {
-                    return "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href] | //input[not(@type='hidden')] | //a[href] | //area | //textarea | //button | //select";
+                if (!s) {
+                    x = "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href] | //input[not(@type='hidden')] | //a[href] | //area | //textarea | //button | //select";
                 } else {
-                    return "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and contains(., '" + s + "')] | //input[not(@type='hidden') and contains(., '" + s + "')] | //a[@href and contains(., '" + s + "')] | //area[contains(., '" + s + "')] |  //textarea[contains(., '" + s + "')] | //button[contains(@value, '" + s + "')] | //select[contains(., '" + s + "')]";
+                    x = "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and $C] | //input[not(@type='hidden') and $C] | //a[@href and $C] | //area[$C] |  //textarea[$C] | //button[$C] | //select[$C]";
                 }
+                break;
             case "e":
-                if (s === "") {
-                    return "//input[@type='text'] | //textarea";
+                if (!s) {
+                    x = "//input[@type='text'] | //textarea";
                 } else {
-                    return "//input[@type='text' and contains(., '" + s + "')] | //textarea[contains(., '" + s + "')]";
+                    x = "//input[@type='text' and $C] | //textarea[$C]";
                 }
+                break;
             case "i":
-                if (s === "") {
-                    return "//img[@src]";
+                if (!s) {
+                    x = "//img[@src]";
                 } else {
-                    return "//img[@src and contains(., '" + s + "')]";
+                    x = "//img[@src and $C]";
                 }
+                break;
         }
+        if (s) {
+            l = s.toLowerCase();
+            return x.replace("$C", "contains(translate(., '" + s.toUpperCase() + "', '" + l + "'), '" + l + "')");
+        } 
+        return x;
     }
 };
