@@ -276,6 +276,7 @@ gboolean command_run_multi(const Arg *arg)
 
 gboolean command_open(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, false);
     return vb_load_uri(arg);
 }
 
