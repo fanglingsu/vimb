@@ -138,30 +138,41 @@ More about the [keybindings][].
 
 ## hints
 
-hint-link [PREFIX], hint-link-new [PREFIX]
-: Start hinting to open link into current or new window. If PREFIX is given,
-  print this into the inputbox, default `.` and `,`.
+The hinting is the way to do what you would do with the mouse in common
+mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
+is started, the relevant elements on the page will be marked by numbered
+labels. Hints can be selected by using <tab> or <ctrl-tab>, by typing the
+number of the label, or filtering the elements by some text that is part of the
+hinted element (like url, link text, button label) and any combination of this
+methods. If <enter> is pressed, the current active hint will be fired. If only
+one possible hint remains, this will be fired automatically.
 
-hint-input-open [PREFIX], hint-input-tabopen [PREFIX]
+Syntax: `:hint-{TYPE} [QUERY]`
+
+If QUERY is given, this is used to filter hints contents initially. Note that
+the QUERY can only be used to filter the hints by their content and not by
+their numeric hint label. On the other hand QUERY is the only way to match
+hints with numeric content.
+
+hint-link [QUERY], hint-link-new [QUERY]
+: Start hinting to open link into current or new window.
+
+hint-input-open [QUERY], hint-input-tabopen [QUERY]
 : Start hinting to fill the inputbox with `:open {hintedLinkUrl}` or `:tabopen
-  {hintedLinkUrl}`. If PREFIX is given, print this into the inputbox, default
-  `;o` and `;t`.
+  {hintedLinkUrl}`.
 
-hint-yank [PREFIX]
+hint-yank [QUERY]
 : Start hinting to yank the hinted link url into the primary and secondary
-  clipboard. If PREFIX is given, print this into the inputbox, default `;y`.
+  clipboard.
 
-hint-image-open [PREFIX], hint-image-tabopen [PREFIX]
-: Start hinting to open images into current or new window. If PREFIX is given,
-  print this into the inputbox, default `;i` and `;I`.
+hint-image-open [QUERY], hint-image-tabopen [QUERY]
+: Start hinting to open images into current or new window.
 
-hint-editor [PREFIX]
-: Start hinting to open inputboxes or textareas with external editor. If PREFIX
-  is given, print this into the inputbox, default `;e`.
+hint-editor [QUERY]
+: Start hinting to open inputboxes or textareas with external editor.
 
-hint-save [PREFIX]
+hint-save [QUERY]
 : Start hinting to download hinted links into configured download directory.
-  If PREFIX is given, print this into the inputbox, default `;s`.
 
 next, n
 prev, p
