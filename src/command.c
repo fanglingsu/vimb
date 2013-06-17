@@ -86,15 +86,15 @@ static CommandInfo cmd_list[] = {
     {"cunmap",               NULL,    command_unmap,                {VB_MODE_COMMAND}},
     {"set",                  NULL,    command_set,                  {0}},
     {"inspect",              NULL,    command_inspect,              {0}},
-    {"hint-link",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN, "."}},
-    {"hint-link-new",        NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW, ","}},
-    {"hint-input-open",      NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT, ";o"}},
-    {"hint-input-tabopen",   NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT | HINTS_OPEN_NEW, ";t"}},
-    {"hint-yank",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_YANK, ";y"}},
-    {"hint-image-open",      NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN, ";i"}},
-    {"hint-image-tabopen",   NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW, ";I"}},
-    {"hint-editor",          NULL,    command_hints,                {HINTS_TYPE_EDITABLE, ";e"}},
-    {"hint-save",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE, ";s"}},
+    {"hint-link",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN}},
+    {"hint-link-new",        NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW}},
+    {"hint-input-open",      NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT}},
+    {"hint-input-tabopen",   NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT | HINTS_OPEN_NEW}},
+    {"hint-yank",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_YANK}},
+    {"hint-image-open",      NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN}},
+    {"hint-image-tabopen",   NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW}},
+    {"hint-editor",          NULL,    command_hints,                {HINTS_TYPE_EDITABLE}},
+    {"hint-save",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE}},
     {"yank-uri",             "yu",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",       "ys",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},
     {"search-forward",       NULL,    command_search,               {VB_SEARCH_FORWARD}},
@@ -462,9 +462,37 @@ gboolean command_inspect(const Arg *arg)
 
 gboolean command_hints(const Arg *arg)
 {
-    vb_echo_force(VB_MSG_NORMAL, false, "%s", arg->s);
+    int mode = arg->i;
+    char *prefix = "";
+    /* set prefix string according to hint type */
+    switch (HINTS_GET_TYPE(mode)) {
+        case HINTS_TYPE_LINK:
+            if (mode & HINTS_PROCESS_OPEN) {
+                prefix = mode & HINTS_OPEN_NEW ? "," : ".";
+            } else if (mode & HINTS_PROCESS_INPUT) {
+                prefix = mode & HINTS_OPEN_NEW ? ";t" : ";o";
+            } else if (mode & HINTS_PROCESS_YANK) {
+                prefix = ";y";
+            } else if (mode & HINTS_PROCESS_SAVE) {
+                prefix = ";s";
+            }
+            break;
+
+        case HINTS_TYPE_IMAGE:
+            if (mode & HINTS_PROCESS_OPEN) {
+                prefix = mode & HINTS_OPEN_NEW ? ";I" : ";i";
+            }
+            break;
+
+        case HINTS_TYPE_EDITABLE:
+            prefix = ";e";
+            break;
+    }
+
+    vb_echo_force(VB_MSG_NORMAL, false, "%s%s", prefix, arg->s ? arg->s : "");
+
     /* mode will be set in hints_create - so we don't neet to do it here */
-    hints_create(NULL, arg->i, (arg->s ? strlen(arg->s) : 0));
+    hints_create(arg->s, arg->i, strlen(prefix));
 
     return true;
 }

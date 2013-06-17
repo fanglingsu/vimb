@@ -204,31 +204,40 @@ Remove a Input Mode keybinding.
 Remove a Command Mode keybinding.
 
 .SS Hints
+The hinting is the way to do what you would do with the mouse in common
+mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
+is started, the relevant elements on the page will be marked by numbered
+labels. Hints can be selected by using <tab> or <ctrl-tab>, by typing the
+number of the label, or filtering the elements by some text that is part of
+the hinted element (like url, link text, button label) and any combination of
+this methods. If <enter> is pressed, the current active hint will be fired. If
+only one possible hint remains, this will be fired automatically.
 .TP
-.BI "hint-link [" PREFIX "], hint-link-new [" PREFIX ]
-Start hinting to open link into current or new window. If \fIPREFIX\fP is given,
-print this into the inputbox, default '.' and ','.
+Syntax: ":hint-{TYPE} [\fIQUERY\fP]"
+If \fIQUERY\fP is given, this is used to filter hints contents initially. Note
+that the \fIQUERY\fP can only be used to filter the hints by their content and
+not by their numeric hint label. On the other hand \fIQUERY\fP is the only way
+to match hints with numeric content.
 .TP
-.BI "hint-input-open [" PREFIX "], hint-input-tabopen [" PREFIX ]
+.BI "hint-link [" QUERY "], hint-link-new [" QUERY ]
+Start hinting to open link into current or new window.
+.TP
+.BI "hint-input-open [" QUERY "], hint-input-tabopen [" QUERY ]
 Start hinting to fill the inputbox with ":open {hintedLinkUrl}" or ":tabopen
-{hintedLinkUrl}". If \fIPREFIX\fP is given, print this into the inputbox,
-default ';o' and ';t'.
+{hintedLinkUrl}".
 .TP
-.BI "hint-yank [" PREFIX ]
+.BI "hint-yank [" QUERY ]
 Start hinting to yank the hinted link url into the primary and secondary
-clipboard. If \fIPREFIX\fP is given, print this into the inputbox, default ';y'.
+clipboard.
 .TP
-.BI "hint-image-open [" PREFIX "], hint-image-tabopen [" PREFIX ]
-Start hinting to open images into current or new window. If \fIPREFIX\fP is
-given, print this into the inputbox, default ';i' and ';I'.
+.BI "hint-image-open [" QUERY "], hint-image-tabopen [" QUERY ]
+Start hinting to open images into current or new window.
 .TP
-.BI "hint-editor [" PREFIX "]"
-Start hinting to open inputboxes or textareas with external editor. If
-\fIPREFIX\fP is given, print this into the inputbox, default ';e'.
+.BI "hint-editor [" QUERY "]"
+Start hinting to open inputboxes or textareas with external editor.
 .TP
-.BI "hint-save [" PREFIX "]"
-Start hinting to download hinted links into configured download directory. If
-\fIPREFIX\fP is given, print this into the inputbox, default ';s'.
+.BI "hint-save [" QUERY "]"
+Start hinting to download hinted links into configured download directory.
 
 .SS Yank
 .TP
