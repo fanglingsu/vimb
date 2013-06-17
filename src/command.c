@@ -232,15 +232,13 @@ gboolean command_run_string(const char *input)
     gboolean success;
     Command command = NULL;
     Arg arg = {0};
-
-    vb_set_mode(VB_MODE_NORMAL | (vb.state.mode & VB_MODE_SEARCH), false);
     if (!command_parse_from_string(input, &command, &arg, &vb.state.count)) {
         return false;
     }
 
     success = command(&arg);
     g_free(arg.s);
-
+    
     return success;
 }
 
@@ -323,6 +321,8 @@ gboolean command_close(const Arg *arg)
 
 gboolean command_view_source(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     gboolean mode = webkit_web_view_get_view_source_mode(vb.gui.webview);
     webkit_web_view_set_view_source_mode(vb.gui.webview, !mode);
     webkit_web_view_reload(vb.gui.webview);
@@ -333,6 +333,7 @@ gboolean command_view_source(const Arg *arg)
 gboolean command_navigate(const Arg *arg)
 {
     int count = vb.state.count ? vb.state.count : 1;
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     WebKitWebView *view = vb.gui.webview;
     if (arg->i <= VB_NAVIG_FORWARD) {
@@ -356,6 +357,9 @@ gboolean command_scroll(const Arg *arg)
     int count = vb.state.count ? vb.state.count : 1;
     int direction = (arg->i & (1 << 2)) ? 1 : -1;
     GtkAdjustment *adjust = (arg->i & VB_SCROLL_AXIS_H) ? vb.gui.adjust_h : vb.gui.adjust_v;
+
+    /* keep possible search mode */
+    vb_set_mode(VB_MODE_NORMAL | (vb.state.mode & VB_MODE_SEARCH), false);
 
     max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
     /* type scroll */
@@ -388,6 +392,8 @@ gboolean command_map(const Arg *arg)
 {
     char *key;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     if (!arg->s) {
         return false;
     }
@@ -400,6 +406,8 @@ gboolean command_map(const Arg *arg)
 
 gboolean command_unmap(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     return keybind_remove_from_string(arg->s, arg->i);
 }
 
@@ -408,6 +416,7 @@ gboolean command_set(const Arg *arg)
     gboolean success;
     char *param = NULL, *line = NULL;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
     if (!arg->s || *(arg->s) == '\0') {
         return false;
     }
@@ -432,6 +441,8 @@ gboolean command_inspect(const Arg *arg)
 {
     gboolean enabled;
     WebKitWebSettings *settings = NULL;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     settings = webkit_web_view_get_settings(vb.gui.webview);
     g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
@@ -460,6 +471,8 @@ gboolean command_hints(const Arg *arg)
 
 gboolean command_yank(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, true);
+
     if (arg->i & COMMAND_YANK_SELECTION) {
         char *text = NULL;
         /* copy current selection to clipboard */
@@ -554,6 +567,8 @@ gboolean command_shortcut(const Arg *arg)
 {
     gboolean result;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     if (arg->i) {
         char *handle;
 
@@ -574,6 +589,8 @@ gboolean command_shortcut(const Arg *arg)
 
 gboolean command_shortcut_default(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     return shortcut_set_default(arg->s);
 }
 
@@ -581,6 +598,8 @@ gboolean command_zoom(const Arg *arg)
 {
     float step, level;
     int count = vb.state.count ? vb.state.count : 1;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     if (arg->i & COMMAND_ZOOM_RESET) {
         webkit_web_view_set_zoom_level(vb.gui.webview, 1.0);
@@ -622,6 +641,8 @@ gboolean command_history(const Arg *arg)
 
 gboolean command_bookmark(const Arg *arg)
 {
+    vb_set_mode(VB_MODE_NORMAL, false);
+
     bookmark_add(GET_URI(), arg->s);
     return true;
 }
@@ -630,6 +651,8 @@ gboolean command_eval(const Arg *arg)
 {
     gboolean success;
     char *value = NULL;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
 
     success = vb_eval_script(
         webkit_web_view_get_main_frame(vb.gui.webview), arg->s, NULL, &value
@@ -663,6 +686,8 @@ gboolean command_descent(const Arg *arg)
     const char *uri, *p = NULL, *domain = NULL;
 
     uri = GET_URI();
+
+    vb_set_mode(VB_MODE_NORMAL, false);
     if (!uri || *uri == '\0') {
         return false;
     }
@@ -711,6 +736,7 @@ gboolean command_save(const Arg *arg)
     WebKitDownload *download;
     const char *uri, *path = NULL;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
     if (arg->i == COMMAND_SAVE_CURRENT) {
         uri = GET_URI();
         /* given string is the path to save the download to */
@@ -736,6 +762,7 @@ gboolean command_shellcmd(const Arg *arg)
     int status, argc;
     char *cmd, *exp, *error = NULL, *out = NULL, **argv;
 
+    vb_set_mode(VB_MODE_NORMAL, false);
     if (!arg->s || *(arg->s) == '\0') {
         return false;
     }
