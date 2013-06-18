@@ -36,6 +36,6 @@ gboolean util_array_contains_all_tags(char **src, unsigned int s, char **query, 
 gboolean util_string_contains_all_tags(char *src, char **query, unsigned int q);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 gboolean util_create_tmp_file(const char *content, char **file);
-char *util_buil_path(const char *path, const char *dir);
+char *util_build_path(const char *path, const char *dir);
 
 #endif /* end of include guard: _UTIL_H */

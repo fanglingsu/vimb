@@ -230,7 +230,7 @@ gboolean util_create_tmp_file(const char *content, char **file)
  *
  * Returned path must be freed.
  */
-char *util_buil_path(const char *path, const char *dir)
+char *util_build_path(const char *path, const char *dir)
 {
     char *fullPath, *p;
 

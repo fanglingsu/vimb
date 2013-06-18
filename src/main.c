@@ -935,13 +935,13 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
 
     /* prepare the path to save the donwload */
     if (path) {
-        file = util_buil_path(path, vb.config.download_dir);
+        file = util_build_path(path, vb.config.download_dir);
     } else {
         path = webkit_download_get_suggested_filename(download);
         if (!path) {
             path = "vimb_donwload";
         }
-        file = util_buil_path(path, vb.config.download_dir);
+        file = util_build_path(path, vb.config.download_dir);
     }
 
     /* build the file uri from file path */
