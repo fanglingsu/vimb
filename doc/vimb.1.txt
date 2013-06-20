@@ -647,7 +647,7 @@ that is opened.
 .I $XDG_CONFIG_HOME/PROJECT/style.css
 .RS
 File for userdefined css styles. These file is used if the config variable
-'stylesheet' is enabled.
+`stylesheet' is enabled.
 .RE
 
 .SH ENVIRONMENT
