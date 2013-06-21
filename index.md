@@ -44,7 +44,7 @@ not detract you from your daily work.
 
 ## dependencies
 
-- libwebkit-1.0
+- libwebkit >= 1.3.10
 - libgtk+-2.0
 - libsoup-2.4
 
