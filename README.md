@@ -7,7 +7,7 @@ browsing-experience with low memory and cpu usage.
 More informatio and some screenshots of vimb browser in action can be found on
 the [vimb project page][vimb].
 
-## Features
+## features
 - vim-like modal
 - vim-like keybindings
 - nearly every configuration can be changed on runtime with `:set varname=value`
@@ -35,12 +35,12 @@ the [vimb project page][vimb].
 - open input or teaxteaeas with configurable external editor
 - user defined URL-shortcuts with placeholders
 
-## Dependencies
-- libwebkit-1.0
+## dependencies
+- libwebkit >=1.3.10
 - libgtk+-2.0
 - libsoup-2.4
 
-# License
+# license
 Information about the license are found in the file LICENSE.
 
 [vimb]: http://fanglingsu.github.io/vimb/ "vimb - vim-like webkit browser project page"
