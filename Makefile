@@ -21,7 +21,7 @@ $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
 
-%.o: %.c $(HEAD)
+%.o: %.c %.h src/config.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(CFLAGS)
 

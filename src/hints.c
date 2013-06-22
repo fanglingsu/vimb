@@ -87,7 +87,9 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
             type = 'i';
         }
 
-        if (mode & HINTS_PROCESS_OPEN) {
+        /* images cant be opened from javascript by click event so we precess
+         * the image source in this file */
+        if (mode & HINTS_PROCESS_OPEN && type != 'i') {
             usage = mode & HINTS_OPEN_NEW ? 'T' : 'O';
         } else {
             usage = 'U';
@@ -164,6 +166,11 @@ static void run_script(char *js)
             a.s = g_strconcat((mode & HINTS_OPEN_NEW) ? ":tabopen " : ":open ", v, NULL);
             command_input(&a);
             g_free(a.s);
+        } else if (mode & HINTS_PROCESS_OPEN) {
+            /* used if images should be opened */
+            a.s = v;
+            a.i = (mode & HINTS_OPEN_NEW) ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+            command_open(&a);
         } else if (mode & HINTS_PROCESS_SAVE) {
             a.s = v;
             a.i = COMMAND_SAVE_URI;

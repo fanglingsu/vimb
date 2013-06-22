@@ -22,7 +22,7 @@
 
 #include "main.h"
 
-#define HINTS_GET_TYPE(n) ((n) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE | HINTS_TYPE_EDITABLE))
+#define HINTS_GET_TYPE(n) ((n) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE))
 
 enum {
     HINTS_TYPE_LINK     = 1,
@@ -32,6 +32,7 @@ enum {
     HINTS_PROCESS_YANK  = (1 << 3),
     HINTS_PROCESS_OPEN  = (1 << 4),
     HINTS_PROCESS_SAVE  = (1 << 5),
+    /* additional flag for HINTS_PROCESS_OPEN */
     HINTS_OPEN_NEW      = (1 << 6),
 };
 
