@@ -324,37 +324,48 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     /* retrieves the xpath expression according to mode */
     function _getXpath(s)
     {
-        var x, l;
         if (s === undefined) {
             s = "";
         }
+        /* replace $WHAT in xpath to contains(translate(WHAT, 'SEARCH', 'search'), 'search') */
+        function _buildQuery(what, x, s)
+        {
+            var l, i, parts;
+            l = s.toLowerCase();
+            parts = [
+                "contains(translate(",
+                ",'"+s.toUpperCase()+"','"+l+"'),'"+l+"')"
+            ];
+            for (i = 0; i < what.length; ++i) {
+                x = x.split("$" + what[i]).join(parts.join(what[i]));
+            }
+            return x;
+        }
+
         switch (mode) {
             case "l":
                 if (!s) {
-                    x = "//*[@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href] | //input[not(@type='hidden')] | //a[href] | //area | //textarea | //button | //select";
-                } else {
-                    x = "//*[(@onclick or @onmouseover or @onmousedown or @onmouseup or @oncommand or @class='lk' or @role='link' or @href) and $C] | //input[not(@type='hidden') and $C] | //a[@href and $C] | //area[$C] |  //textarea[$C] | //button[$C] | //select[$C]";
+                    return "//a[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //area[@href] | //textarea[not(@disabled or @readonly)] | //button | //select";
                 }
-                break;
+                return _buildQuery(
+                    ["@value", "."],
+                    "//a[@href and $.] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and $@value] | //area[$.] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
+                    s
+                );
             case "e":
                 if (!s) {
-                    x = "//input[@type='text'] | //textarea";
-                } else {
-                    x = "//input[@type='text' and $C] | //textarea[$C]";
+                    return "//input[@type='text'] | //textarea";
                 }
-                break;
+                return _buildQuery(
+                    ["@value", "."],
+                    "//input[@type='text' and $@value] | //textarea[$.]",
+                    s
+                );
             case "i":
                 if (!s) {
-                    x = "//img[@src]";
-                } else {
-                    x = "//img[@src and $C]";
+                    return "//img[@src]";
                 }
-                break;
+                return _buildQuery(["@title", "@alt"], "//img[@src and ($@title or $@alt)]", s);
         }
-        if (s) {
-            l = s.toLowerCase();
-            return x.replace("$C", "contains(translate(., '" + s.toUpperCase() + "', '" + l + "'), '" + l + "')");
-        } 
-        return x;
     }
 };
