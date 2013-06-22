@@ -22,7 +22,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
         {
             /* document may be undefined for frames out of the same origin */
             /* policy and will break the whole code - so we check this before */
-            if (typeof(win.document) === 'undefined') {
+            if (win.document === undefined) {
                 return;
             }
             var doc = win.document;
@@ -124,7 +124,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     {
         var i = _getHintIdByNum(focusNum);
 
-        if (typeof(hints[i + 1]) !== "undefined") {
+        if (hints[i + 1] !== undefined) {
             return _focus(hints[i + 1].num);
         }
         return _focus(hints[0].num);
@@ -134,7 +134,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     this.focusPrev = function()
     {
         var i = _getHintIdByNum(focusNum);
-        if (i !== 0 && typeof(hints[i - 1].num) !== "undefined") {
+        if (i !== 0 && hints[i - 1].num !== undefined) {
             return _focus(hints[i - 1].num);
         }
         return _focus(hints[hints.length - 1].num);
@@ -325,7 +325,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     function _getXpath(s)
     {
         var x, l;
-        if (typeof(s) === "undefined") {
+        if (s === undefined) {
             s = "";
         }
         switch (mode) {
