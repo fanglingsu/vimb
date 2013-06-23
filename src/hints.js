@@ -348,8 +348,8 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
                     return "//a[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //area[@href] | //textarea[not(@disabled or @readonly)] | //button | //select";
                 }
                 return _buildQuery(
-                    ["@value", "."],
-                    "//a[@href and $.] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and $@value] | //area[$.] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
+                    ["@value", ".", "@placeholder"],
+                    "//a[@href and $.] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and ($@value or $@placeholder)] | //area[$.] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
                     s
                 );
             case "e":
@@ -357,8 +357,8 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
                     return "//input[@type='text'] | //textarea";
                 }
                 return _buildQuery(
-                    ["@value", "."],
-                    "//input[@type='text' and $@value] | //textarea[$.]",
+                    ["@value", ".", "@placeholder"],
+                    "//input[@type='text' and ($@value or $@placeholder)] | //textarea[$.]",
                     s
                 );
             case "i":
