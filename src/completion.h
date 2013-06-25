@@ -22,7 +22,7 @@
 
 #include "main.h"
 
-void completion_clean();
+void completion_clean(void);
 gboolean completion_complete(gboolean back);
 
 #endif /* end of include guard: _COMPLETION_H */

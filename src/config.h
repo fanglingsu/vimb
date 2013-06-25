@@ -140,7 +140,6 @@ const char *default_config[] = {
     "set completion-fg-active=#fff",
     "set completion-bg-normal=#656565",
     "set completion-bg-active=#777",
-    "set max-completion-items=15",
     "set hint-bg=#ff0",
     "set hint-bg-focus=#8f0",
     "set hint-fg=#000",

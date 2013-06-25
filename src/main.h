@@ -265,7 +265,6 @@ typedef struct {
 typedef struct {
     time_t cookie_timeout;
     int    scrollstep;
-    guint  max_completion_items;
     char   *home_page;
     char   *download_dir;
     guint  history_max;
