@@ -311,7 +311,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     function _mouseEvent(e, name)
     {
         var evObj = e.ownerDocument.createEvent("MouseEvents");
-        evObj.initMouseEvent(name, false, true, e.contentWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        evObj.initMouseEvent(name, true, true, e.contentWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
         e.dispatchEvent(evObj);
     }
 
