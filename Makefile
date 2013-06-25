@@ -49,7 +49,7 @@ uninstall:
 
 clean:
 	@$(MAKE) $(MFLAGS) -C doc clean
-	$(RM) src/*.o src/*.do src/hint.js.h $(TARGET) $(DTARGET)
+	$(RM) src/*.o src/*.do src/hints.js.h $(TARGET) $(DTARGET)
 
 dist: distclean
 	@echo "Creating tarball."
