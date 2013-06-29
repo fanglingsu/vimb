@@ -233,6 +233,7 @@ gboolean command_run_string(const char *input)
     Command command = NULL;
     Arg arg = {0};
     if (!command_parse_from_string(input, &command, &arg, &vb.state.count)) {
+        vb_set_mode(VB_MODE_NORMAL, false);
         return false;
     }
 
