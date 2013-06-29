@@ -41,7 +41,7 @@ static struct {
 
 static gboolean init_completion(GList *source);
 static void show(void);
-static void update(gboolean back);
+static void move_cursor(gboolean back);
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
 
@@ -58,7 +58,7 @@ gboolean completion_complete(gboolean back)
     if (vb.state.mode & VB_MODE_COMPLETE) {
         if (comp.text && !strcmp(input, comp.text)) {
             /* step through the next/prev completion item */
-            update(back);
+            move_cursor(back);
             return true;
         }
         /* if current input isn't the content of the completion item, stop
@@ -219,7 +219,7 @@ static void show(void)
     gtk_tree_path_free(path);
 }
 
-static void update(gboolean back)
+static void move_cursor(gboolean back)
 {
     int rows;
     GtkTreePath *path;
