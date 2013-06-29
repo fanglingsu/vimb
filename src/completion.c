@@ -141,6 +141,7 @@ static gboolean init_completion(GList *source)
     gtk_box_pack_end(GTK_BOX(vb.gui.box), comp.tree, false, false, 0);
 
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp.tree), false);
+    gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(comp.tree), true);
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
@@ -164,7 +165,9 @@ static gboolean init_completion(GList *source)
     VB_WIDGET_OVERRIDE_BACKGROUND(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
 
     gtk_tree_view_insert_column_with_attributes(
-        GTK_TREE_VIEW(comp.tree), -1, "", renderer, "text", COMP_ITEM, NULL
+        GTK_TREE_VIEW(comp.tree), -1, "", renderer,
+        "text", COMP_ITEM,
+        NULL
     );
 
     store = gtk_list_store_new(1, G_TYPE_STRING);
