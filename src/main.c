@@ -77,11 +77,11 @@ static void inputbox_print(gboolean force, const MessageType type, gboolean hide
 
 void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
 {
-    char message[255];
+    char message[BUF_SIZE];
     va_list arg_list;
 
     va_start(arg_list, error);
-    vsnprintf(message, 255, error, arg_list);
+    vsnprintf(message, BUF_SIZE, error, arg_list);
     va_end(arg_list);
 
     inputbox_print(true, type, hide, message);
@@ -89,11 +89,11 @@ void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
 {
-    char message[255];
+    char message[BUF_SIZE];
     va_list arg_list;
 
     va_start(arg_list, error);
-    vsnprintf(message, 255, error, arg_list);
+    vsnprintf(message, BUF_SIZE, error, arg_list);
     va_end(arg_list);
 
     inputbox_print(false, type, hide, message);

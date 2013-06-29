@@ -243,9 +243,6 @@ static void move_cursor(gboolean back)
         }
     }
 
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
-    }
     /* get new path and move cursor to it */
     path = gtk_tree_path_new_from_indices(comp.active, -1);
     gtk_tree_view_set_cursor(tree, path, NULL, false);

@@ -33,6 +33,9 @@
 #else
 #endif
 
+/* size of some I/O buffer */
+#define BUF_SIZE  512
+
 #define LENGTH(x) (sizeof x / sizeof x[0])
 
 #ifdef DEBUG
