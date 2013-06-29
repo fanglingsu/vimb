@@ -247,10 +247,10 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
 void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font)
 {
     VB_WIDGET_OVERRIDE_FONT(widget, font);
-    VB_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
-    VB_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
-    VB_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
-    VB_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
+    VB_WIDGET_OVERRIDE_TEXT(widget, VB_GTK_STATE_NORMAL, fg);
+    VB_WIDGET_OVERRIDE_COLOR(widget, VB_GTK_STATE_NORMAL, fg);
+    VB_WIDGET_OVERRIDE_BASE(widget, VB_GTK_STATE_NORMAL, bg);
+    VB_WIDGET_OVERRIDE_BACKGROUND(widget, VB_GTK_STATE_NORMAL, bg);
 }
 
 void vb_update_statusbar()

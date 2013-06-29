@@ -159,15 +159,10 @@ static gboolean init_completion(GList *source)
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     gtk_tree_selection_set_select_function(selection, tree_selection_func, NULL, NULL);
 
-    VB_WIDGET_OVERRIDE_COLOR(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_TEXT(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_BASE(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_BACKGROUND(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
-
-    VB_WIDGET_OVERRIDE_COLOR(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_TEXT(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BASE(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BACKGROUND(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_fg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_bg[VB_COMP_ACTIVE]);
 
     gtk_tree_view_insert_column_with_attributes(
         GTK_TREE_VIEW(comp.tree), -1, "", renderer,
