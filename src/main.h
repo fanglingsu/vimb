@@ -239,7 +239,6 @@ typedef struct {
     GtkBox             *box;
     GtkWidget          *eventbox;
     GtkWidget          *inputbox;
-    GtkWidget          *compbox;
     GtkWidget          *pane;
     StatusBar          statusbar;
     GtkScrollbar       *sb_h;

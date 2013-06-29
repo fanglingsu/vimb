@@ -31,20 +31,16 @@
 extern VbCore vb;
 
 static struct {
-    int   count;   /* command count before the completed content */
-    char  *prefix; /* prefix that marks the completion ':', '/', ':open', ... */
-    int   active;  /* number of the current active tree item */
-    char  *text;   /* text of the current active tree item */
+    GtkWidget *tree;
+    int       count;   /* command count before the completed content */
+    char      *prefix; /* prefix that marks the completion ':', '/', ':open', ... */
+    int       active;  /* number of the current active tree item */
+    char      *text;   /* text of the current active tree item */
 } comp;
 
-typedef struct {
-    GtkTreeView *tree;
-    gboolean    back;
-} cursor;
-
 static gboolean init_completion(GList *source);
-static void show(GtkTreeView *tree);
-static void update(GtkTreeView *tree, gboolean back);
+static void show(void);
+static void update(gboolean back);
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
 
@@ -61,7 +57,7 @@ gboolean completion_complete(gboolean back)
     if (vb.state.mode & VB_MODE_COMPLETE) {
         if (comp.text && !strcmp(input, comp.text)) {
             /* step through the next/prev completion item */
-            update(GTK_TREE_VIEW(vb.gui.compbox), back);
+            update(back);
             return true;
         }
         /* if current input isn't the content of the completion item, stop
@@ -110,16 +106,16 @@ gboolean completion_complete(gboolean back)
     vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
     OVERWRITE_STRING(comp.prefix, prefix);
-    show(GTK_TREE_VIEW(vb.gui.compbox));
+    show();
 
     return true;
 }
 
 void completion_clean(void)
 {
-    if (vb.gui.compbox) {
-        gtk_widget_destroy(vb.gui.compbox);
-        vb.gui.compbox = NULL;
+    if (comp.tree) {
+        gtk_widget_destroy(comp.tree);
+        comp.tree = NULL;
     }
     OVERWRITE_STRING(comp.prefix, NULL);
     OVERWRITE_STRING(comp.text, NULL);
@@ -137,15 +133,14 @@ static gboolean init_completion(GList *source)
     GtkTreeSelection *selection;
     GtkTreeIter iter;
     GtkRequisition size;
-    Gui *gui = &vb.gui;
     gboolean hasItems = (source != NULL);
     int height;
 
     /* init the tree view and the list store */
-    gui->compbox = gtk_tree_view_new();
-    gtk_box_pack_end(GTK_BOX(gui->box), gui->compbox, false, false, 0);
+    comp.tree = gtk_tree_view_new();
+    gtk_box_pack_end(GTK_BOX(vb.gui.box), comp.tree, false, false, 0);
 
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(gui->compbox), false);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp.tree), false);
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
@@ -154,22 +149,22 @@ static gboolean init_completion(GList *source)
         NULL
     );
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(gui->compbox));
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     gtk_tree_selection_set_select_function(selection, tree_selection_func, NULL, NULL);
 
-    VB_WIDGET_OVERRIDE_COLOR(gui->compbox, GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_TEXT(gui->compbox, GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_BASE(gui->compbox, GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_BACKGROUND(gui->compbox, GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_COLOR(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_BACKGROUND(comp.tree, GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
 
-    VB_WIDGET_OVERRIDE_COLOR(gui->compbox, GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_TEXT(gui->compbox, GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BASE(gui->compbox, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BACKGROUND(gui->compbox, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_COLOR(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_BACKGROUND(comp.tree, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
 
     gtk_tree_view_insert_column_with_attributes(
-        GTK_TREE_VIEW(gui->compbox), -1, "", renderer, "text", COMP_ITEM, NULL
+        GTK_TREE_VIEW(comp.tree), -1, "", renderer, "text", COMP_ITEM, NULL
     );
 
     store = gtk_list_store_new(1, G_TYPE_STRING);
@@ -180,28 +175,29 @@ static gboolean init_completion(GList *source)
     }
 
     /* add the model after inserting the items - that's faster */
-    gtk_tree_view_set_model(GTK_TREE_VIEW(gui->compbox), GTK_TREE_MODEL(store));
+    gtk_tree_view_set_model(GTK_TREE_VIEW(comp.tree), GTK_TREE_MODEL(store));
     g_object_unref(store);
 
     /* use max 1/3 of window height for the completion */
 #ifdef HAS_GTK3
-    gtk_widget_get_preferred_size(gui->compbox, NULL, &size);
+    gtk_widget_get_preferred_size(comp.tree, NULL, &size);
 #else
-    gtk_widget_size_request(gui->compbox, &size);
+    gtk_widget_size_request(comp.tree, &size);
 #endif
-    gtk_window_get_size(GTK_WINDOW(gui->window), NULL, &height);
+    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     height /= 3;
     if (size.height > height) {
-        gtk_widget_set_size_request(gui->compbox, -1, height);
+        gtk_widget_set_size_request(comp.tree, -1, height);
     }
 
     return hasItems;
 }
 
 /* allow to change the direction of display */
-static void show(GtkTreeView *tree)
+static void show(void)
 {
     GtkTreePath *path;
+    GtkTreeView *tree = GTK_TREE_VIEW(comp.tree);
 
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
@@ -216,10 +212,11 @@ static void show(GtkTreeView *tree)
     gtk_tree_path_free(path);
 }
 
-static void update(GtkTreeView *tree, gboolean back)
+static void update(gboolean back)
 {
     int rows;
     GtkTreePath *path;
+    GtkTreeView *tree = GTK_TREE_VIEW(comp.tree);
 
     rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(tree), NULL);
     if (back) {
