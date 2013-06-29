@@ -31,6 +31,7 @@
 extern VbCore vb;
 
 static struct {
+    GtkWidget *win;
     GtkWidget *tree;
     int       count;   /* command count before the completed content */
     char      *prefix; /* prefix that marks the completion ':', '/', ':open', ... */
@@ -113,14 +114,13 @@ gboolean completion_complete(gboolean back)
 
 void completion_clean(void)
 {
-    if (comp.tree) {
-        gtk_widget_destroy(comp.tree);
-        comp.tree = NULL;
+    if (comp.win) {
+        gtk_widget_destroy(comp.win);
+        comp.win = comp.tree = NULL;
     }
     OVERWRITE_STRING(comp.prefix, NULL);
     OVERWRITE_STRING(comp.text, NULL);
-    comp.count = 0;
-    comp.active = 0;
+    comp.count = comp.active = 0;
 
     /* remove completion flag from mode */
     vb.state.mode &= ~VB_MODE_COMPLETE;
@@ -138,7 +138,12 @@ static gboolean init_completion(GList *source)
 
     /* init the tree view and the list store */
     comp.tree = gtk_tree_view_new();
-    gtk_box_pack_end(GTK_BOX(vb.gui.box), comp.tree, false, false, 0);
+    comp.win = gtk_scrolled_window_new(NULL, NULL);
+#ifndef HAS_GTK3
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(comp.win), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+#endif
+    gtk_box_pack_end(GTK_BOX(vb.gui.box), comp.win, false, false, 0);
+    gtk_container_add(GTK_CONTAINER(comp.win), comp.tree);
 
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp.tree), false);
     gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(comp.tree), true);
@@ -190,7 +195,11 @@ static gboolean init_completion(GList *source)
     gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     height /= 3;
     if (size.height > height) {
-        gtk_widget_set_size_request(comp.tree, -1, height);
+#ifdef HAS_GTK3
+        gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(comp.win), height);
+#else
+        gtk_widget_set_size_request(comp.win, -1, height);
+#endif
     }
 
     return hasItems;
@@ -204,7 +213,7 @@ static void show(void)
 
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
-    gtk_widget_show(GTK_WIDGET(tree));
+    gtk_widget_show_all(comp.win);
     while (gtk_events_pending()) {
         gtk_main_iteration();
     }
