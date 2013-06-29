@@ -40,7 +40,7 @@ static struct {
 } comp;
 
 static gboolean init_completion(GList *source);
-static void show(void);
+static void show(gboolean back);
 static void move_cursor(gboolean back);
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
@@ -107,7 +107,7 @@ gboolean completion_complete(gboolean back)
     vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
     OVERWRITE_STRING(comp.prefix, prefix);
-    show();
+    show(back);
 
     return true;
 }
@@ -120,7 +120,7 @@ void completion_clean(void)
     }
     OVERWRITE_STRING(comp.prefix, NULL);
     OVERWRITE_STRING(comp.text, NULL);
-    comp.count = comp.active = 0;
+    comp.count = 0;
 
     /* remove completion flag from mode */
     vb.state.mode &= ~VB_MODE_COMPLETE;
@@ -200,12 +200,8 @@ static gboolean init_completion(GList *source)
     return hasItems;
 }
 
-/* allow to change the direction of display */
-static void show(void)
+static void show(gboolean back)
 {
-    GtkTreePath *path;
-    GtkTreeView *tree = GTK_TREE_VIEW(comp.tree);
-
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
     gtk_widget_show_all(comp.win);
@@ -213,10 +209,9 @@ static void show(void)
         gtk_main_iteration();
     }
 
-    /* select the first completion item */
-    path = gtk_tree_path_new_from_indices(0, -1);
-    gtk_tree_view_set_cursor(tree, path, NULL, false);
-    gtk_tree_path_free(path);
+    /* set to -1 to have the cursor on first or last item set in move_cursor */
+    comp.active = -1;
+    move_cursor(back);
 }
 
 static void move_cursor(gboolean back)
