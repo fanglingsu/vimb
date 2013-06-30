@@ -664,7 +664,9 @@ static void init_core(void)
 
     /* Prepare the inputbox */
     gui->inputbox = gtk_entry_new();
+#ifndef HAS_GTK3
     gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
+#endif
     g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", false, NULL);
 
 #ifdef HAS_GTK3
