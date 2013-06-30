@@ -658,6 +658,7 @@ static void init_core(void)
     gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
     gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
 
+    /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
 #ifndef HAS_GTK3
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 #endif

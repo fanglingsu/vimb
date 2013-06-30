@@ -197,9 +197,10 @@ static void init_completion(GtkTreeModel *model)
     gtk_widget_get_preferred_size(comp.tree, NULL, &size);
     gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     height /= 3;
-    if (size.height > height) {
-        gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(comp.win), height);
-    }
+    gtk_scrolled_window_set_min_content_height(
+        GTK_SCROLLED_WINDOW(comp.win),
+        size.height > height ? height : size.height
+    );
 #else
     gtk_widget_size_request(comp.tree, &size);
     gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
