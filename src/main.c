@@ -658,9 +658,20 @@ static void init_core(void)
     gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
     gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
 
-    /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
-#ifndef HAS_GTK3
 #ifdef FEATURE_NO_SCROLLBARS
+#ifdef HAS_GTK3
+    /* set the default style for the application - this can be overwritten by
+     * the users style in gtk-3.0/gtk.css */
+    char *style = "GtkScrollbar{-GtkRange-slider-width:0;-GtkRange-trough-border:0;}";
+    GtkCssProvider *provider = gtk_css_provider_get_default();
+    gtk_css_provider_load_from_data(provider, style, -1, NULL);
+    gtk_style_context_add_provider_for_screen(
+        gdk_screen_get_default(),
+        GTK_STYLE_PROVIDER(provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
+#else /* no GTK3 */
+    /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 #endif
 #endif
