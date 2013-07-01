@@ -660,7 +660,9 @@ static void init_core(void)
 
     /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
 #ifndef HAS_GTK3
+#ifdef FEATURE_NO_SCROLLBARS
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+#endif
 #endif
 
     /* Prepare the inputbox */
@@ -755,8 +757,6 @@ static void read_config(void)
 
 static void setup_signals()
 {
-    WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
-
     /* Set up callbacks so that if either the main window or the browser
      * instance is closed, the program will exit */
     g_signal_connect(vb.gui.window, "destroy", G_CALLBACK(destroy_window_cb), NULL);
@@ -776,8 +776,10 @@ static void setup_signals()
         NULL
     );
 
+#ifdef FEATURE_NO_SCROLLBARS
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
-
+#endif
 
     g_object_connect(
         G_OBJECT(vb.gui.inputbox),

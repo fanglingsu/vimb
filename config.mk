@@ -7,6 +7,12 @@ BINDIR  ?= $(PREFIX)bin/
 MANDIR  ?= $(PREFIX)share/man/
 
 #----------------compile options---------------------
+
+# features
+CPPFLAGS += -DFEATURE_COOKIE
+CPPFLAGS += -DFEATURE_SEARCH_HIGHLIGHT
+CPPFLAGS += -DFEATURE_NO_SCROLLBARS
+
 LIBS = libsoup-2.4
 
 GTK3LIBS=gtk+-3.0 webkitgtk-3.0
@@ -35,10 +41,6 @@ CFLAGS += -Wno-overlength-strings
 #CFLAGS += -Wstrict-prototypes
 
 LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
-
-# features
-CPPFLAGS += -DFEATURE_COOKIE
-CPPFLAGS += -DFEATURE_SEARCH_HIGHLIGHT
 
 CPPFLAGS += -DVERSION=\"${VERSION}\" -D_BSD_SOURCE -D_XOPEN_SOURCE=500
 CPPFLAGS += -DPROJECT=\"${PROJECT}\"
