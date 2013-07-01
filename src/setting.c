@@ -95,7 +95,6 @@ static Setting default_settings[] = {
     {NULL, "completion-fg-active", TYPE_COLOR, completion_style, {0}},
     {NULL, "completion-bg-normal", TYPE_COLOR, completion_style, {0}},
     {NULL, "completion-bg-active", TYPE_COLOR, completion_style, {0}},
-    {NULL, "max-completion-items", TYPE_INTEGER, completion_style, {0}},
     {NULL, "hint-bg", TYPE_CHAR, hint_style, {0}},
     {NULL, "hint-bg-focus", TYPE_CHAR, hint_style, {0}},
     {NULL, "hint-fg", TYPE_CHAR, hint_style, {0}},
@@ -487,14 +486,7 @@ static gboolean completion_style(const Setting *s, const SettingType type)
     Style *style = &vb.style;
     CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VB_COMP_NORMAL : VB_COMP_ACTIVE;
 
-    if (s->type == TYPE_INTEGER) {
-        /* max completion items */
-        if (type == SETTING_GET) {
-            print_value(s, &vb.config.max_completion_items);
-        } else {
-            vb.config.max_completion_items = s->arg.i;
-        }
-    } else if (s->type == TYPE_FONT) {
+    if (s->type == TYPE_FONT) {
         if (type == SETTING_GET) {
             print_value(s, style->comp_font);
         } else {

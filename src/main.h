@@ -33,6 +33,9 @@
 #else
 #endif
 
+/* size of some I/O buffer */
+#define BUF_SIZE  512
+
 #define LENGTH(x) (sizeof x / sizeof x[0])
 
 #ifdef DEBUG
@@ -82,6 +85,7 @@
 
 #define VB_GTK_STATE_NORMAL             GTK_STATE_FLAG_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_FLAG_ACTIVE
+#define VB_GTK_STATE_SELECTED           GTK_STATE_FLAG_SELECTED
 #define VB_WIDGET_SET_STATE(w, s)       gtk_widget_set_state_flags(w, s, true)
 
 #else
@@ -97,6 +101,7 @@
 
 #define VB_GTK_STATE_NORMAL             GTK_STATE_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_ACTIVE
+#define VB_GTK_STATE_SELECTED           GTK_STATE_SELECTED
 #define VB_WIDGET_SET_STATE(w, s)       gtk_widget_set_state(w, s)
 #endif
 
@@ -239,7 +244,6 @@ typedef struct {
     GtkBox             *box;
     GtkWidget          *eventbox;
     GtkWidget          *inputbox;
-    GtkWidget          *compbox;
     GtkWidget          *pane;
     StatusBar          statusbar;
     GtkScrollbar       *sb_h;
@@ -265,7 +269,6 @@ typedef struct {
 typedef struct {
     time_t cookie_timeout;
     int    scrollstep;
-    guint  max_completion_items;
     char   *home_page;
     char   *download_dir;
     guint  history_max;

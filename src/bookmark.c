@@ -93,7 +93,7 @@ static GList *load(const char *file)
 {
     /* read the items from file */
     GList *list   = NULL;
-    char buf[512] = {0};
+    char buf[BUF_SIZE] = {0};
     FILE *f;
 
     if (!(f = fopen(file, "r"))) {

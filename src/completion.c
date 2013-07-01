@@ -26,300 +26,254 @@
 #include "setting.h"
 
 #define TAG_INDICATOR '!'
+#define COMP_ITEM 0
 
 extern VbCore vb;
 
-typedef struct {
-    GtkWidget *label;
-    GtkWidget *event;
-    char      *prefix;
-} Completion;
-
 static struct {
-    GList *completions;
-    GList *active;
-    int   count;
-    char  *prefix;
-} comps;
+    GtkWidget *win;
+    GtkWidget *tree;
+    int       count;   /* command count before the completed content */
+    char      *prefix; /* prefix that marks the completion ':', '/', ':open', ... */
+    int       active;  /* number of the current active tree item */
+    char      *text;   /* text of the current active tree item */
+} comp;
 
-static GList *init_completion(GList *target, GList *source, const char *prefix);
-static GList *update(GList *completion, GList *active, gboolean back);
+static GtkTreeModel *get_tree_model(GList *source);
+static void init_completion(GtkTreeModel *model);
 static void show(gboolean back);
-static void set_entry_text(Completion *completion);
-static char *get_text(Completion *completion);
-static Completion *get_new(const char *label, const char *prefix);
-static void free_completion(Completion *completion);
+static void move_cursor(gboolean back);
+static gboolean tree_selection_func(GtkTreeSelection *selection,
+    GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
 
 gboolean completion_complete(gboolean back)
 {
     VbInputType type;
     const char *input, *prefix, *suffix;
     GList *source = NULL;
+    GtkTreeModel *model = NULL;
 
     input = GET_TEXT();
     type  = vb_get_input_parts(input, &prefix, &suffix);
 
-    if (comps.completions && comps.active
-        && (vb.state.mode & VB_MODE_COMPLETE)
-    ) {
-        char *text = get_text((Completion*)comps.active->data);
-        if (!strcmp(input, text)) {
-            /* updatecompletions */
-            comps.active = update(comps.completions, comps.active, back);
-            g_free(text);
+    if (vb.state.mode & VB_MODE_COMPLETE) {
+        if (comp.text && !strcmp(input, comp.text)) {
+            /* step through the next/prev completion item */
+            move_cursor(back);
             return true;
-        } else {
-            g_free(text);
-            /* if current input isn't the content of the completion item */
-            completion_clean();
         }
+        /* if current input isn't the content of the completion item, stop
+         * completion and start it after that again */
+        completion_clean();
     }
 
-    /* don't disturb other command sub modes - complate only if no sub mode
+    /* don't disturb other command sub modes - complete only if no sub mode
      * is set before */
     if (vb.state.mode != VB_MODE_COMMAND) {
         return false;
     }
 
-    /* create new completion */
-#ifdef HAS_GTK3
-    vb.gui.compbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_set_homogeneous(GTK_BOX(vb.gui.compbox), true);
-#else
-    vb.gui.compbox = gtk_vbox_new(true, 0);
-#endif
-    gtk_box_pack_start(GTK_BOX(vb.gui.box), vb.gui.compbox, false, false, 0);
-
     if (type == VB_INPUT_SET) {
         source = g_list_sort(setting_get_by_prefix(suffix), (GCompareFunc)g_strcmp0);
-        comps.completions = init_completion(comps.completions, source, prefix);
+        if (!g_list_first(source)) {
+            return false;
+        }
+        model  = get_tree_model(source);
         g_list_free(source);
     } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
         /* if search string begins with TAG_INDICATOR lookup the bookmarks */
         if (suffix && *suffix == TAG_INDICATOR) {
             source = bookmark_get_by_tags(suffix + 1);
-            comps.completions = init_completion(comps.completions, source, prefix);
         } else {
             source = history_get_by_tags(HISTORY_URL, suffix);
-            comps.completions = init_completion(comps.completions, source, prefix);
         }
+        if (!g_list_first(source)) {
+            return false;
+        }
+        model = get_tree_model(source);
         g_list_free_full(source, (GDestroyNotify)g_free);
     } else if (type == VB_INPUT_COMMAND) {
         char *command = NULL;
         /* remove counts before command and save it to print it later in inputbox */
-        comps.count = g_ascii_strtoll(suffix, &command, 10);
+        comp.count = g_ascii_strtoll(suffix, &command, 10);
 
         source = g_list_sort(command_get_by_prefix(command), (GCompareFunc)g_strcmp0);
-        comps.completions = init_completion(comps.completions, source, prefix);
+        if (!g_list_first(source)) {
+            return false;
+        }
+        model = get_tree_model(source);
         g_list_free(source);
     } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
         source = g_list_sort(history_get_by_tags(HISTORY_SEARCH, suffix), (GCompareFunc)g_strcmp0);
-        comps.completions = init_completion(comps.completions, source, prefix);
+        if (!g_list_first(source)) {
+            return false;
+        }
+        model  = get_tree_model(source);
         g_list_free_full(source, (GDestroyNotify)g_free);
-    }
-
-    if (!comps.completions) {
-        return false;
     }
 
     vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
+    OVERWRITE_STRING(comp.prefix, prefix);
+    init_completion(model);
     show(back);
 
     return true;
 }
 
-void completion_clean()
+void completion_clean(void)
 {
-    g_list_free_full(comps.completions, (GDestroyNotify)free_completion);
-    comps.completions = NULL;
-
-    if (vb.gui.compbox) {
-        gtk_widget_destroy(vb.gui.compbox);
-        vb.gui.compbox = NULL;
+    if (comp.win) {
+        gtk_widget_destroy(comp.win);
+        comp.win = comp.tree = NULL;
     }
-    OVERWRITE_STRING(comps.prefix, NULL);
-    comps.active = NULL;
-    comps.count  = 0;
+    OVERWRITE_STRING(comp.prefix, NULL);
+    OVERWRITE_STRING(comp.text, NULL);
+    comp.count = 0;
 
     /* remove completion flag from mode */
     vb.state.mode &= ~VB_MODE_COMPLETE;
 }
 
-static GList *init_completion(GList *target, GList *source, const char *prefix)
+static GtkTreeModel *get_tree_model(GList *source)
 {
-    OVERWRITE_STRING(comps.prefix, prefix);
+    GtkTreeIter iter;
+    GtkListStore *store = gtk_list_store_new(1, G_TYPE_STRING);
 
     for (GList *l = source; l; l = l->next) {
-        Completion *c = get_new(l->data, prefix);
-        target        = g_list_prepend(target, c);
-        gtk_box_pack_start(GTK_BOX(vb.gui.compbox), c->event, true, true, 0);
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COMP_ITEM, l->data, -1);
     }
-
-    target = g_list_reverse(target);
-
-    return target;
+    return GTK_TREE_MODEL(store);
 }
 
-static GList *update(GList *completion, GList *active, gboolean back)
+static void init_completion(GtkTreeModel *model)
 {
-    GList *old, *new;
-    Completion *comp;
+    GtkCellRenderer *renderer;
+    GtkTreeSelection *selection;
+    GtkRequisition size;
+    int height;
 
-    int length = g_list_length(completion);
-    int max    = vb.config.max_completion_items;
-    int items  = MAX(length, max);
-    int r      = (max) % 2;
-    int offset = max / 2 - 1 + r;
+    /* prepare the tree view */
+    comp.win  = gtk_scrolled_window_new(NULL, NULL);
+    comp.tree = gtk_tree_view_new();
+#ifndef HAS_GTK3
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(comp.win), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+#endif
+    gtk_box_pack_end(GTK_BOX(vb.gui.box), comp.win, false, false, 0);
+    gtk_container_add(GTK_CONTAINER(comp.win), comp.tree);
 
-    old = active;
-    int position = g_list_position(completion, active) + 1;
-    if (back) {
-        if (!(new = old->prev)) {
-            new = g_list_last(completion);
-        }
-        if (position - 1 > offset && position < items - offset + r) {
-            comp = g_list_nth(completion, position - offset - 2)->data;
-            gtk_widget_show_all(comp->event);
-            comp = g_list_nth(completion, position + offset - r)->data;
-            gtk_widget_hide(comp->event);
-        } else if (position == 1) {
-            int i = 0;
-            for (GList *l = g_list_first(completion); l && i < max; l = l->next, i++) {
-                gtk_widget_hide(((Completion*)l->data)->event);
-            }
-            i = 0;
-            for (GList *l = g_list_last(completion); l && i < max; l = l->prev, i++) {
-                comp = l->data;
-                gtk_widget_show_all(comp->event);
-            }
-        }
-    } else {
-        if (!(new = old->next)) {
-            new = g_list_first(completion);
-        }
-        if (position > offset && position < items - offset - 1 + r) {
-            comp = g_list_nth(completion, position - offset - 1)->data;
-            gtk_widget_hide(comp->event);
-            comp = g_list_nth(completion, position + offset + 1 - r)->data;
-            gtk_widget_show_all(comp->event);
-        } else if (position == items || position  == 1) {
-            int i = 0;
-            for (GList *l = g_list_last(completion); l && i < max; l = l->prev, i++) {
-                gtk_widget_hide(((Completion*)l->data)->event);
-            }
-            i = 0;
-            for (GList *l = g_list_first(completion); l && i < max; l = l->next, i++) {
-                gtk_widget_show_all(((Completion*)l->data)->event);
-            }
-        }
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp.tree), false);
+    /* we have only on line per item so we can use the faster fixed heigh mode */
+    gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(comp.tree), true);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(comp.tree), model);
+    g_object_unref(model);
+
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_fg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_bg[VB_COMP_ACTIVE]);
+
+    /* prepare the selection */
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+    gtk_tree_selection_set_select_function(selection, tree_selection_func, NULL, NULL);
+
+    /* prepare the column renderer */
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer,
+        "font-desc", vb.style.comp_font,
+        "ellipsize", PANGO_ELLIPSIZE_MIDDLE,
+        NULL
+    );
+    gtk_tree_view_insert_column_with_attributes(
+        GTK_TREE_VIEW(comp.tree), -1, "", renderer,
+        "text", COMP_ITEM,
+        NULL
+    );
+
+    /* use max 1/3 of window height for the completion */
+#ifdef HAS_GTK3
+    gtk_widget_get_preferred_size(comp.tree, NULL, &size);
+    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
+    height /= 3;
+    gtk_scrolled_window_set_min_content_height(
+        GTK_SCROLLED_WINDOW(comp.win),
+        size.height > height ? height : size.height
+    );
+#else
+    gtk_widget_size_request(comp.tree, &size);
+    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
+    height /= 3;
+    if (size.height > height) {
+        gtk_widget_set_size_request(comp.win, -1, height);
     }
-
-    VB_WIDGET_SET_STATE(((Completion*)old->data)->label, VB_GTK_STATE_NORMAL);
-    VB_WIDGET_SET_STATE(((Completion*)old->data)->event, VB_GTK_STATE_NORMAL);
-    VB_WIDGET_SET_STATE(((Completion*)new->data)->label, VB_GTK_STATE_ACTIVE);
-    VB_WIDGET_SET_STATE(((Completion*)new->data)->event, VB_GTK_STATE_ACTIVE);
-
-    active = new;
-    set_entry_text(active->data);
-    return active;
+#endif
 }
 
-/* allow to chenge the direction of display */
 static void show(gboolean back)
 {
-    guint max = vb.config.max_completion_items;
-    int i = 0;
+    /* this prevents the first item to be placed out of view if the completion
+     * is shown */
+    gtk_widget_show_all(comp.win);
+    while (gtk_events_pending()) {
+        gtk_main_iteration();
+    }
+
+    /* set to -1 to have the cursor on first or last item set in move_cursor */
+    comp.active = -1;
+    move_cursor(back);
+}
+
+static void move_cursor(gboolean back)
+{
+    int rows;
+    GtkTreePath *path;
+    GtkTreeView *tree = GTK_TREE_VIEW(comp.tree);
+
+    rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(tree), NULL);
     if (back) {
-        comps.active = g_list_last(comps.completions);
-        for (GList *l = comps.active; l && i < max; l = l->prev, i++) {
-            gtk_widget_show_all(((Completion*)l->data)->event);
+        /* step back */
+        if (--comp.active < 0) {
+            comp.active = rows - 1;
         }
     } else {
-        comps.active = g_list_first(comps.completions);
-        for (GList *l = comps.active; l && i < max; l = l->next, i++) {
-            gtk_widget_show_all(((Completion*)l->data)->event);
+        /* step forward */
+        if (++comp.active >= rows) {
+            comp.active = 0;
         }
     }
-    if (comps.active != NULL) {
-        Completion *active = (Completion*)comps.active->data;
-        VB_WIDGET_SET_STATE(active->label, VB_GTK_STATE_ACTIVE);
-        VB_WIDGET_SET_STATE(active->event, VB_GTK_STATE_ACTIVE);
 
-        set_entry_text(active);
-        gtk_widget_show(vb.gui.compbox);
-    }
+    /* get new path and move cursor to it */
+    path = gtk_tree_path_new_from_indices(comp.active, -1);
+    gtk_tree_view_set_cursor(tree, path, NULL, false);
+    gtk_tree_path_free(path);
 }
 
-static void set_entry_text(Completion *completion)
+static gboolean tree_selection_func(GtkTreeSelection *selection,
+    GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data)
 {
-    char *text = get_text(completion);
-    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), text);
-    gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), -1);
-    g_free(text);
-}
+    char *value;
+    GtkTreeIter iter;
 
-/**
- * Retrieves the full new allocated entry text for given completion item.
- */
-static char *get_text(Completion *completion)
-{
-    char *text = NULL;
-
-    /* print the previous typed command count into inputbox too */
-    if (comps.count) {
-        text = g_strdup_printf(
-            "%s%d%s", completion->prefix, comps.count, gtk_label_get_text(GTK_LABEL(completion->label))
-        );
-    } else {
-        text = g_strdup_printf(
-            "%s%s", completion->prefix, gtk_label_get_text(GTK_LABEL(completion->label))
-        );
+    /* if not selected means the item is going to be selected which we are
+     * interested in */
+    if (!selected && gtk_tree_model_get_iter(model, &iter, path)) {
+        gtk_tree_model_get(model, &iter, COMP_ITEM, &value, -1);
+        /* save the content of the selected item so wen can access it easy */
+        if (comp.text) {
+            g_free(comp.text);
+            comp.text = NULL;
+        }
+        if (comp.count) {
+            comp.text = g_strdup_printf("%s%d%s", comp.prefix, comp.count, value);
+        } else {
+            comp.text = g_strdup_printf("%s%s", comp.prefix, value);
+        }
+        /* print the text also into inputbox */
+        vb_echo_force(VB_MSG_NORMAL, false, "%s", comp.text);
+        g_free(value);
     }
 
-    return text;
-}
-
-static Completion *get_new(const char *label, const char *prefix)
-{
-    const int padding = 2;
-    Completion *c = g_new0(Completion, 1);
-
-    c->label  = gtk_label_new(label);
-    c->event  = gtk_event_box_new();
-    c->prefix = g_strdup(prefix);
-
-#ifdef HAS_GTK3
-    GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_set_homogeneous(GTK_BOX(hbox), true);
-#else
-    GtkWidget *hbox = gtk_hbox_new(true, 0);
-#endif
-
-    gtk_box_pack_start(GTK_BOX(hbox), c->label, true, true, 5);
-    gtk_label_set_ellipsize(GTK_LABEL(c->label), PANGO_ELLIPSIZE_MIDDLE);
-    gtk_misc_set_alignment(GTK_MISC(c->label), 0.0, 0.5);
-
-    VB_WIDGET_SET_STATE(c->label, VB_GTK_STATE_NORMAL);
-    VB_WIDGET_SET_STATE(c->event, VB_GTK_STATE_NORMAL);
-
-    VB_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_COLOR(c->label, GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_BACKGROUND(c->event, GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_FONT(c->label, vb.style.comp_font);
-
-    GtkWidget *alignment = gtk_alignment_new(0.5, 0.5, 1, 1);
-    gtk_alignment_set_padding(GTK_ALIGNMENT(alignment), padding, padding, padding, padding);
-    gtk_container_add(GTK_CONTAINER(alignment), hbox);
-    gtk_container_add(GTK_CONTAINER(c->event), alignment);
-
-    return c;
-}
-
-static void free_completion(Completion *completion)
-{
-    gtk_widget_destroy(completion->event);
-    g_free(completion->prefix);
-    g_free(completion);
+    return true;
 }

@@ -77,11 +77,11 @@ static void inputbox_print(gboolean force, const MessageType type, gboolean hide
 
 void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
 {
-    char message[255];
+    char message[BUF_SIZE];
     va_list arg_list;
 
     va_start(arg_list, error);
-    vsnprintf(message, 255, error, arg_list);
+    vsnprintf(message, BUF_SIZE, error, arg_list);
     va_end(arg_list);
 
     inputbox_print(true, type, hide, message);
@@ -89,11 +89,11 @@ void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
 {
-    char message[255];
+    char message[BUF_SIZE];
     va_list arg_list;
 
     va_start(arg_list, error);
-    vsnprintf(message, 255, error, arg_list);
+    vsnprintf(message, BUF_SIZE, error, arg_list);
     va_end(arg_list);
 
     inputbox_print(false, type, hide, message);
@@ -247,10 +247,10 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
 void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font)
 {
     VB_WIDGET_OVERRIDE_FONT(widget, font);
-    VB_WIDGET_OVERRIDE_TEXT(widget, GTK_STATE_NORMAL, fg);
-    VB_WIDGET_OVERRIDE_COLOR(widget, GTK_STATE_NORMAL, fg);
-    VB_WIDGET_OVERRIDE_BASE(widget, GTK_STATE_NORMAL, bg);
-    VB_WIDGET_OVERRIDE_BACKGROUND(widget, GTK_STATE_NORMAL, bg);
+    VB_WIDGET_OVERRIDE_TEXT(widget, VB_GTK_STATE_NORMAL, fg);
+    VB_WIDGET_OVERRIDE_COLOR(widget, VB_GTK_STATE_NORMAL, fg);
+    VB_WIDGET_OVERRIDE_BASE(widget, VB_GTK_STATE_NORMAL, bg);
+    VB_WIDGET_OVERRIDE_BACKGROUND(widget, VB_GTK_STATE_NORMAL, bg);
 }
 
 void vb_update_statusbar()
@@ -658,13 +658,16 @@ static void init_core(void)
     gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
     gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
 
+    /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
 #ifndef HAS_GTK3
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 #endif
 
     /* Prepare the inputbox */
     gui->inputbox = gtk_entry_new();
+#ifndef HAS_GTK3
     gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
+#endif
     g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", false, NULL);
 
 #ifdef HAS_GTK3
