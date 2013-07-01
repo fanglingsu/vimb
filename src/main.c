@@ -638,6 +638,9 @@ static void init_core(void)
         gui->window = gtk_plug_new(vb.embed);
     } else {
         gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+#ifdef HAS_GTK3
+        gtk_window_set_has_resize_grip(GTK_WINDOW(gui->window), false);
+#endif
         gtk_window_set_wmclass(GTK_WINDOW(gui->window), "vimb", "Vimb");
         gtk_window_set_role(GTK_WINDOW(gui->window), "Vimb");
     }
