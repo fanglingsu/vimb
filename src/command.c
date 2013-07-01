@@ -560,7 +560,7 @@ gboolean command_paste(const Arg *arg)
 
 gboolean command_search(const Arg *arg)
 {
-    gboolean forward = !(arg->i ^ vb.state.search_dir);
+    gboolean forward;
 
     if (arg->i == VB_SEARCH_OFF) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
@@ -575,6 +575,7 @@ gboolean command_search(const Arg *arg)
         /* set dearch dir only when the searching is started */
         vb.state.search_dir = arg->i;
     }
+    forward = !(arg->i ^ vb.state.search_dir);
 
     if (vb.state.search_query) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
