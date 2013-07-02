@@ -24,7 +24,7 @@
 #include "command.h"
 #include "hints.js.h"
 
-#define HINT_VAR "VpHint"
+#define HINT_VAR "VbHint"
 #define HINT_FILE "hints.js"
 
 static struct {
@@ -96,7 +96,7 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
         }
 
         js = g_strdup_printf(
-            "%s = new VimbHints('%c', '%c', '%s', '%s', '%s', '%s', %d);",
+            "%s.init('%c', '%c', '%s', '%s', '%s', '%s', %d);",
             HINT_VAR, type, usage,
             style->hint_bg,
             style->hint_bg_focus,
@@ -126,7 +126,7 @@ void hints_update(const gulong num)
 
 void hints_focus_next(const gboolean back)
 {
-    char *js = g_strdup_printf(back ? "%s.focusPrev()" : "%s.focusNext();", HINT_VAR);
+    char *js = g_strdup_printf("%s.focus(%d);", HINT_VAR, back);
     run_script(js);
     g_free(js);
 }

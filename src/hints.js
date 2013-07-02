@@ -1,56 +1,65 @@
-/* mode: l - links, i - images, e - editables */
-/* usage: O - open, T - open in new window, U - use source */
-function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
-{
-    "use strict";
-    var hClass      = "__hint";
-    var hClassFocus = "__hintFocus";
-    var hConts      = [];
-    var hints       = [];
-    var focusNum    = 1;
+var VbHint = (function(){
+    'use strict';
 
-    this.create = function(inputText)
-    {
-        var topwin     = window;
-        var top_height = topwin.innerHeight;
-        var top_width  = topwin.innerWidth;
-        var hCount     = 0;
+    var hClass      = "__hint",
+        hClassFocus = "__hintFocus",
+        hConts      = [],
+        hints       = [],
+        focusNum    = 1,
+        config      = {};
 
-        this.clear();
+    /* mode: l - links, i - images, e - editables */
+    /* usage: O - open, T - open in new window, U - use source */
+    function init(mode, usage, bg, bgf, fg, style, maxHints) {
+        config      = {
+            mode:     mode,
+            usage:    usage,
+            bg:       bg,
+            bgf:      bgf,
+            fg:       fg,
+            style:    style,
+            maxHints: maxHints
+        };
+    }
 
-        function _helper(win, offsetX, offsetY)
-        {
+    function create(inputText) {
+        var topwin     = window,
+            top_height = topwin.innerHeight,
+            top_width  = topwin.innerWidth,
+            hCount     = 0;
+
+        clear();
+
+        function helper(win, offsetX, offsetY) {
             /* document may be undefined for frames out of the same origin */
             /* policy and will break the whole code - so we check this before */
             if (win.document === undefined) {
                 return;
             }
-            var doc = win.document;
+            var doc      = win.document,
+                fragment = doc.createDocumentFragment(),
+                xpath    = getXpath(inputText),
+                res      = doc.evaluate(
+                    xpath, doc,
+                    function (p) {return "http://www.w3.org/1999/xhtml";},
+                    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null
+                ),
 
-            var fragment = doc.createDocumentFragment();
-            var xpath    = _getXpath(inputText);
+                /* generate basic hint element which will be cloned and updated later */
+                hintSpan = doc.createElement("span"),
+                /* Bounds */
+                minX = offsetX < 0 ? -offsetX : 0,
+                minY = offsetY < 0 ? -offsetY : 0,
+                maxX = offsetX + win.width > top_width ? top_width - offsetX : top_width,
+                maxY = offsetY + win.height > top_height ? top_height - offsetY : top_height,
+                rect, e, i;
 
-            var res = doc.evaluate(
-                xpath, doc,
-                function (p) {return "http://www.w3.org/1999/xhtml";},
-                XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null
-            );
-
-            /* generate basic hint element which will be cloned and updated later */
-            var hintSpan = doc.createElement("span");
             hintSpan.setAttribute("class", hClass);
-            hintSpan.style.cssText = style;
-
-            /* Bounds */
-            var minX = offsetX < 0 ? -offsetX : 0;
-            var minY = offsetY < 0 ? -offsetY : 0;
-            var maxX = offsetX + win.width > top_width ? top_width - offsetX : top_width;
-            var maxY = offsetY + win.height > top_height ? top_height - offsetY : top_height;
+            hintSpan.style.cssText = config.style;
 
             /* due to the different XPath result type, we will need two counter variables */
-            var rect, e;
             for (i = 0; i < res.snapshotLength; i++) {
-                if (hCount >= maxHints) {
+                if (hCount >= config.maxHints) {
                     break;
                 }
 
@@ -80,12 +89,12 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
                     num:  hCount,
                     span: hint,
                     bg:   e.style.background,
-                    fg:   e.style.color}
-                );
+                    fg:   e.style.color
+                });
 
                 /* change the foreground and background colors of the hinted items */
-                e.style.color = fg;
-                e.style.background = bg;
+                e.style.color = config.fg;
+                e.style.background = config.bg;
             }
 
             var hDiv = doc.createElement("div");
@@ -97,83 +106,74 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
             hConts.push(hDiv);
 
             /* recurse into any iframe or frame element */
-            var frameTags = ["frame","iframe"];
-            for (var f = 0; f < frameTags.length; ++f) {
-                var frames = doc.getElementsByTagName(frameTags[f]);
-                for (var i = 0, nframes = frames.length; i < nframes; ++i) {
-                    e = frames[i];
+            var frameTags = ["frame","iframe"],
+                frames, n, f, i;
+            for (f = 0; f < frameTags.length; ++f) {
+                frames = doc.getElementsByTagName(frameTags[f]);
+                for (i = 0, n = frames.length; i < n; ++i) {
+                    e    = frames[i];
                     rect = e.getBoundingClientRect();
                     if (!e.contentWindow || !rect || rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
                         continue;
                     }
-                    _helper(e.contentWindow, offsetX + rect.left, offsetY + rect.top);
+                    helper(e.contentWindow, offsetX + rect.left, offsetY + rect.top);
                 }
             }
         }
 
-        _helper(topwin, 0, 0);
+        helper(topwin, 0, 0);
 
         if (hCount <= 1) {
-            return this.fire(1);
+            return fire(1);
         }
-        return _focus(1);
-    };
+        return focusHint(1);
+    }
 
-    /* set focus to next avaiable hint */
-    this.focusNext = function()
-    {
-        var i = _getHintIdByNum(focusNum);
-
-        if (hints[i + 1] !== undefined) {
-            return _focus(hints[i + 1].num);
+    function focus(back) {
+        var num,
+            i = getHintId(focusNum);
+        if (back) {
+            num = (i !== 0 && hints[i - 1].num !== undefined)
+                ? (hints[i - 1].num)
+                : (hints[hints.length - 1].num);
+        } else {
+            num = (hints[i + 1] !== undefined)
+                ? (hints[i + 1].num)
+                : (hints[0].num);
         }
-        return _focus(hints[0].num);
-    };
+        return focusHint(num);
+    }
 
-    /* set focus to previous avaiable hint */
-    this.focusPrev = function()
-    {
-        var i = _getHintIdByNum(focusNum);
-        if (i !== 0 && hints[i - 1].num !== undefined) {
-            return _focus(hints[i - 1].num);
-        }
-        return _focus(hints[hints.length - 1].num);
-    };
-
-    /* filters hints matching given number */
-    this.update = function(n)
-    {
+    function update(n) {
+        var remove = [], i, hint;
         if (n === 0) {
-            return this.create();
+            return create();
         }
         /* remove none matching hints */
-        var remove = [];
-        var i;
         for (i = 0; i < hints.length; ++i) {
-            var hint = hints[i];
+            hint = hints[i];
             if (0 !== hint.num.toString().indexOf(n.toString())) {
                 remove.push(hint.num);
             }
         }
 
         for (i = 0; i < remove.length; ++i) {
-            _removeHint(remove[i]);
+            removeHint(remove[i]);
         }
 
         if (hints.length === 1) {
-            return this.fire(hints[0].num);
+            return fire(hints[0].num);
         }
-        return _focus(n);
-    };
+        return focusHint(n);
+    }
 
-    /* remove all hints and set previous style to them */
-    this.clear = function()
-    {
+    function clear() {
+        var i, hint;
         if (hints.length === 0) {
             return;
         }
-        for (var i = 0; i < hints.length; ++i) {
-            var hint = hints[i];
+        for (i = 0; i < hints.length; ++i) {
+            hint = hints[i];
             if (hint.e) {
                 hint.e.style.background = hint.bg;
                 hint.e.style.color = hint.fg;
@@ -183,34 +183,69 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
             }
         }
         hints = [];
-        for (var i = 0; i < hConts.length; ++i) {
+        for (i = 0; i < hConts.length; ++i) {
             hConts[i].parentNode.removeChild(hConts[i]);
         }
         hConts = [];
-    };
+    }
 
-    /* fires the modeevent on hint with given number */
-    this.fire = function(n)
-    {
-        var hint = _getHintByNum(n ? n : focusNum);
+    function fire(n) {
+        var hint = getHint(n ? n : focusNum);
         if (!hint) {
             return "DONE:";
         }
 
-        var e    = hint.e;
-        var tag  = e.nodeName.toLowerCase();
-        var type = e.type ? e.type : "";
+        var e    = hint.e,
+            tag  = e.nodeName.toLowerCase(),
+            type = e.type ? e.type : "";
 
-        this.clear();
+        clear();
+        if (tag === "input" || tag === "textarea" || tag === "select") {
+            if (type === "radio" || type === "checkbox") {
+                e.focus();
+                click(e);
+                return "DONE:";
+            }
+            if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
+                click(e);
+                return "DONE:";
+            }
+            e.focus();
+            return "INSERT:";
+        }
+        if (tag === "iframe" || tag === "frame") {
+            e.focus();
+            return "DONE:";
+        }
+
+        switch (usage) {
+            case "T": open(e, true); return "DONE:";
+            case "O": open(e, false); return "DONE:";
+            default: return "DATA:" + getSrc(e);
+        }
+    }
+
+    /* fires the modeevent on hint with given number */
+    function fire(n) {
+        var hint = getHint(n ? n : focusNum);
+        if (!hint) {
+            return "DONE:";
+        }
+
+        var e    = hint.e,
+            tag  = e.nodeName.toLowerCase(),
+            type = e.type ? e.type : "";
+
+        clear();
 
         if (tag === "input" || tag === "textarea" || tag === "select") {
             if (type === "radio" || type === "checkbox") {
                 e.focus();
-                _click(e);
+                click(e);
                 return "DONE:";
             }
             if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
-                _click(e);
+                click(e);
                 return "DONE:";
             }
             e.focus();
@@ -220,15 +255,15 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
             return "DONE:";
         }
 
-        switch (usage) {
-            case "T": _open(e, true); return "DONE:";
-            case "O": _open(e, false); return "DONE:";
-            default: return "DATA:" + _getSrc(e);
+        switch (config.usage) {
+            case "T": open(e, true); return "DONE:";
+            case "O": open(e, false); return "DONE:";
+            default: return "DATA:" + getSrc(e);
         }
-    };
+    }
 
-    /* opens given element */
-    function _open(e, newWin)
+    /* internal used methods */
+    function open(e, newWin)
     {
         var oldTarget = e.target;
         if (newWin) {
@@ -237,44 +272,44 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
         } else if (e.target === "_blank") {
             e.removeAttribute("target");
         }
-        _click(e);
+        click(e);
         e.target = oldTarget;
     }
 
     /* set focus on hint with given number */
-    function _focus(n)
+    function focusHint(n)
     {
         /* reset previous focused hint */
-        var hint = _getHintByNum(focusNum);
+        var hint = getHint(focusNum);
         if (hint) {
             hint.e.classList.remove(hClassFocus);
-            hint.e.style.background = bg;
-            _mouseEvent(hint.e, "mouseout");
+            hint.e.style.background = config.bg;
+            mouseEvent(hint.e, "mouseout");
         }
 
         focusNum = n;
 
         /* mark new hint as focused */
-        hint = _getHintByNum(focusNum);
+        hint = getHint(focusNum);
         if (hint) {
             hint.e.classList.add(hClassFocus);
-            hint.e.style.background = bgf;
-            var source              = _getSrc(hint.e);
-            _mouseEvent(hint.e, "mouseover");
+            hint.e.style.background = config.bgf;
+            var source              = getSrc(hint.e);
+            mouseEvent(hint.e, "mouseover");
 
             return "OVER:" + (source ? source : "");
         }
     }
 
     /* retrieves the hint for given hint number */
-    function _getHintByNum(n)
+    function getHint(n)
     {
-        var i = _getHintIdByNum(n);
+        var i = getHintId(n);
         return i !== null ? hints[i] : null;
     }
 
     /* retrieves the id of hint with given number */
-    function _getHintIdByNum(n)
+    function getHintId(n)
     {
         for (var i = 0; i < hints.length; ++i) {
             if (hints[i].num === n) {
@@ -285,9 +320,9 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     }
 
     /* removes hint with given number from hints array */
-    function _removeHint(n)
+    function removeHint(n)
     {
-        var i = _getHintIdByNum(n);
+        var i = getHintId(n);
         if (i === null) {
             return;
         }
@@ -300,15 +335,15 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
         hints.splice(i, 1);
     }
 
-    function _click(e)
+    function click(e)
     {
-        _mouseEvent(e, "mouseover");
-        _mouseEvent(e, "mousedown");
-        _mouseEvent(e, "mouseup");
-        _mouseEvent(e, "click");
+        mouseEvent(e, "mouseover");
+        mouseEvent(e, "mousedown");
+        mouseEvent(e, "mouseup");
+        mouseEvent(e, "click");
     }
 
-    function _mouseEvent(e, name)
+    function mouseEvent(e, name)
     {
         var evObj = e.ownerDocument.createEvent("MouseEvents");
         evObj.initMouseEvent(name, true, true, e.contentWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
@@ -316,19 +351,19 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
     }
 
     /* retrieves the url of given element */
-    function _getSrc(e)
+    function getSrc(e)
     {
         return e.href || e.src;
     }
 
     /* retrieves the xpath expression according to mode */
-    function _getXpath(s)
+    function getXpath(s)
     {
         if (s === undefined) {
             s = "";
         }
         /* replace $WHAT in xpath to contains(translate(WHAT, 'SEARCH', 'search'), 'search') */
-        function _buildQuery(what, x, s)
+        function buildQuery(what, x, s)
         {
             var l, i, parts;
             l = s.toLowerCase();
@@ -342,12 +377,12 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
             return x;
         }
 
-        switch (mode) {
+        switch (config.mode) {
             case "l":
                 if (!s) {
                     return "//a[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //area[@href] | //textarea[not(@disabled or @readonly)] | //button | //select";
                 }
-                return _buildQuery(
+                return buildQuery(
                     ["@value", ".", "@placeholder"],
                     "//a[@href and $.] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and ($@value or $@placeholder)] | //area[$.] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
                     s
@@ -356,7 +391,7 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
                 if (!s) {
                     return "//input[@type='text'] | //textarea";
                 }
-                return _buildQuery(
+                return buildQuery(
                     ["@value", ".", "@placeholder"],
                     "//input[@type='text' and ($@value or $@placeholder)] | //textarea[$.]",
                     s
@@ -365,7 +400,17 @@ function VimbHints(mode, usage, bg, bgf, fg, style, maxHints)
                 if (!s) {
                     return "//img[@src]";
                 }
-                return _buildQuery(["@title", "@alt"], "//img[@src and ($@title or $@alt)]", s);
+                return buildQuery(["@title", "@alt"], "//img[@src and ($@title or $@alt)]", s);
         }
     }
-};
+
+    /* the api */
+    return {
+        init:   init,
+        create: create,
+        update: update,
+        clear:  clear,
+        fire:   fire,
+        focus:  focus
+    };
+})();
