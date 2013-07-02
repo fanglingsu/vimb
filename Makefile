@@ -39,12 +39,12 @@ man:
 	@$(MAKE) $(MFLAGS) -C doc man
 
 install: $(TARGET)
-	install -d $(BINDIR)
-	install -m 755 $(TARGET) $(BINDIR)
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 755 $(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 	@$(MAKE) $(MFLAGS) -C doc install
 
 uninstall:
-	$(RM) $(BINDIR)$(TARGET)
+	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
 	@$(MAKE) $(MFLAGS) -C doc uninstall
 
 clean:
