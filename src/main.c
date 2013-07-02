@@ -911,7 +911,7 @@ static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *fr
 
 static void create_web_view_received_uri_cb(WebKitWebView *view)
 {
-    Arg a = {VB_TARGET_NEW, (char*)GET_URI()};
+    Arg a = {VB_TARGET_NEW, (char*)webkit_web_view_get_uri(view)};
     /* destroy temporary webview */
     webkit_web_view_stop_loading(view);
     gtk_widget_destroy(GTK_WIDGET(view));
