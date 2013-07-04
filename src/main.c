@@ -63,6 +63,8 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 static void request_start_cb(WebKitWebView *webview, WebKitWebFrame *frame,
     WebKitWebResource *resource, WebKitNetworkRequest *request,
     WebKitNetworkResponse *response);
+static void window_object_cleared_cb(WebKitWebView *webview,
+    WebKitWebFrame *frame, JSContextRef context, JSObjectRef window, gpointer user_data);
 
 /* functions */
 static void run_user_script(WebKitWebFrame *frame);
@@ -432,12 +434,6 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 } else {
                     set_status(VB_STATUS_NORMAL);
                 }
-
-                /* inject the hinting javascript */
-                hints_init(frame);
-
-                /* run user script file */
-                run_user_script(frame);
             }
 
             if (vb.state.mode & VB_MODE_INSERT) {
@@ -787,6 +783,7 @@ static void setup_signals()
         "signal::download-requested", G_CALLBACK(vb_download), NULL,
         "signal::resource-request-starting", G_CALLBACK(request_start_cb), NULL,
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
+        "signal::window-object-cleared", G_CALLBACK(window_object_cleared_cb), NULL,
         NULL
     );
 
@@ -1026,6 +1023,17 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
     vb.state.downloads = g_list_remove(vb.state.downloads, download);
 
     vb_update_statusbar();
+}
+
+static void window_object_cleared_cb(WebKitWebView *webview,
+    WebKitWebFrame *frame, JSContextRef context, JSObjectRef window, gpointer user_data)
+{
+
+    /* inject the hinting javascript */
+    hints_init(frame);
+
+    /* run user script file */
+    run_user_script(frame);
 }
 
 int main(int argc, char *argv[])
