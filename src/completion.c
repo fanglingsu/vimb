@@ -271,7 +271,7 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
             comp.text = g_strdup_printf("%s%s", comp.prefix, value);
         }
         /* print the text also into inputbox */
-        vb_echo_force(VB_MSG_NORMAL, false, "%s", comp.text);
+        PUT_TEXT(comp.text);
         g_free(value);
     }
 

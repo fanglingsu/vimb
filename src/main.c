@@ -589,8 +589,7 @@ static void inputbox_print(gboolean force, const MessageType type, gboolean hide
         vb.state.input_type = type;
         vb_update_input_style();
     }
-    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), message);
-    gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), strlen(message) > INPUT_LENGTH ? 0 : -1);
+    PUT_TEXT(message);
     if (hide) {
         g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)hide_message, NULL);
     }

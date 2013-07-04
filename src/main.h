@@ -55,6 +55,10 @@
 #endif
 
 #define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox)))
+#define PUT_TEXT(x) { \
+    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), x); \
+    gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), -1); \
+}
 #define GET_URI() (webkit_web_view_get_uri(vb.gui.webview))
 #define CLEAN_MODE(mode) ((mode) & ~(VB_MODE_COMPLETE | VB_MODE_SEARCH | VB_MODE_HINTING))
 #define CLEAR_INPUT() (vb_echo(VB_MSG_NORMAL, ""))
