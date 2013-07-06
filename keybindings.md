@@ -46,6 +46,12 @@ c(un)map
 ?
 : Start command mode and print `?` to inputbox to start searching backward.
 
+ *
+: Search forward for current selected text.
+
+ #
+: Search backward for current selected text.
+
 o
 : Start command mode and print `:open ` to input box.
 

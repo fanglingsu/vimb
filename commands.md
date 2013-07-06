@@ -292,8 +292,11 @@ shellcmd CMD
 
   Example: ``:shellcmd echo "`date` %" >> myhistory.txt``
 
-[N]search-forward, [N]search-backward
-: Search in current page forward or backward.
+[N]search-forward [QUERY], [N]search-backward [QUERY]
+: Search forward or backward for the N'th occurrence of QUERY in current page.
+
+[N]search-selection-forward, [N]search-selection-backward
+: Search forward or backward for the N'th occurrence of the selected text.
 
 save [PATH]
 : Download current opened page into configured download directory. If PATH is
