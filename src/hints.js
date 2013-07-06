@@ -414,3 +414,4 @@ var VbHint = (function(){
         focus:  focus
     };
 })();
+Object.freeze(VbHint);
