@@ -173,9 +173,9 @@ enum {
 };
 
 typedef enum {
-    VB_SEARCH_FORWARD  = 1,
-    VB_SEARCH_BACKWARD = -1,
-    VB_SEARCH_OFF      = 0
+    VB_SEARCH_OFF,
+    VB_SEARCH_FORWARD  = (1<<0),
+    VB_SEARCH_BACKWARD = (1<<1),
 } SearchDirection;
 
 typedef enum {

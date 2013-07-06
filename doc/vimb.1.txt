@@ -348,8 +348,12 @@ opened uri.
 Example:
 `:shellcmd echo "`date` %" >> myhistory.txt'
 .TP
-.BI [ N "]search-forward, [" N "]search-backward"
-Search in current page forward or backward.
+.BI [ N "]search-forward [" QUERY "], [" N "]search-backward [" QUERY ]
+Search forward or backward for the \fIN\fP'th occurrence of \fIQUERY\fP in
+current page.
+.TP
+.BI [ N "]search-selection-forward, [" N "]search-selection-backward
+Search forward or backward for the \fIN\fP'th occurrence of the selected text.
 .TP
 .BI "save [" PATH "]"
 Download current opened page into configured download directory. If \fIPATH\fP

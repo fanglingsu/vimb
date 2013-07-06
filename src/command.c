@@ -50,75 +50,77 @@ static GHashTable *commands;
 static GHashTable *short_commands;
 
 static CommandInfo cmd_list[] = {
-    /* command               alias    function                      arg */
-    {"open",                 "o",     command_open,                 {VB_TARGET_CURRENT, ""}},
-    {"tabopen",              "t",     command_open,                 {VB_TARGET_NEW, ""}},
-    {"open-closed",          NULL,    command_open_closed,          {VB_TARGET_CURRENT}},
-    {"tabopen-closed",       NULL,    command_open_closed,          {VB_TARGET_NEW}},
-    {"open-clipboard",       "oc",    command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_CURRENT}},
-    {"tabopen-clipboard",    "toc",   command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_NEW}},
-    {"input",                "in",    command_input,                {0, ":"}},
-    {"inputuri",             NULL,    command_input,                {VB_INPUT_CURRENT_URI, ":"}},
-    {"quit",                 "q",     command_close,                {0}},
-    {"source",               NULL,    command_view_source,          {0}},
-    {"back",                 "ba",    command_navigate,             {VB_NAVIG_BACK}},
-    {"forward",              "fo",    command_navigate,             {VB_NAVIG_FORWARD}},
-    {"reload",               "re",    command_navigate,             {VB_NAVIG_RELOAD}},
-    {"reload!",              "re!",   command_navigate,             {VB_NAVIG_RELOAD_FORCE}},
-    {"stop",                 "st",    command_navigate,             {VB_NAVIG_STOP_LOADING}},
-    {"jumpleft",             NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_LEFT}},
-    {"jumpright",            NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_RIGHT}},
-    {"jumptop",              NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_TOP}},
-    {"jumpbottom",           NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_DOWN}},
-    {"pageup",               NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_PAGE}},
-    {"pagedown",             NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_PAGE}},
-    {"halfpageup",           NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_HALFPAGE}},
-    {"halfpagedown",         NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_HALFPAGE}},
-    {"scrollleft",           NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_LEFT | VB_SCROLL_UNIT_LINE}},
-    {"scrollright",          NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_RIGHT | VB_SCROLL_UNIT_LINE}},
-    {"scrollup",             NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_LINE}},
-    {"scrolldown",           NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_LINE}},
-    {"nmap",                 NULL,    command_map,                  {VB_MODE_NORMAL}},
-    {"imap",                 NULL,    command_map,                  {VB_MODE_INSERT}},
-    {"cmap",                 NULL,    command_map,                  {VB_MODE_COMMAND}},
-    {"nunmap",               NULL,    command_unmap,                {VB_MODE_NORMAL}},
-    {"iunmap",               NULL,    command_unmap,                {VB_MODE_INSERT}},
-    {"cunmap",               NULL,    command_unmap,                {VB_MODE_COMMAND}},
-    {"set",                  NULL,    command_set,                  {0}},
-    {"inspect",              NULL,    command_inspect,              {0}},
-    {"hint-link",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN}},
-    {"hint-link-new",        NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW}},
-    {"hint-input-open",      NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT}},
-    {"hint-input-tabopen",   NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT | HINTS_OPEN_NEW}},
-    {"hint-yank",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_YANK}},
-    {"hint-image-open",      NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN}},
-    {"hint-image-tabopen",   NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW}},
-    {"hint-editor",          NULL,    command_hints,                {HINTS_TYPE_EDITABLE}},
-    {"hint-save",            NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE}},
-    {"yank-uri",             "yu",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
-    {"yank-selection",       "ys",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},
-    {"search-forward",       NULL,    command_search,               {VB_SEARCH_FORWARD}},
-    {"search-backward",      NULL,    command_search,               {VB_SEARCH_BACKWARD}},
-    {"shortcut-add",         NULL,    command_shortcut,             {1}},
-    {"shortcut-remove",      NULL,    command_shortcut,             {0}},
-    {"shortcut-default",     NULL,    command_shortcut_default,     {0}},
-    {"zoomin",               "zi",    command_zoom,                 {COMMAND_ZOOM_IN}},
-    {"zoomout",              "zo",    command_zoom,                 {COMMAND_ZOOM_OUT}},
-    {"zoominfull",           "zif",   command_zoom,                 {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
-    {"zoomoutfull",          "zof",   command_zoom,                 {COMMAND_ZOOM_OUT | COMMAND_ZOOM_FULL}},
-    {"zoomreset",            "zr",    command_zoom,                 {COMMAND_ZOOM_RESET}},
-    {"hist-next",            NULL,    command_history,              {0}},
-    {"hist-prev",            NULL,    command_history,              {1}},
-    {"run",                  NULL,    command_run_multi,            {0}},
-    {"bookmark-add",         "bma",   command_bookmark,             {1}},
-    {"eval",                 "e",     command_eval,                 {0}},
-    {"editor",               NULL,    command_editor,               {0}},
-    {"next",                 "n",     command_nextprev,             {0}},
-    {"prev",                 "p",     command_nextprev,             {1}},
-    {"descent",              NULL,    command_descent,              {0}},
-    {"descent!",             NULL,    command_descent,              {1}},
-    {"save",                 NULL,    command_save,                 {COMMAND_SAVE_CURRENT}},
-    {"shellcmd",             NULL,    command_shellcmd,             {0}},
+    /* command                    alias    function                      arg */
+    {"open",                      "o",     command_open,                 {VB_TARGET_CURRENT, ""}},
+    {"tabopen",                   "t",     command_open,                 {VB_TARGET_NEW, ""}},
+    {"open-closed",               NULL,    command_open_closed,          {VB_TARGET_CURRENT}},
+    {"tabopen-closed",            NULL,    command_open_closed,          {VB_TARGET_NEW}},
+    {"open-clipboard",            "oc",    command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_CURRENT}},
+    {"tabopen-clipboard",         "toc",   command_paste,                {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | VB_TARGET_NEW}},
+    {"input",                     "in",    command_input,                {0, ":"}},
+    {"inputuri",                  NULL,    command_input,                {VB_INPUT_CURRENT_URI, ":"}},
+    {"quit",                      "q",     command_close,                {0}},
+    {"source",                    NULL,    command_view_source,          {0}},
+    {"back",                      "ba",    command_navigate,             {VB_NAVIG_BACK}},
+    {"forward",                   "fo",    command_navigate,             {VB_NAVIG_FORWARD}},
+    {"reload",                    "re",    command_navigate,             {VB_NAVIG_RELOAD}},
+    {"reload!",                   "re!",   command_navigate,             {VB_NAVIG_RELOAD_FORCE}},
+    {"stop",                      "st",    command_navigate,             {VB_NAVIG_STOP_LOADING}},
+    {"jumpleft",                  NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_LEFT}},
+    {"jumpright",                 NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_RIGHT}},
+    {"jumptop",                   NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_TOP}},
+    {"jumpbottom",                NULL,    command_scroll,               {VB_SCROLL_TYPE_JUMP | VB_SCROLL_DIRECTION_DOWN}},
+    {"pageup",                    NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_PAGE}},
+    {"pagedown",                  NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_PAGE}},
+    {"halfpageup",                NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_HALFPAGE}},
+    {"halfpagedown",              NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_HALFPAGE}},
+    {"scrollleft",                NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_LEFT | VB_SCROLL_UNIT_LINE}},
+    {"scrollright",               NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_RIGHT | VB_SCROLL_UNIT_LINE}},
+    {"scrollup",                  NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_LINE}},
+    {"scrolldown",                NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_LINE}},
+    {"nmap",                      NULL,    command_map,                  {VB_MODE_NORMAL}},
+    {"imap",                      NULL,    command_map,                  {VB_MODE_INSERT}},
+    {"cmap",                      NULL,    command_map,                  {VB_MODE_COMMAND}},
+    {"nunmap",                    NULL,    command_unmap,                {VB_MODE_NORMAL}},
+    {"iunmap",                    NULL,    command_unmap,                {VB_MODE_INSERT}},
+    {"cunmap",                    NULL,    command_unmap,                {VB_MODE_COMMAND}},
+    {"set",                       NULL,    command_set,                  {0}},
+    {"inspect",                   NULL,    command_inspect,              {0}},
+    {"hint-link",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN}},
+    {"hint-link-new",             NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW}},
+    {"hint-input-open",           NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT}},
+    {"hint-input-tabopen",        NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_INPUT | HINTS_OPEN_NEW}},
+    {"hint-yank",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_YANK}},
+    {"hint-image-open",           NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN}},
+    {"hint-image-tabopen",        NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW}},
+    {"hint-editor",               NULL,    command_hints,                {HINTS_TYPE_EDITABLE}},
+    {"hint-save",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE}},
+    {"yank-uri",                  "yu",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
+    {"yank-selection",            "ys",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},
+    {"search-forward",            NULL,    command_search,               {VB_SEARCH_FORWARD}},
+    {"search-backward",           NULL,    command_search,               {VB_SEARCH_BACKWARD}},
+    {"search-selection-forward",  NULL,    command_selsearch,            {VB_SEARCH_FORWARD}},
+    {"search-selection-backward", NULL,    command_selsearch,            {VB_SEARCH_BACKWARD}},
+    {"shortcut-add",              NULL,    command_shortcut,             {1}},
+    {"shortcut-remove",           NULL,    command_shortcut,             {0}},
+    {"shortcut-default",          NULL,    command_shortcut_default,     {0}},
+    {"zoomin",                    "zi",    command_zoom,                 {COMMAND_ZOOM_IN}},
+    {"zoomout",                   "zo",    command_zoom,                 {COMMAND_ZOOM_OUT}},
+    {"zoominfull",                "zif",   command_zoom,                 {COMMAND_ZOOM_IN | COMMAND_ZOOM_FULL}},
+    {"zoomoutfull",               "zof",   command_zoom,                 {COMMAND_ZOOM_OUT | COMMAND_ZOOM_FULL}},
+    {"zoomreset",                 "zr",    command_zoom,                 {COMMAND_ZOOM_RESET}},
+    {"hist-next",                 NULL,    command_history,              {0}},
+    {"hist-prev",                 NULL,    command_history,              {1}},
+    {"run",                       NULL,    command_run_multi,            {0}},
+    {"bookmark-add",              "bma",   command_bookmark,             {1}},
+    {"eval",                      "e",     command_eval,                 {0}},
+    {"editor",                    NULL,    command_editor,               {0}},
+    {"next",                      "n",     command_nextprev,             {0}},
+    {"prev",                      "p",     command_nextprev,             {1}},
+    {"descent",                   NULL,    command_descent,              {0}},
+    {"descent!",                  NULL,    command_descent,              {1}},
+    {"save",                      NULL,    command_save,                 {COMMAND_SAVE_CURRENT}},
+    {"shellcmd",                  NULL,    command_shellcmd,             {0}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -239,7 +241,7 @@ gboolean command_run_string(const char *input)
 
     success = command(&arg);
     g_free(arg.s);
-    
+
     return success;
 }
 
@@ -592,6 +594,33 @@ gboolean command_search(const Arg *arg)
     vb_set_mode(VB_MODE_NORMAL | VB_MODE_SEARCH, false);
 
     return true;
+}
+
+gboolean command_selsearch(const Arg *arg)
+{
+    char *query = NULL;
+    gboolean res;
+
+    /* don't start a new search if already in search mode */
+    if (vb.state.mode & VB_MODE_SEARCH) {
+        /* don't set a mode - keep the search mode like it is like in vim */
+        return false;
+    }
+
+    /* there is no function to get the selected text so we copy current
+     * selection to clipboard */
+    webkit_web_view_copy_clipboard(vb.gui.webview);
+    query = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+    if (!query) {
+        vb_set_mode(VB_MODE_NORMAL, false);
+
+        return false;
+    }
+
+    res = command_search(&((Arg){arg->i, query}));
+    g_free(query);
+
+    return res;
 }
 
 gboolean command_shortcut(const Arg *arg)

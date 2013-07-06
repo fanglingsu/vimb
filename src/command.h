@@ -69,6 +69,7 @@ gboolean command_hints(const Arg *arg);
 gboolean command_yank(const Arg *arg);
 gboolean command_paste(const Arg *arg);
 gboolean command_search(const Arg *arg);
+gboolean command_selsearch(const Arg *arg);
 gboolean command_shortcut(const Arg *arg);
 gboolean command_shortcut_default(const Arg *arg);
 gboolean command_zoom(const Arg *arg);
