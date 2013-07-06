@@ -144,6 +144,10 @@ const char *default_config[] = {
     "set download-path=",
     "set history-max-items=2000",
     "set editor-command=x-terminal-emulator -e vi %s",
+#if WEBKIT_CHECK_VERSION(2, 0, 0)
+    "set insecure-content-show=off",
+    "set insecure-content-run=off",
+#endif
     NULL
 };
 

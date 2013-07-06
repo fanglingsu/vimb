@@ -66,6 +66,10 @@ static Setting default_settings[] = {
     {"sansfont", "sans-serif-font-family", TYPE_CHAR, webkit, {0}},
     {"seriffont", "serif-font-family", TYPE_CHAR, webkit, {0}},
     {"useragent", "user-agent", TYPE_CHAR, webkit, {0}},
+#if WEBKIT_CHECK_VERSION(2, 0, 0)
+    {"insecure-content-show", "enable-display-of-insecure-content", TYPE_BOOLEAN, webkit, {0}},
+    {"insecure-content-run", "enable-running-of-insecure-content", TYPE_BOOLEAN, webkit, {0}},
+#endif
 
     /* internal variables */
     {NULL, "stylesheet", TYPE_BOOLEAN, user_style, {0}},
