@@ -445,6 +445,12 @@ Start command mode and print `/' to inputbox to start searching forward.
 .B ?
 Start command mode and print `?' to inputbox to start searching backward.
 .TP
+.B *
+Search forward for current selected text.
+.TP
+.B #
+Search backward for current selected text.
+.TP
 .B o
 Start command mode and print `:open ' to input box.
 .TP
