@@ -258,6 +258,9 @@ hist-prev, hist-next
 bookmark-add [TAGS], bma [TAGS]
 : Save the current opened uri with TAGS to the bookmark file.
 
+bookmark-remove [URI], bmr [URI]
+: Removes all bookmarks for given URI or if not given the current opened page.
+
 ## misc
 next, n
 prev, p
