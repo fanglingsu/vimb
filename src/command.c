@@ -113,6 +113,7 @@ static CommandInfo cmd_list[] = {
     {"hist-prev",                 NULL,    command_history,              {1}},
     {"run",                       NULL,    command_run_multi,            {0}},
     {"bookmark-add",              "bma",   command_bookmark,             {1}},
+    {"bookmark-remove",           "bmr",   command_bookmark,             {0}},
     {"eval",                      "e",     command_eval,                 {0}},
     {"editor",                    NULL,    command_editor,               {0}},
     {"next",                      "n",     command_nextprev,             {0}},
@@ -703,11 +704,18 @@ gboolean command_bookmark(const Arg *arg)
 {
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    if (bookmark_add(GET_URI(), arg->s)) {
+    if (!arg->i) {
+        if (bookmark_remove(arg->s ? arg->s : GET_URI())) {
+            vb_echo_force(VB_MSG_NORMAL, false, "Bookmark removed");
+
+            return true;
+        }
+    } else if (bookmark_add(GET_URI(), arg->s)) {
         vb_echo_force(VB_MSG_NORMAL, false, "Bookmark added");
 
         return true;
     }
+
     return false;
 }
 

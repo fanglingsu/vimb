@@ -320,6 +320,10 @@ commands and search queries.
 .TP
 .BI "bookmark-add [" TAGS "], bma [" TAGS ]
 Save the current opened uri with \fITAGS\fP to the bookmark file.
+.TP
+.BI "bookmark-remove [" URI "], bmr [" URI ]
+Removes all bookmarks for given \fIURI\fP or if not given the current opened
+page.
 
 .SS Misc
 .TP

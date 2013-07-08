@@ -55,6 +55,49 @@ gboolean bookmark_add(const char *uri, const char *tags)
     return false;
 }
 
+gboolean bookmark_remove(const char *uri)
+{
+    char **lines, *line, *p;
+    int len, i;
+    GString *new;
+    gboolean removed = false;
+
+    if (!uri) {
+        return false;
+    }
+
+    lines = util_get_lines(vb.files[FILES_BOOKMARK]);
+    if (lines) {
+        new = g_string_new(NULL);
+        len = g_strv_length(lines) - 1;
+        for (i = 0; i < len; i++) {
+            line = lines[i];
+            g_strstrip(line);
+            /* ignore the bookmark tags and test only the uri */
+            if ((p = strchr(line, ' '))) {
+                *p = '\0';
+                if (!strcmp(uri, line)) {
+                    removed = true;
+                    continue;
+                } else {
+                    /* reappend the tags */
+                    *p = ' ';
+                }
+            }
+            if (!strcmp(uri, line)) {
+                removed = true;
+                continue;
+            }
+            g_string_append_printf(new, "%s\n", line);
+        }
+        g_strfreev(lines);
+        g_file_set_contents(vb.files[FILES_BOOKMARK], new->str, -1, NULL);
+        g_string_free(new, true);
+    }
+
+    return removed;
+}
+
 /**
  * Retrieves all bookmark uri matching the given space separated tags string.
  * Don't forget to free the returned list.
