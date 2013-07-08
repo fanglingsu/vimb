@@ -43,4 +43,8 @@ the [vimb project page][vimb].
 # license
 Information about the license are found in the file LICENSE.
 
+# mailing list
+- feature requests, issues and patches can be discussed on the [mailing list][mail]
+
 [vimb]: http://fanglingsu.github.io/vimb/ "vimb - vim-like webkit browser project page"
+[mail]: https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
