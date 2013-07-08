@@ -275,6 +275,12 @@ void vb_update_statusbar()
     if (vb.state.progress != 100) {
         g_string_append_printf(status, " [%i%%]", vb.state.progress);
     }
+#ifdef FEATURE_GTK_PROGRESSBAR
+    gtk_entry_set_progress_fraction(
+        GTK_ENTRY(vb.gui.inputbox),
+        vb.state.progress == 100 ? 0.0 : vb.state.progress/100.0
+    );
+#endif
 
     /* show the scroll status */
     max = gtk_adjustment_get_upper(vb.gui.adjust_v) - gtk_adjustment_get_page_size(vb.gui.adjust_v);
