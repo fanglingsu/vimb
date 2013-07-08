@@ -703,8 +703,12 @@ gboolean command_bookmark(const Arg *arg)
 {
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    bookmark_add(GET_URI(), arg->s);
-    return true;
+    if (bookmark_add(GET_URI(), arg->s)) {
+        vb_echo_force(VB_MSG_NORMAL, false, "Bookmark added");
+
+        return true;
+    }
+    return false;
 }
 
 gboolean command_eval(const Arg *arg)

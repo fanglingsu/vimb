@@ -34,7 +34,7 @@ static void free_bookmark(Bookmark *bm);
 /**
  * Write a new bookmark entry to the end of bookmark file.
  */
-void bookmark_add(const char *uri, const char *tags)
+gboolean bookmark_add(const char *uri, const char *tags)
 {
     FILE *f;
 
@@ -49,7 +49,10 @@ void bookmark_add(const char *uri, const char *tags)
 
         file_lock_set(fileno(f), F_UNLCK);
         fclose(f);
+
+        return true;
     }
+    return false;
 }
 
 /**
