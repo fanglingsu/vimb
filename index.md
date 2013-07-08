@@ -48,10 +48,10 @@ not detract you from your daily work.
 - libgtk+-2.0
 - libsoup-2.4
 
-## bugs
+## contribute
 
 If you find a misbehaviour or have feature requests use the
-[issue tracker][bug] provided by github.
+[issue tracker][bug] provided by github or via [mailing list][mail].
 
 ## alternatives
 
@@ -68,3 +68,4 @@ If you find a misbehaviour or have feature requests use the
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
 [keybindings]: keybindings.html#default-keys
+[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
