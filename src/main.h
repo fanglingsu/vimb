@@ -287,11 +287,6 @@ typedef struct {
     VbColor              comp_fg[VB_COMP_LAST];
     VbColor              comp_bg[VB_COMP_LAST];
     PangoFontDescription *comp_font;
-    /* hint style */
-    char                 *hint_bg;
-    char                 *hint_bg_focus;
-    char                 *hint_fg;
-    char                 *hint_style;
     /* status bar */
     VbColor              status_bg[VB_STATUS_LAST];
     VbColor              status_fg[VB_STATUS_LAST];

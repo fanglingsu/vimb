@@ -1,32 +1,19 @@
 var VbHint = (function(){
     'use strict';
 
-    var hClass      = "__hint",
-        hClassFocus = "__hintFocus",
-        hConts      = [],
-        hints       = [],
-        focusNum    = 1,
-        config      = {};
-
-    /* mode: l - links, i - images, e - editables */
-    /* usage: O - open, T - open in new window, U - use source */
-    function init(mode, usage, bg, bgf, fg, style, maxHints) {
-        config      = {
-            mode:     mode,
-            usage:    usage,
-            bg:       bg,
-            bgf:      bgf,
-            fg:       fg,
-            style:    style,
-            maxHints: maxHints
-        };
-    }
+    var hConts   = [],               /* holds the hintcontainers of the different documents */
+        hints    = [],               /* holds all hint data (hinted element, label, number) */
+        focusNum = 1,                /* number of current focused hint */
+        cId      = "_hintContainer", /* id of the conteiner holding the hint lables */
+        lClass   = "_hintLabel",     /* class used on the hint labels with the hint numbers */
+        hClass   = "_hintElem",      /* marks hinted elements */
+        fClass   = "_hintFocus",     /* marks focused element and focued hint */
+        config;
 
     function create(inputText) {
-        var topwin     = window,
-            top_height = topwin.innerHeight,
-            top_width  = topwin.innerWidth,
-            hCount     = 0;
+        var topWinH = window.innerHeight,
+            topWinW = window.innerWidth,
+            count   = 0;
 
         clear();
 
@@ -46,20 +33,21 @@ var VbHint = (function(){
                 ),
 
                 /* generate basic hint element which will be cloned and updated later */
-                hintSpan = doc.createElement("span"),
+                labelTmpl = doc.createElement("span"),
                 /* Bounds */
                 minX = offsetX < 0 ? -offsetX : 0,
                 minY = offsetY < 0 ? -offsetY : 0,
-                maxX = offsetX + win.width > top_width ? top_width - offsetX : top_width,
-                maxY = offsetY + win.height > top_height ? top_height - offsetY : top_height,
+                maxX = offsetX + win.width > topWinW ? topWinW - offsetX : topWinW,
+                maxY = offsetY + win.height > topWinH ? topWinH - offsetY : topWinH,
                 rect, e, i;
 
-            hintSpan.setAttribute("class", hClass);
-            hintSpan.style.cssText = config.style;
+            labelTmpl.className = lClass;
+
+            createStyle(doc);
 
             /* due to the different XPath result type, we will need two counter variables */
             for (i = 0; i < res.snapshotLength; i++) {
-                if (hCount >= config.maxHints) {
+                if (count >= config.maxHints) {
                     break;
                 }
 
@@ -69,44 +57,39 @@ var VbHint = (function(){
                     continue;
                 }
 
-                var cStyle = topwin.getComputedStyle(e, "");
+                var cStyle = window.getComputedStyle(e, "");
                 if (cStyle.display === "none" || cStyle.visibility !== "visible") {
                     continue;
                 }
 
-                /* making this block DOM compliant */
-                var hint        = hintSpan.cloneNode(false);
-                hint.style.left = Math.max((rect.left + win.scrollX), win.scrollX) - 3 + "px";
-                hint.style.top  = Math.max((rect.top + win.scrollY), win.scrollY) - 3 + "px";
-                hint.className  = hClass;
-                hint.appendChild(doc.createTextNode(hCount + 1));
+                /* create the hint label with number */
+                var label        = labelTmpl.cloneNode(false);
+                label.style.left = Math.max((rect.left + win.scrollX), win.scrollX) - 3 + "px";
+                label.style.top  = Math.max((rect.top + win.scrollY), win.scrollY) - 3 + "px";
+                label.innerText  = count + 1;
 
-                fragment.appendChild(hint);
+                fragment.appendChild(label);
 
-                hCount++;
+                /* add the hint class to the hinted element */
+                e.classList.add(hClass);
+
+                count++;
                 hints.push({
-                    e:    e,
-                    num:  hCount,
-                    span: hint,
-                    bg:   e.style.background,
-                    fg:   e.style.color
+                    e:     e,
+                    num:   count,
+                    label: label
                 });
-
-                /* change the foreground and background colors of the hinted items */
-                e.style.color = config.fg;
-                e.style.background = config.bg;
             }
 
             var hDiv = doc.createElement("div");
-            hDiv.id  = "hint_container";
-
+            hDiv.id  = cId;
             hDiv.appendChild(fragment);
             doc.documentElement.appendChild(hDiv);
 
             hConts.push(hDiv);
 
             /* recurse into any iframe or frame element */
-            var frameTags = ["frame","iframe"],
+            var frameTags = ["frame", "iframe"],
                 frames, n, f, i;
             for (f = 0; f < frameTags.length; ++f) {
                 frames = doc.getElementsByTagName(frameTags[f]);
@@ -121,12 +104,47 @@ var VbHint = (function(){
             }
         }
 
-        helper(topwin, 0, 0);
+        helper(window, 0, 0);
 
-        if (hCount <= 1) {
+        if (count <= 1) {
             return fire(1);
         }
         return focusHint(1);
+    }
+
+    function createStyle(doc)
+    {
+        if (doc.hasStyle) {
+            return;
+        }
+        var e = doc.createElement("style");
+        e.innerHTML += "." + lClass + "{" +
+            "position:absolute;" +
+            "z-index:100000;" +
+            "font-family:monospace;" +
+            "font-weight:bold;" +
+            "font-size:10px;" +
+            "color:#000;" +
+            "background-color:#fff;" +
+            "margin:0;" +
+            "padding:0px 1px;" +
+            "border:1px solid #444;" +
+            "opacity:0.7" +
+            "}" +
+            "." + hClass + "{" +
+            "background-color:#ff0 !important;" +
+            "color:#000 !important" +
+            "}" +
+            "." + hClass + "." + fClass + "{" +
+            "background-color:#8f0 !important" +
+            "}" +
+            "." + lClass + "." + fClass + "{" +
+            "opacity:1" +
+            "}";
+
+        doc.head.appendChild(e);
+        /* prevent us from adding the style multiple times */
+        doc.hasStyle = true;
     }
 
     function focus(back) {
@@ -175,11 +193,9 @@ var VbHint = (function(){
         for (i = 0; i < hints.length; ++i) {
             hint = hints[i];
             if (hint.e) {
-                hint.e.style.background = hint.bg;
-                hint.e.style.color = hint.fg;
-                hint.e.classList.remove(hClassFocus);
+                hint.e.classList.remove(fClass);
                 hint.e.classList.remove(hClass);
-                hint.span.parentNode.removeChild(hint.span);
+                hint.label.parentNode.removeChild(hint.label);
             }
         }
         hints = [];
@@ -282,8 +298,9 @@ var VbHint = (function(){
         /* reset previous focused hint */
         var hint = getHint(focusNum);
         if (hint) {
-            hint.e.classList.remove(hClassFocus);
-            hint.e.style.background = config.bg;
+            hint.e.classList.remove(fClass);
+            hint.label.classList.remove(fClass);
+
             mouseEvent(hint.e, "mouseout");
         }
 
@@ -292,11 +309,12 @@ var VbHint = (function(){
         /* mark new hint as focused */
         hint = getHint(focusNum);
         if (hint) {
-            hint.e.classList.add(hClassFocus);
-            hint.e.style.background = config.bgf;
-            var source              = getSrc(hint.e);
+            hint.e.classList.add(fClass);
+            hint.label.classList.add(fClass);
+
             mouseEvent(hint.e, "mouseover");
 
+            var source = getSrc(hint.e);
             return "OVER:" + (source ? source : "");
         }
     }
@@ -327,9 +345,9 @@ var VbHint = (function(){
             return;
         }
         var hint = hints[i];
-        hint.e.style.background = hint.bg;
-        hint.e.style.color      = hint.fg;
-        hint.span.parentNode.removeChild(hint.span);
+        hint.e.classList.remove(fClass);
+        hint.e.classList.remove(hClass);
+        hint.label.parentNode.removeChild(hint.label);
 
         /* remove hints from all hints */
         hints.splice(i, 1);
@@ -406,7 +424,15 @@ var VbHint = (function(){
 
     /* the api */
     return {
-        init:   init,
+        /* mode: l - links, i - images, e - editables */
+        /* usage: O - open, T - open in new window, U - use source */
+        init: function init(mode, usage, maxHints) {
+            config = {
+                mode:     mode,
+                usage:    usage,
+                maxHints: maxHints
+            };
+        },
         create: create,
         update: update,
         clear:  clear,

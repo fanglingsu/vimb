@@ -34,7 +34,6 @@ static gboolean status_color_fg(const Setting *s, const SettingType type);
 static gboolean status_font(const Setting *s, const SettingType type);
 static gboolean input_style(const Setting *s, const SettingType type);
 static gboolean completion_style(const Setting *s, const SettingType type);
-static gboolean hint_style(const Setting *s, const SettingType type);
 static gboolean strict_ssl(const Setting *s, const SettingType type);
 static gboolean ca_bundle(const Setting *s, const SettingType type);
 static gboolean home_page(const Setting *s, const SettingType type);
@@ -99,10 +98,6 @@ static Setting default_settings[] = {
     {NULL, "completion-fg-active", TYPE_COLOR, completion_style, {0}},
     {NULL, "completion-bg-normal", TYPE_COLOR, completion_style, {0}},
     {NULL, "completion-bg-active", TYPE_COLOR, completion_style, {0}},
-    {NULL, "hint-bg", TYPE_CHAR, hint_style, {0}},
-    {NULL, "hint-bg-focus", TYPE_CHAR, hint_style, {0}},
-    {NULL, "hint-fg", TYPE_CHAR, hint_style, {0}},
-    {NULL, "hint-style", TYPE_CHAR, hint_style, {0}},
     {NULL, "ca-bundle", TYPE_CHAR, ca_bundle, {0}},
     {NULL, "home-page", TYPE_CHAR, home_page, {0}},
     {NULL, "download-path", TYPE_CHAR, download_path, {0}},
@@ -513,38 +508,6 @@ static gboolean completion_style(const Setting *s, const SettingType type)
             print_value(s, color);
         } else {
             VB_COLOR_PARSE(color, s->arg.s);
-        }
-    }
-
-    return true;
-}
-
-static gboolean hint_style(const Setting *s, const SettingType type)
-{
-    Style *style = &vb.style;
-    if (!g_strcmp0(s->name, "hint-bg")) {
-        if (type == SETTING_GET) {
-            print_value(s, style->hint_bg);
-        } else {
-            OVERWRITE_STRING(style->hint_bg, s->arg.s)
-        }
-    } else if (!g_strcmp0(s->name, "hint-bg-focus")) {
-        if (type == SETTING_GET) {
-            print_value(s, style->hint_bg_focus);
-        } else {
-            OVERWRITE_STRING(style->hint_bg_focus, s->arg.s)
-        }
-    } else if (!g_strcmp0(s->name, "hint-fg")) {
-        if (type == SETTING_GET) {
-            print_value(s, style->hint_fg);
-        } else {
-            OVERWRITE_STRING(style->hint_fg, s->arg.s)
-        }
-    } else {
-        if (type == SETTING_GET) {
-            print_value(s, style->hint_style);
-        } else {
-            OVERWRITE_STRING(style->hint_style, s->arg.s);
         }
     }
 

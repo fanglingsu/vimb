@@ -72,7 +72,6 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
     if (!(vb.state.mode & VB_MODE_HINTING)) {
         vb_set_mode(VB_MODE_COMMAND | VB_MODE_HINTING, false);
 
-        Style *style = &vb.style;
         hints.prefixLength = prefixLength;
         hints.mode         = mode;
         hints.num          = 0;
@@ -96,13 +95,8 @@ void hints_create(const char *input, guint mode, const guint prefixLength)
         }
 
         js = g_strdup_printf(
-            "%s.init('%c', '%c', '%s', '%s', '%s', '%s', %d);",
-            HINT_VAR, type, usage,
-            style->hint_bg,
-            style->hint_bg_focus,
-            style->hint_fg,
-            style->hint_style,
-            MAXIMUM_HINTS
+            "%s.init('%c', '%c', %d);",
+            HINT_VAR, type, usage, MAXIMUM_HINTS
         );
 
         observe_input(true);
