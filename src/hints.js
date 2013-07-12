@@ -70,11 +70,14 @@ var VbHint = (function(){
 
                 /* if hinted element is an image - show title or alt of the image in hint label */
                 /* this allows to see how to filter for the image */
+                var text = "";
                 if (e instanceof HTMLImageElement) {
-                    var text = e.alt || e.title;
-                    if (text) {
-                        label.innerText += ": " + text.substr(0, 20);
-                    }
+                    text = e.alt || e.title;
+                } else if (e.firstElementChild instanceof HTMLImageElement && /^\s*$/.test(e.textContent)) {
+                    text = e.firstElementChild.title || e.firstElementChild.alt;
+                }
+                if (text) {
+                    label.innerText += ": " + text.substr(0, 20);
                 }
 
                 fragment.appendChild(label);
@@ -373,8 +376,8 @@ var VbHint = (function(){
                     return "//a[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //area[@href] | //textarea[not(@disabled or @readonly)] | //button | //select";
                 }
                 return buildQuery(
-                    ["@value", ".", "@placeholder"],
-                    "//a[@href and $.] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and ($@value or $@placeholder)] | //area[$.] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
+                    ["@value", ".", "@placeholder", "@title", "@alt"],
+                    "//a[@href and ($. or child::img[$@title or $@alt])] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and ($@value or $@placeholder)] | //area[$.] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
                     s
                 );
             case "e":
