@@ -68,6 +68,15 @@ var VbHint = (function(){
                 label.style.top  = Math.max((rect.top + win.scrollY), win.scrollY) - 3 + "px";
                 label.innerText  = count + 1;
 
+                /* if hinted element is an image - show title or alt of the image in hint label */
+                /* this allows to see how to filter for the image */
+                if (e instanceof HTMLImageElement) {
+                    var text = e.alt || e.title;
+                    if (text) {
+                        label.innerText += ": " + text.substr(0, 20);
+                    }
+                }
+
                 fragment.appendChild(label);
 
                 /* add the hint class to the hinted element */
