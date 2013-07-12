@@ -83,7 +83,7 @@ gboolean completion_complete(gboolean back)
     } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
         /* if search string begins with TAG_INDICATOR lookup the bookmarks */
         if (suffix && *suffix == TAG_INDICATOR) {
-            source = bookmark_get_by_tags(suffix + 1);
+            source = g_list_sort(bookmark_get_by_tags(suffix + 1), (GCompareFunc)g_strcmp0);
         } else {
             source = history_get_by_tags(HISTORY_URL, suffix);
         }
