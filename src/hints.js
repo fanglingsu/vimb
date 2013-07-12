@@ -216,43 +216,6 @@ var VbHint = (function(){
             type = e.type ? e.type : "";
 
         clear();
-        if (tag === "input" || tag === "textarea" || tag === "select") {
-            if (type === "radio" || type === "checkbox") {
-                e.focus();
-                click(e);
-                return "DONE:";
-            }
-            if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
-                click(e);
-                return "DONE:";
-            }
-            e.focus();
-            return "INSERT:";
-        }
-        if (tag === "iframe" || tag === "frame") {
-            e.focus();
-            return "DONE:";
-        }
-
-        switch (usage) {
-            case "T": open(e, true); return "DONE:";
-            case "O": open(e, false); return "DONE:";
-            default: return "DATA:" + getSrc(e);
-        }
-    }
-
-    /* fires the modeevent on hint with given number */
-    function fire(n) {
-        var hint = getHint(n ? n : focusNum);
-        if (!hint) {
-            return "DONE:";
-        }
-
-        var e    = hint.e,
-            tag  = e.nodeName.toLowerCase(),
-            type = e.type ? e.type : "";
-
-        clear();
 
         if (tag === "input" || tag === "textarea" || tag === "select") {
             if (type === "radio" || type === "checkbox") {
