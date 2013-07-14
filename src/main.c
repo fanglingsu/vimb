@@ -466,7 +466,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
             dom_check_auto_insert(view);
 
-            history_add(HISTORY_URL, uri);
+            history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
             break;
 
         case WEBKIT_LOAD_FAILED:
@@ -505,13 +505,13 @@ static void inputbox_activate_cb(GtkEntry *entry)
         case '?':
             a.i = *text == '/' ? VB_SEARCH_FORWARD : VB_SEARCH_BACKWARD;
             a.s = (command + 1);
-            history_add(HISTORY_SEARCH, command + 1);
+            history_add(HISTORY_SEARCH, command + 1, NULL);
             command_search(&a);
             break;
 
         case ':':
             completion_clean();
-            history_add(HISTORY_COMMAND, command + 1);
+            history_add(HISTORY_COMMAND, command + 1, NULL);
             command_run_string((command + 1));
             break;
     }
