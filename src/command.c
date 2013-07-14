@@ -710,7 +710,7 @@ gboolean command_bookmark(const Arg *arg)
 
             return true;
         }
-    } else if (bookmark_add(GET_URI(), arg->s)) {
+    } else if (bookmark_add(GET_URI(), webkit_web_view_get_title(vb.gui.webview), arg->s)) {
         vb_echo_force(VB_MSG_NORMAL, false, "Bookmark added");
 
         return true;

@@ -25,16 +25,19 @@ extern VbCore vb;
 
 typedef struct {
     char *uri;
+    char *title;
     char **tags;
 } Bookmark;
 
 static GList *load(const char *file);
+static Bookmark *line_to_bookmark(const char *line);
+static int bookmark_comp(Bookmark *a, Bookmark *b);
 static void free_bookmark(Bookmark *bm);
 
 /**
  * Write a new bookmark entry to the end of bookmark file.
  */
-gboolean bookmark_add(const char *uri, const char *tags)
+gboolean bookmark_add(const char *uri, const char *title, const char *tags)
 {
     FILE *f;
 
@@ -42,7 +45,9 @@ gboolean bookmark_add(const char *uri, const char *tags)
         file_lock_set(fileno(f), F_WRLCK);
 
         if (tags) {
-            fprintf(f, "%s %s\n", uri, tags);
+            fprintf(f, "%s\t%s\t%s\n", uri, title ? title : "", tags);
+        } else if (title) {
+            fprintf(f, "%s\t%s\n", uri, title);
         } else {
             fprintf(f, "%s\n", uri);
         }
@@ -73,15 +78,15 @@ gboolean bookmark_remove(const char *uri)
         for (i = 0; i < len; i++) {
             line = lines[i];
             g_strstrip(line);
-            /* ignore the bookmark tags and test only the uri */
-            if ((p = strchr(line, ' '))) {
+            /* ignore the title or bookmark tags and test only the uri */
+            if ((p = strchr(line, '\t'))) {
                 *p = '\0';
                 if (!strcmp(uri, line)) {
                     removed = true;
                     continue;
                 } else {
                     /* reappend the tags */
-                    *p = ' ';
+                    *p = '\t';
                 }
             }
             if (!strcmp(uri, line)) {
@@ -107,12 +112,13 @@ GList *bookmark_get_by_tags(const char *tags)
     GList *res = NULL, *src = NULL;
     char **parts;
     unsigned int len;
+    Bookmark *bm;
 
     src = load(vb.files[FILES_BOOKMARK]);
     if (!tags || *tags == '\0') {
         /* without any tags return all bookmarked items */
         for (GList *l = src; l; l = l->next) {
-            Bookmark *bm = (Bookmark*)l->data;
+            bm = (Bookmark*)l->data;
             res = g_list_prepend(res, g_strdup(bm->uri));
         }
     } else {
@@ -120,7 +126,7 @@ GList *bookmark_get_by_tags(const char *tags)
         len   = g_strv_length(parts);
 
         for (GList *l = src; l; l = l->next) {
-            Bookmark *bm = (Bookmark*)l->data;
+            bm = (Bookmark*)l->data;
             if (bm->tags
                 && util_array_contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
             ) {
@@ -137,48 +143,51 @@ GList *bookmark_get_by_tags(const char *tags)
 
 static GList *load(const char *file)
 {
-    /* read the items from file */
-    GList *list   = NULL;
-    char buf[BUF_SIZE] = {0};
-    FILE *f;
+    return util_file_to_unique_list(
+        file, (Util_Content_Func)line_to_bookmark, (GCompareFunc)bookmark_comp,
+        (GDestroyNotify)free_bookmark
+    );
+}
 
-    if (!(f = fopen(file, "r"))) {
-        return list;
+static Bookmark *line_to_bookmark(const char *line)
+{
+    char **parts;
+    int len;
+    while (g_ascii_isspace(*line)) {
+        line++;
+    }
+    if (*line == '\0') {
+        return NULL;
     }
 
-    file_lock_set(fileno(f), F_RDLCK);
-    while (fgets(buf, sizeof(buf), f)) {
-        char *p;
-        Bookmark *bm;
+    Bookmark *item = g_new0(Bookmark, 1);
 
-        g_strstrip(buf);
-        /* skip empty lines */
-        if (!*buf) {
-            continue;
-        }
-
-        /* create bookmark */
-        bm = g_new(Bookmark, 1);
-        if ((p = strchr(buf, ' '))) {
-            *p = '\0';
-            bm->uri  = g_strdup(buf);
-            bm->tags = g_strsplit(p + 1, " ", 0);
-        } else {
-            bm->uri  = g_strdup(buf);
-            bm->tags = NULL;
-        }
-
-        list = g_list_prepend(list, bm);
+    parts = g_strsplit(line, "\t", 3);
+    len   = g_strv_length(parts);
+    if (len == 3) {
+        item->tags = g_strsplit(parts[2], " ", 0);
+        item->title = g_strdup(parts[1]);
+        item->uri = g_strdup(parts[0]);
+    } else if (len == 2) {
+        item->title = g_strdup(parts[1]);
+        item->uri = g_strdup(parts[0]);
+    } else {
+        item->uri = g_strdup(parts[0]);
     }
-    file_lock_set(fileno(f), F_UNLCK);
-    fclose(f);
+    g_strfreev(parts);
 
-    return list;
+    return item;
+}
+
+static int bookmark_comp(Bookmark *a, Bookmark *b)
+{
+    return g_strcmp0(a->uri, b->uri);
 }
 
 static void free_bookmark(Bookmark *bm)
 {
     g_free(bm->uri);
+    g_free(bm->title);
     g_strfreev(bm->tags);
     g_free(bm);
 }

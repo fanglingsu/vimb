@@ -20,7 +20,7 @@
 #ifndef _BOOKMARK_H
 #define _BOOKMARK_H
 
-gboolean bookmark_add(const char *uri, const char *tags);
+gboolean bookmark_add(const char *uri, const char *title, const char *tags);
 gboolean bookmark_remove(const char *uri);
 GList *bookmark_get_by_tags(const char *tags);
 
