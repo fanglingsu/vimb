@@ -20,6 +20,7 @@
 #include "main.h"
 #include "history.h"
 #include "util.h"
+#include "completion.h"
 
 extern VbCore vb;
 
@@ -85,48 +86,6 @@ void history_add(HistoryType type, const char *value, const char *additional)
 }
 
 /**
- * Retrieves the list of matching history items to given tag string.
- * Returned list must be freed.
- */
-GList *history_get_by_tags(HistoryType type, const char *tags)
-{
-    GList *res = NULL, *src = NULL;
-    char **parts;
-    unsigned int len;
-    History *item;
-
-    src = load(get_file_by_type(type));
-    if (!tags || *tags == '\0') {
-        /* without any tags return all items */
-        for (GList *l = src; l; l = l->next) {
-            item = l->data;
-            res = g_list_prepend(res, g_strdup(item->first));
-        }
-    } else if (HISTORY_URL == type) {
-        parts = g_strsplit(tags, " ", 0);
-        len   = g_strv_length(parts);
-
-        for (GList *l = src; l; l = l->next) {
-            item = l->data;
-            if (util_string_contains_all_tags(item->first, parts, len)) {
-                res = g_list_prepend(res, g_strdup(item->first));
-            }
-        }
-        g_strfreev(parts);
-    } else {
-        for (GList *l = src; l; l = l->next) {
-            item = l->data;
-            if (g_str_has_prefix(item->first, tags)) {
-                res = g_list_prepend(res, g_strdup(item->first));
-            }
-        }
-    }
-    g_list_free_full(src, (GDestroyNotify)g_free);
-
-    return res;
-}
-
-/**
  * Retrieves the item from history to be shown in input box.
  * The result must be freed by the caller.
  */
@@ -161,6 +120,52 @@ void history_rewind(void)
         OVERWRITE_STRING(history.prefix, NULL);
         history.active = NULL;
     }
+}
+
+gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input)
+{
+    char **parts;
+    unsigned int len;
+    gboolean found = false;
+    GList *src = NULL;
+    GtkTreeIter iter;
+    History *item;
+
+    src = load(get_file_by_type(type));
+    if (!input || *input == '\0') {
+        /* without any tags return all items */
+        for (GList *l = src; l; l = l->next) {
+            item = l->data;
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, item->first, -1);
+            found = true;
+        }
+    } else if (HISTORY_URL == type) {
+        parts = g_strsplit(input, " ", 0);
+        len   = g_strv_length(parts);
+
+        for (GList *l = src; l; l = l->next) {
+            item = l->data;
+            if (util_string_contains_all_tags(item->first, parts, len)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, item->first, -1);
+                found = true;
+            }
+        }
+        g_strfreev(parts);
+    } else {
+        for (GList *l = src; l; l = l->next) {
+            item = l->data;
+            if (g_str_has_prefix(item->first, input)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, item->first, -1);
+                found = true;
+            }
+        }
+    }
+    g_list_free_full(src, (GDestroyNotify)g_free);
+
+    return found;
 }
 
 /**

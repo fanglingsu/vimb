@@ -20,6 +20,7 @@
 #include "main.h"
 #include "bookmark.h"
 #include "util.h"
+#include "completion.h"
 
 extern VbCore vb;
 
@@ -103,26 +104,26 @@ gboolean bookmark_remove(const char *uri)
     return removed;
 }
 
-/**
- * Retrieves all bookmark uri matching the given space separated tags string.
- * Don't forget to free the returned list.
- */
-GList *bookmark_get_by_tags(const char *tags)
+gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
 {
-    GList *res = NULL, *src = NULL;
+    gboolean found = false;
     char **parts;
     unsigned int len;
+    GtkTreeIter iter;
+    GList *src = NULL;
     Bookmark *bm;
 
     src = load(vb.files[FILES_BOOKMARK]);
-    if (!tags || *tags == '\0') {
+    if (!input || *input == '\0') {
         /* without any tags return all bookmarked items */
         for (GList *l = src; l; l = l->next) {
             bm = (Bookmark*)l->data;
-            res = g_list_prepend(res, g_strdup(bm->uri));
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, bm->uri, -1);
+            found = true;
         }
     } else {
-        parts = g_strsplit(tags, " ", 0);
+        parts = g_strsplit(input, " ", 0);
         len   = g_strv_length(parts);
 
         for (GList *l = src; l; l = l->next) {
@@ -130,7 +131,9 @@ GList *bookmark_get_by_tags(const char *tags)
             if (bm->tags
                 && util_array_contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
             ) {
-                res = g_list_prepend(res, g_strdup(bm->uri));
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, bm->uri, -1);
+                found = true;
             }
         }
         g_strfreev(parts);
@@ -138,7 +141,7 @@ GList *bookmark_get_by_tags(const char *tags)
 
     g_list_free_full(src, (GDestroyNotify)free_bookmark);
 
-    return res;
+    return found;
 }
 
 static GList *load(const char *file)

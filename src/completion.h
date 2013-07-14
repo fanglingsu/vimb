@@ -22,6 +22,11 @@
 
 #include "main.h"
 
+enum {
+    COMPLETION_STORE_FIRST,
+    COMPLETION_STORE_SECOND
+};
+
 void completion_clean(void);
 gboolean completion_complete(gboolean back);
 

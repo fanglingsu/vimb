@@ -26,7 +26,6 @@
 #include "setting.h"
 
 #define TAG_INDICATOR '!'
-#define COMP_ITEM 0
 
 extern VbCore vb;
 
@@ -39,7 +38,6 @@ static struct {
     char      *text;   /* text of the current active tree item */
 } comp;
 
-static GtkTreeModel *get_tree_model(GList *source);
 static void init_completion(GtkTreeModel *model);
 static void show(gboolean back);
 static void move_cursor(gboolean back);
@@ -50,8 +48,8 @@ gboolean completion_complete(gboolean back)
 {
     VbInputType type;
     const char *input, *prefix, *suffix;
-    GList *source = NULL;
-    GtkTreeModel *model = NULL;
+    GtkListStore *store = NULL;
+    gboolean res = false;
 
     input = GET_TEXT();
     type  = vb_get_input_parts(input, &prefix, &suffix);
@@ -73,49 +71,35 @@ gboolean completion_complete(gboolean back)
         return false;
     }
 
+    /* create the list store model */
+    store = gtk_list_store_new(1, G_TYPE_STRING);
     if (type == VB_INPUT_SET) {
-        source = g_list_sort(setting_get_by_prefix(suffix), (GCompareFunc)g_strcmp0);
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model  = get_tree_model(source);
-        g_list_free(source);
+        res = setting_fill_completion(store, suffix);
     } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
         /* if search string begins with TAG_INDICATOR lookup the bookmarks */
         if (suffix && *suffix == TAG_INDICATOR) {
-            source = g_list_sort(bookmark_get_by_tags(suffix + 1), (GCompareFunc)g_strcmp0);
+            res = bookmark_fill_completion(store, suffix + 1);
         } else {
-            source = history_get_by_tags(HISTORY_URL, suffix);
+            res = history_fill_completion(store, HISTORY_URL, suffix);
         }
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model = get_tree_model(source);
-        g_list_free_full(source, (GDestroyNotify)g_free);
     } else if (type == VB_INPUT_COMMAND) {
         char *command = NULL;
         /* remove counts before command and save it to print it later in inputbox */
         comp.count = g_ascii_strtoll(suffix, &command, 10);
 
-        source = g_list_sort(command_get_by_prefix(command), (GCompareFunc)g_strcmp0);
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model = get_tree_model(source);
-        g_list_free(source);
+        res = command_fill_completion(store, command);
     } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
-        source = g_list_sort(history_get_by_tags(HISTORY_SEARCH, suffix), (GCompareFunc)g_strcmp0);
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model  = get_tree_model(source);
-        g_list_free_full(source, (GDestroyNotify)g_free);
+        res = history_fill_completion(store, HISTORY_SEARCH, suffix);
+    }
+
+    if (!res) {
+        return false;
     }
 
     vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
     OVERWRITE_STRING(comp.prefix, prefix);
-    init_completion(model);
+    init_completion(GTK_TREE_MODEL(store));
     show(back);
 
     return true;
@@ -133,18 +117,6 @@ void completion_clean(void)
 
     /* remove completion flag from mode */
     vb.state.mode &= ~VB_MODE_COMPLETE;
-}
-
-static GtkTreeModel *get_tree_model(GList *source)
-{
-    GtkTreeIter iter;
-    GtkListStore *store = gtk_list_store_new(1, G_TYPE_STRING);
-
-    for (GList *l = source; l; l = l->next) {
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, COMP_ITEM, l->data, -1);
-    }
-    return GTK_TREE_MODEL(store);
 }
 
 static void init_completion(GtkTreeModel *model)
@@ -188,7 +160,7 @@ static void init_completion(GtkTreeModel *model)
     );
     gtk_tree_view_insert_column_with_attributes(
         GTK_TREE_VIEW(comp.tree), -1, "", renderer,
-        "text", COMP_ITEM,
+        "text", COMPLETION_STORE_FIRST,
         NULL
     );
 
@@ -259,7 +231,7 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
     /* if not selected means the item is going to be selected which we are
      * interested in */
     if (!selected && gtk_tree_model_get_iter(model, &iter, path)) {
-        gtk_tree_model_get(model, &iter, COMP_ITEM, &value, -1);
+        gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
         /* save the content of the selected item so wen can access it easy */
         if (comp.text) {
             g_free(comp.text);
