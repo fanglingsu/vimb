@@ -10,67 +10,90 @@ var VbHint = (function(){
         fClass   = "_hintFocus",     /* marks focused element and focued hint */
         config;
 
-    function create(inputText) {
-        var topWinH = window.innerHeight,
-            topWinW = window.innerWidth,
-            count   = 0;
-
+    function create(inputText)
+    {
         clear();
 
-        function helper(win, offsetX, offsetY) {
+        var count = 0;
+
+        function helper(win, offsets)
+        {
             /* document may be undefined for frames out of the same origin */
             /* policy and will break the whole code - so we check this before */
             if (win.document === undefined) {
                 return;
             }
-            var doc      = win.document,
-                fragment = doc.createDocumentFragment(),
-                xpath    = getXpath(inputText),
-                res      = doc.evaluate(
+
+            offsets        = offsets || {left: 0, right: 0, top: 0, bottom: 0};
+            offsets.right  = win.innerWidth  - offsets.right;
+            offsets.bottom = win.innerHeight - offsets.bottom;
+
+            function isVisible(e)
+            {
+                if (e === undefined) {
+                    return false;
+                }
+                var rect = e.getBoundingClientRect();
+                if (!rect ||
+                    rect.top > offsets.bottom || rect.bottom < offsets.top ||
+                    rect.left > offsets.right || rect.right < offsets.left ||
+                    !rect.width || !rect.height
+                ) {
+                    return false;
+                }
+
+                var cStyle = win.getComputedStyle(e, null);
+                if (cStyle.display === "none" || cStyle.visibility !== "visible") {
+                    return false;
+                }
+                /* check if the element at the center of current is that element self */
+                /* else the element is covers by another element or within a hidden container */
+                if (!e.childElementCount
+                    && e.ownerDocument.elementFromPoint((rect.left + rect.right)/2, (rect.top + rect.bottom)/2) !== e
+                ) {
+                    return false;
+                }
+                return true;
+            }
+
+            var doc   = win.document,
+                xpath = getXpath(inputText),
+                res   = doc.evaluate(
                     xpath, doc,
                     function (p) {return "http://www.w3.org/1999/xhtml";},
                     XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null
                 ),
-
                 /* generate basic hint element which will be cloned and updated later */
                 labelTmpl = doc.createElement("span"),
-                /* Bounds */
-                minX = offsetX < 0 ? -offsetX : 0,
-                minY = offsetY < 0 ? -offsetY : 0,
-                maxX = offsetX + win.width > topWinW ? topWinW - offsetX : topWinW,
-                maxY = offsetY + win.height > topWinH ? topWinH - offsetY : topWinH,
-                rect, e, i;
+                e, i;
 
             labelTmpl.className = lClass;
 
-            createStyle(doc);
+            var containerOffsets = getOffsets(doc),
+                offsetX = containerOffsets[0],
+                offsetY = containerOffsets[1],
+                fragment = doc.createDocumentFragment(),
+                rect, label, text;
 
-            /* due to the different XPath result type, we will need two counter variables */
+            /* collect all visible elements in hints array */
             for (i = 0; i < res.snapshotLength; i++) {
-                if (count >= config.maxHints) {
-                    break;
-                }
-
-                e    = res.snapshotItem(i);
-                rect = e.getBoundingClientRect();
-                if (!rect || rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
+                e = res.snapshotItem(i);
+                if (!isVisible(e)) {
                     continue;
                 }
 
-                var cStyle = window.getComputedStyle(e, "");
-                if (cStyle.display === "none" || cStyle.visibility !== "visible") {
-                    continue;
-                }
+                count++;
 
                 /* create the hint label with number */
-                var label        = labelTmpl.cloneNode(false);
-                label.style.left = Math.max((rect.left + win.scrollX), win.scrollX) - 3 + "px";
-                label.style.top  = Math.max((rect.top + win.scrollY), win.scrollY) - 3 + "px";
-                label.innerText  = count + 1;
+                rect  = e.getBoundingClientRect();
+                label = labelTmpl.cloneNode(false);
+                label.style.left = Math.max((rect.left + offsetX), offsetX) - 3 + "px";
+                label.style.top  = Math.max((rect.top  + offsetY), offsetY) - 3 + "px";
+                label.innerText  = count;
 
                 /* if hinted element is an image - show title or alt of the image in hint label */
                 /* this allows to see how to filter for the image */
-                var text = "";
+                text = "";
                 if (e instanceof HTMLImageElement) {
                     text = e.alt || e.title;
                 } else if (e.firstElementChild instanceof HTMLImageElement && /^\s*$/.test(e.textContent)) {
@@ -80,48 +103,65 @@ var VbHint = (function(){
                     label.innerText += ": " + text.substr(0, 20);
                 }
 
-                fragment.appendChild(label);
-
                 /* add the hint class to the hinted element */
                 e.classList.add(hClass);
+                fragment.appendChild(label);
 
-                count++;
                 hints.push({
                     e:     e,
                     num:   count,
                     label: label
                 });
+
+                if (count >= config.maxHints) {
+                    break;
+                }
             }
 
+            /* append the fragment to the document */
             var hDiv = doc.createElement("div");
             hDiv.id  = cId;
             hDiv.appendChild(fragment);
             doc.documentElement.appendChild(hDiv);
+            /* create the default style sheet */
+            createStyle(doc);
 
             hConts.push(hDiv);
 
             /* recurse into any iframe or frame element */
-            var frameTags = ["frame", "iframe"],
-                frames, n, f, i;
-            for (f = 0; f < frameTags.length; ++f) {
-                frames = doc.getElementsByTagName(frameTags[f]);
-                for (i = 0, n = frames.length; i < n; ++i) {
-                    e    = frames[i];
-                    rect = e.getBoundingClientRect();
-                    if (!e.contentWindow || !rect || rect.left > maxX || rect.right < minX || rect.top > maxY || rect.bottom < minY) {
-                        continue;
-                    }
-                    helper(e.contentWindow, offsetX + rect.left, offsetY + rect.top);
+            for (var f in win.frames) {
+                var e = f.frameElement;
+                if (isVisible(e)) {
+                    var rect = e.getBoundingClientRect();
+                    helper(f, {
+                        left:   Math.max(offsets.left - rect.left, 0),
+                        right:  Math.max(rect.right   - offsets.right, 0),
+                        top:    Math.max(offsets.top  - rect.top, 0),
+                        bottom: Math.max(rect.bottom  - offsets.bottom, 0)
+                    });
                 }
             }
         }
 
-        helper(window, 0, 0);
+        helper(window);
 
         if (count <= 1) {
             return fire(1);
         }
         return focusHint(1);
+    }
+
+    function getOffsets(doc)
+    {
+        var body  = doc.body || doc.documentElement,
+            style = body.style,
+            rect;
+
+        if (style && /^(absolute|fixed|relative)$/.test(style.position)) {
+            rect = body.getClientRects()[0];
+            return [-rect.left, -rect.top];
+        }
+        return [doc.defaultView.scrollX, doc.defaultView.scrollY];
     }
 
     function createStyle(doc)
@@ -218,14 +258,14 @@ var VbHint = (function(){
     }
 
     function fire(n) {
-        var hint = getHint(n ? n : focusNum);
+        var hint = getHint(n || focusNum);
         if (!hint) {
             return "DONE:";
         }
 
         var e    = hint.e,
             tag  = e.nodeName.toLowerCase(),
-            type = e.type ? e.type : "";
+            type = e.type || "";
 
         clear();
 
@@ -241,7 +281,8 @@ var VbHint = (function(){
             }
             e.focus();
             return "INSERT:";
-        } else if (tag === "iframe" || tag === "frame") {
+        }
+        if (tag === "iframe" || tag === "frame") {
             e.focus();
             return "DONE:";
         }
@@ -290,7 +331,7 @@ var VbHint = (function(){
             mouseEvent(hint.e, "mouseover");
 
             var source = getSrc(hint.e);
-            return "OVER:" + (source ? source : "");
+            return "OVER:" + (source || "");
         }
     }
 
