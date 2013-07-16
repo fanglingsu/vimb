@@ -132,6 +132,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
     History *item;
 
     src = load(get_file_by_type(type));
+    src = g_list_reverse(src);
     if (!input || *input == '\0') {
         /* without any tags return all items */
         for (GList *l = src; l; l = l->next) {

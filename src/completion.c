@@ -44,12 +44,13 @@ static void move_cursor(gboolean back);
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
 
+
 gboolean completion_complete(gboolean back)
 {
     VbInputType type;
     const char *input, *prefix, *suffix;
     GtkListStore *store = NULL;
-    gboolean res = false;
+    gboolean res = false, sort = true;
 
     input = GET_TEXT();
     type  = vb_get_input_parts(input, &prefix, &suffix);
@@ -80,8 +81,9 @@ gboolean completion_complete(gboolean back)
         if (suffix && *suffix == TAG_INDICATOR) {
             res = bookmark_fill_completion(store, suffix + 1);
         } else {
-            res = history_fill_completion(store, HISTORY_URL, suffix);
+            res  = history_fill_completion(store, HISTORY_URL, suffix);
         }
+        sort = false;
     } else if (type == VB_INPUT_COMMAND) {
         char *command = NULL;
         /* remove counts before command and save it to print it later in inputbox */
@@ -94,6 +96,11 @@ gboolean completion_complete(gboolean back)
 
     if (!res) {
         return false;
+    }
+
+    /* apply the defualt sorting to the first tree model comlumn */
+    if (sort) {
+        gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING);
     }
 
     vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
