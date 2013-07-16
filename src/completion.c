@@ -72,7 +72,7 @@ gboolean completion_complete(gboolean back)
     }
 
     /* create the list store model */
-    store = gtk_list_store_new(1, G_TYPE_STRING);
+    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
     if (type == VB_INPUT_SET) {
         res = setting_fill_completion(store, suffix);
     } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
@@ -123,8 +123,9 @@ static void init_completion(GtkTreeModel *model)
 {
     GtkCellRenderer *renderer;
     GtkTreeSelection *selection;
+    GtkTreeViewColumn *column;
     GtkRequisition size;
-    int height;
+    int height, width;
 
     /* prepare the tree view */
     comp.win  = gtk_scrolled_window_new(NULL, NULL);
@@ -151,23 +152,41 @@ static void init_completion(GtkTreeModel *model)
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     gtk_tree_selection_set_select_function(selection, tree_selection_func, NULL, NULL);
 
-    /* prepare the column renderer */
+    /* get window dimension */
+    gtk_window_get_size(GTK_WINDOW(vb.gui.window), &width, &height);
+
+    /* prepare first column */
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(comp.tree), column);
+
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
         "font-desc", vb.style.comp_font,
         "ellipsize", PANGO_ELLIPSIZE_MIDDLE,
         NULL
     );
-    gtk_tree_view_insert_column_with_attributes(
-        GTK_TREE_VIEW(comp.tree), -1, "", renderer,
-        "text", COMPLETION_STORE_FIRST,
+    gtk_tree_view_column_pack_start(column, renderer, true);
+    gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_FIRST);
+    gtk_tree_view_column_set_min_width(column, 2 * width/3);
+
+    /* prepare second column */
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(comp.tree), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer,
+        "font-desc", vb.style.comp_font,
+        "ellipsize", PANGO_ELLIPSIZE_END,
         NULL
     );
+    gtk_tree_view_column_pack_start(column, renderer, true);
+    gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_SECOND);
 
     /* use max 1/3 of window height for the completion */
 #ifdef HAS_GTK3
     gtk_widget_get_preferred_size(comp.tree, NULL, &size);
-    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     height /= 3;
     gtk_scrolled_window_set_min_content_height(
         GTK_SCROLLED_WINDOW(comp.win),
@@ -175,7 +194,6 @@ static void init_completion(GtkTreeModel *model)
     );
 #else
     gtk_widget_size_request(comp.tree, &size);
-    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     height /= 3;
     if (size.height > height) {
         gtk_widget_set_size_request(comp.win, -1, height);

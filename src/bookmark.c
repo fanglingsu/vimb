@@ -119,7 +119,11 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
         for (GList *l = src; l; l = l->next) {
             bm = (Bookmark*)l->data;
             gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, bm->uri, -1);
+            gtk_list_store_set(
+                store, &iter,
+                COMPLETION_STORE_FIRST, bm->uri,
+                COMPLETION_STORE_SECOND, bm->title, -1
+            );
             found = true;
         }
     } else {
@@ -132,7 +136,11 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
                 && util_array_contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
             ) {
                 gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, bm->uri, -1);
+                gtk_list_store_set(
+                    store, &iter,
+                    COMPLETION_STORE_FIRST, bm->uri,
+                    COMPLETION_STORE_SECOND, bm->title, -1
+                );
                 found = true;
             }
         }

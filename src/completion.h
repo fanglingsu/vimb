@@ -24,7 +24,8 @@
 
 enum {
     COMPLETION_STORE_FIRST,
-    COMPLETION_STORE_SECOND
+    COMPLETION_STORE_SECOND,
+    COMPLETION_STORE_NUM
 };
 
 void completion_clean(void);
