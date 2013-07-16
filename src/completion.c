@@ -178,6 +178,7 @@ static void init_completion(GtkTreeModel *model)
     gtk_tree_view_column_set_min_width(column, 2 * width/3);
 
     /* prepare second column */
+#ifdef FEATURE_TITLE_IN_COMPLETION
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
     gtk_tree_view_append_column(GTK_TREE_VIEW(comp.tree), column);
@@ -190,6 +191,7 @@ static void init_completion(GtkTreeModel *model)
     );
     gtk_tree_view_column_pack_start(column, renderer, true);
     gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_SECOND);
+#endif
 
     /* use max 1/3 of window height for the completion */
 #ifdef HAS_GTK3

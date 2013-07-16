@@ -141,7 +141,10 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
             gtk_list_store_set(
                 store, &iter,
                 COMPLETION_STORE_FIRST, item->first,
-                COMPLETION_STORE_SECOND, item->second, -1
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                COMPLETION_STORE_SECOND, item->second,
+#endif
+                -1
             );
             found = true;
         }
@@ -156,7 +159,10 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
                 gtk_list_store_set(
                     store, &iter,
                     COMPLETION_STORE_FIRST, item->first,
-                    COMPLETION_STORE_SECOND, item->second, -1
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                    COMPLETION_STORE_SECOND, item->second,
+#endif
+                    -1
                 );
                 found = true;
             }
@@ -170,7 +176,10 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
                 gtk_list_store_set(
                     store, &iter,
                     COMPLETION_STORE_FIRST, item->first,
-                    COMPLETION_STORE_SECOND, item->second, -1
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                    COMPLETION_STORE_SECOND, item->second,
+#endif
+                    -1
                 );
                 found = true;
             }

@@ -122,7 +122,10 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
             gtk_list_store_set(
                 store, &iter,
                 COMPLETION_STORE_FIRST, bm->uri,
-                COMPLETION_STORE_SECOND, bm->title, -1
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                COMPLETION_STORE_SECOND, bm->title,
+#endif
+                -1
             );
             found = true;
         }
@@ -139,7 +142,10 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
                 gtk_list_store_set(
                     store, &iter,
                     COMPLETION_STORE_FIRST, bm->uri,
-                    COMPLETION_STORE_SECOND, bm->title, -1
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                    COMPLETION_STORE_SECOND, bm->title,
+#endif
+                    -1
                 );
                 found = true;
             }
