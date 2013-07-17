@@ -20,6 +20,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
+#include "config.h"
 #include "dom.h"
 #include "command.h"
 #include "hints.js.h"
@@ -36,7 +37,6 @@ static struct {
 } hints;
 
 extern VbCore vb;
-extern const unsigned int MAXIMUM_HINTS;
 
 static void run_script(char *js);
 static void fire();

@@ -59,7 +59,6 @@ DFLAGS += -g
 #----------------end of options----------------------
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
 DOBJ      = $(patsubst %.c, %.do, $(wildcard src/*.c))
-HEAD      = $(wildcard src/*.h)
 DEPS      = $(OBJ:%.o=%.d)
 
 TARGET    = $(PROJECT)

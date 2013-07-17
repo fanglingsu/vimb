@@ -20,17 +20,18 @@
 #include <sys/stat.h>
 #include <math.h>
 #include "main.h"
+#include "config.h"
 #include "util.h"
 #include "command.h"
 #include "keybind.h"
 #include "setting.h"
-#include "config.h"
 #include "completion.h"
 #include "dom.h"
 #include "hints.h"
 #include "shortcut.h"
 #include "history.h"
 #include "session.h"
+#include "default.h"
 
 /* variables */
 static char **args;

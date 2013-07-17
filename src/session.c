@@ -19,6 +19,7 @@
 
 #include <sys/file.h>
 #include "main.h"
+#include "config.h"
 #include "session.h"
 
 #ifdef FEATURE_COOKIE
@@ -49,8 +50,6 @@ static void cookiejar_set_property(GObject *self, guint prop_id,
 #endif
 
 extern VbCore vb;
-extern const unsigned int SETTING_MAX_CONNS;
-extern const unsigned int SETTING_MAX_CONNS_PER_HOST;
 
 
 void session_init(void)

@@ -31,7 +31,7 @@ $(DTARGET): $(DOBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(DFLAGS) $(DOBJ) -o $(DTARGET) $(LDFLAGS)
 
-%.do: %.c $(HEAD)
+%.do: %.c %.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(DFLAGS)
 
