@@ -526,7 +526,12 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
         }
     }
 
-    value = type == SETTING_TOGGLE ? !value : (s->arg.i ? true : false);
+    if (type == SETTING_TOGGLE) {
+        value = !value;
+        print_value(s, &value);
+    } else {
+        value = s->arg.i;
+    }
 
     g_object_set(vb.session, "ssl-strict", value, NULL);
 
