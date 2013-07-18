@@ -32,6 +32,7 @@
 #include <gtk/gtkx.h>
 #else
 #endif
+#include "config.h"
 
 /* size of some I/O buffer */
 #define BUF_SIZE  512

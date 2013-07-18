@@ -20,6 +20,15 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
+
+/* features */
+#define FEATURE_COOKIE
+#define FEATURE_SEARCH_HIGHLIGHT
+#define FEATURE_NO_SCROLLBARS
+#define FEATURE_GTK_PROGRESSBAR
+#define FEATURE_TITLE_IN_COMPLETION
+
+
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */
 #define MESSAGE_TIMEOUT              5
@@ -29,7 +38,7 @@
 
 #define MAXIMUM_HINTS              500
 
-
+/* remove this if the bookmark file fits to the new format "URL<tab>title of page<tab>tag1 tag2" */
 #define ANNOUNCEMENT "\
 <!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head> \
 <title>Bookmark file format changed</title> \

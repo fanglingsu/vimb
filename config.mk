@@ -8,13 +8,6 @@ MANDIR  ?= $(PREFIX)/share/man
 
 #----------------compile options---------------------
 
-# features
-CPPFLAGS += -DFEATURE_COOKIE
-CPPFLAGS += -DFEATURE_SEARCH_HIGHLIGHT
-CPPFLAGS += -DFEATURE_NO_SCROLLBARS
-#CPPFLAGS += -DFEATURE_GTK_PROGRESSBAR
-CPPFLAGS += -DFEATURE_TITLE_IN_COMPLETION
-
 LIBS = libsoup-2.4
 
 GTK3LIBS=gtk+-3.0 webkitgtk-3.0
