@@ -21,6 +21,10 @@ $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
 
+src/config.h: src/config.def.h
+	@echo create $@ from src/config.def.h
+	@cp src/config.def.h $@
+
 %.o: %.c %.h src/config.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(CFLAGS)
