@@ -29,6 +29,7 @@ use the `!importen` flag on your style definition to take effect
 ([see also here](#user-scripts)).
 
     ._hintLabel {
+        -webkit-transform:translate(-4px,-4px);
         position: absolute;
         z-index: 100000;
         font-family: monospace;
