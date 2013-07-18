@@ -5,3 +5,4 @@ vimb_dbg
 *.tar.gz
 doc/*.1
 src/hints.js.h
+src/config.h

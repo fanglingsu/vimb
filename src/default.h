@@ -17,19 +17,12 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _DEFAULT_H
+#define _DEFAULT_H
 
 #include "stdlib.h"
 
-/* time in seconds after that message will be removed from inputbox if the
- * message where only temporary */
-#define MESSAGE_TIMEOUT             5
-const unsigned int SETTING_MAX_CONNS          = 25;
-const unsigned int SETTING_MAX_CONNS_PER_HOST = 5;
-const unsigned int MAXIMUM_HINTS = 500;
-
-const char *default_config[] = {
+static char *default_config[] = {
     "nmap gf=source",
     "nmap gF=inspect",
     "nmap :=input",
@@ -149,4 +142,4 @@ const char *default_config[] = {
     NULL
 };
 
-#endif /* end of include guard: _CONFIG_H */
+#endif /* end of include guard: _DEFAULT_H */

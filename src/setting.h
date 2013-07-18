@@ -40,8 +40,8 @@ struct _Setting {
 };
 
 void setting_init(void);
-GList* setting_get_by_prefix(const char *prefix);
 void setting_cleanup(void);
 gboolean setting_run(char* name, const char* param);
+gboolean setting_fill_completion(GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _SETTING_H */

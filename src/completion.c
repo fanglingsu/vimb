@@ -26,7 +26,6 @@
 #include "setting.h"
 
 #define TAG_INDICATOR '!'
-#define COMP_ITEM 0
 
 extern VbCore vb;
 
@@ -39,19 +38,19 @@ static struct {
     char      *text;   /* text of the current active tree item */
 } comp;
 
-static GtkTreeModel *get_tree_model(GList *source);
 static void init_completion(GtkTreeModel *model);
 static void show(gboolean back);
 static void move_cursor(gboolean back);
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
 
+
 gboolean completion_complete(gboolean back)
 {
     VbInputType type;
     const char *input, *prefix, *suffix;
-    GList *source = NULL;
-    GtkTreeModel *model = NULL;
+    GtkListStore *store = NULL;
+    gboolean res = false, sort = true;
 
     input = GET_TEXT();
     type  = vb_get_input_parts(input, &prefix, &suffix);
@@ -73,49 +72,41 @@ gboolean completion_complete(gboolean back)
         return false;
     }
 
+    /* create the list store model */
+    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
     if (type == VB_INPUT_SET) {
-        source = g_list_sort(setting_get_by_prefix(suffix), (GCompareFunc)g_strcmp0);
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model  = get_tree_model(source);
-        g_list_free(source);
+        res = setting_fill_completion(store, suffix);
     } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
         /* if search string begins with TAG_INDICATOR lookup the bookmarks */
         if (suffix && *suffix == TAG_INDICATOR) {
-            source = g_list_sort(bookmark_get_by_tags(suffix + 1), (GCompareFunc)g_strcmp0);
+            res = bookmark_fill_completion(store, suffix + 1);
         } else {
-            source = history_get_by_tags(HISTORY_URL, suffix);
+            res  = history_fill_completion(store, HISTORY_URL, suffix);
         }
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model = get_tree_model(source);
-        g_list_free_full(source, (GDestroyNotify)g_free);
+        sort = false;
     } else if (type == VB_INPUT_COMMAND) {
         char *command = NULL;
         /* remove counts before command and save it to print it later in inputbox */
         comp.count = g_ascii_strtoll(suffix, &command, 10);
 
-        source = g_list_sort(command_get_by_prefix(command), (GCompareFunc)g_strcmp0);
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model = get_tree_model(source);
-        g_list_free(source);
+        res = command_fill_completion(store, command);
     } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
-        source = g_list_sort(history_get_by_tags(HISTORY_SEARCH, suffix), (GCompareFunc)g_strcmp0);
-        if (!g_list_first(source)) {
-            return false;
-        }
-        model  = get_tree_model(source);
-        g_list_free_full(source, (GDestroyNotify)g_free);
+        res = history_fill_completion(store, HISTORY_SEARCH, suffix);
+    }
+
+    if (!res) {
+        return false;
+    }
+
+    /* apply the defualt sorting to the first tree model comlumn */
+    if (sort) {
+        gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING);
     }
 
     vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
 
     OVERWRITE_STRING(comp.prefix, prefix);
-    init_completion(model);
+    init_completion(GTK_TREE_MODEL(store));
     show(back);
 
     return true;
@@ -135,24 +126,13 @@ void completion_clean(void)
     vb.state.mode &= ~VB_MODE_COMPLETE;
 }
 
-static GtkTreeModel *get_tree_model(GList *source)
-{
-    GtkTreeIter iter;
-    GtkListStore *store = gtk_list_store_new(1, G_TYPE_STRING);
-
-    for (GList *l = source; l; l = l->next) {
-        gtk_list_store_append(store, &iter);
-        gtk_list_store_set(store, &iter, COMP_ITEM, l->data, -1);
-    }
-    return GTK_TREE_MODEL(store);
-}
-
 static void init_completion(GtkTreeModel *model)
 {
     GtkCellRenderer *renderer;
     GtkTreeSelection *selection;
+    GtkTreeViewColumn *column;
     GtkRequisition size;
-    int height;
+    int height, width;
 
     /* prepare the tree view */
     comp.win  = gtk_scrolled_window_new(NULL, NULL);
@@ -179,23 +159,43 @@ static void init_completion(GtkTreeModel *model)
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     gtk_tree_selection_set_select_function(selection, tree_selection_func, NULL, NULL);
 
-    /* prepare the column renderer */
+    /* get window dimension */
+    gtk_window_get_size(GTK_WINDOW(vb.gui.window), &width, &height);
+
+    /* prepare first column */
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(comp.tree), column);
+
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
         "font-desc", vb.style.comp_font,
         "ellipsize", PANGO_ELLIPSIZE_MIDDLE,
         NULL
     );
-    gtk_tree_view_insert_column_with_attributes(
-        GTK_TREE_VIEW(comp.tree), -1, "", renderer,
-        "text", COMP_ITEM,
+    gtk_tree_view_column_pack_start(column, renderer, true);
+    gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_FIRST);
+    gtk_tree_view_column_set_min_width(column, 2 * width/3);
+
+    /* prepare second column */
+#ifdef FEATURE_TITLE_IN_COMPLETION
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(comp.tree), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer,
+        "font-desc", vb.style.comp_font,
+        "ellipsize", PANGO_ELLIPSIZE_END,
         NULL
     );
+    gtk_tree_view_column_pack_start(column, renderer, true);
+    gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_SECOND);
+#endif
 
     /* use max 1/3 of window height for the completion */
 #ifdef HAS_GTK3
     gtk_widget_get_preferred_size(comp.tree, NULL, &size);
-    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     height /= 3;
     gtk_scrolled_window_set_min_content_height(
         GTK_SCROLLED_WINDOW(comp.win),
@@ -203,7 +203,6 @@ static void init_completion(GtkTreeModel *model)
     );
 #else
     gtk_widget_size_request(comp.tree, &size);
-    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
     height /= 3;
     if (size.height > height) {
         gtk_widget_set_size_request(comp.win, -1, height);
@@ -259,7 +258,7 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
     /* if not selected means the item is going to be selected which we are
      * interested in */
     if (!selected && gtk_tree_model_get_iter(model, &iter, path)) {
-        gtk_tree_model_get(model, &iter, COMP_ITEM, &value, -1);
+        gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
         /* save the content of the selected item so wen can access it easy */
         if (comp.text) {
             g_free(comp.text);

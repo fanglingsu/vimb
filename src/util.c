@@ -98,6 +98,44 @@ char **util_get_lines(const char *filename)
     return lines;
 }
 
+GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
+    GCompareFunc unique_func, GDestroyNotify free_func)
+{
+    GList *gl = NULL;
+    char *line, **lines = util_get_lines(filename);
+    void *value;
+    int len;
+
+    len = g_strv_length(lines);
+    if (!len) {
+        return gl;
+    }
+
+    for (int i = 0; i < len; i++) {
+        line = lines[i];
+        g_strstrip(line);
+        if (*line == '\0') {
+            continue;
+        }
+
+        if ((value = func(line))) {
+            /* if the value is already in list, remove this entry */
+            for (GList *l = gl; l; l = l->next) {
+                if (!unique_func(value, l->data)) {
+                    free_func(l->data);
+                    gl = g_list_delete_link(gl, l);
+                    break;
+                }
+            }
+            gl = g_list_prepend(gl, value);
+        }
+    }
+    g_strfreev(lines);
+    gl = g_list_reverse(gl);
+
+    return gl;
+}
+
 char *util_strcasestr(const char *haystack, const char *needle)
 {
     unsigned char c1, c2;

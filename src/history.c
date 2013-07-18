@@ -20,6 +20,7 @@
 #include "main.h"
 #include "history.h"
 #include "util.h"
+#include "completion.h"
 
 extern VbCore vb;
 
@@ -29,6 +30,11 @@ static const VbFile file_map[HISTORY_LAST] = {
     FILES_SEARCH,
     FILES_HISTORY
 };
+
+typedef struct {
+    char *first;
+    char *second;
+} History;
 
 static struct {
     char  *prefix;
@@ -40,6 +46,9 @@ static GList *get_list(const char *input);
 static const char *get_file_by_type(HistoryType type);
 static GList *load(const char *file);
 static void write_to_file(GList *list, const char *file);
+static History *line_to_history(const char *line);
+static int history_comp(History *a, History *b);
+static void free_history(History *item);
 
 
 /**
@@ -58,15 +67,18 @@ void history_cleanup(void)
 /**
  * Write a new history entry to the end of history file.
  */
-void history_add(HistoryType type, const char *value)
+void history_add(HistoryType type, const char *value, const char *additional)
 {
     FILE *f;
     const char *file = get_file_by_type(type);
 
     if ((f = fopen(file, "a+"))) {
         file_lock_set(fileno(f), F_WRLCK);
-
-        fprintf(f, "%s\n", value);
+        if (additional) {
+            fprintf(f, "%s\t%s\n", value, additional);
+        } else {
+            fprintf(f, "%s\n", value);
+        }
 
         file_lock_set(fileno(f), F_UNLCK);
         fclose(f);
@@ -74,47 +86,7 @@ void history_add(HistoryType type, const char *value)
 }
 
 /**
- * Retrieves the list of matching history items to given tag string.
- * Returned list must be freed.
- */
-GList *history_get_by_tags(HistoryType type, const char *tags)
-{
-    GList *res = NULL, *src = NULL;
-    char **parts;
-    unsigned int len;
-
-    src = load(get_file_by_type(type));
-    if (!tags || *tags == '\0') {
-        /* without any tags return all items */
-        for (GList *l = src; l; l = l->next) {
-            res = g_list_prepend(res, g_strdup((char*)l->data));
-        }
-    } else if (HISTORY_URL == type) {
-        parts = g_strsplit(tags, " ", 0);
-        len   = g_strv_length(parts);
-
-        for (GList *l = src; l; l = l->next) {
-            char *value = (char*)l->data;
-            if (util_string_contains_all_tags(value, parts, len)) {
-                res = g_list_prepend(res, g_strdup(value));
-            }
-        }
-        g_strfreev(parts);
-    } else {
-        for (GList *l = src; l; l = l->next) {
-            char *value = (char*)l->data;
-            if (g_str_has_prefix(value, tags)) {
-                res = g_list_prepend(res, g_strdup(value));
-            }
-        }
-    }
-    g_list_free_full(src, (GDestroyNotify)g_free);
-
-    return res;
-}
-
-/**
- * Retrieves the command from history to be shown in input box.
+ * Retrieves the item from history to be shown in input box.
  * The result must be freed by the caller.
  */
 char *history_get(const char *input, gboolean prev)
@@ -148,6 +120,74 @@ void history_rewind(void)
         OVERWRITE_STRING(history.prefix, NULL);
         history.active = NULL;
     }
+}
+
+gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input)
+{
+    char **parts;
+    unsigned int len;
+    gboolean found = false;
+    GList *src = NULL;
+    GtkTreeIter iter;
+    History *item;
+
+    src = load(get_file_by_type(type));
+    src = g_list_reverse(src);
+    if (!input || *input == '\0') {
+        /* without any tags return all items */
+        for (GList *l = src; l; l = l->next) {
+            item = l->data;
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(
+                store, &iter,
+                COMPLETION_STORE_FIRST, item->first,
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                COMPLETION_STORE_SECOND, item->second,
+#endif
+                -1
+            );
+            found = true;
+        }
+    } else if (HISTORY_URL == type) {
+        parts = g_strsplit(input, " ", 0);
+        len   = g_strv_length(parts);
+
+        for (GList *l = src; l; l = l->next) {
+            item = l->data;
+            if (util_string_contains_all_tags(item->first, parts, len)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(
+                    store, &iter,
+                    COMPLETION_STORE_FIRST, item->first,
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                    COMPLETION_STORE_SECOND, item->second,
+#endif
+                    -1
+                );
+                found = true;
+            }
+        }
+        g_strfreev(parts);
+    } else {
+        for (GList *l = src; l; l = l->next) {
+            item = l->data;
+            if (g_str_has_prefix(item->first, input)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(
+                    store, &iter,
+                    COMPLETION_STORE_FIRST, item->first,
+#ifdef FEATURE_TITLE_IN_COMPLETION
+                    COMPLETION_STORE_SECOND, item->second,
+#endif
+                    -1
+                );
+                found = true;
+            }
+        }
+    }
+    g_list_free_full(src, (GDestroyNotify)g_free);
+
+    return found;
 }
 
 /**
@@ -188,11 +228,12 @@ static GList *get_list(const char *input)
 
     /* generate new history list with the matching items */
     for (GList *l = src; l; l = l->next) {
-        char *value = (char*)l->data;
-        if (g_str_has_prefix(value, history.query)) {
-            result = g_list_prepend(result, g_strdup(value));
+        History *item = l->data;
+        if (g_str_has_prefix(item->first, history.query)) {
+            result = g_list_prepend(result, g_strdup(item->first));
         }
     }
+    g_list_free_full(src, (GDestroyNotify)free_history);
 
     return result;
 }
@@ -208,38 +249,12 @@ static const char *get_file_by_type(HistoryType type)
 static GList *load(const char *file)
 {
     /* read the history items from file */
-    GList *list   = NULL;
-    char buf[BUF_SIZE] = {0};
-    FILE *f;
+    GList *list = NULL;
 
-    if (!(f = fopen(file, "r"))) {
-        return list;
-    }
-
-    file_lock_set(fileno(f), F_RDLCK);
-    while (fgets(buf, sizeof(buf), f)) {
-        g_strstrip(buf);
-
-        /* skip empty lines */
-        if (!*buf) {
-            continue;
-        }
-        /* if the value is already in history, remove this entry */
-        for (GList *l = list; l; l = l->next) {
-            if (*buf && !g_strcmp0(buf, (char*)l->data)) {
-                g_free(l->data);
-                list = g_list_delete_link(list, l);
-                break;
-            }
-        }
-
-        list = g_list_prepend(list, g_strdup(buf));
-    }
-    file_lock_set(fileno(f), F_UNLCK);
-    fclose(f);
-
-    /* reverse to not use the slow g_list_last */
-    list = g_list_reverse(list);
+    list = util_file_to_unique_list(
+        file, (Util_Content_Func)line_to_history, (GCompareFunc)history_comp,
+        (GDestroyNotify)free_history
+    );
 
     /* if list is too long - remove items from end (oldest entries) */
     if (vb.config.history_max < g_list_length(list)) {
@@ -264,12 +279,57 @@ static void write_to_file(GList *list, const char *file)
 
         /* overwrite the history file with new unique history items */
         for (GList *link = list; link; link = link->next) {
-            fprintf(f, "%s\n", (char*)link->data);
+            History *item = link->data;
+            if (item->second) {
+                fprintf(f, "%s\t%s\n", item->first, item->second);
+            } else {
+                fprintf(f, "%s\n", item->first);
+            }
         }
 
         file_lock_set(fileno(f), F_UNLCK);
         fclose(f);
     }
 
-    g_list_free_full(list, (GDestroyNotify)g_free);
+    g_list_free_full(list, (GDestroyNotify)free_history);
+}
+
+static History *line_to_history(const char *line)
+{
+    char **parts;
+    int len;
+
+    while (g_ascii_isspace(*line)) {
+        line++;
+    }
+    if (*line == '\0') {
+        return NULL;
+    }
+
+    History *item = g_new0(History, 1);
+
+    parts = g_strsplit(line, "\t", 2);
+    len   = g_strv_length(parts);
+    if (len == 2) {
+        item->first  = g_strdup(parts[0]);
+        item->second = g_strdup(parts[1]);
+    } else {
+        item->first  = g_strdup(parts[0]);
+    }
+    g_strfreev(parts);
+
+    return item;
+}
+
+static int history_comp(History *a, History *b)
+{
+    /* compare only the first part */
+    return g_strcmp0(a->first, b->first);
+}
+
+static void free_history(History *item)
+{
+    g_free(item->first);
+    g_free(item->second);
+    g_free(item);
 }

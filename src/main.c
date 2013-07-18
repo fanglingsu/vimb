@@ -20,17 +20,18 @@
 #include <sys/stat.h>
 #include <math.h>
 #include "main.h"
+#include "config.h"
 #include "util.h"
 #include "command.h"
 #include "keybind.h"
 #include "setting.h"
-#include "config.h"
 #include "completion.h"
 #include "dom.h"
 #include "hints.h"
 #include "shortcut.h"
 #include "history.h"
 #include "session.h"
+#include "default.h"
 
 /* variables */
 static char **args;
@@ -466,7 +467,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
             dom_check_auto_insert(view);
 
-            history_add(HISTORY_URL, uri);
+            history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
             break;
 
         case WEBKIT_LOAD_FAILED:
@@ -505,13 +506,13 @@ static void inputbox_activate_cb(GtkEntry *entry)
         case '?':
             a.i = *text == '/' ? VB_SEARCH_FORWARD : VB_SEARCH_BACKWARD;
             a.s = (command + 1);
-            history_add(HISTORY_SEARCH, command + 1);
+            history_add(HISTORY_SEARCH, command + 1, NULL);
             command_search(&a);
             break;
 
         case ':':
             completion_clean();
-            history_add(HISTORY_COMMAND, command + 1);
+            history_add(HISTORY_COMMAND, command + 1, NULL);
             command_run_string((command + 1));
             break;
     }
@@ -1076,8 +1077,12 @@ int main(int argc, char *argv[])
 
     init_core();
 
+#if defined(ANNOUNCEMENT) && defined(SHOW_ANNOUNCEMENT)
+    webkit_web_view_load_string(vb.gui.webview, ANNOUNCEMENT, "text/html", NULL, NULL);
+#else
     /* command line argument: URL */
     vb_load_uri(&(Arg){VB_TARGET_CURRENT, argc > 1 ? argv[argc - 1] : vb.config.home_page});
+#endif
 
     /* Run the main GTK+ event loop */
     gtk_main();

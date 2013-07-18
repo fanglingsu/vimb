@@ -144,29 +144,6 @@ void command_init(void)
     }
 }
 
-GList *command_get_by_prefix(const char *prefix)
-{
-    GList *res = NULL;
-    /* according to vim we return only the long commands here */
-    GList *src = g_hash_table_get_keys(commands);
-
-    if (!prefix || prefix == '\0') {
-        for (GList *l = src; l; l = l->next) {
-            res = g_list_prepend(res, l->data);
-        }
-    } else {
-        for (GList *l = src; l; l = l->next) {
-            char *value = (char*)l->data;
-            if (g_str_has_prefix(value, prefix)) {
-                res = g_list_prepend(res, value);
-            }
-        }
-    }
-    g_list_free(src);
-
-    return res;
-}
-
 void command_cleanup(void)
 {
     if (commands) {
@@ -276,6 +253,34 @@ gboolean command_run_multi(const Arg *arg)
     g_strfreev(commands);
 
     return result;
+}
+
+gboolean command_fill_completion(GtkListStore *store, const char *input)
+{
+    gboolean found = false;
+    GtkTreeIter iter;
+    /* according to vim we return only the long commands here */
+    GList *src = g_hash_table_get_keys(commands);
+
+    if (!input || input == '\0') {
+        for (GList *l = src; l; l = l->next) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            found = true;
+        }
+    } else {
+        for (GList *l = src; l; l = l->next) {
+            char *value = (char*)l->data;
+            if (g_str_has_prefix(value, input)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+                found = true;
+            }
+        }
+    }
+    g_list_free(src);
+
+    return found;
 }
 
 gboolean command_open(const Arg *arg)
@@ -710,7 +715,7 @@ gboolean command_bookmark(const Arg *arg)
 
             return true;
         }
-    } else if (bookmark_add(GET_URI(), arg->s)) {
+    } else if (bookmark_add(GET_URI(), webkit_web_view_get_title(vb.gui.webview), arg->s)) {
         vb_echo_force(VB_MSG_NORMAL, false, "Bookmark added");
 
         return true;

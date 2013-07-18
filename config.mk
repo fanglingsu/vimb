@@ -8,12 +8,6 @@ MANDIR  ?= $(PREFIX)/share/man
 
 #----------------compile options---------------------
 
-# features
-CPPFLAGS += -DFEATURE_COOKIE
-CPPFLAGS += -DFEATURE_SEARCH_HIGHLIGHT
-CPPFLAGS += -DFEATURE_NO_SCROLLBARS
-#CPPFLAGS += -DFEATURE_GTK_PROGRESSBAR
-
 LIBS = libsoup-2.4
 
 GTK3LIBS=gtk+-3.0 webkitgtk-3.0
@@ -58,7 +52,6 @@ DFLAGS += -g
 #----------------end of options----------------------
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
 DOBJ      = $(patsubst %.c, %.do, $(wildcard src/*.c))
-HEAD      = $(wildcard src/*.h)
 DEPS      = $(OBJ:%.o=%.d)
 
 TARGET    = $(PROJECT)

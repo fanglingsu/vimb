@@ -22,6 +22,14 @@
 
 #include "main.h"
 
+enum {
+    COMPLETION_STORE_FIRST,
+#ifdef FEATURE_TITLE_IN_COMPLETION
+    COMPLETION_STORE_SECOND,
+#endif
+    COMPLETION_STORE_NUM
+};
+
 void completion_clean(void);
 gboolean completion_complete(gboolean back);
 

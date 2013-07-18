@@ -4,7 +4,7 @@ paradigms from dwb and hopefully a cleaner code base. The goal of Vimb is to
 build a completely keyboard-driven, efficient and pleasurable
 browsing-experience with low memory and cpu usage.
 
-More informatio and some screenshots of vimb browser in action can be found on
+More information and some screenshots of vimb browser in action can be found on
 the [vimb project page][vimb].
 
 ## features
@@ -32,7 +32,7 @@ the [vimb project page][vimb].
 - ssl validation against ca-certificate file
 - custom configuration files
 - tagged bookmarks
-- open input or teaxteaeas with configurable external editor
+- open input or textarea with configurable external editor
 - user defined URL-shortcuts with placeholders
 
 ## dependencies
