@@ -87,8 +87,8 @@ var VbHint = (function(){
                 /* create the hint label with number */
                 rect  = e.getBoundingClientRect();
                 label = labelTmpl.cloneNode(false);
-                label.style.left = Math.max((rect.left + offsetX), offsetX) - 3 + "px";
-                label.style.top  = Math.max((rect.top  + offsetY), offsetY) - 3 + "px";
+                label.style.left = Math.max((rect.left + offsetX), offsetX) + "px";
+                label.style.top  = Math.max((rect.top  + offsetY), offsetY) + "px";
                 label.innerText  = count;
 
                 /* if hinted element is an image - show title or alt of the image in hint label */
@@ -171,6 +171,7 @@ var VbHint = (function(){
         }
         var e = doc.createElement("style");
         e.innerHTML += "." + lClass + "{" +
+            "-webkit-transform:translate(-4px,-4px);" +
             "position:absolute;" +
             "z-index:100000;" +
             "font-family:monospace;" +
