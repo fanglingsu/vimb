@@ -1077,7 +1077,7 @@ int main(int argc, char *argv[])
 
     init_core();
 
-#ifdef ANNOUNCEMENT
+#if defined(ANNOUNCEMENT) && defined(SHOW_ANNOUNCEMENT)
     webkit_web_view_load_string(vb.gui.webview, ANNOUNCEMENT, "text/html", NULL, NULL);
 #else
     /* command line argument: URL */

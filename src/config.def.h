@@ -38,7 +38,9 @@
 
 #define MAXIMUM_HINTS              500
 
-/* remove this if the bookmark file fits to the new format "URL<tab>title of page<tab>tag1 tag2" */
+/* remove next line if the bookmark file fits to the new format "URL<tab>title of page<tab>tag1 tag2" */
+#define SHOW_ANNOUNCEMENT
+
 #define ANNOUNCEMENT "\
 <!DOCTYPE html><html lang=\"en\" dir=\"ltr\"><head> \
 <title>Bookmark file format changed</title> \
@@ -67,7 +69,7 @@ If you have no entries in you bookmark you must edit them to fit the new format.
 // replace the first space in earch line of file to <b>\\t\\t</b> if the line haven't already a \t in it.<br/> \
 sed -i -e '/\\t/!{s/ /\\t\\t/}' bookmark<br/> \
 </code> \
-<p>If you had no entries in the bookmark file or you changed it successfully, you should remove the '#define ANNOUNCEMENT' from <i>config.h</i> file and recompile vimb.</p> \
+<p>If you had no entries in the bookmark file or you changed it successfully, you should remove the '#define SHOW_ANNOUNCEMENT' from <i>config.h</i> file and recompile vimb.</p> \
 </body> \
 </html>"
 
