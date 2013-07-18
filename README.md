@@ -7,36 +7,6 @@ browsing-experience with low memory and cpu usage.
 More information and some screenshots of vimb browser in action can be found on
 the [vimb project page][vimb].
 
-## changedd bookmark and history file format
-The history file and bookmarks file will now holds also the page titles to
-serve them in the completion list. This changed the file format and will break
-previous bookmark files. The history file will still be usable also with the
-latest changes, but the bookmark file must be adapted to the new file format.
-
-```
-// old format
-http://very-long.uri/path.html tag1 tag2
-http://very-long.uri/path-no-tags.html
-```
-
-```
-// new format
-http://very-long.uri/path.html<tab>title of the page<tab>tag1 tag2
-http://very-long.uri/path-no-title.html<tab><tab>tag1 tag2
-http://very-long.uri/path-no-title-and-no-tags.html
-```
-
-The parts of the history and bookmark file are now separated by `<tab>` or
-`\t` char like the cookie file. Following `sed` command can be used to apply
-the required changes to the bookmark file. **Don't forget to backup the file
-before running the command**
-
-```
-// replace the first space in earch line of file to \t\t
-// if the line haven't already a \t in it.
-sed -i -e '/\t/!{s/ /\t\t/}' bookmark
-```
-
 ## features
 - vim-like modal
 - vim-like keybindings
