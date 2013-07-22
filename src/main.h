@@ -124,12 +124,13 @@ typedef enum _vb_mode {
 
 typedef enum {
     VB_INPUT_UNKNOWN,
-    VB_INPUT_SET,
-    VB_INPUT_OPEN,
-    VB_INPUT_TABOPEN,
-    VB_INPUT_COMMAND,
-    VB_INPUT_SEARCH_FORWARD,
-    VB_INPUT_SEARCH_BACKWARD
+    VB_INPUT_SET              = 1<<0,
+    VB_INPUT_OPEN             = 1<<1,
+    VB_INPUT_TABOPEN          = 1<<2,
+    VB_INPUT_COMMAND          = 1<<3,
+    VB_INPUT_SEARCH_FORWARD   = 1<<4,
+    VB_INPUT_SEARCH_BACKWARD  = 1<<5,
+    VB_INPUT_ALL              = VB_INPUT_OPEN | VB_INPUT_TABOPEN | VB_INPUT_SET | VB_INPUT_COMMAND | VB_INPUT_SEARCH_FORWARD | VB_INPUT_SEARCH_BACKWARD,
 } VbInputType;
 
 enum {
@@ -325,7 +326,8 @@ void vb_update_statusbar(void);
 void vb_update_status_style(void);
 void vb_update_input_style(void);
 void vb_update_urlbar(const char *uri);
-VbInputType vb_get_input_parts(const char* input, const char **prefix, const char **clean);
+VbInputType vb_get_input_parts(const char* input, unsigned int use,
+    const char **prefix, const char **clean);
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);
 void vb_quit(void);
 

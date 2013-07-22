@@ -333,7 +333,8 @@ void vb_update_urlbar(const char *uri)
  * ...) and set the given prefix pointer to the found prefix and the given
  * suffix pointer to the suffix.
  */
-VbInputType vb_get_input_parts(const char* input, const char **prefix, const char **clean)
+VbInputType vb_get_input_parts(const char* input, unsigned int use,
+    const char **prefix, const char **clean)
 {
     static const struct {
         VbInputType type;
@@ -350,6 +351,10 @@ VbInputType vb_get_input_parts(const char* input, const char **prefix, const cha
         {VB_INPUT_SEARCH_BACKWARD, "?", 1},
     };
     for (unsigned int i = 0; i < LENGTH(types); i++) {
+        /* process only those types given with use */
+        if (!(types[i].type & use)) {
+            continue;
+        }
         if (!strncmp(input, types[i].prefix, types[i].len)) {
             *prefix = types[i].prefix;
             *clean  = input + types[i].len;

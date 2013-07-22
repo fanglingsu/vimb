@@ -53,7 +53,7 @@ gboolean completion_complete(gboolean back)
     gboolean res = false, sort = true;
 
     input = GET_TEXT();
-    type  = vb_get_input_parts(input, &prefix, &suffix);
+    type  = vb_get_input_parts(input, VB_INPUT_ALL, &prefix, &suffix);
 
     if (vb.state.mode & VB_MODE_COMPLETE) {
         if (comp.text && !strcmp(input, comp.text)) {

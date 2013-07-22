@@ -37,12 +37,12 @@ typedef struct {
 } History;
 
 static struct {
-    char  *prefix;
-    char  *query;
+    char  *prefix;  /* prefix that is prepended to the history item to for the complete command */
+    char  *query;   /* part of input text to match the history items */
     GList *active;
 } history;
 
-static GList *get_list(const char *input);
+static GList *get_list(VbInputType type, const char *query);
 static const char *get_file_by_type(HistoryType type);
 static GList *load(const char *file);
 static void write_to_file(GList *list, const char *file);
@@ -91,13 +91,33 @@ void history_add(HistoryType type, const char *value, const char *additional)
  */
 char *history_get(const char *input, gboolean prev)
 {
+    VbInputType type;
+    const char *prefix, *query;
     GList *new = NULL;
 
+    if (history.active) {
+        /* calculate the actual content of the inpubox from history data, if
+         * the theoretical content and the actual given input are different
+         * rewind the history to recreate it later new */
+        char *current = g_strconcat(history.prefix, (char*)history.active->data, NULL);
+        if (strcmp(input, current)) {
+            history_rewind();
+        }
+        g_free(current);
+    }
+
+    /* create the history list if the lookup is started or input was changed */
     if (!history.active) {
-        history.active = get_list(input);
-        /* start with latest added items */
-        history.active = g_list_first(history.active);
-        history.active = g_list_prepend(history.active, g_strdup(""));
+        type = vb_get_input_parts(
+            input, VB_INPUT_COMMAND|VB_INPUT_SEARCH_FORWARD|VB_INPUT_SEARCH_BACKWARD,
+            &prefix, &query
+        );
+        history.active = get_list(type, query);
+        if (!history.active) {
+            return NULL;
+        }
+        OVERWRITE_STRING(history.query, query);
+        OVERWRITE_STRING(history.prefix, prefix);
     }
 
     if (prev) {
@@ -118,6 +138,7 @@ void history_rewind(void)
         g_list_free_full(history.active, (GDestroyNotify)g_free);
 
         OVERWRITE_STRING(history.prefix, NULL);
+        OVERWRITE_STRING(history.query, NULL);
         history.active = NULL;
     }
 }
@@ -194,43 +215,37 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
  * Retrieves the list of matching history items.
  * The list must be freed.
  */
-static GList *get_list(const char *input)
+static GList *get_list(VbInputType type, const char *query)
 {
-    VbInputType input_type;
-    HistoryType type;
-    GList *result = NULL;
-    const char *prefix, *suffix;
+    GList *result = NULL, *src = NULL;
 
-    input_type = vb_get_input_parts(input, &prefix, &suffix);
+    switch (type) {
+        case VB_INPUT_COMMAND:
+            src = load(get_file_by_type(HISTORY_COMMAND));
+            break;
 
-    /* get the right history type and command prefix */
-    if (input_type == VB_INPUT_COMMAND
-        || input_type == VB_INPUT_OPEN
-        || input_type == VB_INPUT_TABOPEN
-    ) {
-        type = HISTORY_COMMAND;
-        OVERWRITE_STRING(history.query, suffix);
-        OVERWRITE_STRING(history.prefix, prefix);
-    } else if (input_type == VB_INPUT_SEARCH_FORWARD
-        || input_type == VB_INPUT_SEARCH_BACKWARD
-    ) {
-        type = HISTORY_SEARCH;
-        OVERWRITE_STRING(history.query, suffix);
-        OVERWRITE_STRING(history.prefix, prefix);
-    } else {
-        return NULL;
+        case VB_INPUT_SEARCH_FORWARD:
+        case VB_INPUT_SEARCH_BACKWARD:
+            src = load(get_file_by_type(HISTORY_SEARCH));
+            break;
+
+        default:
+            return NULL;
     }
-
-    GList *src = load(get_file_by_type(type));
 
     /* generate new history list with the matching items */
     for (GList *l = src; l; l = l->next) {
         History *item = l->data;
-        if (g_str_has_prefix(item->first, history.query)) {
+        if (g_str_has_prefix(item->first, query)) {
             result = g_list_prepend(result, g_strdup(item->first));
         }
     }
     g_list_free_full(src, (GDestroyNotify)free_history);
+
+    /* prepend the original query as own item like done in vim to have the
+     * origianl input string in input box if we step before the first real
+     * item */
+    result = g_list_prepend(result, g_strdup(query));
 
     return result;
 }
