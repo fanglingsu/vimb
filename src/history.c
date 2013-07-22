@@ -204,13 +204,10 @@ static GList *get_list(const char *input)
     input_type = vb_get_input_parts(input, &prefix, &suffix);
 
     /* get the right history type and command prefix */
-    if (input_type == VB_INPUT_OPEN
+    if (input_type == VB_INPUT_COMMAND
+        || input_type == VB_INPUT_OPEN
         || input_type == VB_INPUT_TABOPEN
     ) {
-        type = HISTORY_URL;
-        OVERWRITE_STRING(history.query, suffix);
-        OVERWRITE_STRING(history.prefix, prefix);
-    } else if (input_type == VB_INPUT_COMMAND) {
         type = HISTORY_COMMAND;
         OVERWRITE_STRING(history.query, suffix);
         OVERWRITE_STRING(history.prefix, prefix);
