@@ -568,32 +568,48 @@ gboolean command_paste(const Arg *arg)
 
 gboolean command_search(const Arg *arg)
 {
+    static SearchDirection dir;
+    static char *query = NULL;
+#ifdef FEATURE_SEARCH_HIGHLIGHT
+    static gboolean highlight = false;
+#endif
     gboolean forward;
 
     if (arg->i == VB_SEARCH_OFF) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_unmark_text_matches(vb.gui.webview);
+        highlight = false;
 #endif
         return true;
     }
 
     /* copy search query for later use */
     if (arg->s) {
-        OVERWRITE_STRING(vb.state.search_query, arg->s);
+        OVERWRITE_STRING(query, arg->s);
         /* set dearch dir only when the searching is started */
-        vb.state.search_dir = arg->i;
+        dir = arg->i;
     }
-    forward = !(arg->i ^ vb.state.search_dir);
 
-    if (vb.state.search_query) {
+    forward = !(arg->i ^ dir);
+
+    if (query) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
-        webkit_web_view_mark_text_matches(vb.gui.webview, vb.state.search_query, false, 0);
-        webkit_web_view_set_highlight_text_matches(vb.gui.webview, true);
+        if (!highlight) {
+            /* highlight matches if the search is started new or continued
+             * after switch to normal mode which calls this function with
+             * VB_SEARCH_OFF */
+            webkit_web_view_mark_text_matches(vb.gui.webview, query, false, 0);
+            webkit_web_view_set_highlight_text_matches(vb.gui.webview, true);
+
+            /* mark the search as active */
+            highlight = true;
+        }
 #endif
+
         /* make sure we have a count greater than 0 */
         vb.state.count = vb.state.count ? vb.state.count : 1;
         do {
-            if (!webkit_web_view_search_text(vb.gui.webview, vb.state.search_query, false, forward, true)) {
+            if (!webkit_web_view_search_text(vb.gui.webview, query, false, forward, true)) {
                 break;
             }
         } while (--vb.state.count);

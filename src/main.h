@@ -267,8 +267,6 @@ typedef struct {
     StatusType      status_type;
     MessageType     input_type;
     gboolean        is_inspecting;
-    SearchDirection search_dir;
-    char            *search_query;
     GList           *downloads;
 } State;
 
