@@ -593,7 +593,9 @@ gboolean command_search(const Arg *arg)
         /* make sure we have a count greater than 0 */
         vb.state.count = vb.state.count ? vb.state.count : 1;
         do {
-            webkit_web_view_search_text(vb.gui.webview, vb.state.search_query, false, forward, true);
+            if (!webkit_web_view_search_text(vb.gui.webview, vb.state.search_query, false, forward, true)) {
+                break;
+            }
         } while (--vb.state.count);
     }
 
