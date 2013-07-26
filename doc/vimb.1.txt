@@ -400,8 +400,8 @@ prefix.
 .TP
 .B history
 The history of URLs is shown for the `:open ` and `:tabopen ` commands. This
-completion looks up for every given word in the list of the url history. Only
-those completion are shown that match every given word.
+completion looks up for every given word in the history url and titles. Only
+those history items are shown, where the title or url contains all tags.
 
 Example:
 ":open foo bar<tab>" will complete only URLs that contain the words foo and

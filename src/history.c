@@ -348,7 +348,9 @@ static gboolean history_item_contains_all_tags(History *item, char **query,
 
     /* iterate over all query parts */
     for (i = 0; i < qlen; i++) {
-        if (!util_strcasestr(item->first, query[i])) {
+        if (!(util_strcasestr(item->first, query[i])
+            || (item->second && util_strcasestr(item->second, query[i])))
+        ) {
             return false;
         }
     }
