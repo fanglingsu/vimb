@@ -35,8 +35,6 @@ char** util_get_lines(const char* filename);
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     GCompareFunc unique_func, GDestroyNotify free_func);
 char* util_strcasestr(const char* haystack, const char* needle);
-gboolean util_array_contains_all_tags(char **src, unsigned int s, char **query, unsigned int q);
-gboolean util_string_contains_all_tags(char *src, char **query, unsigned int q);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 gboolean util_create_tmp_file(const char *content, char **file);
 char *util_build_path(const char *path, const char *dir);

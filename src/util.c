@@ -158,56 +158,6 @@ next:
     return NULL;
 }
 
-
-/**
- * Checks if the given source array of pointer are prefixes to all those
- * entries given as array of search strings.
- */
-gboolean util_array_contains_all_tags(char **src, unsigned int s, char **query, unsigned int q)
-{
-    unsigned int i, n;
-
-    if (!s || !q) {
-        return true;
-    }
-
-    /* iterate over all query parts */
-    for (i = 0; i < q; i++) {
-        gboolean found = false;
-        for (n = 0; n < s; n++) {
-            if (g_str_has_prefix(src[n], query[i])) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * Checks if the given array of tags are all found in source string.
- */
-gboolean util_string_contains_all_tags(char *src, char **query, unsigned int q)
-{
-    unsigned int i;
-    if (!q) {
-        return true;
-    }
-
-    /* iterate over all query parts */
-    for (i = 0; i < q; i++) {
-        if (!util_strcasestr(src, query[i])) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 /**
  * Replaces appearances of search in string by given replace.
  * Returne a new allocated string of search was found.

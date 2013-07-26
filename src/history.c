@@ -47,6 +47,8 @@ static const char *get_file_by_type(HistoryType type);
 static GList *load(const char *file);
 static void write_to_file(GList *list, const char *file);
 static History *line_to_history(const char *line);
+static gboolean history_item_contains_all_tags(History *item, char **query,
+    unsigned int qlen);
 static int history_comp(History *a, History *b);
 static void free_history(History *item);
 
@@ -175,7 +177,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
 
         for (GList *l = src; l; l = l->next) {
             item = l->data;
-            if (util_string_contains_all_tags(item->first, parts, len)) {
+            if (history_item_contains_all_tags(item, parts, len)) {
                 gtk_list_store_append(store, &iter);
                 gtk_list_store_set(
                     store, &iter,
@@ -331,6 +333,27 @@ static History *line_to_history(const char *line)
     g_strfreev(parts);
 
     return item;
+}
+
+/**
+ * Checks if the given array of tags are all found in history item.
+ */
+static gboolean history_item_contains_all_tags(History *item, char **query,
+    unsigned int qlen)
+{
+    unsigned int i;
+    if (!qlen) {
+        return true;
+    }
+
+    /* iterate over all query parts */
+    for (i = 0; i < qlen; i++) {
+        if (!util_strcasestr(item->first, query[i])) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 static int history_comp(History *a, History *b)

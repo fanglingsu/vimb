@@ -31,6 +31,8 @@ typedef struct {
 } Bookmark;
 
 static GList *load(const char *file);
+static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
+    unsigned int qlen);
 static Bookmark *line_to_bookmark(const char *line);
 static int bookmark_comp(Bookmark *a, Bookmark *b);
 static void free_bookmark(Bookmark *bm);
@@ -135,9 +137,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
 
         for (GList *l = src; l; l = l->next) {
             bm = (Bookmark*)l->data;
-            if (bm->tags
-                && util_array_contains_all_tags(bm->tags, g_strv_length(bm->tags), parts, len)
-            ) {
+            if (bookmark_contains_all_tags(bm, parts, len)) {
                 gtk_list_store_append(store, &iter);
                 gtk_list_store_set(
                     store, &iter,
@@ -164,6 +164,35 @@ static GList *load(const char *file)
         file, (Util_Content_Func)line_to_bookmark, (GCompareFunc)bookmark_comp,
         (GDestroyNotify)free_bookmark
     );
+}
+
+/**
+ * Checks if the given bookmark have all given query strings as prefix.
+ */
+static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
+    unsigned int qlen)
+{
+    unsigned int i, n, tlen;
+
+    if (!qlen || !bm->tags || !(tlen = g_strv_length(bm->tags))) {
+        return true;
+    }
+
+    /* iterate over all query parts */
+    for (i = 0; i < qlen; i++) {
+        gboolean found = false;
+        for (n = 0; n < tlen; n++) {
+            if (g_str_has_prefix(bm->tags[n], query[i])) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 static Bookmark *line_to_bookmark(const char *line)
