@@ -593,6 +593,7 @@ gboolean command_search(const Arg *arg)
     forward = !(arg->i ^ dir);
 
     if (query) {
+        int count;
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         if (!highlight) {
             /* highlight matches if the search is started new or continued
@@ -607,14 +608,16 @@ gboolean command_search(const Arg *arg)
 #endif
 
         /* make sure we have a count greater than 0 */
-        vb.state.count = vb.state.count ? vb.state.count : 1;
+        count = vb.state.count ? vb.state.count : 1;
         do {
             if (!webkit_web_view_search_text(vb.gui.webview, query, false, forward, true)) {
                 break;
             }
-        } while (--vb.state.count);
+        } while (--count);
     }
 
+    /* unset posibble set count */
+    vb.state.count = 0;
     vb_set_mode(VB_MODE_NORMAL | VB_MODE_SEARCH, false);
 
     return true;
