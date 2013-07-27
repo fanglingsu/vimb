@@ -17,15 +17,17 @@ src/hints.js.h: src/hints.js
 	@echo "minify $<"
 	@cat $< | src/js2h.sh > $@
 
+$(OBJ): src/config.h config.mk
+
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
 
-src/config.h: src/config.def.h
+src/config.h:
 	@echo create $@ from src/config.def.h
 	@cp src/config.def.h $@
 
-%.o: %.c %.h src/config.h
+%.o: %.c %.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(CFLAGS)
 
