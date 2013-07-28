@@ -111,7 +111,10 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         return gl;
     }
 
-    for (int i = 0; i < len; i++) {
+    /* begin with tha last line of the file to make unique check easier -
+     * every already existing item in the list is the latest, so we don't need
+     * to romove items from the list which takes some time */
+    for (int i = len - 1; i >= 0; i--) {
         line = lines[i];
         g_strstrip(line);
         if (*line == '\0') {
@@ -119,19 +122,16 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         }
 
         if ((value = func(line))) {
-            /* if the value is already in list, remove this entry */
-            for (GList *l = gl; l; l = l->next) {
-                if (!unique_func(value, l->data)) {
-                    free_func(l->data);
-                    gl = g_list_delete_link(gl, l);
-                    break;
-                }
+            /* if the value is already in list, free it and don't put it onto
+             * the list */
+            if (g_list_find_custom(gl, value, unique_func)) {
+                free_func(value);
+            } else {
+                gl = g_list_prepend(gl, value);
             }
-            gl = g_list_prepend(gl, value);
         }
     }
     g_strfreev(lines);
-    gl = g_list_reverse(gl);
 
     return gl;
 }
