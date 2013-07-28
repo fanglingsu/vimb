@@ -227,6 +227,8 @@ gboolean setting_fill_completion(GtkListStore *store, const char *input)
 
 /**
  * Converts string representing also given data type into and Arg.
+ *
+ * Returned Arg must be freed with g_free.
  */
 static Arg *char_to_arg(const char *str, const Type type)
 {
