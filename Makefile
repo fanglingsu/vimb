@@ -3,6 +3,7 @@ include config.mk
 -include $(DEPS)
 
 all: $(TARGET)
+debug: $(DTARGET)
 
 options:
 	@echo "$(PROJECT) build options:"
@@ -12,15 +13,22 @@ options:
 	@echo "CC      = $(CC)"
 
 src/hints.o: src/hints.js.h
+src/hints.do: src/hints.js.h
+
 src/hints.js.h: src/hints.js
 	@echo "minify $<"
 	@cat $< | src/js2h.sh > $@
 
 $(OBJ): src/config.h config.mk
+$(DOBJ): src/config.h config.mk
 
 $(TARGET): $(OBJ)
 	@echo "$(CC) $@"
 	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
+
+$(DTARGET): $(DOBJ)
+	@echo "$(CC) $@"
+	@$(CC) $(DFLAGS) $(DOBJ) -o $(DTARGET) $(DLDFLAGS)
 
 src/config.h:
 	@echo create $@ from src/config.def.h
@@ -29,12 +37,6 @@ src/config.h:
 %.o: %.c %.h
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CFLAGS)
-
-debug: $(DTARGET)
-
-$(DTARGET): $(DOBJ)
-	@echo "$(CC) $@"
-	@$(CC) $(DFLAGS) $(DOBJ) -o $(DTARGET) $(LDFLAGS)
 
 %.do: %.c %.h
 	@echo "${CC} $<"

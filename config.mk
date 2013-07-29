@@ -30,14 +30,19 @@ ifeq ($(USEGTK3), 1)
 CPPFLAGS += -DHAS_GTK3
 endif
 
-CFLAGS += $(shell pkg-config --cflags $(LIBS))
-CFLAGS += -Wall -pipe -ansi -std=c99 -pedantic
-CFLAGS += -Wmissing-declarations -Wmissing-parameter-type -Wno-overlength-strings
-CFLAGS += ${CPPFLAGS}
+# prepare the lib flags used for the linker
+LIBFLAGS = $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
 
-LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
+# normal compiler flags
+CFLAGS  += $(shell pkg-config --cflags $(LIBS))
+CFLAGS  += -Wall -pipe -ansi -std=c99 -pedantic
+CFLAGS  += -Wmissing-declarations -Wmissing-parameter-type -Wno-overlength-strings
+CFLAGS  += ${CPPFLAGS}
+LDFLAGS += -s ${LIBFLAGS}
 
-DFLAGS += $(CFLAGS) -DDEBUG -ggdb -g
+# compiler flags for the debug target
+DFLAGS   += $(CFLAGS) -DDEBUG -ggdb -g
+DLDFLAGS += ${LIBFLAGS}
 
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
 DOBJ      = $(patsubst %.c, %.do, $(wildcard src/*.c))
