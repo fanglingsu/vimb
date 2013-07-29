@@ -61,9 +61,12 @@ static void free_history(History *item);
 void history_cleanup(void)
 {
     const char *file;
+    GList *list;
     for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
         file = get_file_by_type(i);
-        write_to_file(load(file), file);
+        list = load(file);
+        write_to_file(list, file);
+        g_list_free_full(list, (GDestroyNotify)free_history);
     }
 }
 
@@ -209,7 +212,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
             }
         }
     }
-    g_list_free_full(src, (GDestroyNotify)g_free);
+    g_list_free_full(src, (GDestroyNotify)free_history);
 
     return found;
 }
@@ -260,6 +263,8 @@ static const char *get_file_by_type(HistoryType type)
 
 /**
  * Loads history items form file but eleminate duplicates in FIFO order.
+ *
+ * Returned list must be freed with (GDestroyNotify) free_history.
  */
 static GList *load(const char *file)
 {
@@ -292,8 +297,6 @@ static void write_to_file(GList *list, const char *file)
         file_lock_set(fileno(f), F_UNLCK);
         fclose(f);
     }
-
-    g_list_free_full(list, (GDestroyNotify)free_history);
 }
 
 static History *line_to_history(const char *line)
