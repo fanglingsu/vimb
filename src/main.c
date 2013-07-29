@@ -658,7 +658,7 @@ static void init_core(void)
     }
 
     GdkGeometry hints = {10, 10};
-    gtk_window_set_default_size(GTK_WINDOW(gui->window), 640, 480);
+    gtk_window_set_default_size(GTK_WINDOW(gui->window), WIN_WIDTH, WIN_HEIGHT);
     gtk_window_set_title(GTK_WINDOW(gui->window), "vimb");
     gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
     gtk_window_set_icon(GTK_WINDOW(gui->window), NULL);

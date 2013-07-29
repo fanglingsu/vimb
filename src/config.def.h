@@ -38,6 +38,9 @@
 
 #define MAXIMUM_HINTS              500
 
+#define WIN_WIDTH                  800
+#define WIN_HEIGHT                 600
+
 /* remove next line if the bookmark file fits to the new format "URL<tab>title of page<tab>tag1 tag2" */
 #define SHOW_ANNOUNCEMENT
 
