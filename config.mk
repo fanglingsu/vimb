@@ -24,31 +24,21 @@ else
 LIBS += $(GTK2LIBS)
 endif
 
-CFLAGS += $(shell pkg-config --cflags $(LIBS))
-CFLAGS += -Wall
-CFLAGS += -pipe
-CFLAGS += -ansi
-CFLAGS += -std=c99
-CFLAGS += -pedantic
-CFLAGS += -Wmissing-declarations
-CFLAGS += -Wmissing-parameter-type
-CFLAGS += -Wno-overlength-strings
-
-LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
-
-CPPFLAGS += -DVERSION=\"${VERSION}\" -D_BSD_SOURCE -D_XOPEN_SOURCE=500
+CPPFLAGS  = -DVERSION=\"${VERSION}\" -D_BSD_SOURCE -D_XOPEN_SOURCE=500
 CPPFLAGS += -DPROJECT=\"${PROJECT}\"
 ifeq ($(USEGTK3), 1)
 CPPFLAGS += -DHAS_GTK3
 endif
 
-#----------------developer options-------------------
-DFLAGS += $(CFLAGS)
-DFLAGS += -DDEBUG
-DFLAGS += -ggdb
-DFLAGS += -g
+CFLAGS += $(shell pkg-config --cflags $(LIBS))
+CFLAGS += -Wall -pipe -ansi -std=c99 -pedantic
+CFLAGS += -Wmissing-declarations -Wmissing-parameter-type -Wno-overlength-strings
+CFLAGS += ${CPPFLAGS}
 
-#----------------end of options----------------------
+LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
+
+DFLAGS += $(CFLAGS) -DDEBUG -ggdb -g
+
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
 DOBJ      = $(patsubst %.c, %.do, $(wildcard src/*.c))
 DEPS      = $(OBJ:%.o=%.d)
@@ -58,7 +48,3 @@ DTARGET   = $(TARGET)_dbg
 DIST_FILE = $(PROJECT)_$(VERSION).tar.gz
 MANDIR1   = $(MANDIR)/man1
 MAN1      = $(PROJECT).1
-
-FMOD = 0644
-
-MFLAGS = --no-print-directory

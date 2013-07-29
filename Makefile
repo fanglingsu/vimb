@@ -6,11 +6,10 @@ all: $(TARGET)
 
 options:
 	@echo "$(PROJECT) build options:"
-	@echo "LIBS      = $(LIBS)"
-	@echo "CC        = $(CC)"
-	@echo "CFLAGS    = $(CFLAGS)"
-	@echo "CPPFLAGS  = $(CPPFLAGS)"
-	@echo "LDFLAGS   = $(LDFLAGS)"
+	@echo "LIBS    = $(LIBS)"
+	@echo "CFLAGS  = $(CFLAGS)"
+	@echo "LDFLAGS = $(LDFLAGS)"
+	@echo "CC      = $(CC)"
 
 src/hints.o: src/hints.js.h
 src/hints.js.h: src/hints.js
@@ -29,7 +28,7 @@ src/config.h:
 
 %.o: %.c %.h
 	@echo "${CC} $<"
-	@$(CC) -c -o $@ $< $(CPPFLAGS) $(CFLAGS)
+	@$(CC) -c -o $@ $< $(CFLAGS)
 
 debug: $(DTARGET)
 
@@ -39,7 +38,7 @@ $(DTARGET): $(DOBJ)
 
 %.do: %.c %.h
 	@echo "${CC} $<"
-	@$(CC) -c -o $@ $< $(CPPFLAGS) $(DFLAGS)
+	@$(CC) -c -o $@ $< $(DFLAGS)
 
 install: $(TARGET) doc/$(MAN1)
 	install -d $(DESTDIR)$(BINDIR)
