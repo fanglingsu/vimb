@@ -57,6 +57,8 @@ DEPS      = $(OBJ:%.o=%.d)
 TARGET    = $(PROJECT)
 DTARGET   = $(TARGET)_dbg
 DIST_FILE = $(PROJECT)_$(VERSION).tar.gz
+MANDIR1   = $(MANDIR)/man1
+MAN1      = $(PROJECT).1
 
 FMOD = 0644
 

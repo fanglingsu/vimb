@@ -41,14 +41,19 @@ $(DTARGET): $(DOBJ)
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(DFLAGS)
 
-install: $(TARGET)
+install: $(TARGET) doc/$(MAN1)
 	install -d $(DESTDIR)$(BINDIR)
+	install -d $(DESTDIR)$(MANDIR1)
 	install -m 755 $(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
-	@$(MAKE) $(MFLAGS) -C doc install
+	@echo "install -m 644 src/$(MAN1) $(DESTDIR)$(MANDIR1)/$(MAN1)"
+	@sed -e "s/VERSION/$(VERSION)/g" \
+		-e "s/DATE/`date +'%m %Y'`/g" \
+		-e "s/PROJECT/$(PROJECT)/g" < doc/$(MAN1) > $(DESTDIR)$(MANDIR1)/$(MAN1)
+	@chmod 644 $(DESTDIR)$(MANDIR1)/$(MAN1)
 
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
-	@$(MAKE) $(MFLAGS) -C doc uninstall
+	$(RM) $(DESTDIR)$(MANDIR1)/$(MAN1)
 
 clean:
 	$(RM) src/*.o src/*.do src/hints.js.h $(TARGET) $(DTARGET)
