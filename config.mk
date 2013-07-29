@@ -33,7 +33,6 @@ CFLAGS += -pedantic
 CFLAGS += -Wmissing-declarations
 CFLAGS += -Wmissing-parameter-type
 CFLAGS += -Wno-overlength-strings
-#CFLAGS += -Wstrict-prototypes
 
 LDFLAGS += $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
 
