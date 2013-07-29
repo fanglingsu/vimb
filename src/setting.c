@@ -17,6 +17,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "config.h"
 #include "setting.h"
 #include "util.h"
 #include "completion.h"

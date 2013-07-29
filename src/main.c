@@ -17,10 +17,10 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "config.h"
 #include <sys/stat.h>
 #include <math.h>
 #include "main.h"
-#include "config.h"
 #include "util.h"
 #include "command.h"
 #include "keybind.h"

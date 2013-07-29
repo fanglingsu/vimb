@@ -17,9 +17,9 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "config.h"
 #include <sys/file.h>
 #include "main.h"
-#include "config.h"
 #include "session.h"
 
 #ifdef FEATURE_COOKIE

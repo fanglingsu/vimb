@@ -17,10 +17,10 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "config.h"
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
-#include "config.h"
 #include "dom.h"
 #include "command.h"
 #include "hints.js.h"
