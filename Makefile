@@ -2,7 +2,7 @@ include config.mk
 
 -include $(DEPS)
 
-all: $(TARGET) man
+all: $(TARGET)
 
 options:
 	@echo "$(PROJECT) build options:"
@@ -41,9 +41,6 @@ $(DTARGET): $(DOBJ)
 	@echo "${CC} $<"
 	@$(CC) -c -o $@ $< $(CPPFLAGS) $(DFLAGS)
 
-man:
-	@$(MAKE) $(MFLAGS) -C doc man
-
 install: $(TARGET)
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 755 $(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
@@ -54,7 +51,6 @@ uninstall:
 	@$(MAKE) $(MFLAGS) -C doc uninstall
 
 clean:
-	@$(MAKE) $(MFLAGS) -C doc clean
 	$(RM) src/*.o src/*.do src/hints.js.h $(TARGET) $(DTARGET)
 
 dist: distclean
