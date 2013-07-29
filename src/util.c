@@ -17,13 +17,14 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "config.h"
 #include <stdio.h>
 #include "ctype.h"
 #include "util.h"
 
 char *util_get_config_dir(void)
 {
-    char *path = g_build_filename(g_get_user_config_dir(), "vimb", NULL);
+    char *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
     util_create_dir_if_not_exists(path);
 
     return path;
@@ -31,7 +32,7 @@ char *util_get_config_dir(void)
 
 char *util_get_cache_dir(void)
 {
-    char *path = g_build_filename(g_get_user_cache_dir(), "vimb", NULL);
+    char *path = g_build_filename(g_get_user_cache_dir(), PROJECT, NULL);
     util_create_dir_if_not_exists(path);
 
     return path;

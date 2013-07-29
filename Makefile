@@ -49,6 +49,7 @@ install: $(TARGET) doc/$(MAN1)
 	@echo "install -m 644 src/$(MAN1) $(DESTDIR)$(MANDIR1)/$(MAN1)"
 	@sed -e "s/VERSION/$(VERSION)/g" \
 		-e "s/DATE/`date +'%m %Y'`/g" \
+		-e "s/PROJECT_UCFIRST/$(PROJECT_UCFIRST)/g" \
 		-e "s/PROJECT/$(PROJECT)/g" < doc/$(MAN1) > $(DESTDIR)$(MANDIR1)/$(MAN1)
 	@chmod 644 $(DESTDIR)$(MANDIR1)/$(MAN1)
 

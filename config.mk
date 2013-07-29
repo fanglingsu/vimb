@@ -2,9 +2,9 @@
 VERSION = 0.1.9
 
 PROJECT = vimb
-PREFIX  ?= /usr/local
-BINDIR  ?= $(PREFIX)/bin
-MANDIR  ?= $(PREFIX)/share/man
+PREFIX ?= /usr/local
+BINDIR ?= $(PREFIX)/bin
+MANDIR ?= $(PREFIX)/share/man
 
 #----------------compile options---------------------
 
@@ -24,8 +24,11 @@ else
 LIBS += $(GTK2LIBS)
 endif
 
+# generate a first char upper case project name
+PROJECT_UCFIRST = $(shell echo '${PROJECT}' | sed 's/\([a-z]\)\([a-zA-Z0-9]*\)/\u\1\2/')
+
 CPPFLAGS  = -DVERSION=\"${VERSION}\" -D_BSD_SOURCE -D_XOPEN_SOURCE=500
-CPPFLAGS += -DPROJECT=\"${PROJECT}\"
+CPPFLAGS += -DPROJECT=\"${PROJECT}\" -DPROJECT_UCFIRST=\"${PROJECT_UCFIRST}\"
 ifeq ($(USEGTK3), 1)
 CPPFLAGS += -DHAS_GTK3
 endif

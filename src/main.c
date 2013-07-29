@@ -653,16 +653,16 @@ static void init_core(void)
 #ifdef HAS_GTK3
         gtk_window_set_has_resize_grip(GTK_WINDOW(gui->window), false);
 #endif
-        gtk_window_set_wmclass(GTK_WINDOW(gui->window), "vimb", "Vimb");
-        gtk_window_set_role(GTK_WINDOW(gui->window), "Vimb");
+        gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT_UCFIRST);
+        gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT_UCFIRST);
     }
 
     GdkGeometry hints = {10, 10};
     gtk_window_set_default_size(GTK_WINDOW(gui->window), WIN_WIDTH, WIN_HEIGHT);
-    gtk_window_set_title(GTK_WINDOW(gui->window), "vimb");
+    gtk_window_set_title(GTK_WINDOW(gui->window), PROJECT);
     gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
     gtk_window_set_icon(GTK_WINDOW(gui->window), NULL);
-    gtk_widget_set_name(GTK_WIDGET(gui->window), "vimb");
+    gtk_widget_set_name(GTK_WIDGET(gui->window), PROJECT);
 
     /* Create a browser instance */
     gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
@@ -970,7 +970,7 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
     } else {
         path = webkit_download_get_suggested_filename(download);
         if (!path) {
-            path = "vimb_donwload";
+            path = PROJECT "-donwload";
         }
         file = util_build_path(path, vb.config.download_dir);
     }
