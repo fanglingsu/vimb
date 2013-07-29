@@ -163,7 +163,7 @@ static GList *load(const char *file)
 {
     return util_file_to_unique_list(
         file, (Util_Content_Func)line_to_bookmark, (GCompareFunc)bookmark_comp,
-        (GDestroyNotify)free_bookmark
+        (GDestroyNotify)free_bookmark, vb.config.history_max
     );
 }
 

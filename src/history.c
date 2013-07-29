@@ -264,23 +264,10 @@ static const char *get_file_by_type(HistoryType type)
 static GList *load(const char *file)
 {
     /* read the history items from file */
-    GList *list = NULL;
-
-    list = util_file_to_unique_list(
+    return util_file_to_unique_list(
         file, (Util_Content_Func)line_to_history, (GCompareFunc)history_comp,
-        (GDestroyNotify)free_history
+        (GDestroyNotify)free_history, vb.config.history_max
     );
-
-    /* if list is too long - remove items from end (oldest entries) */
-    if (vb.config.history_max < g_list_length(list)) {
-        while (vb.config.history_max < g_list_length(list)) {
-            GList *last = g_list_first(list);
-            g_free(last->data);
-            list = g_list_delete_link(list, last);
-        }
-    }
-
-    return list;
 }
 
 /**

@@ -98,13 +98,26 @@ char **util_get_lines(const char *filename)
     return lines;
 }
 
+/**
+ * Retrieves a list with unique items from file.
+ *
+ * @filename:    file to read items from
+ * @func:        function to parse a single line to item
+ * @unique_func: function to decide if two items are equal
+ * @free_func:   function to free already converted item if this isn't unque
+ * @max_items:   maximum number of items that are returned, use 0 for
+ *               unlimited items
+ */
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
-    GCompareFunc unique_func, GDestroyNotify free_func)
+    GCompareFunc unique_func, GDestroyNotify free_func, unsigned int max_items)
 {
     GList *gl = NULL;
+    /* yes, the whole file is read and wen possible don not need all the
+     * lines, but this is easier to implement compared to reading the file
+     * line wise from ent to begining */
     char *line, **lines = util_get_lines(filename);
     void *value;
-    int len;
+    int len, num_items = 0;
 
     len = g_strv_length(lines);
     if (!len) {
@@ -128,6 +141,10 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
                 free_func(value);
             } else {
                 gl = g_list_prepend(gl, value);
+                /* skip the loop if we precessed max_items unique items */
+                if (++num_items >= max_items) {
+                    break;
+                }
             }
         }
     }
