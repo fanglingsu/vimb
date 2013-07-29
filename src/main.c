@@ -471,8 +471,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             vb_update_statusbar();
 
             dom_check_auto_insert(view);
-
-            history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
+            if (strncmp(uri, "about:", 6)) {
+                history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
+            }
             break;
 
         case WEBKIT_LOAD_FAILED:
