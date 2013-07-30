@@ -78,6 +78,10 @@ u
 U
 : Open the last closed page into a new window.
 
+ctrl-p
+: Open the oldest entry from read it later queue in current browser window, if
+  vimb has been compiled with QUEUE feature.
+
 ctrl-q
 : Quit the browser.
 
@@ -168,6 +172,10 @@ F
 
 ;-s
 : Start hinting to download the linkes resource.
+
+;-p
+: If vimb has been compiled with QUEUE feature. Start hinting to push hinted
+  URI into queue.
 
 ---
 

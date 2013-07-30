@@ -174,6 +174,10 @@ hint-editor [QUERY]
 hint-save [QUERY]
 : Start hinting to download hinted links into configured download directory.
 
+hint-push [QUERY]
+: Start hinting to push hinted URI into the read it later queue. If vimb hab
+  been compiled with QUEUE feature.
+
 next, n
 prev, p
 : Focus next or previous hint if hinting mode is active.
@@ -260,6 +264,17 @@ bookmark-add [TAGS], bma [TAGS]
 
 bookmark-remove [URI], bmr [URI]
 : Removes all bookmarks for given URI or if not given the current opened page.
+
+## queue
+The queue allows to mark URLs for later reding (something like a read it later
+list). This list is shared between the single instances of vimb. Only available
+if vimb has been compiled with QUEUE feature.
+
+push [URI]
+: Push URI or if not given current URI into the queue.
+
+pop
+: Open the oldest queue entry in current browser window and remove it from the queue.
 
 ## misc
 next, n

@@ -16,24 +16,18 @@ not detract you from your daily work.
 - modal like vim
 - vim oriented [keybindings][]
 - follow links via keyboard hints
-- bookmarks
+- tagged bookmarks
 - cookie support
 - userscripts support
 - customer stylesheet support
-- completions for
-  - commands
-  - urls from history
-  - bookmarked urls
-  - variables
-  - search queries from history
-- history for
-  - commands
-  - urls
-  - search queries
+- completions for commands, url history, bookmarks variables and search
+  queries
+- history for commands, url and search queries
 - open textareas with configurable editor
 - user defined url shortcuts with up to 9 placeholders
 - xembed - so vimb can be used together with [tabbed][]
 - run shell commands from inputbox
+- read it later queue to collect URIs for later use
 
 ## download
 
