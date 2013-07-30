@@ -43,7 +43,6 @@ static char *default_config[] = {
     "nmap <ctrl-q>=quit",
     "nmap <ctrl-o>=back",
     "nmap <ctrl-i>=forward",
-    "nmap <ctrl-p>=pop",
     "nmap r=reload",
     "nmap R=reload!",
     "nmap C=stop",
@@ -70,6 +69,7 @@ static char *default_config[] = {
     "nmap ;s=hint-save",
 #ifdef FEATURE_QUEUE
     "nmap ;p=hint-push",
+    "nmap <ctrl-p>=pop",
 #endif
     "nmap y=yank-uri",
     "nmap Y=yank-selection",
