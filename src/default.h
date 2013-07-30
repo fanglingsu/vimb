@@ -87,7 +87,7 @@ static char *default_config[] = {
     "cmap <up>=hist-prev",
     "cmap <down>=hist-next",
     "imap <ctrl-t>=editor",
-    "shortcut-add dl=https://duckduckgo.com/lite/?q=$0",
+    "shortcut-add dl=https://duckduckgo.com/html/?q=$0",
     "shortcut-add dd=https://duckduckgo.com/?q=$0",
     "shortcut-default dl",
     "set images=on",
