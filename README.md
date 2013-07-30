@@ -23,6 +23,7 @@ the [vimb project page][vimb].
 - completions for
   - commands
   - urls
+  - bookmarked urls
   - variable names of settings
   - search-queries
 - hinting - marks links, form fields and other clickable elements to be
@@ -31,14 +32,31 @@ the [vimb project page][vimb].
   other fat browsers
 - ssl validation against ca-certificate file
 - custom configuration files
-- tagged bookmarks
 - open input or textarea with configurable external editor
 - user defined URL-shortcuts with placeholders
+- run shell commands from inpubox
 
 ## dependencies
 - libwebkit >=1.3.10
 - libgtk+-2.0
 - libsoup-2.4
+
+## install
+Edit config.mk to match your local setup.
+
+Edit config.h to match you personal preferences.
+
+The default Makefile will not overwrite your customised `config.h` with the
+contents of `config.def.h`, even if it was updated in the latest git pull.
+Therefore, you should always compare your customised `config.h` with
+`config.def.h` and make sure you include any changes to the latter in your
+`config.h`.
+
+Run following command to compile and install vimb (if necessary last one as
+root).
+
+    make clean && make
+    make install
 
 # license
 Information about the license are found in the file LICENSE.
