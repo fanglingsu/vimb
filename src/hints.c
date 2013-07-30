@@ -169,11 +169,15 @@ static void run_script(char *js)
             a.s = v;
             a.i = COMMAND_SAVE_URI;
             command_save(&a);
-        } else if (mode & HINTS_PROCESS_PUSH) {
+        }
+#ifdef FEATURE_QUEUE
+        else if (mode & HINTS_PROCESS_PUSH) {
             a.s = v;
             a.i = COMMAND_QUEUE_PUSH;
             command_queue(&a);
-        } else {
+        }
+#endif
+        else {
             a.i = VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY;
             a.s = v;
             command_yank(&a);

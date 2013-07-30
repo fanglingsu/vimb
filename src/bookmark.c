@@ -148,6 +148,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
     return found;
 }
 
+#ifdef FEATURE_QUEUE
 /**
  * Push a uri to the end of the queue.
  *
@@ -184,6 +185,7 @@ char *bookmark_queue_pop(void)
     }
     return uri;
 }
+#endif /* FEATURE_QUEUE */
 
 static GList *load(const char *file)
 {

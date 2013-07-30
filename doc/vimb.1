@@ -240,7 +240,8 @@ Start hinting to open inputboxes or textareas with external editor.
 Start hinting to download hinted links into configured download directory.
 .TP
 .BI "hint-push [" QUERY "]"
-Start hinting to push hinted URI into the read it later queue.
+Start hinting to push hinted URI into the read it later queue. If PROJECT hab
+been compiled with QUEUE feature.
 
 .SS Yank
 .TP
@@ -330,14 +331,16 @@ page.
 
 .SS Queue
 The queue allows to mark URLs for later reding (something like a read it later
-list). This list is shared between the single instances of PROJECT.
+list). This list is shared between the single instances of PROJECT. Only
+available if PROJECT has been compiled with QUEUE feature.
 .TP
 .BI "push [" URI ]
-Push \fIURI\fP or if not given current URI into the queue.
+Push \fIURI\fP or if not given
+current URI into the queue.
 .TP
 .B pop
-Open the oldest queue entry in current browser window and remove it from the
-queue.
+Open the oldest queue entry
+in current browser window and remove it from the queue.
 
 .SS Misc
 .TP
@@ -583,7 +586,8 @@ Start hinting to open editable form fileds with external editor.
 Start hinting to download the linkes resource.
 .TP
 .B ;\-p
-Start hinting to push hinted URI into queue.
+If PROJECT has been compiled with QUEUE feature. Start hinting to push hinted
+URI into queue.
 .TP
 .B y
 Yank the URI or current page into clipboard.
@@ -674,7 +678,8 @@ Holds the bookmarks saved with command `bookmark-add'.
 .RE
 .I $XDG_CONFIG_HOME/PROJECT/queue
 .RS
-Holds the read it later queue filled by `hint-push' or `push'.
+Holds the read it later queue filled by `hint-push' or `push' if PROJECT has
+been compiled with QUEUE feature.
 .RE
 .I $XDG_CONFIG_HOME/PROJECT/scripts.js
 .RS

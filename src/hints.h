@@ -34,7 +34,9 @@ enum {
     HINTS_PROCESS_SAVE  = (1 << 5),
     /* additional flag for HINTS_PROCESS_OPEN */
     HINTS_OPEN_NEW      = (1 << 6),
+#ifdef FEATURE_QUEUE
     HINTS_PROCESS_PUSH  = (1 << 7),
+#endif
 };
 
 void hints_init(WebKitWebFrame *frame);

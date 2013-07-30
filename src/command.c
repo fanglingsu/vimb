@@ -94,7 +94,9 @@ static CommandInfo cmd_list[] = {
     {"hint-image-tabopen",        NULL,    command_hints,                {HINTS_TYPE_IMAGE | HINTS_PROCESS_OPEN | HINTS_OPEN_NEW}},
     {"hint-editor",               NULL,    command_hints,                {HINTS_TYPE_EDITABLE}},
     {"hint-save",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE}},
+#ifdef FEATURE_QUEUE
     {"hint-push",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_PUSH}},
+#endif
     {"yank-uri",                  "yu",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",            "ys",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},
     {"search-forward",            NULL,    command_search,               {VB_SEARCH_FORWARD}},
@@ -122,8 +124,10 @@ static CommandInfo cmd_list[] = {
     {"descent!",                  NULL,    command_descent,              {1}},
     {"save",                      NULL,    command_save,                 {COMMAND_SAVE_CURRENT}},
     {"shellcmd",                  NULL,    command_shellcmd,             {0}},
+#ifdef FEATURE_QUEUE
     {"push",                      NULL,    command_queue,                {COMMAND_QUEUE_PUSH}},
     {"pop",                       NULL,    command_queue,                {COMMAND_QUEUE_POP}},
+#endif
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -487,9 +491,12 @@ gboolean command_hints(const Arg *arg)
                 prefix = ";y";
             } else if (mode & HINTS_PROCESS_SAVE) {
                 prefix = ";s";
-            } else if (mode & HINTS_PROCESS_PUSH) {
+            }
+#ifdef FEATURE_QUEUE
+            else if (mode & HINTS_PROCESS_PUSH) {
                 prefix = ";p";
             }
+#endif
             break;
 
         case HINTS_TYPE_IMAGE:
@@ -891,6 +898,7 @@ gboolean command_shellcmd(const Arg *arg)
     return false;
 }
 
+#ifdef FEATURE_QUEUE
 gboolean command_queue(const Arg *arg)
 {
     gboolean res = false;
@@ -915,6 +923,7 @@ gboolean command_queue(const Arg *arg)
     }
     return res;
 }
+#endif
 
 gboolean command_editor(const Arg *arg)
 {

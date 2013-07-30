@@ -863,8 +863,10 @@ static void init_files(void)
     vb.files[FILES_BOOKMARK] = g_build_filename(path, "bookmark", NULL);
     util_create_file_if_not_exists(vb.files[FILES_BOOKMARK]);
 
+#ifdef FEATURE_QUEUE
     vb.files[FILES_QUEUE] = g_build_filename(path, "queue", NULL);
     util_create_file_if_not_exists(vb.files[FILES_QUEUE]);
+#endif
 
     vb.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
 

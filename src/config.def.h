@@ -27,6 +27,7 @@
 #define FEATURE_NO_SCROLLBARS
 /*#define FEATURE_GTK_PROGRESSBAR*/
 #define FEATURE_TITLE_IN_COMPLETION
+#define FEATURE_QUEUE
 
 
 /* time in seconds after that message will be removed from inputbox if the

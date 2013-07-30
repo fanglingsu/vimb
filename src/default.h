@@ -68,7 +68,9 @@ static char *default_config[] = {
     "nmap ;I=hint-image-tabopen",
     "nmap ;e=hint-editor",
     "nmap ;s=hint-save",
+#ifdef FEATURE_QUEUE
     "nmap ;p=hint-push",
+#endif
     "nmap y=yank-uri",
     "nmap Y=yank-selection",
     "nmap p=open-clipboard",
