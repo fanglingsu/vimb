@@ -238,6 +238,9 @@ Start hinting to open inputboxes or textareas with external editor.
 .TP
 .BI "hint-save [" QUERY "]"
 Start hinting to download hinted links into configured download directory.
+.TP
+.BI "hint-push [" QUERY "]"
+Start hinting to push hinted URI into the read it later queue.
 
 .SS Yank
 .TP
@@ -489,6 +492,8 @@ Open the last closed page.
 .TP
 .B U
 Open the last closed page into a new window.
+.TP ctrl\-p
+Open the oldest entry from read it later queue in current browser window.
 .TP
 .B ctrl\-q
 Quit the browser.
@@ -576,6 +581,9 @@ Start hinting to open editable form fileds with external editor.
 .TP
 .B ;\-s
 Start hinting to download the linkes resource.
+.TP
+.B ;\-p
+Start hinting to push hinted URI into queue.
 .TP
 .B y
 Yank the URI or current page into clipboard.
