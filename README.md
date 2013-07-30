@@ -35,6 +35,7 @@ the [vimb project page][vimb].
 - open input or textarea with configurable external editor
 - user defined URL-shortcuts with placeholders
 - run shell commands from inpubox
+- read it later queue to collect URIs for later use
 
 ## dependencies
 - libwebkit >=1.3.10
