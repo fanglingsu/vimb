@@ -11,5 +11,5 @@ There isn't really much to see for a browser that controlled via keyboard and
 a single inputbox, but following images may give a impression of they way vimb
 makes you more productive in your work.
 
-[![link hinting](media/tn/vimb-hints.png "link hinting (688x472 33kB)")](media/vimb-hints.png)
-[![setting completion of vimb](media/tn/vimb-completion.png "completion of settings (688x472 11kB)")](media/vimb-completion.png)
+[![link hinting](media/tn/vimb-hints.png "link hinting (688x472 33kB)"){:width="300"}{:height="206"}](media/vimb-hints.png)
+[![setting completion of vimb](media/tn/vimb-completion.png "completion of settings (688x472 11kB)"){:width="300"}{:height="206"}](media/vimb-completion.png)

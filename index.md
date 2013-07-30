@@ -33,6 +33,7 @@ not detract you from your daily work.
 - open textareas with configurable editor
 - user defined url shortcuts with up to 9 placeholders
 - xembed - so vimb can be used together with [tabbed][]
+- run shell commands from inputbox
 
 ## download
 
@@ -47,6 +48,25 @@ not detract you from your daily work.
 - libwebkit >= 1.3.10
 - libgtk+-2.0
 - libsoup-2.4
+
+## install
+
+1. Edit `config.mk` to match your local setup.
+
+2. Edit `config.h` to match you personal preferences.
+
+   The default Makefile will not overwrite your customised `config.h` with the
+   contents of `config.def.h`, even if it was updated in the latest git pull.
+   Therefore, you should always compare your customised `config.h` with
+   `config.def.h` and make sure you include any changes to the latter in your
+   `config.h`.
+
+3. Run following command to compile and install vimb (if necessary last one as
+   root).
+
+       make clean && make
+       make install
+
 
 ## contribute
 
