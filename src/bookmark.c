@@ -173,7 +173,7 @@ char *bookmark_queue_pop(void)
 
         uri = g_strdup(lines[0]);
         /* don't process last empty line */
-        len -= 1; 
+        len -= 1;
         /* skip the first list that should be removed */
         for (i = 1; i < len; i++) {
             g_string_append_printf(new, "%s\n", lines[i]);
@@ -195,14 +195,24 @@ static GList *load(const char *file)
 
 /**
  * Checks if the given bookmark have all given query strings as prefix.
+ *
+ * @bm:    bookmark to test if it matches
+ * @query: char array with tags to search for
+ * @qlen:  length of given query char array
+ *
+ * Return: true if the bookmark contained all tags
  */
 static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     unsigned int qlen)
 {
     unsigned int i, n, tlen;
 
-    if (!qlen || !bm->tags || !(tlen = g_strv_length(bm->tags))) {
+    if (!qlen) {
         return true;
+    }
+    /* don't use bookmarks without tags if tags are used to filter */
+    if (!bm->tags || !(tlen = g_strv_length(bm->tags))) {
+        return false;
     }
 
     /* iterate over all query parts */
