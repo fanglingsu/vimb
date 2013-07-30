@@ -1068,7 +1068,7 @@ int main(int argc, char *argv[])
     }
 
     if (ver) {
-        fprintf(stdout, "%s/%s (build %s %s)\n", PROJECT, VERSION, __DATE__, __TIME__);
+        fprintf(stdout, "%s/%s\n", PROJECT, FULL_VERSION);
         return EXIT_SUCCESS;
     }
     if (dump) {
