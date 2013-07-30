@@ -41,6 +41,9 @@
 #define WIN_WIDTH                  800
 #define WIN_HEIGHT                 600
 
+/* template to run shell command for vimb command :shellcmd */
+#define SHELL_CMD "/bin/sh -c '%s'"
+
 /* remove next line if the bookmark file fits to the new format "URL<tab>title of page<tab>tag1 tag2" */
 #define SHOW_ANNOUNCEMENT
 

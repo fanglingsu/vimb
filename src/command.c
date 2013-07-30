@@ -30,8 +30,6 @@
 #include "bookmark.h"
 #include "dom.h"
 
-#define SHELL_CMD "/bin/sh -c '%s'"
-
 typedef struct {
     char    *file;
     Element *element;
