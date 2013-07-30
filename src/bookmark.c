@@ -43,25 +43,14 @@ static void free_bookmark(Bookmark *bm);
  */
 gboolean bookmark_add(const char *uri, const char *title, const char *tags)
 {
-    FILE *f;
-
-    if ((f = fopen(vb.files[FILES_BOOKMARK], "a+"))) {
-        file_lock_set(fileno(f), F_WRLCK);
-
-        if (tags) {
-            fprintf(f, "%s\t%s\t%s\n", uri, title ? title : "", tags);
-        } else if (title) {
-            fprintf(f, "%s\t%s\n", uri, title);
-        } else {
-            fprintf(f, "%s\n", uri);
-        }
-
-        file_lock_set(fileno(f), F_UNLCK);
-        fclose(f);
-
-        return true;
+    const char *file = vb.files[FILES_BOOKMARK];
+    if (tags) {
+        return util_file_append(file, "%s\t%s\t%s\n", uri, title ? title : "", tags);
     }
-    return false;
+    if (title) {
+        return util_file_append(file, "%s\t%s\n", uri, title);
+    }
+    return util_file_append(file, "%s\n", uri);
 }
 
 gboolean bookmark_remove(const char *uri)
@@ -157,6 +146,43 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
     g_list_free_full(src, (GDestroyNotify)free_bookmark);
 
     return found;
+}
+
+/**
+ * Push a uri to the end of the queue.
+ *
+ * @uri: URI to put into the queue
+ */
+gboolean bookmark_queue_push(const char *uri)
+{
+    return util_file_append(vb.files[FILES_QUEUE], "%s\n", uri);
+}
+
+/**
+ * Retrieves the oldest entry from queue.
+ * Retruned uri must be freed with g_free.
+ */
+char *bookmark_queue_pop(void)
+{
+    int len, i;
+    char **lines, *uri = NULL;
+
+    lines = util_get_lines(vb.files[FILES_QUEUE]);
+    if (lines && (len = g_strv_length(lines))) {
+        GString *new = g_string_new(NULL);
+
+        uri = g_strdup(lines[0]);
+        /* don't process last empty line */
+        len -= 1; 
+        /* skip the first list that should be removed */
+        for (i = 1; i < len; i++) {
+            g_string_append_printf(new, "%s\n", lines[i]);
+        }
+        g_strfreev(lines);
+        g_file_set_contents(vb.files[FILES_QUEUE], new->str, -1, NULL);
+        g_string_free(new, true);
+    }
+    return uri;
 }
 
 static GList *load(const char *file)

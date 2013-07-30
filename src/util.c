@@ -154,6 +154,32 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     return gl;
 }
 
+/**
+ * Append new data to file.
+ *
+ * @file:   File to appen the data
+ * @format: Format string used to process va_list
+ */
+gboolean util_file_append(const char *file, const char *format, ...)
+{
+    va_list args;
+    FILE *f;
+
+    if ((f = fopen(file, "a+"))) {
+        file_lock_set(fileno(f), F_WRLCK);
+
+        va_start(args, format);
+        vfprintf(f, format, args);
+        va_end(args);
+
+        file_lock_set(fileno(f), F_UNLCK);
+        fclose(f);
+
+        return true;
+    }
+    return false;
+}
+
 char *util_strcasestr(const char *haystack, const char *needle)
 {
     unsigned char c1, c2;

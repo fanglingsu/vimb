@@ -121,6 +121,8 @@ static CommandInfo cmd_list[] = {
     {"descent!",                  NULL,    command_descent,              {1}},
     {"save",                      NULL,    command_save,                 {COMMAND_SAVE_CURRENT}},
     {"shellcmd",                  NULL,    command_shellcmd,             {0}},
+    {"push",                      NULL,    command_queue,                {COMMAND_QUEUE_PUSH}},
+    {"pop",                       NULL,    command_queue,                {COMMAND_QUEUE_POP}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -731,12 +733,12 @@ gboolean command_bookmark(const Arg *arg)
 
     if (!arg->i) {
         if (bookmark_remove(arg->s ? arg->s : GET_URI())) {
-            vb_echo_force(VB_MSG_NORMAL, false, "Bookmark removed");
+            vb_echo_force(VB_MSG_NORMAL, false, "  Bookmark removed");
 
             return true;
         }
     } else if (bookmark_add(GET_URI(), webkit_web_view_get_title(vb.gui.webview), arg->s)) {
-        vb_echo_force(VB_MSG_NORMAL, false, "Bookmark added");
+        vb_echo_force(VB_MSG_NORMAL, false, "  Bookmark added");
 
         return true;
     }
@@ -884,6 +886,31 @@ gboolean command_shellcmd(const Arg *arg)
 
     vb_echo(VB_MSG_ERROR, true, "[%d] %s", WEXITSTATUS(status), error);
     return false;
+}
+
+gboolean command_queue(const Arg *arg)
+{
+    gboolean res = false;
+    char *uri;
+
+    vb_set_mode(VB_MODE_NORMAL, false);
+
+    if (arg->i == COMMAND_QUEUE_PUSH) {
+        res = bookmark_queue_push(arg->s ? arg->s : GET_URI());
+        if (res) {
+            vb_echo(VB_MSG_NORMAL, false, "  Pushed to queue");
+        }
+        return res;
+    }
+
+    /* pop last added url from queue and open it */
+    if ((uri = bookmark_queue_pop())) {
+        res = vb_load_uri(&(Arg){VB_TARGET_CURRENT, uri});
+        g_free(uri);
+    } else {
+        vb_echo(VB_MSG_NORMAL, false, "  Queue is empty");
+    }
+    return res;
 }
 
 gboolean command_editor(const Arg *arg)

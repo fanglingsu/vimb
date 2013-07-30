@@ -210,6 +210,7 @@ typedef enum {
     FILES_COMMAND,
     FILES_SEARCH,
     FILES_BOOKMARK,
+    FILES_QUEUE,
     FILES_USER_STYLE,
     FILES_LAST
 } VbFile;

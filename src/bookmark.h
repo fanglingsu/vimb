@@ -23,5 +23,7 @@
 gboolean bookmark_add(const char *uri, const char *title, const char *tags);
 gboolean bookmark_remove(const char *uri);
 gboolean bookmark_fill_completion(GtkListStore *store, const char *input);
+gboolean bookmark_queue_push(const char *uri);
+char *bookmark_queue_pop(void);
 
 #endif /* end of include guard: _BOOKMARK_H */

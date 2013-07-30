@@ -75,20 +75,12 @@ void history_cleanup(void)
  */
 void history_add(HistoryType type, const char *value, const char *additional)
 {
-    FILE *f;
     const char *file = get_file_by_type(type);
 
-    if ((f = fopen(file, "a+"))) {
-        file_lock_set(fileno(f), F_WRLCK);
-        if (additional) {
-            fprintf(f, "%s\t%s\n", value, additional);
-        } else {
-            fprintf(f, "%s\n", value);
-        }
-
-        file_lock_set(fileno(f), F_UNLCK);
-        fclose(f);
+    if (additional) {
+        util_file_append(file, "%s\t%s\n", value, additional);
     }
+    util_file_append(file, "%s\n", value);
 }
 
 /**

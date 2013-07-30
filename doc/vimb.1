@@ -325,6 +325,17 @@ Save the current opened uri with \fITAGS\fP to the bookmark file.
 Removes all bookmarks for given \fIURI\fP or if not given the current opened
 page.
 
+.SS Queue
+The queue allows to mark URLs for later reding (something like a read it later
+list). This list is shared between the single instances of PROJECT.
+.TP
+.BI "push [" URI ]
+Push \fIURI\fP or if not given current URI into the queue.
+.TP
+.B pop
+Open the oldest queue entry in current browser window and remove it from the
+queue.
+
 .SS Misc
 .TP
 .B next, n, prev, p
@@ -652,6 +663,10 @@ box.
 .I $XDG_CONFIG_HOME/PROJECT/bookmark
 .RS
 Holds the bookmarks saved with command `bookmark-add'.
+.RE
+.I $XDG_CONFIG_HOME/PROJECT/queue
+.RS
+Holds the read it later queue filled by `hint-push' or `push'.
 .RE
 .I $XDG_CONFIG_HOME/PROJECT/scripts.js
 .RS

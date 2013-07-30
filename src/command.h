@@ -44,6 +44,11 @@ enum {
     COMMAND_SAVE_URI
 };
 
+enum {
+    COMMAND_QUEUE_PUSH,
+    COMMAND_QUEUE_POP
+};
+
 typedef gboolean (*Command)(const Arg *arg);
 
 void command_init(void);
@@ -81,5 +86,6 @@ gboolean command_nextprev(const Arg *arg);
 gboolean command_descent(const Arg *arg);
 gboolean command_save(const Arg *arg);
 gboolean command_shellcmd(const Arg *arg);
+gboolean command_queue(const Arg *arg);
 
 #endif /* end of include guard: _COMMAND_H */
