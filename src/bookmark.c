@@ -161,9 +161,11 @@ gboolean bookmark_queue_push(const char *uri)
 
 /**
  * Retrieves the oldest entry from queue.
+ *
+ * @item_count: will be filled with the number of remaining items in queue.
  * Retruned uri must be freed with g_free.
  */
-char *bookmark_queue_pop(void)
+char *bookmark_queue_pop(int *item_count)
 {
     int len, i;
     char **lines, *uri = NULL;
@@ -182,6 +184,10 @@ char *bookmark_queue_pop(void)
         g_strfreev(lines);
         g_file_set_contents(vb.files[FILES_QUEUE], new->str, -1, NULL);
         g_string_free(new, true);
+
+        *item_count = len - 1;
+    } else {
+        *item_count = 0;
     }
     return uri;
 }

@@ -890,7 +890,7 @@ gboolean command_shellcmd(const Arg *arg)
     g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, &out, &error, &status, NULL);
     g_strfreev(argv);
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-        vb_echo(VB_MSG_NORMAL, true, "  %s", out);
+        vb_echo(VB_MSG_NORMAL, true, "%s", out);
         return true;
     }
 
@@ -902,6 +902,7 @@ gboolean command_shellcmd(const Arg *arg)
 gboolean command_queue(const Arg *arg)
 {
     gboolean res = false;
+    int count = 0;
     char *uri;
 
     vb_set_mode(VB_MODE_NORMAL, false);
@@ -909,18 +910,18 @@ gboolean command_queue(const Arg *arg)
     if (arg->i == COMMAND_QUEUE_PUSH) {
         res = bookmark_queue_push(arg->s ? arg->s : GET_URI());
         if (res) {
-            vb_echo(VB_MSG_NORMAL, false, "  Pushed to queue");
+            vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
         }
         return res;
     }
 
     /* pop last added url from queue and open it */
-    if ((uri = bookmark_queue_pop())) {
+    if ((uri = bookmark_queue_pop(&count))) {
         res = vb_load_uri(&(Arg){VB_TARGET_CURRENT, uri});
         g_free(uri);
-    } else {
-        vb_echo(VB_MSG_NORMAL, false, "  Queue is empty");
     }
+    vb_echo(VB_MSG_NORMAL, false, "Queue length %d", count);
+
     return res;
 }
 #endif
