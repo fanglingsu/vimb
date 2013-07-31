@@ -79,8 +79,9 @@ void history_add(HistoryType type, const char *value, const char *additional)
 
     if (additional) {
         util_file_append(file, "%s\t%s\n", value, additional);
+    } else {
+        util_file_append(file, "%s\n", value);
     }
-    util_file_append(file, "%s\n", value);
 }
 
 /**
