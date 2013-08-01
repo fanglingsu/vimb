@@ -26,6 +26,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input);
 #ifdef FEATURE_QUEUE
 gboolean bookmark_queue_push(const char *uri);
 char *bookmark_queue_pop(int *item_count);
+gboolean bookmark_queue_clear(void);
 #endif
 
 #endif /* end of include guard: _BOOKMARK_H */

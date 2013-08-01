@@ -127,6 +127,7 @@ static CommandInfo cmd_list[] = {
 #ifdef FEATURE_QUEUE
     {"queue-push",                NULL,    command_queue,                {COMMAND_QUEUE_PUSH}},
     {"queue-pop",                 NULL,    command_queue,                {COMMAND_QUEUE_POP}},
+    {"queue-clear",               NULL,    command_queue,                {COMMAND_QUEUE_CLEAR}},
 #endif
 };
 
@@ -907,20 +908,28 @@ gboolean command_queue(const Arg *arg)
 
     vb_set_mode(VB_MODE_NORMAL, false);
 
-    if (arg->i == COMMAND_QUEUE_PUSH) {
-        res = bookmark_queue_push(arg->s ? arg->s : GET_URI());
-        if (res) {
-            vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
-        }
-        return res;
-    }
+    switch (arg->i) {
+        case COMMAND_QUEUE_PUSH:
+            res = bookmark_queue_push(arg->s ? arg->s : GET_URI());
+            if (res) {
+                vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
+            }
+            break;
 
-    /* pop last added url from queue and open it */
-    if ((uri = bookmark_queue_pop(&count))) {
-        res = vb_load_uri(&(Arg){VB_TARGET_CURRENT, uri});
-        g_free(uri);
+        case COMMAND_QUEUE_POP:
+            if ((uri = bookmark_queue_pop(&count))) {
+                res = vb_load_uri(&(Arg){VB_TARGET_CURRENT, uri});
+                g_free(uri);
+            }
+            vb_echo(VB_MSG_NORMAL, false, "Queue length %d", count);
+            break;
+
+        case COMMAND_QUEUE_CLEAR:
+            if (bookmark_queue_clear()) {
+                vb_echo(VB_MSG_NORMAL, false, "Queue cleared");
+            }
+            break;
     }
-    vb_echo(VB_MSG_NORMAL, false, "Queue length %d", count);
 
     return res;
 }

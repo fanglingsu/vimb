@@ -192,6 +192,19 @@ char *bookmark_queue_pop(int *item_count)
     }
     return uri;
 }
+
+/**
+ * Removes all contents from the queue file.
+ */
+gboolean bookmark_queue_clear(void)
+{
+    FILE *f;
+    if ((f = fopen(vb.files[FILES_QUEUE], "w"))) {
+        fclose(f);
+        return true;
+    }
+    return false;
+}
 #endif /* FEATURE_QUEUE */
 
 static GList *load(const char *file)

@@ -47,7 +47,8 @@ enum {
 #ifdef FEATURE_QUEUE
 enum {
     COMMAND_QUEUE_PUSH,
-    COMMAND_QUEUE_POP
+    COMMAND_QUEUE_POP,
+    COMMAND_QUEUE_CLEAR
 };
 #endif
 
