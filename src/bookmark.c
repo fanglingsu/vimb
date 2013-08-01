@@ -106,6 +106,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
     Bookmark *bm;
 
     src = load(vb.files[FILES_BOOKMARK]);
+    src = g_list_reverse(src);
     if (!input || *input == '\0') {
         /* without any tags return all bookmarked items */
         for (GList *l = src; l; l = l->next) {

@@ -82,7 +82,7 @@ gboolean completion_complete(gboolean back)
         if (suffix && *suffix == TAG_INDICATOR) {
             res = bookmark_fill_completion(store, suffix + 1);
         } else {
-            res  = history_fill_completion(store, HISTORY_URL, suffix);
+            res = history_fill_completion(store, HISTORY_URL, suffix);
         }
         sort = false;
     } else if (type == VB_INPUT_COMMAND) {
