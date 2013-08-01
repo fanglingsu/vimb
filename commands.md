@@ -276,6 +276,9 @@ queue-push [URI]
 queue-pop
 : Open the oldest queue entry in current browser window and remove it from the queue.
 
+queue-clear
+: Removes all entries from queue.
+
 ## misc
 next, n
 prev, p
