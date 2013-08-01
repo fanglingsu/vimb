@@ -174,7 +174,7 @@ hint-editor [QUERY]
 hint-save [QUERY]
 : Start hinting to download hinted links into configured download directory.
 
-hint-push [QUERY]
+hint-queue-push [QUERY]
 : Start hinting to push hinted URI into the read it later queue. If vimb hab
   been compiled with QUEUE feature.
 
@@ -270,10 +270,10 @@ The queue allows to mark URLs for later reding (something like a read it later
 list). This list is shared between the single instances of vimb. Only available
 if vimb has been compiled with QUEUE feature.
 
-push [URI]
+queue-push [URI]
 : Push URI or if not given current URI into the queue.
 
-pop
+queue-pop
 : Open the oldest queue entry in current browser window and remove it from the queue.
 
 ## misc
