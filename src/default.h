@@ -68,8 +68,8 @@ static char *default_config[] = {
     "nmap ;e=hint-editor",
     "nmap ;s=hint-save",
 #ifdef FEATURE_QUEUE
-    "nmap ;p=hint-push",
-    "nmap <ctrl-p>=pop",
+    "nmap ;p=hint-queue-push",
+    "nmap <ctrl-p>=queue-pop",
 #endif
     "nmap y=yank-uri",
     "nmap Y=yank-selection",

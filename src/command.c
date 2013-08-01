@@ -95,7 +95,7 @@ static CommandInfo cmd_list[] = {
     {"hint-editor",               NULL,    command_hints,                {HINTS_TYPE_EDITABLE}},
     {"hint-save",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE}},
 #ifdef FEATURE_QUEUE
-    {"hint-push",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_PUSH}},
+    {"hint-queue-push",           NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_PUSH}},
 #endif
     {"yank-uri",                  "yu",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",            "ys",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},
@@ -125,8 +125,8 @@ static CommandInfo cmd_list[] = {
     {"save",                      NULL,    command_save,                 {COMMAND_SAVE_CURRENT}},
     {"shellcmd",                  NULL,    command_shellcmd,             {0}},
 #ifdef FEATURE_QUEUE
-    {"push",                      NULL,    command_queue,                {COMMAND_QUEUE_PUSH}},
-    {"pop",                       NULL,    command_queue,                {COMMAND_QUEUE_POP}},
+    {"queue-push",                NULL,    command_queue,                {COMMAND_QUEUE_PUSH}},
+    {"queue-pop",                 NULL,    command_queue,                {COMMAND_QUEUE_POP}},
 #endif
 };
 
