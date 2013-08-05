@@ -161,6 +161,16 @@ gboolean bookmark_queue_push(const char *uri)
 }
 
 /**
+ * Push a uri to the bginning of the queue.
+ *
+ * @uri: URI to put into the queue
+ */
+gboolean bookmark_queue_unshift(const char *uri)
+{
+    return util_file_prepend(vb.files[FILES_QUEUE], "%s\n", uri);
+}
+
+/**
  * Retrieves the oldest entry from queue.
  *
  * @item_count: will be filled with the number of remaining items in queue.

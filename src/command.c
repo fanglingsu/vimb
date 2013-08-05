@@ -126,6 +126,7 @@ static CommandInfo cmd_list[] = {
     {"shellcmd",                  NULL,    command_shellcmd,             {0}},
 #ifdef FEATURE_QUEUE
     {"queue-push",                NULL,    command_queue,                {COMMAND_QUEUE_PUSH}},
+    {"queue-unshift",             NULL,    command_queue,                {COMMAND_QUEUE_UNSHIFT}},
     {"queue-pop",                 NULL,    command_queue,                {COMMAND_QUEUE_POP}},
     {"queue-clear",               NULL,    command_queue,                {COMMAND_QUEUE_CLEAR}},
 #endif
@@ -911,6 +912,13 @@ gboolean command_queue(const Arg *arg)
     switch (arg->i) {
         case COMMAND_QUEUE_PUSH:
             res = bookmark_queue_push(arg->s ? arg->s : GET_URI());
+            if (res) {
+                vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
+            }
+            break;
+
+        case COMMAND_QUEUE_UNSHIFT:
+            res = bookmark_queue_unshift(arg->s ? arg->s : GET_URI());
             if (res) {
                 vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
             }

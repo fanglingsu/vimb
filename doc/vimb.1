@@ -335,8 +335,10 @@ list). This list is shared between the single instances of PROJECT. Only
 available if PROJECT has been compiled with QUEUE feature.
 .TP
 .BI "queue-push [" URI ]
-Push \fIURI\fP or if not given
-current URI into the queue.
+Push \fIURI\fP or if not given current URI to the end of the queue.
+.TP
+.BI "queue-unshift [" URI ]
+Push \fIURI\fP or if not given current URI to the beginning of the queue.
 .TP
 .B queue-pop
 Open the oldest queue entry in current browser window and remove it from the

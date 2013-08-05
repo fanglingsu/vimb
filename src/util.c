@@ -180,6 +180,41 @@ gboolean util_file_append(const char *file, const char *format, ...)
     return false;
 }
 
+/**
+ * Prepend new data to file.
+ *
+ * @file:   File to prepend the data
+ * @format: Format string used to process va_list
+ */
+gboolean util_file_prepend(const char *file, const char *format, ...)
+{
+    gboolean res = false;
+    va_list args;
+    char *content;
+    FILE *f;
+
+    content = util_get_file_contents(file, NULL);
+    if ((f = fopen(file, "w"))) {
+        file_lock_set(fileno(f), F_WRLCK);
+
+        va_start(args, format);
+        /* write new content to the file */
+        vfprintf(f, format, args);
+        va_end(args);
+
+        /* append previous file content */
+        fputs(content, f);
+
+        file_lock_set(fileno(f), F_UNLCK);
+        fclose(f);
+
+        res = true;
+    }
+    g_free(content);
+
+    return res;
+}
+
 char *util_strcasestr(const char *haystack, const char *needle)
 {
     unsigned char c1, c2;

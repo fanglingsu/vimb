@@ -35,6 +35,7 @@ char** util_get_lines(const char* filename);
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     GCompareFunc unique_func, GDestroyNotify free_func, unsigned int max_items);
 gboolean util_file_append(const char *file, const char *format, ...);
+gboolean util_file_prepend(const char *file, const char *format, ...);
 char* util_strcasestr(const char* haystack, const char* needle);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 gboolean util_create_tmp_file(const char *content, char **file);
