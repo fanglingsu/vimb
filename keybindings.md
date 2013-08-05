@@ -228,6 +228,9 @@ g-f
 g-F
 : Opend the Web Inspector for current page.
 
+ctrl-z
+: Switch vimb into pass-through mode.
+
 ### command/hint mode
 
 tab

@@ -314,6 +314,12 @@ run [COMMAND LIST]
 
   Example: `:run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown`
 
+pass-through
+: Switches vimb into pass-through mode. In pass-through mode only the
+  `<ctrl-c>` and `<esc>` keybindings are interpreted by vimb, all other
+  keystrokes are given to the webview to handle them. This allows to use
+  websites that uses keybindings itself, that might be swallowed by vimb else.
+
 shellcmd CMD
 : Runs given shell CMD syncron and print the output into inputbox. The CMD can
   contain multiple `%` chars that are expanded to the current opened uri.
