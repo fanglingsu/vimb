@@ -318,6 +318,8 @@ gboolean command_input(const Arg *arg)
 {
     const char *url;
 
+    vb_set_mode(VB_MODE_COMMAND, false);
+
     /* add current url if requested */
     if (VB_INPUT_CURRENT_URI == arg->i && (url = GET_URI())) {
         /* append the current url to the input message */
@@ -327,8 +329,6 @@ gboolean command_input(const Arg *arg)
     } else {
         vb_echo_force(VB_MSG_NORMAL, false, "%s", arg->s);
     }
-
-    vb_set_mode(VB_MODE_COMMAND, false);
 
     return true;
 }
