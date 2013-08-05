@@ -254,6 +254,7 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
         return true;
     }
+
     /* allow mode keys and counts only in normal mode and search mode */
     if (vb.state.mode & (VB_MODE_NORMAL|VB_MODE_SEARCH)) {
         if (vb.state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)
@@ -264,7 +265,10 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
             return true;
         }
-        if (strchr(modkeys->str, keyval) && vb.state.modkey != keyval) {
+        /* modekeys don't have ctrl or mod modiefiers set */
+        if (!CLEAN_STATE(event)
+            && strchr(modkeys->str, keyval) && vb.state.modkey != keyval
+        ) {
             vb.state.modkey = (char)keyval;
             vb_update_statusbar();
 
