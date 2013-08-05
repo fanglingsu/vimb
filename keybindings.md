@@ -175,7 +175,11 @@ F
 
 ;-p
 : If vimb has been compiled with QUEUE feature. Start hinting to push hinted
-  URI into queue.
+  URI to end of the queue.
+
+;-P
+: If vimb has been compiled with QUEUE feature. Start hinting to push hinted
+  URI to beginning of the queue.
 
 ---
 

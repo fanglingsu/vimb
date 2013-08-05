@@ -175,8 +175,12 @@ hint-save [QUERY]
 : Start hinting to download hinted links into configured download directory.
 
 hint-queue-push [QUERY]
-: Start hinting to push hinted URI into the read it later queue. If vimb hab
-  been compiled with QUEUE feature.
+: Start hinting to push hinted URI to end of the read it later queue. If vimb
+  has been compiled with QUEUE feature.
+
+hint-queue-unshift [QUERY]
+: Start hinting to push hinted URI to the beginning of the read it later
+  queue. If vimb has been compiled with QUEUE feature.
 
 next, n
 prev, p
@@ -271,7 +275,10 @@ list). This list is shared between the single instances of vimb. Only available
 if vimb has been compiled with QUEUE feature.
 
 queue-push [URI]
-: Push URI or if not given current URI into the queue.
+: Push URI or if not given current URI to end of the queue.
+
+queue-unshift [URI]
+: Push URI or if not given current URI to beginning of the queue.
 
 queue-pop
 : Open the oldest queue entry in current browser window and remove it from the queue.
