@@ -25,17 +25,18 @@
 #define HINTS_GET_TYPE(n) ((n) & (HINTS_TYPE_LINK | HINTS_TYPE_IMAGE))
 
 enum {
-    HINTS_TYPE_LINK     = 1,
-    HINTS_TYPE_IMAGE    = 2,
-    HINTS_TYPE_EDITABLE = 3,
-    HINTS_PROCESS_INPUT = (1 << 2),
-    HINTS_PROCESS_YANK  = (1 << 3),
-    HINTS_PROCESS_OPEN  = (1 << 4),
-    HINTS_PROCESS_SAVE  = (1 << 5),
+    HINTS_TYPE_LINK       = 1,
+    HINTS_TYPE_IMAGE      = 2,
+    HINTS_TYPE_EDITABLE   = 3,
+    HINTS_PROCESS_INPUT   = (1 << 2),
+    HINTS_PROCESS_YANK    = (1 << 3),
+    HINTS_PROCESS_OPEN    = (1 << 4),
+    HINTS_PROCESS_SAVE    = (1 << 5),
     /* additional flag for HINTS_PROCESS_OPEN */
-    HINTS_OPEN_NEW      = (1 << 6),
+    HINTS_OPEN_NEW        = (1 << 6),
 #ifdef FEATURE_QUEUE
-    HINTS_PROCESS_PUSH  = (1 << 7),
+    HINTS_PROCESS_PUSH    = (1 << 7),
+    HINTS_PROCESS_UNSHIFT = (1 << 8),
 #endif
 };
 

@@ -240,8 +240,12 @@ Start hinting to open inputboxes or textareas with external editor.
 Start hinting to download hinted links into configured download directory.
 .TP
 .BI "hint-queue-push [" QUERY "]"
-Start hinting to push hinted URI into the read it later queue. If PROJECT hab
+Start hinting to push hinted URI into the read it later queue. If PROJECT has
 been compiled with QUEUE feature.
+.TP
+.BI "hint-queue-unshift [" QUERY "]"
+Start hinting to push hinted URI to begin of read it later queue. If PROJECT
+has been compiled with QUEUE feature.
 
 .SS Yank
 .TP
@@ -595,6 +599,10 @@ Start hinting to download the linkes resource.
 .B ;\-p
 If PROJECT has been compiled with QUEUE feature. Start hinting to push hinted
 URI into queue.
+.TP
+.B ;\-P
+If PROJECT has been compiled with QUEUE feature. Start hinting to push hinted
+URI to the beginning of the queu.
 .TP
 .B y
 Yank the URI or current page into clipboard.

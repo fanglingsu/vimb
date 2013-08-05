@@ -96,6 +96,7 @@ static CommandInfo cmd_list[] = {
     {"hint-save",                 NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_SAVE}},
 #ifdef FEATURE_QUEUE
     {"hint-queue-push",           NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_PUSH}},
+    {"hint-queue-unshift",        NULL,    command_hints,                {HINTS_TYPE_LINK | HINTS_PROCESS_UNSHIFT}},
 #endif
     {"yank-uri",                  "yu",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_URI}},
     {"yank-selection",            "ys",    command_yank,                 {VB_CLIPBOARD_PRIMARY | VB_CLIPBOARD_SECONDARY | COMMAND_YANK_SELECTION}},

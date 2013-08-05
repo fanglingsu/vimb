@@ -175,6 +175,10 @@ static void run_script(char *js)
             a.s = v;
             a.i = COMMAND_QUEUE_PUSH;
             command_queue(&a);
+        } else if (mode & HINTS_PROCESS_UNSHIFT) {
+            a.s = v;
+            a.i = COMMAND_QUEUE_UNSHIFT;
+            command_queue(&a);
         }
 #endif
         else {
