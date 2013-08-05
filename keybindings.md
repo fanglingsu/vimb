@@ -91,10 +91,10 @@ ctrl-q
 [N]ctrl-i
 : Go forward N steps in the browser history.
 
-[N]gu
+[N]g-u
 : Go to the Nth descendent directory of the current one.
 
-gU
+g-U
 : Go to the domain of the current opened URL.
 
 r
@@ -227,6 +227,10 @@ g-f
 
 g-F
 : Opend the Web Inspector for current page.
+
+g-i
+: Set cursor to the first editable element in the page and switch to insert
+  mode.
 
 ctrl-z
 : Switch vimb into pass-through mode.

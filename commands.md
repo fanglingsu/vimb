@@ -342,6 +342,10 @@ inspect
 : Toggles the webinspector for current page. This is only available if the
   config `webinspector` is enabled.
 
+focus-input
+: Set the cursor to the first found editable element on the page and switch
+  vimb into insert mode.
+
 quit, q
 : Close the browser.
 
