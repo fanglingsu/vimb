@@ -83,6 +83,7 @@ static char *default_config[] = {
     "nmap zz=zoomreset",
     "nmap gu=descent",
     "nmap gU=descent!",
+    "nmap <ctrl-z>=pass-through",
     "cmap <tab>=next",
     "cmap <shift-tab>=prev",
     "cmap <up>=hist-prev",

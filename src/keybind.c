@@ -255,6 +255,11 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
         return true;
     }
 
+    /* skip further logic if we are in pass through mode */
+    if (vb.state.mode & VB_MODE_PASSTHROUGH) {
+        return true;
+    }
+
     /* allow mode keys and counts only in normal mode and search mode */
     if (vb.state.mode & (VB_MODE_NORMAL|VB_MODE_SEARCH)) {
         if (vb.state.modkey == 0 && ((keyval >= GDK_1 && keyval <= GDK_9)

@@ -48,6 +48,12 @@ Used for editing text elements in a webpage.
 .TP
 .B Command Mode
 Execute PROJECT commands from the builtin inputbox (commandline).
+.TP
+.B Pass-Through Mode
+In Pass-Through mode only the <ctrl-c> and <esc> keybindings are interpreted
+by PROJECT, all other keystrokes are given to the webview to handle them. This
+allows to use websites that uses keybindings itself, that might be swallowed
+by PROJECT else.
 
 .SH COMMANDS
 Commands are a central part in PROJECT. They are used for nearly all things
@@ -369,6 +375,11 @@ Format:
 
 Example:
 ":run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown"
+
+.TP
+.B pass-through
+Switch PROJECT into pass-trough mode.
+
 .TP
 .BI "shellcmd " CMD
 Runs given shell \fICMD\fP syncron and print the output into inputbox. The
@@ -636,6 +647,9 @@ Search for \fIN\fPnth next search result.
 .TP
 .BI [ N ]N
 Search for \fIN\fPnth previous search result.
+.TP
+.B ctrl-z
+Switch PROJECT into pass-through mode.
 
 .SS COMMAND_MODE
 .TP

@@ -232,6 +232,12 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
                 gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
                 vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
                 break;
+
+            case VB_MODE_PASSTHROUGH:
+                clean = false;
+                gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
+                vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
+                break;
         }
         vb.state.mode = mode;
     }

@@ -131,6 +131,7 @@ static CommandInfo cmd_list[] = {
     {"queue-pop",                 NULL,    command_queue,                {COMMAND_QUEUE_POP}},
     {"queue-clear",               NULL,    command_queue,                {COMMAND_QUEUE_CLEAR}},
 #endif
+    {"pass-through",              NULL,    command_mode,                 {VB_MODE_PASSTHROUGH}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -943,6 +944,11 @@ gboolean command_queue(const Arg *arg)
     return res;
 }
 #endif
+
+gboolean command_mode(const Arg *arg)
+{
+    return vb_set_mode(arg->i, false);
+}
 
 gboolean command_editor(const Arg *arg)
 {

@@ -116,10 +116,11 @@ typedef enum _vb_mode {
     VB_MODE_NORMAL        = 1<<0,
     VB_MODE_COMMAND       = 1<<1,
     VB_MODE_INSERT        = 1<<2,
+    VB_MODE_PASSTHROUGH   = 1<<3,
     /* sub modes */
-    VB_MODE_SEARCH        = 1<<3, /* normal mode */
-    VB_MODE_COMPLETE      = 1<<4, /* command mode */
-    VB_MODE_HINTING       = 1<<5, /* command mode */
+    VB_MODE_SEARCH        = 1<<4, /* normal mode */
+    VB_MODE_COMPLETE      = 1<<5, /* command mode */
+    VB_MODE_HINTING       = 1<<6, /* command mode */
 } Mode;
 
 typedef enum {
