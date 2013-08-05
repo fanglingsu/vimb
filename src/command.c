@@ -132,6 +132,7 @@ static CommandInfo cmd_list[] = {
     {"queue-clear",               NULL,    command_queue,                {COMMAND_QUEUE_CLEAR}},
 #endif
     {"pass-through",              NULL,    command_mode,                 {VB_MODE_PASSTHROUGH}},
+    {"focus-input",               NULL,    command_focusinput,           {0}},
 };
 
 static void editor_resume(GPid pid, int status, OpenEditorData *data);
@@ -948,6 +949,16 @@ gboolean command_queue(const Arg *arg)
 gboolean command_mode(const Arg *arg)
 {
     return vb_set_mode(arg->i, false);
+}
+
+gboolean command_focusinput(const Arg *arg)
+{
+    if (dom_focus_input(vb.gui.webview)) {
+        vb_set_mode(VB_MODE_INSERT, false);
+
+        return true;
+    }
+    return false;
 }
 
 gboolean command_editor(const Arg *arg)

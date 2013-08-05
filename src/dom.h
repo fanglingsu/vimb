@@ -44,6 +44,7 @@ typedef struct {
 
 void dom_check_auto_insert(WebKitWebView *view);
 void dom_clear_focus(WebKitWebView *view);
+gboolean dom_focus_input(WebKitWebView *view);
 gboolean dom_is_editable(Element *element);
 Element *dom_get_active_element(WebKitWebView *view);
 const char *dom_editable_element_get_value(Element *element);

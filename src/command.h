@@ -94,5 +94,6 @@ gboolean command_shellcmd(const Arg *arg);
 gboolean command_queue(const Arg *arg);
 #endif
 gboolean command_mode(const Arg *arg);
+gboolean command_focusinput(const Arg *arg);
 
 #endif /* end of include guard: _COMMAND_H */

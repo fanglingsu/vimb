@@ -58,6 +58,33 @@ void dom_clear_focus(WebKitWebView *view)
 }
 
 /**
+ * Set focus to the first found editable element and returns if a element was
+ * found to focus.
+ */
+gboolean dom_focus_input(WebKitWebView *view)
+{
+    gboolean found = false;
+    gulong count;
+    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(view);
+    WebKitDOMNodeList *elems = webkit_dom_document_get_elements_by_tag_name(doc, "*");
+    Element *elem;
+
+    count = webkit_dom_node_list_get_length(elems);
+    for (int i = 0; i < count; i++) {
+        elem = WEBKIT_DOM_ELEMENT(webkit_dom_node_list_item(elems, i));
+
+        if (dom_is_editable(elem)) {
+            webkit_dom_element_focus(elem);
+            found = true;
+            break;
+        }
+    }
+    g_object_unref(elems);
+
+    return found;
+}
+
+/**
  * Indicates if the given dom element is an editable element like text input,
  * password or textarea.
  */

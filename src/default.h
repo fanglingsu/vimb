@@ -84,6 +84,7 @@ static char *default_config[] = {
     "nmap gu=descent",
     "nmap gU=descent!",
     "nmap <ctrl-z>=pass-through",
+    "nmap gi=focus-input",
     "cmap <tab>=next",
     "cmap <shift-tab>=prev",
     "cmap <up>=hist-prev",
