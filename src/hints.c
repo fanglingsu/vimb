@@ -147,7 +147,7 @@ static void run_script(char *js)
             vb.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
         );
     } else if (!strncmp(value, "DONE:", 5)) {
-        vb_set_mode(VB_MODE_NORMAL, false);
+        vb_set_mode(VB_MODE_NORMAL, true);
     } else if (!strncmp(value, "INSERT:", 7)) {
         vb_set_mode(VB_MODE_INSERT, false);
         if (HINTS_GET_TYPE(mode) == HINTS_TYPE_EDITABLE) {
