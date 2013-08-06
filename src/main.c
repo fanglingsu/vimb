@@ -207,7 +207,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             command_search(&((Arg){VB_SEARCH_OFF}));
         } else if ((vb.state.mode & VB_MODE_HINTING) && !(mode & VB_MODE_HINTING)) {
             hints_clear();
-        } else if (CLEAN_MODE(vb.state.mode) == VB_MODE_INSERT && !(mode & VB_MODE_INSERT)) {
+        } else if (CLEAN_MODE(vb.state.mode) == VB_MODE_INPUT && !(mode & VB_MODE_INPUT)) {
             clean = true;
             dom_clear_focus(vb.gui.webview);
         }
@@ -227,7 +227,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
                 gtk_widget_grab_focus(GTK_WIDGET(vb.gui.inputbox));
                 break;
 
-            case VB_MODE_INSERT:
+            case VB_MODE_INPUT:
                 clean = false;
                 gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
                 if (mode & VB_MODE_PASSTHROUGH) {
@@ -456,7 +456,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 run_user_script(frame);
             }
 
-            if (vb.state.mode & VB_MODE_INSERT) {
+            if (vb.state.mode & VB_MODE_INPUT) {
                 /* status bar is updated by vb_set_mode */
                 vb_set_mode(VB_MODE_NORMAL, false);
             } else {
@@ -887,7 +887,7 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
 
     g_object_get(result, "context", &context, NULL);
     if (mode == VB_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-        vb_set_mode(VB_MODE_INSERT, false);
+        vb_set_mode(VB_MODE_INPUT, false);
 
         propagate = true;
     }

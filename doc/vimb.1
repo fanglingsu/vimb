@@ -43,11 +43,13 @@ PROJECT is modal an has following main modes:
 .B Normal Mode
 The default mode. Pressing Escape always enter normal mode.
 .TP
-.B Insert Mode
+.B Input Mode
 Used for editing text elements in a webpage.
 .TP
 .B Command Mode
 Execute PROJECT commands from the builtin inputbox (commandline).
+
+.SS Submodes
 .TP
 .B Pass-Through Mode
 In Pass-Through mode only the <ctrl-c> and <esc> keybindings are interpreted
@@ -61,7 +63,7 @@ that could be done with this browser. Commands allow to set config variables,
 to assign keybindings and much more. Also the keybindings are only shortcut
 for the commands itself.
 
-Commands can be called in Insert Mode from the inputbox in the way like
+Commands can be called in Input Mode from the inputbox in the way like
 ":[count]command[ param[=value]]". But some commands are not available in
 Command Mode and therefore not callable directly. To use them too, they must be
 bound to the keybinding.
@@ -89,7 +91,7 @@ the browser with various prefilled content.
 .BI "input [" TEXT "], in [" TEXT ]
 Writes
 .I TEXT
-into to inputbox and switch to command mode. If no
+into to inputbox and switch to Command Mode. If no
 .I TEXT
 is given, print ':' into the inputbox.
 .TP
@@ -378,7 +380,7 @@ Example:
 
 .TP
 .B pass-through
-Switch PROJECT into pass-trough mode.
+Switch PROJECT into Pass-Through Mode.
 
 .TP
 .BI "shellcmd " CMD
@@ -411,7 +413,7 @@ Close the browser.
 .TP
 .B focus-input
 Set the cursor to the first found editable element on the page and switch
-PROJECT into insert mode.
+PROJECT into Input Mode.
 .TP
 .B source
 Toggle between normal view and source view for the current page.
@@ -471,9 +473,9 @@ Example:
 "25G" to got to 25% of the page.
 .TP
 .B esc
-Got back to normal mode indipendent from current mode.
+Got back to Normal Mode indipendent from current mode.
 
-.SS NORMAL_MODE
+.SS NORMAL MODE
 .TP
 .B g\-f
 Toggle show html source of current page.
@@ -482,17 +484,17 @@ Toggle show html source of current page.
 Opend the Web Inspector for current page.
 .TP
 .B g\-i
-Set cursor to the first editable element in the page and switch to insert
-mode.
+Set cursor to the first editable element in the page and switch to Input
+Mode.
 .TP
 .B :
-Start command mode and print `:' to the input box.
+Start Command Mode and print `:' to the input box.
 .TP
 .B /
-Start command mode and print `/' to inputbox to start searching forward.
+Start Command Mode and print `/' to inputbox to start searching forward.
 .TP
 .B ?
-Start command mode and print `?' to inputbox to start searching backward.
+Start Command Mode and print `?' to inputbox to start searching backward.
 .TP
 .B *
 Search forward for current selected text.
@@ -501,16 +503,16 @@ Search forward for current selected text.
 Search backward for current selected text.
 .TP
 .B o
-Start command mode and print `:open ' to input box.
+Start Command Mode and print `:open ' to input box.
 .TP
 .B O
-Start command mode and print `:open CURRENT_URI' to input box.
+Start Command Mode and print `:open CURRENT_URI' to input box.
 .TP
 .B t
-Start command mode and print `:tabopen ' to input box.
+Start Command Mode and print `:tabopen ' to input box.
 .TP
 .B T
-Start command mode and print `:tabopen CURRENT_URI' to input box.
+Start Command Mode and print `:tabopen CURRENT_URI' to input box.
 .TP
 .B g\-h
 Opend the configured home-page.
@@ -657,9 +659,9 @@ Search for \fIN\fPnth next search result.
 Search for \fIN\fPnth previous search result.
 .TP
 .B ctrl\-z
-Switch PROJECT into pass-through mode.
+Switch PROJECT into Pass-Through Mode.
 
-.SS COMMAND_MODE
+.SS COMMAND MODE
 .TP
 .B tab
 Complete different sources in the inputbox or if hinting is active, focus next
@@ -675,15 +677,15 @@ Step through history backward.
 .B down
 Step through history forward.
 
-.SS INSERT_MODE
+.SS INPUT MODE
 .TP
-.B ctrl-t
+.B ctrl\-t
 If the current active form element is an inputbox or textarea, the content is
 copied to temporary file and the file openen with the configured external
 editor (setting `editor-command').
 .TP
 .B ctrl\-z
-Switch PROJECT into pass-through mode.
+Switch PROJECT into Pass-Through Mode.
 
 .SH FILES
 .I $XDG_CONFIG_HOME/PROJECT/config

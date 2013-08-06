@@ -79,8 +79,7 @@ gboolean dom_focus_input(WebKitWebView *view)
         return false;
     }
 
-    html = webkit_dom_node_list_item(list, 0);
-
+    html     = webkit_dom_node_list_item(list, 0);
     resolver = webkit_dom_document_create_ns_resolver(doc, html);
     if (!resolver) {
         return false;
@@ -195,7 +194,7 @@ static gboolean element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* el
 static gboolean auto_insert(Element *element)
 {
     if (dom_is_editable(element)) {
-        vb_set_mode(VB_MODE_INSERT, false);
+        vb_set_mode(VB_MODE_INPUT, false);
         return true;
     }
     return false;
@@ -206,7 +205,7 @@ static gboolean editable_focus_cb(Element *element, Event *event)
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), false
     );
-    if (CLEAN_MODE(vb.state.mode) != VB_MODE_INSERT) {
+    if (CLEAN_MODE(vb.state.mode) != VB_MODE_INPUT) {
         EventTarget *target = webkit_dom_event_get_target(event);
         auto_insert((void*)target);
     }

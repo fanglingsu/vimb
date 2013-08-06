@@ -78,10 +78,10 @@ static CommandInfo cmd_list[] = {
     {"scrollup",                  NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_TOP | VB_SCROLL_UNIT_LINE}},
     {"scrolldown",                NULL,    command_scroll,               {VB_SCROLL_TYPE_SCROLL | VB_SCROLL_DIRECTION_DOWN | VB_SCROLL_UNIT_LINE}},
     {"nmap",                      NULL,    command_map,                  {VB_MODE_NORMAL}},
-    {"imap",                      NULL,    command_map,                  {VB_MODE_INSERT}},
+    {"imap",                      NULL,    command_map,                  {VB_MODE_INPUT}},
     {"cmap",                      NULL,    command_map,                  {VB_MODE_COMMAND}},
     {"nunmap",                    NULL,    command_unmap,                {VB_MODE_NORMAL}},
-    {"iunmap",                    NULL,    command_unmap,                {VB_MODE_INSERT}},
+    {"iunmap",                    NULL,    command_unmap,                {VB_MODE_INPUT}},
     {"cunmap",                    NULL,    command_unmap,                {VB_MODE_COMMAND}},
     {"set",                       NULL,    command_set,                  {0}},
     {"inspect",                   NULL,    command_inspect,              {0}},
@@ -961,7 +961,7 @@ gboolean command_mode(const Arg *arg)
 gboolean command_focusinput(const Arg *arg)
 {
     if (dom_focus_input(vb.gui.webview)) {
-        vb_set_mode(VB_MODE_INSERT, false);
+        vb_set_mode(VB_MODE_INPUT, false);
 
         return true;
     }
