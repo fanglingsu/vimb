@@ -1,19 +1,19 @@
 .\" vim: ft=groff
 .\" Process this file with
 .\" groff -man -Tascii vimb.1
-.TH PROJECT 1 "DATE" "PROJECT/VERSION" "PROJECT_UCFIRST Manual"
+.TH vimb 1 "DATE" "vimb/VERSION" "Vimb Manual"
 
 .SH NAME
-PROJECT - Vim Browser - A modal web browser based on webkit thats inspired by
+vimb - Vim Browser - A modal web browser based on webkit thats inspired by
 vim the great editor.
 
 .SH SYNOPSIS
-.BI "PROJECT [" "OPTION" "] [" "URI" "]"
+.BI "vimb [" "OPTION" "] [" "URI" "]"
 
 .SH DESCRIPTION
-PROJECT is a webkit based web browser that behaves like the vimperator
+vimb is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
-of PROJECT is to build a completely keyboard-driven, efficient and pleasurable
+of vimb is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
 
 .SH OPTIONS
@@ -24,7 +24,7 @@ Use custom configuration given as \fICONFIG-FILE\fP.
 .TP
 .BI "\-e, \-\-embed " "WINID"
 .I WINID
-of an XEmbed-aware application, that PROJECT will use as its parent.
+of an XEmbed-aware application, that vimb will use as its parent.
 .TP
 .B "\-h, \-\-help"
 Show help options.
@@ -32,13 +32,13 @@ Show help options.
 .B "\-d, \-\-dump-config"
 Dump out the whole default configurations to stdout. This can be used to
 create a own config file in
-.I $XDG_CONFIG_HOME/PROJECT/config
+.I $XDG_CONFIG_HOME/vimb/config
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
 
 .SH MODES
-PROJECT is modal an has following main modes:
+vimb is modal an has following main modes:
 .TP
 .B Normal Mode
 The default mode. Pressing Escape always enter normal mode.
@@ -47,18 +47,18 @@ The default mode. Pressing Escape always enter normal mode.
 Used for editing text elements in a webpage.
 .TP
 .B Command Mode
-Execute PROJECT commands from the builtin inputbox (commandline).
+Execute vimb commands from the builtin inputbox (commandline).
 
 .SS Submodes
 .TP
 .B Pass-Through Mode
 In Pass-Through mode only the <ctrl-c> and <esc> keybindings are interpreted
-by PROJECT, all other keystrokes are given to the webview to handle them. This
+by vimb, all other keystrokes are given to the webview to handle them. This
 allows to use websites that uses keybindings itself, that might be swallowed
-by PROJECT else.
+by vimb else.
 
 .SH COMMANDS
-Commands are a central part in PROJECT. They are used for nearly all things
+Commands are a central part in vimb. They are used for nearly all things
 that could be done with this browser. Commands allow to set config variables,
 to assign keybindings and much more. Also the keybindings are only shortcut
 for the commands itself.
@@ -248,11 +248,11 @@ Start hinting to open inputboxes or textareas with external editor.
 Start hinting to download hinted links into configured download directory.
 .TP
 .BI "hint-queue-push [" QUERY "]"
-Start hinting to push hinted URI into the read it later queue. If PROJECT has
+Start hinting to push hinted URI into the read it later queue. If vimb has
 been compiled with QUEUE feature.
 .TP
 .BI "hint-queue-unshift [" QUERY "]"
-Start hinting to push hinted URI to begin of read it later queue. If PROJECT
+Start hinting to push hinted URI to begin of read it later queue. If vimb
 has been compiled with QUEUE feature.
 
 .SS Yank
@@ -343,8 +343,8 @@ page.
 
 .SS Queue
 The queue allows to mark URLs for later reding (something like a read it later
-list). This list is shared between the single instances of PROJECT. Only
-available if PROJECT has been compiled with QUEUE feature.
+list). This list is shared between the single instances of vimb. Only
+available if vimb has been compiled with QUEUE feature.
 .TP
 .BI "queue-push [" URI ]
 Push \fIURI\fP or if not given current URI to the end of the queue.
@@ -380,7 +380,7 @@ Example:
 
 .TP
 .B pass-through
-Switch PROJECT into Pass-Through Mode.
+Switch vimb into Pass-Through Mode.
 
 .TP
 .BI "shellcmd " CMD
@@ -413,7 +413,7 @@ Close the browser.
 .TP
 .B focus-input
 Set the cursor to the first found editable element on the page and switch
-PROJECT into Input Mode.
+vimb into Input Mode.
 .TP
 .B source
 Toggle between normal view and source view for the current page.
@@ -528,7 +528,7 @@ Open the last closed page into a new window.
 .TP
 .B ctrl\-p
 Open the oldest entry from read it later queue in current browser window, if
-PROJECT has been compiled with QUEUE feature.
+vimb has been compiled with QUEUE feature.
 .TP
 .B ctrl\-q
 Quit the browser.
@@ -618,11 +618,11 @@ Start hinting to open editable form fileds with external editor.
 Start hinting to download the linkes resource.
 .TP
 .B ;\-p
-If PROJECT has been compiled with QUEUE feature. Start hinting to push hinted
+If vimb has been compiled with QUEUE feature. Start hinting to push hinted
 URI into queue.
 .TP
 .B ;\-P
-If PROJECT has been compiled with QUEUE feature. Start hinting to push hinted
+If vimb has been compiled with QUEUE feature. Start hinting to push hinted
 URI to the beginning of the queu.
 .TP
 .B y
@@ -659,7 +659,7 @@ Search for \fIN\fPnth next search result.
 Search for \fIN\fPnth previous search result.
 .TP
 .B ctrl\-z
-Switch PROJECT into Pass-Through Mode.
+Switch vimb into Pass-Through Mode.
 
 .SS COMMAND MODE
 .TP
@@ -685,50 +685,50 @@ copied to temporary file and the file openen with the configured external
 editor (setting `editor-command').
 .TP
 .B ctrl\-z
-Switch PROJECT into Pass-Through Mode.
+Switch vimb into Pass-Through Mode.
 
 .SH FILES
-.I $XDG_CONFIG_HOME/PROJECT/config
+.I $XDG_CONFIG_HOME/vimb/config
 .RS
 Configuration file to set webkit setting, some gui styles and keybindings.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/cookies
+.I $XDG_CONFIG_HOME/vimb/cookies
 .RS
 Cookie store file.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/closed
+.I $XDG_CONFIG_HOME/vimb/closed
 .RS
 Holds the URI of the last closed browser window.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/history
+.I $XDG_CONFIG_HOME/vimb/history
 .RS
 This file holds the history of unique opened URIs.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/command
+.I $XDG_CONFIG_HOME/vimb/command
 .RS
 This file holds the history of commands and search queries performed via input
 box.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/search
+.I $XDG_CONFIG_HOME/vimb/search
 .RS
 This file holds the history of search queries.
 box.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/bookmark
+.I $XDG_CONFIG_HOME/vimb/bookmark
 .RS
 Holds the bookmarks saved with command `bookmark-add'.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/queue
+.I $XDG_CONFIG_HOME/vimb/queue
 .RS
 Holds the read it later queue filled by `hint-queue-push' or `queue-push' if
-PROJECT has been compiled with QUEUE feature.
+vimb has been compiled with QUEUE feature.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/scripts.js
+.I $XDG_CONFIG_HOME/vimb/scripts.js
 .RS
 This file can be used to run user scripts, that are injected into every paged
 that is opened.
 .RE
-.I $XDG_CONFIG_HOME/PROJECT/style.css
+.I $XDG_CONFIG_HOME/vimb/style.css
 .RS
 File for userdefined css styles. These file is used if the config variable
 `stylesheet' is enabled.
