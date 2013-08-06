@@ -259,3 +259,5 @@ ctrl-t
   copied to temporary file and the file openen with the configured external
   editor.
 
+ctrl-z
+: Switch vimb into pass-through mode.
