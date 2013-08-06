@@ -23,6 +23,7 @@
 
 extern VbCore vb;
 
+static gboolean element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* element);
 static gboolean auto_insert(Element *element);
 static gboolean editable_focus_cb(Element *element, Event *event);
 static Element *get_active_element(Document *doc);
@@ -64,22 +65,42 @@ void dom_clear_focus(WebKitWebView *view)
 gboolean dom_focus_input(WebKitWebView *view)
 {
     gboolean found = false;
-    gulong count;
-    WebKitDOMDocument *doc = webkit_web_view_get_dom_document(view);
-    WebKitDOMNodeList *elems = webkit_dom_document_get_elements_by_tag_name(doc, "*");
-    Element *elem;
+    WebKitDOMNode *html, *node;
+    WebKitDOMDocument *doc;
+    WebKitDOMDOMWindow *win;
+    WebKitDOMNodeList *list;
+    WebKitDOMXPathNSResolver *resolver;
+    WebKitDOMXPathResult* result;
 
-    count = webkit_dom_node_list_get_length(elems);
-    for (int i = 0; i < count; i++) {
-        elem = WEBKIT_DOM_ELEMENT(webkit_dom_node_list_item(elems, i));
+    doc  = webkit_web_view_get_dom_document(view);
+    win  = webkit_dom_document_get_default_view(doc);
+    list = webkit_dom_document_get_elements_by_tag_name(doc, "html");
+    if (!list) {
+        return false;
+    }
 
-        if (dom_is_editable(elem)) {
-            webkit_dom_element_focus(elem);
+    html = webkit_dom_node_list_item(list, 0);
+
+    resolver = webkit_dom_document_create_ns_resolver(doc, html);
+    if (!resolver) {
+        return false;
+    }
+
+    result = webkit_dom_document_evaluate(
+        doc, "//input[@type='text']|//input[@type='password']|//textarea",
+        html, resolver, 0, NULL, NULL
+    );
+    if (!result) {
+        return false;
+    }
+    while ((node = webkit_dom_xpath_result_iterate_next(result, NULL))) {
+        if (element_is_visible(win, WEBKIT_DOM_ELEMENT(node))) {
+            webkit_dom_element_focus(WEBKIT_DOM_ELEMENT(node));
             found = true;
             break;
         }
     }
-    g_object_unref(elems);
+    g_object_unref(list);
 
     return found;
 }
@@ -152,6 +173,23 @@ void dom_editable_element_set_disable(Element *element, gboolean value)
     } else {
         webkit_dom_html_text_area_element_set_disabled((HtmlTextareaElement*)element, value);
     }
+}
+
+static gboolean element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* element)
+{
+    gchar* value = NULL;
+
+    WebKitDOMCSSStyleDeclaration* style = webkit_dom_dom_window_get_computed_style(win, element, "");
+    value = webkit_dom_css_style_declaration_get_property_value(style, "visibility");
+    if (value && g_ascii_strcasecmp(value, "hidden") == 0) {
+        return false;
+    }
+    value = webkit_dom_css_style_declaration_get_property_value(style, "display");
+    if (value && g_ascii_strcasecmp(value, "none") == 0) {
+        return false;
+    }
+
+    return true;
 }
 
 static gboolean auto_insert(Element *element)
