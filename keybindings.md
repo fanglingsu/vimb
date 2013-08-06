@@ -35,16 +35,16 @@ c(un)map
 ## default keybindings
 {:#default-keys}
 
-### normal mode
+### Normal Mode
 
  :
-: Start command mode and print `:` to the input box.
+: Start Command Mode and print `:` to the input box.
 
 /
-: Start command mode and print `/` to inputbox to start searching forward.
+: Start Command Mode and print `/` to inputbox to start searching forward.
 
 ?
-: Start command mode and print `?` to inputbox to start searching backward.
+: Start Command Mode and print `?` to inputbox to start searching backward.
 
  *
 : Search forward for current selected text.
@@ -229,13 +229,13 @@ g-F
 : Opend the Web Inspector for current page.
 
 g-i
-: Set cursor to the first editable element in the page and switch to insert
-  mode.
+: Set cursor to the first editable element in the page and switch to Input
+  Mode.
 
 ctrl-z
-: Switch vimb into pass-through mode.
+: Switch vimb into Pass-Through Mode.
 
-### command/hint mode
+### Command/Hint Mode
 
 tab
 : Complete different sources in the inputbox or focus next hint if hinting is
@@ -252,7 +252,7 @@ up
 down
 : Step through history forward.
 
-### insert mode
+### Insert Mode
 
 ctrl-t
 : If the current active form element is an inputbox or textarea, the content is
@@ -260,4 +260,4 @@ ctrl-t
   editor.
 
 ctrl-z
-: Switch vimb into pass-through mode.
+: Switch vimb into Pass-Through Mode.

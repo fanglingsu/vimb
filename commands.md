@@ -11,7 +11,7 @@ could be done with this browser. Commands allow to set config variables, to
 assign keybindings and much more. Also the keybindings are only shortcut for
 the commands itself.
 
-Commands can be called in Insert Mode from the inputbox in the way like
+Commands can be called in Input Mode from the inputbox in the way like
 `:[count]command[ param[=value]]`. But some commands are not available in
 Command Mode and therefore not callable directly. To use them too, they must be
 bound to the keybinding.
@@ -37,7 +37,7 @@ Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
 
 input [TEXT], in [TEXT]
-: Writes TEXT into to inputbox and switch to command mode. If no TEXT is given,
+: Writes TEXT into to inputbox and switch to Command Mode. If no TEXT is given,
   print `:` into the inputbox.
 
 inputuri [TEXT]
@@ -184,7 +184,7 @@ hint-queue-unshift [QUERY]
 
 next, n
 prev, p
-: Focus next or previous hint if hinting mode is active.
+: Focus next or previous hint if Hinting Mode is active.
 
 ## yank
 
@@ -315,7 +315,7 @@ run [COMMAND LIST]
   Example: `:run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown`
 
 pass-through
-: Switches vimb into pass-through mode. In pass-through mode only the
+: Switches vimb into Pass-Through Mode. In pass-through Mode only the
   `<ctrl-c>` and `<esc>` keybindings are interpreted by vimb, all other
   keystrokes are given to the webview to handle them. This allows to use
   websites that uses keybindings itself, that might be swallowed by vimb else.
@@ -344,7 +344,7 @@ inspect
 
 focus-input
 : Set the cursor to the first found editable element on the page and switch
-  vimb into insert mode.
+  vimb into Input Mode.
 
 quit, q
 : Close the browser.
