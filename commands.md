@@ -17,6 +17,7 @@ Command Mode and therefore not callable directly. To use them too, they must be
 bound to the keybinding.
 
 ## open
+{:#open}
 open [URI], o [URI]
 : Open the give URI into current window. If URI is empty the configured
   `home-page` is opened.
@@ -31,8 +32,28 @@ tabopen [URI], t [URI]
 (tab)open-clipboard, (t)oc
 : Open the url from clipboard.
 
-## input
+## queue
+{:#queue}
+The queue allows to mark URLs for later reding (something like a read it later
+list). This list is shared between the single instances of vimb. Only available
+if vimb has been compiled with QUEUE feature.
 
+queue-push [URI]
+: Push URI or if not given current URI to end of the queue. A URI can be
+  everything that could be used with the `open` command like
+  [shortcuts](#shortcuts).
+
+queue-unshift [URI]
+: Push URI or if not given current URI to beginning of the queue.
+
+queue-pop
+: Open the oldest queue entry in current browser window and remove it from the queue.
+
+queue-clear
+: Removes all entries from queue.
+
+## input
+{:#input}
 Switches the browser into Command Mode and prefill the inputbox on th bottom of
 the browser with various prefilled content.
 
@@ -46,7 +67,7 @@ inputuri [TEXT]
   prefilled. If TEXT is not given use `:` instead.
 
 ## navigate
-
+{:#navigate}
 Following commands are used to navigate within the browser history.
 
 [N]back, [N]ba
@@ -71,7 +92,7 @@ descent!
 : Go to the domain of the current opened page.
 
 ## scroll
-
+{:#scroll}
 Following commands are used to scroll ad jump within the current view.
 
 [N]jumpleft
@@ -115,7 +136,7 @@ Following commands are used to scroll ad jump within the current view.
 : Scroll the page N times the `scrollstep` to the end.
 
 ## keybinding
-
+{:#keybinding}
 nmap
 : Add a keybinding used in Normal Mode.
 
@@ -137,7 +158,7 @@ cunmap
 More about the [keybindings][].
 
 ## hints
-
+{:#hints}
 The hinting is the way to do what you would do with the mouse in common
 mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
 is started, the relevant elements on the page will be marked by numbered
@@ -187,7 +208,7 @@ prev, p
 : Focus next or previous hint if Hinting Mode is active.
 
 ## yank
-
+{:#yank}
 yank-uri, yu
 : Yank the current url to the primary and secondary clipboard.
 
@@ -195,6 +216,7 @@ yank-selection, ys
 : Yank the selected text into the primary and secondary clipboard.
 
 ## shortcuts
+{:#shortcuts}
 
 Shortcuts allows to open URL build up from a named template with additional
 parameters. If a shortcut named `dd` is defined, you can use it with `:open dd
@@ -223,7 +245,7 @@ shortcut-default SHORTCUT
   SHORTCUT is already in use or not to be able to set it.
 
 ## configuration
-
+{:#configuration}
 set VAR=VALUE
 : Set configuration values named by VAR. To set boolean variable you should use
   `on`, `off` or `true` and `false`. Colors are given as hexadecimal value like
@@ -253,7 +275,7 @@ zoomreset, zr
 : Reset the zoomlevel to the default value.
 
 ## history
-
+{:#history}
 hist-prev, hist-next
 : Prints the previous or next cammand or search query from history into
   inputbox. If there is already text in the input box this will be used to get
@@ -268,23 +290,6 @@ bookmark-add [TAGS], bma [TAGS]
 
 bookmark-remove [URI], bmr [URI]
 : Removes all bookmarks for given URI or if not given the current opened page.
-
-## queue
-The queue allows to mark URLs for later reding (something like a read it later
-list). This list is shared between the single instances of vimb. Only available
-if vimb has been compiled with QUEUE feature.
-
-queue-push [URI]
-: Push URI or if not given current URI to end of the queue.
-
-queue-unshift [URI]
-: Push URI or if not given current URI to beginning of the queue.
-
-queue-pop
-: Open the oldest queue entry in current browser window and remove it from the queue.
-
-queue-clear
-: Removes all entries from queue.
 
 ## misc
 next, n

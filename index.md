@@ -15,19 +15,19 @@ not detract you from your daily work.
 ## features
 - modal like vim
 - vim oriented [keybindings][]
-- follow links via keyboard hints
+- follow links via keyboard [hints][]
+- read it later [queue][] to collect URIs for later use
 - tagged bookmarks
 - cookie support
 - userscripts support
 - customer stylesheet support
 - completions for commands, url history, bookmarks variables and search
   queries
-- history for commands, url and search queries
+- [history][] for commands, url and search queries
 - open textareas with configurable editor
-- user defined url shortcuts with up to 9 placeholders
+- user defined url [shortcuts][] with up to 9 placeholders
 - xembed - so vimb can be used together with [tabbed][]
 - run shell commands from inputbox
-- read it later queue to collect URIs for later use
 
 ## download
 
@@ -82,4 +82,8 @@ If you find a misbehaviour or have feature requests use the
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
 [keybindings]: keybindings.html#default-keys
+[queue]:       commands.html#queue
+[hints]:       commands.html#hints
+[history]:     commands.html#history
+[shortcuts]:   commands.html#shortcuts
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
