@@ -656,7 +656,7 @@ Search for \fIN\fPnth next search result.
 .BI [ N ]N
 Search for \fIN\fPnth previous search result.
 .TP
-.B ctrl-z
+.B ctrl\-z
 Switch PROJECT into pass-through mode.
 
 .SS COMMAND_MODE
@@ -681,6 +681,9 @@ Step through history forward.
 If the current active form element is an inputbox or textarea, the content is
 copied to temporary file and the file openen with the configured external
 editor (setting `editor-command').
+.TP
+.B ctrl\-z
+Switch PROJECT into pass-through mode.
 
 .SH FILES
 .I $XDG_CONFIG_HOME/PROJECT/config
