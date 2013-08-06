@@ -948,7 +948,14 @@ gboolean command_queue(const Arg *arg)
 
 gboolean command_mode(const Arg *arg)
 {
-    return vb_set_mode(arg->i, false);
+    /* if a main mode is given - set the mode like it is */
+    if (CLEAN_MODE(arg->i)) {
+        return vb_set_mode(arg->i, false);
+    }
+
+    /* else combine the current main mode with the new submode */
+    /* TODO move this logic to main.c: vb_set_mode() */
+    return vb_set_mode(arg->i|CLEAN_MODE(vb.state.mode), false);
 }
 
 gboolean command_focusinput(const Arg *arg)

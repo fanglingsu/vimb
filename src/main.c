@@ -196,10 +196,6 @@ gboolean vb_set_clipboard(const Arg *arg)
     return result;
 }
 
-/**
- * Set the base modes. All other mode flags like completion can be set directly
- * to vb.state.mode.
- */
 gboolean vb_set_mode(Mode mode, gboolean clean)
 {
     /* process only if mode has changed */
@@ -211,7 +207,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             command_search(&((Arg){VB_SEARCH_OFF}));
         } else if ((vb.state.mode & VB_MODE_HINTING) && !(mode & VB_MODE_HINTING)) {
             hints_clear();
-        } else if (CLEAN_MODE(vb.state.mode) == VB_MODE_INSERT) {
+        } else if (CLEAN_MODE(vb.state.mode) == VB_MODE_INSERT && !(mode & VB_MODE_INSERT)) {
             clean = true;
             dom_clear_focus(vb.gui.webview);
         }
@@ -221,6 +217,10 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             case VB_MODE_NORMAL:
                 history_rewind();
                 gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
+                if (mode & VB_MODE_PASSTHROUGH) {
+                    clean = false;
+                    vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
+                }
                 break;
 
             case VB_MODE_COMMAND:
@@ -230,13 +230,11 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
             case VB_MODE_INSERT:
                 clean = false;
                 gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-                vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
-                break;
-
-            case VB_MODE_PASSTHROUGH:
-                clean = false;
-                gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-                vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
+                if (mode & VB_MODE_PASSTHROUGH) {
+                    vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
+                } else {
+                    vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
+                }
                 break;
         }
         vb.state.mode = mode;

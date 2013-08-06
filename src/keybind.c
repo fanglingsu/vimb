@@ -257,7 +257,7 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
 
     /* skip further logic if we are in pass through mode */
     if (vb.state.mode & VB_MODE_PASSTHROUGH) {
-        return true;
+        return false;
     }
 
     /* allow mode keys and counts only in normal mode and search mode */

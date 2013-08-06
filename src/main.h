@@ -61,7 +61,7 @@
     gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), -1); \
 }
 #define GET_URI() (webkit_web_view_get_uri(vb.gui.webview))
-#define CLEAN_MODE(mode) ((mode) & ~(VB_MODE_COMPLETE | VB_MODE_SEARCH | VB_MODE_HINTING))
+#define CLEAN_MODE(mode) ((mode) & (VB_MODE_NORMAL|VB_MODE_COMMAND|VB_MODE_INSERT))
 #define CLEAR_INPUT() (vb_echo(VB_MSG_NORMAL, ""))
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
@@ -116,8 +116,8 @@ typedef enum _vb_mode {
     VB_MODE_NORMAL        = 1<<0,
     VB_MODE_COMMAND       = 1<<1,
     VB_MODE_INSERT        = 1<<2,
-    VB_MODE_PASSTHROUGH   = 1<<3,
     /* sub modes */
+    VB_MODE_PASSTHROUGH   = 1<<3, /* normal or insert mode */
     VB_MODE_SEARCH        = 1<<4, /* normal mode */
     VB_MODE_COMPLETE      = 1<<5, /* command mode */
     VB_MODE_HINTING       = 1<<6, /* command mode */
