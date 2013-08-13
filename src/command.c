@@ -729,8 +729,9 @@ gboolean command_zoom(const Arg *arg)
 
 gboolean command_history(const Arg *arg)
 {
-    const char *input = GET_TEXT();
-    char *entry       = history_get(input, arg->i);
+    char *input = vb_get_input_text();
+    char *entry = history_get(input, arg->i);
+    g_free(input);
 
     if (!entry) {
         return false;

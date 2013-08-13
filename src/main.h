@@ -55,11 +55,6 @@
 #define TIMER_END
 #endif
 
-#define GET_TEXT() (gtk_entry_get_text(GTK_ENTRY(vb.gui.inputbox)))
-#define PUT_TEXT(x) { \
-    gtk_entry_set_text(GTK_ENTRY(vb.gui.inputbox), x); \
-    gtk_editable_set_position(GTK_EDITABLE(vb.gui.inputbox), -1); \
-}
 #define GET_URI() (webkit_web_view_get_uri(vb.gui.webview))
 #define CLEAN_MODE(mode) ((mode) & (VB_MODE_NORMAL|VB_MODE_COMMAND|VB_MODE_INPUT))
 #define CLEAR_INPUT() (vb_echo(VB_MSG_NORMAL, ""))
@@ -253,7 +248,7 @@ typedef struct {
     WebKitWebInspector *inspector;
     GtkBox             *box;
     GtkWidget          *eventbox;
-    GtkWidget          *inputbox;
+    GtkWidget          *input;
     GtkWidget          *pane;
     StatusBar          statusbar;
     GtkScrollbar       *sb_h;
@@ -319,6 +314,9 @@ extern VbCore core;
 /* functions */
 void vb_echo_force(const MessageType type,gboolean hide, const char *error, ...);
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...);
+void vb_set_input_text(const char *text);
+char *vb_get_input_text(void);
+void vb_input_activate(void);
 gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value);
 gboolean vb_load_uri(const Arg *arg);
 gboolean vb_set_clipboard(const Arg *arg);

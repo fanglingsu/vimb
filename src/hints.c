@@ -41,8 +41,8 @@ extern VbCore vb;
 static void run_script(char *js);
 static void fire();
 static void observe_input(gboolean observe);
-static gboolean changed_cb(GtkEditable *entry);
-static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event);
+static gboolean changed_cb(GtkTextBuffer *buffer);
+static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event);
 
 void hints_init(WebKitWebFrame *frame)
 {
@@ -201,30 +201,41 @@ static void observe_input(gboolean observe)
 {
     if (observe) {
         hints.change_handler = g_signal_connect(
-            G_OBJECT(vb.gui.inputbox), "changed", G_CALLBACK(changed_cb), NULL
+            G_OBJECT(gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input))),
+            "changed", G_CALLBACK(changed_cb), NULL
         );
+
         hints.keypress_handler = g_signal_connect(
-            G_OBJECT(vb.gui.inputbox), "key-press-event", G_CALLBACK(keypress_cb), NULL
+            G_OBJECT(vb.gui.input), "key-press-event", G_CALLBACK(keypress_cb), NULL
         );
     } else if (hints.change_handler && hints.keypress_handler) {
-        g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), hints.change_handler);
-        g_signal_handler_disconnect(G_OBJECT(vb.gui.inputbox), hints.keypress_handler);
+        g_signal_handler_disconnect(
+            G_OBJECT(gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input))),
+            hints.change_handler
+        );
+        g_signal_handler_disconnect(G_OBJECT(vb.gui.input), hints.keypress_handler);
 
         hints.change_handler = hints.keypress_handler = 0;
     }
 }
 
-static gboolean changed_cb(GtkEditable *entry)
+static gboolean changed_cb(GtkTextBuffer *buffer)
 {
-    const char *text = GET_TEXT();
+    char *text;
+    GtkTextIter start, end;
+
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    text = gtk_text_buffer_get_text(buffer, &start, &end, false);
 
     /* skip hinting prefixes like '.', ',', ';y' ... */
     hints_create(text + hints.prefixLength, hints.mode, hints.prefixLength);
 
+    g_free(text);
+
     return true;
 }
 
-static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
+static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event)
 {
     int numval;
     guint keyval = event->keyval;

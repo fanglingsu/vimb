@@ -34,15 +34,15 @@ static GSList *find(int mode, guint modkey, guint modmask, guint keyval);
 static void string_to_keybind(char *str, Keybind *key);
 static guint string_to_modmask(const char *str);
 static guint string_to_value(const char *str);
-static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event);
+static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event, gpointer is_input);
 static void free_keybind(Keybind *keybind);
 
 
 void keybind_init(void)
 {
     modkeys = g_string_new("");
-    g_signal_connect(G_OBJECT(vb.gui.webview), "key-press-event", G_CALLBACK(keypress_cb), NULL);
-    g_signal_connect(G_OBJECT(vb.gui.box), "key-press-event", G_CALLBACK(keypress_cb), NULL);
+    g_signal_connect(G_OBJECT(vb.gui.webview), "key-press-event", G_CALLBACK(keypress_cb), GINT_TO_POINTER(0));
+    g_signal_connect(G_OBJECT(vb.gui.input), "key-press-event", G_CALLBACK(keypress_cb), GINT_TO_POINTER(1));
 }
 
 void keybind_cleanup(void)
@@ -233,7 +233,7 @@ static guint string_to_value(const char *str)
     return str[0];
 }
 
-static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
+static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event, gpointer is_input)
 {
     guint keyval, state;
     static GdkKeymap *keymap;
@@ -249,9 +249,12 @@ static gboolean keypress_cb(WebKitWebView *webview, GdkEventKey *event)
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
         vb.state.modkey = vb.state.count = 0;
-        /* switch to normal mode and clear the input box */
+        /* switch to normal mode and clear the command line */
         vb_set_mode(VB_MODE_NORMAL, true);
 
+        return true;
+    } else if (GPOINTER_TO_INT(is_input) && keyval == GDK_Return) {
+        vb_input_activate();
         return true;
     }
 

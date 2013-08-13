@@ -49,11 +49,12 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
 gboolean completion_complete(gboolean back)
 {
     VbInputType type;
-    const char *input, *prefix, *suffix;
+    char *input;
+    const char *prefix, *suffix;
     GtkListStore *store = NULL;
     gboolean res = false, sort = true;
 
-    input = GET_TEXT();
+    input = vb_get_input_text();
     type  = vb_get_input_parts(input, VB_INPUT_ALL, &prefix, &suffix);
 
     if (vb.state.mode & VB_MODE_COMPLETE) {
@@ -271,7 +272,7 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
             comp.text = g_strdup_printf("%s%s", comp.prefix, value);
         }
         /* print the text also into inputbox */
-        PUT_TEXT(comp.text);
+        vb_set_input_text(comp.text);
         g_free(value);
     }
 

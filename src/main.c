@@ -38,12 +38,11 @@ static char **args;
 VbCore      vb;
 
 /* callbacks */
+static void input_changed_cb(GtkTextBuffer *buffer);
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
 static void destroy_window_cb(GtkWidget *widget);
-static void inputbox_activate_cb(GtkEntry *entry);
-static gboolean inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event);
 static void scroll_cb(GtkAdjustment *adjustment);
 static WebKitWebView *inspector_new(WebKitWebInspector *inspector, WebKitWebView *webview);
 static gboolean inspector_show(WebKitWebInspector *inspector);
@@ -74,7 +73,7 @@ static void setup_signals();
 static void init_files(void);
 static gboolean hide_message();
 static void set_status(const StatusType status);
-static void inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message);
+static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message);
 
 void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
 {
@@ -85,7 +84,7 @@ void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...
     vsnprintf(message, BUF_SIZE, error, arg_list);
     va_end(arg_list);
 
-    inputbox_print(true, type, hide, message);
+    input_print(true, type, hide, message);
 }
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
@@ -97,7 +96,80 @@ void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
     vsnprintf(message, BUF_SIZE, error, arg_list);
     va_end(arg_list);
 
-    inputbox_print(false, type, hide, message);
+    input_print(false, type, hide, message);
+}
+
+/**
+ * Writes given text into the command line.
+ */
+void vb_set_input_text(const char *text)
+{
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input));
+    gtk_text_buffer_set_text(buffer, text, -1);
+}
+
+/**
+ * Retrieves the content of the command line.
+ * Retruned string must be freed with g_free.
+ */
+char *vb_get_input_text(void)
+{
+    GtkTextIter start, end;
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input));
+
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    return gtk_text_buffer_get_text(buffer, &start, &end, false);
+}
+
+/**
+ * Called if the user hit the return key in the command line.
+ */
+void vb_input_activate(void)
+{
+    char *command  = NULL;
+    char *text = vb_get_input_text();
+
+    Arg a;
+    command = text + 1;
+    switch (*text) {
+        case '/':
+        case '?':
+            a.i = *text == '/' ? VB_SEARCH_FORWARD : VB_SEARCH_BACKWARD;
+            a.s = command;
+            history_add(HISTORY_SEARCH, command, NULL);
+            command_search(&a);
+            break;
+
+        case ':':
+            completion_clean();
+            history_add(HISTORY_COMMAND, command, NULL);
+            command_run_string(command);
+            break;
+    }
+
+    g_free(text);
+}
+
+static void input_changed_cb(GtkTextBuffer *buffer)
+{
+    char *text;
+    GtkTextIter start, end;
+    gboolean forward;
+    if (!gtk_widget_is_focus(GTK_WIDGET(vb.gui.input))) {
+        /* if the widget isn't focused the change comes not from the user and
+         * we can skip further processing */
+        return;
+    }
+
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    text = gtk_text_buffer_get_text(buffer, &start, &end, false);
+
+    if ((forward = (*text == '/')) || *text == '?') {
+        webkit_web_view_unmark_text_matches(vb.gui.webview);
+        webkit_web_view_search_text(vb.gui.webview, &text[1], false, forward, false);
+    }
+    /* TODO start hinting also if ., or ; are the first char in inputbox */
+    g_free(text);
 }
 
 gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value)
@@ -224,7 +296,7 @@ gboolean vb_set_mode(Mode mode, gboolean clean)
                 break;
 
             case VB_MODE_COMMAND:
-                gtk_widget_grab_focus(GTK_WIDGET(vb.gui.inputbox));
+                gtk_widget_grab_focus(GTK_WIDGET(vb.gui.input));
                 break;
 
             case VB_MODE_INPUT:
@@ -280,12 +352,6 @@ void vb_update_statusbar()
     if (vb.state.progress != 100) {
         g_string_append_printf(status, " [%i%%]", vb.state.progress);
     }
-#ifdef FEATURE_GTK_PROGRESSBAR
-    gtk_entry_set_progress_fraction(
-        GTK_ENTRY(vb.gui.inputbox),
-        vb.state.progress == 100 ? 0.0 : vb.state.progress/100.0
-    );
-#endif
 
     /* show the scroll status */
     max = gtk_adjustment_get_upper(vb.gui.adjust_v) - gtk_adjustment_get_page_size(vb.gui.adjust_v);
@@ -323,7 +389,7 @@ void vb_update_input_style(void)
 {
     MessageType type = vb.state.input_type;
     vb_set_widget_font(
-        vb.gui.inputbox, &vb.style.input_fg[type], &vb.style.input_bg[type], vb.style.input_font[type]
+        vb.gui.input, &vb.style.input_fg[type], &vb.style.input_bg[type], vb.style.input_font[type]
     );
 }
 
@@ -398,7 +464,7 @@ void vb_quit(void)
 
 static gboolean hide_message()
 {
-    inputbox_print(false, VB_MSG_NORMAL, false, "");
+    input_print(false, VB_MSG_NORMAL, false, "");
 
     return false;
 }
@@ -490,49 +556,6 @@ static void destroy_window_cb(GtkWidget *widget)
     vb_quit();
 }
 
-static void inputbox_activate_cb(GtkEntry *entry)
-{
-    const char *text;
-    char *command  = NULL;
-    guint16 length = gtk_entry_get_text_length(entry);
-
-    if (0 == length) {
-        return;
-    }
-
-    /* do not free or modify text */
-    text = GET_TEXT();
-
-    /* duplicate the content because this may change for example if
-     * :set varName? is used the text is changed to the new printed
-     * content of inputbox */
-    command = g_strdup((text));
-
-    Arg a;
-    switch (*text) {
-        case '/':
-        case '?':
-            a.i = *text == '/' ? VB_SEARCH_FORWARD : VB_SEARCH_BACKWARD;
-            a.s = (command + 1);
-            history_add(HISTORY_SEARCH, command + 1, NULL);
-            command_search(&a);
-            break;
-
-        case ':':
-            completion_clean();
-            history_add(HISTORY_COMMAND, command + 1, NULL);
-            command_run_string((command + 1));
-            break;
-    }
-
-    g_free(command);
-}
-
-static gboolean inputbox_keyrelease_cb(GtkEntry *entry, GdkEventKey *event)
-{
-    return false;
-}
-
 static void scroll_cb(GtkAdjustment *adjustment)
 {
     vb_update_statusbar();
@@ -596,10 +619,10 @@ static void set_status(const StatusType status)
     }
 }
 
-static void inputbox_print(gboolean force, const MessageType type, gboolean hide, const char *message)
+static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message)
 {
     /* don't print message if the input is focussed */
-    if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.inputbox))) {
+    if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.input))) {
         return;
     }
 
@@ -608,7 +631,7 @@ static void inputbox_print(gboolean force, const MessageType type, gboolean hide
         vb.state.input_type = type;
         vb_update_input_style();
     }
-    PUT_TEXT(message);
+    vb_set_input_text(message);
     if (hide) {
         g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)hide_message, NULL);
     }
@@ -693,13 +716,8 @@ static void init_core(void)
 #endif
 #endif
 
-    /* Prepare the inputbox */
-    gui->inputbox = gtk_entry_new();
-#ifndef HAS_GTK3
-    gtk_entry_set_inner_border(GTK_ENTRY(gui->inputbox), NULL);
-#endif
-    g_object_set(gtk_widget_get_settings(gui->inputbox), "gtk-entry-select-on-focus", false, NULL);
-
+    /* Prepare the command line */
+    gui->input = gtk_text_view_new();
 #ifdef HAS_GTK3
     gui->pane            = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gui->box             = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
@@ -718,8 +736,6 @@ static void init_core(void)
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), true, true);
     gtk_widget_show_all(gui->window);
 
-    setup_signals();
-
     /* Put all part together */
     gtk_container_add(GTK_CONTAINER(gui->scroll), GTK_WIDGET(gui->webview));
     gtk_container_add(GTK_CONTAINER(gui->eventbox), GTK_WIDGET(gui->statusbar.box));
@@ -731,8 +747,9 @@ static void init_core(void)
 
     gtk_box_pack_start(gui->box, gui->scroll, true, true, 0);
     gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
-    gtk_entry_set_has_frame(GTK_ENTRY(gui->inputbox), false);
-    gtk_box_pack_end(gui->box, gui->inputbox, false, false, 0);
+    gtk_box_pack_end(gui->box, gui->input, false, false, 0);
+
+    setup_signals();
 
     /* Make sure that when the browser area becomes visible, it will get mouse
      * and keyboard events */
@@ -810,11 +827,11 @@ static void setup_signals()
 #endif
 
     g_object_connect(
-        G_OBJECT(vb.gui.inputbox),
-        "signal::activate",          G_CALLBACK(inputbox_activate_cb),   NULL,
-        "signal::key-release-event", G_CALLBACK(inputbox_keyrelease_cb), NULL,
+        G_OBJECT(gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input))),
+        "signal::changed", G_CALLBACK(input_changed_cb), NULL,
         NULL
     );
+
     /* webview adjustment */
     g_object_connect(G_OBJECT(vb.gui.adjust_v),
         "signal::value-changed", G_CALLBACK(scroll_cb), NULL,
