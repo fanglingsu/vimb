@@ -249,11 +249,18 @@ static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event, gpointer is_i
     /* check for escape or modkeys or counts */
     if (IS_ESCAPE_KEY(keyval, state)) {
         vb.state.modkey = vb.state.count = 0;
+
+        /* remove focus from possible focused inputbox - this allows to clear
+         * the inputbox also if esc is pressed from inputbox for example after
+         * yanking some text or the result of the :shecllcmd */
+        gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
+
         /* switch to normal mode and clear the command line */
         vb_set_mode(VB_MODE_NORMAL, true);
 
         return true;
     } else if (GPOINTER_TO_INT(is_input) && keyval == GDK_Return) {
+        /* simulate the gtk entries activate callback */
         vb_input_activate();
         return true;
     }

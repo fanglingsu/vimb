@@ -536,6 +536,8 @@ gboolean command_yank(const Arg *arg)
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
+            /* TODO should we show the full ynaked content with
+             * vb_set_input_text, wich migh get very large? */
             vb_echo_force(VB_MSG_NORMAL, false, "Yanked: %s", text);
             g_free(text);
 
@@ -544,7 +546,7 @@ gboolean command_yank(const Arg *arg)
 
         return false;
     }
-    /* use current arg.s a new clipboard content */
+    /* use current arg.s as new clipboard content */
     Arg a = {arg->i};
     if (arg->i & COMMAND_YANK_URI) {
         /* yank current url */
