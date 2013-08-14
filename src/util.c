@@ -166,13 +166,13 @@ gboolean util_file_append(const char *file, const char *format, ...)
     FILE *f;
 
     if ((f = fopen(file, "a+"))) {
-        file_lock_set(fileno(f), F_WRLCK);
+        FILE_LOCK_SET(fileno(f), F_WRLCK);
 
         va_start(args, format);
         vfprintf(f, format, args);
         va_end(args);
 
-        file_lock_set(fileno(f), F_UNLCK);
+        FILE_LOCK_SET(fileno(f), F_UNLCK);
         fclose(f);
 
         return true;
@@ -195,7 +195,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
 
     content = util_get_file_contents(file, NULL);
     if ((f = fopen(file, "w"))) {
-        file_lock_set(fileno(f), F_WRLCK);
+        FILE_LOCK_SET(fileno(f), F_WRLCK);
 
         va_start(args, format);
         /* write new content to the file */
@@ -205,7 +205,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
         /* append previous file content */
         fputs(content, f);
 
-        file_lock_set(fileno(f), F_UNLCK);
+        FILE_LOCK_SET(fileno(f), F_UNLCK);
         fclose(f);
 
         res = true;

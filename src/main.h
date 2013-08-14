@@ -61,13 +61,13 @@
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
 
-#define OVERWRITE_STRING(t, s) if (t) {g_free(t); t = NULL;} t = g_strdup(s);
+#define OVERWRITE_STRING(t, s) {if (t) {g_free(t); t = NULL;} t = g_strdup(s);}
 
 #define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
 #define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))
 #define CLEAN_STATE(e)            ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_CONTROL_MASK))
 
-#define file_lock_set(fd, cmd) \
+#define FILE_LOCK_SET(fd, cmd) \
 { \
     struct flock lock = { .l_type = cmd, .l_start = 0, .l_whence = SEEK_SET, .l_len = 0}; \
     fcntl(fd, F_SETLK, lock); \
@@ -86,7 +86,7 @@
 #define VB_GTK_STATE_NORMAL             GTK_STATE_FLAG_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_FLAG_ACTIVE
 #define VB_GTK_STATE_SELECTED           GTK_STATE_FLAG_SELECTED
-#define VB_WIDGET_SET_STATE(w, s)       gtk_widget_set_state_flags(w, s, true)
+#define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state_flags(w, s, true))
 
 #else
 
@@ -102,7 +102,7 @@
 #define VB_GTK_STATE_NORMAL             GTK_STATE_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_ACTIVE
 #define VB_GTK_STATE_SELECTED           GTK_STATE_SELECTED
-#define VB_WIDGET_SET_STATE(w, s)       gtk_widget_set_state(w, s)
+#define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state(w, s))
 #endif
 
 /* enums */

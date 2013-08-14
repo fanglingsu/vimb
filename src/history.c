@@ -275,7 +275,7 @@ static void write_to_file(GList *list, const char *file)
 {
     FILE *f;
     if ((f = fopen(file, "w"))) {
-        file_lock_set(fileno(f), F_WRLCK);
+        FILE_LOCK_SET(fileno(f), F_WRLCK);
 
         /* overwrite the history file with new unique history items */
         for (GList *link = list; link; link = link->next) {
@@ -287,7 +287,7 @@ static void write_to_file(GList *list, const char *file)
             }
         }
 
-        file_lock_set(fileno(f), F_UNLCK);
+        FILE_LOCK_SET(fileno(f), F_UNLCK);
         fclose(f);
     }
 }

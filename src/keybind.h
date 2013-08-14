@@ -24,15 +24,6 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 
-typedef struct {
-    int     mode;        /* mode maks for allowed browser modes */
-    guint   modkey;
-    guint   modmask;     /* modemask for the kayval */
-    guint   keyval;
-    Command func;
-    Arg     arg;
-} Keybind;
-
 void keybind_init(void);
 void keybind_cleanup(void);
 gboolean keybind_add_from_string(char *keys, const char *command, const Mode mode);

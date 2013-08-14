@@ -23,6 +23,15 @@
 #include "command.h"
 #include "completion.h"
 
+typedef struct {
+    int     mode;        /* mode maks for allowed browser modes */
+    guint   modkey;
+    guint   modmask;     /* modemask for the kayval */
+    guint   keyval;
+    Command func;
+    Arg     arg;
+} Keybind;
+
 extern VbCore vb;
 
 static GSList  *keys;
