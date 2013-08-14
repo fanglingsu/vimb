@@ -41,7 +41,7 @@ extern VbCore vb;
 static void run_script(char *js);
 static void fire();
 static void observe_input(gboolean observe);
-static gboolean changed_cb(GtkTextBuffer *buffer);
+static void changed_cb(GtkTextBuffer *buffer);
 static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event);
 
 void hints_init(WebKitWebFrame *frame)
@@ -219,7 +219,7 @@ static void observe_input(gboolean observe)
     }
 }
 
-static gboolean changed_cb(GtkTextBuffer *buffer)
+static void changed_cb(GtkTextBuffer *buffer)
 {
     char *text;
     GtkTextIter start, end;
@@ -231,8 +231,6 @@ static gboolean changed_cb(GtkTextBuffer *buffer)
     hints_create(text + hints.prefixLength, hints.mode, hints.prefixLength);
 
     g_free(text);
-
-    return true;
 }
 
 static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event)
