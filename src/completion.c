@@ -25,6 +25,7 @@
 #include "bookmark.h"
 #include "command.h"
 #include "setting.h"
+#include "ex.h"
 
 #define TAG_INDICATOR '!'
 
@@ -54,10 +55,11 @@ gboolean completion_complete(gboolean back)
     GtkListStore *store = NULL;
     gboolean res = false, sort = true;
 
+    /* TODO give the type of completion to this function - because we have to
+     * handle also abreviated commands like ':op foo<tab>' */
     input = vb_get_input_text();
     type  = vb_get_input_parts(input, VB_INPUT_ALL, &prefix, &suffix);
-
-    if (vb.state.mode & VB_MODE_COMPLETE) {
+    if (vb.mode->flags & FLAG_COMPLETION) {
         if (comp.text && !strcmp(input, comp.text)) {
             /* step through the next/prev completion item */
             move_cursor(back);
@@ -66,12 +68,6 @@ gboolean completion_complete(gboolean back)
         /* if current input isn't the content of the completion item, stop
          * completion and start it after that again */
         completion_clean();
-    }
-
-    /* don't disturb other command sub modes - complete only if no sub mode
-     * is set before */
-    if (vb.state.mode != VB_MODE_COMMAND) {
-        return false;
     }
 
     /* create the list store model */
@@ -91,7 +87,10 @@ gboolean completion_complete(gboolean back)
         /* remove counts before command and save it to print it later in inputbox */
         comp.count = g_ascii_strtoll(suffix, &command, 10);
 
-        res = command_fill_completion(store, command);
+        res = ex_fill_completion(store, command);
+        /* we have a special sorting of the ex commands so we don't should
+         * reorder them for the completion */
+        sort = false;
     } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
         res = history_fill_completion(store, HISTORY_SEARCH, suffix);
     } else if (type == VB_INPUT_BOOKMARK_ADD) {
@@ -107,7 +106,8 @@ gboolean completion_complete(gboolean back)
         gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING);
     }
 
-    vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
+    /* set the submode flag */
+    vb.mode->flags |= FLAG_COMPLETION;
 
     OVERWRITE_STRING(comp.prefix, prefix);
     init_completion(GTK_TREE_MODEL(store));
@@ -118,16 +118,18 @@ gboolean completion_complete(gboolean back)
 
 void completion_clean(void)
 {
-    if (comp.win) {
-        gtk_widget_destroy(comp.win);
-        comp.win = comp.tree = NULL;
-    }
-    OVERWRITE_STRING(comp.prefix, NULL);
-    OVERWRITE_STRING(comp.text, NULL);
-    comp.count = 0;
+    if (vb.mode->flags & FLAG_COMPLETION) {
+        /* remove completion flag from mode */
+        vb.mode->flags &= ~FLAG_COMPLETION;
 
-    /* remove completion flag from mode */
-    vb.state.mode &= ~VB_MODE_COMPLETE;
+        if (comp.win) {
+            gtk_widget_destroy(comp.win);
+            comp.win = comp.tree = NULL;
+        }
+        OVERWRITE_STRING(comp.prefix, NULL);
+        OVERWRITE_STRING(comp.text, NULL);
+        comp.count = 0;
+    }
 }
 
 static void init_completion(GtkTreeModel *model)

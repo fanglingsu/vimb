@@ -17,17 +17,17 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _HINTS_H
-#define _HINTS_H
+#ifndef _NORMAL_H
+#define _NORMAL_H
 
+#include "config.h"
 #include "main.h"
 
-void hints_init(WebKitWebFrame *frame);
-VbResult hints_keypress(unsigned int key);
-void hints_create(const char *input);
-void hints_update(int num);
-void hints_fire(void);
-void hints_clear(void);
-void hints_focus_next(const gboolean back);
+typedef struct NormalCmdInfo_s NormalCmdInfo;
 
-#endif /* end of include guard: _HINTS_H */
+void normal_enter(void);
+void normal_leave(void);
+VbResult normal_keypress(unsigned int key);
+void normal_input_changed(const char *text);
+
+#endif /* end of include guard: _NORMAL_H */

@@ -441,14 +441,34 @@ var VbHint = (function(){
 
     /* the api */
     return {
-        /* mode: l - links, i - images, e - editables */
-        /* usage: O - open, T - open in new window, U - use source */
-        init: function init(mode, usage, maxHints) {
+        init: function init(prefix, maxHints) {
+            /* mode: l - links, i - images, e - editables */
+            /* usage: O - open, T - open in new window, U - use source */
+            var map = {
+                /* prompt : [mode, usage] */
+                ";e": ['e', 'U'],
+                ";i": ['i', 'U'],
+                ";I": ['i', 'U'],
+                ";o": ['l', 'O'],
+                ";O": ['l', 'U'],
+                ";p": ['l', 'U'],
+                ";P": ['l', 'U'],
+                ";s": ['l', 'U'],
+                ";t": ['l', 'T'],
+                ";T": ['l', 'U'],
+                ";y": ['l', 'U']
+            };
+            /* default config */
             config = {
-                mode:     mode,
-                usage:    usage,
+                mode:     'l',
+                usage:    'O',
                 maxHints: maxHints
             };
+            /* overwrite with mapped config if found */
+            if (map.hasOwnProperty(prefix)) {
+                config.mode  = map[prefix][0];
+                config.usage = map[prefix][1];
+            }
         },
         create: create,
         update: update,

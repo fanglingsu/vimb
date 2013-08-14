@@ -17,17 +17,17 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _HINTS_H
-#define _HINTS_H
+#ifndef _EX_H
+#define _EX_H
 
+#include "config.h"
 #include "main.h"
 
-void hints_init(WebKitWebFrame *frame);
-VbResult hints_keypress(unsigned int key);
-void hints_create(const char *input);
-void hints_update(int num);
-void hints_fire(void);
-void hints_clear(void);
-void hints_focus_next(const gboolean back);
+void ex_enter(void);
+void ex_leave(void);
+VbResult ex_keypress(unsigned int key);
+void ex_input_changed(const char *text);
+gboolean ex_fill_completion(GtkListStore *store, const char *input);
+gboolean ex_run_string(const char *input);
 
-#endif /* end of include guard: _HINTS_H */
+#endif /* end of include guard: _EX_H */

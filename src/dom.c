@@ -20,6 +20,7 @@
 #include "config.h"
 #include "main.h"
 #include "dom.h"
+#include "mode.h"
 
 extern VbCore vb;
 
@@ -194,7 +195,8 @@ static gboolean element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* el
 static gboolean auto_insert(Element *element)
 {
     if (dom_is_editable(element)) {
-        vb_set_mode(VB_MODE_INPUT, false);
+        mode_enter('i');
+
         return true;
     }
     return false;
@@ -205,7 +207,7 @@ static gboolean editable_focus_cb(Element *element, Event *event)
     webkit_dom_event_target_remove_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), false
     );
-    if (CLEAN_MODE(vb.state.mode) != VB_MODE_INPUT) {
+    if (vb.mode->id != 'i') {
         EventTarget *target = webkit_dom_event_get_target(event);
         auto_insert((void*)target);
     }

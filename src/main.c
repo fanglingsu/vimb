@@ -23,7 +23,6 @@
 #include "main.h"
 #include "util.h"
 #include "command.h"
-#include "keybind.h"
 #include "setting.h"
 #include "completion.h"
 #include "dom.h"
@@ -31,14 +30,20 @@
 #include "shortcut.h"
 #include "history.h"
 #include "session.h"
+#include "mode.h"
+#include "normal.h"
+#include "ex.h"
+#include "input.h"
+#include "map.h"
 #include "default.h"
+#include "pass.h"
+#include "bookmark.h"
 
 /* variables */
 static char **args;
 VbCore      vb;
 
 /* callbacks */
-static void input_changed_cb(GtkTextBuffer *buffer);
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
@@ -104,8 +109,7 @@ void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
  */
 void vb_set_input_text(const char *text)
 {
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input));
-    gtk_text_buffer_set_text(buffer, text, -1);
+    gtk_text_buffer_set_text(vb.gui.buffer, text, -1);
 }
 
 /**
@@ -115,64 +119,9 @@ void vb_set_input_text(const char *text)
 char *vb_get_input_text(void)
 {
     GtkTextIter start, end;
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input));
 
-    gtk_text_buffer_get_bounds(buffer, &start, &end);
-    return gtk_text_buffer_get_text(buffer, &start, &end, false);
-}
-
-/**
- * Called if the user hit the return key in the command line.
- */
-void vb_input_activate(void)
-{
-    char *command  = NULL;
-    char *text = vb_get_input_text();
-
-    Arg a;
-    command = text + 1;
-    switch (*text) {
-        case '/':
-        case '?':
-            a.i = *text == '/' ? VB_SEARCH_FORWARD : VB_SEARCH_BACKWARD;
-            a.s = command;
-            history_add(HISTORY_SEARCH, command, NULL);
-            command_search(&a);
-            break;
-
-        case ':':
-            completion_clean();
-            history_add(HISTORY_COMMAND, command, NULL);
-            command_run_string(command);
-            break;
-    }
-
-    g_free(text);
-}
-
-static void input_changed_cb(GtkTextBuffer *buffer)
-{
-    char *text;
-    GtkTextIter start, end;
-    gboolean forward;
-
-    /* if vimb isn't in command mode, all changes are considered as output of
-     * some commands that we don't want here */
-    /* TODO find a better place to only observe the change events in command
-     * mode */
-    if (!(vb.state.mode & VB_MODE_COMMAND)) {
-        return;
-    }
-
-    gtk_text_buffer_get_bounds(buffer, &start, &end);
-    text = gtk_text_buffer_get_text(buffer, &start, &end, false);
-
-    if ((forward = (*text == '/')) || *text == '?') {
-        webkit_web_view_unmark_text_matches(vb.gui.webview);
-        webkit_web_view_search_text(vb.gui.webview, &text[1], false, forward, false);
-    }
-    /* TODO start hinting also if ., or ; are the first char in inputbox */
-    g_free(text);
+    gtk_text_buffer_get_bounds(vb.gui.buffer, &start, &end);
+    return gtk_text_buffer_get_text(vb.gui.buffer, &start, &end, false);
 }
 
 gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value)
@@ -200,11 +149,13 @@ gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **
 
 gboolean vb_load_uri(const Arg *arg)
 {
-    char *uri = NULL, *rp, *path = arg->s ? arg->s : "";
+    char *uri = NULL, *rp, *path = NULL;
     struct stat st;
 
-    g_strstrip(path);
-    if (*path == '\0') {
+    if (arg->s) {
+        path = g_strstrip(arg->s);
+    }
+    if (!path || *path == '\0') {
         path = vb.config.home_page;
     }
 
@@ -271,15 +222,19 @@ gboolean vb_set_clipboard(const Arg *arg)
     return result;
 }
 
-gboolean vb_set_mode(Mode mode, gboolean clean)
+gboolean vb_set_mode(VimbMode mode, gboolean clean)
 {
+    if (mode == VB_MODE_INPUT) {
+        mode_enter('i');
+        return true;
+    }
     /* process only if mode has changed */
     if (vb.state.mode != mode) {
         /* leaf the old mode */
         if ((vb.state.mode & VB_MODE_COMPLETE) && !(mode & VB_MODE_COMPLETE)) {
             completion_clean();
         } else if ((vb.state.mode & VB_MODE_SEARCH) && !(mode & VB_MODE_SEARCH)) {
-            command_search(&((Arg){VB_SEARCH_OFF}));
+            command_search(&((Arg){COMMAND_SEARCH_OFF}));
         } else if ((vb.state.mode & VB_MODE_HINTING) && !(mode & VB_MODE_HINTING)) {
             hints_clear();
         } else if (CLEAN_MODE(vb.state.mode) == VB_MODE_INPUT && !(mode & VB_MODE_INPUT)) {
@@ -386,6 +341,9 @@ void vb_update_status_style(void)
     vb_set_widget_font(
         vb.gui.statusbar.right, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
     );
+    vb_set_widget_font(
+        vb.gui.statusbar.cmd, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
+    );
 }
 
 void vb_update_input_style(void)
@@ -454,9 +412,9 @@ void vb_quit(void)
 
     webkit_web_view_stop_loading(vb.gui.webview);
 
-    command_cleanup();
+    map_cleanup();
+    mode_cleanup();
     setting_cleanup();
-    keybind_cleanup();
     shortcut_cleanup();
     history_cleanup();
 
@@ -545,8 +503,8 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             vb.state.progress = 100;
             vb_update_statusbar();
 
-            dom_check_auto_insert(view);
             if (strncmp(uri, "about:", 6)) {
+                dom_check_auto_insert(view);
                 history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
             }
             break;
@@ -722,7 +680,9 @@ static void init_core(void)
 #endif
 
     /* Prepare the command line */
-    gui->input = gtk_text_view_new();
+    gui->input  = gtk_text_view_new();
+    gui->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(gui->input));
+
 #ifdef HAS_GTK3
     gui->pane            = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
     gui->box             = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
@@ -734,6 +694,7 @@ static void init_core(void)
 #endif
     gui->statusbar.left  = gtk_label_new(NULL);
     gui->statusbar.right = gtk_label_new(NULL);
+    gui->statusbar.cmd   = gtk_label_new(NULL);
 
     /* Prepare the event box */
     gui->eventbox = gtk_event_box_new();
@@ -747,7 +708,9 @@ static void init_core(void)
     gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->pane));
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.right), 1.0, 0.0);
+    gtk_misc_set_alignment(GTK_MISC(gui->statusbar.cmd), 1.0, 0.0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, true, true, 2);
+    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.cmd, false, false, 0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, false, false, 2);
 
     gtk_box_pack_start(gui->box, gui->scroll, true, true, 0);
@@ -760,11 +723,17 @@ static void init_core(void)
      * and keyboard events */
     gtk_widget_grab_focus(GTK_WIDGET(gui->webview));
 
+    /* initialize the modes */
+    mode_init();
+    mode_add('n', normal_enter, normal_leave, normal_keypress, normal_input_changed);
+    mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
+    mode_add('i', input_enter, input_leave, input_keypress, NULL);
+    mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
+    mode_enter('n');
+
     init_files();
     session_init();
     setting_init();
-    command_init();
-    keybind_init();
     shortcut_init();
     read_config();
 
@@ -780,7 +749,7 @@ static void read_config(void)
 
     /* load default config */
     for (guint i = 0; default_config[i] != NULL; i++) {
-        if (!command_run_string(default_config[i])) {
+        if (!ex_run_string(default_config[i])) {
             fprintf(stderr, "Invalid default config: %s\n", default_config[i]);
         }
     }
@@ -797,7 +766,7 @@ static void read_config(void)
             if (!g_ascii_isalpha(line[0])) {
                 continue;
             }
-            if (!command_run_string(line)) {
+            if (!ex_run_string(line)) {
                 fprintf(stderr, "Invalid config: %s\n", line);
             }
         }
@@ -831,9 +800,12 @@ static void setup_signals()
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
 #endif
 
+    g_signal_connect(
+        G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(map_keypress), NULL
+    );
     g_object_connect(
-        G_OBJECT(gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.gui.input))),
-        "signal::changed", G_CALLBACK(input_changed_cb), NULL,
+        G_OBJECT(vb.gui.buffer),
+        "signal::changed", G_CALLBACK(mode_input_changed), NULL,
         NULL
     );
 
@@ -903,16 +875,17 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
 {
     gboolean propagate = false;
     WebKitHitTestResultContext context;
-    Mode mode = CLEAN_MODE(vb.state.mode);
 
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
 
     g_object_get(result, "context", &context, NULL);
-    if (mode == VB_MODE_NORMAL && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+    /* TODO move this to normal.c */
+    if (vb.mode->id == 'n' && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
         vb_set_mode(VB_MODE_INPUT, false);
 
         propagate = true;
     }
+    /* TODO move this to normal.c */
     /* middle mouse click onto link */
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
         Arg a = {VB_TARGET_NEW};
@@ -1055,13 +1028,16 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
         return;
     }
 
-    char *file = g_path_get_basename(webkit_download_get_destination_uri(download));
+    const char *file = webkit_download_get_destination_uri(download);
+    /* skip the file protocoll for the display */
+    if (!strncmp(file, "file://", 7)) {
+        file += 7;
+    }
     if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
         vb_echo(VB_MSG_ERROR, false, "Error downloading %s", file);
     } else {
         vb_echo(VB_MSG_NORMAL, false, "Download %s finished", file);
     }
-    g_free(file);
 
     /* remove the donwload from the list */
     vb.state.downloads = g_list_remove(vb.state.downloads, download);

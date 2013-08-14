@@ -17,16 +17,14 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _KEYBIND_H
-#define _KEYBIND_H
+#ifndef _PASS_H
+#define _PASS_H
 
-#include "command.h"
-#include <gdk/gdkkeysyms.h>
-#include <gdk/gdkkeysyms-compat.h>
+#include "config.h"
+#include "main.h"
 
-void keybind_init(void);
-void keybind_cleanup(void);
-gboolean keybind_add_from_string(char *keys, const char *command, const Mode mode);
-gboolean keybind_remove_from_string(char *str, const Mode mode);
+void pass_enter(void);
+void pass_leave(void);
+VbResult pass_keypress(unsigned int key);
 
-#endif /* end of include guard: _KEYBIND_H */
+#endif /* end of include guard: _PASS_H */

@@ -17,17 +17,39 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _HINTS_H
-#define _HINTS_H
-
+#include "config.h"
 #include "main.h"
+#include "pass.h"
+#include "mode.h"
+#include "dom.h"
 
-void hints_init(WebKitWebFrame *frame);
-VbResult hints_keypress(unsigned int key);
-void hints_create(const char *input);
-void hints_update(int num);
-void hints_fire(void);
-void hints_clear(void);
-void hints_focus_next(const gboolean back);
+extern VbCore vb;
 
-#endif /* end of include guard: _HINTS_H */
+
+/**
+ * Function called when vimb enters the passthrough mode.
+ */
+void pass_enter(void)
+{
+    /* switch focus first to make shure we can write to the inputbox without
+     * disturbing the user */
+    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
+    vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
+}
+
+/**
+ * Called when passthrough mode is left.
+ */
+void pass_leave(void)
+{
+    vb_set_input_text("");
+}
+
+VbResult pass_keypress(unsigned int key)
+{
+    if (key == CTRL('[')) { /* esc */
+        vb.state.processed_key = true;
+        mode_enter('n');
+    }
+    return RESULT_COMPLETE;
+}

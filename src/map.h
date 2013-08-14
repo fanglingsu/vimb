@@ -17,17 +17,25 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _HINTS_H
-#define _HINTS_H
+#ifndef _MAP_H
+#define _MAP_H
 
-#include "main.h"
+/* size of the typeahead buffer that will altered during mapping an can
+ * therefor become larger than expected for examlpe by
+ * ':nmap gh :open LONG_URI TO HOME PAGE' where two keys expand to a large
+ * string */
+#define MAP_QUEUE_SIZE 500
 
-void hints_init(WebKitWebFrame *frame);
-VbResult hints_keypress(unsigned int key);
-void hints_create(const char *input);
-void hints_update(int num);
-void hints_fire(void);
-void hints_clear(void);
-void hints_focus_next(const gboolean back);
+typedef enum {
+    MAP_DONE,
+    MAP_AMBIGUOUS,
+    MAP_NOMATCH
+} MapState;
 
-#endif /* end of include guard: _HINTS_H */
+void map_cleanup(void);
+gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data);
+MapState map_handle_keys(const char *keys, int keylen);
+void map_insert(char *in, char *mapped, char mode);
+gboolean map_delete(char *in, char mode);
+
+#endif /* end of include guard: _MAP_H */
