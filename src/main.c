@@ -155,9 +155,12 @@ static void input_changed_cb(GtkTextBuffer *buffer)
     char *text;
     GtkTextIter start, end;
     gboolean forward;
-    if (!gtk_widget_is_focus(GTK_WIDGET(vb.gui.input))) {
-        /* if the widget isn't focused the change comes not from the user and
-         * we can skip further processing */
+
+    /* if vimb isn't in command mode, all changes are considered as output of
+     * some commands that we don't want here */
+    /* TODO find a better place to only observe the change events in command
+     * mode */
+    if (!(vb.state.mode & VB_MODE_COMMAND)) {
         return;
     }
 

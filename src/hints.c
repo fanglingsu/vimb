@@ -219,6 +219,7 @@ static void observe_input(gboolean observe)
     }
 }
 
+/* TODO move this event handler to a more generic place in vimb */
 static void changed_cb(GtkTextBuffer *buffer)
 {
     char *text;
