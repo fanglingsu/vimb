@@ -268,7 +268,7 @@ static gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event, gpointer is_i
         vb_set_mode(VB_MODE_NORMAL, true);
 
         return true;
-    } else if (GPOINTER_TO_INT(is_input) && keyval == GDK_Return) {
+    } else if (GPOINTER_TO_INT(is_input) && keyval == GDK_Return && !(vb.state.mode & VB_MODE_HINTING)) {
         /* simulate the gtk entries activate callback */
         vb_input_activate();
         return true;
