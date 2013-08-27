@@ -633,9 +633,6 @@ static gboolean proxy(const Setting *s, const SettingType type)
 
             soup_uri_free(proxy_uri);
             g_free(proxy_new);
-        } else {
-            /* inform the customer that the proxy could not be set */
-            return false;
         }
     } else {
         g_object_set(vb.session, "proxy-uri", NULL, NULL);
