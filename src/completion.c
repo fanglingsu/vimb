@@ -94,6 +94,8 @@ gboolean completion_complete(gboolean back)
         res = command_fill_completion(store, command);
     } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
         res = history_fill_completion(store, HISTORY_SEARCH, suffix);
+    } else if (type == VB_INPUT_BOOKMARK_ADD) {
+        res = bookmark_fill_tag_completion(store, suffix);
     }
 
     if (!res) {

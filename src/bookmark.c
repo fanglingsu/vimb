@@ -149,6 +149,52 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
     return found;
 }
 
+gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
+{
+    gboolean found = false;
+    unsigned int len, i;
+    GtkTreeIter iter;
+    GList *src = NULL, *tags = NULL, *l;
+    Bookmark *bm;
+
+    /* get all distinct tags from bookmark file */
+    src = load(vb.files[FILES_BOOKMARK]);
+    for (GList *l = src; l; l = l->next) {
+        bm = (Bookmark*)l->data;
+        len = (bm->tags) ? g_strv_length(bm->tags) : 0;
+        for (i = 0; i < len; i++) {
+            char *tag = bm->tags[i];
+            /* add tag only if it isn't already in the list */
+            if (!g_list_find_custom(tags, tag, (GCompareFunc)strcmp)) {
+                tags = g_list_prepend(tags, tag);
+            }
+        }
+    }
+
+    /* generate the completion with the found tags */
+    if (!input || *input == '\0') {
+        for (l = tags; l; l = l->next) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            found = true;
+        }
+    } else {
+        for (l = tags; l; l = l->next) {
+            if (g_str_has_prefix(l->data, input)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+                found = true;
+            }
+        }
+    }
+    g_list_free_full(src, (GDestroyNotify)free_bookmark);
+    /* we don't need to free the values, because they where already removed by
+     * freeing the src list - we never allocated new momory for them */
+    g_list_free(tags);
+
+    return found;
+}
+
 #ifdef FEATURE_QUEUE
 /**
  * Push a uri to the end of the queue.
