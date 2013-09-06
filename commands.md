@@ -307,7 +307,9 @@ prev, p
      their url, the bookmarks only by their tags. If multiple tags are given to get
      the bookmarks, only those bookmarks will be returned, that matches all the
      given tags or that don't have any tag set.
-  4. Searchqueries `/` or `?`
+  4. Bookmark tags that are already used can be completet for `:bma QUERY` or
+     `:bookmark-add QUERY` command.
+  5. Searchqueries `/` or `?`
 
 run [COMMAND LIST]
 : Run is a command, that was introduced to have the ability to run multiple

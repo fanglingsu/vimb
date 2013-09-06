@@ -21,8 +21,8 @@ not detract you from your daily work.
 - cookie support
 - userscripts support
 - customer stylesheet support
-- completions for commands, url history, bookmarks variables and search
-  queries
+- completions for commands, url history, bookmarks, boorkamrk tags, variables
+  and search queries
 - [history][] for commands, url and search queries
 - open textareas with configurable editor
 - user defined url [shortcuts][] with up to 9 placeholders
