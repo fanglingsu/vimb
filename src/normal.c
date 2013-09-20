@@ -223,7 +223,7 @@ static struct {
 /* g^X  */ {NULL},
 /* g^Y  */ {NULL},
 /* g^Z  */ {NULL},
-/* gESC */ {NULL},
+/* gESC */ {NULL}, /* used as Control Sequence Introducer */
 /* g^\  */ {NULL},
 /* g^]  */ {NULL},
 /* g^^  */ {NULL},
@@ -355,7 +355,6 @@ void normal_leave(void)
 VbResult normal_keypress(unsigned int key)
 {
     State *s = &vb.state;
-    s->processed_key = true;
     VbResult res;
     if (info.phase == PHASE_START && key == 'g') {
         info.phase = PHASE_AFTERG;
@@ -488,9 +487,6 @@ static VbResult normal_ex(const NormalCmdInfo *info)
 {
     char prompt[2] = {0};
 
-    /* avoid to print the char that called this function into the input box */
-    vb.state.processed_key = true;
-
     /* Handle some hardwired mapping here instead of using map_insert. This
      * makes the binding imutable and we can simply use f, F, o and t in
      * mapped keys too */
@@ -549,8 +545,6 @@ static VbResult normal_hint(const NormalCmdInfo *info)
 
     /* check if this is a valid hint mode */
     if (!info->arg || !strchr(allowed, info->arg)) {
-        vb.state.processed_key = true;
-
         return RESULT_ERROR;
     }
 

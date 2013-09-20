@@ -193,12 +193,10 @@ VbResult ex_keypress(unsigned int key)
     /* delegate call to the submode if hinting is active */
     if (vb.mode->flags & FLAG_HINTING) {
         if (RESULT_COMPLETE == hints_keypress(key)) {
-            vb.state.processed_key = true;
             return RESULT_COMPLETE;
         }
     }
 
-    vb.state.processed_key = true;
     switch (key) {
         case CTRL('I'): /* Tab */
             /* mode will be set in completion_complete */

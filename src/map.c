@@ -49,6 +49,16 @@ static void showcmd(char *keys, int keylen, gboolean append);
 static void free_map(Map *map);
 
 
+void map_init(void)
+{
+    /* bind cursor keys to ^P and ^N but only in command mode else down would
+     * trigger the queue pop */
+    map_insert("<Up>", "\x10", 'c');
+    map_insert("<Down>", "\x0e", 'c');
+    map_insert("<Up>", "k", 'n');
+    map_insert("<Down>", "j", 'n');
+}
+
 void map_cleanup(void)
 {
     if (map.list) {
@@ -63,46 +73,90 @@ void map_cleanup(void)
 gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
 {
     unsigned int key = 0;
-    if ((event->state & GDK_CONTROL_MASK) == 0
-        && event->keyval > 0
-        && event->keyval < 0xff
-    ) {
-        key = event->keyval;
-    } else {
-        /* convert chars A-Za-z with ctrl flag <ctrl-a> or <ctrl-A> -> \001
-         * and <ctrl-z> -> \032 like vi */
-        if (event->keyval == GDK_Escape) {
-            key = CTRL('[');
-        } else if (event->keyval == GDK_Tab) {
-            key = CTRL('I');
-        } else if (event->keyval == GDK_ISO_Left_Tab) {
-            key = CTRL('O');
-        } else if (event->keyval == GDK_Return) {
-            key = '\n';
-        } else if (event->keyval == GDK_BackSpace) {
-            /* FIXME how to handle <C-S-Del> to remove selected Numbers in
-             * hint mode */
-            key = CTRL('H'); /* 0x08 */
-        } else if (event->keyval == GDK_Up) {
-            key = CTRL('P'); /* or ^Ok instead? */
-        } else if (event->keyval == GDK_Down) {
-            key = CTRL('N');
-        } else if (event->keyval >= 0x41 && event->keyval <= 0x5d) {/* chars A-] */
-            key = event->keyval - 0x40;
-        } else if (event->keyval >= 0x61 && event->keyval <= 0x7a) {/* chars a-z */
-            key = event->keyval - 0x60;
-        }
-    }
+    static struct {
+        guint keyval;
+        int   ctrl;    /* -1 = indifferent, 1 = ctrl, 0 = no ctrl */
+        char  *ch;
+        int   chlen;
+    } keys[] = {
+        {GDK_Escape,       -1, "\x1b",         1}, /* ^[ */
+        {GDK_Tab,          -1, "\x09",         1}, /* ^I */
+        {GDK_ISO_Left_Tab, -1, "\x0f",         1}, /* ^O */
+        {GDK_Return,       -1, "\x0a",         1},
+        {GDK_KP_Enter,     -1, "\x0a",         1},
+        {GDK_BackSpace,    -1, "\x08",         1}, /* ^H */
+        {GDK_Up,           -1, CSI_STR "ku",   3},
+        {GDK_Down,         -1, CSI_STR "kd",   3},
+        {GDK_Left,         -1, CSI_STR "kl",   3},
+        {GDK_Right,        -1, CSI_STR "kr",   3},
+        /* function keys are prefixed by gEsc like in vim the CSI Control
+         * Sequence Introducer \233 */
+        /* TODO calculate this automatic */
+        {GDK_KEY_F1,        1, CSI_STR "\x01", 2},
+        {GDK_KEY_F2,        1, CSI_STR "\x02", 2},
+        {GDK_KEY_F3,        1, CSI_STR "\x03", 2},
+        {GDK_KEY_F4,        1, CSI_STR "\x04", 2},
+        {GDK_KEY_F5,        1, CSI_STR "\x05", 2},
+        {GDK_KEY_F6,        1, CSI_STR "\x06", 2},
+        {GDK_KEY_F7,        1, CSI_STR "\x07", 2},
+        {GDK_KEY_F8,        1, CSI_STR "\x08", 2},
+        {GDK_KEY_F9,        1, CSI_STR "\x09", 2},
+        {GDK_KEY_F10,       1, CSI_STR "\x0a", 2},
+        {GDK_KEY_F11,       1, CSI_STR "\x0b", 2},
+        {GDK_KEY_F12,       1, CSI_STR "\x0c", 2},
+        {GDK_KEY_F1,        0, CSI_STR "\x0d", 2},
+        {GDK_KEY_F2,        0, CSI_STR "\x0e", 2},
+        {GDK_KEY_F3,        0, CSI_STR "\x0f", 2},
+        {GDK_KEY_F4,        0, CSI_STR "\x10", 2},
+        {GDK_KEY_F5,        0, CSI_STR "\x11", 2},
+        {GDK_KEY_F6,        0, CSI_STR "\x12", 2},
+        {GDK_KEY_F7,        0, CSI_STR "\x13", 2},
+        {GDK_KEY_F8,        0, CSI_STR "\x14", 2},
+        {GDK_KEY_F9,        0, CSI_STR "\x15", 2},
+        {GDK_KEY_F10,       0, CSI_STR "\x16", 2},
+        {GDK_KEY_F11,       0, CSI_STR "\x17", 2},
+        {GDK_KEY_F12,       0, CSI_STR "\x18", 2},
+    };
+
+    int ctrl = (event->state & GDK_CONTROL_MASK) != 0;
 
     /* set initial value for the flag that should be changed in the modes key
      * handler functions */
-    vb.state.processed_key = false;
-    if (key) {
-        map_handle_keys((char*)(&key), 1);
-    }
-    return vb.state.processed_key;
-}
+    vb.state.processed_key = true;
+    if (!ctrl && event->keyval > 0 && event->keyval < 0xff) {
+        map_handle_keys((char*)(&event->keyval), 1);
 
+        return vb.state.processed_key;
+    }
+
+    /* convert chars A-]a-z with ctrl flag <ctrl-a> or <ctrl-A> -> \001
+     * and <ctrl-z> -> \032 like vi */
+    if (event->keyval >= 0x41 && event->keyval <= 0x5d) {/* chars A-] */
+        key = event->keyval - 0x40;
+        map_handle_keys((char*)(&key), 1);
+
+        return vb.state.processed_key;
+    } else if (event->keyval >= 0x61 && event->keyval <= 0x7a) {/* chars a-z */
+        key = event->keyval - 0x60;
+        map_handle_keys((char*)(&key), 1);
+
+        return vb.state.processed_key;
+    }
+
+    for (int i = 0; i < LENGTH(keys); i++) {
+        if (keys[i].keyval == event->keyval
+            && (keys[i].ctrl == ctrl ||keys[i].ctrl == -1)
+        ) {
+            map_handle_keys(keys[i].ch, keys[i].chlen);
+
+            return vb.state.processed_key;
+        }
+    }
+
+    /* mark all unknown key events as unhandled to not break some gtk features
+     * like <S-Einf> to copy clipboard content into inputbox */
+    return false;
+}
 
 /**
  * Added the given key sequence ot the key queue and precesses the mapping of
@@ -134,6 +188,7 @@ MapState map_handle_keys(const char *keys, int keylen)
     /* try to resolve keys against the map */
     while (true) {
         /* send any resolved key to the parser */
+        static int csi = 0;
         while (map.resolved > 0) {
             /* pop the next char from queue */
             map.resolved--;
@@ -144,6 +199,23 @@ MapState map_handle_keys(const char *keys, int keylen)
             /* move all other queue entries one step to the left */
             for (int i = 0; i < map.qlen; i++) {
                 map.queue[i] = map.queue[i + 1];
+            }
+
+            /* skip csi indicator and the next 2 chars - if the csi sequence
+             * isn't part of a mapped command we let gtk handle the key - this
+             * is required allo to move cursor in inputbox with <Left> and
+             * <Right> keys */
+            /* TODO make it simplier to skip the special keys here */
+            if ((qk & 0xff) == CSI) {
+                csi = 2;
+                vb.state.processed_key = false;
+                continue;
+            }
+            if (csi > 0) {
+                csi--;
+                vb.state.processed_key = false;
+                showcmd(NULL, 0, false);
+                continue;
             }
 
             /* remove the nomap flag */
@@ -357,9 +429,40 @@ static char *map_convert_keylabel(char *in, int inlen, int *len)
         char *ch;
         int  chlen;
     } keys[] = {
-        {"<CR>",  4, "\n",   1},
-        {"<Tab>", 5, "\t",   1},
-        {"<Esc>", 5, "\x1b", 1}
+        {"<CR>",    4, "\n",           1},
+        {"<Tab>",   5, "\t",           1},
+        {"<Esc>",   5, "\x1b",         1},
+        {"<Up>",    4, CSI_STR "ku",   3},
+        {"<Down>",  6, CSI_STR "kd",   3},
+        {"<Left>",  6, CSI_STR "kl",   3},
+        {"<Right>", 7, CSI_STR "kr",   3},
+        /* convert function keys to gEsc+num */
+        /* TODO allow to calculate the ch programmatic instead of mapping the
+         * function keys here */
+        {"<C-F1>",  6, CSI_STR "\x01", 2},
+        {"<C-F2>",  6, CSI_STR "\x02", 2},
+        {"<C-F3>",  6, CSI_STR "\x03", 2},
+        {"<C-F4>",  6, CSI_STR "\x04", 2},
+        {"<C-F5>",  6, CSI_STR "\x05", 2},
+        {"<C-F6>",  6, CSI_STR "\x06", 2},
+        {"<C-F7>",  6, CSI_STR "\x07", 2},
+        {"<C-F8>",  6, CSI_STR "\x08", 2},
+        {"<C-F9>",  6, CSI_STR "\x09", 2},
+        {"<C-F10>", 7, CSI_STR "\x0a", 2},
+        {"<C-F11>", 7, CSI_STR "\x0b", 2},
+        {"<C-F12>", 7, CSI_STR "\x0c", 2},
+        {"<F1>",    4, CSI_STR "\x0d", 2},
+        {"<F2>",    4, CSI_STR "\x0e", 2},
+        {"<F3>",    4, CSI_STR "\x0f", 2},
+        {"<F4>",    4, CSI_STR "\x10", 2},
+        {"<F5>",    4, CSI_STR "\x11", 2},
+        {"<F6>",    4, CSI_STR "\x12", 2},
+        {"<F7>",    4, CSI_STR "\x13", 2},
+        {"<F8>",    4, CSI_STR "\x14", 2},
+        {"<F9>",    4, CSI_STR "\x15", 2},
+        {"<F10>",   5, CSI_STR "\x16", 2},
+        {"<F11>",   5, CSI_STR "\x17", 2},
+        {"<F12>",   5, CSI_STR "\x18", 2},
     };
 
     for (int i = 0; i < LENGTH(keys); i++) {
@@ -409,6 +512,8 @@ static void showcmd(char *keys, int keylen, gboolean append)
             if (IS_CTRL(key)) {
                 map.showbuf[map.slen++] = '^';
                 map.showbuf[map.slen++] = CTRL(key);
+            } else if ((key & 0xff) == CSI) {
+                map.showbuf[map.slen++] = '@';
             } else {
                 map.showbuf[map.slen++] = key;
             }

@@ -48,8 +48,8 @@ void pass_leave(void)
 VbResult pass_keypress(unsigned int key)
 {
     if (key == CTRL('[')) { /* esc */
-        vb.state.processed_key = true;
         mode_enter('n');
     }
+    vb.state.processed_key = false;
     return RESULT_COMPLETE;
 }

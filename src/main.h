@@ -41,12 +41,13 @@
 
 /* this macro converts a non-'g' ascii command into a 'g' command by setting
  * the 8th bit for the char */
-/* TODO maybe these macros are only used in keybind.c or mode.c */
 #define G_CMD(x)     ((x) | 0x80)
 #define UNG_CMD(x)   ((x) & ~0x80)
 #define CTRL(x)      ((x) ^ 0x40)
 /* check if the char x is a char with CTRL like ^C */
 #define IS_CTRL(x)   (((unsigned char)x) <= 32)
+#define CSI          0x9b   /* Control Sequence Introducer */
+#define CSI_STR      "\233"
 
 #ifdef DEBUG
 #define PRINT_DEBUG(...) { \

@@ -51,7 +51,6 @@ void hints_init(WebKitWebFrame *frame)
 
 VbResult hints_keypress(unsigned int key)
 {
-    vb.state.processed_key = true;
     if (key == '\n') {
         hints_fire();
 
@@ -85,7 +84,6 @@ VbResult hints_keypress(unsigned int key)
 
         return RESULT_COMPLETE;
     }
-    vb.state.processed_key = false;
 
     return RESULT_ERROR;
 }

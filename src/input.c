@@ -59,19 +59,17 @@ VbResult input_keypress(unsigned int key)
 {
     switch (key) {
         case CTRL('['): /* esc */
-            vb.state.processed_key = true;
             mode_enter('n');
             return RESULT_COMPLETE;
 
         case CTRL('T'):
-            vb.state.processed_key = true;
             return input_open_editor();
 
         case CTRL('Z'):
-            vb.state.processed_key = true;
             mode_enter('p');
             return RESULT_COMPLETE;
     }
+    vb.state.processed_key = false;
     return RESULT_ERROR;
 }
 
