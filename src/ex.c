@@ -366,18 +366,17 @@ static void input_activate(void)
 
 gboolean ex_run_string(const char *input)
 {
-    ExArg *a = g_new0(ExArg, 1);
-    a->lhs = g_string_new("");
-    a->rhs = g_string_new("");
+    ExArg *arg = g_new0(ExArg, 1);
+    arg->lhs   = g_string_new("");
+    arg->rhs   = g_string_new("");
 
-    if (!parse(&input, a)
-        || !execute(a)
-    ) {
-        free_cmdarg(a);
-
-        return false;
+    while (input && *input) {
+        if (!parse(&input, arg) || !execute(arg)) {
+            free_cmdarg(arg);
+            return false;
+        }
     }
-    free_cmdarg(a);
+    free_cmdarg(arg);
 
     return true;
 }
@@ -388,11 +387,18 @@ gboolean ex_run_string(const char *input)
 static gboolean parse(const char **input, ExArg *arg)
 {
     ExInfo *cmd = NULL;
-    if (!*input) {
+    if (!*input || !**input) {
         return false;
     }
-    /* remove leading whitespace */
-    skip_whitespace(input);
+
+    /* trunkacate string from potentially previous run */
+    g_string_truncate(arg->lhs, 0);
+    g_string_truncate(arg->rhs, 0);
+
+    /* remove leading whitespace and : */
+    while (**input && (**input == ':' || **input == ' ')) {
+        (*input)++;
+    }
     parse_count(input, arg);
 
     skip_whitespace(input);
@@ -414,6 +420,9 @@ static gboolean parse(const char **input, ExArg *arg)
         parse_rhs(input, arg);
     }
 
+    if (**input) {
+        (*input)++;
+    }
 #if 0
     PRINT_DEBUG("CMD idx=%d, x=%d [%s][%s][%s]", arg->idx, arg->count, arg->name, arg->lhs->str, arg->rhs->str);
 #endif
@@ -485,12 +494,12 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
  */
 static gboolean parse_lhs(const char **input, ExArg *arg)
 {
-    if (!*input) {
+    if (!*input || !**input) {
         return false;
     }
     /* get the char until the next none escaped whitespace and save it into
      * the lhs */
-    while (*input && **input != ' ') {
+    while (**input && **input != ' ') {
         /* if we find a backslash this escapes the next whitespace */
         if (**input == '\\') {
             /* move pointer to the next char */
@@ -520,11 +529,11 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
  */
 static gboolean parse_rhs(const char **input, ExArg *arg)
 {
-    if (!*input) {
+    if (!*input || !**input) {
         return false;
     }
     /* get char until the end of command */
-    while (*input && **input != '\n' && **input != '|') {
+    while (**input && **input != '\n' && **input != '|') {
         /* if we find a backslash this escapes the next whitespace */
         if (**input == '\\') {
             /* move pointer to the next char */
@@ -560,7 +569,7 @@ static gboolean execute(const ExArg *arg)
 static void skip_whitespace(const char **input)
 {
     /* TODO should \t also be skipped here? */
-    while (*input && **input == ' ') {
+    while (**input && **input == ' ') {
         (*input)++;
     }
 }
@@ -582,8 +591,12 @@ static char *expand_string(const char *str)
 
 static void free_cmdarg(ExArg *arg)
 {
-    g_string_free(arg->lhs, true);
-    g_string_free(arg->rhs, true);
+    if (arg->lhs) {
+        g_string_free(arg->lhs, true);
+    }
+    if (arg->rhs) {
+        g_string_free(arg->rhs, true);
+    }
     g_free(arg);
 }
 
