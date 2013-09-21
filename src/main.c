@@ -731,7 +731,6 @@ static void init_core(void)
     mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
     mode_enter('n');
 
-    map_init();
     init_files();
     session_init();
     setting_init();

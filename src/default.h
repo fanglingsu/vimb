@@ -65,6 +65,8 @@ static char *default_config[] = {
     "set insecure-content-show=off",
     "set insecure-content-run=off",
 #endif
+    "cmap <Up> <C-P>",
+    "cmap <Down> <C-N>",
     NULL
 };
 

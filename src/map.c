@@ -49,16 +49,6 @@ static void showcmd(char *keys, int keylen, gboolean append);
 static void free_map(Map *map);
 
 
-void map_init(void)
-{
-    /* bind cursor keys to ^P and ^N but only in command mode else down would
-     * trigger the queue pop */
-    map_insert("<Up>", "\x10", 'c');
-    map_insert("<Down>", "\x0e", 'c');
-    map_insert("<Up>", "k", 'n');
-    map_insert("<Down>", "j", 'n');
-}
-
 void map_cleanup(void)
 {
     if (map.list) {
@@ -390,7 +380,8 @@ static char *map_convert_keys(char *in, int inlen, int *len)
                 }
             }
 
-            if (!raw) {
+            /* if we could not convert it jet - try to translate the label */
+            if (!rawlen) {
                 raw = map_convert_keylabel(p, symlen, &rawlen);
             }
         }
