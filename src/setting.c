@@ -50,7 +50,7 @@ static Setting default_settings[] = {
     /* alias,  name,               type,         func,           arg */
     {"images", "auto-load-images", TYPE_BOOLEAN, webkit, {0}},
     {"cursivfont", "cursive-font-family", TYPE_CHAR, webkit, {0}},
-    {"defaultencondig", "default-encoding", TYPE_CHAR, webkit, {0}},
+    {"defaultencoding", "default-encoding", TYPE_CHAR, webkit, {0}},
     {"defaultfont", "default-font-family", TYPE_CHAR, webkit, {0}},
     {"fontsize", "default-font-size", TYPE_INTEGER, webkit, {0}},
     {"monofontsize", "default-monospace-font-size", TYPE_INTEGER, webkit, {0}},

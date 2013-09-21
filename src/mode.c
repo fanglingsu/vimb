@@ -97,8 +97,10 @@ VbResult mode_handle_key(unsigned int key)
     VbResult res;
     if (vb.mode && vb.mode->keypress) {
         key &= 0xff;
+#ifdef DEBUG
         int flags = vb.mode->flags;
         int id    = vb.mode->id;
+#endif
         res = vb.mode->keypress(key);
         if (vb.mode) {
             PRINT_DEBUG(
