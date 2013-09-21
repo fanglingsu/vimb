@@ -156,7 +156,7 @@ gboolean command_save(const Arg *arg)
         uri = arg->s;
     }
 
-    if (!uri || *uri == '\0') {
+    if (!uri || !*uri) {
         return false;
     }
 

@@ -155,7 +155,7 @@ gboolean vb_load_uri(const Arg *arg)
     if (arg->s) {
         path = g_strstrip(arg->s);
     }
-    if (!path || *path == '\0') {
+    if (!path || !*path) {
         path = vb.config.home_page;
     }
 

@@ -437,7 +437,7 @@ static VbResult normal_descent(const NormalCmdInfo *info)
     uri = GET_URI();
 
     /* get domain part */
-    if (!uri || *uri == '\0'
+    if (!uri || !*uri
         || !(domain = strstr(uri, "://"))
         || !(domain = strchr(domain + 3, '/'))
     ) {

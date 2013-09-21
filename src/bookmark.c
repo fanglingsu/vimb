@@ -107,7 +107,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
 
     src = load(vb.files[FILES_BOOKMARK]);
     src = g_list_reverse(src);
-    if (!input || *input == '\0') {
+    if (!input || !*input) {
         /* without any tags return all bookmarked items */
         for (GList *l = src; l; l = l->next) {
             bm = (Bookmark*)l->data;
@@ -172,7 +172,7 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
     }
 
     /* generate the completion with the found tags */
-    if (!input || *input == '\0') {
+    if (!input || !*input) {
         for (l = tags; l; l = l->next) {
             gtk_list_store_append(store, &iter);
             gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
@@ -317,7 +317,7 @@ static Bookmark *line_to_bookmark(const char *line)
     while (g_ascii_isspace(*line)) {
         line++;
     }
-    if (*line == '\0') {
+    if (!*line) {
         return NULL;
     }
 

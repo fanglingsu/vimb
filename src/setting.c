@@ -204,7 +204,7 @@ gboolean setting_fill_completion(GtkListStore *store, const char *input)
     GtkTreeIter iter;
     GList *src = g_hash_table_get_keys(settings);
 
-    if (!input || input == '\0') {
+    if (!input || !*input) {
         for (GList *l = src; l; l = l->next) {
             gtk_list_store_append(store, &iter);
             gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);

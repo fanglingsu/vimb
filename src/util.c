@@ -131,7 +131,7 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     for (int i = len - 1; i >= 0; i--) {
         line = lines[i];
         g_strstrip(line);
-        if (*line == '\0') {
+        if (!*line) {
             continue;
         }
 

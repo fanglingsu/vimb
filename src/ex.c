@@ -423,9 +423,7 @@ static gboolean parse(const char **input, ExArg *arg)
     if (**input) {
         (*input)++;
     }
-#if 0
-    PRINT_DEBUG("CMD idx=%d, x=%d [%s][%s][%s]", arg->idx, arg->count, arg->name, arg->lhs->str, arg->rhs->str);
-#endif
+
     return true;
 }
 
@@ -475,7 +473,7 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
             }
         }
         (*input)++;
-    } while (matches > 0 && **input != '\0' && **input != ' ');
+    } while (matches > 0 && **input && **input != ' ');
 
     if (!matches) {
         /* TODO show readable error message */
@@ -494,25 +492,28 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
  */
 static gboolean parse_lhs(const char **input, ExArg *arg)
 {
+    char quote = '\\';
+
     if (!*input || !**input) {
         return false;
     }
+
     /* get the char until the next none escaped whitespace and save it into
      * the lhs */
     while (**input && **input != ' ') {
         /* if we find a backslash this escapes the next whitespace */
-        if (**input == '\\') {
+        if (**input == quote) {
             /* move pointer to the next char */
             (*input)++;
             if (!*input) {
                 /* if input ends here - use only the backslash */
-                g_string_append_c(arg->lhs, '\\');
+                g_string_append_c(arg->lhs, quote);
             } else if (**input == ' ') {
                 /* escaped whitespace becomes only whitespace */
                 g_string_append_c(arg->lhs, **input);
             } else {
                 /* put escape char and next char into the result string */
-                g_string_append_c(arg->lhs, '\\');
+                g_string_append_c(arg->lhs, quote);
                 g_string_append_c(arg->lhs, **input);
             }
         } else {
@@ -529,24 +530,27 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
  */
 static gboolean parse_rhs(const char **input, ExArg *arg)
 {
+    char quote = '\\';
+
     if (!*input || !**input) {
         return false;
     }
+
     /* get char until the end of command */
     while (**input && **input != '\n' && **input != '|') {
         /* if we find a backslash this escapes the next whitespace */
-        if (**input == '\\') {
+        if (**input == quote) {
             /* move pointer to the next char */
             (*input)++;
             if (!*input) {
                 /* if input ends here - use only the backslash */
-                g_string_append_c(arg->rhs, '\\');
+                g_string_append_c(arg->rhs, quote);
             } else if (**input == ' ') {
                 /* escaped whitespace becomes only whitespace */
                 g_string_append_c(arg->rhs, **input);
             } else {
                 /* put escape char and next char into the result string */
-                g_string_append_c(arg->rhs, '\\');
+                g_string_append_c(arg->rhs, quote);
                 g_string_append_c(arg->rhs, **input);
             }
         } else {
@@ -622,7 +626,7 @@ static gboolean ex_eval(const ExArg *arg)
     gboolean success;
     char *value = NULL;
 
-    if (!*arg->rhs->str) {
+    if (!arg->rhs->len) {
         return false;
     }
 
@@ -641,13 +645,14 @@ static gboolean ex_eval(const ExArg *arg)
 
 static gboolean ex_map(const ExArg *arg)
 {
-    /* TODO implement parsing of chars */
-    char *lhs = arg->lhs->str;
-    char *rhs = arg->rhs->str;
+    char *lhs, *rhs;
 
-    if (!*lhs || !*rhs) {
+    if (!arg->lhs->len || !arg->rhs->len) {
         return false;
     }
+
+    lhs = arg->lhs->str;
+    rhs = arg->rhs->str;
 
     if (arg->code == EX_NMAP) {
         map_insert(lhs, rhs, 'n');
@@ -661,12 +666,12 @@ static gboolean ex_map(const ExArg *arg)
 
 static gboolean ex_unmap(const ExArg *arg)
 {
-    /* TODO implement parsing of chars */
-    char *lhs = arg->lhs->str;
-
-    if (!*lhs) {
+    char *lhs;
+    if (!arg->lhs->len) {
         return false;
     }
+
+    lhs = arg->lhs->str;
 
     if (arg->code == EX_NUNMAP) {
         map_delete(lhs, 'n');
@@ -732,7 +737,7 @@ static gboolean ex_set(const ExArg *arg)
     gboolean success;
     char *param = NULL;
 
-    if (!*arg->rhs->str) {
+    if (!arg->rhs->len) {
         return false;
     }
 
@@ -786,7 +791,7 @@ static gboolean ex_shortcut(const ExArg *arg)
      * shortcut[name]=http://donain.tld/?q=$0' */
     switch (arg->code) {
         case EX_SCA:
-            if (*arg->rhs->str && (p = strchr(arg->rhs->str, '='))) {
+            if (arg->rhs->len && (p = strchr(arg->rhs->str, '='))) {
                 *p++ = '\0';
                 return shortcut_add(arg->rhs->str, p);
             }
