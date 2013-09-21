@@ -37,15 +37,16 @@ static struct {
     char   queue[MAP_QUEUE_SIZE];   /* queue holding typed keys */
     int    qlen;                    /* pointer to last char in queue */
     int    resolved;                /* number of resolved keys (no mapping required) */
-    char   showbuf[12];             /* buffer used to show ambiguous keys to the user */
-    int    slen;                    /* pointer to last char in showbuf */
     guint  timout_id;               /* source id of the timeout function */
+    char   transchar[3];            /* buffer used to translate keys to be shown in statusbar */
+    char   showbuf[10];             /* buffer to shw ambiguous key sequence */
 } map;
 
 static char *map_convert_keys(char *in, int inlen, int *len);
 static char *map_convert_keylabel(char *in, int inlen, int *len);
 static gboolean map_timeout(gpointer data);
-static void showcmd(char *keys, int keylen, gboolean append);
+static void showcmd(char *keys, int keylen);
+static char* transchar(char c);
 static void free_map(Map *map);
 
 
@@ -204,7 +205,7 @@ MapState map_handle_keys(const char *keys, int keylen)
             if (csi > 0) {
                 csi--;
                 vb.state.processed_key = false;
-                showcmd(NULL, 0, false);
+                showcmd(NULL, 0);
                 continue;
             }
 
@@ -213,7 +214,7 @@ MapState map_handle_keys(const char *keys, int keylen)
 
             /* send the key to the parser */
             if (RESULT_MORE != mode_handle_key((unsigned int)qk)) {
-                showcmd(NULL, 0, false);
+                showcmd(NULL, 0);
             }
         }
 
@@ -237,7 +238,7 @@ MapState map_handle_keys(const char *keys, int keylen)
                 /* find ambiguous matches */
                 if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue, map.qlen)) {
                     ambiguous++;
-                    showcmd(map.queue, map.qlen, false);
+                    showcmd(map.queue, map.qlen);
                 }
                 /* complete match or better/longer match than previous found */
                 if (m->inlen <= map.qlen
@@ -283,7 +284,7 @@ MapState map_handle_keys(const char *keys, int keylen)
         } else {
             /* first char is not mapped but resolved */
             map.resolved = 1;
-            showcmd(map.queue, map.resolved, true);
+            showcmd(map.queue, map.resolved);
         }
     }
 
@@ -483,37 +484,49 @@ static gboolean map_timeout(gpointer data)
  * Add given keys to the show command queue to show them to the user.
  * If the keylen of 0 is given, the show command queue is cleared.
  */
-static void showcmd(char *keys, int keylen, gboolean append)
+static void showcmd(char *keys, int keylen)
 {
-    /* make sure we keep in buffer range also for ^X chars */
-    int max = LENGTH(map.showbuf) - 2;
+    char *translated;
+    int old, extra, overflow;
 
-    if (!append) {
-        map.slen = 0;
+    /* if we get a keylen > 1 this means we have a better match for a previous
+     * ambiguous key sequence and have to remove the previous one before */
+    if (!keylen || keylen > 1) {
+        map.showbuf[0] = '\0';
     }
-
-    /* truncate the buffer */
-    if (!keylen) {
-        map.showbuf[(map.slen = 0)] = '\0';
-    } else {
-        /* TODO if not all keys would fit into the buffer use the last significat
-         * chars instead */
-        while (keylen-- && map.slen < max) {
-            char key = *keys++;
-            if (IS_CTRL(key)) {
-                map.showbuf[map.slen++] = '^';
-                map.showbuf[map.slen++] = CTRL(key);
-            } else if ((key & 0xff) == CSI) {
-                map.showbuf[map.slen++] = '@';
-            } else {
-                map.showbuf[map.slen++] = key;
-            }
+    /* show the most significant last chars in the statusbar if they don't
+     * fit into the showbuf */
+    for (int i = 0; i < keylen; i++) {
+        translated = transchar(keys[i]);
+        old        = strlen(map.showbuf);
+        extra      = strlen(translated);
+        overflow   = old + extra - LENGTH(map.showbuf);
+        if (overflow > 0) {
+            g_memmove(map.showbuf, map.showbuf + overflow, old - overflow + 1);
         }
-        map.showbuf[map.slen] = '\0';
+        strcat(map.showbuf, translated);
     }
-
     /* show the typed keys */
     gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.cmd), map.showbuf);
+}
+
+/**
+ * Transalte a singe char into a readable representation to be show to the
+ * user in statu bar.
+ */
+static char *transchar(char c)
+{
+    if (IS_CTRL(c)) {
+        map.transchar[0] = '^';
+        map.transchar[1] = CTRL(c);
+        map.transchar[2] = '\0';
+    } else if ((c & 0xff) == CSI) {
+        map.transchar[0] = '~';
+    } else {
+        map.transchar[0] = c;
+        map.transchar[1] = '\0';
+    }
+    return map.transchar;
 }
 
 static void free_map(Map *map)
