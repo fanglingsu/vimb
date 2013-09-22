@@ -70,7 +70,7 @@ static struct {
 /* NUL  */ {NULL},
 /* ^A   */ {NULL},
 /* ^B   */ {normal_scroll},
-/* ^C   */ {NULL},
+/* ^C   */ {normal_navigate},
 /* ^D   */ {normal_scroll},
 /* ^E   */ {NULL},
 /* ^F   */ {normal_scroll},
@@ -576,7 +576,7 @@ static VbResult normal_navigate(const NormalCmdInfo *info)
             webkit_web_view_reload_bypass_cache(view);
             break;
 
-        case 'C': /* TODO shouldn't we use ^C instead? */
+        case CTRL('C'):
             webkit_web_view_stop_loading(view);
             break;
     }
