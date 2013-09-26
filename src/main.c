@@ -1035,12 +1035,8 @@ int main(int argc, char *argv[])
 
     init_core();
 
-#if defined(ANNOUNCEMENT) && defined(SHOW_ANNOUNCEMENT)
-    webkit_web_view_load_string(vb.gui.webview, ANNOUNCEMENT, "text/html", NULL, NULL);
-#else
     /* command line argument: URL */
     vb_load_uri(&(Arg){VB_TARGET_CURRENT, argc > 1 ? argv[argc - 1] : vb.config.home_page});
-#endif
 
     /* Run the main GTK+ event loop */
     gtk_main();
