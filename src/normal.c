@@ -50,6 +50,7 @@ static VbResult normal_descent(const NormalCmdInfo *info);
 static VbResult normal_ex(const NormalCmdInfo *info);
 static VbResult normal_focus_input(const NormalCmdInfo *info);
 static VbResult normal_hint(const NormalCmdInfo *info);
+static VbResult normal_input_open(const NormalCmdInfo *info);
 static VbResult normal_navigate(const NormalCmdInfo *info);
 static VbResult normal_open_clipboard(const NormalCmdInfo *info);
 static VbResult normal_open(const NormalCmdInfo *info);
@@ -146,12 +147,12 @@ static struct {
 /* L    */ {NULL},
 /* M    */ {NULL},
 /* N    */ {normal_search},
-/* O    */ {NULL},
+/* O    */ {normal_input_open},
 /* P    */ {normal_open_clipboard},
 /* Q    */ {NULL},
 /* R    */ {normal_navigate},
 /* S    */ {NULL},
-/* T    */ {NULL},
+/* T    */ {normal_input_open},
 /* U    */ {normal_open},
 /* V    */ {NULL},
 /* W    */ {NULL},
@@ -178,12 +179,12 @@ static struct {
 /* l    */ {normal_scroll},
 /* m    */ {NULL},
 /* n    */ {normal_search},
-/* o    */ {normal_ex},
+/* o    */ {normal_input_open},
 /* p    */ {normal_open_clipboard},
 /* q    */ {NULL},
 /* r    */ {normal_navigate},
 /* s    */ {NULL},
-/* t    */ {normal_ex},
+/* t    */ {normal_input_open},
 /* u    */ {normal_open},
 /* v    */ {NULL},
 /* w    */ {NULL},
@@ -485,40 +486,16 @@ static VbResult normal_descent(const NormalCmdInfo *info)
 
 static VbResult normal_ex(const NormalCmdInfo *info)
 {
-    char prompt[2] = {0};
-
-    /* Handle some hardwired mapping here instead of using map_insert. This
-     * makes the binding imutable and we can simply use f, F, o and t in
-     * mapped keys too */
-    switch (info->cmd) {
-        case 'o':
-            vb_set_input_text(":open ");
-            /* switch mode after setting the input text to not trigger the
-             * commands modes input change handler */
-            mode_enter('c');
-            break;
-
-        case 't':
-            vb_set_input_text(":tabopen ");
-            mode_enter('c');
-            break;
-
-        case 'f':
-            /* switch the mode first so that the input change handler of
-             * command mode will recognize the ; to switch to hinting submode */
-            mode_enter('c');
-            vb_set_input_text(";o");
-            break;
-
-        case 'F':
-            mode_enter('c');
-            vb_set_input_text(";t");
-            break;
-        
-        default:
-            prompt[0] = info->cmd;
-            vb_set_input_text(prompt);
-            mode_enter('c');
+    if (info->cmd == 'F') {
+        mode_enter('c');
+        vb_set_input_text(";t");
+    } else if (info->cmd == 'f') {
+        mode_enter('c');
+        vb_set_input_text(";o");
+    } else {
+        char prompt[2] = {info->cmd, '\0'};
+        vb_set_input_text(prompt);
+        mode_enter('c');
     }
 
     return RESULT_COMPLETE;
@@ -550,6 +527,28 @@ static VbResult normal_hint(const NormalCmdInfo *info)
 
     mode_enter('c');
     vb_set_input_text(prompt);
+    return RESULT_COMPLETE;
+}
+
+static VbResult normal_input_open(const NormalCmdInfo *info)
+{
+    if (strchr("ot", info->cmd)) {
+        vb_set_input_text(info->cmd == 't' ? ":tabopen " : ":open ");
+    } else {
+        /* use vb_set_input_text because this is not restricted to BUF_SIZE
+         * wich could be to small for some uri */
+        char *str = g_strconcat(
+            info->cmd == 'T' ? ":tabopen " : ":open ",
+            GET_URI(),
+            NULL
+        );
+        vb_set_input_text(str);
+        g_free(str);
+    }
+    /* switch mode after setting the input text to not trigger the
+     * commands modes input change handler */
+    mode_enter('c');
+
     return RESULT_COMPLETE;
 }
 
