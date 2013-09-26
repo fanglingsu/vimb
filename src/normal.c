@@ -535,15 +535,7 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
     if (strchr("ot", info->cmd)) {
         vb_set_input_text(info->cmd == 't' ? ":tabopen " : ":open ");
     } else {
-        /* use vb_set_input_text because this is not restricted to BUF_SIZE
-         * wich could be to small for some uri */
-        char *str = g_strconcat(
-            info->cmd == 'T' ? ":tabopen " : ":open ",
-            GET_URI(),
-            NULL
-        );
-        vb_set_input_text(str);
-        g_free(str);
+        vb_echo(VB_MSG_NORMAL, false, ":%s %s", info->cmd == 'T' ? "open" : "tabopen", GET_URI());
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */

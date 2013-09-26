@@ -82,26 +82,47 @@ static void input_print(gboolean force, const MessageType type, gboolean hide, c
 
 void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
 {
-    char message[BUF_SIZE];
-    va_list arg_list;
+    char *buffer;
+    va_list args;
 
-    va_start(arg_list, error);
-    vsnprintf(message, BUF_SIZE, error, arg_list);
-    va_end(arg_list);
+    va_start(args, error);
+    buffer = g_strdup_vprintf(error, args);
+    va_end(args);
 
-    input_print(true, type, hide, message);
+    input_print(true, type, hide, buffer);
+    g_free(buffer);
 }
 
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
 {
-    char message[BUF_SIZE];
-    va_list arg_list;
+    char *buffer;
+    va_list args;
 
-    va_start(arg_list, error);
-    vsnprintf(message, BUF_SIZE, error, arg_list);
-    va_end(arg_list);
+    va_start(args, error);
+    buffer = g_strdup_vprintf(error, args);
+    va_end(args);
 
-    input_print(false, type, hide, message);
+    input_print(false, type, hide, buffer);
+    g_free(buffer);
+}
+
+static void input_print(gboolean force, const MessageType type, gboolean hide,
+    const char *message)
+{
+    /* don't print message if the input is focussed */
+    if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.input))) {
+        return;
+    }
+
+    /* apply input style only if the message type was changed */
+    if (type != vb.state.input_type) {
+        vb.state.input_type = type;
+        vb_update_input_style();
+    }
+    vb_set_input_text(message);
+    if (hide) {
+        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)hide_message, NULL);
+    }
 }
 
 /**
@@ -522,24 +543,6 @@ static void set_status(const StatusType status)
         vb.state.status_type = status;
         /* update the statusbar style only if the status changed */
         vb_update_status_style();
-    }
-}
-
-static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message)
-{
-    /* don't print message if the input is focussed */
-    if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.input))) {
-        return;
-    }
-
-    /* apply input style only if the message type was changed */
-    if (type != vb.state.input_type) {
-        vb.state.input_type = type;
-        vb_update_input_style();
-    }
-    vb_set_input_text(message);
-    if (hide) {
-        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)hide_message, NULL);
     }
 }
 
