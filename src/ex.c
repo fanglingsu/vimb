@@ -190,11 +190,9 @@ VbResult ex_keypress(unsigned int key)
     GtkTextBuffer *buffer = vb.gui.buffer;
     GtkTextMark *mark;
 
-    /* delegate call to the submode if hinting is active */
-    if (vb.mode->flags & FLAG_HINTING) {
-        if (RESULT_COMPLETE == hints_keypress(key)) {
-            return RESULT_COMPLETE;
-        }
+    /* delegate call to the submode */
+    if (RESULT_COMPLETE == hints_keypress(key)) {
+        return RESULT_COMPLETE;
     }
 
     switch (key) {

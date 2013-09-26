@@ -51,6 +51,12 @@ void hints_init(WebKitWebFrame *frame)
 
 VbResult hints_keypress(unsigned int key)
 {
+    /* if we are not already in hint mode we expect to get a ; to start
+     * hinting */
+    if (!(vb.mode->flags & FLAG_HINTING) && key != ';') {
+        return RESULT_ERROR;
+    }
+
     if (key == '\n') {
         hints_fire();
 

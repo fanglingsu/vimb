@@ -114,6 +114,22 @@ VbResult mode_handle_key(unsigned int key)
     return RESULT_ERROR;
 }
 
+gboolean mode_input_focusin(GtkWidget *widget, GdkEventFocus *event, gpointer data)
+{
+    /* enter the command mode if the focus is on inputbox */
+    mode_enter('c');
+
+    return false;
+}
+
+gboolean mode_input_focusout(GtkWidget *widget, GdkEventFocus *event, gpointer data)
+{
+    /* if focus is lesft from inputbox - switch back to normal mode */
+    mode_enter('n');
+
+    return false;
+}
+
 /**
  * Process input changed event on current active mode.
  */

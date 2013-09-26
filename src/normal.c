@@ -408,15 +408,6 @@ VbResult normal_keypress(unsigned int key)
     return res;
 }
 
-/**
- * Handles changes in the inputbox. If there are usergenerated changes, we
- * switch to command mode.
- */
-void normal_input_changed(const char *text)
-{
-    /*mode_enter('i');*/
-}
-
 static VbResult normal_clear_input(const NormalCmdInfo *info)
 {
     vb_set_input_text("");

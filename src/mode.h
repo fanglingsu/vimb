@@ -29,6 +29,8 @@ void mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
     ModeKeyFunc keypress, ModeInputChangedFunc input_changed);
 void mode_enter(char id);
 VbResult mode_handle_key(unsigned int key);
+gboolean mode_input_focusin(GtkWidget *widget, GdkEventFocus *event, gpointer data);
+gboolean mode_input_focusout(GtkWidget *widget, GdkEventFocus *event, gpointer data);
 void mode_input_changed(GtkTextBuffer* buffer, gpointer data);
 
 #endif /* end of include guard: _MODE_H */
