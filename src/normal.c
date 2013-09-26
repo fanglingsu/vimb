@@ -526,7 +526,7 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
     if (strchr("ot", info->cmd)) {
         vb_set_input_text(info->cmd == 't' ? ":tabopen " : ":open ");
     } else {
-        vb_echo(VB_MSG_NORMAL, false, ":%s %s", info->cmd == 'T' ? "open" : "tabopen", GET_URI());
+        vb_echo(VB_MSG_NORMAL, false, ":%s %s", info->cmd == 'T' ? "tabopen" : "open", GET_URI());
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */
