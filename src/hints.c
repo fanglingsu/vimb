@@ -95,7 +95,7 @@ void hints_clear(void)
     if (vb.mode->flags & FLAG_HINTING) {
         vb.mode->flags &= ~FLAG_HINTING;
         vb_set_input_text("");
-        js = g_strdup_printf("%s.clear();", HINT_VAR);
+        js = g_strconcat(HINT_VAR, ".clear();", NULL);
         vb_eval_script(webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value);
         g_free(value);
         g_free(js);
@@ -145,7 +145,7 @@ void hints_focus_next(const gboolean back)
 
 void hints_fire(void)
 {
-    char *js = g_strdup_printf("%s.fire();", HINT_VAR);
+    char *js = g_strconcat(HINT_VAR, ".fire();", NULL);
     run_script(js);
     g_free(js);
 }

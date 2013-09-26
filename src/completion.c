@@ -273,7 +273,7 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
         if (comp.count) {
             comp.text = g_strdup_printf("%s%d%s", comp.prefix, comp.count, value);
         } else {
-            comp.text = g_strdup_printf("%s%s", comp.prefix, value);
+            comp.text = g_strconcat(comp.prefix, value, NULL);
         }
         /* print the text also into inputbox */
         vb_set_input_text(comp.text);

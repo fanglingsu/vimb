@@ -159,12 +159,12 @@ gboolean vb_load_uri(const Arg *arg)
         path = vb.config.home_page;
     }
 
-    if (g_strrstr(path, "://") || !strncmp(path, "about:", 6)) {
+    if (strstr(path, "://") || !strncmp(path, "about:", 6)) {
         uri = g_strdup(path);
     } else if (stat(path, &st) == 0) {
         /* check if the path is a file path */
         rp  = realpath(path, NULL);
-        uri = g_strdup_printf("file://%s", rp);
+        uri = g_strconcat("file://", rp, NULL);
         free(rp);
     } else if (strchr(path, ' ') || !strchr(path, '.')) {
         /* use a shortcut if path contains spaces or no dot */
@@ -172,7 +172,7 @@ gboolean vb_load_uri(const Arg *arg)
     }
 
     if (!uri) {
-        uri = g_strdup_printf("http://%s", path);
+        uri = g_strconcat("http://", path, NULL);
     }
 
     if (arg->i == VB_TARGET_NEW) {
@@ -874,7 +874,7 @@ static void hover_link_cb(WebKitWebView *webview, const char *title, const char 
 {
     char *message;
     if (link) {
-        message = g_strdup_printf("Link: %s", link);
+        message = g_strconcat("Link: ", link, NULL);
         gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), message);
         g_free(message);
     } else {

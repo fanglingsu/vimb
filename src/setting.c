@@ -624,9 +624,9 @@ static gboolean proxy(const Setting *s, const SettingType type)
     if (enabled) {
         proxy = (char *)g_getenv("http_proxy");
         if (proxy != NULL && strlen(proxy)) {
-            proxy_new = g_strrstr(proxy, "http://")
+            proxy_new = g_str_has_prefix(proxy, "http://")
                 ? g_strdup(proxy)
-                : g_strdup_printf("http://%s", proxy);
+                : g_strconcat("http://", proxy, NULL);
             proxy_uri = soup_uri_new(proxy_new);
 
             g_object_set(vb.session, "proxy-uri", proxy_uri, NULL);
