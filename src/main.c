@@ -222,63 +222,6 @@ gboolean vb_set_clipboard(const Arg *arg)
     return result;
 }
 
-gboolean vb_set_mode(VimbMode mode, gboolean clean)
-{
-    if (mode == VB_MODE_INPUT) {
-        mode_enter('i');
-        return true;
-    }
-    /* process only if mode has changed */
-    if (vb.state.mode != mode) {
-        /* leaf the old mode */
-        if ((vb.state.mode & VB_MODE_COMPLETE) && !(mode & VB_MODE_COMPLETE)) {
-            completion_clean();
-        } else if ((vb.state.mode & VB_MODE_SEARCH) && !(mode & VB_MODE_SEARCH)) {
-            command_search(&((Arg){COMMAND_SEARCH_OFF}));
-        } else if ((vb.state.mode & VB_MODE_HINTING) && !(mode & VB_MODE_HINTING)) {
-            hints_clear();
-        } else if (CLEAN_MODE(vb.state.mode) == VB_MODE_INPUT && !(mode & VB_MODE_INPUT)) {
-            clean = true;
-            dom_clear_focus(vb.gui.webview);
-        }
-
-        /* enter the new mode */
-        switch (CLEAN_MODE(mode)) {
-            case VB_MODE_NORMAL:
-                history_rewind();
-                gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-                if (mode & VB_MODE_PASSTHROUGH) {
-                    clean = false;
-                    vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
-                }
-                break;
-
-            case VB_MODE_COMMAND:
-                gtk_widget_grab_focus(GTK_WIDGET(vb.gui.input));
-                break;
-
-            case VB_MODE_INPUT:
-                clean = false;
-                gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-                if (mode & VB_MODE_PASSTHROUGH) {
-                    vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
-                } else {
-                    vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
-                }
-                break;
-        }
-        vb.state.mode = mode;
-    }
-
-    if (clean) {
-        vb_echo(VB_MSG_NORMAL, false, "");
-    }
-
-    vb_update_statusbar();
-
-    return true;
-}
-
 void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font)
 {
     VB_WIDGET_OVERRIDE_FONT(widget, font);
@@ -485,12 +428,12 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 run_user_script(frame);
             }
 
-            if (vb.state.mode & VB_MODE_INPUT) {
-                /* status bar is updated by vb_set_mode */
-                vb_set_mode(VB_MODE_NORMAL, false);
-            } else {
-                vb_update_statusbar();
+            /* if we load a page from a submitted form, leafe the insert mode */
+            if (vb.mode->id == 'i') {
+                mode_enter('n');
             }
+
+            vb_update_statusbar();
             vb_update_urlbar(uri);
 
             break;
@@ -879,13 +822,10 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
     g_object_get(result, "context", &context, NULL);
     /* TODO move this to normal.c */
     if (vb.mode->id == 'n' && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-        vb_set_mode(VB_MODE_INPUT, false);
-
+        mode_enter('i');
         propagate = true;
-    }
-    /* TODO move this to normal.c */
-    /* middle mouse click onto link */
-    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
+    } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
+        /* middle mouse click onto link */
         Arg a = {VB_TARGET_NEW};
         g_object_get(result, "link-uri", &a.s, NULL);
         vb_load_uri(&a);

@@ -643,9 +643,6 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
     gdouble value, max, new;
     int count = info->count ? info->count : 1;
 
-    /* TODO is this required? */
-    /*vb_set_mode(VB_MODE_NORMAL | (vb.state.mode & VB_MODE_SEARCH), false);*/
-
     /* TODO split this into more functions - reduce similar code */
     switch (info->cmd) {
         case 'h':

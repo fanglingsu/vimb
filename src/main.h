@@ -352,7 +352,6 @@ void vb_input_activate(void);
 gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value);
 gboolean vb_load_uri(const Arg *arg);
 gboolean vb_set_clipboard(const Arg *arg);
-gboolean vb_set_mode(VimbMode mode, gboolean clean);
 void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font);
 void vb_update_statusbar(void);
 void vb_update_status_style(void);
