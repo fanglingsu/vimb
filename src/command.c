@@ -29,16 +29,16 @@
 
 extern VbCore vb;
 
-gboolean command_search(const Arg *arg, unsigned int count)
+gboolean command_search(const Arg *arg)
 {
-    static SearchDirection dir;
+    static short dir;   /* last direction 1 forward, -1 backward*/
     static char *query = NULL;
 #ifdef FEATURE_SEARCH_HIGHLIGHT
     static gboolean highlight = false;
 #endif
     gboolean forward;
 
-    if (arg->i == COMMAND_SEARCH_OFF) {
+    if (arg->i == 0) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_unmark_text_matches(vb.gui.webview);
         highlight = false;
@@ -50,12 +50,13 @@ gboolean command_search(const Arg *arg, unsigned int count)
     if (arg->s) {
         OVERWRITE_STRING(query, arg->s);
         /* set dearch dir only when the searching is started */
-        dir = arg->i;
+        dir = arg->i > 0 ? 1 : -1;
     }
 
-    forward = !(arg->i ^ dir);
+    forward = (arg->i * dir) > 0;
 
     if (query) {
+        unsigned int count = abs(arg->i);
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         if (!highlight) {
             /* highlight matches if the search is started new or continued

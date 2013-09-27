@@ -218,7 +218,7 @@ void normal_enter(void)
 void normal_leave(void)
 {
     /* TODO clean those only if they where active */
-    command_search(&((Arg){COMMAND_SEARCH_OFF}), 0);
+    command_search(&((Arg){0}));
 }
 
 /**
@@ -272,7 +272,7 @@ static VbResult normal_clear_input(const NormalCmdInfo *info)
 {
     vb_set_input_text("");
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    command_search(&((Arg){COMMAND_SEARCH_OFF}), 0);
+    command_search(&((Arg){0}));
 
     return RESULT_COMPLETE;
 }
@@ -581,27 +581,27 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
 
 static VbResult normal_search(const NormalCmdInfo *info)
 {
-    command_search(
-        &((Arg){info->cmd == 'n' ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD}),
-        info->count > 0 ? info->count : 1
-    );
+    int count = (info->count > 0) ? info->count : 1;
+
+    command_search(&((Arg){info->cmd == 'n' ? count : -count}));
     return RESULT_COMPLETE;
 }
 
 static VbResult normal_search_selection(const NormalCmdInfo *info)
 {
+    int count;
+    char *query;
+
     /* there is no function to get the selected text so we copy current
      * selection to clipboard */
     webkit_web_view_copy_clipboard(vb.gui.webview);
-    char *query = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+    query = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
     if (!query) {
         return RESULT_ERROR;
     }
+    count = (info->count > 0) ? info->count : 1;
 
-    command_search(
-        &((Arg){info->cmd == '*' ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD, query}),
-        info->count > 0 ? info->count : 1
-    );
+    command_search(&((Arg){info->cmd == '*' ? count : -count}));
     g_free(query);
 
     return RESULT_COMPLETE;

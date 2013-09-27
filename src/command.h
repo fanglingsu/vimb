@@ -20,12 +20,6 @@
 #ifndef _COMMAND_H
 #define _COMMAND_H
 
-typedef enum {
-    COMMAND_SEARCH_OFF,
-    COMMAND_SEARCH_FORWARD  = (1<<0),
-    COMMAND_SEARCH_BACKWARD = (1<<1),
-} SearchDirection;
-
 enum {
     COMMAND_YANK_ARG,
     COMMAND_YANK_URI,
@@ -46,7 +40,7 @@ enum {
 };
 #endif
 
-gboolean command_search(const Arg *arg, unsigned int count);
+gboolean command_search(const Arg *arg);
 gboolean command_history(const Arg *arg);
 gboolean command_yank(const Arg *arg);
 gboolean command_save(const Arg *arg);

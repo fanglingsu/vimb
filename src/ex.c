@@ -342,7 +342,7 @@ gboolean ex_fill_completion(GtkListStore *store, const char *input)
  */
 static void input_activate(void)
 {
-    gboolean forward = false;
+    int count = -1;
     char *text, *cmd;
     text = vb_get_input_text();
 
@@ -353,11 +353,11 @@ static void input_activate(void)
      * does vim also skip history recording for such mapped commands */
     cmd = text + 1;
     switch (*text) {
-        case '/': forward = true; /* fall throught */
+        case '/': count = 1; /* fall throught */
         case '?':
             history_add(HISTORY_SEARCH, cmd, NULL);
             mode_enter('n');
-            command_search(&((Arg){forward ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD, cmd}), 1);
+            command_search(&((Arg){count, cmd}));
             break;
 
         case ';':
