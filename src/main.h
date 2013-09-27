@@ -41,7 +41,7 @@
 
 #define CTRL(x)      ((x) ^ 0x40)
 /* check if the char x is a char with CTRL like ^C */
-#define IS_CTRL(x)   (((unsigned char)x) <= 32)
+#define IS_CTRL(x)   (((unsigned char)x) <= 0x1f)
 #define CSI          0x9b   /* Control Sequence Introducer */
 #define CSI_STR      "\233"
 

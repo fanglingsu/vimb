@@ -491,7 +491,7 @@ static void showcmd(char *keys, int keylen)
 
     /* if we get a keylen > 1 this means we have a better match for a previous
      * ambiguous key sequence and have to remove the previous one before */
-    if (!keylen || keylen > 1) {
+    if (keylen != 1) {
         map.showbuf[0] = '\0';
     }
     /* show the most significant last chars in the statusbar if they don't
@@ -522,6 +522,7 @@ static char *transchar(char c)
         map.transchar[2] = '\0';
     } else if ((c & 0xff) == CSI) {
         map.transchar[0] = '~';
+        map.transchar[1] = '\0';
     } else {
         map.transchar[0] = c;
         map.transchar[1] = '\0';
