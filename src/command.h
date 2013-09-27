@@ -46,7 +46,7 @@ enum {
 };
 #endif
 
-gboolean command_search(const Arg *arg);
+gboolean command_search(const Arg *arg, unsigned int count);
 gboolean command_history(const Arg *arg);
 gboolean command_yank(const Arg *arg);
 gboolean command_save(const Arg *arg);

@@ -257,13 +257,6 @@ void vb_update_statusbar()
     int max, val, num;
     GString *status = g_string_new("");
 
-    /* show current count */
-    g_string_append_printf(status, "%.0d", vb.state.count);
-    /* show current modkey */
-    if (vb.state.modkey) {
-        g_string_append_c(status, vb.state.modkey);
-    }
-
     /* show the active downloads */
     if (vb.state.downloads) {
         num = g_list_length(vb.state.downloads);

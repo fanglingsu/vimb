@@ -29,7 +29,7 @@
 
 extern VbCore vb;
 
-gboolean command_search(const Arg *arg)
+gboolean command_search(const Arg *arg, unsigned int count)
 {
     static SearchDirection dir;
     static char *query = NULL;
@@ -56,7 +56,6 @@ gboolean command_search(const Arg *arg)
     forward = !(arg->i ^ dir);
 
     if (query) {
-        int count;
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         if (!highlight) {
             /* highlight matches if the search is started new or continued
@@ -70,17 +69,12 @@ gboolean command_search(const Arg *arg)
         }
 #endif
 
-        /* make sure we have a count greater than 0 */
-        count = vb.state.count ? vb.state.count : 1;
         do {
             if (!webkit_web_view_search_text(vb.gui.webview, query, false, forward, true)) {
                 break;
             }
         } while (--count);
     }
-
-    /* unset posibble set count */
-    vb.state.count = 0;
 
     return true;
 }

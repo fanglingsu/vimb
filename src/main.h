@@ -266,8 +266,6 @@ typedef struct {
 
 /* state */
 typedef struct {
-    char            modkey;
-    guint           count;
     guint           progress;
     StatusType      status_type;
     MessageType     input_type;

@@ -218,7 +218,7 @@ void normal_enter(void)
 void normal_leave(void)
 {
     /* TODO clean those only if they where active */
-    command_search(&((Arg){COMMAND_SEARCH_OFF}));
+    command_search(&((Arg){COMMAND_SEARCH_OFF}), 0);
 }
 
 /**
@@ -272,11 +272,7 @@ static VbResult normal_clear_input(const NormalCmdInfo *info)
 {
     vb_set_input_text("");
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    /* TODO implement the search new - so we can remove the command.c file */
-    command_search(&((Arg){COMMAND_SEARCH_OFF}));
-    /* check flags on the current state to only clear hints if they where
-     * enabled before */
-    /*hints_clear();*/
+    command_search(&((Arg){COMMAND_SEARCH_OFF}), 0);
 
     return RESULT_COMPLETE;
 }
@@ -585,7 +581,10 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
 
 static VbResult normal_search(const NormalCmdInfo *info)
 {
-    command_search(&((Arg){info->cmd == 'n' ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD}));
+    command_search(
+        &((Arg){info->cmd == 'n' ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD}),
+        info->count > 0 ? info->count : 1
+    );
     return RESULT_COMPLETE;
 }
 
@@ -599,7 +598,10 @@ static VbResult normal_search_selection(const NormalCmdInfo *info)
         return RESULT_ERROR;
     }
 
-    command_search(&((Arg){info->cmd == '*' ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD, query}));
+    command_search(
+        &((Arg){info->cmd == '*' ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD, query}),
+        info->count > 0 ? info->count : 1
+    );
     g_free(query);
 
     return RESULT_COMPLETE;

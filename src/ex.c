@@ -357,7 +357,7 @@ static void input_activate(void)
         case '?':
             history_add(HISTORY_SEARCH, cmd, NULL);
             mode_enter('n');
-            command_search(&((Arg){forward ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD, cmd}));
+            command_search(&((Arg){forward ? COMMAND_SEARCH_FORWARD : COMMAND_SEARCH_BACKWARD, cmd}), 1);
             break;
 
         case ';':
