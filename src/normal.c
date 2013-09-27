@@ -333,16 +333,14 @@ static VbResult normal_descent(const NormalCmdInfo *info)
 
 static VbResult normal_ex(const NormalCmdInfo *info)
 {
+    mode_enter('c');
     if (info->cmd == 'F') {
-        mode_enter('c');
         vb_set_input_text(";t");
     } else if (info->cmd == 'f') {
-        mode_enter('c');
         vb_set_input_text(";o");
     } else {
         char prompt[2] = {info->cmd, '\0'};
         vb_set_input_text(prompt);
-        mode_enter('c');
     }
 
     return RESULT_COMPLETE;
