@@ -285,6 +285,18 @@ VbResult ex_keypress(unsigned int key)
 void ex_input_changed(const char *text)
 {
     gboolean forward = false;
+    GtkTextIter start, end;
+    GtkTextBuffer *buffer = vb.gui.buffer;
+
+    if (gtk_text_buffer_get_line_count(buffer) > 1) {
+        /* remove everething from the buffer, except of the first line */
+        gtk_text_buffer_get_iter_at_line(buffer, &start, 0);
+        if (gtk_text_iter_forward_to_line_end(&start)) {
+            gtk_text_buffer_get_end_iter(buffer, &end);
+            gtk_text_buffer_delete(buffer, &start, &end);
+        }
+    }
+
     switch (*text) {
         case ';':
             hints_create(text);
