@@ -31,7 +31,6 @@
 
 typedef enum {
     PHASE_START,
-    PHASE_AFTERG,
     PHASE_KEY2,
     PHASE_COMPLETE,
 } Phase;
@@ -39,7 +38,7 @@ typedef enum {
 struct NormalCmdInfo_s {
     int count;          /* count used for the command */
     unsigned char cmd;  /* command key */
-    unsigned char arg;  /* argument key if this is used */
+    unsigned char ncmd; /* second command key (optional) */
     Phase phase;        /* current parsing phase */
 } info = {0, '\0', '\0', PHASE_START};
 
@@ -49,6 +48,7 @@ static VbResult normal_clear_input(const NormalCmdInfo *info);
 static VbResult normal_descent(const NormalCmdInfo *info);
 static VbResult normal_ex(const NormalCmdInfo *info);
 static VbResult normal_focus_input(const NormalCmdInfo *info);
+static VbResult normal_g_cmd(const NormalCmdInfo *info);
 static VbResult normal_hint(const NormalCmdInfo *info);
 static VbResult normal_input_open(const NormalCmdInfo *info);
 static VbResult normal_navigate(const NormalCmdInfo *info);
@@ -68,263 +68,134 @@ static VbResult normal_zoom(const NormalCmdInfo *info);
 static struct {
     NormalCommand func;
 } commands[] = {
-/* NUL  */ {NULL},
-/* ^A   */ {NULL},
-/* ^B   */ {normal_scroll},
-/* ^C   */ {normal_navigate},
-/* ^D   */ {normal_scroll},
-/* ^E   */ {NULL},
-/* ^F   */ {normal_scroll},
-/* ^G   */ {NULL},
-/* ^H   */ {NULL},
-/* ^I   */ {normal_navigate},
-/* ^J   */ {NULL},
-/* ^K   */ {NULL},
-/* ^L   */ {NULL},
-/* ^M   */ {NULL},
-/* ^N   */ {NULL},
-/* ^O   */ {normal_navigate},
-/* ^P   */ {normal_queue},
-/* ^Q   */ {normal_quit},
-/* ^R   */ {NULL},
-/* ^S   */ {NULL},
-/* ^T   */ {NULL},
-/* ^U   */ {normal_scroll},
-/* ^V   */ {NULL},
-/* ^W   */ {NULL},
-/* ^X   */ {NULL},
-/* ^Y   */ {NULL},
-/* ^Z   */ {normal_pass},
-/* ^[   */ {normal_clear_input},
-/* ^\   */ {NULL},
-/* ^]   */ {NULL},
-/* ^^   */ {NULL},
-/* ^_   */ {NULL},
-/* SPC  */ {NULL},
-/* !    */ {NULL},
-/* "    */ {NULL},
-/* #    */ {normal_search_selection},
-/* $    */ {normal_scroll},
-/* %    */ {NULL},
-/* &    */ {NULL},
-/* '    */ {NULL},
-/* (    */ {NULL},
-/* )    */ {NULL},
-/* *    */ {normal_search_selection},
-/* +    */ {NULL},
-/* ,    */ {NULL},
-/* -    */ {NULL},
-/* .    */ {NULL},
-/* /    */ {normal_ex},
-/* 0    */ {normal_scroll},
-/* 1    */ {NULL},
-/* 2    */ {NULL},
-/* 3    */ {NULL},
-/* 4    */ {NULL},
-/* 5    */ {NULL},
-/* 6    */ {NULL},
-/* 7    */ {NULL},
-/* 8    */ {NULL},
-/* 9    */ {NULL},
-/* :    */ {normal_ex},
-/* ;    */ {normal_hint},
-/* <    */ {NULL},
-/* =    */ {NULL},
-/* >    */ {NULL},
-/* ?    */ {normal_ex},
-/* @    */ {NULL},
-/* A    */ {NULL},
-/* B    */ {NULL},
-/* C    */ {NULL},
-/* D    */ {NULL},
-/* E    */ {NULL},
-/* F    */ {normal_ex},
-/* G    */ {normal_scroll},
-/* H    */ {NULL},
-/* I    */ {NULL},
-/* J    */ {NULL},
-/* K    */ {NULL},
-/* L    */ {NULL},
-/* M    */ {NULL},
-/* N    */ {normal_search},
-/* O    */ {normal_input_open},
-/* P    */ {normal_open_clipboard},
-/* Q    */ {NULL},
-/* R    */ {normal_navigate},
-/* S    */ {NULL},
-/* T    */ {normal_input_open},
-/* U    */ {normal_open},
-/* V    */ {NULL},
-/* W    */ {NULL},
-/* X    */ {NULL},
-/* Y    */ {normal_yank},
-/* Z    */ {NULL},
-/* [    */ {NULL},
-/* \    */ {NULL},
-/* ]    */ {NULL},
-/* ^    */ {NULL},
-/* _    */ {NULL},
-/* `    */ {NULL},
-/* a    */ {NULL},
-/* b    */ {NULL},
-/* c    */ {NULL},
-/* d    */ {NULL},
-/* e    */ {NULL},
-/* f    */ {normal_ex},
-/* g    */ {NULL},
-/* h    */ {normal_scroll},
-/* i    */ {NULL},
-/* j    */ {normal_scroll},
-/* k    */ {normal_scroll},
-/* l    */ {normal_scroll},
-/* m    */ {NULL},
-/* n    */ {normal_search},
-/* o    */ {normal_input_open},
-/* p    */ {normal_open_clipboard},
-/* q    */ {NULL},
-/* r    */ {normal_navigate},
-/* s    */ {NULL},
-/* t    */ {normal_input_open},
-/* u    */ {normal_open},
-/* v    */ {NULL},
-/* w    */ {NULL},
-/* x    */ {NULL},
-/* y    */ {normal_yank},
-/* z    */ {normal_zoom}, /* arg chars are handled in normal_keypress */
-/* {    */ {NULL},
-/* |    */ {NULL},
-/* }    */ {NULL},
-/* ~    */ {NULL},
-/* DEL  */ {NULL},
-/***************/
-/* gNUL */ {NULL},
-/* g^A  */ {NULL},
-/* g^B  */ {NULL},
-/* g^C  */ {NULL},
-/* g^D  */ {NULL},
-/* g^E  */ {NULL},
-/* g^F  */ {NULL},
-/* g^G  */ {NULL},
-/* g^H  */ {NULL},
-/* g^I  */ {NULL},
-/* g^J  */ {NULL},
-/* g^K  */ {NULL},
-/* g^L  */ {NULL},
-/* g^M  */ {NULL},
-/* g^N  */ {NULL},
-/* g^O  */ {NULL},
-/* g^P  */ {NULL},
-/* g^Q  */ {NULL},
-/* g^R  */ {NULL},
-/* g^S  */ {NULL},
-/* g^T  */ {NULL},
-/* g^U  */ {NULL},
-/* g^V  */ {NULL},
-/* g^W  */ {NULL},
-/* g^X  */ {NULL},
-/* g^Y  */ {NULL},
-/* g^Z  */ {NULL},
-/* gESC */ {NULL}, /* used as Control Sequence Introducer */
-/* g^\  */ {NULL},
-/* g^]  */ {NULL},
-/* g^^  */ {NULL},
-/* g^_  */ {NULL},
-/* gSPC */ {NULL},
-/* g!   */ {NULL},
-/* g"   */ {NULL},
-/* g#   */ {NULL},
-/* g$   */ {NULL},
-/* g%   */ {NULL},
-/* g&   */ {NULL},
-/* g'   */ {NULL},
-/* g(   */ {NULL},
-/* g)   */ {NULL},
-/* g*   */ {NULL},
-/* g+   */ {NULL},
-/* g,   */ {NULL},
-/* g-   */ {NULL},
-/* g.   */ {NULL},
-/* g/   */ {NULL},
-/* g0   */ {NULL},
-/* g1   */ {NULL},
-/* g2   */ {NULL},
-/* g3   */ {NULL},
-/* g4   */ {NULL},
-/* g5   */ {NULL},
-/* g6   */ {NULL},
-/* g7   */ {NULL},
-/* g8   */ {NULL},
-/* g9   */ {NULL},
-/* g:   */ {NULL},
-/* g;   */ {NULL},
-/* g<   */ {NULL},
-/* g=   */ {NULL},
-/* g>   */ {NULL},
-/* g?   */ {NULL},
-/* g@   */ {NULL},
-/* gA   */ {NULL},
-/* gB   */ {NULL},
-/* gC   */ {NULL},
-/* gD   */ {NULL},
-/* gE   */ {NULL},
-/* gF   */ {normal_view_inspector},
-/* gG   */ {NULL},
-/* gH   */ {normal_open},
-/* gI   */ {NULL},
-/* gJ   */ {NULL},
-/* gK   */ {NULL},
-/* gL   */ {NULL},
-/* gM   */ {NULL},
-/* gN   */ {NULL},
-/* gO   */ {NULL},
-/* gP   */ {NULL},
-/* gQ   */ {NULL},
-/* gR   */ {NULL},
-/* gS   */ {NULL},
-/* gT   */ {NULL},
-/* gU   */ {normal_descent},
-/* gV   */ {NULL},
-/* gW   */ {NULL},
-/* gX   */ {NULL},
-/* gY   */ {NULL},
-/* gZ   */ {NULL},
-/* g[   */ {NULL},
-/* g\   */ {NULL},
-/* g]   */ {NULL},
-/* g^   */ {NULL},
-/* g_   */ {NULL},
-/* g`   */ {NULL},
-/* ga   */ {NULL},
-/* gb   */ {NULL},
-/* gc   */ {NULL},
-/* gd   */ {NULL},
-/* ge   */ {NULL},
-/* gf   */ {normal_view_source},
-/* gg   */ {normal_scroll},
-/* gh   */ {normal_open},
-/* gi   */ {normal_focus_input},
-/* gj   */ {NULL},
-/* gk   */ {NULL},
-/* gl   */ {NULL},
-/* gm   */ {NULL},
-/* gn   */ {NULL},
-/* go   */ {NULL},
-/* gp   */ {NULL},
-/* gq   */ {NULL},
-/* gr   */ {NULL},
-/* gs   */ {NULL},
-/* gt   */ {NULL},
-/* gu   */ {normal_descent},
-/* gv   */ {NULL},
-/* gw   */ {NULL},
-/* gx   */ {NULL},
-/* gy   */ {NULL},
-/* gz   */ {NULL},
-/* g{   */ {NULL},
-/* g|   */ {NULL},
-/* g}   */ {NULL},
-/* g~   */ {NULL},
-/* gDEL */ {NULL}
+/* NUL 0x00 */ {NULL},
+/* ^A  0x01 */ {NULL},
+/* ^B  0x02 */ {normal_scroll},
+/* ^C  0x03 */ {normal_navigate},
+/* ^D  0x04 */ {normal_scroll},
+/* ^E  0x05 */ {NULL},
+/* ^F  0x06 */ {normal_scroll},
+/* ^G  0x07 */ {NULL},
+/* ^H  0x08 */ {NULL},
+/* ^I  0x09 */ {normal_navigate},
+/* ^J  0x0a */ {NULL},
+/* ^K  0x0b */ {NULL},
+/* ^L  0x0c */ {NULL},
+/* ^M  0x0d */ {NULL},
+/* ^N  0x0e */ {NULL},
+/* ^O  0x0f */ {normal_navigate},
+/* ^P  0x10 */ {normal_queue},
+/* ^Q  0x11 */ {normal_quit},
+/* ^R  0x12 */ {NULL},
+/* ^S  0x13 */ {NULL},
+/* ^T  0x14 */ {NULL},
+/* ^U  0x15 */ {normal_scroll},
+/* ^V  0x16 */ {NULL},
+/* ^W  0x17 */ {NULL},
+/* ^X  0x18 */ {NULL},
+/* ^Y  0x19 */ {NULL},
+/* ^Z  0x1a */ {normal_pass},
+/* ^[  0x1b */ {normal_clear_input},
+/* ^\  0x1c */ {NULL},
+/* ^]  0x1d */ {NULL},
+/* ^^  0x1e */ {NULL},
+/* ^_  0x1f */ {NULL},
+/* SPC 0x20 */ {NULL},
+/* !   0x21 */ {NULL},
+/* "   0x22 */ {NULL},
+/* #   0x23 */ {normal_search_selection},
+/* $   0x24 */ {normal_scroll},
+/* %   0x25 */ {NULL},
+/* &   0x26 */ {NULL},
+/* '   0x27 */ {NULL},
+/* (   0x28 */ {NULL},
+/* )   0x29 */ {NULL},
+/* *   0x2a */ {normal_search_selection},
+/* +   0x2b */ {NULL},
+/* ,   0x2c */ {NULL},
+/* -   0x2d */ {NULL},
+/* .   0x2e */ {NULL},
+/* /   0x2f */ {normal_ex},
+/* 0   0x30 */ {normal_scroll},
+/* 1   0x31 */ {NULL},
+/* 2   0x32 */ {NULL},
+/* 3   0x33 */ {NULL},
+/* 4   0x34 */ {NULL},
+/* 5   0x35 */ {NULL},
+/* 6   0x36 */ {NULL},
+/* 7   0x37 */ {NULL},
+/* 8   0x38 */ {NULL},
+/* 9   0x39 */ {NULL},
+/* :   0x3a */ {normal_ex},
+/* ;   0x3b */ {normal_hint},
+/* <   0x3c */ {NULL},
+/* =   0x3d */ {NULL},
+/* >   0x3e */ {NULL},
+/* ?   0x3f */ {normal_ex},
+/* @   0x40 */ {NULL},
+/* A   0x41 */ {NULL},
+/* B   0x42 */ {NULL},
+/* C   0x43 */ {NULL},
+/* D   0x44 */ {NULL},
+/* E   0x45 */ {NULL},
+/* F   0x46 */ {normal_ex},
+/* G   0x47 */ {normal_scroll},
+/* H   0x48 */ {NULL},
+/* I   0x49 */ {NULL},
+/* J   0x4a */ {NULL},
+/* K   0x4b */ {NULL},
+/* L   0x4c */ {NULL},
+/* M   0x4d */ {NULL},
+/* N   0x4e */ {normal_search},
+/* O   0x4f */ {normal_input_open},
+/* P   0x50 */ {normal_open_clipboard},
+/* Q   0x51 */ {NULL},
+/* R   0x52 */ {normal_navigate},
+/* S   0x53 */ {NULL},
+/* T   0x54 */ {normal_input_open},
+/* U   0x55 */ {normal_open},
+/* V   0x56 */ {NULL},
+/* W   0x57 */ {NULL},
+/* X   0x58 */ {NULL},
+/* Y   0x59 */ {normal_yank},
+/* Z   0x5a */ {NULL},
+/* [   0x5b */ {NULL},
+/* \   0x5c */ {NULL},
+/* ]   0x5d */ {NULL},
+/* ^   0x5e */ {NULL},
+/* _   0x5f */ {NULL},
+/* `   0x60 */ {NULL},
+/* a   0x61 */ {NULL},
+/* b   0x62 */ {NULL},
+/* c   0x63 */ {NULL},
+/* d   0x64 */ {NULL},
+/* e   0x65 */ {NULL},
+/* f   0x66 */ {normal_ex},
+/* g   0x67 */ {normal_g_cmd},
+/* h   0x68 */ {normal_scroll},
+/* i   0x69 */ {NULL},
+/* j   0x6a */ {normal_scroll},
+/* k   0x6b */ {normal_scroll},
+/* l   0x6c */ {normal_scroll},
+/* m   0x6d */ {NULL},
+/* n   0x6e */ {normal_search},
+/* o   0x6f */ {normal_input_open},
+/* p   0x70 */ {normal_open_clipboard},
+/* q   0x71 */ {NULL},
+/* r   0x72 */ {normal_navigate},
+/* s   0x73 */ {NULL},
+/* t   0x74 */ {normal_input_open},
+/* u   0x75 */ {normal_open},
+/* v   0x76 */ {NULL},
+/* w   0x77 */ {NULL},
+/* x   0x78 */ {NULL},
+/* y   0x79 */ {normal_yank},
+/* z   0x7a */ {normal_zoom},
+/* {   0x7b */ {NULL},
+/* |   0x7c */ {NULL},
+/* }   0x7d */ {NULL},
+/* ~   0x7e */ {NULL},
+/* DEL 0x7f */ {NULL},
 };
 
 extern VbCore vb;
@@ -357,27 +228,16 @@ VbResult normal_keypress(unsigned int key)
 {
     State *s = &vb.state;
     VbResult res;
-    if (info.phase == PHASE_START && key == 'g') {
-        info.phase = PHASE_AFTERG;
-        vb.mode->flags |= FLAG_NOMAP;
-
-        return RESULT_MORE;
-    }
-
-    if (info.phase == PHASE_AFTERG) {
-        key        = G_CMD(key);
-        info.phase = PHASE_START;
-    }
 
     if (info.phase == PHASE_START && info.count == 0 && key == '0') {
         info.cmd   = key;
         info.phase = PHASE_COMPLETE;
     } else if (info.phase == PHASE_KEY2) {
-        info.arg = key;
+        info.ncmd = key;
         info.phase = PHASE_COMPLETE;
     } else if (info.phase == PHASE_START && isdigit(key)) {
         info.count = info.count * 10 + key - '0';
-    } else if (strchr(";z", (char)key)) {
+    } else if (strchr(";zg", (char)key)) {
         /* handle commands that needs additional char */
         info.phase = PHASE_KEY2;
         info.cmd   = key;
@@ -402,7 +262,7 @@ VbResult normal_keypress(unsigned int key)
 
     if (res == RESULT_COMPLETE) {
         /* unset the info */
-        info.cmd = info.arg = info.count = 0;
+        info.cmd = info.ncmd = info.count = 0;
         info.phase = PHASE_START;
     }
     return res;
@@ -436,7 +296,7 @@ static VbResult normal_descent(const NormalCmdInfo *info)
         return RESULT_ERROR;
     }
 
-    switch (UNG_CMD(info->cmd)) {
+    switch (info->ncmd) {
         case 'U':
             p = domain;
             break;
@@ -502,9 +362,40 @@ static VbResult normal_focus_input(const NormalCmdInfo *info)
     return RESULT_ERROR;
 }
 
+static VbResult normal_g_cmd(const NormalCmdInfo *info)
+{
+    Arg a;
+    switch (info->ncmd) {
+        case 'F':
+            return normal_view_inspector(info);
+
+        case 'f':
+            normal_view_source(info);
+
+        case 'g':
+            return normal_scroll(info);
+
+        case 'H':
+        case 'h':
+            a.i = info->ncmd == 'H' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+            a.s = NULL;
+            vb_load_uri(&a);
+            return RESULT_COMPLETE;
+
+        case 'i':
+            return normal_focus_input(info);
+
+        case 'U':
+        case 'u':
+            return normal_descent(info);
+    }
+
+    return RESULT_ERROR;
+}
+
 static VbResult normal_hint(const NormalCmdInfo *info)
 {
-    char prompt[3] = {info->cmd, info->arg, 0};
+    char prompt[3] = {info->cmd, info->ncmd, 0};
 #ifdef FEATURE_QUEUE
     const char *allowed = "eiIoOpPstTy";
 #else
@@ -512,7 +403,7 @@ static VbResult normal_hint(const NormalCmdInfo *info)
 #endif
 
     /* check if this is a valid hint mode */
-    if (!info->arg || !strchr(allowed, info->arg)) {
+    if (!info->ncmd || !strchr(allowed, info->ncmd)) {
         return RESULT_ERROR;
     }
 
@@ -588,16 +479,11 @@ static VbResult normal_open_clipboard(const NormalCmdInfo *info)
 static VbResult normal_open(const NormalCmdInfo *info)
 {
     Arg a;
-    if (strchr("uU", info->cmd)) { /* open last closed */
-        a.i = info->cmd == 'U' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
-        a.s = util_get_file_contents(vb.files[FILES_CLOSED], NULL);
-        vb_load_uri(&a);
-        g_free(a.s);
-    } else { /* open home page */
-        a.i = UNG_CMD(info->cmd) == 'H' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
-        a.s = NULL;
-        vb_load_uri(&a);
-    }
+    /* open last closed */
+    a.i = info->cmd == 'U' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+    a.s = util_get_file_contents(vb.files[FILES_CLOSED], NULL);
+    vb_load_uri(&a);
+    g_free(a.s);
 
     return RESULT_COMPLETE;
 }
@@ -673,11 +559,6 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
             max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
             new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_upper(adjust);
             break;
-        case G_CMD('g'):
-            adjust = vb.gui.adjust_v;
-            max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-            new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_lower(adjust);
-            break;
         case '0':
             adjust = vb.gui.adjust_h;
             new    = gtk_adjustment_get_lower(adjust);
@@ -688,6 +569,12 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
             break;
 
         default:
+            if (info->ncmd == 'g') {
+                adjust = vb.gui.adjust_v;
+                max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
+                new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_lower(adjust);
+                break;
+            }
             return RESULT_ERROR;
     }
     max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
@@ -760,7 +647,7 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
 
     count = info->count ? (float)info->count : 1.0;
 
-    if (info->arg == 'z') { /* zz reset zoom */
+    if (info->ncmd == 'z') { /* zz reset zoom */
         webkit_web_view_set_zoom_level(view, 1.0);
 
         return RESULT_COMPLETE;
@@ -770,10 +657,10 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
     setting = webkit_web_view_get_settings(view);
     g_object_get(G_OBJECT(setting), "zoom-step", &step, NULL);
 
-    webkit_web_view_set_full_content_zoom(view, isupper(info->arg));
+    webkit_web_view_set_full_content_zoom(view, isupper(info->ncmd));
 
     /* calculate the new zoom level */
-    if (info->arg == 'i' || info->arg == 'I') {
+    if (info->ncmd == 'i' || info->ncmd == 'I') {
         level += ((float)count * step);
     } else {
         level -= ((float)count * step);
