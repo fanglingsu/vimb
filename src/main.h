@@ -62,16 +62,10 @@
 #endif
 
 #define GET_URI() (webkit_web_view_get_uri(vb.gui.webview))
-#define CLEAN_MODE(mode) ((mode) & (VB_MODE_NORMAL|VB_MODE_COMMAND|VB_MODE_INPUT))
-#define CLEAR_INPUT() (vb_echo(VB_MSG_NORMAL, ""))
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
 
 #define OVERWRITE_STRING(t, s) {if (t) {g_free(t); t = NULL;} t = g_strdup(s);}
-
-#define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
-#define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))
-#define CLEAN_STATE(e)            ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_CONTROL_MASK))
 
 #define FILE_LOCK_SET(fd, cmd) \
 { \
@@ -112,19 +106,6 @@
 #endif
 
 /* enums */
-/* TODO remove this when the modes are implemented in own files */
-typedef enum _vb_mode {
-    /* main modes */
-    VB_MODE_NORMAL        = 1<<0,
-    VB_MODE_COMMAND       = 1<<1,
-    VB_MODE_INPUT         = 1<<2,
-    /* sub modes */
-    VB_MODE_PASSTHROUGH   = 1<<3, /* normal or insert mode */
-    VB_MODE_SEARCH        = 1<<4, /* normal mode */
-    VB_MODE_COMPLETE      = 1<<5, /* command mode */
-    VB_MODE_HINTING       = 1<<6, /* command mode */
-} VimbMode;
-
 typedef enum {
     RESULT_COMPLETE,
     RESULT_MORE,
@@ -285,7 +266,6 @@ typedef struct {
 
 /* state */
 typedef struct {
-    VimbMode        mode;
     char            modkey;
     guint           count;
     guint           progress;
