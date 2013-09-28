@@ -64,6 +64,7 @@ gboolean completion_complete(gboolean back)
         if (comp.text && !strcmp(input, comp.text)) {
             /* step through the next/prev completion item */
             move_cursor(back);
+            g_free(input);
             return true;
         }
         /* if current input isn't the content of the completion item, stop
@@ -99,6 +100,7 @@ gboolean completion_complete(gboolean back)
     }
 
     if (!res) {
+        g_free(input);
         return false;
     }
 
@@ -119,6 +121,7 @@ gboolean completion_complete(gboolean back)
             g_free(value);
 
             g_object_unref(G_OBJECT(store));
+            g_free(input);
             return false;
         }
     }
@@ -130,6 +133,7 @@ gboolean completion_complete(gboolean back)
 
     init_completion(GTK_TREE_MODEL(store), prefix);
     show(back);
+    g_free(input);
 
     return true;
 }
