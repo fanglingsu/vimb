@@ -66,6 +66,7 @@
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
 
 #define OVERWRITE_STRING(t, s) {if (t) {g_free(t); t = NULL;} t = g_strdup(s);}
+#define OVERWRITE_NSTRING(t, s, l) {if (t) {g_free(t); t = NULL;} t = g_strndup(s, l);}
 
 #define FILE_LOCK_SET(fd, cmd) \
 { \

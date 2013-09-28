@@ -836,7 +836,6 @@ static gboolean ex_shortcut(const ExArg *arg)
  */
 static gboolean ex_complete(short direction)
 {
-    char prefix[2] = {0};
     char *input;            /* input read from inputbox */
     const char *in;         /* pointer to input that we move */
     gboolean found = false;
@@ -886,31 +885,31 @@ static gboolean ex_complete(short direction)
         before_cmdname = in;
 
         if (parse_command_name(&in, arg) && *in == ' ') {
+            OVERWRITE_NSTRING(excomp.prefix, input, in - input + 1);
+
             skip_whitespace(&in);
-            if (arg->code == EX_SET) {
-                if (setting_fill_completion(store, in)) {
-                    /* TODO calculate the prefix automatically */
-                    OVERWRITE_STRING(excomp.prefix, ":set ");
+            switch (arg->code) {
+                case EX_OPEN:
+                case EX_TABOPEN:
+                    if (*in == '!') {
+                        found = bookmark_fill_completion(store, in + 1);
+                    } else {
+                        found = history_fill_completion(store, HISTORY_URL, in);
+                    }
+                    break;
+
+                case EX_SET:
                     sort = true;
-                    found = true;
-                }
-            } else if (arg->code == EX_OPEN || arg->code == EX_TABOPEN) {
-                OVERWRITE_STRING(excomp.prefix, arg->code == EX_OPEN ? ":open " : ":tabopen ");
-                if (*in == '!') {
-                    if (bookmark_fill_completion(store, in + 1)) {
-                        found = true;
-                    }
-                } else {
-                    if (history_fill_completion(store, HISTORY_URL, in)) {
-                        found = true;
-                    }
-                }
-            } else if (arg->code == EX_BMA) {
-                if (bookmark_fill_tag_completion(store, in)) {
-                    OVERWRITE_STRING(excomp.prefix, ":bma ");
+                    found = setting_fill_completion(store, in);
+                    break;
+
+                case EX_BMR:
                     sort  = true;
-                    found = true;
-                }
+                    found = bookmark_fill_tag_completion(store, in);
+                    break;
+
+                default:
+                    break;
             }
         } else { /* complete command names */
             /* restore the 'in' pointer after try to parse command name */
@@ -927,10 +926,8 @@ static gboolean ex_complete(short direction)
         }
         free_cmdarg(arg);
     } else if (*in == '/' || *in == '?') {
-        prefix[0] = *in;
-
         if (history_fill_completion(store, HISTORY_SEARCH, in + 1)) {
-            OVERWRITE_STRING(excomp.prefix, prefix);
+            OVERWRITE_NSTRING(excomp.prefix, in, 1);
             sort  = true;
             found = true;
         }
