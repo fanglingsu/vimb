@@ -137,6 +137,10 @@ void mode_input_changed(GtkTextBuffer* buffer, gpointer data)
 {
     char *text;
     GtkTextIter start, end;
+    /* don't observe changes in completion mode */
+    if (vb.mode->flags & FLAG_COMPLETION) {
+        return;
+    }
     /* don't process changes not typed by the user */
     if (gtk_widget_is_focus(vb.gui.input) && vb.mode && vb.mode->input_changed) {
         gtk_text_buffer_get_bounds(buffer, &start, &end);
