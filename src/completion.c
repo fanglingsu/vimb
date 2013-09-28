@@ -40,7 +40,7 @@ static struct {
     char      *text;   /* text of the current active tree item */
 } comp;
 
-static void init_completion(GtkTreeModel *model);
+static void init_completion(GtkTreeModel *model, const char *prefix);
 static void show(gboolean back);
 static void move_cursor(gboolean back);
 static gboolean tree_selection_func(GtkTreeSelection *selection,
@@ -53,6 +53,7 @@ gboolean completion_complete(gboolean back)
     char *input;
     const char *prefix, *suffix;
     GtkListStore *store = NULL;
+    GtkTreeModel *model;
     gboolean res = false, sort = true;
 
     /* TODO give the type of completion to this function - because we have to
@@ -101,16 +102,33 @@ gboolean completion_complete(gboolean back)
         return false;
     }
 
-    /* apply the defualt sorting to the first tree model comlumn */
+    model = GTK_TREE_MODEL(store);
+    /* if there is only one match - don't build the tree view */
+    if (gtk_tree_model_iter_n_children(model, NULL) == 1) {
+        char *value;
+        GtkTreePath *path = gtk_tree_path_new_from_indices(0, -1);
+        GtkTreeIter iter;
+        if (gtk_tree_model_get_iter(model, &iter, path)) {
+            gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
+
+            if (comp.count) {
+                vb_echo_force(VB_MSG_NORMAL, false, "%s%d%s", prefix, comp.count, value);
+            } else {
+                vb_echo_force(VB_MSG_NORMAL, false, "%s%s", prefix, value);
+            }
+            g_free(value);
+
+            g_object_unref(G_OBJECT(store));
+            return false;
+        }
+    }
+
+    /* apply the default sorting to the first tree model comlumn */
     if (sort) {
         gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING);
     }
 
-    /* set the submode flag */
-    vb.mode->flags |= FLAG_COMPLETION;
-
-    OVERWRITE_STRING(comp.prefix, prefix);
-    init_completion(GTK_TREE_MODEL(store));
+    init_completion(GTK_TREE_MODEL(store), prefix);
     show(back);
 
     return true;
@@ -132,13 +150,18 @@ void completion_clean(void)
     }
 }
 
-static void init_completion(GtkTreeModel *model)
+static void init_completion(GtkTreeModel *model, const char *prefix)
 {
     GtkCellRenderer *renderer;
     GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GtkRequisition size;
     int height, width;
+
+    /* set the submode flag */
+    vb.mode->flags |= FLAG_COMPLETION;
+
+    OVERWRITE_STRING(comp.prefix, prefix);
 
     /* prepare the tree view */
     comp.win  = gtk_scrolled_window_new(NULL, NULL);
