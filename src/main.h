@@ -281,6 +281,7 @@ typedef struct {
     char   *download_dir;
     guint  history_max;
     char   *editor_command;
+    guint  timeoutlen;      /* timeout for ambiguous mappings */
 } Config;
 
 typedef struct {

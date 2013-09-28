@@ -167,7 +167,7 @@ MapState map_handle_keys(const char *keys, int keylen)
         if (map.timout_id) {
             g_source_remove(map.timout_id);
         }
-        map.timout_id = g_timeout_add(1000, (GSourceFunc)map_timeout, NULL);
+        map.timout_id = g_timeout_add(vb.config.timeoutlen, (GSourceFunc)map_timeout, NULL);
     }
 
     /* copy the keys onto the end of queue */

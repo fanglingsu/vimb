@@ -44,6 +44,7 @@ static gboolean proxy(const Setting *s, const SettingType type);
 static gboolean user_style(const Setting *s, const SettingType type);
 static gboolean history_max_items(const Setting *s, const SettingType type);
 static gboolean editor_command(const Setting *s, const SettingType type);
+static gboolean timeoutlen(const Setting *s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -89,6 +90,7 @@ static Setting default_settings[] = {
     {NULL, "status-sslinvalid-color-bg", TYPE_COLOR, status_color_bg, {0}},
     {NULL, "status-sslinvalid-color-fg", TYPE_COLOR, status_color_fg, {0}},
     {NULL, "status-sslinvalid-font", TYPE_FONT, status_font, {0}},
+    {NULL, "timeoutlen", TYPE_INTEGER, timeoutlen, {0}},
     {NULL, "input-bg-normal", TYPE_COLOR, input_style, {0}},
     {NULL, "input-bg-error", TYPE_COLOR, input_style, {0}},
     {NULL, "input-fg-normal", TYPE_COLOR, input_style, {0}},
@@ -697,6 +699,17 @@ static gboolean editor_command(const Setting *s, const SettingType type)
     }
 
     OVERWRITE_STRING(vb.config.editor_command, s->arg.s);
+
+    return true;
+}
+
+static gboolean timeoutlen(const Setting *s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        print_value(s, &vb.config.timeoutlen);
+    } else {
+        vb.config.timeoutlen = abs(s->arg.i);
+    }
 
     return true;
 }
