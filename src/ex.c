@@ -112,6 +112,7 @@ static gboolean ex_shortcut(const ExArg *arg);
 
 static gboolean ex_complete(short direction);
 static void ex_completion_select(char *match);
+static gboolean ex_history(short direction);
 
 /* The order of following command names is significant. If there exists
  * ambiguous commands matching to the users input, the first defined will be
@@ -226,12 +227,11 @@ VbResult ex_keypress(unsigned int key)
             break;
 
         case CTRL('P'): /* up */
-            /* TODO don't emit input change event when stepping though history in search mode */
-            command_history(&((Arg){1}));
+            ex_history(-1);
             break;
 
         case CTRL('N'): /* down */
-            command_history(&((Arg){0}));
+            ex_history(1);
             break;
 
         /* basic command line editing */
@@ -968,4 +968,20 @@ static void ex_completion_select(char *match)
         excomp.current = g_strconcat(excomp.prefix, match, NULL);
     }
     vb_set_input_text(excomp.current);
+}
+
+static gboolean ex_history(short direction)
+{
+    char *input = vb_get_input_text();
+    char *entry = history_get(input, direction < 0);
+    g_free(input);
+
+    if (entry) {
+        vb_set_input_text(entry);
+        g_free(entry);
+
+        return true;
+    }
+
+    return false;
 }

@@ -80,22 +80,6 @@ gboolean command_search(const Arg *arg)
     return true;
 }
 
-gboolean command_history(const Arg *arg)
-{
-    char *input = vb_get_input_text();
-    char *entry = history_get(input, arg->i);
-    g_free(input);
-
-    if (!entry) {
-        return false;
-    }
-
-    vb_echo_force(VB_MSG_NORMAL, false, "%s", entry);
-    g_free(entry);
-
-    return true;
-}
-
 gboolean command_yank(const Arg *arg)
 {
     static char *tmpl = "Yanked: %s";
