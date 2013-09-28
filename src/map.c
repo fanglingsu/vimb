@@ -238,7 +238,6 @@ MapState map_handle_keys(const char *keys, int keylen)
                 /* find ambiguous matches */
                 if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue, map.qlen)) {
                     ambiguous++;
-                    showcmd(map.queue, map.qlen);
                 }
                 /* complete match or better/longer match than previous found */
                 if (m->inlen <= map.qlen
@@ -247,6 +246,7 @@ MapState map_handle_keys(const char *keys, int keylen)
                 ) {
                     /* backup this found possible match */
                     match = m;
+                    showcmd(map.queue, map.qlen);
                 }
             }
         }
