@@ -68,7 +68,7 @@ typedef struct {
     int        count;    /* commands count */
     int        idx;      /* index in commands array */
     const char *name;    /* name of the command */
-    ExCode    code;      /* id of the command */
+    ExCode     code;     /* id of the command */
     gboolean   bang;     /* if the command was called with a bang ! */
     GString    *lhs;     /* left hand side of the command - single word */
     GString    *rhs;     /* right hand side of the command - multiple words */
@@ -109,6 +109,9 @@ static gboolean ex_save(const ExArg *arg);
 static gboolean ex_set(const ExArg *arg);
 static gboolean ex_shellcmd(const ExArg *arg);
 static gboolean ex_shortcut(const ExArg *arg);
+
+static gboolean ex_complete(short direction);
+static void ex_completion_select(char *match);
 
 /* The order of following command names is significant. If there exists
  * ambiguous commands matching to the users input, the first defined will be
@@ -157,6 +160,12 @@ static ExInfo commands[] = {
 #endif
 };
 
+static struct {
+    guint count;
+    char  *prefix;  /* completion prefix like :, ? and / */
+    char  *current; /* holds the current written input box content */
+} excomp;
+
 extern VbCore vb;
 
 
@@ -174,8 +183,10 @@ void ex_enter(void)
  */
 void ex_leave(void)
 {
-    /* TODO clean those only if they where active */
-    completion_clean();
+    if (vb.mode->flags & FLAG_COMPLETION) {
+        completion_clean();
+        vb.mode->flags &= ~FLAG_COMPLETION;
+    }
     hints_clear();
 }
 
@@ -197,12 +208,11 @@ VbResult ex_keypress(unsigned int key)
 
     switch (key) {
         case CTRL('I'): /* Tab */
-            /* mode will be set in completion_complete */
-            completion_complete(false);
+            ex_complete(1);
             break;
 
         case CTRL('O'): /* S-Tab */
-            completion_complete(true);
+            ex_complete(-1);
             break;
 
         case CTRL('['):
@@ -816,4 +826,146 @@ static gboolean ex_shortcut(const ExArg *arg)
         default:
             return false;
     }
+}
+
+/**
+ * Manage the generation and stepping through completions.
+ * This function prepared some prefix and suffix string that are required to
+ * put hte matched data back to inputbox, and prepares the tree list store
+ * model containing matched values.
+ */
+static gboolean ex_complete(short direction)
+{
+    char prefix[2] = {0};
+    char *input;            /* input read from inputbox */
+    const char *in;         /* pointer to input that we move */
+    gboolean found = false;
+    gboolean sort  = false;
+    GtkListStore *store;
+
+    /* if direction is 0 stop the completion */
+    if (!direction) {
+        completion_clean();
+        vb.mode->flags &= ~FLAG_COMPLETION;
+
+        return true;
+    }
+
+    input = vb_get_input_text();
+    /* if completion was already started move to the next/prev item */
+    if (vb.mode->flags & FLAG_COMPLETION) {
+        if (excomp.current && !strcmp(input, excomp.current)) {
+            /* step through the next/prev completion item */
+            completion_next(direction < 0);
+            g_free(input);
+
+            return true;
+        }
+
+        /* if current input isn't the content of the completion item, stop
+         * completion and start it after that again */
+        completion_clean();
+        vb.mode->flags &= ~FLAG_COMPLETION;
+    }
+
+    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
+
+    in = (const char*)input;
+    if (*in == ':') {
+        const char *before_cmdname;
+        /* skipt the first : */
+        in++;
+
+        ExArg *arg = g_new0(ExArg, 1);
+
+        skip_whitespace(&in);
+        parse_count(&in, arg);
+
+        /* packup the current pointer so that we can restore the input pointer
+         * if tha command name parsing fails */
+        before_cmdname = in;
+
+        if (parse_command_name(&in, arg) && *in == ' ') {
+            skip_whitespace(&in);
+            if (arg->code == EX_SET) {
+                if (setting_fill_completion(store, in)) {
+                    /* TODO calculate the prefix automatically */
+                    OVERWRITE_STRING(excomp.prefix, ":set ");
+                    sort = true;
+                    found = true;
+                }
+            } else if (arg->code == EX_OPEN || arg->code == EX_TABOPEN) {
+                OVERWRITE_STRING(excomp.prefix, arg->code == EX_OPEN ? ":open " : ":tabopen ");
+                if (*in == '!') {
+                    if (bookmark_fill_completion(store, in + 1)) {
+                        found = true;
+                    }
+                } else {
+                    if (history_fill_completion(store, HISTORY_URL, in)) {
+                        found = true;
+                    }
+                }
+            } else if (arg->code == EX_BMA) {
+                if (bookmark_fill_tag_completion(store, in)) {
+                    OVERWRITE_STRING(excomp.prefix, ":bma ");
+                    sort  = true;
+                    found = true;
+                }
+            }
+        } else { /* complete command names */
+            /* restore the 'in' pointer after try to parse command name */
+            in = before_cmdname;
+
+            /* backup the parsed data so we can access them in
+             * ex_completion_select function */
+            excomp.count = arg->count;
+
+            if (ex_fill_completion(store, in)) {
+                OVERWRITE_STRING(excomp.prefix, ":");
+                found = true;
+            }
+        }
+        free_cmdarg(arg);
+    } else if (*in == '/' || *in == '?') {
+        prefix[0] = *in;
+
+        if (history_fill_completion(store, HISTORY_SEARCH, in + 1)) {
+            OVERWRITE_STRING(excomp.prefix, prefix);
+            sort  = true;
+            found = true;
+        }
+    }
+
+    /* if the input could be parsed and the tree view could be filled */
+    if (sort) {
+        gtk_tree_sortable_set_sort_column_id(
+            GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING
+        );
+    }
+    if (found
+        && completion_create(GTK_TREE_MODEL(store), ex_completion_select, direction < 0)
+    ) {
+        /* set the submode flag */
+        vb.mode->flags |= FLAG_COMPLETION;
+    }
+
+    g_free(input);
+    return true;
+}
+
+/**
+ * Callback called from the completion if a item is selected to write the
+ * matche item accordings with previously saved prefix and command name to the
+ * inputbox.
+ */
+static void ex_completion_select(char *match)
+{
+    OVERWRITE_STRING(excomp.current, NULL);
+
+    if (excomp.count) {
+        excomp.current = g_strdup_printf("%s%d%s", excomp.prefix, excomp.count, match);
+    } else {
+        excomp.current = g_strconcat(excomp.prefix, match, NULL);
+    }
+    vb_set_input_text(excomp.current);
 }
