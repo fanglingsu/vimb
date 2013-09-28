@@ -903,7 +903,7 @@ static gboolean ex_complete(short direction)
                     found = setting_fill_completion(store, in);
                     break;
 
-                case EX_BMR:
+                case EX_BMA:
                     sort  = true;
                     found = bookmark_fill_tag_completion(store, in);
                     break;
