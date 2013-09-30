@@ -42,9 +42,9 @@ static struct {
     char   showbuf[10];             /* buffer to shw ambiguous key sequence */
 } map;
 
-static char *map_convert_keys(char *in, int inlen, int *len);
-static char *map_convert_keylabel(char *in, int inlen, int *len);
-static gboolean map_timeout(gpointer data);
+static char *convert_keys(char *in, int inlen, int *len);
+static char *convert_keylabel(char *in, int inlen, int *len);
+static gboolean do_timeout(gpointer data);
 static void showcmd(char *keys, int keylen);
 static char* transchar(char c);
 static void free_map(Map *map);
@@ -167,7 +167,7 @@ MapState map_handle_keys(const char *keys, int keylen)
         if (map.timout_id) {
             g_source_remove(map.timout_id);
         }
-        map.timout_id = g_timeout_add(vb.config.timeoutlen, (GSourceFunc)map_timeout, NULL);
+        map.timout_id = g_timeout_add(vb.config.timeoutlen, (GSourceFunc)do_timeout, NULL);
     }
 
     /* copy the keys onto the end of queue */
@@ -297,8 +297,8 @@ MapState map_handle_keys(const char *keys, int keylen)
 void map_insert(char *in, char *mapped, char mode)
 {
     int inlen, mappedlen;
-    char *lhs = map_convert_keys(in, strlen(in), &inlen);
-    char *rhs = map_convert_keys(mapped, strlen(mapped), &mappedlen);
+    char *lhs = convert_keys(in, strlen(in), &inlen);
+    char *rhs = convert_keys(mapped, strlen(mapped), &mappedlen);
 
     /* TODO replace keysymbols in 'in' and 'mapped' string */
     Map *new = g_new(Map, 1);
@@ -314,7 +314,7 @@ void map_insert(char *in, char *mapped, char mode)
 gboolean map_delete(char *in, char mode)
 {
     int len;
-    char *lhs = map_convert_keys(in, strlen(in), &len);
+    char *lhs = convert_keys(in, strlen(in), &len);
 
     for (GSList *l = map.list; l != NULL; l = l->next) {
         Map *m = (Map*)l->data;
@@ -335,7 +335,7 @@ gboolean map_delete(char *in, char mode)
  * Converts a keysequence into a internal raw keysequence.
  * Returned keyseqence must be freed if not used anymore.
  */
-static char *map_convert_keys(char *in, int inlen, int *len)
+static char *convert_keys(char *in, int inlen, int *len)
 {
     int symlen, rawlen;
     char *p, *dest, *raw;
@@ -385,7 +385,7 @@ static char *map_convert_keys(char *in, int inlen, int *len)
 
             /* if we could not convert it jet - try to translate the label */
             if (!rawlen) {
-                raw = map_convert_keylabel(p, symlen, &rawlen);
+                raw = convert_keylabel(p, symlen, &rawlen);
             }
         }
 
@@ -415,7 +415,7 @@ static char *map_convert_keys(char *in, int inlen, int *len)
  * Translate given key string into a internal representation <cr> -> \n.
  * The len of the translated key sequence is put into given *len pointer.
  */
-static char *map_convert_keylabel(char *in, int inlen, int *len)
+static char *convert_keylabel(char *in, int inlen, int *len)
 {
     static struct {
         char *label;
@@ -473,7 +473,7 @@ static char *map_convert_keylabel(char *in, int inlen, int *len)
 /**
  * Timeout function to signalize a key timeout to the map.
  */
-static gboolean map_timeout(gpointer data)
+static gboolean do_timeout(gpointer data)
 {
     /* signalize the timeout to the key handler */
     map_handle_keys("", 0);

@@ -110,10 +110,10 @@ static gboolean ex_set(const ExArg *arg);
 static gboolean ex_shellcmd(const ExArg *arg);
 static gboolean ex_shortcut(const ExArg *arg);
 
-static gboolean ex_complete(short direction);
-static void ex_completion_select(char *match);
-static gboolean ex_history(gboolean prev);
-static void ex_history_rewind(void);
+static gboolean complete(short direction);
+static void completion_select(char *match);
+static gboolean history(gboolean prev);
+static void history_rewind(void);
 
 /* The order of following command names is significant. If there exists
  * ambiguous commands matching to the users input, the first defined will be
@@ -216,11 +216,11 @@ VbResult ex_keypress(unsigned int key)
 
     switch (key) {
         case CTRL('I'): /* Tab */
-            ex_complete(1);
+            complete(1);
             break;
 
         case CTRL('O'): /* S-Tab */
-            ex_complete(-1);
+            complete(-1);
             break;
 
         case CTRL('['):
@@ -234,11 +234,11 @@ VbResult ex_keypress(unsigned int key)
             break;
 
         case CTRL('P'): /* up */
-            ex_history(true);
+            history(true);
             break;
 
         case CTRL('N'): /* down */
-            ex_history(false);
+            history(false);
             break;
 
         /* basic command line editing */
@@ -841,7 +841,7 @@ static gboolean ex_shortcut(const ExArg *arg)
  * put hte matched data back to inputbox, and prepares the tree list store
  * model containing matched values.
  */
-static gboolean ex_complete(short direction)
+static gboolean complete(short direction)
 {
     char *input;            /* input read from inputbox */
     const char *in;         /* pointer to input that we move */
@@ -923,7 +923,7 @@ static gboolean ex_complete(short direction)
             in = before_cmdname;
 
             /* backup the parsed data so we can access them in
-             * ex_completion_select function */
+             * completion_select function */
             excomp.count = arg->count;
 
             if (ex_fill_completion(store, in)) {
@@ -947,7 +947,7 @@ static gboolean ex_complete(short direction)
         );
     }
     if (found
-        && completion_create(GTK_TREE_MODEL(store), ex_completion_select, direction < 0)
+        && completion_create(GTK_TREE_MODEL(store), completion_select, direction < 0)
     ) {
         /* set the submode flag */
         vb.mode->flags |= FLAG_COMPLETION;
@@ -962,7 +962,7 @@ static gboolean ex_complete(short direction)
  * matche item accordings with previously saved prefix and command name to the
  * inputbox.
  */
-static void ex_completion_select(char *match)
+static void completion_select(char *match)
 {
     OVERWRITE_STRING(excomp.current, NULL);
 
@@ -974,11 +974,9 @@ static void ex_completion_select(char *match)
     vb_set_input_text(excomp.current);
 }
 
-static gboolean ex_history(gboolean prev)
+static gboolean history(gboolean prev)
 {
-    int type;
-    char *input, prefix[2] = {0};
-    const char *in;
+    char *input;
     GList *new = NULL;
 
     input = vb_get_input_text();
@@ -988,14 +986,16 @@ static gboolean ex_history(gboolean prev)
          * rewind the history to recreate it later new */
         char *current = g_strconcat(exhist.prefix, (char*)exhist.active->data, NULL);
         if (strcmp(input, current)) {
-            ex_history_rewind();
+            history_rewind();
         }
         g_free(current);
     }
 
     /* create the history list if the lookup is started or input was changed */
     if (!exhist.active) {
-        in = (const char*)input;
+        int type;
+        char prefix[2] = {0};
+        const char *in = (const char*)input;
 
         skip_whitespace(&in);
 
@@ -1005,22 +1005,20 @@ static gboolean ex_history(gboolean prev)
         /* check which type of history we should use */
         if (*in == ':') {
             type = VB_INPUT_COMMAND;
-            in++;
         } else if (*in == '/' || *in == '?') {
             /* the history does not distinguish between forward and backward
              * search, so we don't need the backward search here too */
             type = VB_INPUT_SEARCH_FORWARD;
-            in++;
+        } else {
+            goto failed;
         }
-        exhist.active = history_get_list(type, in);
-        if (!exhist.active) {
-            g_free(input);
 
-            return false;
+        exhist.active = history_get_list(type, in + 1);
+        if (!exhist.active) {
+            goto failed;
         }
         OVERWRITE_STRING(exhist.prefix, prefix);
     }
-    g_free(input);
 
     if (prev) {
         if ((new = g_list_next(exhist.active))) {
@@ -1032,10 +1030,15 @@ static gboolean ex_history(gboolean prev)
 
     vb_echo_force(VB_MSG_NORMAL, false, "%s%s", exhist.prefix, (char*)exhist.active->data);
 
+    g_free(input);
     return true;
+
+failed:
+    g_free(input);
+    return false;
 }
 
-static void ex_history_rewind(void)
+static void history_rewind(void)
 {
     if (exhist.active) {
         /* free temporary used history list */
