@@ -208,7 +208,6 @@ void normal_enter(void)
 {
     dom_clear_focus(vb.gui.webview);
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    history_rewind();
     hints_clear();
 }
 

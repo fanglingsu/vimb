@@ -30,10 +30,7 @@ typedef enum {
 
 void history_cleanup(void);
 void history_add(HistoryType type, const char *value, const char *additional);
-GList *history_get_all(HistoryType type);
-GList *history_get_by_tags(HistoryType type, const char *tags);
-char *history_get(const char *input, gboolean prev);
-void history_rewind(void);
 gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input);
+GList *history_get_list(VbInputType type, const char *query);
 
 #endif /* end of include guard: _HISTORY_H */

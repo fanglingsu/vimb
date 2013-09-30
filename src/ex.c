@@ -112,7 +112,8 @@ static gboolean ex_shortcut(const ExArg *arg);
 
 static gboolean ex_complete(short direction);
 static void ex_completion_select(char *match);
-static gboolean ex_history(short direction);
+static gboolean ex_history(gboolean prev);
+static void ex_history_rewind(void);
 
 /* The order of following command names is significant. If there exists
  * ambiguous commands matching to the users input, the first defined will be
@@ -166,6 +167,12 @@ static struct {
     char  *prefix;  /* completion prefix like :, ? and / */
     char  *current; /* holds the current written input box content */
 } excomp;
+
+static struct {
+    char  *prefix;  /* prefix that is prepended to the history item to for the complete command */
+    char  *query;   /* part of input text to match the history items */
+    GList *active;
+} exhist;
 
 extern VbCore vb;
 
@@ -227,11 +234,11 @@ VbResult ex_keypress(unsigned int key)
             break;
 
         case CTRL('P'): /* up */
-            ex_history(-1);
+            ex_history(true);
             break;
 
         case CTRL('N'): /* down */
-            ex_history(1);
+            ex_history(false);
             break;
 
         /* basic command line editing */
@@ -967,18 +974,74 @@ static void ex_completion_select(char *match)
     vb_set_input_text(excomp.current);
 }
 
-static gboolean ex_history(short direction)
+static gboolean ex_history(gboolean prev)
 {
-    char *input = vb_get_input_text();
-    char *entry = history_get(input, direction < 0);
-    g_free(input);
+    int type;
+    char *input, prefix[2] = {0};
+    const char *in;
+    GList *new = NULL;
 
-    if (entry) {
-        vb_set_input_text(entry);
-        g_free(entry);
-
-        return true;
+    input = vb_get_input_text();
+    if (exhist.active) {
+        /* calculate the actual content of the inpubox from history data, if
+         * the theoretical content and the actual given input are different
+         * rewind the history to recreate it later new */
+        char *current = g_strconcat(exhist.prefix, (char*)exhist.active->data, NULL);
+        if (strcmp(input, current)) {
+            ex_history_rewind();
+        }
+        g_free(current);
     }
 
-    return false;
+    /* create the history list if the lookup is started or input was changed */
+    if (!exhist.active) {
+        in = (const char*)input;
+
+        skip_whitespace(&in);
+
+        /* save the first char as prefix - this should be : / or ? */
+        prefix[0] = *in;
+
+        /* check which type of history we should use */
+        if (*in == ':') {
+            type = VB_INPUT_COMMAND;
+            in++;
+        } else if (*in == '/' || *in == '?') {
+            /* the history does not distinguish between forward and backward
+             * search, so we don't need the backward search here too */
+            type = VB_INPUT_SEARCH_FORWARD;
+            in++;
+        }
+        exhist.active = history_get_list(type, in);
+        if (!exhist.active) {
+            g_free(input);
+
+            return false;
+        }
+        OVERWRITE_STRING(exhist.prefix, prefix);
+    }
+    g_free(input);
+
+    if (prev) {
+        if ((new = g_list_next(exhist.active))) {
+            exhist.active = new;
+        }
+    } else if ((new = g_list_previous(exhist.active))) {
+        exhist.active = new;
+    }
+
+    vb_echo_force(VB_MSG_NORMAL, false, "%s%s", exhist.prefix, (char*)exhist.active->data);
+
+    return true;
+}
+
+static void ex_history_rewind(void)
+{
+    if (exhist.active) {
+        /* free temporary used history list */
+        g_list_free_full(exhist.active, (GDestroyNotify)g_free);
+        exhist.active = NULL;
+
+        OVERWRITE_STRING(exhist.prefix, NULL);
+    }
 }
