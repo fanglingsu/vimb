@@ -792,7 +792,6 @@ static void read_config(void)
         int length = g_strv_length(lines) - 1;
         for (int i = 0; i < length; i++) {
             line = lines[i];
-            g_strstrip(line);
 
             if (!g_ascii_isalpha(line[0])) {
                 continue;
