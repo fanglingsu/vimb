@@ -740,11 +740,8 @@ static void setup_signals()
     g_signal_connect(
         G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(map_keypress), NULL
     );
-    g_object_connect(
-        G_OBJECT(vb.gui.input),
-        "signal::focus-in-event", G_CALLBACK(mode_input_focusin), NULL,
-        "signal::focus-out-event", G_CALLBACK(mode_input_focusout), NULL,
-        NULL
+    g_signal_connect(
+        G_OBJECT(vb.gui.input), "focus-in-event", G_CALLBACK(mode_input_focusin), NULL
     );
     g_object_connect(
         G_OBJECT(vb.gui.buffer),
