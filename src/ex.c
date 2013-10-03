@@ -22,6 +22,7 @@
  * commands from inputbox and the ex commands.
  */
 #include <ctype.h>
+#include <sys/wait.h>
 #include "config.h"
 #include "main.h"
 #include "ex.h"
