@@ -26,6 +26,7 @@
 #include "config.h"
 #include "main.h"
 #include "ex.h"
+#include "ascii.h"
 #include "completion.h"
 #include "hints.h"
 #include "mode.h"
@@ -202,7 +203,7 @@ void ex_leave(void)
 /**
  * Handles the keypress events from webview and inputbox.
  */
-VbResult ex_keypress(unsigned int key)
+VbResult ex_keypress(int key)
 {
     /* TODO allow to get the right prompt like ':', '/', ';o', ... */
     char *prompt = ":";
@@ -216,11 +217,11 @@ VbResult ex_keypress(unsigned int key)
     }
 
     switch (key) {
-        case CTRL('I'): /* Tab */
+        case KEY_TAB:
             complete(1);
             break;
 
-        case CTRL('O'): /* S-Tab */
+        case KEY_SHIFT_TAB:
             complete(-1);
             break;
 
@@ -234,11 +235,11 @@ VbResult ex_keypress(unsigned int key)
             input_activate();
             break;
 
-        case CTRL('P'): /* up */
+        case KEY_UP:
             history(true);
             break;
 
-        case CTRL('N'): /* down */
+        case KEY_DOWN:
             history(false);
             break;
 

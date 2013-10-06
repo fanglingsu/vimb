@@ -25,6 +25,6 @@
 
 void pass_enter(void);
 void pass_leave(void);
-VbResult pass_keypress(unsigned int key);
+VbResult pass_keypress(int key);
 
 #endif /* end of include guard: _PASS_H */

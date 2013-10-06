@@ -92,11 +92,10 @@ void mode_enter(char id)
     vb_update_statusbar();
 }
 
-VbResult mode_handle_key(unsigned int key)
+VbResult mode_handle_key(int key)
 {
     VbResult res;
     if (vb.mode && vb.mode->keypress) {
-        key &= 0xff;
 #ifdef DEBUG
         int flags = vb.mode->flags;
         int id    = vb.mode->id;

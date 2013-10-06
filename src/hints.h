@@ -23,7 +23,7 @@
 #include "main.h"
 
 void hints_init(WebKitWebFrame *frame);
-VbResult hints_keypress(unsigned int key);
+VbResult hints_keypress(int key);
 void hints_create(const char *input);
 void hints_update(int num);
 void hints_fire(void);

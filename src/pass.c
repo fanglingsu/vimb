@@ -45,7 +45,7 @@ void pass_leave(void)
     vb_set_input_text("");
 }
 
-VbResult pass_keypress(unsigned int key)
+VbResult pass_keypress(int key)
 {
     if (key == CTRL('[')) { /* esc */
         mode_enter('n');

@@ -41,9 +41,7 @@
 
 #define CTRL(x)      ((x) ^ 0x40)
 /* check if the char x is a char with CTRL like ^C */
-#define IS_CTRL(x)   (((unsigned char)x) <= 0x1f)
-#define CSI          0x9b   /* Control Sequence Introducer */
-#define CSI_STR      "\233"
+#define IS_CTRL(x)   (((guchar)x) <= 0x1f)
 
 #ifdef DEBUG
 #define PRINT_DEBUG(...) { \
@@ -224,7 +222,7 @@ typedef struct {
 } Arg;
 
 typedef void (*ModeTransitionFunc) (void);
-typedef VbResult (*ModeKeyFunc) (unsigned int);
+typedef VbResult (*ModeKeyFunc) (int);
 typedef void (*ModeInputChangedFunc) (const char*);
 typedef struct {
     char                 id;

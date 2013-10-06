@@ -25,7 +25,7 @@
 
 void input_enter(void);
 void input_leave(void);
-VbResult input_keypress(unsigned int key);
+VbResult input_keypress(int key);
 VbResult input_open_editor(void);
 
 #endif /* end of include guard: _INPUT_H */

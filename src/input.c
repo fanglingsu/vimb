@@ -55,7 +55,7 @@ void input_leave(void)
 /**
  * Handles the keypress events from webview and inputbox.
  */
-VbResult input_keypress(unsigned int key)
+VbResult input_keypress(int key)
 {
     switch (key) {
         case CTRL('['): /* esc */

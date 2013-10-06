@@ -22,6 +22,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
+#include "ascii.h"
 #include "dom.h"
 #include "command.h"
 #include "hints.js.h"
@@ -49,7 +50,7 @@ void hints_init(WebKitWebFrame *frame)
     g_free(value);
 }
 
-VbResult hints_keypress(unsigned int key)
+VbResult hints_keypress(int key)
 {
     /* if we are not already in hint mode we expect to get a ; to start
      * hinting */
@@ -57,11 +58,12 @@ VbResult hints_keypress(unsigned int key)
         return RESULT_ERROR;
     }
 
-    if (key == '\n') {
+    if (key == KEY_CR) {
         hints_fire();
 
         return RESULT_COMPLETE;
     }
+
     /* if there is an active filter by hint num backspace will remove the
      * number filter first */
     if (hints.num && key == CTRL('H')) {
@@ -80,12 +82,12 @@ VbResult hints_keypress(unsigned int key)
             return RESULT_COMPLETE;
         }
     }
-    if (key == CTRL('I')) {
+    if (key == KEY_TAB) {
         hints_focus_next(false);
 
         return RESULT_COMPLETE;
     }
-    if (key == CTRL('O')) {
+    if (key == KEY_SHIFT_TAB) {
         hints_focus_next(true);
 
         return RESULT_COMPLETE;

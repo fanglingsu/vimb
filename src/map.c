@@ -20,6 +20,7 @@
 #include "config.h"
 #include "main.h"
 #include "map.h"
+#include "ascii.h"
 #include "mode.h"
 
 extern VbCore vb;
@@ -42,12 +43,39 @@ static struct {
     char   showbuf[10];             /* buffer to shw ambiguous key sequence */
 } map;
 
+static int keyval_to_string(guint keyval, guint state, guchar *string);
+static int utf_char2bytes(guint c, guchar *buf);
 static char *convert_keys(char *in, int inlen, int *len);
 static char *convert_keylabel(char *in, int inlen, int *len);
 static gboolean do_timeout(gpointer data);
 static void showcmd(char *keys, int keylen);
 static char* transchar(char c);
 static void free_map(Map *map);
+
+static struct {
+    guint state; 
+    guint keyval;
+    char one;
+    char two;
+} special_keys[] = {
+    {GDK_SHIFT_MASK,    GDK_Tab,       'k', 'B'},
+    {0,                 GDK_Up,        'k', 'u'},
+    {0,                 GDK_Down,      'k', 'd'},
+    {0,                 GDK_Left,      'k', 'l'},
+    {0,                 GDK_Right,     'k', 'r'},
+    {0,                 GDK_F1,        'k', '1'},
+    {0,                 GDK_F2,        'k', '2'},
+    {0,                 GDK_F3,        'k', '3'},
+    {0,                 GDK_F4,        'k', '4'},
+    {0,                 GDK_F5,        'k', '5'},
+    {0,                 GDK_F6,        'k', '6'},
+    {0,                 GDK_F7,        'k', '7'},
+    {0,                 GDK_F8,        'k', '8'},
+    {0,                 GDK_F9,        'k', '9'},
+    {0,                 GDK_F10,       'k', ';'},
+    {0,                 GDK_F11,       'F', '1'},
+    {0,                 GDK_F12,       'F', '2'},
+};
 
 
 void map_cleanup(void)
@@ -63,90 +91,140 @@ void map_cleanup(void)
  */
 gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
 {
-    unsigned int key = 0;
-    static struct {
-        guint keyval;
-        int   ctrl;    /* -1 = indifferent, 1 = ctrl, 0 = no ctrl */
-        char  *ch;
-        int   chlen;
-    } keys[] = {
-        {GDK_Escape,       -1, "\x1b",         1}, /* ^[ */
-        {GDK_Tab,          -1, "\x09",         1}, /* ^I */
-        {GDK_ISO_Left_Tab, -1, "\x0f",         1}, /* ^O */
-        {GDK_Return,       -1, "\x0a",         1},
-        {GDK_KP_Enter,     -1, "\x0a",         1},
-        {GDK_BackSpace,    -1, "\x08",         1}, /* ^H */
-        {GDK_Up,           -1, CSI_STR "ku",   3},
-        {GDK_Down,         -1, CSI_STR "kd",   3},
-        {GDK_Left,         -1, CSI_STR "kl",   3},
-        {GDK_Right,        -1, CSI_STR "kr",   3},
-        /* function keys are prefixed by gEsc like in vim the CSI Control
-         * Sequence Introducer \233 */
-        /* TODO calculate this automatic */
-        {GDK_KEY_F1,        1, CSI_STR "\x01", 2},
-        {GDK_KEY_F2,        1, CSI_STR "\x02", 2},
-        {GDK_KEY_F3,        1, CSI_STR "\x03", 2},
-        {GDK_KEY_F4,        1, CSI_STR "\x04", 2},
-        {GDK_KEY_F5,        1, CSI_STR "\x05", 2},
-        {GDK_KEY_F6,        1, CSI_STR "\x06", 2},
-        {GDK_KEY_F7,        1, CSI_STR "\x07", 2},
-        {GDK_KEY_F8,        1, CSI_STR "\x08", 2},
-        {GDK_KEY_F9,        1, CSI_STR "\x09", 2},
-        {GDK_KEY_F10,       1, CSI_STR "\x0a", 2},
-        {GDK_KEY_F11,       1, CSI_STR "\x0b", 2},
-        {GDK_KEY_F12,       1, CSI_STR "\x0c", 2},
-        {GDK_KEY_F1,        0, CSI_STR "\x0d", 2},
-        {GDK_KEY_F2,        0, CSI_STR "\x0e", 2},
-        {GDK_KEY_F3,        0, CSI_STR "\x0f", 2},
-        {GDK_KEY_F4,        0, CSI_STR "\x10", 2},
-        {GDK_KEY_F5,        0, CSI_STR "\x11", 2},
-        {GDK_KEY_F6,        0, CSI_STR "\x12", 2},
-        {GDK_KEY_F7,        0, CSI_STR "\x13", 2},
-        {GDK_KEY_F8,        0, CSI_STR "\x14", 2},
-        {GDK_KEY_F9,        0, CSI_STR "\x15", 2},
-        {GDK_KEY_F10,       0, CSI_STR "\x16", 2},
-        {GDK_KEY_F11,       0, CSI_STR "\x17", 2},
-        {GDK_KEY_F12,       0, CSI_STR "\x18", 2},
-    };
+    guint state  = event->state;
+    guint keyval = event->keyval;
+    guchar string[32];
+    int len;
 
-    int ctrl = (event->state & GDK_CONTROL_MASK) != 0;
+    len = keyval_to_string(keyval, state, string);
 
-    /* set initial value for the flag that should be changed in the modes key
-     * handler functions */
-    vb.state.processed_key = true;
-    if (!ctrl && event->keyval > 0 && event->keyval < 0xff) {
-        map_handle_keys((char*)(&event->keyval), 1);
-
-        return vb.state.processed_key;
+    /* translate iso left tab to shift tab */
+    if (keyval == GDK_ISO_Left_Tab) {
+        keyval = GDK_Tab;
+        state |= GDK_SHIFT_MASK;
     }
 
-    /* convert chars A-]a-z with ctrl flag <ctrl-a> or <ctrl-A> -> \001
-     * and <ctrl-z> -> \032 like vi */
-    if (event->keyval >= 0x41 && event->keyval <= 0x5d) {/* chars A-] */
-        key = event->keyval - 0x40;
-        map_handle_keys((char*)(&key), 1);
-
-        return vb.state.processed_key;
-    } else if (event->keyval >= 0x61 && event->keyval <= 0x7a) {/* chars a-z */
-        key = event->keyval - 0x60;
-        map_handle_keys((char*)(&key), 1);
-
-        return vb.state.processed_key;
-    }
-
-    for (int i = 0; i < LENGTH(keys); i++) {
-        if (keys[i].keyval == event->keyval
-            && (keys[i].ctrl == ctrl ||keys[i].ctrl == -1)
-        ) {
-            map_handle_keys(keys[i].ch, keys[i].chlen);
-
-            return vb.state.processed_key;
+    if (len == 0 || len == 1) {
+        for (int i = 0; i < LENGTH(special_keys); i++) {
+            if (special_keys[i].keyval == keyval
+                && (special_keys[i].state == 0 || state & special_keys[i].state)
+            ) {
+                state &= ~special_keys[i].state;
+                string[0] = CSI;
+                string[1] = special_keys[i].one;
+                string[2] = special_keys[i].two;
+                len = 3;
+                break;
+            }
         }
     }
 
-    /* mark all unknown key events as unhandled to not break some gtk features
-     * like <S-Einf> to copy clipboard content into inputbox */
-    return false;
+    if (len == 0) {
+        /* mark all unknown key events as unhandled to not break some gtk features
+         * like <S-Einf> to copy clipboard content into inputbox */
+        return false;
+    }
+
+    vb.state.processed_key = true;
+    map_handle_keys(string, len);
+
+    return vb.state.processed_key;
+}
+
+/**
+ * Translate a keyvalue to utf-8 encoded and null terminated string.
+ * Given string must have room for 6 bytes.
+ */
+static int keyval_to_string(guint keyval, guint state, guchar *string)
+{
+    int len;
+    guint32 uc;
+
+    if ((uc = gdk_keyval_to_unicode(keyval))) {
+        if ((state & GDK_CONTROL_MASK) && uc >= 0x20 && uc < 0x80) {
+            len = 1;
+            if (uc >= '@') {
+                string[0] = uc & 0x1f;
+            } else if (uc == '8') {
+                string[0] = KEY_BS;
+            } else {
+                string[0] = uc;
+            }
+        } else {
+            /* translate a normal key to utf-8 */
+            len = utf_char2bytes((guint)uc, string);
+        }
+    } else {
+        /* translate keys which are represented by ascii control codes */
+        len = 1;
+        switch (keyval) {
+            case GDK_Tab:
+            case GDK_KP_Tab:
+            case GDK_ISO_Left_Tab:
+                string[0] = KEY_TAB;
+                break;
+            case GDK_Linefeed:
+                string[0] = KEY_NL;
+                break;
+            case GDK_Return:
+            case GDK_ISO_Enter:
+            case GDK_3270_Enter:
+                string[0] = KEY_CR;
+                break;
+            case GDK_Escape:
+                string[0] = KEY_ESC;
+                break;
+            case GDK_BackSpace:
+                string[0] = KEY_BS;
+                break;
+            default:
+                len = 0;
+                break;
+        }
+    }
+
+    return len;
+}
+
+static int utf_char2bytes(guint c, guchar *buf)
+{
+    if (c < 0x80) {
+        buf[0] = c;
+        return 1;
+    }
+    if (c < 0x800) {
+        buf[0] = 0xc0 + (c >> 6);
+        buf[1] = 0x80 + (c & 0x3f);
+        return 2;
+    }
+    if (c < 0x10000) {
+        buf[0] = 0xe0 + (c >> 12);
+        buf[1] = 0x80 + ((c >> 6) & 0x3f);
+        buf[2] = 0x80 + (c & 0x3f);
+        return 3;
+    }
+    if (c < 0x200000) {
+        buf[0] = 0xf0 + (c >> 18);
+        buf[1] = 0x80 + ((c >> 12) & 0x3f);
+        buf[2] = 0x80 + ((c >> 6) & 0x3f);
+        buf[3] = 0x80 + (c & 0x3f);
+        return 4;
+    }
+    if (c < 0x4000000) {
+        buf[0] = 0xf8 + (c >> 24);
+        buf[1] = 0x80 + ((c >> 18) & 0x3f);
+        buf[2] = 0x80 + ((c >> 12) & 0x3f);
+        buf[3] = 0x80 + ((c >> 6) & 0x3f);
+        buf[4] = 0x80 + (c & 0x3f);
+        return 5;
+    }
+    buf[0] = 0xfc + (c >> 30);
+    buf[1] = 0x80 + ((c >> 24) & 0x3f);
+    buf[2] = 0x80 + ((c >> 18) & 0x3f);
+    buf[3] = 0x80 + ((c >> 12) & 0x3f);
+    buf[4] = 0x80 + ((c >> 6) & 0x3f);
+    buf[5] = 0x80 + (c & 0x3f);
+    return 6;
 }
 
 /**
@@ -154,7 +232,7 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
  * chars. The key sequence do not need to be NUL terminated.
  * Keylen of 0 signalized a key timeout.
  */
-MapState map_handle_keys(const char *keys, int keylen)
+MapState map_handle_keys(const guchar *keys, int keylen)
 {
     int ambiguous;
     Map *match = NULL;
@@ -180,13 +258,14 @@ MapState map_handle_keys(const char *keys, int keylen)
     while (true) {
         /* send any resolved key to the parser */
         static int csi = 0;
+        static int c;
         while (map.resolved > 0) {
             /* pop the next char from queue */
             map.resolved--;
             map.qlen--;
 
             /* get first char of queue */
-            char qk = map.queue[0];
+            int qk = map.queue[0];
             /* move all other queue entries one step to the left */
             for (int i = 0; i < map.qlen; i++) {
                 map.queue[i] = map.queue[i + 1];
@@ -199,21 +278,21 @@ MapState map_handle_keys(const char *keys, int keylen)
             /* TODO make it simplier to skip the special keys here */
             if ((qk & 0xff) == CSI) {
                 csi = 2;
-                vb.state.processed_key = false;
                 continue;
-            }
-            if (csi > 0) {
+            } else if (csi == 2) {
                 csi--;
-                vb.state.processed_key = false;
-                showcmd(NULL, 0);
+                c = qk;
                 continue;
+            } else if (csi == 1) {
+                csi--;
+                qk = TERMCAP2KEY(c, qk);
             }
 
             /* remove the nomap flag */
             vb.mode->flags &= ~FLAG_NOMAP;
 
             /* send the key to the parser */
-            if (RESULT_MORE != mode_handle_key((unsigned int)qk)) {
+            if (RESULT_MORE != mode_handle_key((int)qk)) {
                 showcmd(NULL, 0);
             }
         }
@@ -423,40 +502,26 @@ static char *convert_keylabel(char *in, int inlen, int *len)
         char *ch;
         int  chlen;
     } keys[] = {
-        {"<CR>",    4, "\n",           1},
-        {"<Tab>",   5, "\t",           1},
-        {"<Esc>",   5, "\x1b",         1},
-        {"<Up>",    4, CSI_STR "ku",   3},
-        {"<Down>",  6, CSI_STR "kd",   3},
-        {"<Left>",  6, CSI_STR "kl",   3},
-        {"<Right>", 7, CSI_STR "kr",   3},
-        /* convert function keys to gEsc+num */
-        /* TODO allow to calculate the ch programmatic instead of mapping the
-         * function keys here */
-        {"<C-F1>",  6, CSI_STR "\x01", 2},
-        {"<C-F2>",  6, CSI_STR "\x02", 2},
-        {"<C-F3>",  6, CSI_STR "\x03", 2},
-        {"<C-F4>",  6, CSI_STR "\x04", 2},
-        {"<C-F5>",  6, CSI_STR "\x05", 2},
-        {"<C-F6>",  6, CSI_STR "\x06", 2},
-        {"<C-F7>",  6, CSI_STR "\x07", 2},
-        {"<C-F8>",  6, CSI_STR "\x08", 2},
-        {"<C-F9>",  6, CSI_STR "\x09", 2},
-        {"<C-F10>", 7, CSI_STR "\x0a", 2},
-        {"<C-F11>", 7, CSI_STR "\x0b", 2},
-        {"<C-F12>", 7, CSI_STR "\x0c", 2},
-        {"<F1>",    4, CSI_STR "\x0d", 2},
-        {"<F2>",    4, CSI_STR "\x0e", 2},
-        {"<F3>",    4, CSI_STR "\x0f", 2},
-        {"<F4>",    4, CSI_STR "\x10", 2},
-        {"<F5>",    4, CSI_STR "\x11", 2},
-        {"<F6>",    4, CSI_STR "\x12", 2},
-        {"<F7>",    4, CSI_STR "\x13", 2},
-        {"<F8>",    4, CSI_STR "\x14", 2},
-        {"<F9>",    4, CSI_STR "\x15", 2},
-        {"<F10>",   5, CSI_STR "\x16", 2},
-        {"<F11>",   5, CSI_STR "\x17", 2},
-        {"<F12>",   5, CSI_STR "\x18", 2},
+        {"<CR>",    4, "\n",         1},
+        {"<Tab>",   5, "\t",         1},
+        {"<S-Tab>", 7, CSI_STR "kB", 3},
+        {"<Esc>",   5, "\x1b",       1},
+        {"<Up>",    4, CSI_STR "ku", 3},
+        {"<Down>",  6, CSI_STR "kd", 3},
+        {"<Left>",  6, CSI_STR "kl", 3},
+        {"<Right>", 7, CSI_STR "kr", 3},
+        {"<F1>",    4, CSI_STR "k1", 3},
+        {"<F2>",    4, CSI_STR "k2", 3},
+        {"<F3>",    4, CSI_STR "k3", 3},
+        {"<F4>",    4, CSI_STR "k4", 3},
+        {"<F5>",    4, CSI_STR "k5", 3},
+        {"<F6>",    4, CSI_STR "k6", 3},
+        {"<F7>",    4, CSI_STR "k7", 3},
+        {"<F8>",    4, CSI_STR "k8", 3},
+        {"<F9>",    4, CSI_STR "k9", 3},
+        {"<F10>",   5, CSI_STR "k;", 3},
+        {"<F11>",   5, CSI_STR "F1", 3},
+        {"<F12>",   5, CSI_STR "F2", 3},
     };
 
     for (int i = 0; i < LENGTH(keys); i++) {
@@ -476,7 +541,7 @@ static char *convert_keylabel(char *in, int inlen, int *len)
 static gboolean do_timeout(gpointer data)
 {
     /* signalize the timeout to the key handler */
-    map_handle_keys("", 0);
+    map_handle_keys((guchar*)"", 0);
 
     /* call only once */
     return false;

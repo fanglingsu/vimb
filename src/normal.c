@@ -23,6 +23,7 @@
 #include "mode.h"
 #include "main.h"
 #include "normal.h"
+#include "ascii.h"
 #include "command.h"
 #include "hints.h"
 #include "dom.h"
@@ -36,10 +37,10 @@ typedef enum {
 } Phase;
 
 struct NormalCmdInfo_s {
-    int count;          /* count used for the command */
-    unsigned char cmd;  /* command key */
-    unsigned char ncmd; /* second command key (optional) */
-    Phase phase;        /* current parsing phase */
+    int count;   /* count used for the command */
+    char cmd;    /* command key */
+    char ncmd;   /* second command key (optional) */
+    Phase phase; /* current parsing phase */
 } info = {0, '\0', '\0', PHASE_START};
 
 typedef VbResult (*NormalCommand)(const NormalCmdInfo *info);
@@ -223,7 +224,7 @@ void normal_leave(void)
 /**
  * Handles the keypress events from webview and inputbox.
  */
-VbResult normal_keypress(unsigned int key)
+VbResult normal_keypress(int key)
 {
     State *s = &vb.state;
     VbResult res;
@@ -242,13 +243,15 @@ VbResult normal_keypress(unsigned int key)
         info.cmd   = key;
         vb.mode->flags |= FLAG_NOMAP;
     } else {
-        info.cmd   = key & 0xff;
+        info.cmd   = key;
         info.phase = PHASE_COMPLETE;
     }
 
     if (info.phase == PHASE_COMPLETE) {
-        if (commands[info.cmd].func) {
-            res = commands[info.cmd].func(&info);
+        /* TODO allow more commands - some that are looked up via command key
+         * direct and those that are searched via binary search */
+        if ((guchar)info.cmd <= LENGTH(commands) && commands[(guchar)info.cmd].func) {
+            res = commands[(guchar)info.cmd].func(&info);
         } else {
             /* let gtk handle the keyevent if we have no command attached to
              * it */

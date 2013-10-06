@@ -25,7 +25,7 @@
 
 void ex_enter(void);
 void ex_leave(void);
-VbResult ex_keypress(unsigned int key);
+VbResult ex_keypress(int key);
 void ex_input_changed(const char *text);
 gboolean ex_fill_completion(GtkListStore *store, const char *input);
 gboolean ex_run_string(const char *input);
