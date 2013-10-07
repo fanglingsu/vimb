@@ -28,5 +28,6 @@ typedef struct NormalCmdInfo_s NormalCmdInfo;
 void normal_enter(void);
 void normal_leave(void);
 VbResult normal_keypress(int key);
+void normal_showcmd(int c);
 
 #endif /* end of include guard: _NORMAL_H */

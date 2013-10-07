@@ -22,8 +22,8 @@
 
 /* CSI (control sequence introducer) is the first byte of a control sequence
  * and is always followed by two bytes. */
-#define CSI         0x9b
-#define CSI_STR     "\233"
+#define CSI         0x80
+#define CSI_STR     "\x80"
 
 #define IS_SPECIAL(c)       (c < 0)
 

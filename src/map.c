@@ -20,6 +20,7 @@
 #include "config.h"
 #include "main.h"
 #include "map.h"
+#include "normal.h"
 #include "ascii.h"
 #include "mode.h"
 
@@ -39,8 +40,6 @@ static struct {
     int    qlen;                    /* pointer to last char in queue */
     int    resolved;                /* number of resolved keys (no mapping required) */
     guint  timout_id;               /* source id of the timeout function */
-    char   transchar[3];            /* buffer used to translate keys to be shown in statusbar */
-    char   showbuf[10];             /* buffer to shw ambiguous key sequence */
 } map;
 
 static int keyval_to_string(guint keyval, guint state, guchar *string);
@@ -48,12 +47,10 @@ static int utf_char2bytes(guint c, guchar *buf);
 static char *convert_keys(char *in, int inlen, int *len);
 static char *convert_keylabel(char *in, int inlen, int *len);
 static gboolean do_timeout(gpointer data);
-static void showcmd(char *keys, int keylen);
-static char* transchar(char c);
 static void free_map(Map *map);
 
 static struct {
-    guint state; 
+    guint state;
     guint keyval;
     char one;
     char two;
@@ -129,6 +126,200 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
     map_handle_keys(string, len);
 
     return vb.state.processed_key;
+}
+
+/**
+ * Added the given key sequence ot the key queue and precesses the mapping of
+ * chars. The key sequence do not need to be NUL terminated.
+ * Keylen of 0 signalized a key timeout.
+ */
+MapState map_handle_keys(const guchar *keys, int keylen)
+{
+    int ambiguous;
+    Map *match = NULL;
+    gboolean timeout = (keylen == 0); /* keylen 0 signalized timeout */
+
+    /* don't set the timeout function if a timeout is handled */
+    if (!timeout) {
+        /* if a previous timeout function was set remove this to start the
+         * timeout new */
+        if (map.timout_id) {
+            g_source_remove(map.timout_id);
+        }
+        map.timout_id = g_timeout_add(vb.config.timeoutlen, (GSourceFunc)do_timeout, NULL);
+    }
+
+    /* copy the keys onto the end of queue */
+    while (map.qlen < LENGTH(map.queue) && keylen > 0) {
+        map.queue[map.qlen++] = *keys++;
+        keylen--;
+    }
+
+    /* try to resolve keys against the map */
+    while (true) {
+        /* send any resolved key to the parser */
+        static int csi = 0;
+        static int c;
+        while (map.resolved > 0) {
+            /* pop the next char from queue */
+            map.resolved--;
+            map.qlen--;
+
+            /* get first char of queue */
+            int qk = map.queue[0];
+            /* move all other queue entries one step to the left */
+            for (int i = 0; i < map.qlen; i++) {
+                map.queue[i] = map.queue[i + 1];
+            }
+
+            /* skip csi indicator and the next 2 chars - if the csi sequence
+             * isn't part of a mapped command we let gtk handle the key - this
+             * is required allo to move cursor in inputbox with <Left> and
+             * <Right> keys */
+            /* TODO make it simplier to skip the special keys here */
+            if ((qk & 0xff) == CSI) {
+                csi = 2;
+                continue;
+            } else if (csi == 2) {
+                csi--;
+                c = qk;
+                continue;
+            } else if (csi == 1) {
+                csi--;
+                qk = TERMCAP2KEY(c, qk);
+            }
+
+            /* remove the nomap flag */
+            vb.mode->flags &= ~FLAG_NOMAP;
+
+            /* send the key to the parser */
+            if (RESULT_MORE != mode_handle_key((int)qk)) {
+                normal_showcmd(0);
+            }
+        }
+
+        /* if all keys where processed return MAP_DONE */
+        if (map.qlen == 0) {
+            map.resolved = 0;
+            return match ? MAP_DONE : MAP_NOMATCH;
+        }
+
+        /* try to find matching maps */
+        match     = NULL;
+        ambiguous = 0;
+        if (!(vb.mode->flags & FLAG_NOMAP)) {
+            for (GSList *l = map.list; l != NULL; l = l->next) {
+                Map *m = (Map*)l->data;
+                /* ignore maps for other modes */
+                if (m->mode != vb.mode->id) {
+                    continue;
+                }
+
+                /* find ambiguous matches */
+                if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue, map.qlen)) {
+                    if (ambiguous == 0) {
+                        /* show command chars for the ambiguous commands */
+                        int i = map.qlen > SHOWCMD_LEN ? map.qlen - SHOWCMD_LEN : 0;
+                        /* only appending the last queue char does not work
+                         * with the multi char termcap entries, so we flush
+                         * the show command and put the chars into it again */
+                        normal_showcmd(0);
+                        while (i < map.qlen) {
+                            normal_showcmd(map.queue[i++]);
+                        }
+                    }
+                    ambiguous++;
+                }
+                /* complete match or better/longer match than previous found */
+                if (m->inlen <= map.qlen
+                    && !strncmp(m->in, map.queue, m->inlen)
+                    && (!match || match->inlen < m->inlen)
+                ) {
+                    /* backup this found possible match */
+                    match = m;
+                }
+            }
+        }
+
+        /* if there are ambiguous matches return MAP_KEY and flush queue
+         * after a timeout if the user do not type more keys */
+        if (ambiguous) {
+            return MAP_AMBIGUOUS;
+        }
+
+        /* replace the matched chars from queue by the cooked string that
+         * is the result of the mapping */
+        if (match) {
+            int i, j;
+            /* flush ths show command to make room for possible mapped command
+             * chars to show for example if :nmap foo 12g is use we want to
+             * display the incomplete 12g command */
+            normal_showcmd(0);
+            if (match->inlen < match->mappedlen) {
+                /* make some space within the queue */
+                for (i = map.qlen + match->mappedlen - match->inlen, j = map.qlen; j > match->inlen; ) {
+                    map.queue[--i] = map.queue[--j];
+                }
+            } else if (match->inlen > match->mappedlen) {
+                /* delete some keys */
+                for (i = match->mappedlen, j = match->inlen; i < map.qlen; ) {
+                    map.queue[i++] = map.queue[j++];
+                }
+            }
+
+            /* copy the mapped string into the queue */
+            strncpy(map.queue, match->mapped, match->mappedlen);
+            map.qlen += match->mappedlen - match->inlen;
+            if (match->inlen <= match->mappedlen) {
+                map.resolved = match->inlen;
+            } else {
+                map.resolved = match->mappedlen;
+            }
+        } else {
+            /* first char is not mapped but resolved */
+            map.resolved = 1;
+        }
+    }
+
+    /* should never be reached */
+    return MAP_DONE;
+}
+
+void map_insert(char *in, char *mapped, char mode)
+{
+    int inlen, mappedlen;
+    char *lhs = convert_keys(in, strlen(in), &inlen);
+    char *rhs = convert_keys(mapped, strlen(mapped), &mappedlen);
+
+    /* TODO replace keysymbols in 'in' and 'mapped' string */
+    Map *new = g_new(Map, 1);
+    new->in        = lhs;
+    new->inlen     = inlen;
+    new->mapped    = rhs;
+    new->mappedlen = mappedlen;
+    new->mode      = mode;
+
+    map.list = g_slist_prepend(map.list, new);
+}
+
+gboolean map_delete(char *in, char mode)
+{
+    int len;
+    char *lhs = convert_keys(in, strlen(in), &len);
+
+    for (GSList *l = map.list; l != NULL; l = l->next) {
+        Map *m = (Map*)l->data;
+
+        /* remove only if the map's lhs matches the given key sequence */
+        if (m->mode == mode && m->inlen == len && !strcmp(m->in, lhs)) {
+            /* remove the found list item */
+            map.list = g_slist_delete_link(map.list, l);
+
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -225,189 +416,6 @@ static int utf_char2bytes(guint c, guchar *buf)
     buf[4] = 0x80 + ((c >> 6) & 0x3f);
     buf[5] = 0x80 + (c & 0x3f);
     return 6;
-}
-
-/**
- * Added the given key sequence ot the key queue and precesses the mapping of
- * chars. The key sequence do not need to be NUL terminated.
- * Keylen of 0 signalized a key timeout.
- */
-MapState map_handle_keys(const guchar *keys, int keylen)
-{
-    int ambiguous;
-    Map *match = NULL;
-    gboolean timeout = (keylen == 0); /* keylen 0 signalized timeout */
-
-    /* don't set the timeout function if a timeout is handled */
-    if (!timeout) {
-        /* if a previous timeout function was set remove this to start the
-         * timeout new */
-        if (map.timout_id) {
-            g_source_remove(map.timout_id);
-        }
-        map.timout_id = g_timeout_add(vb.config.timeoutlen, (GSourceFunc)do_timeout, NULL);
-    }
-
-    /* copy the keys onto the end of queue */
-    while (map.qlen < LENGTH(map.queue) && keylen > 0) {
-        map.queue[map.qlen++] = *keys++;
-        keylen--;
-    }
-
-    /* try to resolve keys against the map */
-    while (true) {
-        /* send any resolved key to the parser */
-        static int csi = 0;
-        static int c;
-        while (map.resolved > 0) {
-            /* pop the next char from queue */
-            map.resolved--;
-            map.qlen--;
-
-            /* get first char of queue */
-            int qk = map.queue[0];
-            /* move all other queue entries one step to the left */
-            for (int i = 0; i < map.qlen; i++) {
-                map.queue[i] = map.queue[i + 1];
-            }
-
-            /* skip csi indicator and the next 2 chars - if the csi sequence
-             * isn't part of a mapped command we let gtk handle the key - this
-             * is required allo to move cursor in inputbox with <Left> and
-             * <Right> keys */
-            /* TODO make it simplier to skip the special keys here */
-            if ((qk & 0xff) == CSI) {
-                csi = 2;
-                continue;
-            } else if (csi == 2) {
-                csi--;
-                c = qk;
-                continue;
-            } else if (csi == 1) {
-                csi--;
-                qk = TERMCAP2KEY(c, qk);
-            }
-
-            /* remove the nomap flag */
-            vb.mode->flags &= ~FLAG_NOMAP;
-
-            /* send the key to the parser */
-            if (RESULT_MORE != mode_handle_key((int)qk)) {
-                showcmd(NULL, 0);
-            }
-        }
-
-        /* if all keys where processed return MAP_DONE */
-        if (map.qlen == 0) {
-            map.resolved = 0;
-            return match ? MAP_DONE : MAP_NOMATCH;
-        }
-
-        /* try to find matching maps */
-        match     = NULL;
-        ambiguous = 0;
-        if (!(vb.mode->flags & FLAG_NOMAP)) {
-            for (GSList *l = map.list; l != NULL; l = l->next) {
-                Map *m = (Map*)l->data;
-                /* ignore maps for other modes */
-                if (m->mode != vb.mode->id) {
-                    continue;
-                }
-
-                /* find ambiguous matches */
-                if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue, map.qlen)) {
-                    if (ambiguous == 0) {
-                        showcmd(map.queue, map.qlen);
-                    }
-                    ambiguous++;
-                }
-                /* complete match or better/longer match than previous found */
-                if (m->inlen <= map.qlen
-                    && !strncmp(m->in, map.queue, m->inlen)
-                    && (!match || match->inlen < m->inlen)
-                ) {
-                    /* backup this found possible match */
-                    match = m;
-                }
-            }
-        }
-
-        /* if there are ambiguous matches return MAP_KEY and flush queue
-         * after a timeout if the user do not type more keys */
-        if (ambiguous) {
-            return MAP_AMBIGUOUS;
-        }
-
-        /* replace the matched chars from queue by the cooked string that
-         * is the result of the mapping */
-        if (match) {
-            int i, j;
-            if (match->inlen < match->mappedlen) {
-                /* make some space within the queue */
-                for (i = map.qlen + match->mappedlen - match->inlen, j = map.qlen; j > match->inlen; ) {
-                    map.queue[--i] = map.queue[--j];
-                }
-            } else if (match->inlen > match->mappedlen) {
-                /* delete some keys */
-                for (i = match->mappedlen, j = match->inlen; i < map.qlen; ) {
-                    map.queue[i++] = map.queue[j++];
-                }
-            }
-
-            /* copy the mapped string into the queue */
-            strncpy(map.queue, match->mapped, match->mappedlen);
-            map.qlen += match->mappedlen - match->inlen;
-            if (match->inlen <= match->mappedlen) {
-                map.resolved = match->inlen;
-            } else {
-                map.resolved = match->mappedlen;
-            }
-        } else {
-            /* first char is not mapped but resolved */
-            map.resolved = 1;
-            showcmd(map.queue, map.resolved);
-        }
-    }
-
-    /* should never be reached */
-    return MAP_DONE;
-}
-
-void map_insert(char *in, char *mapped, char mode)
-{
-    int inlen, mappedlen;
-    char *lhs = convert_keys(in, strlen(in), &inlen);
-    char *rhs = convert_keys(mapped, strlen(mapped), &mappedlen);
-
-    /* TODO replace keysymbols in 'in' and 'mapped' string */
-    Map *new = g_new(Map, 1);
-    new->in        = lhs;
-    new->inlen     = inlen;
-    new->mapped    = rhs;
-    new->mappedlen = mappedlen;
-    new->mode      = mode;
-
-    map.list = g_slist_prepend(map.list, new);
-}
-
-gboolean map_delete(char *in, char mode)
-{
-    int len;
-    char *lhs = convert_keys(in, strlen(in), &len);
-
-    for (GSList *l = map.list; l != NULL; l = l->next) {
-        Map *m = (Map*)l->data;
-
-        /* remove only if the map's lhs matches the given key sequence */
-        if (m->mode == mode && m->inlen == len && !strcmp(m->in, lhs)) {
-            /* remove the found list item */
-            map.list = g_slist_delete_link(map.list, l);
-
-            return true;
-        }
-    }
-
-    return false;
 }
 
 /**
@@ -545,56 +553,6 @@ static gboolean do_timeout(gpointer data)
 
     /* call only once */
     return false;
-}
-
-/**
- * Add given keys to the show command queue to show them to the user.
- * If the keylen of 0 is given, the show command queue is cleared.
- */
-static void showcmd(char *keys, int keylen)
-{
-    char *translated;
-    int old, extra, overflow;
-
-    /* if we get a keylen > 1 this means we have a better match for a previous
-     * ambiguous key sequence and have to remove the previous one before */
-    if (keylen != 1) {
-        map.showbuf[0] = '\0';
-    }
-    /* show the most significant last chars in the statusbar if they don't
-     * fit into the showbuf */
-    for (int i = 0; i < keylen; i++) {
-        translated = transchar(keys[i]);
-        old        = strlen(map.showbuf);
-        extra      = strlen(translated);
-        overflow   = old + extra - LENGTH(map.showbuf);
-        if (overflow > 0) {
-            g_memmove(map.showbuf, map.showbuf + overflow, old - overflow + 1);
-        }
-        strcat(map.showbuf, translated);
-    }
-    /* show the typed keys */
-    gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.cmd), map.showbuf);
-}
-
-/**
- * Transalte a singe char into a readable representation to be show to the
- * user in statu bar.
- */
-static char *transchar(char c)
-{
-    if (IS_CTRL(c)) {
-        map.transchar[0] = '^';
-        map.transchar[1] = CTRL(c);
-        map.transchar[2] = '\0';
-    } else if ((c & 0xff) == CSI) {
-        map.transchar[0] = '~';
-        map.transchar[1] = '\0';
-    } else {
-        map.transchar[0] = c;
-        map.transchar[1] = '\0';
-    }
-    return map.transchar;
 }
 
 static void free_map(Map *map)
