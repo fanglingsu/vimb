@@ -3,21 +3,19 @@ var VbHint = (function(){
 
     var hConts   = [],               /* holds the hintcontainers of the different documents */
         hints    = [],               /* holds all hint data (hinted element, label, number) */
-        focusNum = 1,                /* number of current focused hint */
+        ixdFocus = 0,                /* index of current focused hint */
         cId      = "_hintContainer", /* id of the conteiner holding the hint lables */
         lClass   = "_hintLabel",     /* class used on the hint labels with the hint numbers */
         hClass   = "_hintElem",      /* marks hinted elements */
         fClass   = "_hintFocus",     /* marks focused element and focued hint */
         config;
 
-    function create(inputText)
-    {
+    function create(inputText) {
         clear();
 
         var count = 0;
 
-        function helper(win, offsets)
-        {
+        function helper(win, offsets) {
             /* document may be undefined for frames out of the same origin */
             /* policy and will break the whole code - so we check this before */
             if (win.document === undefined) {
@@ -28,8 +26,7 @@ var VbHint = (function(){
             offsets.right  = win.innerWidth  - offsets.right;
             offsets.bottom = win.innerHeight - offsets.bottom;
 
-            function isVisible(e)
-            {
+            function isVisible(e) {
                 if (e === undefined) {
                     return false;
                 }
@@ -144,13 +141,12 @@ var VbHint = (function(){
         helper(window);
 
         if (count <= 1) {
-            return fire(1);
+            return fire(0);
         }
-        return focusHint(1);
+        return focusHint(0);
     }
 
-    function getOffsets(doc)
-    {
+    function getOffsets(doc) {
         var body  = doc.body || doc.documentElement,
             style = body.style,
             rect;
@@ -162,8 +158,7 @@ var VbHint = (function(){
         return [doc.defaultView.scrollX, doc.defaultView.scrollY];
     }
 
-    function createStyle(doc)
-    {
+    function createStyle(doc) {
         if (doc.hasStyle) {
             return;
         }
@@ -199,41 +194,47 @@ var VbHint = (function(){
     }
 
     function focus(back) {
-        var num,
-            i = getHintId(focusNum);
+        var n, i = ixdFocus;
         if (back) {
-            num = (i !== 0 && hints[i - 1].num !== undefined)
-                ? (hints[i - 1].num)
-                : (hints[hints.length - 1].num);
+            n = (i >= 1) ? i - 1 : hints.length - 1;
         } else {
-            num = (hints[i + 1] !== undefined)
-                ? (hints[i + 1].num)
-                : (hints[0].num);
+            n = (i + 1 < hints.length) ? i + 1 : 0;
         }
-        return focusHint(num);
+        return focusHint(n);
     }
 
     function update(n) {
-        var remove = [], i, hint;
+        var remove = [], idx, r, i, hint;
         if (n === 0) {
             return create();
         }
         /* remove none matching hints */
         for (i = 0; i < hints.length; ++i) {
             hint = hints[i];
+            /* collect the hints to be removed */
             if (0 !== hint.num.toString().indexOf(n.toString())) {
-                remove.push(hint.num);
+                remove.push(hint);
             }
         }
 
+        /* now remove the hints */
         for (i = 0; i < remove.length; ++i) {
-            removeHint(remove[i]);
+            r = remove[i];
+            r.e.classList.remove(fClass);
+            r.e.classList.remove(hClass);
+            r.label.parentNode.removeChild(r.label);
+
+            /* remove hints from all hints */
+            if ((idx = hints.indexOf(r)) !== -1) {
+                hints.splice(idx, 1);
+            }
         }
 
+
         if (hints.length === 1) {
-            return fire(hints[0].num);
+            return fire(0);
         }
-        return focusHint(n);
+        return focusHint(0);
     }
 
     function clear() {
@@ -256,8 +257,8 @@ var VbHint = (function(){
         hConts = [];
     }
 
-    function fire(n) {
-        var hint = getHint(n || focusNum);
+    function fire(i) {
+        var hint = getHint(i || ixdFocus);
         if (!hint) {
             return "DONE:";
         }
@@ -294,8 +295,7 @@ var VbHint = (function(){
     }
 
     /* internal used methods */
-    function open(e, newWin)
-    {
+    function open(e, newWin) {
         var oldTarget = e.target;
         if (newWin) {
             /* set target to open in new window */
@@ -308,96 +308,59 @@ var VbHint = (function(){
     }
 
     /* set focus on hint with given number */
-    function focusHint(n)
-    {
+    function focusHint(i) {
         /* reset previous focused hint */
-        var hint = getHint(focusNum);
-        if (hint) {
+        var hint;
+        if ((hint = getHint(ixdFocus))) {
             hint.e.classList.remove(fClass);
             hint.label.classList.remove(fClass);
 
             mouseEvent(hint.e, "mouseout");
         }
 
-        focusNum = n;
-
         /* mark new hint as focused */
-        hint = getHint(focusNum);
-        if (hint) {
+        ixdFocus = i;
+        if ((hint = getHint(i))) {
             hint.e.classList.add(fClass);
             hint.label.classList.add(fClass);
 
             mouseEvent(hint.e, "mouseover");
 
-            var source = getSrc(hint.e);
-            return "OVER:" + (source || "");
+            var src = getSrc(hint.e);
+            return "OVER:" + (src || "");
         }
     }
 
     /* retrieves the hint for given hint number */
-    function getHint(n)
-    {
-        var i = getHintId(n);
-        return i !== null ? hints[i] : null;
+    function getHint(i) {
+        return hints[i] || null;
     }
 
-    /* retrieves the id of hint with given number */
-    function getHintId(n)
-    {
-        for (var i = 0; i < hints.length; ++i) {
-            if (hints[i].num === n) {
-                return i;
-            }
-        }
-        return null;
-    }
-
-    /* removes hint with given number from hints array */
-    function removeHint(n)
-    {
-        var i = getHintId(n);
-        if (i === null) {
-            return;
-        }
-        var hint = hints[i];
-        hint.e.classList.remove(fClass);
-        hint.e.classList.remove(hClass);
-        hint.label.parentNode.removeChild(hint.label);
-
-        /* remove hints from all hints */
-        hints.splice(i, 1);
-    }
-
-    function click(e)
-    {
+    function click(e) {
         mouseEvent(e, "mouseover");
         mouseEvent(e, "mousedown");
         mouseEvent(e, "mouseup");
         mouseEvent(e, "click");
     }
 
-    function mouseEvent(e, name)
-    {
+    function mouseEvent(e, name) {
         var evObj = e.ownerDocument.createEvent("MouseEvents");
         evObj.initMouseEvent(name, true, true, e.contentWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
         e.dispatchEvent(evObj);
     }
 
     /* retrieves the url of given element */
-    function getSrc(e)
-    {
+    function getSrc(e) {
         return e.href || e.src;
     }
 
     /* retrieves the xpath expression according to mode */
-    function getXpath(s)
-    {
+    function getXpath(s) {
         if (s === undefined) {
             s = "";
         }
         /* replace $WHAT in xpath to contains(translate(WHAT, 'SEARCH', 'search'), 'search') */
-        function buildQuery(what, x, s)
-        {
+        function buildQuery(what, x, s) {
             var l, i, parts;
             l = s.toLowerCase();
             parts = [
