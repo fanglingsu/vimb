@@ -49,6 +49,7 @@ typedef enum {
     EX_CUNMAP,
     EX_IUNMAP,
     EX_NUNMAP,
+    EX_NORMAL,
     EX_OPEN,
 #ifdef FEATURE_QUEUE
     EX_QCLEAR,
@@ -105,6 +106,7 @@ static gboolean ex_bookmark(const ExArg *arg);
 static gboolean ex_eval(const ExArg *arg);
 static gboolean ex_map(const ExArg *arg);
 static gboolean ex_unmap(const ExArg *arg);
+static gboolean ex_normal(const ExArg *arg);
 static gboolean ex_open(const ExArg *arg);
 static gboolean ex_queue(const ExArg *arg);
 static gboolean ex_quit(const ExArg *arg);
@@ -138,6 +140,7 @@ static ExInfo commands[] = {
     {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"iunmap",           EX_IUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"nmap",             EX_NMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
+    {"normal",           EX_NORMAL,      ex_normal,     EX_FLAG_BANG|EX_FLAG_LHS},
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"open",             EX_OPEN,        ex_open,       EX_FLAG_RHS},
     {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE},
@@ -727,6 +730,16 @@ static gboolean ex_unmap(const ExArg *arg)
     } else {
         map_delete(lhs, 'i');
     }
+    return true;
+}
+
+static gboolean ex_normal(const ExArg *arg)
+{
+    mode_enter('n');
+
+    /* if called with bang - don't apply mapping */
+    map_handle_string(arg->lhs->str, !arg->bang);
+
     return true;
 }
 

@@ -123,7 +123,7 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
     }
 
     vb.state.processed_key = true;
-    map_handle_keys(string, len);
+    map_handle_keys(string, len, true);
 
     return vb.state.processed_key;
 }
@@ -133,7 +133,7 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
  * chars. The key sequence do not need to be NUL terminated.
  * Keylen of 0 signalized a key timeout.
  */
-MapState map_handle_keys(const guchar *keys, int keylen)
+MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
 {
     int ambiguous;
     Map *match = NULL;
@@ -207,7 +207,7 @@ MapState map_handle_keys(const guchar *keys, int keylen)
         /* try to find matching maps */
         match     = NULL;
         ambiguous = 0;
-        if (!(vb.mode->flags & FLAG_NOMAP)) {
+        if (use_map && !(vb.mode->flags & FLAG_NOMAP)) {
             for (GSList *l = map.list; l != NULL; l = l->next) {
                 Map *m = (Map*)l->data;
                 /* ignore maps for other modes */
@@ -239,12 +239,12 @@ MapState map_handle_keys(const guchar *keys, int keylen)
                     match = m;
                 }
             }
-        }
 
-        /* if there are ambiguous matches return MAP_KEY and flush queue
-         * after a timeout if the user do not type more keys */
-        if (ambiguous) {
-            return MAP_AMBIGUOUS;
+            /* if there are ambiguous matches return MAP_KEY and flush queue
+             * after a timeout if the user do not type more keys */
+            if (ambiguous) {
+                return MAP_AMBIGUOUS;
+            }
         }
 
         /* replace the matched chars from queue by the cooked string that
@@ -283,6 +283,18 @@ MapState map_handle_keys(const guchar *keys, int keylen)
 
     /* should never be reached */
     return MAP_DONE;
+}
+
+/**
+ * Like map_handle_keys but use a null terminates string with untranslated
+ * keys like <C-T> that are converted here before calling map_handle_keys.
+ */
+void map_handle_string(char *str, gboolean use_map)
+{
+    int len;
+    char *keys = convert_keys(str, strlen(str), &len);
+
+    map_handle_keys((guchar*)keys, len, use_map);
 }
 
 void map_insert(char *in, char *mapped, char mode)
@@ -549,7 +561,7 @@ static char *convert_keylabel(char *in, int inlen, int *len)
 static gboolean do_timeout(gpointer data)
 {
     /* signalize the timeout to the key handler */
-    map_handle_keys((guchar*)"", 0);
+    map_handle_keys((guchar*)"", 0, true);
 
     /* call only once */
     return false;

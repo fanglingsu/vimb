@@ -513,6 +513,14 @@ value.
 
 Example:
 ":eval document.cookie"
+.TP
+.BI ":no[rmal][!] [" CMDS ]
+Execute normal mode commands \fICMDS\fP. This makes it possible to execute
+normal mode commands typed on the input box. If the \fI!\fP is given, mappings
+will not be used.
+
+Example:
+":set scripts!|no! R"
 
 .SH INPUT MODE
 
