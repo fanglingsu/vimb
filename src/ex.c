@@ -93,6 +93,7 @@ static void input_activate(void);
 static gboolean parse(const char **input, ExArg *arg);
 static gboolean parse_count(const char **input, ExArg *arg);
 static gboolean parse_command_name(const char **input, ExArg *arg);
+static gboolean parse_bang(const char **input, ExArg *arg);
 static gboolean parse_lhs(const char **input, ExArg *arg);
 static gboolean parse_rhs(const char **input, ExArg *arg);
 static void skip_whitespace(const char **input);
@@ -438,6 +439,11 @@ static gboolean parse(const char **input, ExArg *arg)
     /* get the command and it's flags to decide what to parse */
     cmd = &(commands[arg->idx]);
 
+    /* parse the bang if this is allowed */
+    if (cmd->flags & EX_FLAG_BANG) {
+        parse_bang(input, arg);
+    }
+
     /* parse the lhs if this is available */
     skip_whitespace(input);
     if (cmd->flags & EX_FLAG_LHS) {
@@ -502,7 +508,7 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
             }
         }
         (*input)++;
-    } while (matches > 0 && **input && **input != ' ');
+    } while (matches > 0 && **input && **input != ' ' && **input != '!');
 
     if (!matches) {
         /* TODO show readable error message */
@@ -513,6 +519,18 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
     arg->code = commands[first].code;
     arg->name = commands[first].name;
 
+    return true;
+}
+
+/**
+ * Parse a single bang ! after the command.
+ */
+static gboolean parse_bang(const char **input, ExArg *arg)
+{
+    if (*input && **input == '!') {
+        arg->bang = true;
+        (*input)++;
+    }
     return true;
 }
 
