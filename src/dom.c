@@ -35,9 +35,13 @@ void dom_check_auto_insert(WebKitWebView *view)
     Document *doc   = webkit_web_view_get_dom_document(view);
     Element *active = get_active_element(doc);
 
-    /* the focus was not set automatically - add event listener to track focus
-     * events on the document */
-    if (!auto_insert(active)) {
+    if (vb.config.strict_focus || !auto_insert(active)) {
+        /* if the strict-focus is on also blur the possible active element */
+        if (vb.config.strict_focus) {
+            dom_clear_focus(view);
+        }
+        /* the focus was not set automatically - add event listener to track
+         * focus events on the document */
         HtmlElement *element = webkit_dom_document_get_body(doc);
         if (!element) {
             element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));

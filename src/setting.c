@@ -37,6 +37,7 @@ static gboolean status_font(const Setting *s, const SettingType type);
 static gboolean input_style(const Setting *s, const SettingType type);
 static gboolean completion_style(const Setting *s, const SettingType type);
 static gboolean strict_ssl(const Setting *s, const SettingType type);
+static gboolean strict_focus(const Setting *s, const SettingType type);
 static gboolean ca_bundle(const Setting *s, const SettingType type);
 static gboolean home_page(const Setting *s, const SettingType type);
 static gboolean download_path(const Setting *s, const SettingType type);
@@ -79,6 +80,7 @@ static Setting default_settings[] = {
     {NULL, "proxy", TYPE_BOOLEAN, proxy, {0}},
     {NULL, "cookie-timeout", TYPE_INTEGER, cookie_timeout, {0}},
     {NULL, "strict-ssl", TYPE_BOOLEAN, strict_ssl, {0}},
+    {NULL, "strict-focus", TYPE_BOOLEAN, strict_focus, {0}},
 
     {NULL, "scrollstep", TYPE_INTEGER, scrollstep, {0}},
     {NULL, "status-color-bg", TYPE_COLOR, status_color_bg, {0}},
@@ -543,6 +545,20 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
     }
 
     g_object_set(vb.session, "ssl-strict", value, NULL);
+
+    return true;
+}
+
+static gboolean strict_focus(const Setting *s, const SettingType type)
+{
+    if (type != SETTING_SET) {
+        if (type == SETTING_TOGGLE) {
+            vb.config.strict_focus = !vb.config.strict_focus;
+        }
+        print_value(s, &vb.config.strict_focus);
+    } else {
+        vb.config.strict_focus = s->arg.i ? true : false;
+    }
 
     return true;
 }

@@ -35,6 +35,7 @@ static char *default_config[] = {
     "set proxy=on",
     "set cookie-timeout=4800",
     "set strict-ssl=on",
+    "set strict-focus=off",
     "set scrollstep=40",
     "set status-color-bg=#000",
     "set status-color-fg=#fff",
