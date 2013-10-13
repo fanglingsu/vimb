@@ -20,6 +20,7 @@
 #include "config.h"
 #include "main.h"
 #include "mode.h"
+#include "normal.h"
 
 static GHashTable *modes = NULL;
 extern VbCore vb;
@@ -95,6 +96,22 @@ void mode_enter(char id)
 VbResult mode_handle_key(int key)
 {
     VbResult res;
+    static gboolean ctrl_v = false;
+
+    if (ctrl_v) {
+        vb.state.processed_key = false;
+        ctrl_v = false;
+
+        return RESULT_COMPLETE;
+    }
+    if (key == CTRL('V')) {
+        vb.mode->flags |= FLAG_NOMAP;
+        ctrl_v = true;
+        normal_showcmd(key);
+
+        return RESULT_MORE;
+    }
+
     if (vb.mode && vb.mode->keypress) {
 #ifdef DEBUG
         int flags = vb.mode->flags;

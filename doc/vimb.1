@@ -78,6 +78,9 @@ Toggle show html source of current page.
 .B g\-F
 Opend the Web Inspector for current page.
 .TP
+.B CTRL\-V
+Pass the next key press directly to gtk.
+.TP
 .B CTRL\-Q
 Quit the browser.
 
@@ -325,6 +328,9 @@ Moves the cursor direct behind the prompt `:'.
 .TP
 .B CTRL\-E
 Moves the cursor after the char in inputbox.
+.TP
+.B CTRL\-V
+Pass the next key press directly to gtk.
 
 .SS Command Line History
 .TP
@@ -507,6 +513,18 @@ value.
 
 Example:
 ":eval document.cookie"
+
+.SH INPUT MODE
+
+.TP
+.B <Esc>, CTRL\-[
+Switch back to normal mode.
+.TP
+.B CTRL\-T
+Open configured editor with content of current form field.
+.TP
+.B CTRL\-Z
+Enter the pass-through mode.
 
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<shift-tab>` in the
