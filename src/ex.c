@@ -237,7 +237,7 @@ VbResult ex_keypress(int key)
             vb_set_input_text("");
             break;
 
-        case '\n':
+        case KEY_CR:
             input_activate();
             break;
 

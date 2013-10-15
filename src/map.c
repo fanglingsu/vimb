@@ -343,47 +343,50 @@ static int keyval_to_string(guint keyval, guint state, guchar *string)
     int len;
     guint32 uc;
 
-    if ((uc = gdk_keyval_to_unicode(keyval))) {
-        if ((state & GDK_CONTROL_MASK) && uc >= 0x20 && uc < 0x80) {
-            len = 1;
-            if (uc >= '@') {
-                string[0] = uc & 0x1f;
-            } else if (uc == '8') {
-                string[0] = KEY_BS;
+    len = 1;
+    switch (keyval) {
+        case GDK_Tab:
+        case GDK_KP_Tab:
+        case GDK_ISO_Left_Tab:
+            string[0] = KEY_TAB;
+            break;
+
+        case GDK_Linefeed:
+            string[0] = KEY_NL;
+            break;
+
+        case GDK_Return:
+        case GDK_ISO_Enter:
+        case GDK_3270_Enter:
+            string[0] = KEY_CR;
+            break;
+
+        case GDK_Escape:
+            string[0] = KEY_ESC;
+            break;
+
+        case GDK_BackSpace:
+            string[0] = KEY_BS;
+            break;
+
+        default:
+            if ((uc = gdk_keyval_to_unicode(keyval))) {
+                if ((state & GDK_CONTROL_MASK) && uc >= 0x20 && uc < 0x80) {
+                    if (uc >= '@') {
+                        string[0] = uc & 0x1f;
+                    } else if (uc == '8') {
+                        string[0] = KEY_BS;
+                    } else {
+                        string[0] = uc;
+                    }
+                } else {
+                    /* translate a normal key to utf-8 */
+                    len = utf_char2bytes((guint)uc, string);
+                }
             } else {
-                string[0] = uc;
-            }
-        } else {
-            /* translate a normal key to utf-8 */
-            len = utf_char2bytes((guint)uc, string);
-        }
-    } else {
-        /* translate keys which are represented by ascii control codes */
-        len = 1;
-        switch (keyval) {
-            case GDK_Tab:
-            case GDK_KP_Tab:
-            case GDK_ISO_Left_Tab:
-                string[0] = KEY_TAB;
-                break;
-            case GDK_Linefeed:
-                string[0] = KEY_NL;
-                break;
-            case GDK_Return:
-            case GDK_ISO_Enter:
-            case GDK_3270_Enter:
-                string[0] = KEY_CR;
-                break;
-            case GDK_Escape:
-                string[0] = KEY_ESC;
-                break;
-            case GDK_BackSpace:
-                string[0] = KEY_BS;
-                break;
-            default:
                 len = 0;
-                break;
-        }
+            }
+            break;
     }
 
     return len;

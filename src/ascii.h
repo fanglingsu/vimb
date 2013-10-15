@@ -33,7 +33,7 @@
 
 #define KEY_TAB         '\x09'
 #define KEY_NL          '\x15'
-#define KEY_CR          '\x0a'
+#define KEY_CR          '\x0d'
 #define KEY_ESC         '\x1b'
 #define KEY_BS          '\x08'
 #define KEY_SHIFT_TAB   TERMCAP2KEY('k', 'B')
