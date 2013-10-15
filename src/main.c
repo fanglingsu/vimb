@@ -1005,7 +1005,7 @@ int main(int argc, char *argv[])
     }
 
     if (ver) {
-        fprintf(stdout, "%s/%s\n", PROJECT, FULL_VERSION);
+        fprintf(stdout, "%s/%s\n", PROJECT, VERSION);
         return EXIT_SUCCESS;
     }
     if (dump) {
