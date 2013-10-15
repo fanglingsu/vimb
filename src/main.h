@@ -84,7 +84,6 @@
 
 #define VB_GTK_STATE_NORMAL             GTK_STATE_FLAG_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_FLAG_ACTIVE
-#define VB_GTK_STATE_SELECTED           GTK_STATE_FLAG_SELECTED
 #define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state_flags(w, s, true))
 
 #else
@@ -100,7 +99,6 @@
 
 #define VB_GTK_STATE_NORMAL             GTK_STATE_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_ACTIVE
-#define VB_GTK_STATE_SELECTED           GTK_STATE_SELECTED
 #define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state(w, s))
 #endif
 

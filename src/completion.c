@@ -81,8 +81,8 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
 
     VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
     VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_bg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
 
     /* prepare the selection */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree));
