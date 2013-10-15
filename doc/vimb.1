@@ -492,7 +492,7 @@ Removes all entries from queue.
 .BI ":shellcmd " CMD
 Runs given shell \fICMD\fP syncron and print the output into inputbox. The
 \fICMD\fP can contain multiple '%' chars that are expanded to the current
-opened uri.
+opened uri. Also the '~/' to home dir expansion is available.
 
 Example: :shellcmd echo "`date` %" >> myhistory.txt
 .TP

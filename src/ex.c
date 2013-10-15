@@ -75,6 +75,7 @@ typedef struct {
     gboolean   bang;     /* if the command was called with a bang ! */
     GString    *lhs;     /* left hand side of the command - single word */
     GString    *rhs;     /* right hand side of the command - multiple words */
+    int        flags;    /* flags for the already parsed command */
 } ExArg;
 
 typedef gboolean (*ExFunc)(const ExArg *arg);
@@ -87,6 +88,7 @@ typedef struct {
 #define EX_FLAG_BANG   0x001  /* command uses the bang ! after command name */
 #define EX_FLAG_LHS    0x002  /* command has a single word after the command name */
 #define EX_FLAG_RHS    0x004  /* command has a right hand side */
+#define EX_FLAG_EXP    0x008  /* expand pattern like % or %:p in rhs */
     int        flags;
 } ExInfo;
 
@@ -97,10 +99,10 @@ static gboolean parse_command_name(const char **input, ExArg *arg);
 static gboolean parse_bang(const char **input, ExArg *arg);
 static gboolean parse_lhs(const char **input, ExArg *arg);
 static gboolean parse_rhs(const char **input, ExArg *arg);
+static void expand_input(const char **input, ExArg *arg);
 static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static gboolean execute(const ExArg *arg);
-static char *expand_string(const char *str);
 
 static gboolean ex_bookmark(const ExArg *arg);
 static gboolean ex_eval(const ExArg *arg);
@@ -148,14 +150,14 @@ static ExInfo commands[] = {
     {"qpop",             EX_QPOP,        ex_queue,      EX_FLAG_NONE},
     {"qpush",            EX_QPUSH,       ex_queue,      EX_FLAG_RHS},
     {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
-    {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS},
+    {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS|EX_FLAG_EXP},
 #if 0
     {"sca",              EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"scd",              EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"scr",              EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
 #endif
     {"set",              EX_SET,         ex_set,        EX_FLAG_RHS},
-    {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS},
+    {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS|EX_FLAG_EXP},
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
@@ -419,7 +421,6 @@ gboolean ex_run_string(const char *input)
  */
 static gboolean parse(const char **input, ExArg *arg)
 {
-    ExInfo *cmd = NULL;
     if (!*input || !**input) {
         return false;
     }
@@ -439,22 +440,19 @@ static gboolean parse(const char **input, ExArg *arg)
         return false;
     }
 
-    /* get the command and it's flags to decide what to parse */
-    cmd = &(commands[arg->idx]);
-
     /* parse the bang if this is allowed */
-    if (cmd->flags & EX_FLAG_BANG) {
+    if (arg->flags & EX_FLAG_BANG) {
         parse_bang(input, arg);
     }
 
     /* parse the lhs if this is available */
     skip_whitespace(input);
-    if (cmd->flags & EX_FLAG_LHS) {
+    if (arg->flags & EX_FLAG_LHS) {
         parse_lhs(input, arg);
     }
     /* parse the rhs if this is available */
     skip_whitespace(input);
-    if (cmd->flags & EX_FLAG_RHS) {
+    if (arg->flags & EX_FLAG_RHS) {
         parse_rhs(input, arg);
     }
 
@@ -518,9 +516,10 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
         return false;
     }
 
-    arg->idx  = first;
-    arg->code = commands[first].code;
-    arg->name = commands[first].name;
+    arg->idx   = first;
+    arg->code  = commands[first].code;
+    arg->name  = commands[first].name;
+    arg->flags = commands[first].flags;
 
     return true;
 }
@@ -603,13 +602,40 @@ static gboolean parse_rhs(const char **input, ExArg *arg)
                 g_string_append_c(arg->rhs, quote);
                 g_string_append_c(arg->rhs, **input);
             }
-        } else {
-            /* unquoted char */
-            g_string_append_c(arg->rhs, **input);
+        } else { /* unquoted char */
+            /* check for expansion placeholder */
+            if (arg->flags & EX_FLAG_EXP && strchr("%~", **input)) {
+                /* handle expansion */
+                expand_input(input, arg);
+            } else {
+                g_string_append_c(arg->rhs, **input);
+            }
         }
         (*input)++;
     }
     return true;
+}
+
+static void expand_input(const char **input, ExArg *arg)
+{
+    const char *uri;
+    switch (**input) {
+        case '%':
+            if ((uri = GET_URI())) {
+                /* TODO check for modifiers like :h:t:r:e */
+                g_string_append(arg->rhs, uri);
+            }
+            break;
+
+        case '~':
+            (*input)++;
+            /* expand only ~/ because ~user is not handled at the moment */
+            if (**input == '/') {
+                g_string_append(arg->rhs, g_get_home_dir());
+                g_string_append_c(arg->rhs, **input);
+            }
+            break;
+    }
 }
 
 /**
@@ -626,21 +652,6 @@ static void skip_whitespace(const char **input)
     while (**input && **input == ' ') {
         (*input)++;
     }
-}
-
-/**
- * Expands paceholders in given string.
- * % - expanded to current uri
- * TODO allow modifiers like :p :h :e :r like in vim expand()
- *
- * Returned string must be freed.
- */
-static char *expand_string(const char *str)
-{
-    if (!str) {
-        return NULL;
-    }
-    return util_str_replace("%", GET_URI(), str);
 }
 
 static void free_cmdarg(ExArg *arg)
@@ -815,15 +826,13 @@ static gboolean ex_set(const ExArg *arg)
 static gboolean ex_shellcmd(const ExArg *arg)
 {
     int status, argc;
-    char *cmd, *exp, *error = NULL, *out = NULL, **argv;
+    char *cmd, *error = NULL, *out = NULL, **argv;
 
     if (!*arg->rhs->str) {
         return false;
     }
 
-    exp = expand_string(arg->rhs->str);
-    cmd = g_strdup_printf(SHELL_CMD, exp);
-    g_free(exp);
+    cmd = g_strdup_printf(SHELL_CMD, arg->rhs->str);
     if (!g_shell_parse_argv(cmd, &argc, &argv, NULL)) {
         vb_echo(VB_MSG_ERROR, true, "Could not parse command args");
         g_free(cmd);
