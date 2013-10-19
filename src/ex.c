@@ -43,6 +43,7 @@ typedef enum {
     EX_BMA,
     EX_BMR,
     EX_EVAL,
+    EX_HARDCOPY,
     EX_CMAP,
     EX_IMAP,
     EX_NMAP,
@@ -106,6 +107,7 @@ static gboolean execute(const ExArg *arg);
 
 static gboolean ex_bookmark(const ExArg *arg);
 static gboolean ex_eval(const ExArg *arg);
+static gboolean ex_hardcopy(const ExArg *arg);
 static gboolean ex_map(const ExArg *arg);
 static gboolean ex_unmap(const ExArg *arg);
 static gboolean ex_normal(const ExArg *arg);
@@ -132,12 +134,9 @@ static ExInfo commands[] = {
     /* command           code             func            flags */
     {"bma",              EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
     {"bmr",              EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
-#if 0
-    {"bookmark-add",     EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
-    {"bookmark-remove",  EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
-#endif
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"cunmap",           EX_CUNMAP,      ex_unmap,      EX_FLAG_LHS},
+    {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_RHS},
     {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"iunmap",           EX_IUNMAP,      ex_unmap,      EX_FLAG_LHS},
@@ -151,23 +150,12 @@ static ExInfo commands[] = {
     {"qpush",            EX_QPUSH,       ex_queue,      EX_FLAG_RHS},
     {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
     {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS|EX_FLAG_EXP},
-#if 0
-    {"sca",              EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
-    {"scd",              EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
-    {"scr",              EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
-#endif
     {"set",              EX_SET,         ex_set,        EX_FLAG_RHS},
     {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS|EX_FLAG_EXP},
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
     {"tabopen",          EX_TABOPEN,     ex_open,       EX_FLAG_RHS},
-#if 0
-    {"queue-push",       EX_QPUSH,       ex_queue,      EX_FLAG_RHS},
-    {"queue-unshift",    EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
-    {"queue-pop",        EX_QPOP,        ex_queue,      EX_FLAG_RHS},
-    {"queue-clear",      EX_QCLEAR,      ex_queue,      EX_FLAG_RHS},
-#endif
 };
 
 static struct {
@@ -702,6 +690,12 @@ static gboolean ex_eval(const ExArg *arg)
     g_free(value);
 
     return success;
+}
+
+static gboolean ex_hardcopy(const ExArg *arg)
+{
+    webkit_web_frame_print(webkit_web_view_get_main_frame(vb.gui.webview));
+    return true;
 }
 
 static gboolean ex_map(const ExArg *arg)
