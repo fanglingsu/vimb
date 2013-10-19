@@ -158,35 +158,30 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
     /* try to resolve keys against the map */
     while (true) {
         /* send any resolved key to the parser */
-        static int csi = 0;
-        static int c;
         while (map.resolved > 0) {
-            /* pop the next char from queue */
-            map.resolved--;
-            map.qlen--;
-
-            /* get first char of queue */
-            int qk = map.queue[0];
-            /* move all other queue entries one step to the left */
-            for (int i = 0; i < map.qlen; i++) {
-                map.queue[i] = map.queue[i + 1];
-            }
+            int qk;
 
             /* skip csi indicator and the next 2 chars - if the csi sequence
              * isn't part of a mapped command we let gtk handle the key - this
              * is required allo to move cursor in inputbox with <Left> and
              * <Right> keys */
-            /* TODO make it simplier to skip the special keys here */
-            if ((qk & 0xff) == CSI) {
-                csi = 2;
-                continue;
-            } else if (csi == 2) {
-                csi--;
-                c = qk;
-                continue;
-            } else if (csi == 1) {
-                csi--;
-                qk = TERMCAP2KEY(c, qk);
+            if ((map.queue[0] & 0xff) == CSI && map.qlen >= 3) {
+                /* get next 2 chars to build the termcap key */
+                qk = TERMCAP2KEY(map.queue[1], map.queue[2]);
+
+                map.resolved -= 3;
+                map.qlen     -= 3;
+                /* move all other queue entries three steps to the left */
+                g_memmove(map.queue, map.queue + 3, map.qlen);
+            } else {
+                /* get first char of queue */
+                qk = map.queue[0];
+
+                map.resolved--;
+                map.qlen--;
+
+                /* move all other queue entries one step to the left */
+                g_memmove(map.queue, map.queue + 1, map.qlen);
             }
 
             /* remove the nomap flag */
