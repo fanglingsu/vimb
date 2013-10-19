@@ -74,6 +74,34 @@ static struct {
     {0,                 GDK_F12,       'F', '2'},
 };
 
+static struct {
+    char *label;
+    int  len;
+    char *ch;
+    int  chlen;
+} key_labels[] = {
+    {"<CR>",    4, "\n",         1},
+    {"<Tab>",   5, "\t",         1},
+    {"<S-Tab>", 7, CSI_STR "kB", 3},
+    {"<Esc>",   5, "\x1b",       1},
+    {"<Up>",    4, CSI_STR "ku", 3},
+    {"<Down>",  6, CSI_STR "kd", 3},
+    {"<Left>",  6, CSI_STR "kl", 3},
+    {"<Right>", 7, CSI_STR "kr", 3},
+    {"<F1>",    4, CSI_STR "k1", 3},
+    {"<F2>",    4, CSI_STR "k2", 3},
+    {"<F3>",    4, CSI_STR "k3", 3},
+    {"<F4>",    4, CSI_STR "k4", 3},
+    {"<F5>",    4, CSI_STR "k5", 3},
+    {"<F6>",    4, CSI_STR "k6", 3},
+    {"<F7>",    4, CSI_STR "k7", 3},
+    {"<F8>",    4, CSI_STR "k8", 3},
+    {"<F9>",    4, CSI_STR "k9", 3},
+    {"<F10>",   5, CSI_STR "k;", 3},
+    {"<F11>",   5, CSI_STR "F1", 3},
+    {"<F12>",   5, CSI_STR "F2", 3},
+};
+
 
 void map_cleanup(void)
 {
@@ -514,38 +542,12 @@ static char *convert_keys(char *in, int inlen, int *len)
  */
 static char *convert_keylabel(char *in, int inlen, int *len)
 {
-    static struct {
-        char *label;
-        int  len;
-        char *ch;
-        int  chlen;
-    } keys[] = {
-        {"<CR>",    4, "\n",         1},
-        {"<Tab>",   5, "\t",         1},
-        {"<S-Tab>", 7, CSI_STR "kB", 3},
-        {"<Esc>",   5, "\x1b",       1},
-        {"<Up>",    4, CSI_STR "ku", 3},
-        {"<Down>",  6, CSI_STR "kd", 3},
-        {"<Left>",  6, CSI_STR "kl", 3},
-        {"<Right>", 7, CSI_STR "kr", 3},
-        {"<F1>",    4, CSI_STR "k1", 3},
-        {"<F2>",    4, CSI_STR "k2", 3},
-        {"<F3>",    4, CSI_STR "k3", 3},
-        {"<F4>",    4, CSI_STR "k4", 3},
-        {"<F5>",    4, CSI_STR "k5", 3},
-        {"<F6>",    4, CSI_STR "k6", 3},
-        {"<F7>",    4, CSI_STR "k7", 3},
-        {"<F8>",    4, CSI_STR "k8", 3},
-        {"<F9>",    4, CSI_STR "k9", 3},
-        {"<F10>",   5, CSI_STR "k;", 3},
-        {"<F11>",   5, CSI_STR "F1", 3},
-        {"<F12>",   5, CSI_STR "F2", 3},
-    };
-
-    for (int i = 0; i < LENGTH(keys); i++) {
-        if (inlen == keys[i].len && !strncmp(keys[i].label, in, inlen)) {
-            *len = keys[i].chlen;
-            return keys[i].ch;
+    for (int i = 0; i < LENGTH(key_labels); i++) {
+        if (inlen == key_labels[i].len
+            && !strncmp(key_labels[i].label, in, inlen)
+        ) {
+            *len = key_labels[i].chlen;
+            return key_labels[i].ch;
         }
     }
     *len = 0;
