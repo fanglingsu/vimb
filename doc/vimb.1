@@ -348,11 +348,11 @@ Step forward in the command history.
 
 .SS Open
 .TP
-.BI ":open [" URI "], o [" URI ]
+.BI ":o[pen] [" URI "], o [" URI ]
 Open the give \fIURI\fP into current window. If \fIURI\fP is empty the
 configured 'home-page' is opened.
 .TP
-.BI ":tabopen [" URI "], t [" URI ]
+.BI ":t[abopen] [" URI "], t [" URI ]
 Open the give \fIURI\fP into a new window. If \fIURI\fP is empty the
 configured 'home-page' is opened.
 
@@ -387,19 +387,19 @@ be used <Left>, <Up>, <Right>, <Down> for the cursor keys, <Tab>, <Esc>, <CR>,
 <F1>-<F12>, <C-F1>-<C-F12> and <C-A>-<C-Z>.
 
 .TP
-.BI ":nmap {" lhs "} {" rhs }
+.BI ":nm[ap] {" lhs "} {" rhs }
 .TP
-.BI ":imap {" lhs "} {" rhs }
+.BI ":im[ap] {" lhs "} {" rhs }
 .TP
-.BI ":cmap {" lhs "} {" rhs }
+.BI ":cm[ap] {" lhs "} {" rhs }
 Map the key-sequence \fIlhs\fP to \fIrhs\fP for the applicable mode.
 
 .TP
-.BI ":nunmap {" lhs }
+.BI ":nu[nmap] {" lhs }
 .TP
-.BI ":iunmap {" lhs }
+.BI ":iu[nmap] {" lhs }
 .TP
-.BI ":cunmap {" lhs }
+.BI ":cu[nmap] {" lhs }
 Remove the mapping of \fIlhs\fP for the applicable mode.
 
 .RS 0
@@ -456,17 +456,17 @@ the \fISHORTCUT\fP is already in use or not to be able to set it.
 
 .SS Settings
 .TP
-.BI ":set " VAR = VALUE
+.BI ":se[t] " VAR = VALUE
 Set configuration values named by
 .IR VAR .
 To set boolean variable you should use 'on', 'off' or 'true'
 and 'false'. Colors are given as hexadecimal value like '#f57700'.
 .TP
-.BI ":set " VAR ?
+.BI ":se[t] " VAR ?
 Show the current set value of variable
 .IR VAR .
 .TP
-.BI ":set " VAR !
+.BI ":se[t] " VAR !
 Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 
 .SS Queue
@@ -474,40 +474,37 @@ The queue allows to mark URLs for later reding (something like a read it later
 list). This list is shared between the single instances of vimb. Only
 available if vimb has been compiled with QUEUE feature.
 .TP
-.BI ":qpush [" URI ]
+.BI ":qpu[sh] [" URI ]
 Push \fIURI\fP or if not given current URI to the end of the queue.
 .TP
-.BI ":qunshift [" URI ]
+.BI ":qu[nshift] [" URI ]
 Push \fIURI\fP or if not given current URI to the beginning of the queue.
 .TP
-.B :qpop
+.B :qp[op]
 Open the oldest queue entry in current browser window and remove it from the
 queue.
 .TP
-.B :qclear
+.B :qc[lear]
 Removes all entries from queue.
 
 .SS Misc
 .TP
-.BI ":shellcmd " CMD
+.BI ":sh[ellcmd] " CMD
 Runs given shell \fICMD\fP syncron and print the output into inputbox. The
 \fICMD\fP can contain multiple '%' chars that are expanded to the current
 opened uri. Also the '~/' to home dir expansion is available.
 
 Example: :shellcmd echo "`date` %" >> myhistory.txt
 .TP
-.BI ":save [" PATH "]"
+.BI ":s[ave] [" PATH "]"
 Download current opened page into configured download directory. If \fIPATH\fP
 is given, download under this file name or path. Possible value for PATH are
 `page.html', `subdir/img1.png', `~/downlod.html' or absolute paths
 `/tmp/file.html'.
-.B :quit, :q
+.B :q[uit]
 Close the browser.
 .TP
-.B :source
-Toggle between normal view and source view for the current page.
-.TP
-.BI :eval " JAVASCRIPT" ", :e" " JAVASCRIPT"
+.BI :e[val] " JAVASCRIPT"
 Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated
 value.
 
