@@ -206,7 +206,7 @@ static struct {
 
 extern VbCore vb;
 
-static char showcmd_buf[SHOWCMD_LEN];   /* buffer to show ambiguous key sequence */
+static char showcmd_buf[SHOWCMD_LEN + 1];   /* buffer to show ambiguous key sequence */
 
 /**
  * Function called when vimb enters the normal mode.
@@ -290,7 +290,7 @@ void normal_showcmd(int c)
         translated = transchar(c);
         old        = strlen(showcmd_buf);
         extra      = strlen(translated);
-        overflow   = old + extra - SHOWCMD_LEN + 1;
+        overflow   = old + extra - SHOWCMD_LEN;
         if (overflow > 0) {
             g_memmove(showcmd_buf, showcmd_buf + overflow, old - overflow + 1);
         }
