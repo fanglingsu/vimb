@@ -2,20 +2,16 @@
 .\" Process this file with
 .\" groff -man -Tascii vimb.1
 .TH vimb 1 "DATE" "vimb/VERSION" "Vimb Manual"
-
 .SH NAME
 vimb - Vim Browser - A modal web browser based on webkit thats inspired by
 vim the great editor.
-
 .SH SYNOPSIS
 .BI "vimb [" "OPTION" "] [" "URI" "]"
-
 .SH DESCRIPTION
 vimb is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
 of vimb is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
-
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
@@ -36,7 +32,6 @@ create a own config file in
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
-
 .SH MODES
 vimb is modal an has following main modes:
 .TP
@@ -54,12 +49,10 @@ In Pass-Through mode only the `<Esc>` and `<C-[>` keybindings are interpreted
 by vimb, all other keystrokes are given to the webview to handle them. This
 allows to use websites that uses keybindings itself, that might be swallowed
 by vimb else.
-
 .SH NORMAL MODE COMMANDS
 Some of the Normal Model Commands can have a numeric count to multiply the
 effect of the command. If a command supports the count this is shown as
 \fB[N]\fP.
-
 .SS General
 .TP
 .B :
@@ -83,7 +76,6 @@ Pass the next key press directly to gtk.
 .TP
 .B CTRL\-Q
 Quit the browser.
-
 .SS Navigation
 .TP
 .B o
@@ -140,7 +132,6 @@ Reload the website without using caches.
 .TP
 .B CTRL\-C
 Stop loading the current page.
-
 .SS Motion
 .TP
 .BI [ N ]CTRL\-F
@@ -180,7 +171,6 @@ Scroll page \fIN\fP steps down.
 .TP
 .BI [ N ]k
 Scroll page \fIN\fP steps up.
-
 .SS Hinting
 The hinting is the way to do what you would do with the mouse in common
 mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
@@ -199,7 +189,6 @@ and numbered. Elements can be selected either by typing their number, or by
 typing part of their text (\fIhint\fP) to narrow down the result. When an
 element has been selected, it is automatically clicked or used (depending on
 \fImode\fP) and hint mode ends.
-
 .RS 0
 Following keys have special meanings in Hints mode:
 .IP \fB<CR>\fP
@@ -211,7 +200,6 @@ Moves the focus to the previous hint element.
 .IP "\fB<Esc>, CTRL\-C, CTRL\-[\fP"
 Exits Hints mode without selecting an element
 .RE
-
 .TP
 .B f
 Is an alias for the \fB;o\fP hint mode.
@@ -256,7 +244,6 @@ feature.
 .TP
 .B ;\-y
 Yank hint's destination location into primary and secondary clipboard.
-
 .SS Searching
 .TP
 .BI / QUERY ", ?" QUERY
@@ -278,7 +265,6 @@ direction.
 .BI [ N ]N
 Search for \fIN\fPnth previous search result depending on current serach
 direction.
-
 .SS Zooming
 .TP
 .BI [ N ]z\-i
@@ -295,7 +281,6 @@ Full-Content Zoom-Out the page by \fIN\fP steps.
 .TP
 .B z\-z
 Reset Zoom.
-
 .SS Yank
 .TP
 .B y
@@ -303,9 +288,7 @@ Yank the URI or current page into clipboard.
 .TP
 .B Y
 Yank the current selection into clipboard.
-
 .SH COMMAND MODE
-
 .SS Command Line Editing
 .TP
 .B <Esc>, CTRL\-[, CTRL-C
@@ -331,7 +314,6 @@ Moves the cursor after the char in inputbox.
 .TP
 .B CTRL\-V
 Pass the next key press directly to gtk.
-
 .SS Command Line History
 .TP
 .B <Tab>
@@ -345,19 +327,16 @@ Step backward in the command history.
 .TP
 .B <Down>
 Step forward in the command history.
-
 .SS Open
 .TP
-.BI ":o[pen] [" URI "], o [" URI ]
+.BI ":o[pen] [" URI ]
 Open the give \fIURI\fP into current window. If \fIURI\fP is empty the
 configured 'home-page' is opened.
 .TP
-.BI ":t[abopen] [" URI "], t [" URI ]
+.BI ":t[abopen] [" URI ]
 Open the give \fIURI\fP into a new window. If \fIURI\fP is empty the
 configured 'home-page' is opened.
-
 .SS Key Mapping
-
 Key mappings allow to alter actions of key presses. Each key mapping is
 associated with a mode and only has effect when the mode is active. Following
 commands allow the user to substitute one sequence of key presses by another.
@@ -366,7 +345,6 @@ commands allow the user to substitute one sequence of key presses by another.
 Note that the \fIlhs\fP ends with the first found space. If you want to use
 space also in the {lhs} you have to escape this with a single `\\' like shown
 in the examples.
-
 .RS 0
 Standard key mapping commands are provided for these modes \fIm\fP:
 .IP \fBn\fP
@@ -376,7 +354,6 @@ Insert mode: When interacting with text fields on a website.
 .IP \fBc\fP
 Command Line mode: When typing into the vimbs command line.
 .RE
-
 Most keys in key sequences are represented simply by the character that you
 see on the screen when you type them. However, as a number of these characters
 have special meanings, and a number of keys have no visual representation, a
@@ -384,25 +361,18 @@ special notation is required.
 
 As special key names have the format \fI<...>\fP. Following special keys can
 be used <Left>, <Up>, <Right>, <Down> for the cursor keys, <Tab>, <Esc>, <CR>,
-<F1>-<F12>, <C-F1>-<C-F12> and <C-A>-<C-Z>.
-
+<F1>-<F12> and <C-A>-<C-Z>.
 .TP
 .BI ":nm[ap] {" lhs "} {" rhs }
 .TP
 .BI ":im[ap] {" lhs "} {" rhs }
 .TP
 .BI ":cm[ap] {" lhs "} {" rhs }
-Map the key-sequence \fIlhs\fP to \fIrhs\fP for the applicable mode.
+Map the key sequence \fIlhs\fP to \fIrhs\fP for the modes where the map
+command applies. The result, including \fIrhs\fP, is then further scanned for
+mappings. This allows for nested and recursive use of mappings.
 
-.TP
-.BI ":nu[nmap] {" lhs }
-.TP
-.BI ":iu[nmap] {" lhs }
-.TP
-.BI ":cu[nmap] {" lhs }
-Remove the mapping of \fIlhs\fP for the applicable mode.
-
-.RS 0
+.RS
 Example:
 .IP ":cmap <C-G>h /home/user/downloads/"
 Adds a keybind to insert a file path into the input box. This could be useful
@@ -413,7 +383,22 @@ This will enable scripts and lookup the first bookmarked URI with the tag
 .IP ":nmap \\\\\ \\\\\  50G;o"
 Example which mappes two spaces to go to 50% of the page, start hinting mode.
 .RE
-
+.TP
+.BI ":nn[oremap] {" lhs "} {" rhs }
+.TP
+.BI ":ino[remap] {" lhs "} {" rhs }
+.TP
+.BI ":cno[remap] {" lhs "} {" rhs }
+Map the key sequence \fIlhs\fP to \fIrhs\fP for the mode where the map command
+applies. Disallow mapping of \fIrhs\fP, to avoid nested and recursive
+mappings. Often used to redefine a command.
+.TP
+.BI ":nu[nmap] {" lhs }
+.TP
+.BI ":iu[nmap] {" lhs }
+.TP
+.BI ":cu[nmap] {" lhs }
+Remove the mapping of \fIlhs\fP for the applicable mode.
 .SS Bookmarks
 .TP
 .BI ":bma [" TAGS ]
@@ -422,7 +407,6 @@ Save the current opened uri with \fITAGS\fP to the bookmark file.
 .BI ":bmr [" URI ]
 Removes all bookmarks for given \fIURI\fP or if not given the current opened
 page.
-
 .SS Shortcuts
 Shortcuts allows to open URL build up from a named template with additional
 parameters. If a shortcut named 'dd' is defined, you can use it with `:open dd
@@ -445,7 +429,6 @@ to setup a search engine. Can be called by `:open dl my search phrase'.
 .IP ":shortcut-add gh=https://github.com/$0/$1"
 to build urls from given parameters. Can be called `:open gh fanglingsu vimb'.
 .RE
-
 .TP
 .BI ":shortcut-remove " "SHORTCUT"
 Remove the search engine to the given \fISHORTCUT\fP.
@@ -453,7 +436,6 @@ Remove the search engine to the given \fISHORTCUT\fP.
 .BI ":shortcut-default " "SHORTCUT"
 Set the shortcut for given \fISHORTCUT\fP as the default. It doesn't matter if
 the \fISHORTCUT\fP is already in use or not to be able to set it.
-
 .SS Settings
 .TP
 .BI ":se[t] " VAR = VALUE
@@ -468,7 +450,6 @@ Show the current set value of variable
 .TP
 .BI ":se[t] " VAR !
 Toggle the value of boolean variable \fIVAR\fP and display the new set value.
-
 .SS Queue
 The queue allows to mark URLs for later reding (something like a read it later
 list). This list is shared between the single instances of vimb. Only
@@ -486,7 +467,6 @@ queue.
 .TP
 .B :qc[lear]
 Removes all entries from queue.
-
 .SS Misc
 .TP
 .BI ":sh[ellcmd] " CMD
@@ -522,9 +502,7 @@ Example:
 .B :ha[rdcopy]
 Print current document. Open a GUI dialog where you can select the printer,
 number of copies, orientation, etc.
-
 .SH INPUT MODE
-
 .TP
 .B <Esc>, CTRL\-[
 Switch back to normal mode.
@@ -534,7 +512,6 @@ Open configured editor with content of current form field.
 .TP
 .B CTRL\-Z
 Enter the pass-through mode.
-
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<shift-tab>` in the
 activated inputbox. Depending of the current inserted content different
@@ -572,13 +549,12 @@ Example:
 .TP
 .B boomark tags
 The boomark tag completion allows to insert already used bookmars for the
-`:bma ` or `:bookmark-add ` commands.
+`:bma ` commands.
 .TP
 .B search
 The search completion allow to get a filtered list of already done searches.
 This completion starts by `/` or `?` in inputbox and performs a prefix
 comparison for further typed chars.
-
 .SH FILES
 .I $XDG_CONFIG_HOME/vimb/config
 .RS
@@ -607,11 +583,11 @@ This file holds the history of search queries.
 .RE
 .I $XDG_CONFIG_HOME/vimb/bookmark
 .RS
-Holds the bookmarks saved with command `bookmark-add'.
+Holds the bookmarks saved with command `bma'.
 .RE
 .I $XDG_CONFIG_HOME/vimb/queue
 .RS
-Holds the read it later queue filled by `hint-queue-push' or `queue-push' if
+Holds the read it later queue filled by `qpush' if
 vimb has been compiled with QUEUE feature.
 .RE
 .I $XDG_CONFIG_HOME/vimb/scripts.js
@@ -624,7 +600,6 @@ that is opened.
 File for userdefined css styles. These file is used if the config variable
 `stylesheet' is enabled.
 .RE
-
 .SH ENVIRONMENT
 .TP
 .B HOME
@@ -634,11 +609,9 @@ directory. If not set the entry out of the passwd file will be used instead.
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
 `proxy' is enabled, this will be used as http proxy.
-
 .SH "REPORTING BUGS"
 Report bugs to the main project page on https://github.com/fanglingsu/vimb/issues
 .br
 or on the mailing list https://lists.sourceforge.net/lists/listinfo/vimb-users.
-
 .SH AUTHOR
 Daniel Carl

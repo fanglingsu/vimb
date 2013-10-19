@@ -45,10 +45,13 @@ typedef enum {
     EX_EVAL,
     EX_HARDCOPY,
     EX_CMAP,
+    EX_CNOREMAP,
     EX_IMAP,
     EX_NMAP,
+    EX_NNOREMAP,
     EX_CUNMAP,
     EX_IUNMAP,
+    EX_INOREMAP,
     EX_NUNMAP,
     EX_NORMAL,
     EX_OPEN,
@@ -131,16 +134,19 @@ static void history_rewind(void);
  * searching for a matching command if the next compared character did not
  * match. */
 static ExInfo commands[] = {
-    /* command           code             func            flags */
+    /* command           code            func           flags */
     {"bma",              EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
     {"bmr",              EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
+    {"cnoremap",         EX_CNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"cunmap",           EX_CUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_RHS},
     {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
+    {"inoremap",         EX_INOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"iunmap",           EX_IUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"nmap",             EX_NMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
+    {"nnoremap",         EX_NNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"normal",           EX_NORMAL,      ex_normal,     EX_FLAG_BANG|EX_FLAG_LHS},
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"open",             EX_OPEN,        ex_open,       EX_FLAG_RHS},
@@ -700,22 +706,14 @@ static gboolean ex_hardcopy(const ExArg *arg)
 
 static gboolean ex_map(const ExArg *arg)
 {
-    char *lhs, *rhs;
-
     if (!arg->lhs->len || !arg->rhs->len) {
         return false;
     }
 
-    lhs = arg->lhs->str;
-    rhs = arg->rhs->str;
+    /* instead of using the EX_XMAP constants we use the first char of the
+     * command name as mode and the second to determine if noremap is used */
+    map_insert(arg->lhs->str, arg->rhs->str, arg->name[0], arg->name[1] != 'n');
 
-    if (arg->code == EX_NMAP) {
-        map_insert(lhs, rhs, 'n');
-    } else if (arg->code == EX_CMAP) {
-        map_insert(lhs, rhs, 'c');
-    } else {
-        map_insert(lhs, rhs, 'i');
-    }
     return true;;
 }
 

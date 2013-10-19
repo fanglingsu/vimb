@@ -27,11 +27,12 @@
 extern VbCore vb;
 
 typedef struct {
-    char *in;         /* input keys */
-    int  inlen;       /* length of the input keys */
-    char *mapped;     /* mapped keys */
-    int  mappedlen;   /* length of the mapped keys string */
-    char mode;        /* mode for which the map is available */
+    char     *in;       /* input keys */
+    int      inlen;     /* length of the input keys */
+    char     *mapped;   /* mapped keys */
+    int      mappedlen; /* length of the mapped keys string */
+    char     mode;      /* mode for which the map is available */
+    gboolean remap;     /* if false do not remap the {rhs} of this map */
 } Map;
 
 static struct {
@@ -294,10 +295,14 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
             /* copy the mapped string into the queue */
             strncpy(map.queue, match->mapped, match->mappedlen);
             map.qlen += match->mappedlen - match->inlen;
-            if (match->inlen <= match->mappedlen) {
-                map.resolved = match->inlen;
-            } else {
+
+            /* without remap the mapped chars are resolved now */
+            if (!match->remap) {
                 map.resolved = match->mappedlen;
+            } else if (match->inlen <= match->mappedlen
+                && !strncmp(match->in, match->mapped, match->inlen)
+            ) {
+                map.resolved = match->inlen;
             }
         } else {
             /* first char is not mapped but resolved */
@@ -321,7 +326,7 @@ void map_handle_string(char *str, gboolean use_map)
     map_handle_keys((guchar*)keys, len, use_map);
 }
 
-void map_insert(char *in, char *mapped, char mode)
+void map_insert(char *in, char *mapped, char mode, gboolean remap)
 {
     int inlen, mappedlen;
     char *lhs = convert_keys(in, strlen(in), &inlen);
@@ -330,13 +335,13 @@ void map_insert(char *in, char *mapped, char mode)
     /* if lhs was already mapped, remove this first */
     map_delete_by_lhs(lhs, inlen, mode);
 
-    /* TODO replace keysymbols in 'in' and 'mapped' string */
     Map *new = g_new(Map, 1);
     new->in        = lhs;
     new->inlen     = inlen;
     new->mapped    = rhs;
     new->mappedlen = mappedlen;
     new->mode      = mode;
+    new->remap     = remap;
 
     map.list = g_slist_prepend(map.list, new);
 }
