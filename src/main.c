@@ -985,7 +985,7 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
 int main(int argc, char *argv[])
 {
     static char *winid = NULL;
-    static gboolean ver = false, dump = false;
+    static gboolean ver = false;
     static GError *err;
 
     vb.custom_config = NULL;
@@ -993,7 +993,6 @@ int main(int argc, char *argv[])
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.custom_config, "Custom cufiguration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
-        {"dump-config", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump out the default configuration to stdout", NULL},
         {NULL}
     };
     /* Initialize GTK+ */
@@ -1006,13 +1005,6 @@ int main(int argc, char *argv[])
 
     if (ver) {
         fprintf(stdout, "%s/%s\n", PROJECT, VERSION);
-        return EXIT_SUCCESS;
-    }
-    if (dump) {
-        /* load default config */
-        for (guint i = 0; default_config[i] != NULL; i++) {
-            fprintf(stdout, "%s\n", default_config[i]);
-        }
         return EXIT_SUCCESS;
     }
 
