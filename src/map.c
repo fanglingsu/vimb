@@ -42,6 +42,7 @@ static struct {
     guint  timout_id;               /* source id of the timeout function */
 } map;
 
+static gboolean map_delete_by_lhs(const char *lhs, int len, char mode);
 static int keyval_to_string(guint keyval, guint state, guchar *string);
 static int utf_char2bytes(guint c, guchar *buf);
 static char *convert_keys(char *in, int inlen, int *len);
@@ -326,6 +327,9 @@ void map_insert(char *in, char *mapped, char mode)
     char *lhs = convert_keys(in, strlen(in), &inlen);
     char *rhs = convert_keys(mapped, strlen(mapped), &mappedlen);
 
+    /* if lhs was already mapped, remove this first */
+    map_delete_by_lhs(lhs, inlen, mode);
+
     /* TODO replace keysymbols in 'in' and 'mapped' string */
     Map *new = g_new(Map, 1);
     new->in        = lhs;
@@ -342,6 +346,11 @@ gboolean map_delete(char *in, char mode)
     int len;
     char *lhs = convert_keys(in, strlen(in), &len);
 
+    return map_delete_by_lhs(lhs, len, mode);
+}
+
+static gboolean map_delete_by_lhs(const char *lhs, int len, char mode)
+{
     for (GSList *l = map.list; l != NULL; l = l->next) {
         Map *m = (Map*)l->data;
 
@@ -349,11 +358,9 @@ gboolean map_delete(char *in, char mode)
         if (m->mode == mode && m->inlen == len && !strcmp(m->in, lhs)) {
             /* remove the found list item */
             map.list = g_slist_delete_link(map.list, l);
-
             return true;
         }
     }
-
     return false;
 }
 
