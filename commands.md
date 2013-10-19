@@ -1,368 +1,178 @@
 ---
 title:  vimb - commands
 layout: default
-meta:   list of commands available in vimb the vim browser
+meta:   vimb browser ex commands
 active: commands
 ---
 
 # vimb commands
-Commands are a central part in vimb. They are used for nearly all things that
-could be done with this browser. Commands allow to set config variables, to
-assign keybindings and much more. Also the keybindings are only shortcut for
-the commands itself.
-
-Commands can be called in Input Mode from the inputbox in the way like
-`:[count]command[ param[=value]]`. But some commands are not available in
-Command Mode and therefore not callable directly. To use them too, they must be
-bound to the keybinding.
 
 ## open
 {:#open}
-open [URI], o [URI]
+
+\:o[pen] [URI]
 : Open the give URI into current window. If URI is empty the configured
   `home-page` is opened.
 
-tabopen [URI], t [URI]
+\:t[abopen] [URI]
 : Open the give URI into a new window. If URI is empty the configured
   `home-page` is opened.
 
-(tab)open-closed
-: Open the last closed page.
+## key mapping
 
-(tab)open-clipboard, (t)oc
-: Open the url from clipboard.
+Key mappings allow to alter actions of key presses. Each key mapping is
+associated with a mode and only has effect when the mode is active. Following
+commands allow the user to substitute one sequence of key presses by another.
 
-## queue
-{:#queue}
-The queue allows to mark URLs for later reding (something like a read it later
-list). This list is shared between the single instances of vimb. Only available
-if vimb has been compiled with QUEUE feature.
+Syntax: *:{m}map {lhs} {rhs}*
 
-queue-push [URI]
-: Push URI or if not given current URI to end of the queue. A URI can be
-  everything that could be used with the `open` command like
-  [shortcuts](#shortcuts).
+Note that the lhs ends with the first found space. If you want to use space
+also in the {lhs} you have to escape this with a single '\' like shown in the
+examples. Standard key mapping commands are provided for these modes m:
 
-queue-unshift [URI]
-: Push URI or if not given current URI to beginning of the queue.
+- n Normal mode: When browsing normally.
+- i Insert mode: When interacting with text fields on a website.
+- c Command Line mode: When typing into the vimbs command line.
 
-queue-pop
-: Open the oldest queue entry in current browser window and remove it from the queue.
+Most keys in key sequences are represented simply by the character that you see
+on the screen when you type them. However, as a number of these characters have
+special meanings, and a number of keys have no visual representation, a special
+notation is required.
 
-queue-clear
-: Removes all entries from queue.
+As special key names have the format \<...\>. Following special keys can be
+used \<Left\>, \<Up\>, \<Right\>, \<Down\> for the cursor keys, \<Tab\>,
+\<Esc\>, \<CR\>, \<F1\>-\<F12\> and \<C-A\>-\<C-Z\>.
 
-## input
-{:#input}
-Switches the browser into Command Mode and prefill the inputbox on th bottom of
-the browser with various prefilled content.
+\:nm[ap] {lhs} {rhs}
+\:im[ap] {lhs} {rhs}
+\:cm[ap] {lhs} {rhs}
+: Map the key sequence lhs to rhs for the modes where the map command applies.
+  The result, including rhs, is then further scanned for mappings. This allows
+  for nested and recursive use of mappings.
 
-input [TEXT], in [TEXT]
-: Writes TEXT into to inputbox and switch to Command Mode. If no TEXT is given,
-  print `:` into the inputbox.
+  - `:cmap <C-G>h /home/user/downloads/`
+    Adds a keybind to insert a file path into the input box. This could be
+    useful for the ':save' command that could be used as ':save ^Gh'.
+  - `:nmap <F1> :set scripts=on<CR>:open !glib<Tab><CR>`
+    This will enable scripts and lookup the first bookmarked URI with the tag
+    'glib' and open it immediately if F1 key is pressed.
+  - `:nmap \ \  50G;o`
+    Example which mappes two spaces to go to 50% of the page, start hinting
+    mode.
 
-inputuri [TEXT]
-: Writes TEXT{URI} into to inputbox where {URL} is the current used url. This
-  can be used to add keybindings to generate the tabopen command with current uri
-  prefilled. If TEXT is not given use `:` instead.
+\:nn[oremap] {lhs} {rhs}
+\:ino[remap] {lhs} {rhs}
+\:cno[remap] {lhs} {rhs}
+: Map the key sequence lhs to rhs for the mode where the map command applies.
+  Disallow mapping of rhs, to avoid nested and recursive mappings. Often used
+  to redefine a command.
 
-## navigate
-{:#navigate}
-Following commands are used to navigate within the browser history.
+\:nu[nmap] {lhs}
+\:iu[nmap] {lhs}
+\:cu[nmap] {lhs}
+: Remove the mapping of lhs for the applicable mode.
 
-[N]back, [N]ba
-: Move N steps back in browser history.
+## bookmarks
 
-[N]forward, [N]fo
-: Move N steps back in browser history.
+\:bma [TAGS]
+: Save the current opened uri with TAGS to the bookmark file.
 
-reload, re
-: Reload the current viewed url.
-
-reload!, re!
-: Discard any caches and reload the current viewed url.
-
-stop, st
-: Stop loading the current url.
-
-[N]descent
-: Go to the Nth descendent directory of the current opened.
-
-descent!
-: Go to the domain of the current opened page.
-
-## scroll
-{:#scroll}
-Following commands are used to scroll ad jump within the current view.
-
-[N]jumpleft
-: Scrolls the current view N steps to the left. If N is given jump to N% of the
-  page from the left.
-
-[N]jumpright
-: Scrolls the current view to the right. If N is given jump to N% of the page
-  from the left.
-
-[N]jumptop
-: Scrolls the current view to the top of page. If N is given, scroll to N% of
-  the page.
-
-[N]jumpbottom
-: Scrolls the current view to the end of page. If N is given, scroll to N% of
-  the page.
-
-[N]pageup
-: Scroll up the page N screens.
-
-[N]pagedown
-: Scroll down the page N screens.
-
-[N]halfpageup
-: Scroll up the page N half screens.
-
-[N]halfpagedown
-: Scroll down the page N half screens.
-
-[N]scrollleft
-: Scroll the page N times the `scrollstep` to the left.
-
-[N]scrollright
-: Scroll the page N times the `scrollstep` to the right.
-
-[N]scrollup
-4 Scroll the page N times the `scrollstep` to the top.
-
-[N]scrolldown
-: Scroll the page N times the `scrollstep` to the end.
-
-## keybinding
-{:#keybinding}
-nmap
-: Add a keybinding used in Normal Mode.
-
-imap
-: Add a keybinding used in Input Mode.
-
-cmap
-: Add a keybinding used in Command Mode.
-
-nunmap
-: Remove a Normal Mode keybinding.
-
-iunmap
-: Remove a Input Mode keybinding.
-
-cunmap
-: Remove a Command Mode keybinding.
-
-More about the [keybindings][].
-
-## hints
-{:#hints}
-The hinting is the way to do what you would do with the mouse in common
-mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
-is started, the relevant elements on the page will be marked by numbered
-labels. Hints can be selected by using <tab> or <ctrl-tab>, by typing the
-number of the label, or filtering the elements by some text that is part of the
-hinted element (like url, link text, button label) and any combination of this
-methods. If <enter> is pressed, the current active hint will be fired. If only
-one possible hint remains, this will be fired automatically.
-
-Syntax: `:hint-{TYPE} [QUERY]`
-
-If QUERY is given, this is used to filter hints contents initially. Note that
-the QUERY can only be used to filter the hints by their content and not by
-their numeric hint label. On the other hand QUERY is the only way to match
-hints with numeric content.
-
-hint-link [QUERY], hint-link-new [QUERY]
-: Start hinting to open link into current or new window.
-
-hint-input-open [QUERY], hint-input-tabopen [QUERY]
-: Start hinting to fill the inputbox with `:open {hintedLinkUrl}` or `:tabopen
-  {hintedLinkUrl}`.
-
-hint-yank [QUERY]
-: Start hinting to yank the hinted link url into the primary and secondary
-  clipboard.
-
-hint-image-open [QUERY], hint-image-tabopen [QUERY]
-: Start hinting to open images into current or new window.
-
-hint-editor [QUERY]
-: Start hinting to open inputboxes or textareas with external editor.
-
-hint-save [QUERY]
-: Start hinting to download hinted links into configured download directory.
-
-hint-queue-push [QUERY]
-: Start hinting to push hinted URI to end of the read it later queue. If vimb
-  has been compiled with QUEUE feature.
-
-hint-queue-unshift [QUERY]
-: Start hinting to push hinted URI to the beginning of the read it later
-  queue. If vimb has been compiled with QUEUE feature.
-
-next, n
-prev, p
-: Focus next or previous hint if Hinting Mode is active.
-
-## yank
-{:#yank}
-yank-uri, yu
-: Yank the current url to the primary and secondary clipboard.
-
-yank-selection, ys
-: Yank the selected text into the primary and secondary clipboard.
+\:bmr [URI]
+: Removes all bookmarks for given URI or if not given the current opened page.
 
 ## shortcuts
 {:#shortcuts}
 
 Shortcuts allows to open URL build up from a named template with additional
-parameters. If a shortcut named `dd` is defined, you can use it with `:open dd
-list of parameters` to open the generated URL.
+parameters. If a shortcut named 'dd' is defined, you can use it with ':open dd
+list of parameters' to open the generated URL.
 
 Shortcuts are a good to use with search engines where the URL is nearly the
 same but a single parameter is user defined.
 
-shortcut-add SHORTCUT=URI
+\:shortcut-add SHORTCUT=URI
 : Adds a shortcut with the SHORTCUT and URI template. The URI can contain
-  multiple placeholders $0-$9 that will be filled by the parameters given when
-  the shortcut is called. The parameters given when the shortcut is
-  called will be split into as many parameters like the highest used placeholder.
+  multiple placeholders `$0-$9` that will be filled by the parameters given when
+  the shortcut is called. The parameters given when the shortcut is called
+  will be split into as many parameters like the highest used placeholder.
 
-  Example 1: `shortcut-add dl=https://duckduckgo.com/lite/?q=$0` to setup a search
-  engine. Can be called by `:open dl my search phrase`.
+  - `:shortcut-add dl=https://duckduckgo.com/lite/?q=$0`
+    to setup a search engine. Can be called by ':open dl my search phrase'.
+  - `:shortcut-add gh=https://github.com/$0/$1`
+    to build urls from given parameters. Can be called ':open gh fanglingsu
+    vimb'.
 
-  Example 2: `shortcut-add gh=https://github.com/$0/$1` to build urls from given
-  parameters. Can be called `:open gh fanglingsu vimb`.
-
-shortcut-remove SHORTCUT
+\:shortcut-remove SHORTCUT
 : Remove the search engine to the given SHORTCUT.
 
-shortcut-default SHORTCUT
+\:shortcut-default SHORTCUT
 : Set the shortcut for given SHORTCUT as the default. It doesn't matter if the
   SHORTCUT is already in use or not to be able to set it.
 
-## configuration
-{:#configuration}
-set VAR=VALUE
-: Set configuration values named by VAR. To set boolean variable you should use
-  `on`, `off` or `true` and `false`. Colors are given as hexadecimal value like
-  `#f57700`.
+## settings
 
-set VAR?
+\:se[t] VAR=VALUE
+: Set configuration values named by VAR. To set boolean variable you should
+  use 'on', 'off' or 'true' and 'false'. Colors are given as hexadecimal value
+  like '#f57700'.
+
+\:se[t] VAR?
 : Show the current set value of variable VAR.
 
-set VAR!
+\:se[t] VAR!
 : Toggle the value of boolean variable VAR and display the new set value.
 
-## zoom
+## queue
+{:#queue}
 
-[N]zoomin, [N]zi
-: Zoom N steps in of the current page - effects only the text.
+The queue allows to mark URLs for later reding (something like a read it later
+list). This list is shared between the single instances of vimb. Only available
+if vimb has been compiled with QUEUE feature.
 
-[N]zoomout, [N]zo
-: Zoom N steps out of the current page - effects only the text.
+\:qpu[sh] [URI]
+: Push URI or if not given current URI to the end of the queue.
 
-[N]zoominfull, [N]zif
-: Zoom N steps in of the current page - effecting all elements.
+\:qu[nshift] [URI]
+: Push URI or if not given current URI to the beginning of the queue.
 
-[N]zoomoutfull, [N]zof
-: Zoom N steps out of the current page - effecting all elements.
+\:qp[op]
+: Open the oldest queue entry in current browser window and remove it from the
+  queue.
 
-zoomreset, zr
-: Reset the zoomlevel to the default value.
-
-## history
-{:#history}
-hist-prev, hist-next
-: Prints the previous or next cammand or search query from history into
-  inputbox. If there is already text in the input box this will be used to get
-  history items. A command is not a internal command, but every string entered
-  into inputbox that begins with [:/?]. So the history contains real commands and
-  search queries.
-
-## bookmark
-
-bookmark-add [TAGS], bma [TAGS]
-: Save the current opened uri with TAGS to the bookmark file.
-
-bookmark-remove [URI], bmr [URI]
-: Removes all bookmarks for given URI or if not given the current opened page.
+\:qc[lear]
+: Removes all entries from queue.
 
 ## misc
-next, n
-prev, p
-: This are wrapper commands to start completion and to step through the
-  completion items, or to focus previous or next hints if hinting is active.
 
-  Following completions are available:
-
-  1. Commands `:`
-  2. Settings `:set `
-  3. Url-History and Bookmarks `:open QUERY` or `:tabopen QUERY`. If QUERY is
-     given, this will be used to fetch matching urls from history file, or to find
-     bookmarks from bookmark file. The urls from history will only be matched by
-     their url, the bookmarks only by their tags. If multiple tags are given to get
-     the bookmarks, only those bookmarks will be returned, that matches all the
-     given tags or that don't have any tag set.
-  4. Bookmark tags that are already used can be completet for `:bma QUERY` or
-     `:bookmark-add QUERY` command.
-  5. Searchqueries `/` or `?`
-
-run [COMMAND LIST]
-: Run is a command, that was introduced to have the ability to run multiple
-  other commands with a single call. Everything after the `run` is interpreted as
-  a `|` seperated list of commands and parameters. The run command
-  allows to use fancy keybindings that set several config settings with only on keypress.
-
-  Format: `:run [count]command[ param[=value]]|[count]command[ param[=value]]|...`
-
-  Example: `:run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown`
-
-pass-through
-: Switches vimb into Pass-Through Mode. In pass-through Mode only the
-  `<ctrl-c>` and `<esc>` keybindings are interpreted by vimb, all other
-  keystrokes are given to the webview to handle them. This allows to use
-  websites that uses keybindings itself, that might be swallowed by vimb else.
-
-shellcmd CMD
+\:sh[ellcmd] CMD
 : Runs given shell CMD syncron and print the output into inputbox. The CMD can
-  contain multiple `%` chars that are expanded to the current opened uri.
+  contain multiple '%' chars that are expanded to the current opened uri. Also
+  the '~/' to home dir expansion is available.
 
   Example: ``:shellcmd echo "`date` %" >> myhistory.txt``
 
-[N]search-forward [QUERY], [N]search-backward [QUERY]
-: Search forward or backward for the N'th occurrence of QUERY in current page.
-
-[N]search-selection-forward, [N]search-selection-backward
-: Search forward or backward for the N'th occurrence of the selected text.
-
-save [PATH]
+\:s[ave] [PATH]
 : Download current opened page into configured download directory. If PATH is
-  given, download under this file name  or path. Possible value for PATH are
-  `page.html`, `subdir/img1.png`, `~/downlod.html` or absolute pathes
-  `/tmp/file.html`.
+  given, download under this file name or path. Possible value for PATH are
+  'page.html', 'subdir/img1.png', '~/downlod.html' or absolute paths
+  '/tmp/file.html'.
 
-inspect
-: Toggles the webinspector for current page. This is only available if the
-  config `webinspector` is enabled.
-
-focus-input
-: Set the cursor to the first found editable element on the page and switch
-  vimb into Input Mode.
-
-quit, q
+\:q[uit]
 : Close the browser.
 
-source
-: Toggle between normal view and source view for the current page.
-
-eval JAVASCRIPT, e JAVASCRIPT
-: Runs the given JAVASCRIPT in the current page and display the evaluated value.
+\:e[val] JAVASCRIPT
+: Runs the given JAVASCRIPT in the current page and display the evaluated
+  value.
 
   Example: `:eval document.cookie`
 
+\:no[rmal][!] [CMDS]
+: Execute normal mode commands CMDS. This makes it possible to execute normal
+  mode commands typed on the input box. If the '!' is given, mappings will not
+  be used.
 
-[keybindings]: keybindings.html
+  Example: `:set scripts!\|no! R`
+
+\:ha[rdcopy]
+: Print current document. Open a GUI dialog where you can select the printer,
+  number of copies, orientation, etc.

@@ -7,7 +7,7 @@ active: home
 
 # vimb - a vim-like webkit browser
 
-vimb is a fast and lightweight web browser based on the webkit web browser
+[vimb][] is a fast and lightweight web browser based on the webkit web browser
 engine and the gtk toolkit. vimb is modal like the great vim editor and also
 easily configurable during runtime. vimb is mostly keyboard driven and does
 not detract you from your daily work.
@@ -31,7 +31,7 @@ not detract you from your daily work.
 
 ## download
 
-- You can get [vimb][] from github with following command.
+- You can get vimb from github with following command.
 
       git clone git://github.com/fanglingsu/vimb.git vimb
 
@@ -74,16 +74,16 @@ If you find a misbehaviour or have feature requests use the
 - [surf][] a really minimalistic browser of the suckless project. No runtime
   configuration.
 
-[zip]:  https://github.com/fanglingsu/vimb/archive/master.zip "vim browser download zip"
-[tgz]:  https://github.com/fanglingsu/vimb/archive/master.tar.gz "vim browser download tar.gz"
-[bug]:  https://github.com/fanglingsu/vimb/issues "vimb browser - issue tracker"
-[surf]: http://surf.suckless.org/
-[vimb]: https://github.com/fanglingsu/vimb "vimb browser project"
+[zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vim browser download zip"
+[tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vim browser download tar.gz"
+[bug]:         https://github.com/fanglingsu/vimb/issues "vimb browser - issue tracker"
+[surf]:        http://surf.suckless.org/
+[vimb]:        https://github.com/fanglingsu/vimb "vimb vimlike webbrowser sources"
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
-[keybindings]: keybindings.html#default-keys
+[keybindings]: keybindings.html
+[hints]:       keybindings.html#hinting
+[history]:     keybindings.html#history
 [queue]:       commands.html#queue
-[hints]:       commands.html#hints
-[history]:     commands.html#history
 [shortcuts]:   commands.html#shortcuts
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"

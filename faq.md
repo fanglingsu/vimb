@@ -15,6 +15,14 @@ plugged into another xembed aware window that allows tabbing like [tabbed][].
 
     tabbed -c vimb -e
 
+## User-Scripts does not seem to have any effect
+{:#user-scripts}
+
+The precedance of the user style is lower than that of the website so you have
+to mark your style definition to have higher priority.
+
+    a:link {color: #0f0 !important;}
+
 ## How to change the colors of the hints?
 
 Vimb hints can be styled by the user style-sheet
@@ -53,17 +61,5 @@ use the `!importen` flag on your style definition to take effect
         opacity: 1
     }
 
-## User-Scripts does not seem to have any effect {#user-scripts}
-
-The precedance of the user style is lower than that of the website so you have
-to mark your style definition to have higher priority.
-
-    a:link {color: #0f0 !important;}
-
-## How can I use Emacs keybinding for input editing?
-
-If the key theme is installed, following woul do the job for GTK2.
-
-    echo 'gtk-key-theme-name = "Emacs"' >> ~/.gtkrc-2.0
 
 [tabbed]: http://tools.suckless.org/tabbed/
