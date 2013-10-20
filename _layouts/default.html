@@ -13,13 +13,15 @@
 <div id="nav" role="navigation">
   <ul>
     <li{% if page.active == "home" %} class="active"{% endif %}><a href="./">home</a></li>
-    <li{% if page.active == "screenshots" %} class="active"{% endif %}><a href="screenshots.html">screenshots</a></li>
     <li{% if page.active == "commands" %} class="active"{% endif %}><a href="commands.html">commands</a></li>
     <li{% if page.active == "keybindings" %} class="active"{% endif %}><a href="keybindings.html">keybindings</a></li>
     <li{% if page.active == "faq" %} class="active"{% endif %}><a href="faq.html">faq</a></li>
   </ul>
 </div>
+<div class="main">
 {{ content }}
+</div>
+  <div id="footer"><a href="#content" title="to top">&#9650; top</a></div>
 </div>
 </body>
 </html>

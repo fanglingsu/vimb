@@ -12,7 +12,17 @@ engine and the gtk toolkit. vimb is modal like the great vim editor and also
 easily configurable during runtime. vimb is mostly keyboard driven and does
 not detract you from your daily work.
 
+## screenshots
+
+There isn't really much to see for a browser that controlled via keyboard and
+a single inputbox, but following images may give a impression of they way vimb
+makes you more productive in your work.
+
+[![link hinting](media/tn/vimb-hints.png "link hinting (688x472 33kB)"){:width="300"}{:height="206"}](media/vimb-hints.png)
+[![setting completion of vimb](media/tn/vimb-completion.png "completion of settings (688x472 11kB)"){:width="300"}{:height="206"}](media/vimb-completion.png)
+
 ## features
+
 - modal like vim
 - vim oriented [keybindings][]
 - follow links via keyboard [hints][]
@@ -29,25 +39,19 @@ not detract you from your daily work.
 - xembed - so vimb can be used together with [tabbed][]
 - run shell commands from inputbox
 
-## download
-
-- You can get vimb from github with following command.
-
-      git clone git://github.com/fanglingsu/vimb.git vimb
-
-- Or you can download the latest releases as [tar.gz][tgz] or as [zip][].
-
-## dependencies
-
-- libwebkit >= 1.3.10
-- libgtk+-2.0
-- libsoup-2.4
-
 ## install
 
-1. Edit `config.mk` to match your local setup.
+1. Download the sources
 
-2. Edit `config.h` to match you personal preferences.
+   - You can get vimb from github with following command.
+   
+         git clone git://github.com/fanglingsu/vimb.git vimb
+   
+   - Or you can download the latest releases as [tar.gz][tgz] or as [zip][].
+
+2. Edit `config.mk` to match your local setup.
+
+3. Edit `config.h` to match you personal preferences.
 
    The default Makefile will not overwrite your customised `config.h` with the
    contents of `config.def.h`, even if it was updated in the latest git pull.
@@ -55,12 +59,17 @@ not detract you from your daily work.
    `config.def.h` and make sure you include any changes to the latter in your
    `config.h`.
 
-3. Run following command to compile and install vimb (if necessary last one as
+4. Run following command to compile and install vimb (if necessary last one as
    root).
 
        make clean && make
        make install
 
+## dependencies
+
+- libwebkit >= 1.3.10
+- libgtk+-2.0
+- libsoup-2.4
 
 ## contribute
 

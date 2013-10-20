@@ -171,7 +171,7 @@ if vimb has been compiled with QUEUE feature.
   mode commands typed on the input box. If the '!' is given, mappings will not
   be used.
 
-  Example: `:set scripts!\|no! R`
+  Example: `:set scripts!|no! R`
 
 \:ha[rdcopy]
 : Print current document. Open a GUI dialog where you can select the printer,

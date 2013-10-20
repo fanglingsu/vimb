@@ -1,18 +1,20 @@
 *{margin:0;padding:0}
 html{background-color:#e0ddda}
-body{color:#333;font-family:"Dejavu sans-serif",sans-serif;margin:0;padding:0;line-height:1.5em}
-#content{background-color:#fff;margin:1em auto;padding:3em 4em 2.5em;max-width:50em;border:1px solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
+body{color:#333;font-family:"Dejavu sans-serif",sans-serif;line-height:1.5em}
+#content{background-color:#fff;margin:1em auto 2em;max-width:60em;border:1px solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
 #nav{font-size:1.3em;padding-bottom:1.5em}
 #nav ul{margin:0;padding:0;display:block;width:100%}
-#nav li{list-style:none;float:left;width:20%;margin:0;padding:0}
-#nav li a{text-align:center;display:block;padding:0 .5em;border:1px solid #ccc;border-right-width:0;height:1.5em;top:.1em;background-color:#f4f4f4}
-#nav li:last-child a{border-right-width:1px}
-#nav li.active a,#head a:focus,#head a:hover{background-color:#fff}
+#nav li{list-style:none;float:left;width:25%;margin:0;padding:0}
+#nav li a{text-align:center;display:block;padding:.2em .5em;border-bottom:1px solid #ccc;border-right:1px solid #ccc;height:1.5em;top:.1em;background-color:#f4f4f4}
+#nav li:last-child a{border-right-width:0}
+#nav li.active a{background-color:#fff;border-bottom-width:0;color:#555}
 #nav+*{clear:left}
-h1,h2,h3{font-family:inherit;font-weight:bolder;padding:.5em 0 .5em}
+#footer{margin:0 .5em 1em;display:block;text-align:center}
+.main{padding:1em 4em 2.5em}
+h1,h2,h3{font-family:inherit;font-weight:bolder;padding:.5em 0 .2em;margin-bottom:.3em;color:#555}
 h1{padding-top:.8em}
 h1{font-size:2em}
-h2{font-size:1.5em}
+h2{font-size:1.5em;border-bottom:1px solid #ccc;margin-bottom:.8em}
 h3{font-size:1em}
 em{font-style:italic}
 p,pre,ul,ol,dl{margin-bottom:1em}
@@ -34,14 +36,11 @@ th{background-color:#eee}
 hr{border-top:1px solid #ccc;width:100%}
 dl{width:100%}
 dd{margin:0 0 .4em 3em}
-@media screen and (max-width:50em){
-#nav ul>li{width:30%}
-#nav li:nth-child(3) a{border-right-width:1px}
-#nav li:nth-child(3)~li a{border-top-width:0}
-#nav li a{text-align:left}
-}
 @media screen and (max-width:38em){
+#content{margin:0}
 #nav ul>li{width:100%}
-#nav li a{border-right-width:1px}
+#nav li a{border-right-width:1px;text-align:left;padding:0 .5em}
 #nav li~li a{border-top-width:0}
+#nav li.active a{border-bottom-width:1px}
+.main{padding:1em .5em}
 }
