@@ -33,6 +33,9 @@
  * message where only temporary */
 #define MESSAGE_TIMEOUT              5
 
+/* number of chars to be shown for ambiguous commands */
+#define SHOWCMD_LEN                 10
+
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST   5
 

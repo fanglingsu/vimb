@@ -17,34 +17,39 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _COMMAND_H
-#define _COMMAND_H
+#include "config.h"
+#include "main.h"
+#include "pass.h"
+#include "mode.h"
+#include "dom.h"
 
-enum {
-    COMMAND_YANK_ARG,
-    COMMAND_YANK_URI,
-    COMMAND_YANK_SELECTION
-};
+extern VbCore vb;
 
-enum {
-    COMMAND_SAVE_CURRENT,
-    COMMAND_SAVE_URI
-};
 
-#ifdef FEATURE_QUEUE
-enum {
-    COMMAND_QUEUE_PUSH,
-    COMMAND_QUEUE_UNSHIFT,
-    COMMAND_QUEUE_POP,
-    COMMAND_QUEUE_CLEAR
-};
-#endif
+/**
+ * Function called when vimb enters the passthrough mode.
+ */
+void pass_enter(void)
+{
+    /* switch focus first to make shure we can write to the inputbox without
+     * disturbing the user */
+    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
+    vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
+}
 
-gboolean command_search(const Arg *arg);
-gboolean command_yank(const Arg *arg);
-gboolean command_save(const Arg *arg);
-#ifdef FEATURE_QUEUE
-gboolean command_queue(const Arg *arg);
-#endif
+/**
+ * Called when passthrough mode is left.
+ */
+void pass_leave(void)
+{
+    vb_set_input_text("");
+}
 
-#endif /* end of include guard: _COMMAND_H */
+VbResult pass_keypress(int key)
+{
+    if (key == CTRL('[')) { /* esc */
+        mode_enter('n');
+    }
+    vb.state.processed_key = false;
+    return RESULT_COMPLETE;
+}

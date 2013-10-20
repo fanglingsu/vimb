@@ -25,13 +25,9 @@ LIBS += $(GTK2LIBS)
 endif
 
 # generate a first char upper case project name
-PROJECT_UCFIRST = $(shell echo '${PROJECT}' | sed 's/\([a-z]\)\([a-zA-Z0-9]*\)/\u\1\2/')
+PROJECT_UCFIRST = $(shell echo '${PROJECT}' | awk '{for(i=1;i<=NF;i++){$$i=toupper(substr($$i,1,1))substr($$i,2)}}1')
 
-# try to get a better version string from git
-GIT_VERSION  = $(shell git describe --tags | tr -d '\n')
-FULL_VERSION = $(shell if [ "$(GIT_VERSION)" ]; then echo "$(GIT_VERSION)"; else echo "$(VERSION)"; fi)
-
-CPPFLAGS  = -DVERSION=\"${VERSION}\" -DFULL_VERSION=\"${FULL_VERSION}\"
+CPPFLAGS  = -DVERSION=\"${VERSION}\"
 CPPFLAGS += -DPROJECT=\"${PROJECT}\" -DPROJECT_UCFIRST=\"${PROJECT_UCFIRST}\"
 CPPFLAGS += -D_BSD_SOURCE -D_XOPEN_SOURCE=500
 ifeq ($(USEGTK3), 1)

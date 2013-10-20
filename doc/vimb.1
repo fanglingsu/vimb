@@ -2,20 +2,16 @@
 .\" Process this file with
 .\" groff -man -Tascii vimb.1
 .TH vimb 1 "DATE" "vimb/VERSION" "Vimb Manual"
-
 .SH NAME
 vimb - Vim Browser - A modal web browser based on webkit thats inspired by
 vim the great editor.
-
 .SH SYNOPSIS
 .BI "vimb [" "OPTION" "] [" "URI" "]"
-
 .SH DESCRIPTION
 vimb is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
 of vimb is to build a completely keyboard-driven, efficient and pleasurable
 browsing-experience.
-
 .SH OPTIONS
 Mandatory arguments to long options are mandatory for short options too.
 .TP
@@ -28,15 +24,10 @@ of an XEmbed-aware application, that vimb will use as its parent.
 .TP
 .B "\-h, \-\-help"
 Show help options.
-.TP
-.B "\-d, \-\-dump-config"
-Dump out the whole default configurations to stdout. This can be used to
-create a own config file in
 .I $XDG_CONFIG_HOME/vimb/config
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
-
 .SH MODES
 vimb is modal an has following main modes:
 .TP
@@ -47,439 +38,28 @@ The default mode. Pressing Escape always enter normal mode.
 Used for editing text elements in a webpage.
 .TP
 .B Command Mode
-Execute vimb commands from the builtin inputbox (commandline).
-
-.SS Submodes
+Execute ex-commands from the builtin inputbox (commandline).
 .TP
 .B Pass-Through Mode
-In Pass-Through mode only the <ctrl-c> and <esc> keybindings are interpreted
+In Pass-Through mode only the `<Esc>` and `<C-[>` keybindings are interpreted
 by vimb, all other keystrokes are given to the webview to handle them. This
 allows to use websites that uses keybindings itself, that might be swallowed
 by vimb else.
-
-.SH COMMANDS
-Commands are a central part in vimb. They are used for nearly all things
-that could be done with this browser. Commands allow to set config variables,
-to assign keybindings and much more. Also the keybindings are only shortcut
-for the commands itself.
-
-Commands can be called in Input Mode from the inputbox in the way like
-":[count]command[ param[=value]]". But some commands are not available in
-Command Mode and therefore not callable directly. To use them too, they must be
-bound to the keybinding.
-
-.SS Open
+.SH NORMAL MODE COMMANDS
+Some of the Normal Model Commands can have a numeric count to multiply the
+effect of the command. If a command supports the count this is shown as
+\fB[N]\fP.
+.SS General
 .TP
-.BI "open [" URI "], o [" URI ]
-Open the give \fIURI\fP into current window. If \fIURI\fP is empty the
-configured 'home-page' is opened.
+.B :
+Start Command Mode and print `:' to the input box.
 .TP
-.BI "tabopen [" URI "], t [" URI ]
-Open the give \fIURI\fP into a new window. If \fIURI\fP is empty the
-configured 'home-page' is opened.
+.B g\-i
+Set cursor to the first editable element in the page and switch to Input
+Mode.
 .TP
-.B (tab)open-closed
-Open the last closed page.
-.TP
-.B (tab)open-clipboard, (t)oc
-Open the url from clipboard.
-
-.SS Input
-Switches the browser into Command Mode and prefill the inputbox on th bottom of
-the browser with various prefilled content.
-.TP
-.BI "input [" TEXT "], in [" TEXT ]
-Writes
-.I TEXT
-into to inputbox and switch to Command Mode. If no
-.I TEXT
-is given, print ':' into the inputbox.
-.TP
-.BI "inputuri [" "TEXT" "]"
-Writes
-.I TEXT\fR{URI}
-into to inputbox where {URL} is the current used url. This can be used to add
-keybindings to generate the tabopen command with current uri prefilled. If
-.I TEXT
-is not given use ':' instead.
-
-.SS Navigate
-Following commands are used to navigate within the browser history.
-.TP
-.BI [ N "]back, [" N "]ba"
-Move
-. I N
-steps back in browser history.
-.TP
-.BI [ N "]forward, [" N "]fo"
-Move \fIN\fP steps back in browser history.
-.TP
-.B reload, re
-Reload the current viewed url.
-.TP
-.B reload!, re!
-Discard any caches and reload the current viewed url.
-.TP
-.B stop, st
-Stop loading the current url.
-.TP
-.BI [ N "]descent"
-Go to the \fIN\fPth descendent directory of the current opened.
-.TP
-.B descent!
-Go to the domain of the current opened page.
-
-.SS Scroll
-Following commands are used to scroll ad jump within the current view.
-.TP
-.BI [ N "]jumpleft"
-Scrolls the current view \fIN\fP steps to the left.
-.br
-If \fIN\fP is given jump to \fIN\fR% of the page from the left.
-.TP
-.BI [ N "]jumpright"
-Scrolls the current view to the right.
-.br
-If \fIN\fP is given jump to \fIN\fP% of the page from the left.
-.TP
-.BI [ N "]jumptop"
-Scrolls the current view to the top of page.
-.br
-If \fIN\fP is given, scroll to \fIN\fR% of the page.
-.TP
-.BI [ N "]jumpbottom"
-Scrolls the current view to the end of page.
-.br
-If \fIN\fP is given, scroll to \fIN\fR% of the page.
-.TP
-.BI [ N "]pageup"
-Scroll up the page \fIN\fP screens.
-.TP
-.BI [ N "]pagedown"
-Scroll down the page \fIN\fP screens.
-.TP
-.BI [ N "]halfpageup"
-Scroll up the page \fIN\fP half screens.
-.TP
-.BI [ N "]halfpagedown"
-Scroll down the page \fIN\fP half screens.
-.TP
-.BI [ N "]scrollleft"
-Scroll the page \fIN\fP times the "scrollstep" to the left.
-.TP
-.BI [ N "]scrollright"
-Scroll the page \fIN\fP times the "scrollstep" to the right.
-.TP
-.BI [ N "]scrollup"
-Scroll the page \fIN\fP times the "scrollstep" to the top.
-.TP
-.BI [ N "]scrolldown"
-Scroll the page \fIN\fP times the "scrollstep" to the end.
-
-.SS Keybinding
-To bind a command to a key sequence use the {n,i,c}map command. To map a
-keysequence to a command, use this format "nmap {[modkey]key}={command}[ params]".
-
-The modkey is a single simple char like "g". The key can also contain
-special keys and modifiers and is given in format like "<ctrl\-o>", "<tab>",
-"<shift\-tab>", "<up>", "<right>" or also a simple char like "G".
-
-Example:
-.br
-"nmap <shift\-?>=input :foo" to write :foo into input box and switch to Command Mode.
-.br
-"cunmap <shift\-tab>" To remove this keybinding use.
-
-If a keybinding is added, for the same key-sequence like another keybinding,
-the previous keybinding will be removed.
-.TP
-.B nmap
-Add a keybinding used in Normal Mode.
-.TP
-.B imap
-Add a keybinding used in Input Mode.
-.TP
-.B cmap
-Add a keybinding used in Command Mode.
-.TP
-.B nunmap
-Remove a Normal Mode keybinding.
-.TP
-.B iunmap
-Remove a Input Mode keybinding.
-.TP
-.B cunmap
-Remove a Command Mode keybinding.
-
-.SS Hints
-The hinting is the way to do what you would do with the mouse in common
-mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
-is started, the relevant elements on the page will be marked by numbered
-labels. Hints can be selected by using <tab> or <ctrl-tab>, by typing the
-number of the label, or filtering the elements by some text that is part of
-the hinted element (like url, link text, button label) and any combination of
-this methods. If <enter> is pressed, the current active hint will be fired. If
-only one possible hint remains, this will be fired automatically.
-.TP
-Syntax: ":hint-{TYPE} [\fIQUERY\fP]"
-If \fIQUERY\fP is given, this is used to filter hints contents initially. Note
-that the \fIQUERY\fP can only be used to filter the hints by their content and
-not by their numeric hint label. On the other hand \fIQUERY\fP is the only way
-to match hints with numeric content.
-.TP
-.BI "hint-link [" QUERY "], hint-link-new [" QUERY ]
-Start hinting to open link into current or new window.
-.TP
-.BI "hint-input-open [" QUERY "], hint-input-tabopen [" QUERY ]
-Start hinting to fill the inputbox with ":open {hintedLinkUrl}" or ":tabopen
-{hintedLinkUrl}".
-.TP
-.BI "hint-yank [" QUERY ]
-Start hinting to yank the hinted link url into the primary and secondary
-clipboard.
-.TP
-.BI "hint-image-open [" QUERY "], hint-image-tabopen [" QUERY ]
-Start hinting to open images into current or new window.
-.TP
-.BI "hint-editor [" QUERY "]"
-Start hinting to open inputboxes or textareas with external editor.
-.TP
-.BI "hint-save [" QUERY "]"
-Start hinting to download hinted links into configured download directory.
-.TP
-.BI "hint-queue-push [" QUERY "]"
-Start hinting to push hinted URI into the read it later queue. If vimb has
-been compiled with QUEUE feature.
-.TP
-.BI "hint-queue-unshift [" QUERY "]"
-Start hinting to push hinted URI to begin of read it later queue. If vimb
-has been compiled with QUEUE feature.
-
-.SS Yank
-.TP
-.B yank-uri, yu
-Yank the current url to the primary and secondary clipboard.
-.TP
-.B yank-selection, ys
-Yank the selected text into the primary and secondary clipboard.
-
-.SS Shortcuts
-Shortcuts allows to open URL build up from a named template with additional
-parameters. If a shortcut named 'dd' is defined, you can use it with `:open dd
-list of parameters' to open the generated URL.
-
-Shortcuts are a good to use with search engines where the URL is nearly the
-same but a single parameter is user defined.
-.TP
-.BI "shortcut-add " "SHORTCUT" "=" "URI"
-Adds a shortcut with the \fISHORTCUT\fP and \fIURI\fP template. The \fIURI\fP
-can contain multiple placeholders $0-$9 that will be filled by the parameters
-given when the shortcut is called. The parameters given when the shortcut is
-called will be split into as many parameters like the highest used
-placeholder.
-
-Example 1: shortcut-add dl=https://duckduckgo.com/lite/?q=$0 to setup a
-search engine. Can be called by `:open dl my search phrase'.
-
-Example 2: shortcut-add gh=https://github.com/$0/$1 to build urls from given
-parameters. Can be called `:open gh fanglingsu vimb'.
-.TP
-.BI "shortcut-remove " "SHORTCUT"
-Remove the search engine to the given \fISHORTCUT\fP.
-.TP
-.BI "shortcut-default " "SHORTCUT"
-Set the shortcut for given \fISHORTCUT\fP as the default. It doesn't matter if
-the \fISHORTCUT\fP is already in use or not to be able to set it.
-
-.SS Configuration
-.TP
-.BI "set " VAR = VALUE
-Set configuration values named by
-.IR VAR .
-To set boolean variable you should use 'on', 'off' or 'true'
-and 'false'. Colors are given as hexadecimal value like '#f57700'.
-.TP
-.BI "set " VAR ?
-Show the current set value of variable
-.IR VAR .
-.TP
-.BI "set " VAR !
-Toggle the value of boolean variable \fIVAR\fP and display the new set value.
-
-.SS Zoom
-.TP
-.BI [ N "]zoomin, [" N "]zi"
-Zoom \fIN\fP steps in of the current page - effects only the text.
-.TP
-.BI [ N "]zoomout, [" N "]zo"
-Zoom \fIN\fP steps out of the current page - effects only the text.
-.TP
-.BI [ N "]zoominfull, [" N "]zif"
-Zoom \fIN\fP steps in of the current page - effecting all elements.
-.TP
-.BI [ N "]zoomoutfull, [" N "]zof"
-Zoom \fIN\fP steps out of the current page - effecting all elements.
-.TP
-.B zoomreset, zr
-Reset the zoomlevel to the default value.
-
-.SS History
-.TP
-.B hist-prev, hist-next"
-Prints the previous or next cammand or search query from history into
-inputbox. If there is already text in the input box this will be used to get
-history items. A command is not a internal command, but every string entered
-into inputbox that begins with \fI[:/?]\fP. So the history contains real
-commands and search queries.
-
-.SS Bookmark
-.TP
-.BI "bookmark-add [" TAGS "], bma [" TAGS ]
-Save the current opened uri with \fITAGS\fP to the bookmark file.
-.TP
-.BI "bookmark-remove [" URI "], bmr [" URI ]
-Removes all bookmarks for given \fIURI\fP or if not given the current opened
-page.
-
-.SS Queue
-The queue allows to mark URLs for later reding (something like a read it later
-list). This list is shared between the single instances of vimb. Only
-available if vimb has been compiled with QUEUE feature.
-.TP
-.BI "queue-push [" URI ]
-Push \fIURI\fP or if not given current URI to the end of the queue.
-.TP
-.BI "queue-unshift [" URI ]
-Push \fIURI\fP or if not given current URI to the beginning of the queue.
-.TP
-.B queue-pop
-Open the oldest queue entry in current browser window and remove it from the
-queue.
-.TP
-.B queue-clear
-Removes all entries from queue.
-
-.SS Misc
-.TP
-.B next, n, prev, p
-This are wrapper commands to start completion and to step through the
-completion items, or to focus previous or next hints if hinting is active.
-
-.TP
-.BI "run [" "COMMAND LIST" ]
-Run is a command, that was introduced to have the ability to run multiple
-other commands with a single call. Everything after the `run' is interpreted
-as a `|' seperated list of commands and parameters. The run command allows to
-use fancy keybindings that set several config settings with only on keypress.
-
-Format:
-":run [count]command[ param[=value]]|[count]command[ param[=value]]|..."
-
-Example:
-":run set input-bg-normal=#ff0 | set input-fg-normal=#f0f | 5pagedown"
-
-.TP
-.B pass-through
+.B CTRL\-Z
 Switch vimb into Pass-Through Mode.
-
-.TP
-.BI "shellcmd " CMD
-Runs given shell \fICMD\fP syncron and print the output into inputbox. The
-\fICMD\fP can contain multiple '%' chars that are expanded to the current
-opened uri.
-
-Example:
-`:shellcmd echo "`date` %" >> myhistory.txt'
-.TP
-.BI [ N "]search-forward [" QUERY "], [" N "]search-backward [" QUERY ]
-Search forward or backward for the \fIN\fP'th occurrence of \fIQUERY\fP in
-current page.
-.TP
-.BI [ N "]search-selection-forward, [" N "]search-selection-backward
-Search forward or backward for the \fIN\fP'th occurrence of the selected text.
-.TP
-.BI "save [" PATH "]"
-Download current opened page into configured download directory. If \fIPATH\fP
-is given, download under this file name or path. Possible value for PATH are
-`page.html', `subdir/img1.png', `~/downlod.html' or absolute pathes
-`/tmp/file.html'.
-.TP
-.B inspect
-Toggles the webinspector for current page. This is only available if the config
-"webinspector" is enabled.
-.TP
-.B quit, q
-Close the browser.
-.TP
-.B focus-input
-Set the cursor to the first found editable element on the page and switch
-vimb into Input Mode.
-.TP
-.B source
-Toggle between normal view and source view for the current page.
-.TP
-.BI eval " JAVASCRIPT" ", e" " JAVASCRIPT"
-Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated
-value.
-
-Example:
-":eval document.cookie"
-
-.SH COMPLETIONS
-The completions are triggered by pressing `<tab>` or `<shift-tab>` in the
-activated inputbox. Depending of the current inserted content different
-complations are started. The complation takes additional typed chars to filter
-the completion list that is shown.
-.TP
-.B commands
-The completion for commands are started when at least `:` is shown in the
-inputbox. If there are given some sore chars the completion will lookup those
-commands that starts with the given chars.
-.TP
-.B settings
-The setting name completion ist started if at least `:set ` is shown in
-inputbox and does also match settings that begins with slready typed setting
-prefix.
-.TP
-.B history
-The history of URLs is shown for the `:open ` and `:tabopen ` commands. This
-completion looks up for every given word in the history url and titles. Only
-those history items are shown, where the title or url contains all tags.
-
-Example:
-":open foo bar<tab>" will complete only URLs that contain the words foo and
-bar.
-.TP
-.B bookmarks
-The bookmark completion is similar to the history completion, but does match
-only the tags of the bookmarks. The bookmark completion ist started by `:open
-\fB!\fP` or `:tabopen \fB!\fP` and does a prefix search for all given words in
-the bookmark tags.
-
-Example:
-":open \fB!\fPfoo ba" will match all bookmark that have the tags "foo" or
-"foot" and tags starting with "ba" like "ball".
-.TP
-.B boomark tags
-The boomark tag completion allows to insert already used bookmars for the
-`:bma ` or `:bookmark-add ` commands.
-.TP
-.B search
-The search completion allow to get a filtered list of already done searches.
-This completion starts by `/` or `?` in inputbox and performs a prefix
-comparison for further typed chars.
-
-.SH KEYBINDINGS
-If the commands used by a keybinding, the keybindings can also user together
-with a count. The count hase to typed just before the keybinding.
-
-Example:
-"25G" to got to 25% of the page.
-.TP
-.B esc
-Got back to Normal Mode indipendent from current mode.
-
-.SS NORMAL MODE
 .TP
 .B g\-f
 Toggle show html source of current page.
@@ -487,42 +67,30 @@ Toggle show html source of current page.
 .B g\-F
 Opend the Web Inspector for current page.
 .TP
-.B g\-i
-Set cursor to the first editable element in the page and switch to Input
-Mode.
+.B CTRL\-V
+Pass the next key press directly to gtk.
 .TP
-.B :
-Start Command Mode and print `:' to the input box.
-.TP
-.B /
-Start Command Mode and print `/' to inputbox to start searching forward.
-.TP
-.B ?
-Start Command Mode and print `?' to inputbox to start searching backward.
-.TP
-.B *
-Search forward for current selected text.
-.TP
-.B #
-Search backward for current selected text.
+.B CTRL\-Q
+Quit the browser.
+.SS Navigation
 .TP
 .B o
 Start Command Mode and print `:open ' to input box.
 .TP
 .B O
-Start Command Mode and print `:open CURRENT_URI' to input box.
+Start Command Mode and print `:open URI' to input box.
 .TP
 .B t
 Start Command Mode and print `:tabopen ' to input box.
 .TP
 .B T
-Start Command Mode and print `:tabopen CURRENT_URI' to input box.
+Start Command Mode and print `:tabopen URI' to input box.
 .TP
 .B g\-h
 Opend the configured home-page.
 .TP
 .B g\-H
-Opend the configured home-page into new window.
+Open the configured home-page into new window.
 .TP
 .B u
 Open the last closed page.
@@ -530,51 +98,57 @@ Open the last closed page.
 .B U
 Open the last closed page into a new window.
 .TP
-.B ctrl\-p
+.B CTRL\-P
 Open the oldest entry from read it later queue in current browser window, if
 vimb has been compiled with QUEUE feature.
 .TP
-.B ctrl\-q
-Quit the browser.
+.B p
+Open the url out of the clipboard.
 .TP
-.BI [ N ]ctrl\-o
+.B P
+Open the url out of the clipboard into new window.
+.TP
+.BI [ N ]UP
 Go back \fIN\fP steps in the browser history.
 .TP
-.BI [ N ]ctrl\-i
+.BI [ N ]DOWN
 Go forward \fIN\fP steps in the browser history.
 .TP
-.BI [ N ]gu
+.BI [ N ]g\-u
 Go to the \fIN\fPth descendent directory of the current opened URL.
 .TP
-.B gU
+.B g\-U
 Go to the domain of the current opened page.
 .TP
 .B r
 Reload the website.
 .TP
 .B R
-Reload the website witout using caches.
+Reload the website without using caches.
 .TP
-.B C
+.B CTRL\-C
 Stop loading the current page.
+.SS Motion
 .TP
-.BI [ N ]ctrl\-f
+.BI [ N ]CTRL\-F
 Scroll \fIN\fP pages down.
 .TP
-.BI [ N ]ctrl\-b
+.BI [ N ]CTRL\-B
 Scroll \fIN\fP pages up.
 .TP
-.BI [ N ]ctrl\-d
+.BI [ N ]CTRL\-D
 Scroll \fIN\fP half pages down.
 .TP
-.BI [ N ]ctrl\-u
+.BI [ N ]CTRL\-U
 Scroll \fIN\fP half pages up.
 .TP
 .BI [ N ]g\-g
-Scroll to the top of the current page. Or if \fIN\fP is given to \fIN\fP% of the page.
+Scroll to the top of the current page. Or if \fIN\fP is given to \fIN\fP% of
+the page.
 .TP
 .BI [ N ]G
-Scroll to the bottom of the current page. Or if \fIN\fP is given to \fIN\fP% of the page.
+Scroll to the bottom of the current page. Or if \fIN\fP is given to \fIN\fP%
+of the page.
 .TP
 .BI [ N ]0
 Scroll \fIN\fP steps to the left of current page.
@@ -593,53 +167,101 @@ Scroll page \fIN\fP steps down.
 .TP
 .BI [ N ]k
 Scroll page \fIN\fP steps up.
+.SS Hinting
+The hinting is the way to do what you would do with the mouse in common
+mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
+is started, the relevant elements on the page will be marked by numbered
+labels. Hints can be selected by using <Tab>, <C-I> or <C-Tab>, <C-O>, by
+typing the number of the label, or filtering the elements by some text that is
+part of the hinted element (like url, link text, button label) and any
+combination of this methods. If <enter> is pressed, the current active hint
+will be fired. If only one possible hint remains, this will be fired
+automatically.
+
+.BI Syntax: " ;{mode}{hint}"
+
+Start hint mode. Different elements depending on \fImode\fP are highlighted
+and numbered. Elements can be selected either by typing their number, or by
+typing part of their text (\fIhint\fP) to narrow down the result. When an
+element has been selected, it is automatically clicked or used (depending on
+\fImode\fP) and hint mode ends.
+.RS 0
+Following keys have special meanings in Hints mode:
+.IP \fB<CR>\fP
+Selects the first highlighted element, or the current focused.
+.IP "\fB<Tab>\fP"
+Moves the focus to the next hint element.
+.IP "\fB<S-Tab>\fP"
+Moves the focus to the previous hint element.
+.IP "\fB<Esc>, CTRL\-C, CTRL\-[\fP"
+Exits Hints mode without selecting an element
+.RE
 .TP
 .B f
-Start hinting for links.
+Is an alias for the \fB;o\fP hint mode.
 .TP
 .B F
-Start hinting for links to open them in new window.
+Is an alias for the \fB;t\fP hint mode.
 .TP
 .B ;\-o
-Start hinting to build :open command with hinted source.
+Open hint's location in the current window.
 .TP
 .B ;\-t
-Start hinting to build :tabopen command with hinted source.
-.TP
-.B ;\-y
-Start hinting to yank hinted element URI into clipboard.
-.TP
-.B ;\-i
-Start hinting to open images.
-.TP
-.B ;\-I
-Start hinting to open images into new window.
-.TP
-.B ;\-e
-Start hinting to open editable form fileds with external editor.
+Open hint's location in a new window.
 .TP
 .B ;\-s
-Start hinting to download the linkes resource.
+Saves the hint's destination under the configured `download-path'.
+.TP
+.B ;\-O
+Generate an `:open' prompt with hint's URL.
+.TP
+.B ;\-T
+Generate an `:tabopen' prompt with hint's URL.
+.TP
+.B ;\-e
+Open the configured editor (`editor-command') with the hinted form element's
+content. If the file in editor is saved and the editor is closed, the file
+content will be put back in the form field.
+.TP
+.B ;\-i
+Open hinted image into current window.
+.TP
+.B ;\-I
+Open hinted image into new window.
 .TP
 .B ;\-p
-If vimb has been compiled with QUEUE feature. Start hinting to push hinted
-URI into queue.
+Push the hint's URL to the end of the read it later queue like the `:qpush'
+command. This is only available if vimb was compiled with QUEUE feature.
 .TP
 .B ;\-P
-If vimb has been compiled with QUEUE feature. Start hinting to push hinted
-URI to the beginning of the queu.
+Push the hint's URL to the beginning of the read it later queue like the
+`:qunshift' command. This is only available if vimb was compiled with QUEUE
+feature.
 .TP
-.B y
-Yank the URI or current page into clipboard.
+.B ;\-y
+Yank hint's destination location into primary and secondary clipboard.
+.SS Searching
 .TP
-.B Y
-Yank the current selection into clipboard.
+.BI / QUERY ", ?" QUERY
+Start searching for \fIQUERY\fP in the current page. \fI/\fP start search
+forward, \fI?\fP in backward direction.
 .TP
-.B p
-Open the url out of the clipboard.
+.B *, #
+Start searching for the current selected text, or if no text is selected for
+the content of the primary or secondary clipboard. \fI*\fP start the search in
+forward direction and \fI#\fP in backward direction.
+
+Note that this commands will yank the text selection into the clipboard and
+may remove other content from there!
 .TP
-.B P
-Open the url out of the clipboard into new window.
+.BI [ N ]n
+Search for \fIN\fPnth next search result depending on current serach
+direction.
+.TP
+.BI [ N ]N
+Search for \fIN\fPnth previous search result depending on current serach
+direction.
+.SS Zooming
 .TP
 .BI [ N ]z\-i
 Zoom-In the text of the page by \fIN\fP steps.
@@ -648,49 +270,287 @@ Zoom-In the text of the page by \fIN\fP steps.
 Zoom-Out the text of the page by \fIN\fP steps.
 .TP
 .BI [ N ]z\-I
-Fullcontent Zoom-In the page by \fIN\fP steps.
+Full-Content Zoom-In the page by \fIN\fP steps.
 .TP
 .BI [ N ]z\-O
-Fullcontent Zoom-Out the page by \fIN\fP steps.
+Full-Content Zoom-Out the page by \fIN\fP steps.
 .TP
 .B z\-z
 Reset Zoom.
+.SS Yank
 .TP
-.BI [ N ]n
-Search for \fIN\fPnth next search result.
+.B y
+Yank the URI or current page into clipboard.
 .TP
-.BI [ N ]N
-Search for \fIN\fPnth previous search result.
+.B Y
+Yank the current selection into clipboard.
+.SH COMMAND MODE
+.SS Command Line Editing
 .TP
-.B ctrl\-z
-Switch vimb into Pass-Through Mode.
+.B <Esc>, CTRL\-[, CTRL-C
+Ignore all typed content and switch back to normal mode.
+.TP
+.B <CR>
+Submit the entered ex command or search query to run it.
+.TP
+.B CTRL\-H
+Deletes the char before the cursor.
+.TP
+.B CTRL\-W
+Deletes the last word before the cursor.
+.TP
+.B CTRL\-U
+Remove everything between cursor and prompt.
+.TP
+.B CTRL\-B
+Moves the cursor direct behind the prompt `:'.
+.TP
+.B CTRL\-E
+Moves the cursor after the char in inputbox.
+.TP
+.B CTRL\-V
+Pass the next key press directly to gtk.
+.SS Command Line History
+.TP
+.B <Tab>
+Start completion of the content in inputbox in forward direction.
+.TP
+.B <S-Tab>
+Start completion of the content in inputbox in backward direction.
+.TP
+.B <Up>
+Step backward in the command history.
+.TP
+.B <Down>
+Step forward in the command history.
+.SS Open
+.TP
+.BI ":o[pen] [" URI ]
+Open the give \fIURI\fP into current window. If \fIURI\fP is empty the
+configured 'home-page' is opened.
+.TP
+.BI ":t[abopen] [" URI ]
+Open the give \fIURI\fP into a new window. If \fIURI\fP is empty the
+configured 'home-page' is opened.
+.SS Key Mapping
+Key mappings allow to alter actions of key presses. Each key mapping is
+associated with a mode and only has effect when the mode is active. Following
+commands allow the user to substitute one sequence of key presses by another.
 
-.SS COMMAND MODE
-.TP
-.B tab
-Complete different sources in the inputbox or if hinting is active, focus next
-hint.
-.TP
-.B shift\-tab
-Complete backward different sources in the inputbox or if hinting is active,
-focus previous hint.
-.TP
-.B up
-Step through history backward.
-.TP
-.B down
-Step through history forward.
+.BI Syntax: " :{m}map {lhs} {rhs}"
+Note that the \fIlhs\fP ends with the first found space. If you want to use
+space also in the {lhs} you have to escape this with a single `\\' like shown
+in the examples.
+.RS 0
+Standard key mapping commands are provided for these modes \fIm\fP:
+.IP \fBn\fP
+Normal mode: When browsing normally.
+.IP \fBi\fP
+Insert mode: When interacting with text fields on a website.
+.IP \fBc\fP
+Command Line mode: When typing into the vimbs command line.
+.RE
+Most keys in key sequences are represented simply by the character that you
+see on the screen when you type them. However, as a number of these characters
+have special meanings, and a number of keys have no visual representation, a
+special notation is required.
 
-.SS INPUT MODE
+As special key names have the format \fI<...>\fP. Following special keys can
+be used <Left>, <Up>, <Right>, <Down> for the cursor keys, <Tab>, <Esc>, <CR>,
+<F1>-<F12> and <C-A>-<C-Z>.
 .TP
-.B ctrl\-t
-If the current active form element is an inputbox or textarea, the content is
-copied to temporary file and the file openen with the configured external
-editor (setting `editor-command').
+.BI ":nm[ap] {" lhs "} {" rhs }
 .TP
-.B ctrl\-z
-Switch vimb into Pass-Through Mode.
+.BI ":im[ap] {" lhs "} {" rhs }
+.TP
+.BI ":cm[ap] {" lhs "} {" rhs }
+Map the key sequence \fIlhs\fP to \fIrhs\fP for the modes where the map
+command applies. The result, including \fIrhs\fP, is then further scanned for
+mappings. This allows for nested and recursive use of mappings.
 
+.RS
+Example:
+.IP ":cmap <C-G>h /home/user/downloads/"
+Adds a keybind to insert a file path into the input box. This could be useful
+for the `:save' command that could be used as ":save ^Gh".
+.IP ":nmap <F1> :set scripts=on<CR>:open !glib<Tab><CR>"
+This will enable scripts and lookup the first bookmarked URI with the tag
+`glib' and open it immediately if F1 key is pressed.
+.IP ":nmap \\\\\ \\\\\  50G;o"
+Example which mappes two spaces to go to 50% of the page, start hinting mode.
+.RE
+.TP
+.BI ":nn[oremap] {" lhs "} {" rhs }
+.TP
+.BI ":ino[remap] {" lhs "} {" rhs }
+.TP
+.BI ":cno[remap] {" lhs "} {" rhs }
+Map the key sequence \fIlhs\fP to \fIrhs\fP for the mode where the map command
+applies. Disallow mapping of \fIrhs\fP, to avoid nested and recursive
+mappings. Often used to redefine a command.
+.TP
+.BI ":nu[nmap] {" lhs }
+.TP
+.BI ":iu[nmap] {" lhs }
+.TP
+.BI ":cu[nmap] {" lhs }
+Remove the mapping of \fIlhs\fP for the applicable mode.
+.SS Bookmarks
+.TP
+.BI ":bma [" TAGS ]
+Save the current opened uri with \fITAGS\fP to the bookmark file.
+.TP
+.BI ":bmr [" URI ]
+Removes all bookmarks for given \fIURI\fP or if not given the current opened
+page.
+.SS Shortcuts
+Shortcuts allows to open URL build up from a named template with additional
+parameters. If a shortcut named 'dd' is defined, you can use it with `:open dd
+list of parameters' to open the generated URL.
+
+Shortcuts are a good to use with search engines where the URL is nearly the
+same but a single parameter is user defined.
+.TP
+.BI ":shortcut-add " "SHORTCUT" "=" "URI"
+Adds a shortcut with the \fISHORTCUT\fP and \fIURI\fP template. The \fIURI\fP
+can contain multiple placeholders $0-$9 that will be filled by the parameters
+given when the shortcut is called. The parameters given when the shortcut is
+called will be split into as many parameters like the highest used
+placeholder.
+
+.RS
+Examples:
+.IP ":shortcut-add dl=https://duckduckgo.com/lite/?q=$0"
+to setup a search engine. Can be called by `:open dl my search phrase'.
+.IP ":shortcut-add gh=https://github.com/$0/$1"
+to build urls from given parameters. Can be called `:open gh fanglingsu vimb'.
+.RE
+.TP
+.BI ":shortcut-remove " "SHORTCUT"
+Remove the search engine to the given \fISHORTCUT\fP.
+.TP
+.BI ":shortcut-default " "SHORTCUT"
+Set the shortcut for given \fISHORTCUT\fP as the default. It doesn't matter if
+the \fISHORTCUT\fP is already in use or not to be able to set it.
+.SS Settings
+.TP
+.BI ":se[t] " VAR = VALUE
+Set configuration values named by
+.IR VAR .
+To set boolean variable you should use 'on', 'off' or 'true'
+and 'false'. Colors are given as hexadecimal value like '#f57700'.
+.TP
+.BI ":se[t] " VAR ?
+Show the current set value of variable
+.IR VAR .
+.TP
+.BI ":se[t] " VAR !
+Toggle the value of boolean variable \fIVAR\fP and display the new set value.
+.SS Queue
+The queue allows to mark URLs for later reding (something like a read it later
+list). This list is shared between the single instances of vimb. Only
+available if vimb has been compiled with QUEUE feature.
+.TP
+.BI ":qpu[sh] [" URI ]
+Push \fIURI\fP or if not given current URI to the end of the queue.
+.TP
+.BI ":qu[nshift] [" URI ]
+Push \fIURI\fP or if not given current URI to the beginning of the queue.
+.TP
+.B :qp[op]
+Open the oldest queue entry in current browser window and remove it from the
+queue.
+.TP
+.B :qc[lear]
+Removes all entries from queue.
+.SS Misc
+.TP
+.BI ":sh[ellcmd] " CMD
+Runs given shell \fICMD\fP syncron and print the output into inputbox. The
+\fICMD\fP can contain multiple '%' chars that are expanded to the current
+opened uri. Also the '~/' to home dir expansion is available.
+
+Example: :shellcmd echo "`date` %" >> myhistory.txt
+.TP
+.BI ":s[ave] [" PATH "]"
+Download current opened page into configured download directory. If \fIPATH\fP
+is given, download under this file name or path. Possible value for PATH are
+`page.html', `subdir/img1.png', `~/downlod.html' or absolute paths
+`/tmp/file.html'.
+.B :q[uit]
+Close the browser.
+.TP
+.BI :e[val] " JAVASCRIPT"
+Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated
+value.
+
+Example:
+":eval document.cookie"
+.TP
+.BI ":no[rmal][!] [" CMDS ]
+Execute normal mode commands \fICMDS\fP. This makes it possible to execute
+normal mode commands typed on the input box. If the \fI!\fP is given, mappings
+will not be used.
+
+Example:
+":set scripts!|no! R"
+.TP
+.B :ha[rdcopy]
+Print current document. Open a GUI dialog where you can select the printer,
+number of copies, orientation, etc.
+.SH INPUT MODE
+.TP
+.B <Esc>, CTRL\-[
+Switch back to normal mode.
+.TP
+.B CTRL\-T
+Open configured editor with content of current form field.
+.TP
+.B CTRL\-Z
+Enter the pass-through mode.
+.SH COMPLETIONS
+The completions are triggered by pressing `<Tab>` or `<shift-tab>` in the
+activated inputbox. Depending of the current inserted content different
+completions are started. The completion takes additional typed chars to filter
+the completion list that is shown.
+.TP
+.B commands
+The completion for commands are started when at least `:` is shown in the
+inputbox. If there are given some sore chars the completion will lookup those
+commands that starts with the given chars.
+.TP
+.B settings
+The setting name completion is started if at least `:set ` is shown in
+inputbox and does also match settings that begins with already typed setting
+prefix.
+.TP
+.B history
+The history of URLs is shown for the `:open ` and `:tabopen ` commands. This
+completion looks up for every given word in the history url and titles. Only
+those history items are shown, where the title or url contains all tags.
+
+Example:
+":open foo bar<Tab>" will complete only URLs that contain the words foo and
+bar.
+.TP
+.B bookmarks
+The bookmark completion is similar to the history completion, but does match
+only the tags of the bookmarks. The bookmark completion ist started by `:open
+\fB!\fP` or `:tabopen \fB!\fP` and does a prefix search for all given words in
+the bookmark tags.
+
+Example:
+":open \fB!\fPfoo ba" will match all bookmark that have the tags "foo" or
+"foot" and tags starting with "ba" like "ball".
+.TP
+.B boomark tags
+The boomark tag completion allows to insert already used bookmars for the
+`:bma ` commands.
+.TP
+.B search
+The search completion allow to get a filtered list of already done searches.
+This completion starts by `/` or `?` in inputbox and performs a prefix
+comparison for further typed chars.
 .SH FILES
 .I $XDG_CONFIG_HOME/vimb/config
 .RS
@@ -716,15 +576,14 @@ box.
 .I $XDG_CONFIG_HOME/vimb/search
 .RS
 This file holds the history of search queries.
-box.
 .RE
 .I $XDG_CONFIG_HOME/vimb/bookmark
 .RS
-Holds the bookmarks saved with command `bookmark-add'.
+Holds the bookmarks saved with command `bma'.
 .RE
 .I $XDG_CONFIG_HOME/vimb/queue
 .RS
-Holds the read it later queue filled by `hint-queue-push' or `queue-push' if
+Holds the read it later queue filled by `qpush' if
 vimb has been compiled with QUEUE feature.
 .RE
 .I $XDG_CONFIG_HOME/vimb/scripts.js
@@ -737,7 +596,6 @@ that is opened.
 File for userdefined css styles. These file is used if the config variable
 `stylesheet' is enabled.
 .RE
-
 .SH ENVIRONMENT
 .TP
 .B HOME
@@ -747,10 +605,9 @@ directory. If not set the entry out of the passwd file will be used instead.
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
 `proxy' is enabled, this will be used as http proxy.
-
 .SH "REPORTING BUGS"
-Report bugs to the main project page on
-.IR https://github.com/fanglingsu/vimb/issues .
-
+Report bugs to the main project page on https://github.com/fanglingsu/vimb/issues
+.br
+or on the mailing list https://lists.sourceforge.net/lists/listinfo/vimb-users.
 .SH AUTHOR
 Daniel Carl

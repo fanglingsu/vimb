@@ -14,8 +14,6 @@ the [vimb project page][vimb].
   - allow to inspect the current set values of variables `:set varname?`
   - allow to toggle boolean variables with `:set varname!`
 - keybindings for each browser mode assignable
-- the center of `vimb` are the commands that can be called from inputbox or
-  via keybinding
 - history for
   - commands
   - search queries

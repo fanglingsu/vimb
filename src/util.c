@@ -131,7 +131,7 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     for (int i = len - 1; i >= 0; i--) {
         line = lines[i];
         g_strstrip(line);
-        if (*line == '\0') {
+        if (!*line) {
             continue;
         }
 
@@ -217,7 +217,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
 
 char *util_strcasestr(const char *haystack, const char *needle)
 {
-    unsigned char c1, c2;
+    guchar c1, c2;
     int i, j;
     int nlen = strlen(needle);
     int hlen = strlen(haystack) - nlen + 1;

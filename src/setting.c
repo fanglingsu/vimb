@@ -37,6 +37,7 @@ static gboolean status_font(const Setting *s, const SettingType type);
 static gboolean input_style(const Setting *s, const SettingType type);
 static gboolean completion_style(const Setting *s, const SettingType type);
 static gboolean strict_ssl(const Setting *s, const SettingType type);
+static gboolean strict_focus(const Setting *s, const SettingType type);
 static gboolean ca_bundle(const Setting *s, const SettingType type);
 static gboolean home_page(const Setting *s, const SettingType type);
 static gboolean download_path(const Setting *s, const SettingType type);
@@ -44,13 +45,14 @@ static gboolean proxy(const Setting *s, const SettingType type);
 static gboolean user_style(const Setting *s, const SettingType type);
 static gboolean history_max_items(const Setting *s, const SettingType type);
 static gboolean editor_command(const Setting *s, const SettingType type);
+static gboolean timeoutlen(const Setting *s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
     /* alias,  name,               type,         func,           arg */
     {"images", "auto-load-images", TYPE_BOOLEAN, webkit, {0}},
     {"cursivfont", "cursive-font-family", TYPE_CHAR, webkit, {0}},
-    {"defaultencondig", "default-encoding", TYPE_CHAR, webkit, {0}},
+    {"defaultencoding", "default-encoding", TYPE_CHAR, webkit, {0}},
     {"defaultfont", "default-font-family", TYPE_CHAR, webkit, {0}},
     {"fontsize", "default-font-size", TYPE_INTEGER, webkit, {0}},
     {"monofontsize", "default-monospace-font-size", TYPE_INTEGER, webkit, {0}},
@@ -78,6 +80,7 @@ static Setting default_settings[] = {
     {NULL, "proxy", TYPE_BOOLEAN, proxy, {0}},
     {NULL, "cookie-timeout", TYPE_INTEGER, cookie_timeout, {0}},
     {NULL, "strict-ssl", TYPE_BOOLEAN, strict_ssl, {0}},
+    {NULL, "strict-focus", TYPE_BOOLEAN, strict_focus, {0}},
 
     {NULL, "scrollstep", TYPE_INTEGER, scrollstep, {0}},
     {NULL, "status-color-bg", TYPE_COLOR, status_color_bg, {0}},
@@ -89,6 +92,7 @@ static Setting default_settings[] = {
     {NULL, "status-sslinvalid-color-bg", TYPE_COLOR, status_color_bg, {0}},
     {NULL, "status-sslinvalid-color-fg", TYPE_COLOR, status_color_fg, {0}},
     {NULL, "status-sslinvalid-font", TYPE_FONT, status_font, {0}},
+    {NULL, "timeoutlen", TYPE_INTEGER, timeoutlen, {0}},
     {NULL, "input-bg-normal", TYPE_COLOR, input_style, {0}},
     {NULL, "input-bg-error", TYPE_COLOR, input_style, {0}},
     {NULL, "input-fg-normal", TYPE_COLOR, input_style, {0}},
@@ -204,7 +208,7 @@ gboolean setting_fill_completion(GtkListStore *store, const char *input)
     GtkTreeIter iter;
     GList *src = g_hash_table_get_keys(settings);
 
-    if (!input || input == '\0') {
+    if (!input || !*input) {
         for (GList *l = src; l; l = l->next) {
             gtk_list_store_append(store, &iter);
             gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
@@ -545,6 +549,20 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
     return true;
 }
 
+static gboolean strict_focus(const Setting *s, const SettingType type)
+{
+    if (type != SETTING_SET) {
+        if (type == SETTING_TOGGLE) {
+            vb.config.strict_focus = !vb.config.strict_focus;
+        }
+        print_value(s, &vb.config.strict_focus);
+    } else {
+        vb.config.strict_focus = s->arg.i ? true : false;
+    }
+
+    return true;
+}
+
 static gboolean ca_bundle(const Setting *s, const SettingType type)
 {
     char *value;
@@ -624,9 +642,9 @@ static gboolean proxy(const Setting *s, const SettingType type)
     if (enabled) {
         proxy = (char *)g_getenv("http_proxy");
         if (proxy != NULL && strlen(proxy)) {
-            proxy_new = g_strrstr(proxy, "http://")
+            proxy_new = g_str_has_prefix(proxy, "http://")
                 ? g_strdup(proxy)
-                : g_strdup_printf("http://%s", proxy);
+                : g_strconcat("http://", proxy, NULL);
             proxy_uri = soup_uri_new(proxy_new);
 
             g_object_set(vb.session, "proxy-uri", proxy_uri, NULL);
@@ -697,6 +715,17 @@ static gboolean editor_command(const Setting *s, const SettingType type)
     }
 
     OVERWRITE_STRING(vb.config.editor_command, s->arg.s);
+
+    return true;
+}
+
+static gboolean timeoutlen(const Setting *s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        print_value(s, &vb.config.timeoutlen);
+    } else {
+        vb.config.timeoutlen = abs(s->arg.i);
+    }
 
     return true;
 }

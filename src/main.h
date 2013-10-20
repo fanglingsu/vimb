@@ -39,6 +39,10 @@
 
 #define LENGTH(x) (sizeof x / sizeof x[0])
 
+#define CTRL(x)      ((x) ^ 0x40)
+/* check if the char x is a char with CTRL like ^C */
+#define IS_CTRL(x)   (((guchar)x) <= 0x1f)
+
 #ifdef DEBUG
 #define PRINT_DEBUG(...) { \
     fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s()\t", __FILE__, __LINE__, __func__); \
@@ -56,16 +60,11 @@
 #endif
 
 #define GET_URI() (webkit_web_view_get_uri(vb.gui.webview))
-#define CLEAN_MODE(mode) ((mode) & (VB_MODE_NORMAL|VB_MODE_COMMAND|VB_MODE_INPUT))
-#define CLEAR_INPUT() (vb_echo(VB_MSG_NORMAL, ""))
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
 
 #define OVERWRITE_STRING(t, s) {if (t) {g_free(t); t = NULL;} t = g_strdup(s);}
-
-#define IS_ESCAPE_KEY(k, s) ((k == GDK_Escape && s == 0) || (k == GDK_c && s == GDK_CONTROL_MASK))
-#define CLEAN_STATE_WITH_SHIFT(e) ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_SHIFT_MASK|GDK_CONTROL_MASK))
-#define CLEAN_STATE(e)            ((e)->state & (GDK_MOD1_MASK|GDK_MOD4_MASK|GDK_CONTROL_MASK))
+#define OVERWRITE_NSTRING(t, s, l) {if (t) {g_free(t); t = NULL;} t = g_strndup(s, l);}
 
 #define FILE_LOCK_SET(fd, cmd) \
 { \
@@ -85,7 +84,6 @@
 
 #define VB_GTK_STATE_NORMAL             GTK_STATE_FLAG_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_FLAG_ACTIVE
-#define VB_GTK_STATE_SELECTED           GTK_STATE_FLAG_SELECTED
 #define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state_flags(w, s, true))
 
 #else
@@ -101,22 +99,15 @@
 
 #define VB_GTK_STATE_NORMAL             GTK_STATE_NORMAL
 #define VB_GTK_STATE_ACTIVE             GTK_STATE_ACTIVE
-#define VB_GTK_STATE_SELECTED           GTK_STATE_SELECTED
 #define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state(w, s))
 #endif
 
 /* enums */
-typedef enum _vb_mode {
-    /* main modes */
-    VB_MODE_NORMAL        = 1<<0,
-    VB_MODE_COMMAND       = 1<<1,
-    VB_MODE_INPUT         = 1<<2,
-    /* sub modes */
-    VB_MODE_PASSTHROUGH   = 1<<3, /* normal or insert mode */
-    VB_MODE_SEARCH        = 1<<4, /* normal mode */
-    VB_MODE_COMPLETE      = 1<<5, /* command mode */
-    VB_MODE_HINTING       = 1<<6, /* command mode */
-} Mode;
+typedef enum {
+    RESULT_COMPLETE,
+    RESULT_MORE,
+    RESULT_ERROR
+} VbResult;
 
 typedef enum {
     VB_INPUT_UNKNOWN,
@@ -170,12 +161,6 @@ enum {
     VB_SCROLL_UNIT_LINE     = (1 << 3),
     VB_SCROLL_UNIT_HALFPAGE = (1 << 4)
 };
-
-typedef enum {
-    VB_SEARCH_OFF,
-    VB_SEARCH_FORWARD  = (1<<0),
-    VB_SEARCH_BACKWARD = (1<<1),
-} SearchDirection;
 
 typedef enum {
     VB_MSG_NORMAL,
@@ -234,11 +219,28 @@ typedef struct {
     char *s;
 } Arg;
 
+typedef void (*ModeTransitionFunc) (void);
+typedef VbResult (*ModeKeyFunc) (int);
+typedef void (*ModeInputChangedFunc) (const char*);
+typedef struct {
+    char                 id;
+    ModeTransitionFunc   enter;         /* is called if the mode is entered */
+    ModeTransitionFunc   leave;         /* is called if the mode is left */
+    ModeKeyFunc          keypress;      /* receives key to process */
+    ModeInputChangedFunc input_changed; /* is triggered if input textbuffer is changed */
+#define FLAG_NOMAP       0x0001  /* disables mapping for key strokes */
+#define FLAG_HINTING     0x0002  /* marks active hinting submode */
+#define FLAG_COMPLETION  0x0004  /* marks active completion submode */
+#define FLAG_PASSTHROUGH 0x0008  /* don't handle any other keybind than <esc> */
+    unsigned int         flags;
+} Mode;
+
 /* statusbar */
 typedef struct {
     GtkBox    *box;
     GtkWidget *left;
     GtkWidget *right;
+    GtkWidget *cmd;
 } StatusBar;
 
 /* gui */
@@ -250,6 +252,7 @@ typedef struct {
     GtkBox             *box;
     GtkWidget          *eventbox;
     GtkWidget          *input;
+    GtkTextBuffer      *buffer; /* text buffer associated with the input for fast access */
     GtkWidget          *pane;
     StatusBar          statusbar;
     GtkScrollbar       *sb_h;
@@ -260,23 +263,23 @@ typedef struct {
 
 /* state */
 typedef struct {
-    Mode            mode;
-    char            modkey;
-    guint           count;
     guint           progress;
     StatusType      status_type;
     MessageType     input_type;
     gboolean        is_inspecting;
     GList           *downloads;
+    gboolean        processed_key;
 } State;
 
 typedef struct {
-    time_t cookie_timeout;
-    int    scrollstep;
-    char   *home_page;
-    char   *download_dir;
-    guint  history_max;
-    char   *editor_command;
+    time_t   cookie_timeout;
+    int      scrollstep;
+    char     *home_page;
+    char     *download_dir;
+    guint    history_max;
+    char     *editor_command;
+    guint    timeoutlen;      /* timeout for ambiguous mappings */
+    gboolean strict_focus;
 } Config;
 
 typedef struct {
@@ -298,6 +301,7 @@ typedef struct {
     State           state;
 
     char            *files[FILES_LAST];
+    Mode            *mode;
     Config          config;
     Style           style;
     SoupSession     *session;
@@ -321,7 +325,6 @@ void vb_input_activate(void);
 gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value);
 gboolean vb_load_uri(const Arg *arg);
 gboolean vb_set_clipboard(const Arg *arg);
-gboolean vb_set_mode(Mode mode, gboolean clean);
 void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font);
 void vb_update_statusbar(void);
 void vb_update_status_style(void);

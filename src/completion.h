@@ -30,7 +30,11 @@ enum {
     COMPLETION_STORE_NUM
 };
 
+typedef void (*CompletionSelectFunc) (char *match);
+
+gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
+    gboolean back);
 void completion_clean(void);
-gboolean completion_complete(gboolean back);
+void completion_next(gboolean back);
 
 #endif /* end of include guard: _COMPLETION_H */

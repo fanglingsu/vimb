@@ -37,13 +37,6 @@ typedef struct {
     char *second;
 } History;
 
-static struct {
-    char  *prefix;  /* prefix that is prepended to the history item to for the complete command */
-    char  *query;   /* part of input text to match the history items */
-    GList *active;
-} history;
-
-static GList *get_list(VbInputType type, const char *query);
 static const char *get_file_by_type(HistoryType type);
 static GList *load(const char *file);
 static void write_to_file(GList *list, const char *file);
@@ -72,6 +65,7 @@ void history_cleanup(void)
 
 /**
  * Write a new history entry to the end of history file.
+ * TODO identify the history by the promt char
  */
 void history_add(HistoryType type, const char *value, const char *additional)
 {
@@ -81,64 +75,6 @@ void history_add(HistoryType type, const char *value, const char *additional)
         util_file_append(file, "%s\t%s\n", value, additional);
     } else {
         util_file_append(file, "%s\n", value);
-    }
-}
-
-/**
- * Retrieves the item from history to be shown in input box.
- * The result must be freed by the caller.
- */
-char *history_get(const char *input, gboolean prev)
-{
-    VbInputType type;
-    const char *prefix, *query;
-    GList *new = NULL;
-
-    if (history.active) {
-        /* calculate the actual content of the inpubox from history data, if
-         * the theoretical content and the actual given input are different
-         * rewind the history to recreate it later new */
-        char *current = g_strconcat(history.prefix, (char*)history.active->data, NULL);
-        if (strcmp(input, current)) {
-            history_rewind();
-        }
-        g_free(current);
-    }
-
-    /* create the history list if the lookup is started or input was changed */
-    if (!history.active) {
-        type = vb_get_input_parts(
-            input, VB_INPUT_COMMAND|VB_INPUT_SEARCH_FORWARD|VB_INPUT_SEARCH_BACKWARD,
-            &prefix, &query
-        );
-        history.active = get_list(type, query);
-        if (!history.active) {
-            return NULL;
-        }
-        OVERWRITE_STRING(history.query, query);
-        OVERWRITE_STRING(history.prefix, prefix);
-    }
-
-    if (prev) {
-        if ((new = g_list_next(history.active))) {
-            history.active = new;
-        }
-    } else if ((new = g_list_previous(history.active))) {
-        history.active = new;
-    }
-
-    return g_strconcat(history.prefix, (char*)history.active->data, NULL);
-}
-
-void history_rewind(void)
-{
-    if (history.active) {
-        /* free temporary used history list */
-        g_list_free_full(history.active, (GDestroyNotify)g_free);
-
-        OVERWRITE_STRING(history.prefix, NULL);
-        OVERWRITE_STRING(history.query, NULL);
-        history.active = NULL;
     }
 }
 
@@ -153,7 +89,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
 
     src = load(get_file_by_type(type));
     src = g_list_reverse(src);
-    if (!input || *input == '\0') {
+    if (!input || !*input) {
         /* without any tags return all items */
         for (GList *l = src; l; l = l->next) {
             item = l->data;
@@ -214,7 +150,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
  * Retrieves the list of matching history items.
  * The list must be freed.
  */
-static GList *get_list(VbInputType type, const char *query)
+GList *history_get_list(VbInputType type, const char *query)
 {
     GList *result = NULL, *src = NULL;
 
@@ -300,7 +236,7 @@ static History *line_to_history(const char *line)
     while (g_ascii_isspace(*line)) {
         line++;
     }
-    if (*line == '\0') {
+    if (!*line) {
         return NULL;
     }
 

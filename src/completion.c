@@ -20,123 +20,49 @@
 #include "config.h"
 #include "main.h"
 #include "completion.h"
-#include "util.h"
-#include "history.h"
-#include "bookmark.h"
-#include "command.h"
-#include "setting.h"
-
-#define TAG_INDICATOR '!'
 
 extern VbCore vb;
 
 static struct {
     GtkWidget *win;
     GtkWidget *tree;
-    int       count;   /* command count before the completed content */
-    char      *prefix; /* prefix that marks the completion ':', '/', ':open', ... */
     int       active;  /* number of the current active tree item */
-    char      *text;   /* text of the current active tree item */
+    CompletionSelectFunc selfunc;
 } comp;
 
-static void init_completion(GtkTreeModel *model);
-static void show(gboolean back);
-static void move_cursor(gboolean back);
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
 
 
-gboolean completion_complete(gboolean back)
-{
-    VbInputType type;
-    char *input;
-    const char *prefix, *suffix;
-    GtkListStore *store = NULL;
-    gboolean res = false, sort = true;
-
-    input = vb_get_input_text();
-    type  = vb_get_input_parts(input, VB_INPUT_ALL, &prefix, &suffix);
-
-    if (vb.state.mode & VB_MODE_COMPLETE) {
-        if (comp.text && !strcmp(input, comp.text)) {
-            /* step through the next/prev completion item */
-            move_cursor(back);
-            return true;
-        }
-        /* if current input isn't the content of the completion item, stop
-         * completion and start it after that again */
-        completion_clean();
-    }
-
-    /* don't disturb other command sub modes - complete only if no sub mode
-     * is set before */
-    if (vb.state.mode != VB_MODE_COMMAND) {
-        return false;
-    }
-
-    /* create the list store model */
-    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
-    if (type == VB_INPUT_SET) {
-        res = setting_fill_completion(store, suffix);
-    } else if (type == VB_INPUT_OPEN || type == VB_INPUT_TABOPEN) {
-        /* if search string begins with TAG_INDICATOR lookup the bookmarks */
-        if (suffix && *suffix == TAG_INDICATOR) {
-            res = bookmark_fill_completion(store, suffix + 1);
-        } else {
-            res = history_fill_completion(store, HISTORY_URL, suffix);
-        }
-        sort = false;
-    } else if (type == VB_INPUT_COMMAND) {
-        char *command = NULL;
-        /* remove counts before command and save it to print it later in inputbox */
-        comp.count = g_ascii_strtoll(suffix, &command, 10);
-
-        res = command_fill_completion(store, command);
-    } else if (type == VB_INPUT_SEARCH_FORWARD || type == VB_INPUT_SEARCH_BACKWARD) {
-        res = history_fill_completion(store, HISTORY_SEARCH, suffix);
-    } else if (type == VB_INPUT_BOOKMARK_ADD) {
-        res = bookmark_fill_tag_completion(store, suffix);
-    }
-
-    if (!res) {
-        return false;
-    }
-
-    /* apply the defualt sorting to the first tree model comlumn */
-    if (sort) {
-        gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING);
-    }
-
-    vb_set_mode(VB_MODE_COMMAND | VB_MODE_COMPLETE, false);
-
-    OVERWRITE_STRING(comp.prefix, prefix);
-    init_completion(GTK_TREE_MODEL(store));
-    show(back);
-
-    return true;
-}
-
-void completion_clean(void)
-{
-    if (comp.win) {
-        gtk_widget_destroy(comp.win);
-        comp.win = comp.tree = NULL;
-    }
-    OVERWRITE_STRING(comp.prefix, NULL);
-    OVERWRITE_STRING(comp.text, NULL);
-    comp.count = 0;
-
-    /* remove completion flag from mode */
-    vb.state.mode &= ~VB_MODE_COMPLETE;
-}
-
-static void init_completion(GtkTreeModel *model)
+gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
+    gboolean back)
 {
     GtkCellRenderer *renderer;
     GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GtkRequisition size;
+    GtkTreePath *path;
+    GtkTreeIter iter;
     int height, width;
+
+    /* if there is only one match - don't build the tree view */
+    if (gtk_tree_model_iter_n_children(model, NULL) == 1) {
+        char *value;
+        path = gtk_tree_path_new_from_indices(0, -1);
+        if (gtk_tree_model_get_iter(model, &iter, path)) {
+            gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
+
+            /* call the select function */
+            selfunc(value);
+
+            g_free(value);
+            g_object_unref(model);
+
+            return false;
+        }
+    }
+
+    comp.selfunc = selfunc;
 
     /* prepare the tree view */
     comp.win  = gtk_scrolled_window_new(NULL, NULL);
@@ -155,8 +81,8 @@ static void init_completion(GtkTreeModel *model)
 
     VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
     VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_bg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
+    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
 
     /* prepare the selection */
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree));
@@ -212,10 +138,7 @@ static void init_completion(GtkTreeModel *model)
         gtk_widget_set_size_request(comp.win, -1, height);
     }
 #endif
-}
 
-static void show(gboolean back)
-{
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
     gtk_widget_show_all(comp.win);
@@ -225,10 +148,12 @@ static void show(gboolean back)
 
     /* set to -1 to have the cursor on first or last item set in move_cursor */
     comp.active = -1;
-    move_cursor(back);
+    completion_next(back);
+
+    return true;
 }
 
-static void move_cursor(gboolean back)
+void completion_next(gboolean back)
 {
     int rows;
     GtkTreePath *path;
@@ -253,6 +178,14 @@ static void move_cursor(gboolean back)
     gtk_tree_path_free(path);
 }
 
+void completion_clean(void)
+{
+    if (comp.win) {
+        gtk_widget_destroy(comp.win);
+        comp.win = comp.tree = NULL;
+    }
+}
+
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data)
 {
@@ -263,18 +196,9 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
      * interested in */
     if (!selected && gtk_tree_model_get_iter(model, &iter, path)) {
         gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
-        /* save the content of the selected item so wen can access it easy */
-        if (comp.text) {
-            g_free(comp.text);
-            comp.text = NULL;
-        }
-        if (comp.count) {
-            comp.text = g_strdup_printf("%s%d%s", comp.prefix, comp.count, value);
-        } else {
-            comp.text = g_strdup_printf("%s%s", comp.prefix, value);
-        }
-        /* print the text also into inputbox */
-        vb_set_input_text(comp.text);
+
+        comp.selfunc(value);
+
         g_free(value);
     }
 

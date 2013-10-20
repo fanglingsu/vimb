@@ -17,34 +17,26 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _COMMAND_H
-#define _COMMAND_H
+#ifndef _MAP_H
+#define _MAP_H
 
-enum {
-    COMMAND_YANK_ARG,
-    COMMAND_YANK_URI,
-    COMMAND_YANK_SELECTION
-};
+/* size of the typeahead buffer that will altered during mapping an can
+ * therefor become larger than expected for examlpe by
+ * ':nmap gh :open LONG_URI TO HOME PAGE' where two keys expand to a large
+ * string */
+#define MAP_QUEUE_SIZE 500
 
-enum {
-    COMMAND_SAVE_CURRENT,
-    COMMAND_SAVE_URI
-};
+typedef enum {
+    MAP_DONE,
+    MAP_AMBIGUOUS,
+    MAP_NOMATCH
+} MapState;
 
-#ifdef FEATURE_QUEUE
-enum {
-    COMMAND_QUEUE_PUSH,
-    COMMAND_QUEUE_UNSHIFT,
-    COMMAND_QUEUE_POP,
-    COMMAND_QUEUE_CLEAR
-};
-#endif
+void map_cleanup(void);
+gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data);
+MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map);
+void map_handle_string(char *str, gboolean use_map);
+void map_insert(char *in, char *mapped, char mode, gboolean remap);
+gboolean map_delete(char *in, char mode);
 
-gboolean command_search(const Arg *arg);
-gboolean command_yank(const Arg *arg);
-gboolean command_save(const Arg *arg);
-#ifdef FEATURE_QUEUE
-gboolean command_queue(const Arg *arg);
-#endif
-
-#endif /* end of include guard: _COMMAND_H */
+#endif /* end of include guard: _MAP_H */
