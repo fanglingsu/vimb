@@ -7,10 +7,13 @@ active: home
 
 # vimb - a vim-like webkit browser
 
-[vimb][] is a fast and lightweight web browser based on the webkit web browser
-engine and the gtk toolkit. vimb is modal like the great vim editor and also
-easily configurable during runtime. vimb is mostly keyboard driven and does
-not detract you from your daily work.
+[Vimb][vimb] is a fast and lightweight web browser based on the webkit web
+browser engine and the gtk toolkit. Vimb is modal like the great vim editor
+and also easily configurable during runtime. Vimb is mostly keyboard driven
+and does not detract you from your daily work.
+
+If your are familiar with vim or have some experience with pentadactyl the use
+of vimb would be a breeze, if not we missed our target.
 
 ## screenshots
 
@@ -47,7 +50,8 @@ makes you more productive in your work.
    
          git clone git://github.com/fanglingsu/vimb.git vimb
    
-   - Or you can download the latest releases as [tar.gz][tgz] or as [zip][].
+   - Or you can download actual source as [tar.gz][tgz] or as [zip][] or get
+     one of the [releases][].
 
 2. Edit `config.mk` to match your local setup.
 
@@ -83,11 +87,12 @@ If you find a misbehaviour or have feature requests use the
 - [surf][] a really minimalistic browser of the suckless project. No runtime
   configuration.
 
-[zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vim browser download zip"
-[tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vim browser download tar.gz"
-[bug]:         https://github.com/fanglingsu/vimb/issues "vimb browser - issue tracker"
+[zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
+[tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
+[releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
+[bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim-like browser - issues"
 [surf]:        http://surf.suckless.org/
-[vimb]:        https://github.com/fanglingsu/vimb "vimb vimlike webbrowser sources"
+[vimb]:        https://github.com/fanglingsu/vimb "vimb vim-like webbrowser sources"
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
 [keybindings]: keybindings.html
@@ -95,4 +100,4 @@ If you find a misbehaviour or have feature requests use the
 [history]:     keybindings.html#history
 [queue]:       commands.html#queue
 [shortcuts]:   commands.html#shortcuts
-[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim-like browser - mailing list"

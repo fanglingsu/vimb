@@ -7,6 +7,17 @@ active: commands
 
 # vimb commands
 
+Commands that are listed below are ex-commands like in vim, that are typed
+into the inputbox (the command line of vimb). The commands may vary in their
+syntax or in the parts they allow, but in general they follow a simple syntax.
+
+    :[N]cmd[name][!][ lhs][ rhs]
+
+Where `lhs` (left hand side) must not contain any unescaped space. The syntax
+of the `rhs` (right hand side) if this is available depends on the command. At
+the moment the count parts `[N]` of commands is parsed, but actual there does
+not exists any command that uses the count.
+
 ## open
 {:#open}
 
