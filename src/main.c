@@ -65,9 +65,6 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
     WebKitWebFrame *frame, WebKitNetworkRequest *request, char*
     mime_type, WebKitWebPolicyDecision *decision);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
-static void request_start_cb(WebKitWebView *webview, WebKitWebFrame *frame,
-    WebKitWebResource *resource, WebKitNetworkRequest *request,
-    WebKitNetworkResponse *response);
 
 /* functions */
 static void run_user_script(WebKitWebFrame *frame);
@@ -727,7 +724,6 @@ static void setup_signals()
         "signal::title-changed", G_CALLBACK(title_changed_cb), NULL,
         "signal::mime-type-policy-decision-requested", G_CALLBACK(mimetype_decision_cb), NULL,
         "signal::download-requested", G_CALLBACK(vb_download), NULL,
-        "signal::resource-request-starting", G_CALLBACK(request_start_cb), NULL,
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
         NULL
     );
@@ -942,19 +938,6 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
     vb_update_statusbar();
 
     return true;
-}
-
-/**
- * Callback to filter started resource request.
- */
-static void request_start_cb(WebKitWebView *webview, WebKitWebFrame *frame,
-    WebKitWebResource *resource, WebKitNetworkRequest *request,
-    WebKitNetworkResponse *response)
-{
-    const char *uri = webkit_network_request_get_uri(request);
-    if (g_str_has_suffix(uri, "/favicon.ico")) {
-        webkit_network_request_set_uri(request, "about:blank");
-    }
 }
 
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
