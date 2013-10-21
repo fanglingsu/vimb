@@ -66,7 +66,7 @@ static Setting default_settings[] = {
     {"xssauditor", "enable-xss-auditor", TYPE_BOOLEAN, webkit, {0}},
     {"minimumfontsize", "minimum-font-size", TYPE_INTEGER, webkit, {0}},
     {"monofont", "monospace-font-family", TYPE_CHAR, webkit, {0}},
-    {"backgrounds", "print-backgrounds", TYPE_BOOLEAN, webkit, {0}},
+    {NULL, "print-backgrounds", TYPE_BOOLEAN, webkit, {0}},
     {"sansfont", "sans-serif-font-family", TYPE_CHAR, webkit, {0}},
     {"seriffont", "serif-font-family", TYPE_CHAR, webkit, {0}},
     {"useragent", "user-agent", TYPE_CHAR, webkit, {0}},
