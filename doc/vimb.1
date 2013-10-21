@@ -103,10 +103,10 @@ Open the oldest entry from read it later queue in current browser window, if
 vimb has been compiled with QUEUE feature.
 .TP
 .B p
-Open the url out of the clipboard.
+Open the URI out of the clipboard.
 .TP
 .B P
-Open the url out of the clipboard into new window.
+Open the URI out of the clipboard into new window.
 .TP
 .BI [ N ]UP
 Go back \fIN\fP steps in the browser history.
@@ -115,7 +115,7 @@ Go back \fIN\fP steps in the browser history.
 Go forward \fIN\fP steps in the browser history.
 .TP
 .BI [ N ]g\-u
-Go to the \fIN\fPth descendent directory of the current opened URL.
+Go to the \fIN\fPth descendent directory of the current opened URI.
 .TP
 .B g\-U
 Go to the domain of the current opened page.
@@ -169,11 +169,11 @@ Scroll page \fIN\fP steps down.
 Scroll page \fIN\fP steps up.
 .SS Hinting
 The hinting is the way to do what you would do with the mouse in common
-mouse-driven browsers. Open url, yank uri, save page and so on. If the hinting
+mouse-driven browsers. Open URI, yank URI, save page and so on. If the hinting
 is started, the relevant elements on the page will be marked by numbered
 labels. Hints can be selected by using <Tab>, <C-I> or <C-Tab>, <C-O>, by
 typing the number of the label, or filtering the elements by some text that is
-part of the hinted element (like url, link text, button label) and any
+part of the hinted element (like URI, link text, button label) and any
 combination of this methods. If <enter> is pressed, the current active hint
 will be fired. If only one possible hint remains, this will be fired
 automatically.
@@ -213,10 +213,10 @@ Open hint's location in a new window.
 Saves the hint's destination under the configured `download-path'.
 .TP
 .B ;\-O
-Generate an `:open' prompt with hint's URL.
+Generate an `:open' prompt with hint's URI.
 .TP
 .B ;\-T
-Generate an `:tabopen' prompt with hint's URL.
+Generate an `:tabopen' prompt with hint's URI.
 .TP
 .B ;\-e
 Open the configured editor (`editor-command') with the hinted form element's
@@ -230,11 +230,11 @@ Open hinted image into current window.
 Open hinted image into new window.
 .TP
 .B ;\-p
-Push the hint's URL to the end of the read it later queue like the `:qpush'
+Push the hint's URI to the end of the read it later queue like the `:qpush'
 command. This is only available if vimb was compiled with QUEUE feature.
 .TP
 .B ;\-P
-Push the hint's URL to the beginning of the read it later queue like the
+Push the hint's URI to the beginning of the read it later queue like the
 `:qunshift' command. This is only available if vimb was compiled with QUEUE
 feature.
 .TP
@@ -398,17 +398,17 @@ Remove the mapping of \fIlhs\fP for the applicable mode.
 .SS Bookmarks
 .TP
 .BI ":bma [" TAGS ]
-Save the current opened uri with \fITAGS\fP to the bookmark file.
+Save the current opened URI with \fITAGS\fP to the bookmark file.
 .TP
 .BI ":bmr [" URI ]
 Removes all bookmarks for given \fIURI\fP or if not given the current opened
 page.
 .SS Shortcuts
-Shortcuts allows to open URL build up from a named template with additional
+Shortcuts allows to open URI build up from a named template with additional
 parameters. If a shortcut named 'dd' is defined, you can use it with `:open dd
-list of parameters' to open the generated URL.
+list of parameters' to open the generated URI.
 
-Shortcuts are a good to use with search engines where the URL is nearly the
+Shortcuts are a good to use with search engines where the URI is nearly the
 same but a single parameter is user defined.
 .TP
 .BI ":shortcut-add " "SHORTCUT" "=" "URI"
@@ -423,7 +423,7 @@ Examples:
 .IP ":shortcut-add dl=https://duckduckgo.com/lite/?q=$0"
 to setup a search engine. Can be called by `:open dl my search phrase'.
 .IP ":shortcut-add gh=https://github.com/$0/$1"
-to build urls from given parameters. Can be called `:open gh fanglingsu vimb'.
+to build URIs from given parameters. Can be called `:open gh fanglingsu vimb'.
 .RE
 .TP
 .BI ":shortcut-remove " "SHORTCUT"
@@ -447,7 +447,7 @@ Show the current set value of variable
 .BI ":se[t] " VAR !
 Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 .SS Queue
-The queue allows to mark URLs for later reding (something like a read it later
+The queue allows to mark URIs for later reding (something like a read it later
 list). This list is shared between the single instances of vimb. Only
 available if vimb has been compiled with QUEUE feature.
 .TP
@@ -468,7 +468,7 @@ Removes all entries from queue.
 .BI ":sh[ellcmd] " CMD
 Runs given shell \fICMD\fP syncron and print the output into inputbox. The
 \fICMD\fP can contain multiple '%' chars that are expanded to the current
-opened uri. Also the '~/' to home dir expansion is available.
+opened URI. Also the '~/' to home dir expansion is available.
 
 Example: :shellcmd echo "`date` %" >> myhistory.txt
 .TP
@@ -525,12 +525,12 @@ inputbox and does also match settings that begins with already typed setting
 prefix.
 .TP
 .B history
-The history of URLs is shown for the `:open ` and `:tabopen ` commands. This
-completion looks up for every given word in the history url and titles. Only
-those history items are shown, where the title or url contains all tags.
+The history of URIs is shown for the `:open ` and `:tabopen ` commands. This
+completion looks up for every given word in the history URI and titles. Only
+those history items are shown, where the title or URI contains all tags.
 
 Example:
-":open foo bar<Tab>" will complete only URLs that contain the words foo and
+":open foo bar<Tab>" will complete only URIs that contain the words foo and
 bar.
 .TP
 .B bookmarks
@@ -551,10 +551,203 @@ The boomark tag completion allows to insert already used bookmars for the
 The search completion allow to get a filtered list of already done searches.
 This completion starts by `/` or `?` in inputbox and performs a prefix
 comparison for further typed chars.
+.SH SETTINGS
+All settings listed below can be set with the `:set' command.
+.SS Webkit-Settings
+.TP
+.B caret (bool)
+Whether to enable accessibility enhanced keyboard navigation.
+.TP
+.B cursivfont (string)
+The font family used as the default for content using cursive font.
+.TP
+.B defaultencoding (string)
+The default text charset used when interpreting content with an unspecified
+charset.
+.TP
+.B defaultfont (string)
+The font family to use as the default for content that does not specify a
+font.
+.TP
+.B fontsize (int)
+The default font size used to display text.
+.TP
+.B images (bool)
+Determines whether images should be automatically loaded or not.
+.TP
+.B insecure-content-show (bool)
+Whether pages loaded via HTTPS should load subresources such as images and
+frames from non-HTTPS URIs. Only for webkit>=2.0.
+.TP
+.B insecure-content-run (bool)
+Whether pages loaded via HTTPS should run subresources such as CSS, scripts,
+and plugins from non-HTTPS URIs. Only for webkit>=2.0.
+.TP
+.B minimumfontsize (int)
+The minimum font size used to display text.
+.TP
+.B monofont (string)
+The font family used as the default for content using monospace font.
+.TP
+.B monofontsize (int)
+Default font size for the monospace font.
+.TP
+.B offlinecache (bool)
+Whether to enable HTML5 offline web application cache support. Offline web
+application cache allows web applications to run even when the user is not
+connected to the network.
+.TP
+.B pagecache (bool)
+Enable or disable the page cache. Disabling the page cache is generally only
+useful for special circumstances like low-memory scenarios or special purpose
+applications like static HTML viewers.
+.TP
+.B plugins (bool)
+Determines whether or not plugins on the page are enabled.
+.TP
+.B print-backgrounds (bool)
+Whether background images should be drawn during printing.
+.TP
+.B sansfont (string)
+The font family used as the default for content using sans-serif font.
+.TP
+.B scripts (bool)
+Determines whether or not JavaScript executes within a page.
+.TP
+.B seriffont (string)
+The font family used as the default for content using serif font.
+.TP
+.B useragent (string)
+The user-agent string used by WebKit.
+.TP
+.B webinspector (bool)
+Determines whether or not developer tools, such as the Web Inspector, are
+enabled.
+.TP
+.B xssauditor (bool)
+Whether to enable the XSS auditor. This feature filters some kinds of
+reflective XSS attacks on vulnerable web sites.
+.SS Vimb-Settings
+.TP
+.B ca-bundle (string)
+The path to the crt file for the certificate validation.
+.TP
+.B completion-bg-active (color)
+Background color for selected completion item.
+.TP
+.B completion-bg-normal (color)
+Background color for none selected completion items.
+.TP
+.B completion-fg-active (color)
+Foreground color for the selected completion item.
+.TP
+.B completion-fg-normal (color)
+Foreground color for the none selected completion items.
+.TP
+.B completion-font (string)
+Font used for the completion items.
+.TP
+.B cookie-timeout (int)
+Cookie timeout in seconds.
+.TP
+.B download-path (string)
+Path to the default download directory.
+.TP
+.B editor-command (string)
+Command with placeholder '%s' called if form filed is opened with editor to
+spawn the editor like `x-terminal-emulator -e vi %s'.
+.TP
+.B header (string)
+Comma separated list of headers that replaces default header sent by webkit or
+new headers. The format for the header list elements is `name[=[value]]'.
+
+Note that these headers will replace already existing headers. If there is
+no '=' after the header name, than the complete header will be removed from
+the request, if the '=' is present means that the header value is set to empty
+value.
+.RS
+Example:
+.IP ":set header=DNT=1,User-Agent"
+Send the 'Do Not Track' header with each request and remove the User-Agent
+Header completely from request.
+.RE
+.TP
+.B history-max-items (int)
+Maximum number of unique items stored in search-, command or URI history.
+.TP
+.B home-page (string)
+Homepage that vimb opens if started without a URI.
+.TP
+.B input-bg-error (color)
+Background color for the inputbox if error is shown.
+.TP
+.B input-bg-normal (color)
+Background color of the inputbox.
+.TP
+.B input-fg-error (color)
+Foreground color of inputbox if error is shown.
+.TP
+.B input-fg-normal (color)
+Foreground color of inputbox.
+.TP
+.B input-font-error (string)
+Font user in inputbox if error is shown.
+.TP
+.B input-font-normal (string)
+Font used for inputbox.
+.TP
+.B proxy (bool)
+Indicates if the environment variable `http_proxy' is evaluated.
+.TP
+.B scrollstep (int)
+Number of pixel vimb scrolls if 'j' or 'k' is used.
+.TP
+.B status-color-bg (color)
+Background color of the statusbar.
+.TP
+.B status-color-fg (color)
+Foreground color of the statusbar.
+.TP
+.B status-font (string)
+Font used in statusbar.
+.TP
+.B status-ssl-color-bg (color)
+Background color of statusbar if current page uses trusted https certificate.
+.TP
+.B status-ssl-color-fg (color)
+Foreground color for statusbar for https pages.
+.TP
+.B status-ssl-font (string)
+Statusbar font for https pages.
+.TP
+.B status-sslinvalid-color-bg (color)
+Background color of the statusbar if the certificate if the https page isn't
+trusted.
+.TP
+.B status-sslinvalid-color-fg (color)
+Foreground of statusbar for untrusted https pages.
+.TP
+.B status-sslinvalid-font (string)
+Statusbar font for untrusted https pages.
+.TP
+.B strict-focus (bool)
+Indicates if vimb follows the instruction of the page to focus a form field
+without user interaction. If set the true, vimb will no switch to input mode
+if the pages say so and vimb will remove the focus fro the form field.
+.TP
+.B strict-ssl (bool)
+If 'on', vimb will not load a untrusted https site.
+.TP
+.B stylesheet (bool)
+If 'on' the user defined styles-sheet is used.
+.TP
+.B timeoutlen (int)
+The time in milliseconds that is waited for a key code or mapped key sequence
+to complete.
 .SH FILES
 .I $XDG_CONFIG_HOME/vimb/config
 .RS
-Configuration file to set webkit setting, some gui styles and keybindings.
+Configuration file to set webkit setting, some GUI styles and keybindings.
 .RE
 .I $XDG_CONFIG_HOME/vimb/cookies
 .RS
