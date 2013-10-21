@@ -272,14 +272,15 @@ typedef struct {
 } State;
 
 typedef struct {
-    time_t   cookie_timeout;
-    int      scrollstep;
-    char     *home_page;
-    char     *download_dir;
-    guint    history_max;
-    char     *editor_command;
-    guint    timeoutlen;      /* timeout for ambiguous mappings */
-    gboolean strict_focus;
+    time_t     cookie_timeout;
+    int        scrollstep;
+    char       *home_page;
+    char       *download_dir;
+    guint      history_max;
+    char       *editor_command;
+    guint      timeoutlen;      /* timeout for ambiguous mappings */
+    gboolean   strict_focus;
+    GHashTable *headers;        /* holds user defined header appended to requests */
 } Config;
 
 typedef struct {

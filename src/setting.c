@@ -46,6 +46,7 @@ static gboolean user_style(const Setting *s, const SettingType type);
 static gboolean history_max_items(const Setting *s, const SettingType type);
 static gboolean editor_command(const Setting *s, const SettingType type);
 static gboolean timeoutlen(const Setting *s, const SettingType type);
+static gboolean headers(const Setting *s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -109,6 +110,7 @@ static Setting default_settings[] = {
     {NULL, "download-path", TYPE_CHAR, download_path, {0}},
     {NULL, "history-max-items", TYPE_INTEGER, history_max_items, {0}},
     {NULL, "editor-command", TYPE_CHAR, editor_command, {0}},
+    {NULL, "header", TYPE_CHAR, headers, {0}},
 };
 
 void setting_init(void)
@@ -725,6 +727,50 @@ static gboolean timeoutlen(const Setting *s, const SettingType type)
         print_value(s, &vb.config.timeoutlen);
     } else {
         vb.config.timeoutlen = abs(s->arg.i);
+    }
+
+    return true;
+}
+
+/**
+ * Allow to set user defined http headers.
+ *
+ * :set header=NAME1=VALUE!,NAME2=,NAME3
+ *
+ * Note that these headers will replace already existing headers. If there is
+ * no '=' after the header name, than the complete header will be removed from
+ * the request (NAME3), if the '=' is present means that the header value is
+ * set to empty value.
+ */
+static gboolean headers(const Setting *s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        char *key, *value;
+        GHashTableIter iter;
+        GString *str;
+
+        if (vb.config.headers) {
+            str = g_string_new("");
+            /* build a list woth the header values */
+            g_hash_table_iter_init(&iter, vb.config.headers);
+            while (g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) {
+                g_string_append_c(str, ',');
+                soup_header_g_string_append_param(str, key, value);
+            }
+
+            /* skip the first ',' we put into the headers string */
+            print_value(s, str->str + 1);
+            g_string_free(str, true);
+        } else {
+            print_value(s, &"");
+        }
+    } else {
+        /* remove previous parsed headers */
+        if (vb.config.headers) {
+            soup_header_free_param_list(vb.config.headers);
+            vb.config.headers = NULL;
+        }
+        vb.config.headers = soup_header_parse_param_list(s->arg.s);
     }
 
     return true;

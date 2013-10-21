@@ -48,6 +48,7 @@ static void cookiejar_init(CookieJar *self);
 static void cookiejar_set_property(GObject *self, guint prop_id,
     const GValue *value, GParamSpec *pspec);
 #endif
+static void request_started_cb(SoupSession *session, SoupMessage *msg, gpointer data);
 
 extern VbCore vb;
 
@@ -60,6 +61,10 @@ void session_init(void)
     g_object_set(vb.session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
     g_object_set(vb.session, "accept-language-auto", true, NULL);
 
+    g_signal_connect(
+        vb.session, "request-started",
+        G_CALLBACK(request_started_cb), NULL
+    );
 #ifdef FEATURE_COOKIE
     soup_session_add_feature(
         vb.session,
@@ -117,3 +122,23 @@ static void cookiejar_set_property(GObject *self, guint prop_id, const
     flock(COOKIEJAR(self)->lock, LOCK_UN);
 }
 #endif
+
+static void request_started_cb(SoupSession *session, SoupMessage *msg, gpointer data)
+{
+    GHashTableIter iter;
+    char *name, *value;
+
+    if (!vb.config.headers) {
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, vb.config.headers);
+    while (g_hash_table_iter_next(&iter, (gpointer*)&name, (gpointer*)&value)) {
+        /* allow to remove header with null value */
+        if (value == NULL) {
+            soup_message_headers_remove(msg->request_headers, name);
+        } else {
+            soup_message_headers_replace(msg->request_headers, name, value);
+        }
+    }
+}
