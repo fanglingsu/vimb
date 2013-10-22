@@ -868,15 +868,19 @@ static void update_title(void)
 #ifdef FEATURE_TITLE_PROGRESS
     /* show load status of page or the downloads */
     if (vb.state.progress != 100) {
-        char *title = g_strdup_printf("[%i%%] %s", vb.state.progress, vb.state.title);
+        char *title = g_strdup_printf(
+            "[%i%%] %s",
+            vb.state.progress,
+            vb.state.title ? vb.state.title : ""
+        );
         gtk_window_set_title(GTK_WINDOW(vb.gui.window), title);
         g_free(title);
-    } else {
+        return;
+    }
+#endif
+    if (vb.state.title) {
         gtk_window_set_title(GTK_WINDOW(vb.gui.window), vb.state.title);
     }
-#else
-    gtk_window_set_title(GTK_WINDOW(vb.gui.window), vb.state.title);
-#endif
 }
 
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
