@@ -39,7 +39,7 @@ dd{margin:0 0 .4em 3em}
 @media screen and (max-width:38em){
 #content{margin:0}
 #nav ul>li{width:100%}
-#nav li a{border-right-width:1px;text-align:left;padding:0 .5em}
+#nav li a{border-right-width:0;text-align:left;padding:0 .5em}
 #nav li~li a{border-top-width:0}
 #nav li.active a{border-bottom-width:1px}
 .main{padding:1em .5em}
