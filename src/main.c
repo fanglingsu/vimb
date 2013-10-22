@@ -67,6 +67,7 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 
 /* functions */
+static void update_title(void);
 static void run_user_script(WebKitWebFrame *frame);
 static char *jsref_to_string(JSContextRef context, JSValueRef ref);
 static void init_core(void);
@@ -390,6 +391,7 @@ static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
 {
     vb.state.progress = webkit_web_view_get_progress(view) * 100;
     vb_update_statusbar();
+    update_title();
 }
 
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec)
@@ -456,6 +458,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             /* update load progress in statusbar */
             vb.state.progress = 100;
             vb_update_statusbar();
+            update_title();
 
             if (strncmp(uri, "about:", 6)) {
                 dom_check_auto_insert(view);
@@ -879,7 +882,21 @@ static void hover_link_cb(WebKitWebView *webview, const char *title, const char 
 
 static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title)
 {
-    gtk_window_set_title(GTK_WINDOW(vb.gui.window), title);
+    OVERWRITE_STRING(vb.state.title, title);
+    update_title();
+}
+
+static void update_title(void)
+{
+    char *title;
+    /* show load status of page or the downloads */
+    if (vb.state.progress != 100) {
+        title = g_strdup_printf("[%i%%] %s", vb.state.progress, vb.state.title);
+        gtk_window_set_title(GTK_WINDOW(vb.gui.window), title);
+        g_free(title);
+    } else {
+        gtk_window_set_title(GTK_WINDOW(vb.gui.window), vb.state.title);
+    }
 }
 
 static gboolean mimetype_decision_cb(WebKitWebView *webview,

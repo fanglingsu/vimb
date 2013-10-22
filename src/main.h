@@ -269,6 +269,7 @@ typedef struct {
     gboolean        is_inspecting;
     GList           *downloads;
     gboolean        processed_key;
+    char            *title;         /* holds the window title */
 } State;
 
 typedef struct {
