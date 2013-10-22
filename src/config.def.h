@@ -22,11 +22,18 @@
 
 
 /* features */
+/* enable cookie support */
 #define FEATURE_COOKIE
+/* highlich search reasults */
 #define FEATURE_SEARCH_HIGHLIGHT
+/* disable scrollbars */
 #define FEATURE_NO_SCROLLBARS
+/* show page title in url completions */
 #define FEATURE_TITLE_IN_COMPLETION
+/* enable the read it later queue */
 #define FEATURE_QUEUE
+/* show load progress in window title */
+#define FEATURE_TITLE_PROGRESS
 /* should the history indicator [+-] be shown in status bar after url */
 #define FEATURE_HISTORY_INDICATOR
 
