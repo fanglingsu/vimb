@@ -314,47 +314,6 @@ void vb_update_urlbar(const char *uri)
     gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), uri);
 }
 
-/**
- * Analyzes the given input string for known prefixes (':set ', ':open ', '/',
- * ...) and set the given prefix pointer to the found prefix and the given
- * suffix pointer to the suffix.
- */
-VbInputType vb_get_input_parts(const char* input, unsigned int use,
-    const char **prefix, const char **clean)
-{
-    static const struct {
-        VbInputType type;
-        const char *prefix;
-        unsigned int len;
-    } types[] = {
-        {VB_INPUT_OPEN, ":o ", 3},
-        {VB_INPUT_TABOPEN, ":t ", 3},
-        {VB_INPUT_OPEN, ":open ", 6},
-        {VB_INPUT_TABOPEN, ":tabopen ", 9},
-        {VB_INPUT_SET, ":set ", 5},
-        {VB_INPUT_BOOKMARK_ADD, ":bma ", 5},
-        {VB_INPUT_BOOKMARK_ADD, ":bookmark-add ", 14},
-        {VB_INPUT_COMMAND, ":", 1},
-        {VB_INPUT_SEARCH_FORWARD, "/", 1},
-        {VB_INPUT_SEARCH_BACKWARD, "?", 1},
-    };
-    for (unsigned int i = 0; i < LENGTH(types); i++) {
-        /* process only those types given with use */
-        if (!(types[i].type & use)) {
-            continue;
-        }
-        if (!strncmp(input, types[i].prefix, types[i].len)) {
-            *prefix = types[i].prefix;
-            *clean  = input + types[i].len;
-            return types[i].type;
-        }
-    }
-
-    *prefix = NULL;
-    *clean  = input;
-    return VB_INPUT_UNKNOWN;
-}
-
 void vb_quit(void)
 {
     const char *uri = GET_URI();
