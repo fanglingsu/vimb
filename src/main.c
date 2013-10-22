@@ -216,6 +216,10 @@ gboolean vb_load_uri(const Arg *arg)
     } else {
         /* Load a web page into the browser instance */
         webkit_web_view_load_uri(vb.gui.webview, uri);
+        /* show the url to be opened in the windo title until we receive the
+         * page title */
+        OVERWRITE_STRING(vb.state.title, uri);
+        update_title();
     }
     g_free(uri);
 
