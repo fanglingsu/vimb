@@ -27,6 +27,8 @@
 #define FEATURE_NO_SCROLLBARS
 #define FEATURE_TITLE_IN_COMPLETION
 #define FEATURE_QUEUE
+/* should the history indicator [+-] be shown in status bar after url */
+#define FEATURE_HISTORY_INDICATOR
 
 
 /* time in seconds after that message will be removed from inputbox if the

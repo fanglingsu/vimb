@@ -311,7 +311,25 @@ void vb_update_input_style(void)
 
 void vb_update_urlbar(const char *uri)
 {
-    gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), uri);
+    Gui *gui = &vb.gui;
+#ifdef FEATURE_HISTORY_INDICATOR
+    gboolean back, fwd;
+    char *str;
+
+    back = webkit_web_view_can_go_back(gui->webview);
+    fwd  = webkit_web_view_can_go_forward(gui->webview);
+
+    /* show history indicator only if there is something to show */
+    if (back || fwd) {
+        str = g_strdup_printf("%s [%s]", uri, back ? (fwd ? "+-" : "+") : "-");
+        gtk_label_set_text(GTK_LABEL(gui->statusbar.left), str);
+        g_free(str);
+    } else {
+        gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
+    }
+#else
+    gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
+#endif
 }
 
 void vb_quit(void)
