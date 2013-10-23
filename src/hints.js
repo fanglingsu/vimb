@@ -39,16 +39,8 @@ var VbHint = (function(){
                     return false;
                 }
 
-                var cStyle = win.getComputedStyle(e, null);
-                if (cStyle.display === "none" || cStyle.visibility !== "visible") {
-                    return false;
-                }
-
-                /* check if the element at the left top or center of current is the element self */
-                /* else the element is covered by another element or within a hidden container */
-                return e.childElementCount > 0
-                    || e.ownerDocument.elementFromPoint((rect.left + rect.right)/2, (rect.top + rect.bottom)/2) === e
-                    || e.ownerDocument.elementFromPoint(rect.left, rect.top + rect.bottom) === e
+                var s = win.getComputedStyle(e, null);
+                return s.display !== "none" && s.visibility == "visible";
             }
 
             var doc   = win.document,
