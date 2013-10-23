@@ -386,6 +386,7 @@ static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec)
         vb.state.progress /= g_list_length(vb.state.downloads);
     }
     vb_update_statusbar();
+    update_title();
 }
 
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
@@ -397,6 +398,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             /* update load progress in statusbar */
             vb.state.progress = 0;
             vb_update_statusbar();
+            update_title();
             break;
 
         case WEBKIT_LOAD_COMMITTED:
