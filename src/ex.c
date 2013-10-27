@@ -581,15 +581,15 @@ static gboolean parse_rhs(const char **input, ExArg *arg)
 
     /* get char until the end of command */
     while (**input && **input != '\n' && **input != '|') {
-        /* if we find a backslash this escapes the next whitespace */
+        /* if we find a backslash this escapes the next char */
         if (**input == quote) {
             /* move pointer to the next char */
             (*input)++;
             if (!*input) {
                 /* if input ends here - use only the backslash */
                 g_string_append_c(arg->rhs, quote);
-            } else if (**input == ' ') {
-                /* escaped whitespace becomes only whitespace */
+            } else if (**input == '|') {
+                /* escaped char becomes only char */
                 g_string_append_c(arg->rhs, **input);
             } else {
                 /* put escape char and next char into the result string */
