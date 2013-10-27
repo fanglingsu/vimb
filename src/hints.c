@@ -158,8 +158,22 @@ void hints_fire(void)
     g_free(js);
 }
 
+void hints_follow_link(const gboolean back, int count)
+{
+    char *pattern = back ? vb.config.prevpattern : vb.config.nextpattern;
+    char *js      = g_strdup_printf(
+        "%s.followLink('%s', [%s], %d);", HINT_VAR,
+        back ? "prev" : "next",
+        pattern,
+        count
+    );
+    run_script(js);
+    g_free(js);
+}
+
 static void run_script(char *js)
 {
+    PRINT_DEBUG("%s", js);
     char mode, *value = NULL;
 
     gboolean success = vb_eval_script(

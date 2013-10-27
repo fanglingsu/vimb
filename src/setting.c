@@ -47,6 +47,7 @@ static gboolean history_max_items(const Setting *s, const SettingType type);
 static gboolean editor_command(const Setting *s, const SettingType type);
 static gboolean timeoutlen(const Setting *s, const SettingType type);
 static gboolean headers(const Setting *s, const SettingType type);
+static gboolean nextpattern(const Setting *s, const SettingType type);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -111,6 +112,8 @@ static Setting default_settings[] = {
     {NULL, "history-max-items", TYPE_INTEGER, history_max_items, {0}},
     {NULL, "editor-command", TYPE_CHAR, editor_command, {0}},
     {NULL, "header", TYPE_CHAR, headers, {0}},
+    {NULL, "nextpattern", TYPE_CHAR, nextpattern, {0}},
+    {NULL, "previouspattern", TYPE_CHAR, nextpattern, {0}},
 };
 
 void setting_init(void)
@@ -771,6 +774,19 @@ static gboolean headers(const Setting *s, const SettingType type)
             vb.config.headers = NULL;
         }
         vb.config.headers = soup_header_parse_param_list(s->arg.s);
+    }
+
+    return true;
+}
+
+static gboolean nextpattern(const Setting *s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        print_value(s, s->name[0] == 'n' ? vb.config.nextpattern : vb.config.prevpattern);
+    } else if (*s->name == 'n') {
+        OVERWRITE_STRING(vb.config.nextpattern, s->arg.s);
+    } else {
+        OVERWRITE_STRING(vb.config.prevpattern, s->arg.s);
     }
 
     return true;

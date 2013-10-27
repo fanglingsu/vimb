@@ -61,6 +61,7 @@ static VbResult normal_navigate(const NormalCmdInfo *info);
 static VbResult normal_open_clipboard(const NormalCmdInfo *info);
 static VbResult normal_open(const NormalCmdInfo *info);
 static VbResult normal_pass(const NormalCmdInfo *info);
+static VbResult normal_prevnext(const NormalCmdInfo *info);
 static VbResult normal_queue(const NormalCmdInfo *info);
 static VbResult normal_quit(const NormalCmdInfo *info);
 static VbResult normal_scroll(const NormalCmdInfo *info);
@@ -165,9 +166,9 @@ static struct {
 /* X   0x58 */ {NULL},
 /* Y   0x59 */ {normal_yank},
 /* Z   0x5a */ {NULL},
-/* [   0x5b */ {NULL},
+/* [   0x5b */ {normal_prevnext},
 /* \   0x5c */ {NULL},
-/* ]   0x5d */ {NULL},
+/* ]   0x5d */ {normal_prevnext},
 /* ^   0x5e */ {NULL},
 /* _   0x5f */ {NULL},
 /* `   0x60 */ {NULL},
@@ -243,7 +244,7 @@ VbResult normal_keypress(int key)
         info.phase = PHASE_COMPLETE;
     } else if (info.phase == PHASE_START && isdigit(key)) {
         info.count = info.count * 10 + key - '0';
-    } else if (strchr(";zg", (char)key)) {
+    } else if (strchr(";zg[]", (char)key)) {
         /* handle commands that needs additional char */
         info.phase = PHASE_KEY2;
         info.cmd   = key;
@@ -543,6 +544,19 @@ static VbResult normal_open(const NormalCmdInfo *info)
 static VbResult normal_pass(const NormalCmdInfo *info)
 {
     mode_enter('p');
+    return RESULT_COMPLETE;
+}
+
+static VbResult normal_prevnext(const NormalCmdInfo *info)
+{
+    int count = info->count ? info->count : 1;
+    if (info->ncmd == ']') {
+        hints_follow_link(false, count);
+    } else if (info->ncmd == '[') {
+        hints_follow_link(true, count);
+    } else {
+        return RESULT_ERROR;
+    }
     return RESULT_COMPLETE;
 }
 

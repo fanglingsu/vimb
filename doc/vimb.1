@@ -167,6 +167,12 @@ Scroll page \fIN\fP steps down.
 .TP
 .BI [ N ]k
 Scroll page \fIN\fP steps up.
+.TP
+.BI [ N ]]\-]
+Follow the last \fIN\fPth link matching `nextpattern'.
+.TP
+.BI [ N ][\-[
+Follow the last \fIN\fPth link matching `previouspattern'.
 .SS Hinting
 The hinting is the way to do what you would do with the mouse in common
 mouse-driven browsers. Open URI, yank URI, save page and so on. If the hinting
@@ -695,6 +701,16 @@ Font user in inputbox if error is shown.
 .TP
 .B input-font-normal (string)
 Font used for inputbox.
+.TP
+.B nextpattern (string)
+Patterns to use when guessing the next page in a document. Each pattern is
+successively tested against each link in the page beginning from the last
+link. Default "'\\bnext\\b','^(>|>>|»)$','^(>|>>|»)','(>|>>|»)$','\\bmore\\b'"
+.TP
+.B previouspattern (string)
+Patterns to use when guessing the previous page in a document. Each pattern is
+successively tested against each link in the page beginning from the last
+link. Default "\\bprev|previous\\b','^(<|<<|«)$','^(<|<<|«)','(<|<<|«)$'"
 .TP
 .B proxy (bool)
 Indicates if the environment variable `http_proxy' is evaluated.

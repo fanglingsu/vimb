@@ -392,6 +392,53 @@ var VbHint = (function(){
         }
     }
 
+    /* follow the count last link on pagematching the given pattern */
+    function followLink(rel, pattern, count) {
+        /* returns array of matching elements */
+        function followFrame(frame) {
+            var i, p, reg, res = [],
+                elems = frame.document.getElementsByTagName("a");
+
+            /* first match links by rel attribute */
+            for (i = elems.length - 1; i >= 0; i--) {
+                if (elems[i].rel.toLowerCase() === rel) {
+                    res.push(elems[i]);
+                    elems.splice(i, 1);
+                }
+            }
+            /* match each pattern successively against each link in the page */
+            for (p = 0; p < pattern.length; p++) {
+                reg = pattern[p];
+                /* begin with the last link on page */
+                for (i = elems.length - 1; i >= 0; i--) {
+                    if (elems[i].innerText.match(reg)) {
+                        res.push(elems[i]);
+                    }
+                }
+            }
+            return res;
+        }
+        var i, j, elems, frames = allFrames(window);
+        for (i = 0; i < frames.length; i++) {
+            elems = followFrame(frames[i]);
+            for (j = 0; j < elems.length; j++) {
+                if (--count == 0) {
+                    open(elems[j], false);
+                    return "DONE:";
+                }
+            }
+        }
+        return "NONE:";
+    }
+
+    function allFrames(win) {
+        var i, f, frames = [win];
+        for (i = 0; i < win.frames.length; i++) {
+            frames.push(win.frames[i].frameElement);
+        }
+        return frames;
+    }
+
     /* the api */
     return {
         init: function init(prefix, maxHints) {
@@ -423,11 +470,13 @@ var VbHint = (function(){
                 config.usage = map[prefix][1];
             }
         },
-        create: create,
-        update: update,
-        clear:  clear,
-        fire:   fire,
-        focus:  focus
+        create:     create,
+        update:     update,
+        clear:      clear,
+        fire:       fire,
+        focus:      focus,
+        /* not really hintings but uses similar logic */
+        followLink: followLink
     };
 })();
 Object.freeze(VbHint);
