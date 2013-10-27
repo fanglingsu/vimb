@@ -131,6 +131,12 @@ CTRL-C
 [N]k
 : Scroll page N steps up.
 
+[N]]-]
+: Follow the last Nth link matching `nextpattern`.
+
+[N][-[
+: Follow the last Nth link matching `previouspattern`.
+
 ### hinting
 {:#hinting}
 
