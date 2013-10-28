@@ -67,8 +67,8 @@ static char *default_config[] = {
     "set insecure-content-run=off",
 #endif
     "set timeoutlen=1000",
-    "set previouspattern='\\bprev\\|previous\\b','^(<\\|<<\\|«)$','^(<\\|<<\\|«)','(<\\|<<\\|«)$'",
-    "set nextpattern='\\bnext\\b','^(>\\|>>\\|»)$','^(>\\|>>\\|»)','(>\\|>>\\|»)$','\\bmore\\b'",
+    "set previouspattern=/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/",
+    "set nextpattern=/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i",
     NULL
 };
 

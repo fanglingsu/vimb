@@ -173,7 +173,6 @@ void hints_follow_link(const gboolean back, int count)
 
 static void run_script(char *js)
 {
-    PRINT_DEBUG("%s", js);
     char mode, *value = NULL;
 
     gboolean success = vb_eval_script(
