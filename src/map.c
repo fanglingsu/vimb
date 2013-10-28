@@ -82,7 +82,7 @@ static struct {
     char *ch;
     int  chlen;
 } key_labels[] = {
-    {"<CR>",    4, "\n",         1},
+    {"<CR>",    4, "\x0d",       1},
     {"<Tab>",   5, "\t",         1},
     {"<S-Tab>", 7, CSI_STR "kB", 3},
     {"<Esc>",   5, "\x1b",       1},
