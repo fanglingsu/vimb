@@ -397,13 +397,22 @@ var VbHint = (function(){
         /* returns array of matching elements */
         function followFrame(frame) {
             var i, p, reg, res = [],
-                elems = frame.document.getElementsByTagName("a");
+                doc = frame.document,
+                elems = [],
+                all = doc.getElementsByTagName("a");
 
             /* first match links by rel attribute */
-            for (i = elems.length - 1; i >= 0; i--) {
-                if (elems[i].rel.toLowerCase() === rel) {
-                    res.push(elems[i]);
-                    elems.splice(i, 1);
+            for (i = all.length - 1; i >= 0; i--) {
+                /* collect visible elements */
+                var s = doc.defaultView.getComputedStyle(all[i], null);
+                if (s.display !== "none" && s.visibility === "visible") {
+                    /* if there are rel attributes alaments, put them in the result */
+                    if (all[i].rel.toLowerCase() === rel) {
+                        res.push(all[i]);
+                    } else {
+                        /* save to match them later */
+                        elems.push(all[i]);
+                    }
                 }
             }
             /* match each pattern successively against each link in the page */
