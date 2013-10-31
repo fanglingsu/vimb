@@ -368,11 +368,11 @@ var VbHint = (function(){
         switch (config.mode) {
             case "l":
                 if (!s) {
-                    return "//a[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select";
+                    return "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select";
                 }
                 return buildQuery(
                     ["@value", ".", "@placeholder", "@title", "@alt"],
-                    "//a[@href and ($. or child::img[$@title or $@alt])] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and ($@value or $@placeholder)] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
+                    "//*[@href and ($. or child::img[$@title or $@alt])] | //*[(@onclick or @class='lk' or @role='link' or role='button') and $.] | //input[not(@type='hidden' or @disabled or @readonly) and ($@value or $@placeholder)] | //textarea[not(@disabled or @readonly) and $.] | //button[$.] | //select[$.]",
                     s
                 );
             case "e":
