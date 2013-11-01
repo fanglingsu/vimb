@@ -671,7 +671,7 @@ static VbResult normal_search_selection(const NormalCmdInfo *info)
     }
     count = (info->count > 0) ? info->count : 1;
 
-    command_search(&((Arg){info->cmd == '*' ? count : -count}));
+    command_search(&((Arg){info->cmd == '*' ? count : -count, query}));
     g_free(query);
 
     return RESULT_COMPLETE;
