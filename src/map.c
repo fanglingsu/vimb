@@ -159,7 +159,7 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
 }
 
 /**
- * Added the given key sequence ot the key queue and precesses the mapping of
+ * Added the given key sequence to the key queue and process the mapping of
  * chars. The key sequence do not need to be NUL terminated.
  * Keylen of 0 signalized a key timeout.
  */

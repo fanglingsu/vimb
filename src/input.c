@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include <glib/gstdio.h>
 #include "mode.h"
 #include "main.h"
 #include "input.h"
@@ -146,6 +147,7 @@ static void resume_editor(GPid pid, int status, EditorData *data)
     }
     dom_editable_element_set_disable(data->element, false);
 
+    g_unlink(data->file);
     g_free(data->file);
     g_free(data);
     g_spawn_close_pid(pid);
