@@ -87,8 +87,11 @@ static SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
 static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupCookie *new_cookie)
 {
     flock(COOKIEJAR(self)->lock, LOCK_EX);
+    SoupDate *expire;
     if (new_cookie && !new_cookie->expires && vb.config.cookie_timeout) {
-        soup_cookie_set_expires(new_cookie, soup_date_new_from_now(vb.config.cookie_timeout));
+        expire = soup_date_new_from_now(vb.config.cookie_timeout);
+        soup_cookie_set_expires(new_cookie, expire);
+        soup_date_free(expire);
     }
     SOUP_COOKIE_JAR_CLASS(cookiejar_parent_class)->changed(self, old_cookie, new_cookie);
     flock(COOKIEJAR(self)->lock, LOCK_UN);
