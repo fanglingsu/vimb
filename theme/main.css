@@ -24,7 +24,7 @@ h1+ul{margin-top:1.5em}
 ul li{list-style-type:square}
 ol li{list-style-type:decimal}
 li{line-height:1.5em;padding-left:.5em}
-img{border:1px solid #ddd;max-width:100%;padding:0 0 1em 0}
+img{border:1px solid #ddd;max-width:100%;padding:0 0 1em 0;height:auto}
 pre{line-height:1.7em;background:#f7f7f7;border:1px solid #ddd;box-shadow:.26em .26em .65em #eee;padding:.2em .4em;overflow:auto}
 code{font-family:monospace;color:#777;white-space:pre}
 a,a:link{color:#4183C4;text-decoration:none;outline:none}
