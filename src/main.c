@@ -325,7 +325,7 @@ void vb_update_urlbar(const char *uri)
 
     /* show history indicator only if there is something to show */
     if (back || fwd) {
-        str = g_strdup_printf("%s [%s]", uri, back ? (fwd ? "+-" : "+") : "-");
+        str = g_strdup_printf("%s [%s]", uri, back ? (fwd ? "-+" : "-") : "+");
         gtk_label_set_text(GTK_LABEL(gui->statusbar.left), str);
         g_free(str);
     } else {
