@@ -29,7 +29,10 @@ extern VbCore vb;
 static Arg *char_to_arg(const char *str, const Type type);
 static void print_value(const Setting *s, void *value);
 static gboolean webkit(const Setting *s, const SettingType type);
+#ifdef FEATURE_COOKIE
+static gboolean cookie_accept(const Setting *s, const SettingType type);
 static gboolean cookie_timeout(const Setting *s, const SettingType type);
+#endif
 static gboolean scrollstep(const Setting *s, const SettingType type);
 static gboolean status_color_bg(const Setting *s, const SettingType type);
 static gboolean status_color_fg(const Setting *s, const SettingType type);
@@ -80,7 +83,10 @@ static Setting default_settings[] = {
     {NULL, "stylesheet", TYPE_BOOLEAN, user_style, {0}},
 
     {NULL, "proxy", TYPE_BOOLEAN, proxy, {0}},
+#ifdef FEATURE_COOKIE
     {NULL, "cookie-timeout", TYPE_INTEGER, cookie_timeout, {0}},
+    {NULL, "cookie-accept", TYPE_CHAR, cookie_accept, {0}},
+#endif
     {NULL, "strict-ssl", TYPE_BOOLEAN, strict_ssl, {0}},
     {NULL, "strict-focus", TYPE_BOOLEAN, strict_focus, {0}},
 
@@ -369,6 +375,43 @@ static gboolean webkit(const Setting *s, const SettingType type)
 
     return true;
 }
+
+#ifdef FEATURE_COOKIE
+static gboolean cookie_accept(const Setting *s, const SettingType type)
+{
+    int i, policy;
+    SoupCookieJar *jar;
+    static struct {
+        SoupCookieJarAcceptPolicy policy;
+        char*                     name;
+    } map[] = {
+        {SOUP_COOKIE_JAR_ACCEPT_ALWAYS,         "always"},
+        {SOUP_COOKIE_JAR_ACCEPT_NEVER,          "never"},
+        {SOUP_COOKIE_JAR_ACCEPT_NO_THIRD_PARTY, "origin"},
+    };
+
+    jar = (SoupCookieJar*)soup_session_get_feature(vb.session, SOUP_TYPE_COOKIE_JAR);
+
+    if (type == SETTING_GET) {
+        g_object_get(jar, SOUP_COOKIE_JAR_ACCEPT_POLICY, &policy, NULL);
+        for (i = 0; i < LENGTH(map); i++) {
+            if (policy == map[i].policy) {
+                print_value(s, map[i].name);
+                return true;
+            }
+        }
+    } else {
+        for (i = 0; i < LENGTH(map); i++) {
+            if (!strcmp(map[i].name, s->arg.s)) {
+                g_object_set(jar, SOUP_COOKIE_JAR_ACCEPT_POLICY, map[i].policy, NULL);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 static gboolean cookie_timeout(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
@@ -379,6 +422,7 @@ static gboolean cookie_timeout(const Setting *s, const SettingType type)
 
     return true;
 }
+#endif
 
 static gboolean scrollstep(const Setting *s, const SettingType type)
 {
