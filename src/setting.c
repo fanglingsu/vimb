@@ -84,8 +84,8 @@ static Setting default_settings[] = {
 
     {NULL, "proxy", TYPE_BOOLEAN, proxy, {0}},
 #ifdef FEATURE_COOKIE
-    {NULL, "cookie-timeout", TYPE_INTEGER, cookie_timeout, {0}},
     {NULL, "cookie-accept", TYPE_CHAR, cookie_accept, {0}},
+    {NULL, "cookie-timeout", TYPE_INTEGER, cookie_timeout, {0}},
 #endif
     {NULL, "strict-ssl", TYPE_BOOLEAN, strict_ssl, {0}},
     {NULL, "strict-focus", TYPE_BOOLEAN, strict_focus, {0}},
