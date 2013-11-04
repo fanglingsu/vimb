@@ -506,7 +506,15 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
     } while (matches > 0 && **input && **input != ' ' && **input != '!');
 
     if (!matches) {
-        /* TODO show readable error message */
+        /* read until next whitespace or end of input to get command name for
+         * error message - vim uses the whole rest of the input string - but
+         * the first word seems to bee enough for the error message */
+        for (; len < LENGTH(cmd) && *input && **input != ' '; (*input)++) {
+            cmd[len++] = **input;
+        }
+        cmd[len] = '\0';
+
+        vb_echo(VB_MSG_ERROR, true, "Unknown command: %s", cmd);
         return false;
     }
 
