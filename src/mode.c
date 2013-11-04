@@ -93,6 +93,29 @@ void mode_enter(char id)
     vb_update_statusbar();
 }
 
+/**
+ * Set the prompt chars and switch to new mode.
+ *
+ * @id:           Mode id.
+ * @prompt:       Prompt string to set as current promt.
+ * @print_prompt: Indicates if the new set prompt should be put into inputbox
+ *                after switching the mode.
+ */
+void mode_enter_promt(char id, const char *prompt, gboolean print_prompt)
+{
+    /* set the prompt to be accessible in mode_enter */
+    strncpy(vb.state.prompt, prompt, PROMPT_SIZE - 1);
+    vb.state.prompt[PROMPT_SIZE - 1] = '\0';
+
+    mode_enter(id);
+
+    if (print_prompt) {
+        /* set it after the mode was entered so that the modes input change
+         * event listener could grep the new prompt */
+        vb_set_input_text(vb.state.prompt);
+    }
+}
+
 VbResult mode_handle_key(int key)
 {
     VbResult res;

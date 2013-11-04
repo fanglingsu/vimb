@@ -28,6 +28,7 @@ void mode_cleanup(void);
 void mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
     ModeKeyFunc keypress, ModeInputChangedFunc input_changed);
 void mode_enter(char id);
+void mode_enter_promt(char id, const char *prompt, gboolean print_prompt);
 VbResult mode_handle_key(int key);
 gboolean mode_input_focusin(GtkWidget *widget, GdkEventFocus *event, gpointer data);
 gboolean mode_input_focusout(GtkWidget *widget, GdkEventFocus *event, gpointer data);

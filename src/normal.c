@@ -224,7 +224,6 @@ void normal_enter(void)
  */
 void normal_leave(void)
 {
-    /* TODO clean those only if they where active */
     command_search(&((Arg){0}));
 }
 
@@ -392,14 +391,13 @@ static VbResult normal_descent(const NormalCmdInfo *info)
 
 static VbResult normal_ex(const NormalCmdInfo *info)
 {
-    mode_enter('c');
     if (info->cmd == 'F') {
-        vb_set_input_text(";t");
+        mode_enter_promt('c', ";t", true);
     } else if (info->cmd == 'f') {
-        vb_set_input_text(";o");
+        mode_enter_promt('c', ";o", true);
     } else {
         char prompt[2] = {info->cmd, '\0'};
-        vb_set_input_text(prompt);
+        mode_enter_promt('c', prompt, true);
     }
 
     return RESULT_COMPLETE;
@@ -460,8 +458,7 @@ static VbResult normal_hint(const NormalCmdInfo *info)
         return RESULT_ERROR;
     }
 
-    mode_enter('c');
-    vb_set_input_text(prompt);
+    mode_enter_promt('c', prompt, true);
     return RESULT_COMPLETE;
 }
 
@@ -474,7 +471,7 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */
-    mode_enter('c');
+    mode_enter_promt('c', ":", false);
 
     return RESULT_COMPLETE;
 }

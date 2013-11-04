@@ -269,7 +269,9 @@ typedef struct {
     gboolean        is_inspecting;
     GList           *downloads;
     gboolean        processed_key;
-    char            *title;         /* holds the window title */
+    char            *title;                 /* holds the window title */
+#define PROMPT_SIZE 3
+    char            prompt[PROMPT_SIZE];    /* current prompt ':', ';o', '/' */
 } State;
 
 typedef struct {

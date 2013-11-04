@@ -235,7 +235,6 @@ gboolean setting_fill_completion(GtkListStore *store, const char *input)
             }
         }
     }
-    /* TODO sort the store model */
     g_list_free(src);
 
     return found;

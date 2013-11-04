@@ -65,7 +65,6 @@ void history_cleanup(void)
 
 /**
  * Write a new history entry to the end of history file.
- * TODO identify the history by the promt char
  */
 void history_add(HistoryType type, const char *value, const char *additional)
 {

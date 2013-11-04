@@ -205,8 +205,6 @@ void ex_leave(void)
  */
 VbResult ex_keypress(int key)
 {
-    /* TODO allow to get the right prompt like ':', '/', ';o', ... */
-    char *prompt = ":";
     GtkTextIter start, end;
     GtkTextBuffer *buffer = vb.gui.buffer;
     GtkTextMark *mark;
@@ -267,7 +265,7 @@ VbResult ex_keypress(int key)
 
         case CTRL('B'):
             /* move the cursor direct behind the prompt */
-            gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(prompt));
+            gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(vb.state.prompt));
             gtk_text_buffer_place_cursor(buffer, &start);
             break;
 
@@ -281,7 +279,7 @@ VbResult ex_keypress(int key)
             /* remove everythings between cursor and prompt */
             mark = gtk_text_buffer_get_insert(buffer);
             gtk_text_buffer_get_iter_at_mark(buffer, &end, mark);
-            gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(prompt));
+            gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(vb.state.prompt));
             gtk_text_buffer_delete(buffer, &start, &end);
             break;
 
