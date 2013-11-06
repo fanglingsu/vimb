@@ -34,7 +34,7 @@ element (the link, input field or image) and the `_hintFocus` class is added to
 the current focused element as well as the label. Following default style is
 applied to the hints. To change already defined style it might be required to
 use the `!importen` flag on your style definition to take effect
-([see also here](#user-scripts)).
+([see User-Scripts](#user-scripts)).
 
     ._hintLabel {
         -webkit-transform:translate(-4px,-4px);

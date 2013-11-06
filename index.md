@@ -7,10 +7,10 @@ active: home
 
 # vimb - a vim-like webkit browser
 
-[Vimb][vimb] is a fast and lightweight web browser based on the webkit web
-browser engine and the gtk toolkit. Vimb is modal like the great vim editor
-and also easily configurable during runtime. Vimb is mostly keyboard driven
-and does not detract you from your daily work.
+[Vimb][vimb] is a fast and lightweight vim like web browser based on the
+webkit web browser engine and the gtk toolkit. Vimb is modal like the great
+vim editor and also easily configurable during runtime. Vimb is mostly
+keyboard driven and does not detract you from your daily work.
 
 If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
@@ -42,6 +42,11 @@ makes you more productive in your work.
 - xembed - so vimb can be used together with [tabbed][]
 - run shell commands from inputbox
 - manipulate http request headers
+
+## packages
+
+- [archlinux][]
+- [NetBSD][]
 
 ## install
 
@@ -91,14 +96,16 @@ If you find a misbehaviour or have feature requests use the
 [zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
 [tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
 [releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
-[bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim-like browser - issues"
+[bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
 [surf]:        http://surf.suckless.org/
-[vimb]:        https://github.com/fanglingsu/vimb "vimb vim-like webbrowser sources"
+[vimb]:        https://github.com/fanglingsu/vimb "vimb vim like browser sources"
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
-[keybindings]: keybindings.html
-[hints]:       keybindings.html#hinting
-[history]:     keybindings.html#history
-[queue]:       commands.html#queue
-[shortcuts]:   commands.html#shortcuts
-[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim-like browser - mailing list"
+[keybindings]: keybindings.html "vimb keybindings"
+[hints]:       keybindings.html#hinting "vimb hinting"
+[history]:     keybindings.html#history "vimb keybindings to access history"
+[queue]:       commands.html#queue "vimb read it later queue feature"
+[shortcuts]:   commands.html#shortcuts "vimb shortcuts"
+[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
+[archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
+[NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
