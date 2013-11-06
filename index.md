@@ -1,7 +1,7 @@
 ---
 title:  Vimb - Vim Browser
 layout: default
-meta:   vimb the vim browser is a fast, keyboard driven and lightweight web-browser
+meta:   vimb the vim like browser is a fast, keyboard driven and lightweight web-browser
 active: home
 ---
 
