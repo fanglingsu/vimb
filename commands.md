@@ -43,7 +43,7 @@ examples. Standard key mapping commands are provided for these modes m:
 
 - n Normal mode: When browsing normally.
 - i Insert mode: When interacting with text fields on a website.
-- c Command Line mode: When typing into the vimbs command line.
+- c Command Line mode: When typing into the command line of vimb
 
 Most keys in key sequences are represented simply by the character that you see
 on the screen when you type them. However, as a number of these characters have
@@ -136,7 +136,7 @@ same but a single parameter is user defined.
 ## queue
 {:#queue}
 
-The queue allows to mark URLs for later reding (something like a read it later
+The queue allows to mark URLs for later reading (something like a read it later
 list). This list is shared between the single instances of vimb. Only available
 if vimb has been compiled with QUEUE feature.
 
@@ -156,16 +156,16 @@ if vimb has been compiled with QUEUE feature.
 ## misc
 
 \:sh[ellcmd] CMD
-: Runs given shell CMD syncron and print the output into inputbox. The CMD can
-  contain multiple '%' chars that are expanded to the current opened uri. Also
-  the '~/' to home dir expansion is available.
+: Runs given shell CMD synchronous and print the output into inputbox. The CMD
+  can contain multiple '%' chars that are expanded to the current opened uri.
+  Also the '~/' to home directory expansion is available.
 
   Example: ``:shellcmd echo "`date` %" >> myhistory.txt``
 
 \:s[ave] [PATH]
 : Download current opened page into configured download directory. If PATH is
   given, download under this file name or path. Possible value for PATH are
-  'page.html', 'subdir/img1.png', '~/downlod.html' or absolute paths
+  'page.html', 'subdir/img1.png', '~/download.html' or absolute paths
   '/tmp/file.html'.
 
 \:q[uit]

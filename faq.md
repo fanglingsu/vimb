@@ -18,7 +18,7 @@ plugged into another xembed aware window that allows tabbing like [tabbed][].
 ## User-Scripts does not seem to have any effect
 {:#user-scripts}
 
-The precedance of the user style is lower than that of the website so you have
+The precedence of the user style is lower than that of the website so you have
 to mark your style definition to have higher priority.
 
     a:link {color: #0f0 !important;}

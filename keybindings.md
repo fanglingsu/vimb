@@ -31,7 +31,7 @@ g-F
 : Opend the Web Inspector for current page.
 
 CTRL-V
-: Pass the next key press directly to gtk.
+: Pass the next key press directly to GTK.
 
 CTRL-Q
 : Quit the browser.
@@ -51,7 +51,7 @@ T
 : Start Command Mode and print ':tabopen URI' to input box.
 
 g-h
-: Opend the configured home-page.
+: Open the configured home-page.
 
 g-H
 : Open the configured home-page into new window.
@@ -228,10 +228,10 @@ F
   may remove other content from there!
 
 [N]n
-: Search for Nnth next search result depending on current serach direction.
+: Search for Nth next search result depending on current search direction.
 
 [N]N
-: Search for Nnth previous search result depending on current serach
+: Search for Nth previous search result depending on current search
   direction.
 
 ### zooming
@@ -285,7 +285,7 @@ CTRL-E
 : Moves the cursor after the char in inputbox.
 
 CTRL-V
-: Pass the next key press directly to gtk.
+: Pass the next key press directly to GTK.
 
 ### command line history
 {:#history}

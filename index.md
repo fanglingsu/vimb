@@ -1,14 +1,14 @@
 ---
 title:  Vimb - Vim Browser
 layout: default
-meta:   vimb the vim like browser is a fast, keyboard driven and lightweight web-browser
+meta:   vimb - vim like browser is a fast, keyboard driven and lightweight web-browser
 active: home
 ---
 
-# vimb - a vim-like webkit browser
+# vimb - vim like webkit browser
 
 [Vimb][vimb] is a fast and lightweight vim like web browser based on the
-webkit web browser engine and the gtk toolkit. Vimb is modal like the great
+webkit web browser engine and the GTK toolkit. Vimb is modal like the great
 vim editor and also easily configurable during runtime. Vimb is mostly
 keyboard driven and does not detract you from your daily work.
 
@@ -17,9 +17,8 @@ of vimb would be a breeze, if not we missed our target.
 
 ## screenshots
 
-There isn't really much to see for a browser that controlled via keyboard and
-a single inputbox, but following images may give a impression of they way vimb
-makes you more productive in your work.
+There isn't really much to see for a browser that is controlled via keyboard.
+But following images may give a impression of they way vimb works.
 
 [![link hinting](media/vimb-hints.png "link hinting (688x472 32kB)"){:width="350"}](media/vimb-hints.png)
 [![setting completion of vimb](media/vimb-completion.png "completion of settings (690x472 10kB)"){:width="350"}](media/vimb-completion.png)
@@ -34,7 +33,7 @@ makes you more productive in your work.
 - cookie support
 - userscripts support
 - customer stylesheet support
-- completions for commands, url history, bookmarks, boorkamrk tags, variables
+- completions for commands, url history, bookmarks, bookmark tags, variables
   and search queries
 - [history][] for commands, url and search queries
 - open textareas with configurable editor
@@ -52,7 +51,7 @@ makes you more productive in your work.
 
 1. Download the sources
 
-   - You can get vimb from github with following command.
+   - You can get vimb from github by following command.
    
          git clone git://github.com/fanglingsu/vimb.git vimb
    
@@ -69,7 +68,7 @@ makes you more productive in your work.
    `config.def.h` and make sure you include any changes to the latter in your
    `config.h`.
 
-4. Run following command to compile and install vimb (if necessary last one as
+4. Run following commands to compile and install vimb (if necessary last one as
    root).
 
        make clean && make
