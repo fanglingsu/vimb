@@ -91,7 +91,7 @@ gboolean dom_focus_input(WebKitWebView *view)
     }
 
     result = webkit_dom_document_evaluate(
-        doc, "//input[@type='text']|//input[@type='password']|//textarea",
+        doc, "//input[not(@type) or @type='text' or @type='password']|//textarea",
         html, resolver, 0, NULL, NULL
     );
     if (!result) {

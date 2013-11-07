@@ -377,11 +377,11 @@ var VbHint = (function(){
                 );
             case "e":
                 if (!s) {
-                    return "//input[@type='text'] | //textarea";
+                    return "//input[not(@type) or @type='text'] | //textarea";
                 }
                 return buildQuery(
                     ["@value", ".", "@placeholder"],
-                    "//input[@type='text' and ($@value or $@placeholder)] | //textarea[$.]",
+                    "//input[(not(@type) or @type='text') and ($@value or $@placeholder)] | //textarea[$.]",
                     s
                 );
             case "i":
