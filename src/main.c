@@ -801,8 +801,7 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
 
     g_object_get(result, "context", &context, NULL);
-    /* TODO move this to normal.c */
-    if (vb.mode->id == 'n' && context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
         mode_enter('i');
         propagate = true;
     } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
