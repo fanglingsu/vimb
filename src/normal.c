@@ -215,6 +215,8 @@ static char showcmd_buf[SHOWCMD_LEN + 1];   /* buffer to show ambiguous key sequ
 void normal_enter(void)
 {
     dom_clear_focus(vb.gui.webview);
+    /* Make sure that when the browser area becomes visible, it will get mouse
+     * and keyboard events */
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
     hints_clear();
 }

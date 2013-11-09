@@ -622,7 +622,6 @@ static void init_core(void)
     gui->eventbox = gtk_event_box_new();
 
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), true, true);
-    gtk_widget_show_all(gui->window);
 
     /* Put all part together */
     gtk_container_add(GTK_CONTAINER(gui->scroll), GTK_WIDGET(gui->webview));
@@ -641,10 +640,6 @@ static void init_core(void)
 
     setup_signals();
 
-    /* Make sure that when the browser area becomes visible, it will get mouse
-     * and keyboard events */
-    gtk_widget_grab_focus(GTK_WIDGET(gui->webview));
-
     /* initialize the modes */
     mode_init();
     mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
@@ -661,6 +656,7 @@ static void init_core(void)
 
     /* initially apply input style */
     vb_update_input_style();
+
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
 }
