@@ -1003,7 +1003,7 @@ int main(int argc, char *argv[])
     init_core();
 
     /* command line argument: URL */
-    vb_load_uri(&(Arg){VB_TARGET_CURRENT, argc > 1 ? argv[argc - 1] : vb.config.home_page});
+    vb_load_uri(&(Arg){VB_TARGET_CURRENT, argc > 1 ? argv[argc - 1] : NULL});
 
     /* Run the main GTK+ event loop */
     gtk_main();
