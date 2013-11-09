@@ -638,15 +638,12 @@ static void init_core(void)
     gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
     gtk_box_pack_end(gui->box, gui->input, false, false, 0);
 
-    setup_signals();
-
     /* initialize the modes */
     mode_init();
     mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
     mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
     mode_add('i', input_enter, input_leave, input_keypress, NULL);
     mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
-    mode_enter('n');
 
     init_files();
     session_init();
@@ -656,6 +653,11 @@ static void init_core(void)
 
     /* initially apply input style */
     vb_update_input_style();
+
+    setup_signals();
+
+    /* enter normal mode */
+    mode_enter('n');
 
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
