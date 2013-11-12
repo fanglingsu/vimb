@@ -115,7 +115,9 @@ static gboolean ex_map(const ExArg *arg);
 static gboolean ex_unmap(const ExArg *arg);
 static gboolean ex_normal(const ExArg *arg);
 static gboolean ex_open(const ExArg *arg);
+#ifdef FEATURE_QUEUE
 static gboolean ex_queue(const ExArg *arg);
+#endif
 static gboolean ex_quit(const ExArg *arg);
 static gboolean ex_save(const ExArg *arg);
 static gboolean ex_set(const ExArg *arg);
@@ -151,10 +153,12 @@ static ExInfo commands[] = {
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"open",             EX_OPEN,        ex_open,       EX_FLAG_RHS},
     {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE},
+#ifdef FEATURE_QUEUE
+    {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
     {"qclear",           EX_QCLEAR,      ex_queue,      EX_FLAG_RHS},
     {"qpop",             EX_QPOP,        ex_queue,      EX_FLAG_NONE},
     {"qpush",            EX_QPUSH,       ex_queue,      EX_FLAG_RHS},
-    {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
+#endif
     {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS|EX_FLAG_EXP},
     {"set",              EX_SET,         ex_set,        EX_FLAG_RHS},
     {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS|EX_FLAG_EXP},
