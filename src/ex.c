@@ -764,7 +764,8 @@ static gboolean ex_open(const ExArg *arg)
 #ifdef FEATURE_QUEUE
 static gboolean ex_queue(const ExArg *arg)
 {
-    Arg a = {.s = arg->rhs->str};
+    Arg a = {0};
+
     switch (arg->code) {
         case EX_QPUSH:
             a.i = COMMAND_QUEUE_PUSH;
@@ -784,6 +785,12 @@ static gboolean ex_queue(const ExArg *arg)
 
         default:
             return false;
+    }
+
+    /* if no argument is found in rhs, keep the uri in arg null to force
+     * command_queue() to use current URI */
+    if (arg->rhs->len) {
+        a.s = arg->rhs->str;
     }
 
     return command_queue(&a);
