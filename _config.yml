@@ -1,5 +1,5 @@
-auto: true
-server: true
+save: true
+lsi: false
 pygments: true
 markdown: kramdown
 
@@ -9,5 +9,4 @@ kramdown:
   entity_output: as_char
   toc_levels: 2..5
 
-exclude:
-  README.md
+exclude: [README.md]
