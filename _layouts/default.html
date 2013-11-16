@@ -3,7 +3,7 @@
 <head>
 <title>{{ page.title }}</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta http-equiv="last-modified" content="{{ site.time | date: "%Y-%m-%d@%H:%M:%S %Z" }}" />
+<meta http-equiv="last-modified" content="{{ site.time | date_to_rfc822 }}" />
 <meta name="description" content="{{ page.meta }}" />
 <meta name="robots" content="index,follow" />
 <link rel="stylesheet" type="text/css" href="theme/main.css" />
