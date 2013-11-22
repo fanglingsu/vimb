@@ -1,11 +1,11 @@
 ---
-title:  Vimb - Vim Browser
+title:  Vimb - The Vim like Browser
 layout: default
-meta:   vimb - vim like browser is a fast, keyboard driven and lightweight web-browser
+meta:   vimb - the vim like browser is a fast, keyboard driven and lightweight web-browser
 active: home
 ---
 
-# vimb - vim like webkit browser
+# vimb - the vim like browser
 
 [Vimb][vimb] is a fast and lightweight vim like web browser based on the
 webkit web browser engine and the GTK toolkit. Vimb is modal like the great
