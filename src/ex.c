@@ -197,10 +197,7 @@ void ex_enter(void)
  */
 void ex_leave(void)
 {
-    if (vb.mode->flags & FLAG_COMPLETION) {
-        completion_clean();
-        vb.mode->flags &= ~FLAG_COMPLETION;
-    }
+    completion_clean();
     hints_clear();
 }
 
@@ -903,7 +900,6 @@ static gboolean complete(short direction)
     /* if direction is 0 stop the completion */
     if (!direction) {
         completion_clean();
-        vb.mode->flags &= ~FLAG_COMPLETION;
 
         return true;
     }
@@ -922,7 +918,6 @@ static gboolean complete(short direction)
         /* if current input isn't the content of the completion item, stop
          * completion and start it after that again */
         completion_clean();
-        vb.mode->flags &= ~FLAG_COMPLETION;
     }
 
     store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
@@ -997,11 +992,9 @@ static gboolean complete(short direction)
             GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING
         );
     }
-    if (found
-        && completion_create(GTK_TREE_MODEL(store), completion_select, direction < 0)
-    ) {
-        /* set the submode flag */
-        vb.mode->flags |= FLAG_COMPLETION;
+
+    if (found) {
+        completion_create(GTK_TREE_MODEL(store), completion_select, direction < 0);
     }
 
     g_free(input);

@@ -139,6 +139,8 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
     }
 #endif
 
+    vb.mode->flags |= FLAG_COMPLETION;
+
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
     gtk_widget_show_all(comp.win);
@@ -180,6 +182,7 @@ void completion_next(gboolean back)
 
 void completion_clean(void)
 {
+    vb.mode->flags &= ~FLAG_COMPLETION;
     if (comp.win) {
         gtk_widget_destroy(comp.win);
         comp.win = comp.tree = NULL;
