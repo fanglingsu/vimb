@@ -130,9 +130,13 @@ void hints_create(const char *input)
 
         run_script(js);
         g_free(js);
+
+        /* if hinting is started there won't be any aditional filter given and
+         * we can go out of this function */
+        return;
     }
 
-    js = g_strdup_printf("%s.create('%s');", HINT_VAR, input + 2);
+    js = g_strdup_printf("%s.filter('%s');", HINT_VAR, *(input + 2) ? input + 2 : "");
     run_script(js);
     g_free(js);
 }
