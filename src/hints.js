@@ -19,9 +19,7 @@ var VbHint = (function(){
             "-webkit-transform:translate(-4px,-4px);" +
             "position:absolute;" +
             "z-index:100000;" +
-            "font-family:monospace;" +
-            "font-weight:bold;" +
-            "font-size:10px;" +
+            "font:bold\x20.8em\x20monospace;" +
             "color:#000;" +
             "background-color:#fff;" +
             "margin:0;" +
