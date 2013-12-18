@@ -7,6 +7,9 @@ var VbHint = (function(){
         activeHint = 1,                /* number of current focused hint in valid hints array */
         filterText = "",               /* holds the typed filter text */
         filterNum  = 0,                /* holds the numeric filter */
+        /* TODO remove these classes and use the 'vimbhint' attribute for */
+        /* styling the hints and labels - but this might break user */
+        /* stylesheets that use the classes for styling */
         cId      = "_hintContainer",   /* id of the conteiner holding the hint lables */
         lClass   = "_hintLabel",       /* class used on the hint labels with the hint numbers */
         hClass   = "_hintElem",        /* marks hinted elements */
@@ -37,8 +40,46 @@ var VbHint = (function(){
             "opacity:1" +
             "}";
 
+    /* the hint class used to maintain hinted element and labels */
+    function Hint() {
+        /* publich properties e, label, text, showText, num */
+        /* set the active status of the hint - if active show the element */
+        /* with green background instead of yellow */
+        this.setActive = function(active) {
+            if (active) {
+                this.e.classList.add(fClass);
+                this.label.classList.add(fClass);
+            } else {
+                this.e.classList.remove(fClass);
+                this.label.classList.remove(fClass);
+            }
+        };
+
+        /* hide hint label and remove coloring from hinted element */
+        this.hide = function() {
+            /* remove hint labels from no more visible hints */
+            this.label.style.display = "none";
+            this.e.classList.remove(fClass);
+            this.e.classList.remove(hClass);
+        };
+
+        /* show the hint element colored with the hint label */
+        this.show = function() {
+            this.label.style.display = "";
+            this.e.classList.add(hClass);
+
+            /* create the label with the hint number */
+            this.label.innerText = this.num;
+            if (this.showText && this.text) {
+                /* use \x20 instead of ' ' to keep this space during */
+                /* js2h.sh processing */
+                this.label.innerText += ":\x20" + this.text.substr(0, 20);
+            }
+        };
+    }
+
     function clear() {
-        var i, j, hint, doc, e;
+        var i, j, doc, e;
         for (i = 0; i < docs.length; i++) {
             doc = docs[i];
             /* find all hinted elements vimbhint 'hint' */
@@ -91,7 +132,7 @@ var VbHint = (function(){
             }
 
             var doc       = win.document,
-                res       = xpath(doc, getXpath()),
+                res       = xpath(doc, config.xpath),
                 /* generate basic hint element which will be cloned and updated later */
                 labelTmpl = doc.createElement("span"),
                 e, i;
@@ -151,10 +192,11 @@ var VbHint = (function(){
                 e.setAttribute("vimbhint", "hint");
 
                 hints.push({
-                    e:        e,
-                    label:    label,
-                    text:     text,
-                    showText: showText
+                    e:         e,
+                    label:     label,
+                    text:      text,
+                    showText:  showText,
+                    __proto__: new Hint
                 });
 
                 if (count >= config.maxHints) {
@@ -165,8 +207,8 @@ var VbHint = (function(){
             /* append the fragment to the document */
             var hDiv = doc.createElement("div");
             hDiv.id  = cId;
-            hDiv.appendChild(fragment);
             hDiv.setAttribute("vimbhint", "container");
+            hDiv.appendChild(fragment);
             if (doc.body) {
                 doc.body.appendChild(hDiv);
             }
@@ -205,32 +247,22 @@ var VbHint = (function(){
         validHints = [];
         for (i = 0; i < hints.length; i++) {
             hint = hints[i];
-            /* collect only hints matching the filter text */
-            if (matcher(hint.text)) {
+            /* hide not matching the filter text */
+            if (!matcher(hint.text)) {
+                hint.hide();
+            } else {
                 /* assigne the new hint number to the hint */
-                hint.num = num++;
-                setFocus(hint, activeHint === hint.num);
+                hint.num = num;
+                hint.setActive(activeHint === num);
                 /* check for number filter */
-                if (!filterNum || 0 === hint.num.toString().indexOf(filterNum.toString())) {
-                    hint.label.style.display = "";
-                    hint.e.classList.add(hClass);
-
-                    /* create the label with the hint number */
-                    hint.label.innerText = hint.num;
-                    if (hint.showText && hint.text) {
-                        /* use \x20 instead of ' ' to keep this space during */
-                        /* js2h.sh processing */
-                        hint.label.innerText += ":\x20" + hint.text.substr(0, 20);
-                    }
+                if (!filterNum || 0 === num.toString().indexOf(filterNum.toString())) {
+                    hint.show();
                     validHints.push(hint);
-                    continue;
+                } else {
+                    hint.hide();
                 }
+                num++;
             }
-            /* remove hint labels from no more visible hints */
-            hint.label.style.display = "none";
-            hint.label.classList.remove(fClass);
-            hint.e.classList.remove(fClass);
-            hint.e.classList.remove(hClass);
         }
 
         if (validHints.length === 1) {
@@ -318,11 +350,7 @@ var VbHint = (function(){
             return "DONE:";
         }
 
-        switch (config.usage) {
-            case "T": open(e, true); return "DONE:";
-            case "O": open(e, false); return "DONE:";
-            default: return "DATA:" + getSrc(e);
-        }
+        return config.action(e);
     }
 
     /* internal used methods */
@@ -343,36 +371,18 @@ var VbHint = (function(){
         /* reset previous focused hint */
         var hint;
         if ((hint = validHints[oldNum - 1])) {
-            setFocus(hint, false);
-
+            hint.setActive(false);
             mouseEvent(hint.e, "mouseout");
         }
 
         /* mark new hint as focused */
         activeHint = newNum;
         if ((hint = validHints[newNum - 1])) {
-            setFocus(hint, true);
-
+            hint.setActive(true);
             mouseEvent(hint.e, "mouseover");
 
             var src = getSrc(hint.e);
             return "OVER:" + (src || "");
-        }
-    }
-
-    /* Toggles the focus highlight of a hint */
-    function setFocus(hint, active) {
-        if (active) {
-            /* TODO place and remove the active value independent from 'hint' */
-            hint.e.setAttribute("vimbhint", "hint active");
-            hint.e.classList.add(fClass);
-            hint.label.setAttribute("vimbhint", "label active");
-            hint.label.classList.add(fClass);
-        } else {
-            hint.e.setAttribute("vimbhint", "hint");
-            hint.e.classList.remove(fClass);
-            hint.label.setAttribute("vimbhint", "label");
-            hint.label.classList.remove(fClass);
         }
     }
 
@@ -394,18 +404,6 @@ var VbHint = (function(){
     /* retrieves the url of given element */
     function getSrc(e) {
         return e.href || e.src;
-    }
-
-    /* retrieves the xpath expression according to mode */
-    function getXpath() {
-        switch (config.mode) {
-            case "l":
-                return "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select";
-            case "e":
-                return "//input[not(@type) or @type='text'] | //textarea";
-            case "i":
-                return "//img[@src]";
-        }
     }
 
     function xpath(doc, expr) {
@@ -473,34 +471,38 @@ var VbHint = (function(){
 
     /* the api */
     return {
-        init: function init(prefix, maxHints) {
-            /* mode: l - links, i - images, e - editables */
-            /* usage: O - open, T - open in new window, U - use source */
-            var map = {
-                /* prompt : [mode, usage] */
-                ";e": ['e', 'U'],
-                ";i": ['i', 'U'],
-                ";I": ['i', 'U'],
-                ";o": ['l', 'O'],
-                ";O": ['l', 'U'],
-                ";p": ['l', 'U'],
-                ";P": ['l', 'U'],
-                ";s": ['l', 'U'],
-                ";t": ['l', 'T'],
-                ";T": ['l', 'U'],
-                ";y": ['l', 'U']
+        init: function init(prompt, maxHints) {
+            var map = {},
+                defaultXpath = "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
+                srcXpath = "//*[@href] | //img[@src] | //iframe[@src]";
+            function addMode(prompt, xpath, action) {
+                map[prompt] = {
+                    xpath:  xpath  || defaultXpath,
+                    action: action || function(e) {
+                        return "DATA:" + getSrc(e);
+                    }
+                };
             };
-            /* default config */
-            config = {
-                mode:     'l',
-                usage:    'O',
-                maxHints: maxHints
-            };
-            /* overwrite with mapped config if found */
-            if (map.hasOwnProperty(prefix)) {
-                config.mode  = map[prefix][0];
-                config.usage = map[prefix][1];
-            }
+            addMode(";e", "//input[not(@type) or @type='text'] | //textarea");
+            addMode(";i", "//img[@src]");
+            addMode(";I", "//img[@src]");
+            addMode(";o", null, function(e){
+                open(e, false);
+                return "DONE:";
+            });
+            addMode(";O", srcXpath);
+            addMode(";p", srcXpath);
+            addMode(";P", srcXpath);
+            addMode(";s", srcXpath);
+            addMode(";t", null, function(e){
+                open(e, true);
+                return "DONE:";
+            });
+            addMode(";T", srcXpath);
+            addMode(";y", srcXpath);
+
+            config = map.hasOwnProperty(prompt) ? map[prompt] : map[";o"];
+            config.maxHints = maxHints;
             create();
             return show();
         },
