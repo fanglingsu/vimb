@@ -35,6 +35,8 @@ var VbHint = (function(){
             "background-color:#8f0 !important" +
             "}" +
             "." + lClass + "." + fClass + "{" +
+            /* use higher z-index to show the active label if it's overlapped by other labels */
+            "z-index:100001;" +
             "opacity:1" +
             "}";
 
