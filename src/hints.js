@@ -507,6 +507,9 @@ var VbHint = (function(){
             return show();
         },
         filter: function filter(text) {
+            /* remove previously set number filters to make the filter */
+            /* easier to understand for the users */
+            filterNum  = 0;
             filterText = text || "";
             return show();
         },
