@@ -471,38 +471,37 @@ var VbHint = (function(){
     /* the api */
     return {
         init: function init(prompt, maxHints) {
-            var modes = {},
-                defaultXpath = "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
-                srcXpath     = "//*[@href] | //img[@src] | //iframe[@src]";
-
-            function addMode(prompt, xpath, action) {
-                modes[prompt] = {
-                    xpath:  xpath  || defaultXpath,
-                    action: action || function(e) {
-                        return "DATA:" + getSrc(e);
-                    }
+            var prop,
+                /* get the last mode identifying char of prompt */
+                c = prompt.slice(-1),
+                /* holds the xpaths for the different modes */
+                xpathmap = {
+                    ot:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
+                    e:      "//input[not(@type) or @type='text'] | //textarea",
+                    iI:     "//img[@src]",
+                    OpPsTy: "//*[@href] | //img[@src] | //iframe[@src]"
+                },
+                /* holds the actions to perform on hint fire */
+                actionmap = {
+                    o:         function(e) {open(e, false); return "DONE:";},
+                    t:         function(e) {open(e, true); return "DONE:";},
+                    eiIOpPsTy: function(e) {return "DATA:" + getSrc(e);}
                 };
-            };
-            addMode(";e", "//input[not(@type) or @type='text'] | //textarea");
-            addMode(";i", "//img[@src]");
-            addMode(";I", "//img[@src]");
-            addMode(";o", null, function(e){
-                open(e, false);
-                return "DONE:";
-            });
-            addMode(";O", srcXpath);
-            addMode(";p", srcXpath);
-            addMode(";P", srcXpath);
-            addMode(";s", srcXpath);
-            addMode(";t", null, function(e){
-                open(e, true);
-                return "DONE:";
-            });
-            addMode(";T", srcXpath);
-            addMode(";y", srcXpath);
 
-            config = modes.hasOwnProperty(prompt) ? modes[prompt] : modes[";o"];
-            config.maxHints = maxHints;
+            config = {maxHints: maxHints};
+            for (prop in xpathmap) {
+                if (prop.indexOf(c) >= 0) {
+                    config["xpath"] = xpathmap[prop];
+                    break;
+                }
+            }
+            for (prop in actionmap) {
+                if (prop.indexOf(c) >= 0) {
+                    config["action"] = actionmap[prop];
+                    break;
+                }
+            }
+
             create();
             return show();
         },
