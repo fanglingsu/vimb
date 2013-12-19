@@ -270,7 +270,9 @@ var VbHint = (function(){
             }
         }
 
-        if (validHints.length === 1) {
+        /* if no hint is matche or only one remains fire it */
+        /* fire will also handle the case when there is not valid hint found */
+        if (validHints.length <= 1) {
             return fire();
         }
         return focusHint(1, activeHint);
