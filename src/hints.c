@@ -120,6 +120,17 @@ void hints_create(const char *input)
      * inputbox on backspace also if there was used a number filter prior */
     hints.num = 0;
 
+    /* if there is no input or the input is no valid hint mode prefix, clear
+     * possible previous hint mode */
+    if (!input || strlen(input) < 2) {
+        /* stop hint mode - we switch direct to normal mode that will clear
+         * the hinting and additional will remove focus from input box */
+        if (vb.mode->flags & FLAG_HINTING) {
+            mode_enter('n');
+        }
+        return;
+    }
+
     if (!(vb.mode->flags & FLAG_HINTING)) {
         vb.mode->flags |= FLAG_HINTING;
 
