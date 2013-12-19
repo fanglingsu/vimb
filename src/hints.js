@@ -4,16 +4,16 @@ var VbHint = (function(){
     var hints      = [],               /* holds all hint data (hinted element, label, number) in view port */
         docs       = [],               /* hold the affected document with the start and end index of the hints */
         validHints = [],               /* holds the valid hinted elements matching the filter condition */
-        activeHint = 1,                /* number (idx+1) of current focused hint in valid hints array */
+        activeHint,                    /* holds the active hint object */
         filterText = "",               /* holds the typed filter text */
         filterNum  = 0,                /* holds the numeric filter */
         /* TODO remove these classes and use the 'vimbhint' attribute for */
         /* styling the hints and labels - but this might break user */
         /* stylesheets that use the classes for styling */
-        cId      = "_hintContainer",   /* id of the conteiner holding the hint lables */
+        cId      = "_hintContainer",   /* id of the container holding the hint labels */
         lClass   = "_hintLabel",       /* class used on the hint labels with the hint numbers */
         hClass   = "_hintElem",        /* marks hinted elements */
-        fClass   = "_hintFocus",       /* marks focused element and focued hint */
+        fClass   = "_hintFocus",       /* marks focused element and focussed hint */
         config,
         style    = "." + lClass + "{" +
             "-webkit-transform:translate(-4px,-4px);" +
@@ -42,19 +42,6 @@ var VbHint = (function(){
 
     /* the hint class used to maintain hinted element and labels */
     function Hint() {
-        /* publich properties e, label, text, showText, num */
-        /* set the active status of the hint - if active show the element */
-        /* with green background instead of yellow */
-        this.setActive = function(active) {
-            if (active) {
-                this.e.classList.add(fClass);
-                this.label.classList.add(fClass);
-            } else {
-                this.e.classList.remove(fClass);
-                this.label.classList.remove(fClass);
-            }
-        };
-
         /* hide hint label and remove coloring from hinted element */
         this.hide = function() {
             /* remove hint labels from no more visible hints */
@@ -97,7 +84,6 @@ var VbHint = (function(){
         validHints = [];
         filterText = "";
         filterNum  = 0;
-        activeHint = 1;
     }
 
     function create() {
@@ -245,7 +231,8 @@ var VbHint = (function(){
     }
 
     function show() {
-        var i, hint, num = 1,
+        var i, hint,
+            num     = 1,
             matcher = getMatcher(filterText);
 
         /* clear the array of valid hints */
@@ -256,9 +243,8 @@ var VbHint = (function(){
             if (!matcher(hint.text)) {
                 hint.hide();
             } else {
-                /* assigne the new hint number to the hint */
+                /* assign the new hint number to the hint */
                 hint.num = num;
-                hint.setActive(activeHint === num);
                 /* check for number filter */
                 if (!filterNum || 0 === num.toString().indexOf(filterNum.toString())) {
                     hint.show();
@@ -270,15 +256,15 @@ var VbHint = (function(){
             }
         }
 
-        /* if no hint is matche or only one remains fire it */
-        /* fire will also handle the case when there is not valid hint found */
         if (validHints.length <= 1) {
+            focusHint(0);
+
             return fire();
         }
-        return focusHint(1, activeHint);
+        return focusHint(0);
     }
 
-    /* Retruns a vlidator method to check if the hint elemens text matches */
+    /* Returns a validator method to check if the hint elements text matches */
     /* the given filter text. */
     function getMatcher(text) {
         var tokens = text.toLowerCase().split(/\s+/);
@@ -314,26 +300,30 @@ var VbHint = (function(){
     }
 
     function focus(back) {
-        var old = activeHint;
+        var idx = validHints.indexOf(activeHint);
+        /* previous active hint not found */
+        if (idx < 0) {
+            idx = 0;
+        }
+
         if (back) {
-            if (--activeHint < 1) {
-                activeHint = validHints.length;
+            if (--idx < 0) {
+                idx = validHints.length - 1;
             }
         } else {
-            if (++activeHint > validHints.length) {
-                activeHint = 1;
+            if (++idx >= validHints.length) {
+                idx = 0;
             }
         }
-        return focusHint(activeHint, old);
+        return focusHint(idx);
     }
 
-    function fire(num) {
-        var hint = validHints[(num || activeHint) - 1];
-        if (!hint) {
+    function fire() {
+        if (!activeHint) {
             return "DONE:";
         }
 
-        var e    = hint.e,
+        var e    = activeHint.e,
             tag  = e.nodeName.toLowerCase(),
             type = e.type || "";
 
@@ -373,24 +363,21 @@ var VbHint = (function(){
         e.target = oldTarget;
     }
 
-    /* set focus on hint with given number - note that the number need not */
-    /* to be the number shown in the hint label */
-    function focusHint(newNum, oldNum) {
+    /* set focus on hint with given index valid hints array */
+    function focusHint(newIdx) {
         /* reset previous focused hint */
-        var hint;
-        if ((hint = validHints[oldNum - 1])) {
-            hint.setActive(false);
-            mouseEvent(hint.e, "mouseout");
+        if (activeHint) {
+            activeHint.e.classList.remove(fClass);
+            activeHint.label.classList.remove(fClass);
+            mouseEvent(activeHint.e, "mouseout");
         }
+        /* get the new active hint */
+        if ((activeHint = validHints[newIdx])) {
+            activeHint.e.classList.add(fClass);
+            activeHint.label.classList.add(fClass);
+            mouseEvent(activeHint.e, "mouseover");
 
-        /* mark new hint as focused */
-        activeHint = newNum;
-        if ((hint = validHints[newNum - 1])) {
-            hint.setActive(true);
-            mouseEvent(hint.e, "mouseover");
-
-            var src = getSrc(hint.e);
-            return "OVER:" + (src || "");
+            return "OVER:" + getSrc(activeHint.e);;
         }
     }
 
@@ -411,7 +398,7 @@ var VbHint = (function(){
 
     /* retrieves the url of given element */
     function getSrc(e) {
-        return e.href || e.src;
+        return e.href || e.src || "";
     }
 
     function xpath(doc, expr) {
@@ -435,7 +422,7 @@ var VbHint = (function(){
                 /* collect visible elements */
                 var s = doc.defaultView.getComputedStyle(all[i], null);
                 if (s.display !== "none" && s.visibility === "visible") {
-                    /* if there are rel attributes alaments, put them in the result */
+                    /* if there are rel attributes elements, put them in the result */
                     if (all[i].rel.toLowerCase() === rel) {
                         res.push(all[i]);
                     } else {
@@ -520,12 +507,7 @@ var VbHint = (function(){
             return show();
         },
         update: function update(n) {
-            if (n) {
-                filterNum  = n;
-                activeHint = n;
-            } else {
-                filterNum = 0;
-            }
+            filterNum = n > 0 ? n : 0;
             return show();
         },
         clear:      clear,
