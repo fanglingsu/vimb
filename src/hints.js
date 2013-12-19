@@ -231,7 +231,7 @@ var VbHint = (function(){
     }
 
     function show() {
-        var i, hint,
+        var i, hint, newIdx,
             num     = 1,
             matcher = getMatcher(filterText);
 
@@ -261,7 +261,11 @@ var VbHint = (function(){
 
             return fire();
         }
-        return focusHint(0);
+
+        /* if the previous active hint isn't valid set focus to first */
+        if (!activeHint || validHints.indexOf(activeHint) < 0) {
+            return focusHint(0);
+        }
     }
 
     /* Returns a validator method to check if the hint elements text matches */
