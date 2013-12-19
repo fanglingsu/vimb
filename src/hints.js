@@ -471,12 +471,12 @@ var VbHint = (function(){
     /* the api */
     return {
         init: function init(prompt, maxHints) {
-            var map = {},
+            var modes = {},
                 defaultXpath = "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
                 srcXpath     = "//*[@href] | //img[@src] | //iframe[@src]";
 
             function addMode(prompt, xpath, action) {
-                map[prompt] = {
+                modes[prompt] = {
                     xpath:  xpath  || defaultXpath,
                     action: action || function(e) {
                         return "DATA:" + getSrc(e);
@@ -501,7 +501,7 @@ var VbHint = (function(){
             addMode(";T", srcXpath);
             addMode(";y", srcXpath);
 
-            config = map.hasOwnProperty(prompt) ? map[prompt] : map[";o"];
+            config = modes.hasOwnProperty(prompt) ? modes[prompt] : modes[";o"];
             config.maxHints = maxHints;
             create();
             return show();
