@@ -4,7 +4,7 @@ var VbHint = (function(){
     var hints      = [],               /* holds all hint data (hinted element, label, number) in view port */
         docs       = [],               /* hold the affected document with the start and end index of the hints */
         validHints = [],               /* holds the valid hinted elements matching the filter condition */
-        activeHint = 1,                /* number of current focused hint in valid hints array */
+        activeHint = 1,                /* number (idx+1) of current focused hint in valid hints array */
         filterText = "",               /* holds the typed filter text */
         filterNum  = 0,                /* holds the numeric filter */
         /* TODO remove these classes and use the 'vimbhint' attribute for */
@@ -158,9 +158,13 @@ var VbHint = (function(){
                 /* create the hint label with number */
                 rect  = e.getBoundingClientRect();
                 label = labelTmpl.cloneNode(false);
-                label.style.left = Math.max((rect.left + offsetX), offsetX) + "px";
-                label.style.top  = Math.max((rect.top  + offsetY), offsetY) + "px";
-                label.style.display = "none";
+                label.setAttribute(
+                    "style", [
+                        "display:none;",
+                        "left:", Math.max((rect.left + offsetX), offsetX), "px;",
+                        "top:", Math.max((rect.top + offsetY), offsetY), "px;"
+                    ].join("")
+                );
 
                 /* if hinted element is an image - show title or alt of the image in hint label */
                 /* this allows to see how to filter for the image */
@@ -241,13 +245,14 @@ var VbHint = (function(){
     }
 
     function show() {
-        var i, hint, doc, num = 1, activeHint = filterNum || 1,
+        var i, hint, num = 1,
             matcher = getMatcher(filterText);
+
         /* clear the array of valid hints */
         validHints = [];
         for (i = 0; i < hints.length; i++) {
             hint = hints[i];
-            /* hide not matching the filter text */
+            /* hide hints not matching the filter text */
             if (!matcher(hint.text)) {
                 hint.hide();
             } else {
@@ -366,7 +371,8 @@ var VbHint = (function(){
         e.target = oldTarget;
     }
 
-    /* set focus on hint with given number */
+    /* set focus on hint with given number - note that the number need not */
+    /* to be the number shown in the hint label */
     function focusHint(newNum, oldNum) {
         /* reset previous focused hint */
         var hint;
@@ -474,7 +480,8 @@ var VbHint = (function(){
         init: function init(prompt, maxHints) {
             var map = {},
                 defaultXpath = "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
-                srcXpath = "//*[@href] | //img[@src] | //iframe[@src]";
+                srcXpath     = "//*[@href] | //img[@src] | //iframe[@src]";
+
             function addMode(prompt, xpath, action) {
                 map[prompt] = {
                     xpath:  xpath  || defaultXpath,
@@ -511,7 +518,12 @@ var VbHint = (function(){
             return show();
         },
         update: function update(n) {
-            filterNum = n;
+            if (n) {
+                filterNum  = n;
+                activeHint = n;
+            } else {
+                filterNum = 0;
+            }
             return show();
         },
         clear:      clear,
