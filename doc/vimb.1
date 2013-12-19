@@ -191,6 +191,12 @@ and numbered. Elements can be selected either by typing their number, or by
 typing part of their text (\fIhint\fP) to narrow down the result. When an
 element has been selected, it is automatically clicked or used (depending on
 \fImode\fP) and hint mode ends.
+
+The filtering of hints by text splits the query at ' ' and use the single parts
+as separate queries to filter the hints. This is useful for hints that have a
+lot of filterable chars in common and it needs many chars to make a distinct
+selection. For example ';ove to' will easily select the second hint out of
+{'very long link text one', 'very long link text two'}.
 .RS 0
 Following keys have special meanings in Hints mode:
 .IP \fB<CR>\fP
