@@ -42,7 +42,7 @@ CFLAGS  += $(shell pkg-config --cflags $(LIBS))
 CFLAGS  += -Wall -pipe -ansi -std=c99 -pedantic
 CFLAGS  += -Wmissing-declarations -Wmissing-parameter-type -Wno-overlength-strings
 CFLAGS  += ${CPPFLAGS}
-LDFLAGS += -s ${LIBFLAGS}
+LDFLAGS += ${LIBFLAGS}
 
 # compiler flags for the debug target
 DFLAGS   += $(CFLAGS) -DDEBUG -ggdb -g
