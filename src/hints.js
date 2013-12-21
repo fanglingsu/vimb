@@ -475,7 +475,7 @@ var VbHint = (function(){
                     ot:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
                     e:      "//input[not(@type) or @type='text'] | //textarea",
                     iI:     "//img[@src]",
-                    OpPsTy: "//*[@href] | //img[@src] | //iframe[@src]"
+                    OpPsTy: "//*[@href] | //img[@src and not(ancestor::a)] | //iframe[@src]"
                 },
                 /* holds the actions to perform on hint fire */
                 actionmap = {
