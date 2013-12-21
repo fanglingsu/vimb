@@ -331,8 +331,6 @@ var VbHint = (function(){
             tag  = e.nodeName.toLowerCase(),
             type = e.type || "";
 
-        clear();
-
         if (tag === "input" || tag === "textarea" || tag === "select") {
             if (type === "radio" || type === "checkbox") {
                 e.focus();
@@ -470,10 +468,8 @@ var VbHint = (function(){
 
     /* the api */
     return {
-        init: function init(prompt, maxHints) {
+        init: function init(mode, maxHints) {
             var prop,
-                /* get the last mode identifying char of prompt */
-                c = prompt.slice(-1),
                 /* holds the xpaths for the different modes */
                 xpathmap = {
                     ot:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
@@ -490,13 +486,13 @@ var VbHint = (function(){
 
             config = {maxHints: maxHints};
             for (prop in xpathmap) {
-                if (prop.indexOf(c) >= 0) {
+                if (prop.indexOf(mode) >= 0) {
                     config["xpath"] = xpathmap[prop];
                     break;
                 }
             }
             for (prop in actionmap) {
-                if (prop.indexOf(c) >= 0) {
+                if (prop.indexOf(mode) >= 0) {
                     config["action"] = actionmap[prop];
                     break;
                 }
@@ -513,7 +509,7 @@ var VbHint = (function(){
             return show();
         },
         update: function update(n) {
-            filterNum = n > 0 ? n : 0;
+            filterNum = n;
             return show();
         },
         clear:      clear,

@@ -36,13 +36,15 @@
 typedef enum {
     PHASE_START,
     PHASE_KEY2,
+    PHASE_KEY3,
     PHASE_COMPLETE,
 } Phase;
 
 struct NormalCmdInfo_s {
     int count;   /* count used for the command */
-    char cmd;    /* command key */
-    char ncmd;   /* second command key (optional) */
+    char key;    /* command key */
+    char key2;   /* second command key (optional) */
+    char key3;   /* third command key only for hinting */
     Phase phase; /* current parsing phase */
 } info = {0, '\0', '\0', PHASE_START};
 
@@ -56,6 +58,7 @@ static VbResult normal_ex(const NormalCmdInfo *info);
 static VbResult normal_focus_input(const NormalCmdInfo *info);
 static VbResult normal_g_cmd(const NormalCmdInfo *info);
 static VbResult normal_hint(const NormalCmdInfo *info);
+static VbResult normal_do_hint(const char *prompt);
 static VbResult normal_input_open(const NormalCmdInfo *info);
 static VbResult normal_navigate(const NormalCmdInfo *info);
 static VbResult normal_open_clipboard(const NormalCmdInfo *info);
@@ -238,31 +241,40 @@ VbResult normal_keypress(int key)
     VbResult res;
 
     if (info.phase == PHASE_START && info.count == 0 && key == '0') {
-        info.cmd   = key;
+        info.key   = key;
         info.phase = PHASE_COMPLETE;
     } else if (info.phase == PHASE_KEY2) {
-        info.ncmd = key;
+        info.key2  = key;
+
+        /* hinting g; mode requires a third key */
+        if (info.key == 'g' && info.key2 == ';') {
+            info.phase      = PHASE_KEY3;
+            vb.mode->flags |= FLAG_NOMAP;
+        } else {
+            info.phase = PHASE_COMPLETE;
+        }
+    } else if (info.phase == PHASE_KEY3) {
+        info.key3  = key;
         info.phase = PHASE_COMPLETE;
     } else if (info.phase == PHASE_START && isdigit(key)) {
         info.count = info.count * 10 + key - '0';
     } else if (strchr(";zg[]", (char)key)) {
         /* handle commands that needs additional char */
-        info.phase = PHASE_KEY2;
-        info.cmd   = key;
+        info.phase      = PHASE_KEY2;
+        info.key        = key;
         vb.mode->flags |= FLAG_NOMAP;
     } else {
-        info.cmd   = key;
+        info.key   = key;
         info.phase = PHASE_COMPLETE;
     }
 
     if (info.phase == PHASE_COMPLETE) {
         /* TODO allow more commands - some that are looked up via command key
          * direct and those that are searched via binary search */
-        if ((guchar)info.cmd <= LENGTH(commands) && commands[(guchar)info.cmd].func) {
-            res = commands[(guchar)info.cmd].func(&info);
+        if ((guchar)info.key <= LENGTH(commands) && commands[(guchar)info.key].func) {
+            res = commands[(guchar)info.key].func(&info);
         } else {
-            /* let gtk handle the keyevent if we have no command attached to
-             * it */
+            /* let gtk handle the keyevent if we have no command attached to it */
             s->processed_key = false;
             res = RESULT_COMPLETE;
         }
@@ -272,7 +284,7 @@ VbResult normal_keypress(int key)
 
     if (res == RESULT_COMPLETE) {
         /* unset the info */
-        info.cmd = info.ncmd = info.count = 0;
+        info.key = info.key2 = info.key3 = info.count = 0;
         info.phase = PHASE_START;
     } else if (res == RESULT_MORE) {
         normal_showcmd(key);
@@ -352,7 +364,7 @@ static VbResult normal_descent(const NormalCmdInfo *info)
         return RESULT_ERROR;
     }
 
-    switch (info->ncmd) {
+    switch (info->key2) {
         case 'U':
             p = domain;
             break;
@@ -393,12 +405,12 @@ static VbResult normal_descent(const NormalCmdInfo *info)
 
 static VbResult normal_ex(const NormalCmdInfo *info)
 {
-    if (info->cmd == 'F') {
+    if (info->key == 'F') {
         mode_enter_promt('c', ";t", true);
-    } else if (info->cmd == 'f') {
+    } else if (info->key == 'f') {
         mode_enter_promt('c', ";o", true);
     } else {
-        char prompt[2] = {info->cmd, '\0'};
+        char prompt[2] = {info->key, '\0'};
         mode_enter_promt('c', prompt, true);
     }
 
@@ -418,7 +430,13 @@ static VbResult normal_focus_input(const NormalCmdInfo *info)
 static VbResult normal_g_cmd(const NormalCmdInfo *info)
 {
     Arg a;
-    switch (info->ncmd) {
+    switch (info->key2) {
+        case ';': {
+            const char prompt[4] = {'g', ';', info->key3, 0};
+
+            return normal_do_hint(prompt);
+        }
+
         case 'F':
             return normal_view_inspector(info);
 
@@ -430,7 +448,7 @@ static VbResult normal_g_cmd(const NormalCmdInfo *info)
 
         case 'H':
         case 'h':
-            a.i = info->ncmd == 'H' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+            a.i = info->key2 == 'H' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
             a.s = NULL;
             vb_load_uri(&a);
             return RESULT_COMPLETE;
@@ -448,15 +466,15 @@ static VbResult normal_g_cmd(const NormalCmdInfo *info)
 
 static VbResult normal_hint(const NormalCmdInfo *info)
 {
-    char prompt[3] = {info->cmd, info->ncmd, 0};
-#ifdef FEATURE_QUEUE
-    const char *allowed = "eiIoOpPstTy";
-#else
-    const char *allowed = "eiIoOstTy";
-#endif
+    const char prompt[3] = {info->key, info->key2, 0};
 
+    return normal_do_hint(prompt);
+}
+
+static VbResult normal_do_hint(const char *prompt)
+{
     /* check if this is a valid hint mode */
-    if (!info->ncmd || !strchr(allowed, info->ncmd)) {
+    if (!hints_parse_prompt(prompt, NULL, NULL)) {
         return RESULT_ERROR;
     }
 
@@ -466,10 +484,10 @@ static VbResult normal_hint(const NormalCmdInfo *info)
 
 static VbResult normal_input_open(const NormalCmdInfo *info)
 {
-    if (strchr("ot", info->cmd)) {
-        vb_set_input_text(info->cmd == 't' ? ":tabopen " : ":open ");
+    if (strchr("ot", info->key)) {
+        vb_set_input_text(info->key == 't' ? ":tabopen " : ":open ");
     } else {
-        vb_echo(VB_MSG_NORMAL, false, ":%s %s", info->cmd == 'T' ? "tabopen" : "open", GET_URI());
+        vb_echo(VB_MSG_NORMAL, false, ":%s %s", info->key == 'T' ? "tabopen" : "open", GET_URI());
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */
@@ -483,11 +501,11 @@ static VbResult normal_navigate(const NormalCmdInfo *info)
     int count;
 
     WebKitWebView *view = vb.gui.webview;
-    switch (info->cmd) {
+    switch (info->key) {
         case CTRL('I'): /* fall through */
         case CTRL('O'):
             count = info->count ? info->count : 1;
-            if (info->cmd == CTRL('O')) {
+            if (info->key == CTRL('O')) {
                 count *= -1;
             }
             webkit_web_view_go_back_or_forward(view, count);
@@ -511,7 +529,7 @@ static VbResult normal_navigate(const NormalCmdInfo *info)
 
 static VbResult normal_open_clipboard(const NormalCmdInfo *info)
 {
-    Arg a = {info->cmd == 'P' ? VB_TARGET_NEW : VB_TARGET_CURRENT};
+    Arg a = {info->key == 'P' ? VB_TARGET_NEW : VB_TARGET_CURRENT};
 
     a.s = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
     if (!a.s) {
@@ -532,7 +550,7 @@ static VbResult normal_open(const NormalCmdInfo *info)
 {
     Arg a;
     /* open last closed */
-    a.i = info->cmd == 'U' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+    a.i = info->key == 'U' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
     a.s = util_get_file_contents(vb.files[FILES_CLOSED], NULL);
     vb_load_uri(&a);
     g_free(a.s);
@@ -549,9 +567,9 @@ static VbResult normal_pass(const NormalCmdInfo *info)
 static VbResult normal_prevnext(const NormalCmdInfo *info)
 {
     int count = info->count ? info->count : 1;
-    if (info->ncmd == ']') {
+    if (info->key2 == ']') {
         hints_follow_link(false, count);
-    } else if (info->ncmd == '[') {
+    } else if (info->key2 == '[') {
         hints_follow_link(true, count);
     } else {
         return RESULT_ERROR;
@@ -578,7 +596,7 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
     int count = info->count ? info->count : 1;
 
     /* TODO split this into more functions - reduce similar code */
-    switch (info->cmd) {
+    switch (info->key) {
         case 'h':
             adjust = vb.gui.adjust_h;
             value  = vb.config.scrollstep;
@@ -634,7 +652,7 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
             break;
 
         default:
-            if (info->ncmd == 'g') {
+            if (info->key2 == 'g') {
                 adjust = vb.gui.adjust_v;
                 max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
                 new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_lower(adjust);
@@ -652,7 +670,7 @@ static VbResult normal_search(const NormalCmdInfo *info)
 {
     int count = (info->count > 0) ? info->count : 1;
 
-    command_search(&((Arg){info->cmd == 'n' ? count : -count}));
+    command_search(&((Arg){info->key == 'n' ? count : -count}));
     return RESULT_COMPLETE;
 }
 
@@ -670,7 +688,7 @@ static VbResult normal_search_selection(const NormalCmdInfo *info)
     }
     count = (info->count > 0) ? info->count : 1;
 
-    command_search(&((Arg){info->cmd == '*' ? count : -count, query}));
+    command_search(&((Arg){info->key == '*' ? count : -count, query}));
     g_free(query);
 
     return RESULT_COMPLETE;
@@ -705,7 +723,7 @@ static VbResult normal_view_source(const NormalCmdInfo *info)
 
 static VbResult normal_yank(const NormalCmdInfo *info)
 {
-    Arg a = {info->cmd == 'Y' ? COMMAND_YANK_SELECTION : COMMAND_YANK_URI};
+    Arg a = {info->key == 'Y' ? COMMAND_YANK_SELECTION : COMMAND_YANK_URI};
 
     return command_yank(&a) ? RESULT_COMPLETE : RESULT_ERROR;
 }
@@ -718,7 +736,7 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
 
     count = info->count ? (float)info->count : 1.0;
 
-    if (info->ncmd == 'z') { /* zz reset zoom */
+    if (info->key2 == 'z') { /* zz reset zoom */
         webkit_web_view_set_zoom_level(view, 1.0);
 
         return RESULT_COMPLETE;
@@ -728,10 +746,10 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
     setting = webkit_web_view_get_settings(view);
     g_object_get(G_OBJECT(setting), "zoom-step", &step, NULL);
 
-    webkit_web_view_set_full_content_zoom(view, isupper(info->ncmd));
+    webkit_web_view_set_full_content_zoom(view, isupper(info->key2));
 
     /* calculate the new zoom level */
-    if (info->ncmd == 'i' || info->ncmd == 'I') {
+    if (info->key2 == 'i' || info->key2 == 'I') {
         level += ((float)count * step);
     } else {
         level -= ((float)count * step);

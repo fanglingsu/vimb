@@ -93,7 +93,7 @@ gboolean command_yank(const Arg *arg)
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
-            vb_echo_force(VB_MSG_NORMAL, false, tmpl, text);
+            vb_echo(VB_MSG_NORMAL, false, tmpl, text);
             g_free(text);
 
             return true;
@@ -112,7 +112,7 @@ gboolean command_yank(const Arg *arg)
     }
     if (a.s) {
         vb_set_clipboard(&a);
-        vb_echo_force(VB_MSG_NORMAL, false, tmpl, a.s);
+        vb_echo(VB_MSG_NORMAL, false, tmpl, a.s);
 
         return true;
     }

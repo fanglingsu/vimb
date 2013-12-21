@@ -270,8 +270,8 @@ typedef struct {
     GList           *downloads;
     gboolean        processed_key;
     char            *title;                 /* holds the window title */
-#define PROMPT_SIZE 3
-    char            prompt[PROMPT_SIZE];    /* current prompt ':', ';o', '/' */
+#define PROMPT_SIZE 4
+    char            prompt[PROMPT_SIZE];    /* current prompt ':', 'g;t', '/' including nul */
 } State;
 
 typedef struct {
