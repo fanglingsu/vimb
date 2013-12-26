@@ -890,6 +890,10 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
     WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mime_type,
     WebKitWebPolicyDecision *decision)
 {
+    /* don't start download if request failed or stopped by proxy */
+    if (!mime_type || *mime_type == '\0') {
+        return false;
+    }
     if (webkit_web_view_can_show_mime_type(webview, mime_type) == false) {
         webkit_web_policy_decision_download(decision);
 
