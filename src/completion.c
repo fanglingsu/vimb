@@ -123,6 +123,13 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
     gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_SECOND);
 #endif
 
+    /* this prevents the first item to be placed out of view if the completion
+     * is shown */
+    gtk_widget_show_all(comp.win);
+    while (gtk_events_pending()) {
+        gtk_main_iteration();
+    }
+
     /* use max 1/3 of window height for the completion */
 #ifdef HAS_GTK3
     gtk_widget_get_preferred_size(comp.tree, NULL, &size);
@@ -140,13 +147,6 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
 #endif
 
     vb.mode->flags |= FLAG_COMPLETION;
-
-    /* this prevents the first item to be placed out of view if the completion
-     * is shown */
-    gtk_widget_show_all(comp.win);
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
-    }
 
     /* set to -1 to have the cursor on first or last item set in move_cursor */
     comp.active = -1;

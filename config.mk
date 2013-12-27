@@ -19,6 +19,7 @@ LIBS += $(GTK3LIBS)
 USEGTK3 = 1
 else
 LIBS += $(GTK2LIBS)
+$(warning Cannot find gtk3-libs, falling back to gtk2)
 endif
 else
 LIBS += $(GTK2LIBS)
