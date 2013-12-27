@@ -587,7 +587,8 @@ static void init_core(void)
 #ifdef HAS_GTK3
     /* set the default style for the application - this can be overwritten by
      * the users style in gtk-3.0/gtk.css */
-    char *style = "GtkScrollbar{-GtkRange-slider-width:0;-GtkRange-trough-border:0;}";
+    const char *style = "GtkScrollbar{-GtkRange-slider-width:0;-GtkRange-trough-border:0;}\
+                         GtkScrolledWindow{-GtkScrolledWindow-scrollbar-spacing:0;}";
     GtkCssProvider *provider = gtk_css_provider_get_default();
     gtk_css_provider_load_from_data(provider, style, -1, NULL);
     gtk_style_context_add_provider_for_screen(
