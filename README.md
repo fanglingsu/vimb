@@ -57,6 +57,8 @@ root).
     make clean && make
     make install
 
+To build vimb against gtk3 you can use `make GTK=3`.
+
 # license
 Information about the license are found in the file LICENSE.
 
