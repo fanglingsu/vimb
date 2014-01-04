@@ -1,5 +1,5 @@
 # vimb
-Vimb is a web browser that behaves like the Vimprobable but with some
+Vimb is a web browser that behaves like Vimprobable, but with some
 paradigms from dwb and hopefully a cleaner code base. The goal of Vimb is to
 build a completely keyboard-driven, efficient and pleasurable
 browsing-experience with low memory and cpu usage.
@@ -43,7 +43,7 @@ the [vimb project page][vimb].
 ## install
 Edit config.mk to match your local setup.
 
-Edit config.h to match you personal preferences.
+Edit config.h to match your personal preferences.
 
 The default Makefile will not overwrite your customised `config.h` with the
 contents of `config.def.h`, even if it was updated in the latest git pull.
