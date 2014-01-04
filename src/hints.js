@@ -295,7 +295,10 @@ var VbHint = (function(){
         } else if (e.target === "_blank") {
             e.removeAttribute("target");
         }
-        click(e);
+        /* to open links in new window the mouse events are fired with ctrl */
+        /* key - otherwise some ugly pages will ignore this attribute in their */
+        /* mouse event observers like duckduckgo */
+        click(e, newWin);
         e.target = oldTarget;
     }
 
@@ -328,16 +331,20 @@ var VbHint = (function(){
         return hints[i] || null;
     }
 
-    function click(e) {
-        mouseEvent(e, "mouseover");
-        mouseEvent(e, "mousedown");
-        mouseEvent(e, "mouseup");
-        mouseEvent(e, "click");
+    function click(e, ctrl) {
+        mouseEvent(e, "mouseover", ctrl);
+        mouseEvent(e, "mousedown", ctrl);
+        mouseEvent(e, "mouseup", ctrl);
+        mouseEvent(e, "click", ctrl);
     }
 
-    function mouseEvent(e, name) {
+    function mouseEvent(e, name, ctrl) {
         var evObj = e.ownerDocument.createEvent("MouseEvents");
-        evObj.initMouseEvent(name, true, true, e.contentWindow, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        evObj.initMouseEvent(
+            name, true, true, e.contentWindow,
+            0, 0, 0, 0, 0,
+            ctrl !== undefined ? ctrl : false, false, false, false, 0, null
+        );
         e.dispatchEvent(evObj);
     }
 
