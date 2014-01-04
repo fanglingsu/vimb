@@ -800,15 +800,17 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
 
     g_object_get(result, "context", &context, NULL);
-    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
-        mode_enter('i');
-        propagate = true;
-    } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK && event->button == 2) {
-        /* middle mouse click onto link */
-        Arg a = {VB_TARGET_NEW};
-        g_object_get(result, "link-uri", &a.s, NULL);
-        vb_load_uri(&a);
+    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
+        if (event->button == 2 || (event->button == 1 && event->state & GDK_CONTROL_MASK)) {
+            /* ctrl click or middle mouse click onto link */
+            Arg a = {VB_TARGET_NEW};
+            g_object_get(result, "link-uri", &a.s, NULL);
+            vb_load_uri(&a);
 
+            propagate = true;
+        }
+    } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+        mode_enter('i');
         propagate = true;
     }
     g_object_unref(result);
