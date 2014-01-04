@@ -213,6 +213,14 @@ F
 ;-y
 : Yank hint's destination location into primary and secondary clipboard.
 
+Syntax: *g;{mode}{hint}*
+
+Start an extended hints mode and stay there until `<Esc>` is pressed. Like the
+normal hinting except that after a hint is selected, hints remain visible so
+that another one can be selected with the same action as the first. Note that
+the extended hint mode can only be combined with the following hint modes `;I`
+`;p` `;P` `;s` `;t` `;y`.
+
 ### searching
 
 /QUERY, ?QUERY
