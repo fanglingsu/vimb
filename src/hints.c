@@ -34,8 +34,10 @@
 #define HINT_FILE "hints.js"
 
 static struct {
-    guint  num;
-    char   prompt[3];
+    guint    num;       /* olds the numeric filter for hints typed by the user */
+    char     mode;      /* mode identifying char - that last char of the hint prompt */
+    int      promptlen; /* lenfth of the hint prompt chars 2 or 3 */
+    gboolean gmode;     /* indicate if the hints g mode is used */
 } hints;
 
 extern VbCore vb;
@@ -116,23 +118,34 @@ void hints_create(const char *input)
 {
     char *js = NULL;
 
-    /* unset number filter - this is required to remove the last char from
-     * inputbox on backspace also if there was used a number filter prior */
-    hints.num = 0;
+    /* check if the input contains a valid hinting prompt */
+    if (!hints_parse_prompt(input, &hints.mode, &hints.gmode)) {
+        /* if input is not valid, clear possible previous hint mode */
+        if (vb.mode->flags & FLAG_HINTING) {
+            mode_enter('n');
+        }
+        return;
+    }
 
     if (!(vb.mode->flags & FLAG_HINTING)) {
         vb.mode->flags |= FLAG_HINTING;
 
-        /* save the prefix of the hinting mode for later use */
-        strncpy(hints.prompt, input, 2);
+        /* unset number filter - this is required to remove the last char from
+         * inputbox on backspace also if there was used a number filter prior */
+        hints.num       = 0;
+        hints.promptlen = hints.gmode ? 3 : 2;
 
-        js = g_strdup_printf("%s.init('%s', %d);", HINT_VAR, hints.prompt, MAXIMUM_HINTS);
+        js = g_strdup_printf("%s.init('%c', %d);", HINT_VAR, hints.mode, MAXIMUM_HINTS);
 
         run_script(js);
         g_free(js);
+
+        /* if hinting is started there won't be any aditional filter given and
+         * we can go out of this function */
+        return;
     }
 
-    js = g_strdup_printf("%s.create('%s');", HINT_VAR, input + 2);
+    js = g_strdup_printf("%s.filter('%s');", HINT_VAR, *(input + hints.promptlen) ? input + hints.promptlen : "");
     run_script(js);
     g_free(js);
 }
@@ -171,9 +184,68 @@ void hints_follow_link(const gboolean back, int count)
     g_free(js);
 }
 
+/**
+ * Checks if the given hint prompt belong to a known and valid hints mode and
+ * parses the mode and is_gmode into given pointers.
+ *
+ * The given prompt sting may also contain additional chars after the prompt.
+ *
+ * @prompt:   String to be parsed as prompt. The Prompt can be followed by
+ *            additional characters.
+ * @mode:     Pointer to char that will be filled with mode char if prompt was
+ *            valid and given pointer is not NULL.
+ * @is_gmode: Pointer to gboolean to be filled with the flag to indicate gmode
+ *            hinting.
+ */
+gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
+{
+    gboolean res;
+    char pmode = '\0';
+#ifdef FEATURE_QUEUE
+    static char *modes   = "eiIoOpPstTy";
+    static char *g_modes = "IpPsty";
+#else
+    static char *modes   = "eiIoOstTy";
+    static char *g_modes = "Isty";
+#endif
+
+    if (!prompt) {
+        return false;
+    }
+
+    /* get the mode identifying char from prompt */
+    if (*prompt == ';') {
+        pmode = prompt[1];
+    } else if (*prompt == 'g' && strlen(prompt) >= 3) {
+        /* get mode for g;X hint modes */
+        pmode = prompt[2];
+    }
+
+    /* no mode found in prompt */
+    if (!pmode) {
+        return false;
+    }
+
+    res = *prompt == 'g'
+        ? strchr(g_modes, pmode) != NULL
+        : strchr(modes, pmode) != NULL;
+
+    /* fill pointer only if the promt was valid */
+    if (res) {
+        if (mode != NULL) {
+            *mode = pmode;
+        }
+        if (is_gmode != NULL) {
+            *is_gmode = *prompt == 'g';
+        }
+    }
+
+    return res;
+}
+
 static void run_script(char *js)
 {
-    char mode, *value = NULL;
+    char *value = NULL;
 
     gboolean success = vb_eval_script(
         webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value
@@ -187,39 +259,51 @@ static void run_script(char *js)
         return;
     }
 
-    /* check the second char of the prompt ';X' */
-    mode = hints.prompt[1];
-
     if (!strncmp(value, "OVER:", 5)) {
         g_signal_emit_by_name(
             vb.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
         );
     } else if (!strncmp(value, "DONE:", 5)) {
-        mode_enter('n');
+        if (hints.gmode) {
+            /* if g mode is used reset number filter and keep in hint mode */
+            hints.num = 0;
+            hints_update(hints.num);
+        } else {
+            mode_enter('n');
+        }
     } else if (!strncmp(value, "INSERT:", 7)) {
         mode_enter('i');
-        if (mode == 'e') {
+        if (hints.mode == 'e') {
             input_open_editor();
         }
     } else if (!strncmp(value, "DATA:", 5)) {
-        /* switch first to normal mode - else we would clear the inputbox on
-         * switching mode also if we want to show yanked data */
-        mode_enter('n');
+        if (hints.gmode) {
+            /* if g mode is used reset number filter and keep in hint mode */
+            hints.num = 0;
+            hints_update(hints.num);
+        } else {
+            /* switch first to normal mode - else we would clear the inputbox
+             * on switching mode also if we want to show yanked data */
+            mode_enter('n');
+        }
+
         char *v   = (value + 5);
         Arg a     = {0};
-        switch (mode) {
+        switch (hints.mode) {
             /* used if images should be opened */
             case 'i':
             case 'I':
                 a.s = v;
-                a.i = (mode == 'I') ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+                a.i = (hints.mode == 'I') ? VB_TARGET_NEW : VB_TARGET_CURRENT;
                 vb_load_uri(&a);
                 break;
 
             case 'O':
             case 'T':
-                vb_echo(VB_MSG_NORMAL, false, "%s %s", (mode == 'T') ? ":tabopen" : ":open", v);
-                mode_enter('c');
+                vb_echo(VB_MSG_NORMAL, false, "%s %s", (hints.mode == 'T') ? ":tabopen" : ":open", v);
+                if (!hints.gmode) {
+                    mode_enter('c');
+                }
                 break;
 
             case 's':
@@ -238,7 +322,7 @@ static void run_script(char *js)
             case 'p':
             case 'P':
                 a.s = v;
-                a.i = (mode == 'P') ? COMMAND_QUEUE_UNSHIFT : COMMAND_QUEUE_PUSH;
+                a.i = (hints.mode == 'P') ? COMMAND_QUEUE_UNSHIFT : COMMAND_QUEUE_PUSH;
                 command_queue(&a);
                 break;
 #endif

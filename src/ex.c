@@ -306,6 +306,7 @@ void ex_input_changed(const char *text)
     GtkTextIter start, end;
     GtkTextBuffer *buffer = vb.gui.buffer;
 
+    /* don't add line breaks if content is pasted from clipboard into inputbox */
     if (gtk_text_buffer_get_line_count(buffer) > 1) {
         /* remove everething from the buffer, except of the first line */
         gtk_text_buffer_get_iter_at_line(buffer, &start, 0);
@@ -316,7 +317,8 @@ void ex_input_changed(const char *text)
     }
 
     switch (*text) {
-        case ';':
+        case ';': /* fall through - the modes are handled by hints_create */
+        case 'g':
             hints_create(text);
             break;
 
@@ -371,14 +373,15 @@ static void input_activate(void)
      * does vim also skip history recording for such mapped commands */
     cmd = text + 1;
     switch (*text) {
-        case '/': count = 1; /* fall throught */
+        case '/': count = 1; /* fall through */
         case '?':
             history_add(HISTORY_SEARCH, cmd, NULL);
             mode_enter('n');
             command_search(&((Arg){count, cmd}));
             break;
 
-        case ';':
+        case ';': /* fall through */
+        case 'g':
             hints_fire();
             break;
 
