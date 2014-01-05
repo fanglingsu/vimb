@@ -15,10 +15,10 @@ var VbHint = (function(){
         hClass   = "_hintElem",        /* marks hinted elements */
         fClass   = "_hintFocus",       /* marks focused element and focussed hint */
         config,
-        style    = "." + lClass + "{" +
+        style    = "#" + cId + "{z-index:100000}" +
+            "." + lClass + "{" +
             "-webkit-transform:translate(-4px,-4px);" +
             "position:absolute;" +
-            "z-index:100000;" +
             "font:bold\x20.8em\x20monospace;" +
             "color:#000;" +
             "background-color:#fff;" +
@@ -36,7 +36,7 @@ var VbHint = (function(){
             "}" +
             "." + lClass + "." + fClass + "{" +
             /* use higher z-index to show the active label if it's overlapped by other labels */
-            "z-index:100001;" +
+            "z-index:1;" +
             "opacity:1" +
             "}";
 
