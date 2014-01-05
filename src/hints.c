@@ -230,7 +230,7 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
         ? strchr(g_modes, pmode) != NULL
         : strchr(modes, pmode) != NULL;
 
-    /* fill pointer only if the promt was valid */
+    /* fill pointer only if the prompt was valid */
     if (res) {
         if (mode != NULL) {
             *mode = pmode;

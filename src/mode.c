@@ -97,11 +97,11 @@ void mode_enter(char id)
  * Set the prompt chars and switch to new mode.
  *
  * @id:           Mode id.
- * @prompt:       Prompt string to set as current promt.
+ * @prompt:       Prompt string to set as current prompt.
  * @print_prompt: Indicates if the new set prompt should be put into inputbox
  *                after switching the mode.
  */
-void mode_enter_promt(char id, const char *prompt, gboolean print_prompt)
+void mode_enter_prompt(char id, const char *prompt, gboolean print_prompt)
 {
     /* set the prompt to be accessible in mode_enter */
     strncpy(vb.state.prompt, prompt, PROMPT_SIZE - 1);

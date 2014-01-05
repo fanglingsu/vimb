@@ -366,7 +366,7 @@ static void input_activate(void)
     char *text, *cmd;
     text = vb_get_input_text();
 
-    /* skip leading promt char like ':' or '/' */
+    /* skip leading prompt char like ':' or '/' */
     /* TODO should we use a flag to determine if we should record the command
      * into the history - maybe it's not good to save commands in history that
      * where triggered by a map like ':name \, :set scripts!<cr>' - by the way

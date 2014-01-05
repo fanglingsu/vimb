@@ -406,12 +406,12 @@ static VbResult normal_descent(const NormalCmdInfo *info)
 static VbResult normal_ex(const NormalCmdInfo *info)
 {
     if (info->key == 'F') {
-        mode_enter_promt('c', ";t", true);
+        mode_enter_prompt('c', ";t", true);
     } else if (info->key == 'f') {
-        mode_enter_promt('c', ";o", true);
+        mode_enter_prompt('c', ";o", true);
     } else {
         char prompt[2] = {info->key, '\0'};
-        mode_enter_promt('c', prompt, true);
+        mode_enter_prompt('c', prompt, true);
     }
 
     return RESULT_COMPLETE;
@@ -478,7 +478,7 @@ static VbResult normal_do_hint(const char *prompt)
         return RESULT_ERROR;
     }
 
-    mode_enter_promt('c', prompt, true);
+    mode_enter_prompt('c', prompt, true);
     return RESULT_COMPLETE;
 }
 
@@ -491,7 +491,7 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */
-    mode_enter_promt('c', ":", false);
+    mode_enter_prompt('c', ":", false);
 
     return RESULT_COMPLETE;
 }
