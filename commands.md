@@ -110,8 +110,7 @@ same but a single parameter is user defined.
   - `:shortcut-add dl=https://duckduckgo.com/lite/?q=$0`
     to setup a search engine. Can be called by ':open dl my search phrase'.
   - `:shortcut-add gh=https://github.com/$0/$1`
-    to build urls from given parameters. Can be called ':open gh fanglingsu
-    vimb'.
+    to build url from given parameters. Can be called ':open gh fanglingsu vimb'.
 
 \:shortcut-remove SHORTCUT
 : Remove the search engine to the given SHORTCUT.

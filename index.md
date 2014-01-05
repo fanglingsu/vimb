@@ -52,9 +52,9 @@ But following images may give a impression of they way vimb works.
 1. Download the sources
 
    - You can get vimb from github by following command.
-   
+
          git clone git://github.com/fanglingsu/vimb.git vimb
-   
+
    - Or you can download actual source as [tar.gz][tgz] or as [zip][] or get
      one of the [releases][].
 
