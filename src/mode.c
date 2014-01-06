@@ -74,7 +74,6 @@ void mode_enter(char id)
 
         /* if there is a active mode, leave this first */
         if (vb.mode->leave) {
-            PRINT_DEBUG("leave %c", vb.mode->id);
             vb.mode->leave();
         }
     }
@@ -86,7 +85,6 @@ void mode_enter(char id)
     vb.mode = new;
     /* call enter only if the new mode isn't the current mode */
     if (new->enter) {
-        PRINT_DEBUG("enter %c", new->id);
         new->enter();
     }
 
@@ -143,9 +141,9 @@ VbResult mode_handle_key(int key)
         res = vb.mode->keypress(key);
         if (vb.mode) {
             PRINT_DEBUG(
-                "%c: key[0x%x %c] flags[%d] >> %c: flags[%d]",
-                id, key, (key >= 0x20 && key <= 0x7e) ? key : ' ',
-                flags, vb.mode->id, vb.mode->flags
+                "%c[%d]: %#.2x '%c' -> %c[%d]",
+                id - ' ', flags, key, (key >= 0x20 && key <= 0x7e) ? key : ' ',
+                vb.mode->id - ' ', vb.mode->flags
             );
         }
         return res;
