@@ -36,12 +36,10 @@ applied to the hints. To change already defined style it might be required to
 use the `!importen` flag on your style definition to take effect
 ([see User-Scripts](#user-scripts)).
 
-    #_hintContainer {
-        z-index: 100000
-    }
     ._hintLabel {
         -webkit-transform:translate(-4px,-4px);
         position: absolute;
+        z-index: 100000;
         font:bold .8em monospace;
         color: #000;
         background-color: #fff;
@@ -58,7 +56,7 @@ use the `!importen` flag on your style definition to take effect
         background-color: #8f0 !important
     }
     ._hintLabel._hintFocus{
-        z-index: 1;
+        z-index: 100001;
         opacity: 1
     }
 
