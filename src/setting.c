@@ -28,29 +28,31 @@ extern VbCore vb;
 
 static Arg *char_to_arg(const char *str, const Type type);
 static void print_value(const Setting *s, void *value);
-static gboolean webkit(const Setting *s, const SettingType type);
+static SettingStatus webkit(const Setting *s, const SettingType type);
 #ifdef FEATURE_COOKIE
-static gboolean cookie_accept(const Setting *s, const SettingType type);
-static gboolean cookie_timeout(const Setting *s, const SettingType type);
+static SettingStatus cookie_accept(const Setting *s, const SettingType type);
+static SettingStatus cookie_timeout(const Setting *s, const SettingType type);
 #endif
-static gboolean scrollstep(const Setting *s, const SettingType type);
-static gboolean status_color_bg(const Setting *s, const SettingType type);
-static gboolean status_color_fg(const Setting *s, const SettingType type);
-static gboolean status_font(const Setting *s, const SettingType type);
-static gboolean input_style(const Setting *s, const SettingType type);
-static gboolean completion_style(const Setting *s, const SettingType type);
-static gboolean strict_ssl(const Setting *s, const SettingType type);
-static gboolean strict_focus(const Setting *s, const SettingType type);
-static gboolean ca_bundle(const Setting *s, const SettingType type);
-static gboolean home_page(const Setting *s, const SettingType type);
-static gboolean download_path(const Setting *s, const SettingType type);
-static gboolean proxy(const Setting *s, const SettingType type);
-static gboolean user_style(const Setting *s, const SettingType type);
-static gboolean history_max_items(const Setting *s, const SettingType type);
-static gboolean editor_command(const Setting *s, const SettingType type);
-static gboolean timeoutlen(const Setting *s, const SettingType type);
-static gboolean headers(const Setting *s, const SettingType type);
-static gboolean nextpattern(const Setting *s, const SettingType type);
+static SettingStatus scrollstep(const Setting *s, const SettingType type);
+static SettingStatus status_color_bg(const Setting *s, const SettingType type);
+static SettingStatus status_color_fg(const Setting *s, const SettingType type);
+static SettingStatus status_font(const Setting *s, const SettingType type);
+static SettingStatus input_style(const Setting *s, const SettingType type);
+static SettingStatus completion_style(const Setting *s, const SettingType type);
+static SettingStatus strict_ssl(const Setting *s, const SettingType type);
+static SettingStatus strict_focus(const Setting *s, const SettingType type);
+static SettingStatus ca_bundle(const Setting *s, const SettingType type);
+static SettingStatus home_page(const Setting *s, const SettingType type);
+static SettingStatus download_path(const Setting *s, const SettingType type);
+static SettingStatus proxy(const Setting *s, const SettingType type);
+static SettingStatus user_style(const Setting *s, const SettingType type);
+static SettingStatus history_max_items(const Setting *s, const SettingType type);
+static SettingStatus editor_command(const Setting *s, const SettingType type);
+static SettingStatus timeoutlen(const Setting *s, const SettingType type);
+static SettingStatus headers(const Setting *s, const SettingType type);
+static SettingStatus nextpattern(const Setting *s, const SettingType type);
+
+static gboolean validate_js_regexp_list(const char *pattern);
 
 static Setting default_settings[] = {
     /* webkit settings */
@@ -146,7 +148,8 @@ void setting_cleanup(void)
 gboolean setting_run(char *name, const char *param)
 {
     Arg *a = NULL;
-    gboolean result = false, get = false;
+    gboolean get = false;
+    SettingStatus result = SETTING_ERROR;
     SettingType type = SETTING_SET;
 
     /* determine the type to names last char and param */
@@ -183,20 +186,22 @@ gboolean setting_run(char *name, const char *param)
         }
         g_free(a);
 
-        if (!result) {
-            vb_echo(VB_MSG_ERROR, true, "Could not set %s", s->alias ? s->alias : s->name);
+        if (result == SETTING_OK || result & SETTING_USER_NOTIFIED) {
+            return true;
         }
 
-        return result;
+        vb_echo(VB_MSG_ERROR, true, "Could not set %s", s->alias ? s->alias : s->name);
+        return false;
     }
 
     if (type == SETTING_GET) {
         result = s->func(s, type);
-        if (!result) {
-            vb_echo(VB_MSG_ERROR, true, "Could not get %s", s->alias ? s->alias : s->name);
+        if (result == SETTING_OK || result & SETTING_USER_NOTIFIED) {
+            return true;
         }
 
-        return result;
+        vb_echo(VB_MSG_ERROR, true, "Could not get %s", s->alias ? s->alias : s->name);
+        return false;
     }
 
     /* toggle bolean vars */
@@ -207,11 +212,12 @@ gboolean setting_run(char *name, const char *param)
     }
 
     result = s->func(s, type);
-    if (!result) {
-        vb_echo(VB_MSG_ERROR, true, "Could not toggle %s", s->alias ? s->alias : s->name);
+    if (result == SETTING_OK || result & SETTING_USER_NOTIFIED) {
+        return true;
     }
 
-    return result;
+    vb_echo(VB_MSG_ERROR, true, "Could not toggle %s", s->alias ? s->alias : s->name);
+    return false;
 }
 
 gboolean setting_fill_completion(GtkListStore *store, const char *input)
@@ -316,7 +322,7 @@ static void print_value(const Setting *s, void *value)
     }
 }
 
-static gboolean webkit(const Setting *s, const SettingType type)
+static SettingStatus webkit(const Setting *s, const SettingType type)
 {
     WebKitWebSettings *web_setting = webkit_web_view_get_settings(vb.gui.webview);
 
@@ -373,11 +379,11 @@ static gboolean webkit(const Setting *s, const SettingType type)
             break;
     }
 
-    return true;
+    return SETTING_OK;
 }
 
 #ifdef FEATURE_COOKIE
-static gboolean cookie_accept(const Setting *s, const SettingType type)
+static SettingStatus cookie_accept(const Setting *s, const SettingType type)
 {
     int i, policy;
     SoupCookieJar *jar;
@@ -397,22 +403,27 @@ static gboolean cookie_accept(const Setting *s, const SettingType type)
         for (i = 0; i < LENGTH(map); i++) {
             if (policy == map[i].policy) {
                 print_value(s, map[i].name);
-                return true;
+
+                return SETTING_OK;
             }
         }
     } else {
         for (i = 0; i < LENGTH(map); i++) {
             if (!strcmp(map[i].name, s->arg.s)) {
                 g_object_set(jar, SOUP_COOKIE_JAR_ACCEPT_POLICY, map[i].policy, NULL);
-                return true;
+
+                return SETTING_OK;
             }
         }
+        vb_echo(VB_MSG_ERROR, true, "%s must be in [always, origin, never]", s->name);
+
+        return SETTING_ERROR | SETTING_USER_NOTIFIED;
     }
 
-    return false;
+    return SETTING_ERROR;
 }
 
-static gboolean cookie_timeout(const Setting *s, const SettingType type)
+static SettingStatus cookie_timeout(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, &vb.config.cookie_timeout);
@@ -420,11 +431,11 @@ static gboolean cookie_timeout(const Setting *s, const SettingType type)
         vb.config.cookie_timeout = s->arg.i;
     }
 
-    return true;
+    return SETTING_OK;
 }
 #endif
 
-static gboolean scrollstep(const Setting *s, const SettingType type)
+static SettingStatus scrollstep(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, &vb.config.scrollstep);
@@ -432,10 +443,10 @@ static gboolean scrollstep(const Setting *s, const SettingType type)
         vb.config.scrollstep = s->arg.i;
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean status_color_bg(const Setting *s, const SettingType type)
+static SettingStatus status_color_bg(const Setting *s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -453,10 +464,10 @@ static gboolean status_color_bg(const Setting *s, const SettingType type)
         vb_update_status_style();
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean status_color_fg(const Setting *s, const SettingType type)
+static SettingStatus status_color_fg(const Setting *s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -474,10 +485,10 @@ static gboolean status_color_fg(const Setting *s, const SettingType type)
         vb_update_status_style();
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean status_font(const Setting *s, const SettingType type)
+static SettingStatus status_font(const Setting *s, const SettingType type)
 {
     StatusType stype;
     if (g_str_has_prefix(s->name, "status-sslinvalid")) {
@@ -499,10 +510,10 @@ static gboolean status_font(const Setting *s, const SettingType type)
         vb_update_status_style();
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean input_style(const Setting *s, const SettingType type)
+static SettingStatus input_style(const Setting *s, const SettingType type)
 {
     Style *style = &vb.style;
     MessageType itype = g_str_has_suffix(s->name, "normal") ? VB_MSG_NORMAL : VB_MSG_ERROR;
@@ -537,10 +548,10 @@ static gboolean input_style(const Setting *s, const SettingType type)
         vb_update_input_style();
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean completion_style(const Setting *s, const SettingType type)
+static SettingStatus completion_style(const Setting *s, const SettingType type)
 {
     Style *style = &vb.style;
     CompletionStyle ctype = g_str_has_suffix(s->name, "normal") ? VB_COMP_NORMAL : VB_COMP_ACTIVE;
@@ -571,10 +582,10 @@ static gboolean completion_style(const Setting *s, const SettingType type)
         }
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean strict_ssl(const Setting *s, const SettingType type)
+static SettingStatus strict_ssl(const Setting *s, const SettingType type)
 {
     gboolean value;
     if (type != SETTING_SET) {
@@ -582,7 +593,7 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
         if (type == SETTING_GET) {
             print_value(s, &value);
 
-            return true;
+            return SETTING_OK;
         }
     }
 
@@ -595,10 +606,10 @@ static gboolean strict_ssl(const Setting *s, const SettingType type)
 
     g_object_set(vb.session, "ssl-strict", value, NULL);
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean strict_focus(const Setting *s, const SettingType type)
+static SettingStatus strict_focus(const Setting *s, const SettingType type)
 {
     if (type != SETTING_SET) {
         if (type == SETTING_TOGGLE) {
@@ -609,10 +620,10 @@ static gboolean strict_focus(const Setting *s, const SettingType type)
         vb.config.strict_focus = s->arg.i ? true : false;
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean ca_bundle(const Setting *s, const SettingType type)
+static SettingStatus ca_bundle(const Setting *s, const SettingType type)
 {
     char *value;
     if (type == SETTING_GET) {
@@ -623,10 +634,10 @@ static gboolean ca_bundle(const Setting *s, const SettingType type)
         g_object_set(vb.session, "ssl-ca-file", s->arg.s, NULL);
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean home_page(const Setting *s, const SettingType type)
+static SettingStatus home_page(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, vb.config.home_page);
@@ -637,10 +648,10 @@ static gboolean home_page(const Setting *s, const SettingType type)
         );
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean download_path(const Setting *s, const SettingType type)
+static SettingStatus download_path(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, vb.config.download_dir);
@@ -659,10 +670,10 @@ static gboolean download_path(const Setting *s, const SettingType type)
         util_create_dir_if_not_exists(vb.config.download_dir);
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean proxy(const Setting *s, const SettingType type)
+static SettingStatus proxy(const Setting *s, const SettingType type)
 {
     gboolean enabled;
     char *proxy, *proxy_new;
@@ -705,10 +716,10 @@ static gboolean proxy(const Setting *s, const SettingType type)
         g_object_set(vb.session, "proxy-uri", NULL, NULL);
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean user_style(const Setting *s, const SettingType type)
+static SettingStatus user_style(const Setting *s, const SettingType type)
 {
     gboolean enabled = false;
     char *uri = NULL;
@@ -720,7 +731,7 @@ static gboolean user_style(const Setting *s, const SettingType type)
         if (type == SETTING_GET) {
             print_value(s, &enabled);
 
-            return true;
+            return SETTING_OK;
         }
     }
 
@@ -740,35 +751,35 @@ static gboolean user_style(const Setting *s, const SettingType type)
         g_object_set(web_setting, "user-stylesheet-uri", NULL, NULL);
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean history_max_items(const Setting *s, const SettingType type)
+static SettingStatus history_max_items(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, &vb.config.history_max);
 
-        return true;
+        return SETTING_OK;
     }
     vb.config.history_max = s->arg.i;
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean editor_command(const Setting *s, const SettingType type)
+static SettingStatus editor_command(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, vb.config.editor_command);
 
-        return true;
+        return SETTING_OK;
     }
 
     OVERWRITE_STRING(vb.config.editor_command, s->arg.s);
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean timeoutlen(const Setting *s, const SettingType type)
+static SettingStatus timeoutlen(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, &vb.config.timeoutlen);
@@ -776,7 +787,7 @@ static gboolean timeoutlen(const Setting *s, const SettingType type)
         vb.config.timeoutlen = abs(s->arg.i);
     }
 
-    return true;
+    return SETTING_OK;
 }
 
 /**
@@ -789,7 +800,7 @@ static gboolean timeoutlen(const Setting *s, const SettingType type)
  * the request (NAME3), if the '=' is present means that the header value is
  * set to empty value.
  */
-static gboolean headers(const Setting *s, const SettingType type)
+static SettingStatus headers(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         char *key, *value;
@@ -820,18 +831,49 @@ static gboolean headers(const Setting *s, const SettingType type)
         vb.config.headers = soup_header_parse_param_list(s->arg.s);
     }
 
-    return true;
+    return SETTING_OK;
 }
 
-static gboolean nextpattern(const Setting *s, const SettingType type)
+static SettingStatus nextpattern(const Setting *s, const SettingType type)
 {
     if (type == SETTING_GET) {
         print_value(s, s->name[0] == 'n' ? vb.config.nextpattern : vb.config.prevpattern);
-    } else if (*s->name == 'n') {
-        OVERWRITE_STRING(vb.config.nextpattern, s->arg.s);
-    } else {
-        OVERWRITE_STRING(vb.config.prevpattern, s->arg.s);
+
+        return SETTING_OK;
     }
 
+    if (validate_js_regexp_list(s->arg.s)) {
+        if (*s->name == 'n') {
+            OVERWRITE_STRING(vb.config.nextpattern, s->arg.s);
+        } else {
+            OVERWRITE_STRING(vb.config.prevpattern, s->arg.s);
+        }
+
+        return SETTING_OK;
+    }
+
+    return SETTING_ERROR | SETTING_USER_NOTIFIED;
+}
+
+/**
+ * Validated syntax given list of JavaScript RegExp patterns.
+ * If validation fails, the error is shown to the user.
+ */
+static gboolean validate_js_regexp_list(const char *pattern)
+{
+    gboolean result;
+    char *js, *value = NULL;
+
+    js     = g_strdup_printf("var i;for(i=0;i<[%s].length;i++);", pattern);
+    result = vb_eval_script(
+        webkit_web_view_get_main_frame(vb.gui.webview), js, NULL, &value
+    );
+    g_free(js);
+    if (!result) {
+        vb_echo(VB_MSG_ERROR, true, "%s", value);
+        g_free(value);
+
+        return false;
+    }
     return true;
 }

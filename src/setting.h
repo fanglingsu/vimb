@@ -28,8 +28,14 @@ typedef enum {
     SETTING_TOGGLE
 } SettingType;
 
+typedef enum {
+    SETTING_OK,
+    SETTING_ERROR         = (0 << 1),
+    SETTING_USER_NOTIFIED = (0 << 2)
+} SettingStatus;
+
 typedef struct _Setting Setting;
-typedef gboolean (*SettingFunc)(const Setting*, const SettingType);
+typedef SettingStatus (*SettingFunc)(const Setting*, const SettingType);
 
 struct _Setting {
     char*       alias;
