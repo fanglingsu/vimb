@@ -342,8 +342,8 @@ static char *transchar(int c)
 
 static VbResult normal_clear_input(const NormalCmdInfo *info)
 {
-    vb_set_input_text("");
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
+    vb_echo(VB_MSG_NORMAL, false, "");
     command_search(&((Arg){0}));
 
     return RESULT_COMPLETE;

@@ -110,7 +110,7 @@ void mode_enter_prompt(char id, const char *prompt, gboolean print_prompt)
     if (print_prompt) {
         /* set it after the mode was entered so that the modes input change
          * event listener could grep the new prompt */
-        vb_set_input_text(vb.state.prompt);
+        vb_echo_force(VB_MSG_NORMAL, false, vb.state.prompt);
     }
 }
 
