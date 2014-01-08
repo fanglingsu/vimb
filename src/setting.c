@@ -687,7 +687,7 @@ static SettingStatus proxy(const Setting *s, const SettingType type)
         if (type == SETTING_GET) {
             print_value(s, &enabled);
 
-            return true;
+            return SETTING_OK;
         }
     }
 
