@@ -92,7 +92,7 @@ var VbHint = (function(){
         function helper(win, offsets) {
             /* document may be undefined for frames out of the same origin */
             /* policy and will break the whole code - so we check this before */
-            if (win.document === undefined) {
+            if (typeof win.document == "undefined") {
                 return;
             }
 
@@ -101,7 +101,7 @@ var VbHint = (function(){
             offsets.bottom = win.innerHeight - offsets.bottom;
 
             function isVisible(e) {
-                if (e === undefined) {
+                if (typeof e == "undefined") {
                     return false;
                 }
                 var rect = e.getBoundingClientRect();
@@ -398,7 +398,7 @@ var VbHint = (function(){
         evObj.initMouseEvent(
             name, true, true, e.contentWindow,
             0, 0, 0, 0, 0,
-            ctrl !== undefined ? ctrl : false, false, false, false, 0, null
+            (typeof ctrl != "undefined") ? ctrl : false, false, false, false, 0, null
         );
         e.dispatchEvent(evObj);
     }
