@@ -405,9 +405,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_COMMITTED:
             {
-                WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
                 /* set the status */
                 if (g_str_has_prefix(uri, "https://")) {
+                    WebKitWebFrame *frame         = webkit_web_view_get_main_frame(vb.gui.webview);
                     WebKitWebDataSource *src      = webkit_web_frame_get_data_source(frame);
                     WebKitNetworkRequest *request = webkit_web_data_source_get_request(src);
                     SoupMessage *msg              = webkit_network_request_get_message(request);
