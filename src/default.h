@@ -33,6 +33,7 @@ static char *default_config[] = {
     "set useragent=" PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)",
     "set stylesheet=on",
     "set proxy=on",
+    "set pagecache=on",
     "set cookie-timeout=4800",
     "set strict-ssl=on",
     "set strict-focus=off",
