@@ -56,12 +56,20 @@ var VbHint = (function(){
             this.e.classList.add(hClass);
 
             /* create the label with the hint number */
-            this.label.innerText = this.num;
-            if (this.showText && this.text) {
-                /* use \x20 instead of ' ' to keep this space during */
-                /* js2h.sh processing */
-                this.label.innerText += ":\x20" + this.text.substr(0, 20);
+            var text = [];
+            if (this.e instanceof HTMLInputElement) {
+                var type = this.e.type;
+                if (type === "checkbox") {
+                    text.push(this.e.checked ? "☑" : "☐");
+                } else if (type === "radio") {
+                    text.push(this.e.checked ? "⊙" : "○");
+                }
             }
+            if (this.showText && this.text) {
+                text.push(this.text.substr(0, 20));
+            }
+            /* use \x20 instead of ' ' to keep this space during js2h.sh processing */
+            this.label.innerText = this.num + (text.length ? ":\x20" + text.join("\x20") : "");
         };
     }
 
