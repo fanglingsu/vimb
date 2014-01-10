@@ -64,8 +64,6 @@ static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, cons
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
     WebKitWebFrame *frame, WebKitNetworkRequest *request, char*
     mime_type, WebKitWebPolicyDecision *decision);
-static void window_object_cleared_cb(GtkWidget *widget, WebKitWebFrame *frame,
-    JSContextRef js, JSObjectRef win, gpointer data);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 
 /* functions */
@@ -405,9 +403,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_COMMITTED:
             {
+                WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
                 /* set the status */
                 if (g_str_has_prefix(uri, "https://")) {
-                    WebKitWebFrame *frame         = webkit_web_view_get_main_frame(vb.gui.webview);
                     WebKitWebDataSource *src      = webkit_web_frame_get_data_source(frame);
                     WebKitNetworkRequest *request = webkit_web_data_source_get_request(src);
                     SoupMessage *msg              = webkit_network_request_get_message(request);
@@ -418,6 +416,12 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 } else {
                     set_status(VB_STATUS_NORMAL);
                 }
+
+                /* inject the hinting javascript */
+                hints_init(frame);
+
+                /* run user script file */
+                run_user_script(frame);
             }
 
             /* if we load a page from a submitted form, leafe the insert mode */
@@ -642,13 +646,6 @@ static void init_core(void)
     mode_add('i', input_enter, input_leave, input_keypress, NULL);
     mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
 
-    /* run windo object cleared here to inject the hinting and userscript on
-     * startup of vimb, else they are not loaded if JavaScript is disabled */
-    window_object_cleared_cb(
-        GTK_WIDGET(gui->webview),
-        webkit_web_view_get_main_frame(gui->webview), NULL, NULL, NULL
-    );
-
     init_files();
     session_init();
     setting_init();
@@ -711,7 +708,6 @@ static void setup_signals()
         "signal::hovering-over-link", G_CALLBACK(hover_link_cb), NULL,
         "signal::title-changed", G_CALLBACK(title_changed_cb), NULL,
         "signal::mime-type-policy-decision-requested", G_CALLBACK(mimetype_decision_cb), NULL,
-        "signal::window-object-cleared", G_CALLBACK(window_object_cleared_cb), NULL,
         "signal::download-requested", G_CALLBACK(vb_download), NULL,
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
         NULL
@@ -907,16 +903,6 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
         return true;
     }
     return false;
-}
-
-static void window_object_cleared_cb(GtkWidget *widget, WebKitWebFrame *frame,
-    JSContextRef js, JSObjectRef win, gpointer data)
-{
-    /* inject the hinting javascript */
-    hints_init(frame);
-
-    /* run user script file */
-    run_user_script(frame);
 }
 
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path)
