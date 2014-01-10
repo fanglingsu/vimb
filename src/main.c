@@ -642,6 +642,13 @@ static void init_core(void)
     mode_add('i', input_enter, input_leave, input_keypress, NULL);
     mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
 
+    /* run windo object cleared here to inject the hinting and userscript on
+     * startup of vimb, else they are not loaded if JavaScript is disabled */
+    window_object_cleared_cb(
+        GTK_WIDGET(gui->webview),
+        webkit_web_view_get_main_frame(gui->webview), NULL, NULL, NULL
+    );
+
     init_files();
     session_init();
     setting_init();
