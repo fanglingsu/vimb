@@ -30,26 +30,36 @@
 #include "input.h"
 #include "map.h"
 
-#define HINT_VAR "VbHint"
 #define HINT_FILE "hints.js"
 
 static struct {
-    guint    num;       /* olds the numeric filter for hints typed by the user */
-    char     mode;      /* mode identifying char - that last char of the hint prompt */
-    int      promptlen; /* lenfth of the hint prompt chars 2 or 3 */
-    gboolean gmode;     /* indicate if the hints g mode is used */
+    JSObjectRef    obj;       /* the js object */
+    guint          num;       /* olds the numeric filter for hints typed by the user */
+    char           mode;      /* mode identifying char - that last char of the hint prompt */
+    int            promptlen; /* lenfth of the hint prompt chars 2 or 3 */
+    gboolean       gmode;     /* indicate if the hints g mode is used */
+    JSContextRef   ctx;
 } hints;
+
 
 extern VbCore vb;
 
-static void run_script(char *js);
+static JSObjectRef create_hints_object(WebKitWebFrame *frame, const char *script);
+static void call_hints_function(const char *func, int count, JSValueRef params[]);
+static char *js_ref_to_string(JSContextRef context, JSValueRef ref);
+static JSValueRef js_string_to_ref(JSContextRef ctx, const char *string);
 
 
 void hints_init(WebKitWebFrame *frame)
 {
-    char *value = NULL;
-    vb_eval_script(frame, HINTS_JS, HINT_FILE, &value);
-    g_free(value);
+    if (hints.obj) {
+        JSValueUnprotect(hints.ctx, hints.obj);
+        hints.obj = NULL;
+    }
+    if (!hints.obj) {
+        hints.obj = create_hints_object(frame, HINTS_JS);
+        hints.ctx = webkit_web_frame_get_global_context(frame);
+    }
 }
 
 VbResult hints_keypress(int key)
@@ -100,15 +110,11 @@ VbResult hints_keypress(int key)
 
 void hints_clear(void)
 {
-    char *js, *value = NULL;
-
     if (vb.mode->flags & FLAG_HINTING) {
         vb.mode->flags &= ~FLAG_HINTING;
         vb_set_input_text("");
-        js = g_strconcat(HINT_VAR, ".clear();", NULL);
-        vb_eval_script(webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value);
-        g_free(value);
-        g_free(js);
+
+        call_hints_function("clear", 0, NULL);
 
         g_signal_emit_by_name(vb.gui.webview, "hovering-over-link", NULL, NULL);
     }
@@ -116,8 +122,6 @@ void hints_clear(void)
 
 void hints_create(const char *input)
 {
-    char *js = NULL;
-
     /* check if the input contains a valid hinting prompt */
     if (!hints_parse_prompt(input, &hints.mode, &hints.gmode)) {
         /* if input is not valid, clear possible previous hint mode */
@@ -135,53 +139,52 @@ void hints_create(const char *input)
         hints.num       = 0;
         hints.promptlen = hints.gmode ? 3 : 2;
 
-        js = g_strdup_printf("%s.init('%c', %d);", HINT_VAR, hints.mode, MAXIMUM_HINTS);
-
-        run_script(js);
-        g_free(js);
+        JSValueRef arguments[] = {
+            js_string_to_ref(hints.ctx, (char[]){hints.mode, '\0'}),
+            JSValueMakeNumber(hints.ctx, MAXIMUM_HINTS)
+        };
+        call_hints_function("init", 2, arguments);
 
         /* if hinting is started there won't be any aditional filter given and
          * we can go out of this function */
         return;
     }
 
-    js = g_strdup_printf("%s.filter('%s');", HINT_VAR, *(input + hints.promptlen) ? input + hints.promptlen : "");
-    run_script(js);
-    g_free(js);
+    JSValueRef arguments[] = {js_string_to_ref(hints.ctx, *(input + hints.promptlen) ? input + hints.promptlen : "")};
+    call_hints_function("filter", 1, arguments);
 }
 
 void hints_update(int num)
 {
-    char *js = g_strdup_printf("%s.update(%d);", HINT_VAR, hints.num);
-    run_script(js);
-    g_free(js);
+    JSValueRef arguments[] = {
+        JSValueMakeNumber(hints.ctx, num)
+    };
+    call_hints_function("update", 1, arguments);
 }
 
 void hints_focus_next(const gboolean back)
 {
-    char *js = g_strdup_printf("%s.focus(%d);", HINT_VAR, back);
-    run_script(js);
-    g_free(js);
+    JSValueRef arguments[] = {
+        JSValueMakeNumber(hints.ctx, back)
+    };
+    call_hints_function("focus", 1, arguments);
 }
 
 void hints_fire(void)
 {
-    char *js = g_strconcat(HINT_VAR, ".fire();", NULL);
-    run_script(js);
-    g_free(js);
+    call_hints_function("fire", 0, NULL);
 }
 
 void hints_follow_link(const gboolean back, int count)
 {
     char *pattern = back ? vb.config.prevpattern : vb.config.nextpattern;
-    char *js      = g_strdup_printf(
-        "%s.followLink('%s', [%s], %d);", HINT_VAR,
-        back ? "prev" : "next",
-        pattern,
-        count
-    );
-    run_script(js);
-    g_free(js);
+
+    JSValueRef arguments[] = {
+        js_string_to_ref(hints.ctx, back ? "prev" : "next"),
+        js_string_to_ref(hints.ctx, pattern),
+        JSValueMakeNumber(hints.ctx, count)
+    };
+    call_hints_function("followLink", 3, arguments);
 }
 
 /**
@@ -243,21 +246,59 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static void run_script(char *js)
+static JSObjectRef create_hints_object(WebKitWebFrame *frame, const char *script)
 {
-    char *value = NULL;
+    if (!script) {
+        return NULL;
+    }
 
-    gboolean success = vb_eval_script(
-        webkit_web_view_get_main_frame(vb.gui.webview), js, HINT_FILE, &value
-    );
-    if (!success) {
-        fprintf(stderr, "%s\n", value);
-        g_free(value);
+    JSStringRef str, file;
+    JSValueRef result, exc = NULL;
+    JSObjectRef object;
 
-        mode_enter('n');
+    JSContextRef ctx = webkit_web_frame_get_global_context(frame);
+    str              = JSStringCreateWithUTF8CString(script);
+    file             = JSStringCreateWithUTF8CString(HINT_FILE);
+    result           = JSEvaluateScript(ctx, str, NULL, file, 0, &exc);
+    JSStringRelease(str);
+    JSStringRelease(file);
+    if (exc) {
+        return NULL;
+    }
 
+    object = JSValueToObject(ctx, result, &exc);
+    if (exc) {
+        return NULL;
+    }
+    JSValueProtect(ctx, result);
+
+    return object;
+}
+
+static void call_hints_function(const char *func, int count, JSValueRef params[])
+{
+    JSValueRef js_ret, function;
+    JSObjectRef function_object;
+    JSStringRef js_func = NULL;
+    char *value;
+
+    if (!hints.obj) {
         return;
     }
+
+    js_func = JSStringCreateWithUTF8CString(func);
+
+    if (!JSObjectHasProperty(hints.ctx, hints.obj, js_func)) {
+        JSStringRelease(js_func);
+        return;
+    }
+
+    function        = JSObjectGetProperty(hints.ctx, hints.obj, js_func, NULL);
+    function_object = JSValueToObject(hints.ctx, function, NULL);
+    js_ret          = JSObjectCallAsFunction(hints.ctx, function_object, NULL, count, params, NULL);
+    JSStringRelease(js_func);
+
+    value = js_ref_to_string(hints.ctx, js_ret);
 
     if (!strncmp(value, "OVER:", 5)) {
         g_signal_emit_by_name(
@@ -329,4 +370,26 @@ static void run_script(char *js)
         }
     }
     g_free(value);
+}
+
+/* FIXME duplicate to main.c */
+static char *js_ref_to_string(JSContextRef ctx, JSValueRef ref)
+{
+    char *string;
+    JSStringRef str_ref = JSValueToStringCopy(ctx, ref, NULL);
+    size_t len          = JSStringGetMaximumUTF8CStringSize(str_ref);
+
+    string = g_new0(char, len);
+    JSStringGetUTF8CString(str_ref, string, len);
+    JSStringRelease(str_ref);
+
+    return string;
+}
+
+static JSValueRef js_string_to_ref(JSContextRef ctx, const char *string)
+{
+    JSStringRef js = JSStringCreateWithUTF8CString(string);
+    JSValueRef ret = JSValueMakeString(ctx, js);
+    JSStringRelease(js);
+    return ret;
 }

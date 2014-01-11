@@ -1,4 +1,4 @@
-function VimbHint() {
+Object.freeze((function(){
     'use strict';
 
     var hints      = [],               /* holds all hint data (hinted element, label, number) in view port */
@@ -531,13 +531,4 @@ function VimbHint() {
         /* not really hintings but uses similar logic */
         followLink: followLink
     };
-}
-
-/* don't overwrite an already existing instance of VbHint, else we loose the */
-/* hinted elements after a hint was fired and we call VbHint.clear() from */
-/* hints.c */
-/* TODO implement the VimbHint as singleton */
-if (typeof VbHint == "undefined") {
-    var VbHint = new VimbHint();
-    Object.freeze(VbHint);
-}
+})());
