@@ -29,6 +29,7 @@
 #include "mode.h"
 #include "input.h"
 #include "map.h"
+#include "js.h"
 
 #define HINT_FILE "hints.js"
 
@@ -44,10 +45,7 @@ static struct {
 
 extern VbCore vb;
 
-static JSObjectRef create_hints_object(WebKitWebFrame *frame, const char *script);
 static void call_hints_function(const char *func, int count, JSValueRef params[]);
-static char *js_ref_to_string(JSContextRef context, JSValueRef ref);
-static JSValueRef js_string_to_ref(JSContextRef ctx, const char *string);
 
 
 void hints_init(WebKitWebFrame *frame)
@@ -57,7 +55,7 @@ void hints_init(WebKitWebFrame *frame)
         hints.obj = NULL;
     }
     if (!hints.obj) {
-        hints.obj = create_hints_object(frame, HINTS_JS);
+        hints.obj = js_create_object(frame, HINTS_JS);
         hints.ctx = webkit_web_frame_get_global_context(frame);
     }
 }
@@ -246,59 +244,9 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static JSObjectRef create_hints_object(WebKitWebFrame *frame, const char *script)
-{
-    if (!script) {
-        return NULL;
-    }
-
-    JSStringRef str, file;
-    JSValueRef result, exc = NULL;
-    JSObjectRef object;
-
-    JSContextRef ctx = webkit_web_frame_get_global_context(frame);
-    str              = JSStringCreateWithUTF8CString(script);
-    file             = JSStringCreateWithUTF8CString(HINT_FILE);
-    result           = JSEvaluateScript(ctx, str, NULL, file, 0, &exc);
-    JSStringRelease(str);
-    JSStringRelease(file);
-    if (exc) {
-        return NULL;
-    }
-
-    object = JSValueToObject(ctx, result, &exc);
-    if (exc) {
-        return NULL;
-    }
-    JSValueProtect(ctx, result);
-
-    return object;
-}
-
 static void call_hints_function(const char *func, int count, JSValueRef params[])
 {
-    JSValueRef js_ret, function;
-    JSObjectRef function_object;
-    JSStringRef js_func = NULL;
-    char *value;
-
-    if (!hints.obj) {
-        return;
-    }
-
-    js_func = JSStringCreateWithUTF8CString(func);
-
-    if (!JSObjectHasProperty(hints.ctx, hints.obj, js_func)) {
-        JSStringRelease(js_func);
-        return;
-    }
-
-    function        = JSObjectGetProperty(hints.ctx, hints.obj, js_func, NULL);
-    function_object = JSValueToObject(hints.ctx, function, NULL);
-    js_ret          = JSObjectCallAsFunction(hints.ctx, function_object, NULL, count, params, NULL);
-    JSStringRelease(js_func);
-
-    value = js_ref_to_string(hints.ctx, js_ret);
+    char *value = js_object_call_function(hints.ctx, hints.obj, func, count, params);
 
     if (!strncmp(value, "OVER:", 5)) {
         g_signal_emit_by_name(
@@ -370,26 +318,4 @@ static void call_hints_function(const char *func, int count, JSValueRef params[]
         }
     }
     g_free(value);
-}
-
-/* FIXME duplicate to main.c */
-static char *js_ref_to_string(JSContextRef ctx, JSValueRef ref)
-{
-    char *string;
-    JSStringRef str_ref = JSValueToStringCopy(ctx, ref, NULL);
-    size_t len          = JSStringGetMaximumUTF8CStringSize(str_ref);
-
-    string = g_new0(char, len);
-    JSStringGetUTF8CString(str_ref, string, len);
-    JSStringRelease(str_ref);
-
-    return string;
-}
-
-static JSValueRef js_string_to_ref(JSContextRef ctx, const char *string)
-{
-    JSStringRef js = JSStringCreateWithUTF8CString(string);
-    JSValueRef ret = JSValueMakeString(ctx, js);
-    JSStringRelease(js);
-    return ret;
 }

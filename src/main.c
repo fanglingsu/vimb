@@ -38,6 +38,7 @@
 #include "default.h"
 #include "pass.h"
 #include "bookmark.h"
+#include "js.h"
 
 /* variables */
 static char **args;
@@ -68,8 +69,6 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 
 /* functions */
 static void update_title(void);
-static void run_user_script(WebKitWebFrame *frame);
-static char *jsref_to_string(JSContextRef context, JSValueRef ref);
 static void init_core(void);
 static void read_config(void);
 static void setup_signals();
@@ -141,29 +140,6 @@ char *vb_get_input_text(void)
 
     gtk_text_buffer_get_bounds(vb.gui.buffer, &start, &end);
     return gtk_text_buffer_get_text(vb.gui.buffer, &start, &end, false);
-}
-
-gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value)
-{
-    JSStringRef str, file_name;
-    JSValueRef exception = NULL, result = NULL;
-    JSContextRef js;
-
-    js        = webkit_web_frame_get_global_context(frame);
-    str       = JSStringCreateWithUTF8CString(script);
-    file_name = JSStringCreateWithUTF8CString(file);
-
-    result = JSEvaluateScript(js, str, JSContextGetGlobalObject(js), file_name, 0, &exception);
-    JSStringRelease(file_name);
-    JSStringRelease(str);
-
-    if (result) {
-        *value = jsref_to_string(js, result);
-        return true;
-    }
-
-    *value = jsref_to_string(js, exception);
-    return false;
 }
 
 gboolean vb_load_uri(const Arg *arg)
@@ -421,7 +397,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 hints_init(frame);
 
                 /* run user script file */
-                run_user_script(frame);
+                js_eval_file(frame, vb.files[FILES_SCRIPT]);
             }
 
             /* if we load a page from a submitted form, leafe the insert mode */
@@ -520,36 +496,6 @@ static void set_status(const StatusType status)
         /* update the statusbar style only if the status changed */
         vb_update_status_style();
     }
-}
-
-static void run_user_script(WebKitWebFrame *frame)
-{
-    char *js = NULL, *value = NULL;
-    GError *error = NULL;
-
-    if (g_file_test(vb.files[FILES_SCRIPT], G_FILE_TEST_IS_REGULAR)
-        && g_file_get_contents(vb.files[FILES_SCRIPT], &js, NULL, &error)
-    ) {
-        gboolean success = vb_eval_script(frame, js, vb.files[FILES_SCRIPT], &value);
-        if (!success) {
-            fprintf(stderr, "%s", value);
-        }
-        g_free(value);
-        g_free(js);
-    }
-}
-
-static char *jsref_to_string(JSContextRef context, JSValueRef ref)
-{
-    char *string;
-    JSStringRef str_ref = JSValueToStringCopy(context, ref, NULL);
-    size_t len          = JSStringGetMaximumUTF8CStringSize(str_ref);
-
-    string = g_new0(char, len);
-    JSStringGetUTF8CString(str_ref, string, len);
-    JSStringRelease(str_ref);
-
-    return string;
 }
 
 static void init_core(void)

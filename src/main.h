@@ -330,7 +330,6 @@ void vb_echo(const MessageType type, gboolean hide, const char *error, ...);
 void vb_set_input_text(const char *text);
 char *vb_get_input_text(void);
 void vb_input_activate(void);
-gboolean vb_eval_script(WebKitWebFrame *frame, char *script, char *file, char **value);
 gboolean vb_load_uri(const Arg *arg);
 gboolean vb_set_clipboard(const Arg *arg);
 void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font);

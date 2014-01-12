@@ -38,6 +38,7 @@
 #include "bookmark.h"
 #include "shortcut.h"
 #include "map.h"
+#include "js.h"
 
 typedef enum {
     EX_BMA,
@@ -695,7 +696,7 @@ static gboolean ex_eval(const ExArg *arg)
         return false;
     }
 
-    success = vb_eval_script(
+    success = js_eval(
         webkit_web_view_get_main_frame(vb.gui.webview), arg->rhs->str, NULL, &value
     );
     if (success) {

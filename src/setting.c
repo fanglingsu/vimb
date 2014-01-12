@@ -21,6 +21,7 @@
 #include "setting.h"
 #include "util.h"
 #include "completion.h"
+#include "js.h"
 
 static GHashTable *settings;
 
@@ -865,9 +866,7 @@ static gboolean validate_js_regexp_list(const char *pattern)
     char *js, *value = NULL;
 
     js     = g_strdup_printf("var i;for(i=0;i<[%s].length;i++);", pattern);
-    result = vb_eval_script(
-        webkit_web_view_get_main_frame(vb.gui.webview), js, NULL, &value
-    );
+    result = js_eval(webkit_web_view_get_main_frame(vb.gui.webview), js, NULL, &value);
     g_free(js);
     if (!result) {
         vb_echo(VB_MSG_ERROR, true, "%s", value);
