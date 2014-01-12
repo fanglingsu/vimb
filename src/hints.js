@@ -238,7 +238,7 @@ Object.freeze((function(){
         helper(window);
     }
 
-    function show() {
+    function show(fireLast) {
         var i, hint, newIdx,
             num     = 1,
             matcher = getMatcher(filterText);
@@ -263,10 +263,8 @@ Object.freeze((function(){
                 num++;
             }
         }
-
-        if (validHints.length <= 1) {
+        if (fireLast && validHints.length <= 1) {
             focusHint(0);
-
             return fire();
         }
 
@@ -332,32 +330,40 @@ Object.freeze((function(){
 
     function fire() {
         if (!activeHint) {
-            return "DONE:";
+            return "ERROR:";
         }
 
         var e    = activeHint.e,
             tag  = e.nodeName.toLowerCase(),
-            type = e.type || "";
+            type = e.type || "",
+            res  = "";
 
         if (tag === "input" || tag === "textarea" || tag === "select") {
             if (type === "radio" || type === "checkbox") {
                 e.focus();
                 click(e);
-                return "DONE:";
-            }
-            if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
+                res = "DONE:";
+            } else if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
                 click(e);
-                return "DONE:";
+                res = "DONE:";
+            } else {
+                e.focus();
+                res = "INSERT:";
             }
+        } else if (tag === "iframe" || tag === "frame") {
             e.focus();
-            return "INSERT:";
-        }
-        if (tag === "iframe" || tag === "frame") {
-            e.focus();
-            return "DONE:";
+            res = "DONE:";
         }
 
-        return config.action(e);
+        if (config.continue) {
+            /* reset the filter number */
+            filterNum = 0;
+            show(false);
+        } else {
+            clear();
+        }
+
+        return res || config.action(e);
     }
 
     /* internal used methods */
@@ -481,7 +487,7 @@ Object.freeze((function(){
 
     /* the api */
     return {
-        init: function init(mode, maxHints) {
+        init: function init(mode, keepOpen, maxHints) {
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
@@ -497,7 +503,10 @@ Object.freeze((function(){
                     eiIOpPsTy: function(e) {return "DATA:" + getSrc(e);}
                 };
 
-            config = {maxHints: maxHints};
+            config = {
+                maxHints: maxHints,
+                continue: keepOpen
+            };
             for (prop in xpathmap) {
                 if (prop.indexOf(mode) >= 0) {
                     config["xpath"] = xpathmap[prop];
@@ -512,18 +521,27 @@ Object.freeze((function(){
             }
 
             create();
-            return show();
+            return show(true);
         },
         filter: function filter(text) {
             /* remove previously set number filters to make the filter */
             /* easier to understand for the users */
             filterNum  = 0;
             filterText = text || "";
-            return show();
+            return show(true);
         },
         update: function update(n) {
-            filterNum = n;
-            return show();
+            /* delete last filter number digit */
+            if (null === n && filterNum) {
+                filterNum = Math.floor(filterNum / 10);
+                return show(false);
+            }
+            if ((n >= 1 && n <= 9) || (n === 0 && filterNum)) {
+                /* allow a zero as non-first number */
+                filterNum = (filterNum ? filterNum * 10 : 0) + n;
+                return show(true);
+            }
+            return "ERROR:";
         },
         clear:      clear,
         fire:       fire,

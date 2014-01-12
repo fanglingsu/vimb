@@ -35,7 +35,6 @@
 
 static struct {
     JSObjectRef    obj;       /* the js object */
-    guint          num;       /* olds the numeric filter for hints typed by the user */
     char           mode;      /* mode identifying char - that last char of the hint prompt */
     int            promptlen; /* lenfth of the hint prompt chars 2 or 3 */
     gboolean       gmode;     /* indicate if the hints g mode is used */
@@ -45,7 +44,7 @@ static struct {
 
 extern VbCore vb;
 
-static void call_hints_function(const char *func, int count, JSValueRef params[]);
+static gboolean call_hints_function(const char *func, int count, JSValueRef params[]);
 
 
 void hints_init(WebKitWebFrame *frame)
@@ -55,13 +54,15 @@ void hints_init(WebKitWebFrame *frame)
         hints.obj = NULL;
     }
     if (!hints.obj) {
-        hints.obj = js_create_object(frame, HINTS_JS);
         hints.ctx = webkit_web_frame_get_global_context(frame);
+        hints.obj = js_create_object(frame, HINTS_JS);
     }
 }
 
 VbResult hints_keypress(int key)
 {
+    JSValueRef arguments[1];
+
     /* if we are not already in hint mode we expect to get a ; to start
      * hinting */
     if (!(vb.mode->flags & FLAG_HINTING) && key != ';') {
@@ -72,32 +73,21 @@ VbResult hints_keypress(int key)
         hints_fire();
 
         return RESULT_COMPLETE;
-    }
-
-    /* if there is an active filter by hint num backspace will remove the
-     * number filter first */
-    if (hints.num && key == CTRL('H')) {
-        hints.num /= 10;
-        hints_update(hints.num);
-
-        return RESULT_COMPLETE;
-    }
-    if (isdigit(key)) {
-        int num = key - '0';
-        if ((num >= 1 && num <= 9) || (num == 0 && hints.num)) {
-            /* allow a zero as non-first number */
-            hints.num = (hints.num ? hints.num * 10 : 0) + num;
-            hints_update(hints.num);
-
+    } else if (key == CTRL('H')) {
+        arguments[0] = JSValueMakeNull(hints.ctx);
+        if (call_hints_function("update", 1, arguments)) {
             return RESULT_COMPLETE;
         }
-    }
-    if (key == KEY_TAB) {
+    } else if (isdigit(key)) {
+        arguments[0] = JSValueMakeNumber(hints.ctx, key - '0');
+        if (call_hints_function("update", 1, arguments)) {
+            return RESULT_COMPLETE;
+        }
+    } else if (key == KEY_TAB) {
         hints_focus_next(false);
 
         return RESULT_COMPLETE;
-    }
-    if (key == KEY_SHIFT_TAB) {
+    } else if (key == KEY_SHIFT_TAB) {
         hints_focus_next(true);
 
         return RESULT_COMPLETE;
@@ -120,6 +110,12 @@ void hints_clear(void)
 
 void hints_create(const char *input)
 {
+    /* don't start hinting if the hinting object isn't created - for example
+     * if hinting is started before the first data of page are recieved */
+    if (!hints.obj) {
+        return;
+    }
+
     /* check if the input contains a valid hinting prompt */
     if (!hints_parse_prompt(input, &hints.mode, &hints.gmode)) {
         /* if input is not valid, clear possible previous hint mode */
@@ -132,16 +128,14 @@ void hints_create(const char *input)
     if (!(vb.mode->flags & FLAG_HINTING)) {
         vb.mode->flags |= FLAG_HINTING;
 
-        /* unset number filter - this is required to remove the last char from
-         * inputbox on backspace also if there was used a number filter prior */
-        hints.num       = 0;
         hints.promptlen = hints.gmode ? 3 : 2;
 
         JSValueRef arguments[] = {
             js_string_to_ref(hints.ctx, (char[]){hints.mode, '\0'}),
+            JSValueMakeBoolean(hints.ctx, hints.gmode),
             JSValueMakeNumber(hints.ctx, MAXIMUM_HINTS)
         };
-        call_hints_function("init", 2, arguments);
+        call_hints_function("init", 3, arguments);
 
         /* if hinting is started there won't be any aditional filter given and
          * we can go out of this function */
@@ -150,14 +144,6 @@ void hints_create(const char *input)
 
     JSValueRef arguments[] = {js_string_to_ref(hints.ctx, *(input + hints.promptlen) ? input + hints.promptlen : "")};
     call_hints_function("filter", 1, arguments);
-}
-
-void hints_update(int num)
-{
-    JSValueRef arguments[] = {
-        JSValueMakeNumber(hints.ctx, num)
-    };
-    call_hints_function("update", 1, arguments);
 }
 
 void hints_focus_next(const gboolean back)
@@ -244,20 +230,25 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static void call_hints_function(const char *func, int count, JSValueRef params[])
+static gboolean call_hints_function(const char *func, int count, JSValueRef params[])
 {
     char *value = js_object_call_function(hints.ctx, hints.obj, func, count, params);
+
+    if (!value) {
+        return false;
+    }
+
+    if (!strncmp(value, "ERROR:", 6)) {
+        g_free(value);
+        return false;
+    }
 
     if (!strncmp(value, "OVER:", 5)) {
         g_signal_emit_by_name(
             vb.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
         );
     } else if (!strncmp(value, "DONE:", 5)) {
-        if (hints.gmode) {
-            /* if g mode is used reset number filter and keep in hint mode */
-            hints.num = 0;
-            hints_update(hints.num);
-        } else {
+        if (!hints.gmode) {
             mode_enter('n');
         }
     } else if (!strncmp(value, "INSERT:", 7)) {
@@ -266,13 +257,9 @@ static void call_hints_function(const char *func, int count, JSValueRef params[]
             input_open_editor();
         }
     } else if (!strncmp(value, "DATA:", 5)) {
-        if (hints.gmode) {
-            /* if g mode is used reset number filter and keep in hint mode */
-            hints.num = 0;
-            hints_update(hints.num);
-        } else {
-            /* switch first to normal mode - else we would clear the inputbox
-             * on switching mode also if we want to show yanked data */
+        /* switch first to normal mode - else we would clear the inputbox
+         * on switching mode also if we want to show yanked data */
+        if (!hints.gmode) {
             mode_enter('n');
         }
 
@@ -318,4 +305,6 @@ static void call_hints_function(const char *func, int count, JSValueRef params[]
         }
     }
     g_free(value);
+
+    return true;
 }

@@ -25,7 +25,6 @@
 void hints_init(WebKitWebFrame *frame);
 VbResult hints_keypress(int key);
 void hints_create(const char *input);
-void hints_update(int num);
 void hints_fire(void);
 void hints_follow_link(const gboolean back, int count);
 gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode);
