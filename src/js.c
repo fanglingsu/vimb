@@ -130,8 +130,15 @@ char* js_object_call_function(JSContextRef ctx, JSObjectRef obj,
 char* js_ref_to_string(JSContextRef ctx, JSValueRef ref)
 {
     char *string;
-    JSStringRef str_ref = JSValueToStringCopy(ctx, ref, NULL);
-    size_t len          = JSStringGetMaximumUTF8CStringSize(str_ref);
+    size_t len;
+    JSStringRef str_ref;
+
+    if (!ref) {
+        return NULL;
+    }
+
+    str_ref = JSValueToStringCopy(ctx, ref, NULL);
+    len     = JSStringGetMaximumUTF8CStringSize(str_ref);
 
     string = g_new0(char, len);
     JSStringGetUTF8CString(str_ref, string, len);
