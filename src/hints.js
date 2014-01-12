@@ -429,8 +429,9 @@ Object.freeze((function(){
         );
     }
 
-    /* follow the count last link on pagematching the given pattern */
-    function followLink(rel, pattern, count) {
+    /* follow the count last link on pagematching the given regex list */
+    function followLink(rel, list, count) {
+        var patterns = list.split(",");
         /* returns array of matching elements */
         function followFrame(frame) {
             var i, p, reg, res = [],
@@ -453,8 +454,8 @@ Object.freeze((function(){
                 }
             }
             /* match each pattern successively against each link in the page */
-            for (p = 0; p < pattern.length; p++) {
-                reg = pattern[p];
+            for (p = 0; p < patterns.length; p++) {
+                reg = patterns[p];
                 /* begin with the last link on page */
                 for (i = elems.length - 1; i >= 0; i--) {
                     if (elems[i].innerText.match(reg)) {
@@ -474,7 +475,7 @@ Object.freeze((function(){
                 }
             }
         }
-        return "NONE:";
+        return "ERROR:";
     }
 
     function allFrames(win) {
