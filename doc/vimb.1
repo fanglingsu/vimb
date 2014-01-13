@@ -172,6 +172,14 @@ Follow the last \fIN\fPth link matching `nextpattern'.
 .TP
 .BI [ N ][\-[
 Follow the last \fIN\fPth link matching `previouspattern'.
+.TP
+.BI m\-{ a-z }
+Set a page mark {\fIa-z\fP} at current possition on page. Such set marks are
+only available on the current page, if the page is left, all marks will be
+removed.
+.TP
+.BI '\-{ a-z }
+Jump to the mark {\fIa-z\fP} on current page.
 .SS Hinting
 The hinting is the way to do what you would do with the mouse in common
 mouse-driven browsers. Open URI, yank URI, save page and so on. If the hinting
