@@ -36,7 +36,7 @@ the [vimb project page][vimb].
 - read it later queue to collect URIs for later use
 
 ## dependencies
-- libwebkit >=1.3.10
+- libwebkit >=1.5.0
 - libgtk+-2.0
 - libsoup-2.4
 
