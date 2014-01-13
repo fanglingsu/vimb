@@ -76,7 +76,7 @@ But following images may give a impression of they way vimb works.
 
 ## dependencies
 
-- libwebkit >= 1.3.10
+- libwebkit >= 1.5.0
 - libgtk+-2.0
 - libsoup-2.4
 
