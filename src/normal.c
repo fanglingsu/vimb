@@ -499,8 +499,10 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
 
 static VbResult normal_mark(const NormalCmdInfo *info)
 {
+    gdouble current;
     char *mark;
     int  idx;
+
     /* check if the second char is a valid mark char */
     if (!(mark = strchr(VB_MARK_CHARS, info->key2))) {
         return RESULT_ERROR;
@@ -516,7 +518,14 @@ static VbResult normal_mark(const NormalCmdInfo *info)
         if ((int)(vb.state.marks[idx] - .5) < 0) {
             return RESULT_ERROR;
         }
+
+        current = gtk_adjustment_get_value(vb.gui.adjust_v);
+
+        /* jump to the location */
         gtk_adjustment_set_value(vb.gui.adjust_v, vb.state.marks[idx]);
+
+        /* save previous adjust as last position */
+        vb.state.marks[VB_MARK_TICK] = current;
     }
     return RESULT_COMPLETE;
 }
@@ -666,6 +675,8 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
             adjust = vb.gui.adjust_v;
             max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
             new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_upper(adjust);
+            /* save the position to mark ' */
+            vb.state.marks[VB_MARK_TICK] = gtk_adjustment_get_value(adjust);
             break;
         case '0':
             adjust = vb.gui.adjust_h;

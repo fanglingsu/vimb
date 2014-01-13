@@ -104,7 +104,9 @@
 #define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state(w, s))
 #endif
 
-#define VB_MARK_CHARS   "abcdefghijklmnopqrstuvwxyz"
+/* the special mark ' must be the first in the list for easiest lookup */
+#define VB_MARK_CHARS   "'abcdefghijklmnopqrstuvwxyz"
+#define VB_MARK_TICK    0
 #define VB_MARK_SIZE    (sizeof(VB_MARK_CHARS) - 1)
 
 /* enums */
