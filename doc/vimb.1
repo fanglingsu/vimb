@@ -842,6 +842,13 @@ directory. If not set the entry out of the passwd file will be used instead.
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
 `proxy' is enabled, this will be used as http proxy.
+.TP
+.B no_proxy
+A comma separated list of domains and/or ips which should not be proxied. Note
+that an IPv6 address must appear in brackets if used with a port "[::1]:443".
+.IP
+Example: "localhost,127.0.0.1,::1,fc00::/7,example.com:8080"
+.IP
 .SH "REPORTING BUGS"
 Report bugs to the main project page on https://github.com/fanglingsu/vimb/issues
 .br

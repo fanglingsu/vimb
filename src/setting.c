@@ -677,13 +677,21 @@ static SettingStatus download_path(const Setting *s, const SettingType type)
 static SettingStatus proxy(const Setting *s, const SettingType type)
 {
     gboolean enabled;
-    char *proxy, *proxy_new;
-    SoupURI *proxy_uri = NULL;
+#if SOUP_CHECK_VERSION(2, 42, 2)
+    GProxyResolver *proxy = NULL;
+#else
+    SoupURI *proxy = NULL;
+#endif
 
     /* get the current status */
     if (type != SETTING_SET) {
-        g_object_get(vb.session, "proxy-uri", &proxy_uri, NULL);
-        enabled = (proxy_uri != NULL);
+#if SOUP_CHECK_VERSION(2, 42, 2)
+        g_object_get(vb.session, "proxy-resolver", &proxy, NULL);
+#else
+        g_object_get(vb.session, "proxy-uri", &proxy, NULL);
+#endif
+
+        enabled = (proxy != NULL);
 
         if (type == SETTING_GET) {
             print_value(s, &enabled);
@@ -701,20 +709,44 @@ static SettingStatus proxy(const Setting *s, const SettingType type)
     }
 
     if (enabled) {
-        proxy = (char *)g_getenv("http_proxy");
-        if (proxy != NULL && strlen(proxy)) {
-            proxy_new = g_str_has_prefix(proxy, "http://")
-                ? g_strdup(proxy)
-                : g_strconcat("http://", proxy, NULL);
-            proxy_uri = soup_uri_new(proxy_new);
+        const char *http_proxy = g_getenv("http_proxy");
 
-            g_object_set(vb.session, "proxy-uri", proxy_uri, NULL);
+        if (http_proxy != NULL && *http_proxy != '\0') {
+            char *proxy_new = g_str_has_prefix(http_proxy, "http://")
+                ? g_strdup(http_proxy)
+                : g_strconcat("http://", http_proxy, NULL);
 
-            soup_uri_free(proxy_uri);
+#if SOUP_CHECK_VERSION(2, 42, 2)
+            const char *no_proxy;
+            char **ignored_hosts = NULL;
+            /* check for no_proxy environment variable that contains comma
+             * seperated domains or ip addresses to skip from proxy */
+            if ((no_proxy = g_getenv("no_proxy"))) {
+                ignored_hosts = g_strsplit(no_proxy, ",", 0);
+            }
+
+            proxy = g_simple_proxy_resolver_new(proxy_new, ignored_hosts);
+            if (proxy) {
+                g_object_set(vb.session, "proxy-resolver", proxy, NULL);
+            }
+            g_strfreev(ignored_hosts);
+            g_object_unref(proxy);
+#else
+            proxy = soup_uri_new(proxy_new);
+            if (proxy && SOUP_URI_VALID_FOR_HTTP(proxy)) {
+                g_object_set(vb.session, "proxy-uri", proxy, NULL);
+            }
+            soup_uri_free(proxy);
+#endif
             g_free(proxy_new);
         }
     } else {
+        /* disable the proxy */
+#if SOUP_CHECK_VERSION(2, 42, 2)
+        g_object_set(vb.session, "proxy-resolver", NULL, NULL);
+#else
         g_object_set(vb.session, "proxy-uri", NULL, NULL);
+#endif
     }
 
     return SETTING_OK;
