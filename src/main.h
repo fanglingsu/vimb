@@ -104,6 +104,10 @@
 #define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state(w, s))
 #endif
 
+#ifndef SOUP_CHECK_VERSION
+#define SOUP_CHECK_VERSION(major, minor, micro) (0)
+#endif
+
 /* the special mark ' must be the first in the list for easiest lookup */
 #define VB_MARK_CHARS   "'abcdefghijklmnopqrstuvwxyz"
 #define VB_MARK_TICK    0
