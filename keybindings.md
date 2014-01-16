@@ -17,17 +17,17 @@ effect of the command. If a command supports the count this is shown as `[N]`.
 \:
 : Start Command Mode and print ':' to the input box.
 
-g-i
+gi
 : Set cursor to the first editable element in the page and switch to Input
   Mode.
 
 CTRL-Z
 : Switch vimb into Pass-Through Mode.
 
-g-f
+gf
 : Toggle show html source of current page.
 
-g-F
+gF
 : Opend the Web Inspector for current page.
 
 CTRL-V
@@ -50,10 +50,10 @@ t
 T
 : Start Command Mode and print ':tabopen URI' to input box.
 
-g-h
+gh
 : Open the configured home-page.
 
-g-H
+gH
 : Open the configured home-page into new window.
 
 u
@@ -78,10 +78,10 @@ P
 [N]DOWN
 : Go forward N steps in the browser history.
 
-[N]g-u
+[N]gu
 : Go to the Nth descendent directory of the current opened URL.
 
-g-U
+gU
 : Go to the domain of the current opened page.
 
 r
@@ -107,7 +107,7 @@ CTRL-C
 [N]CTRL-U
 : Scroll N half pages up.
 
-[N]g-g
+[N]gg
 : Scroll to the top of the current page. Or if N is given to N% of the page.
 
 [N]G
@@ -131,11 +131,23 @@ CTRL-C
 [N]k
 : Scroll page N steps up.
 
-[N]]-]
+[N]]]
 : Follow the last Nth link matching `nextpattern`.
 
-[N][-[
+[N][[
 : Follow the last Nth link matching `previouspattern`.
+
+m{a-z}
+: Set a page mark `{a-z}` at current possition on page. Such set marks are only
+  available on the current page, if the page is left, all marks will be
+  removed.
+
+'{a-z}
+: Jump to the mark `{a-z}` on current page.
+
+''
+: Jumps to the position before the latest jump, or where the last `m'` command
+  was given.
 
 ### hinting
 {:#hinting}
@@ -176,41 +188,41 @@ f
 F
 : Is an alias for the ;t hint mode.
 
-;-o
+;o
 : Open hint's location in the current window.
 
-;-t
+;t
 : Open hint's location in a new window.
 
-;-s
+;s
 : Saves the hint's destination under the configured `download-path`.
 
-;-O
+;O
 : Generate an ':open ' prompt with hint's URL.
 
-;-T
+;T
 : Generate an ':tabopen ' prompt with hint's URL.
 
-;-e
+;e
 : Open the configured editor (`editor-command`) with the hinted form element's
   content. If the file in editor is saved and the editor is closed, the file
   content will be put back in the form field.
 
-;-i
+;i
 : Open hinted image into current window.
 
-;-I
+;I
 : Open hinted image into new window.
 
-;-p
+;p
 : Push the hint's URL to the end of the read it later queue like the ':qpush'
   command. This is only available if vimb was compiled with QUEUE feature.
 
-;-P
+;P
 : Push the hint's URL to the end of the read it later queue like the ':qpush'
   command. This is only available if vimb was compiled with QUEUE feature.
 
-;-y
+;y
 : Yank hint's destination location into primary and secondary clipboard.
 
 Syntax: *g;{mode}{hint}*
@@ -244,19 +256,19 @@ the extended hint mode can only be combined with the following hint modes `;I`
 
 ### zooming
 
-[N]z-i
+[N]zi
 : Zoom-In the text of the page by N steps.
 
-[N]z-o
+[N]zo
 : Zoom-Out the text of the page by N steps.
 
-[N]z-I
+[N]zI
 : Full-Content Zoom-In the page by N steps.
 
-[N]z-O
+[N]zO
 : Full-Content Zoom-Out the page by N steps.
 
-z-z
+zz
 : Reset Zoom.
 
 ### yank

@@ -29,6 +29,7 @@ But following images may give a impression of they way vimb works.
 - vim oriented [keybindings][]
 - follow links via keyboard [hints][]
 - read it later [queue][] to collect URIs for later use
+- page marks
 - tagged bookmarks
 - cookie support
 - userscripts support
