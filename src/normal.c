@@ -60,6 +60,7 @@ static VbResult normal_g_cmd(const NormalCmdInfo *info);
 static VbResult normal_hint(const NormalCmdInfo *info);
 static VbResult normal_do_hint(const char *prompt);
 static VbResult normal_input_open(const NormalCmdInfo *info);
+static VbResult normal_mark(const NormalCmdInfo *info);
 static VbResult normal_navigate(const NormalCmdInfo *info);
 static VbResult normal_open_clipboard(const NormalCmdInfo *info);
 static VbResult normal_open(const NormalCmdInfo *info);
@@ -117,7 +118,7 @@ static struct {
 /* $   0x24 */ {normal_scroll},
 /* %   0x25 */ {NULL},
 /* &   0x26 */ {NULL},
-/* '   0x27 */ {NULL},
+/* '   0x27 */ {normal_mark},
 /* (   0x28 */ {NULL},
 /* )   0x29 */ {NULL},
 /* *   0x2a */ {normal_search_selection},
@@ -187,7 +188,7 @@ static struct {
 /* j   0x6a */ {normal_scroll},
 /* k   0x6b */ {normal_scroll},
 /* l   0x6c */ {normal_scroll},
-/* m   0x6d */ {NULL},
+/* m   0x6d */ {normal_mark},
 /* n   0x6e */ {normal_search},
 /* o   0x6f */ {normal_input_open},
 /* p   0x70 */ {normal_open_clipboard},
@@ -258,7 +259,7 @@ VbResult normal_keypress(int key)
         info.phase = PHASE_COMPLETE;
     } else if (info.phase == PHASE_START && isdigit(key)) {
         info.count = info.count * 10 + key - '0';
-    } else if (strchr(";zg[]", (char)key)) {
+    } else if (strchr(";zg[]'m", (char)key)) {
         /* handle commands that needs additional char */
         info.phase      = PHASE_KEY2;
         info.key        = key;
@@ -496,6 +497,39 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
     return RESULT_COMPLETE;
 }
 
+static VbResult normal_mark(const NormalCmdInfo *info)
+{
+    gdouble current;
+    char *mark;
+    int  idx;
+
+    /* check if the second char is a valid mark char */
+    if (!(mark = strchr(VB_MARK_CHARS, info->key2))) {
+        return RESULT_ERROR;
+    }
+
+    /* get the index of the mark char */
+    idx = mark - VB_MARK_CHARS;
+
+    if ('m' == info->key) {
+        vb.state.marks[idx] = gtk_adjustment_get_value(vb.gui.adjust_v);
+    } else {
+        /* check if the mark was set */
+        if ((int)(vb.state.marks[idx] - .5) < 0) {
+            return RESULT_ERROR;
+        }
+
+        current = gtk_adjustment_get_value(vb.gui.adjust_v);
+
+        /* jump to the location */
+        gtk_adjustment_set_value(vb.gui.adjust_v, vb.state.marks[idx]);
+
+        /* save previous adjust as last position */
+        vb.state.marks[VB_MARK_TICK] = current;
+    }
+    return RESULT_COMPLETE;
+}
+
 static VbResult normal_navigate(const NormalCmdInfo *info)
 {
     int count;
@@ -641,6 +675,8 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
             adjust = vb.gui.adjust_v;
             max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
             new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_upper(adjust);
+            /* save the position to mark ' */
+            vb.state.marks[VB_MARK_TICK] = gtk_adjustment_get_value(adjust);
             break;
         case '0':
             adjust = vb.gui.adjust_h;

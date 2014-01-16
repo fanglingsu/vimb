@@ -104,6 +104,11 @@
 #define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state(w, s))
 #endif
 
+/* the special mark ' must be the first in the list for easiest lookup */
+#define VB_MARK_CHARS   "'abcdefghijklmnopqrstuvwxyz"
+#define VB_MARK_TICK    0
+#define VB_MARK_SIZE    (sizeof(VB_MARK_CHARS) - 1)
+
 /* enums */
 typedef enum {
     RESULT_COMPLETE,
@@ -274,6 +279,7 @@ typedef struct {
     char            *title;                 /* holds the window title */
 #define PROMPT_SIZE 4
     char            prompt[PROMPT_SIZE];    /* current prompt ':', 'g;t', '/' including nul */
+    gdouble         marks[VB_MARK_SIZE];    /* holds marks set to page with 'm{markchar}' */
 } State;
 
 typedef struct {

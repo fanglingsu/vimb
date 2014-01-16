@@ -3,8 +3,8 @@
 .\" groff -man -Tascii vimb.1
 .TH vimb 1 "DATE" "vimb/VERSION" "Vimb Manual"
 .SH NAME
-vimb - Vim Browser - A modal web browser based on webkit thats inspired by
-vim the great editor.
+vimb - Vim Browser - A modal web browser based on webkit, inspired by vim the
+great editor.
 .SH SYNOPSIS
 .BI "vimb [" "OPTION" "] [" "URI" "]"
 .SH DESCRIPTION
@@ -172,6 +172,18 @@ Follow the last \fIN\fPth link matching `nextpattern'.
 .TP
 .BI [ N ][\-[
 Follow the last \fIN\fPth link matching `previouspattern'.
+.TP
+.BI m\-{ a-z }
+Set a page mark {\fIa-z\fP} at current possition on page. Such set marks are
+only available on the current page, if the page is left, all marks will be
+removed.
+.TP
+.BI '\-{ a-z }
+Jump to the mark {\fIa-z\fP} on current page.
+.TP
+.B '\-'
+Jumps to the position before the latest jump, or where the last "m'" command
+was given.
 .SS Hinting
 The hinting is the way to do what you would do with the mouse in common
 mouse-driven browsers. Open URI, yank URI, save page and so on. If the hinting

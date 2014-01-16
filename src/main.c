@@ -70,6 +70,7 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 /* functions */
 static void update_title(void);
 static void init_core(void);
+static void marks_clear(void);
 static void read_config(void);
 static void setup_signals();
 static void init_files(void);
@@ -408,6 +409,8 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             vb_update_statusbar();
             vb_update_urlbar(uri);
 
+            /* clear possible set marks */
+            marks_clear();
             break;
 
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
@@ -592,6 +595,9 @@ static void init_core(void)
     mode_add('i', input_enter, input_leave, input_keypress, NULL);
     mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
 
+    /* initialize the marks with empty values */
+    marks_clear();
+
     init_files();
     session_init();
     setting_init();
@@ -608,6 +614,16 @@ static void init_core(void)
 
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
+}
+
+static void marks_clear(void)
+{
+    int i;
+
+    /* init empty marks array */
+    for (i = 0; i < VB_MARK_SIZE; i++) {
+        vb.state.marks[i] = -1;
+    }
 }
 
 static void read_config(void)
