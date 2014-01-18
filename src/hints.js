@@ -115,8 +115,7 @@ Object.freeze((function(){
                 var rect = e.getBoundingClientRect();
                 if (!rect ||
                     rect.top > offsets.bottom || rect.bottom < offsets.top ||
-                    rect.left > offsets.right || rect.right < offsets.left ||
-                    !rect.width || !rect.height
+                    rect.left > offsets.right || rect.right < offsets.left
                 ) {
                     return false;
                 }
