@@ -17,12 +17,15 @@ Mandatory arguments to long options are mandatory for short options too.
 .TP
 .BI "\-C, \-\-cmd " "CMD"
 Run \fICMD\fP as ex command line right before the first page is loaded.
-Several ex commands can be used separated by "|".
-.br
+Several ex commands can be used separated by "|". Note that this command is
+not run in further spawned instances of vimb. If a link is opened into a new
+browser instance, the \fICMD\fP does not affect the new instance.
+
 Example: `vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"`
 .TP
 .BI "\-c, \-\-config " "CONFIG-FILE"
-Use custom configuration given as \fICONFIG-FILE\fP.
+Use custom configuration given as \fICONFIG-FILE\fP. This will also be applied
+on new spawned instances.
 .TP
 .BI "\-e, \-\-embed " "WINID"
 .I WINID
