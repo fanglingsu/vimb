@@ -943,12 +943,14 @@ int main(int argc, char *argv[])
     static char *winid = NULL;
     static gboolean ver = false;
     static GError *err;
+    static char *cmd = NULL;
 
     vb.custom_config = NULL;
     static GOptionEntry opts[] = {
-        {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
+        {"cmd", 'C', 0, G_OPTION_ARG_STRING, &cmd, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.custom_config, "Custom cufiguration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+        {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
     /* Initialize GTK+ */
@@ -972,6 +974,11 @@ int main(int argc, char *argv[])
     }
 
     init_core();
+
+    /* process the --cmd if this was given */
+    if (cmd) {
+        ex_run_string(cmd);
+    }
 
     /* command line argument: URL */
     vb_load_uri(&(Arg){VB_TARGET_CURRENT, argc > 1 ? argv[argc - 1] : NULL});
