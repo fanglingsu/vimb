@@ -429,8 +429,7 @@ Object.freeze((function(){
     }
 
     /* follow the count last link on pagematching the given regex list */
-    function followLink(rel, list, count) {
-        var patterns = list.split(",");
+    function followLink(rel, patterns, count) {
         /* returns array of matching elements */
         function followFrame(frame) {
             var i, p, reg, res = [],

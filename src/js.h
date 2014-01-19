@@ -30,5 +30,6 @@ char* js_object_call_function(JSContextRef ctx, JSObjectRef obj,
     const char *func, int count, JSValueRef params[]);
 char *js_ref_to_string(JSContextRef ctx, JSValueRef ref);
 JSValueRef js_string_to_ref(JSContextRef ctx, const char *string);
+JSValueRef js_object_to_ref(JSContextRef ctx, const char *json);
 
 #endif /* end of include guard: _JS_H */

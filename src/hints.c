@@ -161,13 +161,18 @@ void hints_fire(void)
 
 void hints_follow_link(const gboolean back, int count)
 {
-    char *pattern = back ? vb.config.prevpattern : vb.config.nextpattern;
+    char *json = g_strdup_printf(
+        "[%s]",
+        back ? vb.config.prevpattern : vb.config.nextpattern
+    );
 
     JSValueRef arguments[] = {
         js_string_to_ref(hints.ctx, back ? "prev" : "next"),
-        js_string_to_ref(hints.ctx, pattern),
+        js_object_to_ref(hints.ctx, json),
         JSValueMakeNumber(hints.ctx, count)
     };
+    g_free(json);
+
     call_hints_function("followLink", 3, arguments);
 }
 

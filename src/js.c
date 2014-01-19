@@ -159,6 +159,19 @@ JSValueRef js_string_to_ref(JSContextRef ctx, const char *string)
 }
 
 /**
+ * Retrieves a values reference for given json or array string string.
+ */
+JSValueRef js_object_to_ref(JSContextRef ctx, const char *json)
+{
+    JSValueRef ref = NULL;
+    if (evaluate_string(ctx, json, NULL, &ref)) {
+        return ref;
+    }
+    g_warning("Could not parse %s", json);
+    return NULL;
+}
+
+/**
  * Runs a string as JavaScript and returns if the call succeed.
  * In case the call succeed, the given *result is filled with the result
  * value, else with the value reference of the exception.
