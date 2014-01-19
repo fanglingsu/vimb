@@ -633,7 +633,7 @@ static void read_config(void)
     /* load default config */
     for (guint i = 0; default_config[i] != NULL; i++) {
         if (!ex_run_string(default_config[i])) {
-            fprintf(stderr, "Invalid default config: %s\n", default_config[i]);
+            g_error("Invalid default config: '%s'", default_config[i]);
         }
     }
 
@@ -648,7 +648,7 @@ static void read_config(void)
                 continue;
             }
             if (!ex_run_string(line)) {
-                fprintf(stderr, "Invalid config: %s\n", line);
+                g_warning("Invalid user config: '%s'", line);
             }
         }
     }

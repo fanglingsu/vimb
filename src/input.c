@@ -105,7 +105,7 @@ VbResult input_open_editor(void)
     /* spawn editor */
     char* command = g_strdup_printf(vb.config.editor_command, file_path);
     if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
-        fprintf(stderr, "Could not parse editor-command");
+        g_critical("Could not parse editor-command '%s'", command);
         g_free(command);
         return RESULT_ERROR;
     }
@@ -120,6 +120,7 @@ VbResult input_open_editor(void)
     if (!success) {
         unlink(file_path);
         g_free(file_path);
+        g_warning("Could not spawn editor-command");
         return RESULT_ERROR;
     }
 

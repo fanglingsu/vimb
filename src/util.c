@@ -76,7 +76,7 @@ char *util_get_file_contents(const char *filename, gsize *length)
     if (!(g_file_test(filename, G_FILE_TEST_IS_REGULAR)
         && g_file_get_contents(filename, &content, length, &error))
     ) {
-        fprintf(stderr, "Cannot open %s: %s\n", filename, error ? error->message : "file not found");
+        g_warning("Cannot open %s: %s", filename, error ? error->message : "file not found");
         g_clear_error(&error);
     }
     return content;
@@ -268,7 +268,7 @@ gboolean util_create_tmp_file(const char *content, char **file)
 
     fp = g_file_open_tmp(PROJECT "-XXXXXX", file, NULL);
     if (fp == -1) {
-        fprintf(stderr, "Could not create temporary file %s", *file);
+        g_critical("Could not create temp file %s", *file);
         g_free(*file);
         return false;
     }
@@ -280,7 +280,7 @@ gboolean util_create_tmp_file(const char *content, char **file)
     if (bytes < len) {
         close(fp);
         unlink(*file);
-        fprintf(stderr, "Could not write temporary file %s", *file);
+        g_critical("Could not write temp file %s", *file);
         g_free(*file);
 
         return false;

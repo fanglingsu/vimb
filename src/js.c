@@ -37,7 +37,7 @@ gboolean js_eval_file(WebKitWebFrame *frame, const char *file)
     ) {
         gboolean success = js_eval(frame, js, file, &value);
         if (!success) {
-            fprintf(stderr, "%s", value);
+            g_warning("JavaScript error in %s: %s", file, value);
         }
         g_free(value);
         g_free(js);
