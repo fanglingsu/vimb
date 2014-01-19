@@ -120,6 +120,18 @@ Object.freeze((function(){
                     return false;
                 }
 
+                if ((!rect.width || !rect.height) && (e.textContent || !e.name)) {
+                    var arr   = Array.prototype.slice.call(e.childNodes);
+                    var check = function(e) {
+                        return e instanceof Element
+                            && e.style.float != "none"
+                            && isVisible(e);
+                    };
+                    if (!arr.some(check)) {
+                        return false;
+                    }
+                }
+
                 var s = win.getComputedStyle(e, null);
                 return s.display !== "none" && s.visibility == "visible";
             }
