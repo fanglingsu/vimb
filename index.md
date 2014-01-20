@@ -72,7 +72,8 @@ But following images may give a impression of they way vimb works.
 4. Run following commands to compile and install vimb (if necessary last one as
    root).
 
-       make clean && make
+       make clean
+       make             // or make GTK=3 to build agains gtk3 libs
        make install
 
 ## dependencies

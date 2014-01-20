@@ -8,7 +8,7 @@ active: keybindings
 # vimb keybindings
 
 Some of the Normal Model Commands can have a numeric count to multiply the
-effect of the command. If a command supports the count this is shown as `[N]`.
+effect of the command. If a command supports the count this is shown as [*N*].
 
 ## normal mode
 
@@ -72,14 +72,14 @@ p
 P
 : Open the url out of the clipboard into new window.
 
-[N]UP
-: Go back N steps in the browser history.
+[*N*]UP
+: Go back *N* steps in the browser history.
 
-[N]DOWN
-: Go forward N steps in the browser history.
+[*N*]DOWN
+: Go forward *N* steps in the browser history.
 
-[N]gu
-: Go to the Nth descendent directory of the current opened URL.
+[*N*]gu
+: Go to the *N*th descendent directory of the current opened URL.
 
 gU
 : Go to the domain of the current opened page.
@@ -95,47 +95,47 @@ CTRL-C
 
 ### motion
 
-[N]CTRL-F
-: Scroll N pages down.
+[*N*]CTRL-F
+: Scroll *N* pages down.
 
-[N]CTRL-B
-: Scroll N pages up.
+[*N*]CTRL-B
+: Scroll *N* pages up.
 
-[N]CTRL-D
-: Scroll N half pages down.
+[*N*]CTRL-D
+: Scroll *N* half pages down.
 
-[N]CTRL-U
-: Scroll N half pages up.
+[*N*]CTRL-U
+: Scroll *N* half pages up.
 
-[N]gg
-: Scroll to the top of the current page. Or if N is given to N% of the page.
+[*N*]gg
+: Scroll to the top of the current page. Or if N is given to *N*% of the page.
 
-[N]G
-: Scroll to the bottom of the current page. Or if N is given to N% of the page.
+[*N*]G
+: Scroll to the bottom of the current page. Or if *N* is given to *N*% of the page.
 
-[N]0
-: Scroll N steps to the left of current page.
+[*N*]0
+: Scroll *N* steps to the left of current page.
 
-[N]$
-: Scroll N steps to the right of current page.
+[*N*]$
+: Scroll *N* steps to the right of current page.
 
-[N]h
-: Scroll N steps to the left of page.
+[*N*]h
+: Scroll *N* steps to the left of page.
 
-[N]l
-: Scroll N steps to the right of page.
+[*N*]l
+: Scroll *N* steps to the right of page.
 
-[N]j
-: Scroll page N steps down.
+[*N*]j
+: Scroll page *N* steps down.
 
-[N]k
-: Scroll page N steps up.
+[*N*]k
+: Scroll page *N* steps up.
 
-[N]]]
-: Follow the last Nth link matching `nextpattern`.
+[*N*]]]
+: Follow the last *N*th link matching `nextpattern`.
 
-[N][[
-: Follow the last Nth link matching `previouspattern`.
+[*N*][[
+: Follow the last *N*th link matching `previouspattern`.
 
 m{a-z}
 : Set a page mark `{a-z}` at current possition on page. Such set marks are only
@@ -225,19 +225,23 @@ F
 ;y
 : Yank hint's destination location into primary and secondary clipboard.
 
+;Y
+: Yank hint's text description or form text into primary and secondary
+  clipboard.
+
 Syntax: *g;{mode}{hint}*
 
 Start an extended hints mode and stay there until `<Esc>` is pressed. Like the
 normal hinting except that after a hint is selected, hints remain visible so
 that another one can be selected with the same action as the first. Note that
-the extended hint mode can only be combined with the following hint modes `;I`
-`;p` `;P` `;s` `;t` `;y`.
+the extended hint mode can only be combined with the following hint modes `I`
+`p` `P` `s` `t` `y` `Y`.
 
 ### searching
 
 /QUERY, ?QUERY
-: Start searching for QUERY in the current page. '/' start search forward, '?'
-  in backward direction.
+: Start searching for `QUERY` in the current page. '/' start search forward,
+  '?' in backward direction.
 
 \*, \#
 : Start searching for the current selected text, or if no text is selected for
@@ -247,26 +251,26 @@ the extended hint mode can only be combined with the following hint modes `;I`
   Note that this commands will yank the text selection into the clipboard and
   may remove other content from there!
 
-[N]n
-: Search for Nth next search result depending on current search direction.
+[*N*]n
+: Search for *N*th next search result depending on current search direction.
 
-[N]N
-: Search for Nth previous search result depending on current search
+[*N*]N
+: Search for *N*th previous search result depending on current search
   direction.
 
 ### zooming
 
-[N]zi
-: Zoom-In the text of the page by N steps.
+[*N*]zi
+: Zoom-In the text of the page by *N* steps.
 
-[N]zo
-: Zoom-Out the text of the page by N steps.
+[*N*]zo
+: Zoom-Out the text of the page by *N* steps.
 
-[N]zI
-: Full-Content Zoom-In the page by N steps.
+[*N*]zI
+: Full-Content Zoom-In the page by *N* steps.
 
-[N]zO
-: Full-Content Zoom-Out the page by N steps.
+[*N*]zO
+: Full-Content Zoom-Out the page by *N* steps.
 
 zz
 : Reset Zoom.
