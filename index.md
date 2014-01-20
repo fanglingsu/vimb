@@ -48,39 +48,13 @@ But following images may give a impression of they way vimb works.
 - [archlinux][]
 - [NetBSD][]
 
-## install
+## download
+- You can get vimb from github by following command.
 
-1. Download the sources
+      git clone git://github.com/fanglingsu/vimb.git vimb
 
-   - You can get vimb from github by following command.
-
-         git clone git://github.com/fanglingsu/vimb.git vimb
-
-   - Or you can download actual source as [tar.gz][tgz] or as [zip][] or get
-     one of the [releases][].
-
-2. Edit `config.mk` to match your local setup.
-
-3. Edit `config.h` to match you personal preferences.
-
-   The default Makefile will not overwrite your customised `config.h` with the
-   contents of `config.def.h`, even if it was updated in the latest git pull.
-   Therefore, you should always compare your customised `config.h` with
-   `config.def.h` and make sure you include any changes to the latter in your
-   `config.h`.
-
-4. Run following commands to compile and install vimb (if necessary last one as
-   root).
-
-       make clean
-       make             // or make GTK=3 to build agains gtk3 libs
-       make install
-
-## dependencies
-
-- libwebkit >= 1.5.0
-- libgtk+-2.0
-- libsoup-2.4
+- Or you can download actual source as [tar.gz][tgz] or as [zip][] or get
+  one of the [releases][].
 
 ## contribute
 
