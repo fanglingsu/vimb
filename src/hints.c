@@ -194,11 +194,11 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     gboolean res;
     char pmode = '\0';
 #ifdef FEATURE_QUEUE
-    static char *modes   = "eiIoOpPstTy";
-    static char *g_modes = "IpPsty";
+    static char *modes   = "eiIoOpPstTyY";
+    static char *g_modes = "IpPstyY";
 #else
-    static char *modes   = "eiIoOstTy";
-    static char *g_modes = "Isty";
+    static char *modes   = "eiIoOstTyY";
+    static char *g_modes = "IstyY";
 #endif
 
     if (!prompt) {
@@ -294,6 +294,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
                 break;
 
             case 'y':
+            case 'Y':
                 a.i = COMMAND_YANK_ARG;
                 a.s = v;
                 command_yank(&a);

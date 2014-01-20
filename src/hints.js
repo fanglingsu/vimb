@@ -108,6 +108,7 @@ Object.freeze((function(){
             offsets.right  = win.innerWidth  - offsets.right;
             offsets.bottom = win.innerHeight - offsets.bottom;
 
+            /* checks if given elemente is in viewport and visible */
             function isVisible(e) {
                 if (typeof e == "undefined") {
                     return false;
@@ -344,29 +345,15 @@ Object.freeze((function(){
             return "ERROR:";
         }
 
-        var e    = activeHint.e,
-            tag  = e.nodeName.toLowerCase(),
-            type = e.type || "",
-            res  = "";
+        var e = activeHint.e,
+            res;
 
-        if (tag === "input" || tag === "textarea" || tag === "select") {
-            if (type === "radio" || type === "checkbox") {
-                e.focus();
-                click(e);
-                res = "DONE:";
-            } else if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
-                click(e);
-                res = "DONE:";
-            } else {
-                e.focus();
-                res = "INSERT:";
-            }
-        } else if (tag === "iframe" || tag === "frame") {
-            e.focus();
-            res = "DONE:";
+        /* process form actions like focus toggling inputs */
+        if (config.handleForm) {
+            res = handleForm(e);
         }
 
-        if (config.continue) {
+        if (config.keepOpen) {
             /* reset the filter number */
             filterNum = 0;
             show(false);
@@ -375,6 +362,30 @@ Object.freeze((function(){
         }
 
         return res || config.action(e);
+    }
+
+    /* focus or toggle form fields */
+    function handleForm(e) {
+        var tag  = e.nodeName.toLowerCase(),
+            type = e.type || "";
+
+        if (tag === "input" || tag === "textarea" || tag === "select") {
+            if (type === "radio" || type === "checkbox") {
+                e.focus();
+                click(e);
+                return "DONE:";
+            }
+            if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
+                click(e);
+                return "DONE:";
+            }
+            e.focus();
+            return "INSERT:";
+        }
+        if (tag === "iframe" || tag === "frame") {
+            e.focus();
+            return "DONE:";
+        }
     }
 
     /* internal used methods */
@@ -502,7 +513,7 @@ Object.freeze((function(){
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
-                    ot:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
+                    otY:    "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
                     e:      "//input[not(@type) or @type='text'] | //textarea",
                     iI:     "//img[@src]",
                     OpPsTy: "//*[@href] | //img[@src and not(ancestor::a)] | //iframe[@src]"
@@ -511,12 +522,17 @@ Object.freeze((function(){
                 actionmap = {
                     o:         function(e) {open(e, false); return "DONE:";},
                     t:         function(e) {open(e, true); return "DONE:";},
-                    eiIOpPsTy: function(e) {return "DATA:" + getSrc(e);}
+                    eiIOpPsTy: function(e) {return "DATA:" + getSrc(e);},
+                    Y:         function(e) {return "DATA:" + (e.textContent || "");}
                 };
 
             config = {
-                maxHints: maxHints,
-                continue: keepOpen
+                maxHints:   maxHints,
+                keepOpen:   keepOpen,
+                /* handle forms only useful when there are form fields in xpath */
+                /* don't handle form for Y to allow to yank form filed content */
+                /* instead of switching to input mode */
+                handleForm: ("eot".indexOf(mode) >= 0)
             };
             for (prop in xpathmap) {
                 if (prop.indexOf(mode) >= 0) {
