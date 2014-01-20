@@ -54,7 +54,8 @@ Therefore, you should always compare your customised `config.h` with
 Run following command to compile and install vimb (if necessary last one as
 root).
 
-    make clean && make
+    make clean
+    make // or make GTK=3 to compile against gtk3
     make install
 
 To build vimb against gtk3 you can use `make GTK=3`.
