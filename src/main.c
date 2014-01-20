@@ -48,6 +48,9 @@ VbCore      vb;
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
+static void webview_request_starting_cb(WebKitWebView *view,
+    WebKitWebFrame *frame, WebKitWebResource *res, WebKitNetworkRequest *req,
+    WebKitNetworkResponse *resp, gpointer data);
 static void destroy_window_cb(GtkWidget *widget);
 static void scroll_cb(GtkAdjustment *adjustment);
 static WebKitWebView *inspector_new(WebKitWebInspector *inspector, WebKitWebView *webview);
@@ -433,6 +436,38 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
     }
 }
 
+static void webview_request_starting_cb(WebKitWebView *view,
+    WebKitWebFrame *frame, WebKitWebResource *res, WebKitNetworkRequest *req,
+    WebKitNetworkResponse *resp, gpointer data)
+{
+    char *name, *value;
+    GHashTableIter iter;
+    SoupMessage *msg;
+
+    /* don't try to load favicon */
+    const char *uri = webkit_network_request_get_uri(req);
+    if (g_str_has_suffix(uri, "/favicon.ico")) {
+        webkit_network_request_set_uri(req, "about:blank");
+        return;
+    }
+
+    /* set/remove/change user defined headers */
+    msg = webkit_network_request_get_message(req);
+    if (!msg || !vb.config.headers) {
+        return;
+    }
+
+    g_hash_table_iter_init(&iter, vb.config.headers);
+    while (g_hash_table_iter_next(&iter, (gpointer*)&name, (gpointer*)&value)) {
+        /* allow to remove header with null value */
+        if (value == NULL) {
+            soup_message_headers_remove(msg->request_headers, name);
+        } else {
+            soup_message_headers_replace(msg->request_headers, name, value);
+        }
+    }
+}
+
 static void destroy_window_cb(GtkWidget *widget)
 {
     vb_quit();
@@ -672,6 +707,7 @@ static void setup_signals()
         "signal::mime-type-policy-decision-requested", G_CALLBACK(mimetype_decision_cb), NULL,
         "signal::download-requested", G_CALLBACK(vb_download), NULL,
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
+        "signal::resource-request-starting", G_CALLBACK(webview_request_starting_cb), NULL,
         NULL
     );
 
