@@ -36,7 +36,7 @@ CPPFLAGS += -DHAS_GTK3
 endif
 
 # prepare the lib flags used for the linker
-LIBFLAGS = $(shell pkg-config --libs $(LIBS)) -lX11 -lXext -lm
+LIBFLAGS = $(shell pkg-config --libs $(LIBS)) -lX11 -lXext
 
 # normal compiler flags
 CFLAGS  += $(shell pkg-config --cflags $(LIBS))
