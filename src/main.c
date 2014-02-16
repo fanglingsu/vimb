@@ -175,17 +175,22 @@ gboolean vb_load_uri(const Arg *arg)
 
     if (arg->i == VB_TARGET_NEW) {
         guint i = 0;
-        char *cmd[7], xid[64];
+        char *cmd[9];
 
         cmd[i++] = *args;
         if (vb.embed) {
-            cmd[i++] = "-e";
+            char xid[64];
             snprintf(xid, LENGTH(xid), "%u", (int)vb.embed);
+            cmd[i++] = "-e";
             cmd[i++] = xid;
         }
-        if (vb.custom_config) {
+        if (vb.config.file) {
             cmd[i++] = "-c";
-            cmd[i++] = vb.custom_config;
+            cmd[i++] = vb.config.file;
+        }
+        if (vb.config.autocmd) {
+            cmd[i++] = "-C";
+            cmd[i++] = vb.config.autocmd;
         }
         cmd[i++] = uri;
         cmd[i++] = NULL;
@@ -748,8 +753,8 @@ static void init_files(void)
 {
     char *path = util_get_config_dir();
 
-    if (vb.custom_config) {
-        char *rp = realpath(vb.custom_config, NULL);
+    if (vb.config.file) {
+        char *rp = realpath(vb.config.file, NULL);
         vb.files[FILES_CONFIG] = g_strdup(rp);
         free(rp);
     } else {
@@ -978,12 +983,10 @@ int main(int argc, char *argv[])
     static char *winid = NULL;
     static gboolean ver = false;
     static GError *err;
-    static char *cmd = NULL;
 
-    vb.custom_config = NULL;
     static GOptionEntry opts[] = {
-        {"cmd", 'C', 0, G_OPTION_ARG_STRING, &cmd, "Ex command run before first page is loaded", NULL},
-        {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.custom_config, "Custom cufiguration file", NULL},
+        {"cmd", 'C', 0, G_OPTION_ARG_STRING, &vb.config.autocmd, "Ex command run before first page is loaded", NULL},
+        {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom cufiguration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
@@ -1011,8 +1014,8 @@ int main(int argc, char *argv[])
     init_core();
 
     /* process the --cmd if this was given */
-    if (cmd) {
-        ex_run_string(cmd);
+    if (vb.config.autocmd) {
+        ex_run_string(vb.config.autocmd);
     }
 
     /* command line argument: URL */

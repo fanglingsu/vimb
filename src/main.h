@@ -298,6 +298,8 @@ typedef struct {
     GHashTable *headers;        /* holds user defined header appended to requests */
     char       *nextpattern;    /* regex patter nfor prev link matching */
     char       *prevpattern;    /* regex patter nfor next link matching */
+    char       *file;           /* path to the custome config file */
+    char       *autocmd;        /* command given by --cmd option */
 } Config;
 
 typedef struct {
@@ -328,7 +330,6 @@ typedef struct {
 #else
     GdkNativeWindow embed;
 #endif
-    char            *custom_config;
 } VbCore;
 
 /* main object */
