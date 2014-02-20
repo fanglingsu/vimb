@@ -35,6 +35,11 @@ the [vimb project page][vimb].
 - run shell commands from inpubox
 - read it later queue to collect URIs for later use
 
+## packages
+
+- [archlinux][]
+- [NetBSD][]
+
 ## dependencies
 - libwebkit >=1.5.0
 - libgtk+-2.0
@@ -66,5 +71,7 @@ Information about the license are found in the file LICENSE.
 # mailing list
 - feature requests, issues and patches can be discussed on the [mailing list][mail]
 
-[vimb]: http://fanglingsu.github.io/vimb/ "vimb - vim-like webkit browser project page"
-[mail]: https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[vimb]:        http://fanglingsu.github.io/vimb/ "vimb - vim-like webkit browser project page"
+[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
+[NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
