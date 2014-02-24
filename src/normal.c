@@ -724,6 +724,9 @@ static VbResult normal_search_selection(const NormalCmdInfo *info)
     }
     count = (info->count > 0) ? info->count : 1;
 
+    /* stopp possible existing search and the search highlights before
+     * starting the new search query */
+    command_search(&((Arg){0}));
     command_search(&((Arg){info->key == '*' ? count : -count, query}));
     g_free(query);
 
