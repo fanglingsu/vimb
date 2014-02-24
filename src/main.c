@@ -377,7 +377,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 {
     const char *uri = GET_URI();
 
-    switch (webkit_web_view_get_load_status(vb.gui.webview)) {
+    switch (webkit_web_view_get_load_status(view)) {
         case WEBKIT_LOAD_PROVISIONAL:
             /* update load progress in statusbar */
             vb.state.progress = 0;
@@ -387,7 +387,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_COMMITTED:
             {
-                WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
+                WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
                 /* set the status */
                 if (g_str_has_prefix(uri, "https://")) {
                     WebKitWebDataSource *src      = webkit_web_frame_get_data_source(frame);
