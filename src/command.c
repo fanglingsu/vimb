@@ -33,16 +33,14 @@ gboolean command_search(const Arg *arg)
 {
     static short dir;   /* last direction 1 forward, -1 backward*/
     static char *query = NULL;
-#ifdef FEATURE_SEARCH_HIGHLIGHT
-    static gboolean highlight = false;
-#endif
+    static gboolean newsearch = true;
     gboolean forward;
 
     if (arg->i == 0) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
         webkit_web_view_unmark_text_matches(vb.gui.webview);
-        highlight = false;
 #endif
+        newsearch = true;
         return true;
     }
 
@@ -57,24 +55,28 @@ gboolean command_search(const Arg *arg)
 
     if (query) {
         unsigned int count = abs(arg->i);
+        if (newsearch) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
-        if (!highlight) {
             /* highlight matches if the search is started new or continued
              * after switch to normal mode which calls this function with
              * COMMAND_SEARCH_OFF */
             webkit_web_view_mark_text_matches(vb.gui.webview, query, false, 0);
             webkit_web_view_set_highlight_text_matches(vb.gui.webview, true);
-
-            /* mark the search as active */
-            highlight = true;
-        }
 #endif
 
-        do {
+            newsearch = false;
+            /* skip first search because this is done during typing in ex
+             * mode, else the search wil mark the next match as active */
+            if (count) {
+                count -= 1;
+            }
+        }
+
+        while (count--) {
             if (!webkit_web_view_search_text(vb.gui.webview, query, false, forward, true)) {
                 break;
             }
-        } while (--count);
+        };
     }
 
     return true;
