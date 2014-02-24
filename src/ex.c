@@ -325,7 +325,9 @@ void ex_input_changed(const char *text)
 
         case '/': forward = true; /* fall through */
         case '?':
+#ifdef FEATURE_SEARCH_HIGHLIGHT
             webkit_web_view_unmark_text_matches(vb.gui.webview);
+#endif
             webkit_web_view_search_text(vb.gui.webview, &text[1], false, forward, false);
             break;
     }
