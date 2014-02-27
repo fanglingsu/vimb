@@ -917,7 +917,7 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
         file = util_build_path(path, vb.config.download_dir);
     } else {
         path = webkit_download_get_suggested_filename(download);
-        if (!path) {
+        if (!path || *path == '\0') {
             path = PROJECT "-donwload";
         }
         file = util_build_path(path, vb.config.download_dir);
