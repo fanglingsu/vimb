@@ -944,27 +944,47 @@ static gboolean complete(short direction)
         before_cmdname = in;
 
         if (parse_command_name(&in, arg) && *in == ' ') {
-            OVERWRITE_NSTRING(excomp.prefix, input, in - input + 1);
+            const char *token;
+            /* get only the last word of input string for the completion for
+             * bookmark tag completion */
+            if (arg->code == EX_BMA) {
+                /* find the end of the input and search for the next
+                 * whitespace toward the beginning */
+                token = strrchr(in, '\0');
+                while (token >= in && *token != ' ') {
+                    token--;
+                }
+            } else {
+                /* use all input except ot the command itself for the
+                 * completion */
+                token = in;
+            }
 
-            skip_whitespace(&in);
+            /* save the string prefix that will not be part of completion like
+             * the ':open ' if ':open something' is completed. this means that
+             * the complation will only the none prefix part of the input */
+            OVERWRITE_NSTRING(excomp.prefix, input, token - input + 1);
+
+            /* the token points to a space, skip this */
+            skip_whitespace(&token);
             switch (arg->code) {
                 case EX_OPEN:
                 case EX_TABOPEN:
-                    if (*in == '!') {
-                        found = bookmark_fill_completion(store, in + 1);
+                    if (*token == '!') {
+                        found = bookmark_fill_completion(store, token + 1);
                     } else {
-                        found = history_fill_completion(store, HISTORY_URL, in);
+                        found = history_fill_completion(store, HISTORY_URL, token);
                     }
                     break;
 
                 case EX_SET:
                     sort = true;
-                    found = setting_fill_completion(store, in);
+                    found = setting_fill_completion(store, token);
                     break;
 
                 case EX_BMA:
                     sort  = true;
-                    found = bookmark_fill_tag_completion(store, in);
+                    found = bookmark_fill_tag_completion(store, token);
                     break;
 
                 default:
