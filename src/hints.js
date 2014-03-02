@@ -432,7 +432,7 @@ Object.freeze((function(){
     function mouseEvent(e, name, ctrl) {
         var evObj = e.ownerDocument.createEvent("MouseEvents");
         evObj.initMouseEvent(
-            name, true, true, e.contentWindow,
+            name, true, true, e.ownerDocument.defaultView,
             0, 0, 0, 0, 0,
             (typeof ctrl != "undefined") ? ctrl : false, false, false, false, 0, null
         );
