@@ -162,7 +162,7 @@ static ExInfo commands[] = {
 #endif
     {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS|EX_FLAG_EXP},
     {"set",              EX_SET,         ex_set,        EX_FLAG_RHS},
-    {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS|EX_FLAG_EXP},
+    {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS|EX_FLAG_EXP|EX_FLAG_BANG},
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
@@ -838,7 +838,9 @@ static gboolean ex_set(const ExArg *arg)
 static gboolean ex_shellcmd(const ExArg *arg)
 {
     int status, argc;
-    char *cmd, *error = NULL, *out = NULL, **argv;
+    char *cmd, *stdOut = NULL, *stdErr = NULL, **argv;
+    gboolean success;
+    GError *error = NULL;
 
     if (!*arg->rhs->str) {
         return false;
@@ -853,15 +855,34 @@ static gboolean ex_shellcmd(const ExArg *arg)
     }
     g_free(cmd);
 
-    g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, &out, &error, &status, NULL);
-    g_strfreev(argv);
-    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-        vb_echo(VB_MSG_NORMAL, true, "%s", out);
-        return true;
+    if (arg->bang) {
+        if (!g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
+            g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
+            g_clear_error(&error);
+            success = false;
+        } else {
+            success = true;
+        }
+    } else {
+        if (!g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, &stdOut, &stdErr, &status, &error)) {
+            g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
+            g_clear_error(&error);
+            success = false;
+        } else {
+            /* the commands success depends not on the return code of the
+             * called shell command, so we know the result already here */
+            success = true;
+        }
+
+        if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+            vb_echo(VB_MSG_NORMAL, false, "%s", stdOut);
+        } else {
+            vb_echo(VB_MSG_ERROR, true, "[%d] %s", WEXITSTATUS(status), stdErr);
+        }
     }
 
-    vb_echo(VB_MSG_ERROR, true, "[%d] %s", WEXITSTATUS(status), error);
-    return false;
+    g_strfreev(argv);
+    return success;
 }
 
 static gboolean ex_shortcut(const ExArg *arg)

@@ -510,8 +510,12 @@ Removes all entries from queue.
 Runs given shell \fICMD\fP syncron and print the output into inputbox. The
 \fICMD\fP can contain multiple '%' chars that are expanded to the current
 opened URI. Also the '~/' to home dir expansion is available.
+.TP
+.BI ":sh[ellcmd]! " CMD
+Runs given shell \fICMD\fP asyncron. The '%' and '~/' expanshion of the :sh
+command are also expanded for this command too.
 
-Example: :shellcmd echo "`date` %" >> myhistory.txt
+Example: :sh! echo "`date` %" >> myhistory.txt
 .TP
 .BI ":s[ave] [" PATH "]"
 Download current opened page into configured download directory. If \fIPATH\fP
