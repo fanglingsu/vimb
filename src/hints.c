@@ -39,8 +39,12 @@ static struct {
     int            promptlen; /* lenfth of the hint prompt chars 2 or 3 */
     gboolean       gmode;     /* indicate if the hints g mode is used */
     JSContextRef   ctx;
+#if WEBKIT_CHECK_VERSION(2, 0, 0)
+    /* holds the setting if JavaScript can open windows automatically that we
+     * have to change to open windows via hinting */
+    gboolean       allow_open_win;
+#endif
 } hints;
-
 
 extern VbCore vb;
 
@@ -127,6 +131,19 @@ void hints_create(const char *input)
 
     if (!(vb.mode->flags & FLAG_HINTING)) {
         vb.mode->flags |= FLAG_HINTING;
+
+#if WEBKIT_CHECK_VERSION(2, 0, 0)
+        WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
+
+        /* before we enable JavaScript to open new windows, we save the actual
+         * value to be able restore it after hints where fired */
+        g_object_get(G_OBJECT(setting), "javascript-can-open-windows-automatically", &(hints.allow_open_win), NULL);
+
+        /* if window open is already allowed there's no need to allow it again */
+        if (!hints.allow_open_win) {
+            g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", true, NULL);
+        }
+#endif
 
         hints.promptlen = hints.gmode ? 3 : 2;
 
@@ -252,7 +269,13 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
         g_signal_emit_by_name(
             vb.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
         );
-    } else if (!strncmp(value, "DONE:", 5)) {
+        g_free(value);
+
+        return true;
+    }
+
+    /* following return values mark fired hints */
+    if (!strncmp(value, "DONE:", 5)) {
         if (!hints.gmode) {
             mode_enter('n');
         }
@@ -312,5 +335,12 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
     }
     g_free(value);
 
+#if WEBKIT_CHECK_VERSION(2, 0, 0)
+    /* if open window was not allowed for JavaScript, restore this */
+    if (!hints.allow_open_win) {
+        WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
+        g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", hints.allow_open_win, NULL);
+    }
+#endif
     return true;
 }
