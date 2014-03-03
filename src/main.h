@@ -287,19 +287,21 @@ typedef struct {
 } State;
 
 typedef struct {
-    time_t     cookie_timeout;
-    int        scrollstep;
-    char       *home_page;
-    char       *download_dir;
-    guint      history_max;
-    char       *editor_command;
-    guint      timeoutlen;      /* timeout for ambiguous mappings */
-    gboolean   strict_focus;
-    GHashTable *headers;        /* holds user defined header appended to requests */
-    char       *nextpattern;    /* regex patter nfor prev link matching */
-    char       *prevpattern;    /* regex patter nfor next link matching */
-    char       *file;           /* path to the custome config file */
-    char       *autocmd;        /* command given by --cmd option */
+    time_t       cookie_timeout;
+    int          scrollstep;
+    char         *home_page;
+    char         *download_dir;
+    guint        history_max;
+    char         *editor_command;
+    guint        timeoutlen;      /* timeout for ambiguous mappings */
+    gboolean     strict_focus;
+    GHashTable   *headers;        /* holds user defined header appended to requests */
+    char         *nextpattern;    /* regex patter nfor prev link matching */
+    char         *prevpattern;    /* regex patter nfor next link matching */
+    char         *file;           /* path to the custome config file */
+    char         *autocmd;        /* command given by --cmd option */
+    char         *cafile;         /* path to the ca file */
+    GTlsDatabase *tls_db;         /* tls database */
 } Config;
 
 typedef struct {
