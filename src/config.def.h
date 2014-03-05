@@ -36,6 +36,8 @@
 #define FEATURE_TITLE_PROGRESS
 /* should the history indicator [+-] be shown in status bar after url */
 #define FEATURE_HISTORY_INDICATOR
+/* enables workaround for hight dpi displays */
+#define FEATURE_HIGH_DPI
 
 
 /* time in seconds after that message will be removed from inputbox if the
