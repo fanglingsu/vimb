@@ -70,6 +70,9 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 
 /* functions */
+#ifdef FEATURE_WGET_PROGRESS_BAR
+static void wget_bar(int len, int progress, char *string);
+#endif
 static void update_title(void);
 static void init_core(void);
 static void marks_clear(void);
@@ -238,6 +241,23 @@ void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg,
     VB_WIDGET_OVERRIDE_BACKGROUND(widget, VB_GTK_STATE_NORMAL, bg);
 }
 
+#ifdef FEATURE_WGET_PROGRESS_BAR
+static void wget_bar(int len, int progress, char *string)
+{
+    int i, state;
+
+    state = progress * len / 100;
+    for (i = 0; i < state; i++) {
+        string[i] = PROGRESS_BAR[0];
+    }
+    string[i++] = PROGRESS_BAR[1];
+    for (; i < len; i++) {
+        string[i] = PROGRESS_BAR[2];
+    }
+    string[i] = '\0';
+}
+#endif
+
 void vb_update_statusbar()
 {
     int max, val, num;
@@ -251,7 +271,13 @@ void vb_update_statusbar()
 
     /* show load status of page or the downloads */
     if (vb.state.progress != 100) {
+#ifdef FEATURE_WGET_PROGRESS_BAR
+        char bar[PROGRESS_BAR_LEN + 1];
+        wget_bar(PROGRESS_BAR_LEN, vb.state.progress, bar);
+        g_string_append_printf(status, " [%s]", bar);
+#else
         g_string_append_printf(status, " [%i%%]", vb.state.progress);
+#endif
     }
 
     /* show the scroll status */

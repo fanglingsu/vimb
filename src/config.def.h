@@ -36,6 +36,8 @@
 #define FEATURE_TITLE_PROGRESS
 /* should the history indicator [+-] be shown in status bar after url */
 #define FEATURE_HISTORY_INDICATOR
+/* show wget style progressbar in status bar */
+#define FEATURE_WGET_PROGRESS_BAR
 
 
 /* time in seconds after that message will be removed from inputbox if the
@@ -52,6 +54,12 @@
 
 #define WIN_WIDTH                  800
 #define WIN_HEIGHT                 600
+
+#ifdef FEATURE_WGET_PROGRESS_BAR
+/* chars to use for the progressbar */
+#define PROGRESS_BAR             "=> "
+#define PROGRESS_BAR_LEN            20
+#endif
 
 /* template to run shell command for vimb command :shellcmd */
 #define SHELL_CMD "/bin/sh -c '%s'"
