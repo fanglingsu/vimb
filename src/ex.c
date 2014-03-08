@@ -837,8 +837,8 @@ static gboolean ex_set(const ExArg *arg)
 
 static gboolean ex_shellcmd(const ExArg *arg)
 {
-    int status, argc;
-    char *cmd, *stdOut = NULL, *stdErr = NULL, **argv;
+    int status;
+    char *cmd, *stdOut = NULL, *stdErr = NULL;
     gboolean success;
     GError *error = NULL;
 
@@ -847,16 +847,8 @@ static gboolean ex_shellcmd(const ExArg *arg)
     }
 
     cmd = g_strdup_printf(SHELL_CMD, arg->rhs->str);
-    if (!g_shell_parse_argv(cmd, &argc, &argv, NULL)) {
-        vb_echo(VB_MSG_ERROR, true, "Could not parse command args");
-        g_free(cmd);
-
-        return false;
-    }
-    g_free(cmd);
-
     if (arg->bang) {
-        if (!g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
+        if (!g_spawn_command_line_async(cmd, &error)) {
             g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
             g_clear_error(&error);
             success = false;
@@ -864,7 +856,7 @@ static gboolean ex_shellcmd(const ExArg *arg)
             success = true;
         }
     } else {
-        if (!g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, &stdOut, &stdErr, &status, &error)) {
+        if (!g_spawn_command_line_sync(cmd, &stdOut, &stdErr, &status, &error)) {
             g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
             g_clear_error(&error);
             success = false;
@@ -881,7 +873,7 @@ static gboolean ex_shellcmd(const ExArg *arg)
         }
     }
 
-    g_strfreev(argv);
+    g_free(cmd);
     return success;
 }
 
