@@ -519,9 +519,8 @@ Example: :sh! echo "`date` %" >> myhistory.txt
 .TP
 .BI ":s[ave] [" PATH "]"
 Download current opened page into configured download directory. If \fIPATH\fP
-is given, download under this file name or path. Possible value for PATH are
-`page.html', `subdir/img1.png', `~/downlod.html' or absolute paths
-`/tmp/file.html'.
+is given, download under this file name or path. \fIPATH\fP is expanded via
+shell and can therefor contain '~/', '${ENV}' and '~user' pattern.
 .B :q[uit]
 Close the browser.
 .TP
@@ -700,7 +699,8 @@ cookies)}.
 Cookie timeout in seconds.
 .TP
 .B download-path (string)
-Path to the default download directory.
+Path to the default download directory. Note that the set path is expanded via
+shell, so you can use '~/path' or '$HOME/foo'.
 .TP
 .B editor-command (string)
 Command with placeholder '%s' called if form filed is opened with editor to

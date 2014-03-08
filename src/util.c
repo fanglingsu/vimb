@@ -292,35 +292,71 @@ gboolean util_create_tmp_file(const char *content, char **file)
 
 /**
  * Build the absolute file path of given path and possible given directory.
- * If the path is already absolute or uses ~/ for the home directory, the
- * directory is ignored.
  *
  * Returned path must be freed.
  */
 char *util_build_path(const char *path, const char *dir)
 {
-    char *fullPath, *p;
+    char *fullPath = NULL, *fexp, *dexp, *p;
 
-    /* creating directory */
-    if (path[0] == '/') {
-        fullPath = g_strdup(path);
-    } else if (path[0] == '~') {
-        if (path[1] == '/') {
-            fullPath = g_strconcat(g_get_home_dir(), &path[1], NULL);
-        } else {
-            fullPath = g_strconcat(g_get_home_dir(), "/", &path[1], NULL);
+    /* if the path could be expanded */
+    if ((fexp = util_shell_expand(path))) {
+        if (*fexp == '/') {
+            /* path is already absolute, no need to use given dir - there is
+             * no need to free fexp, bacuse this should be done by the caller
+             * on fullPath later */
+            fullPath = fexp;
+        } else if (dir) {
+            /* try to expand also the dir given - this may be ~/path */
+            if ((dexp = util_shell_expand(dir))) {
+                /* use expanded dir and append expanded path */
+                fullPath = g_build_filename(dexp, fexp, NULL);
+                g_free(dexp);
+            }
+            g_free(fexp);
         }
-    } else if (dir) {
-        fullPath = g_strconcat(dir, "/", path, NULL);
-    } else {
-        fullPath = g_strconcat(g_get_current_dir(), "/", path, NULL);
     }
 
-    if ((p = strrchr(fullPath, '/'))) {
+    /* if full path not found use current dir */
+    if (!fullPath) {
+        fullPath = g_build_filename(g_get_current_dir(), path, NULL);
+    }
+
+    if ((p = strrchr(fullPath, G_DIR_SEPARATOR))) {
         *p = '\0';
-        g_mkdir_with_parents(fullPath, 0700);
+        util_create_dir_if_not_exists(fullPath);
         *p = '/';
     }
 
     return fullPath;
+}
+
+/**
+ * Run the shell to expand given string 'echo -n str'.
+ *
+ * Returned path must be g_freed.
+ */
+char *util_shell_expand(const char *str)
+{
+    GError *error = NULL;
+    char *shellcmd, *cmd, *out = NULL;
+
+    /* first check if the string may contain expandable chars */
+    if (*str == '~' || strchr(str, '$')) {
+        cmd      = g_strconcat("echo -n ", str, NULL);
+        shellcmd = g_strdup_printf(SHELL_CMD, cmd);
+        if (!g_spawn_command_line_sync(shellcmd, &out, NULL, NULL, &error)) {
+            g_warning("Could not run shell expansion: %s", error->message);
+            g_clear_error(&error);
+        }
+        g_free(shellcmd);
+        g_free(cmd);
+    }
+
+    /* if string needn't to be expanded or expansion fialed use it like it is */
+    if (!out) {
+        out = g_strdup(str);
+    }
+
+    return out;
 }

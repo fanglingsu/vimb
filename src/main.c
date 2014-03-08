@@ -936,17 +936,26 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path)
 {
     WebKitDownloadStatus status;
-    char *uri, *file;
+    char *uri, *file, *dir;
 
-    /* prepare the path to save the donwload */
+    /* prepare the path to save the download */
     if (path) {
         file = util_build_path(path, vb.config.download_dir);
+
+        /* if file is an directory append a file name */
+        if (g_file_test(file, (G_FILE_TEST_IS_DIR))) {
+            dir  = file;
+            file = g_build_filename(dir, PROJECT "-download", NULL);
+            g_free(dir);
+        }
     } else {
+        /* if there was no path given where to download the file, used
+         * suggested file name or a static one */
         path = webkit_download_get_suggested_filename(download);
         if (!path || *path == '\0') {
-            path = PROJECT "-donwload";
+            path = PROJECT "-download";
         }
-        file = util_build_path(path, vb.config.download_dir);
+        file = g_build_filename(vb.config.download_dir, path, NULL);
     }
 
     /* build the file uri from file path */
