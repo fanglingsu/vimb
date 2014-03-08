@@ -658,7 +658,7 @@ static void init_core(void)
 
 #ifdef FEATURE_HIGH_DPI
     /* fix for high dpi displays */
-    GdkScreen *screen = gdk_window_get_screen(GTK_WIDGET(vb.gui.window)->window);
+    GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(vb.gui.window));
     gdouble dpi = gdk_screen_get_resolution(screen);
     if (dpi != -1) {
         WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
