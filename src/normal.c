@@ -18,7 +18,6 @@
  */
 
 #include <gdk/gdkkeysyms.h>
-#include <ctype.h>
 #include "config.h"
 #include "mode.h"
 #include "main.h"
@@ -257,7 +256,7 @@ VbResult normal_keypress(int key)
     } else if (info.phase == PHASE_KEY3) {
         info.key3  = key;
         info.phase = PHASE_COMPLETE;
-    } else if (info.phase == PHASE_START && isdigit(key)) {
+    } else if (info.phase == PHASE_START && VB_IS_DIGIT(key)) {
         info.count = info.count * 10 + key - '0';
     } else if (strchr(";zg[]'m", (char)key)) {
         /* handle commands that needs additional char */
@@ -785,7 +784,7 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
     setting = webkit_web_view_get_settings(view);
     g_object_get(G_OBJECT(setting), "zoom-step", &step, NULL);
 
-    webkit_web_view_set_full_content_zoom(view, isupper(info->key2));
+    webkit_web_view_set_full_content_zoom(view, VB_IS_UPPER(info->key2));
 
     /* calculate the new zoom level */
     if (info->key2 == 'i' || info->key2 == 'I') {

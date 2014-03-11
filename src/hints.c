@@ -17,7 +17,6 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <ctype.h>
 #include "config.h"
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
@@ -82,7 +81,7 @@ VbResult hints_keypress(int key)
         if (call_hints_function("update", 1, arguments)) {
             return RESULT_COMPLETE;
         }
-    } else if (isdigit(key)) {
+    } else if (VB_IS_DIGIT(key)) {
         arguments[0] = JSValueMakeNumber(hints.ctx, key - '0');
         if (call_hints_function("update", 1, arguments)) {
             return RESULT_COMPLETE;

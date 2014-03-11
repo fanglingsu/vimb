@@ -20,7 +20,7 @@
 #include "config.h"
 #include <stdio.h>
 #include <pwd.h>
-#include "ctype.h"
+#include <ctype.h>
 #include "util.h"
 #include "ascii.h"
 

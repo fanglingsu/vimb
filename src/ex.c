@@ -21,7 +21,6 @@
  * This file contains function to handle input editing, parsing of called ex
  * commands from inputbox and the ex commands.
  */
-#include <ctype.h>
 #include <sys/wait.h>
 #include "config.h"
 #include "main.h"
@@ -429,7 +428,7 @@ static gboolean parse(const char **input, ExArg *arg)
     g_string_truncate(arg->rhs, 0);
 
     /* remove leading whitespace and : */
-    while (**input && (**input == ':' || **input == ' ')) {
+    while (**input && (**input == ':' || VB_IS_SPACE(**input))) {
         (*input)++;
     }
     parse_count(input, arg);
@@ -467,13 +466,13 @@ static gboolean parse(const char **input, ExArg *arg)
  */
 static gboolean parse_count(const char **input, ExArg *arg)
 {
-    if (!*input || !isdigit(**input)) {
+    if (!*input || !VB_IS_DIGIT(**input)) {
         arg->count = 0;
     } else {
         do {
             arg->count = arg->count * 10 + (**input - '0');
             (*input)++;
-        } while (isdigit(**input));
+        } while (VB_IS_DIGIT(**input));
     }
     return true;
 }
@@ -508,13 +507,13 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
             }
         }
         (*input)++;
-    } while (matches > 0 && **input && **input != ' ' && **input != '!');
+    } while (matches > 0 && **input && !VB_IS_SPACE(**input) && **input != '!');
 
     if (!matches) {
         /* read until next whitespace or end of input to get command name for
          * error message - vim uses the whole rest of the input string - but
          * the first word seems to bee enough for the error message */
-        for (; len < LENGTH(cmd) && *input && **input != ' '; (*input)++) {
+        for (; len < LENGTH(cmd) && *input && !VB_IS_SPACE(**input); (*input)++) {
             cmd[len++] = **input;
         }
         cmd[len] = '\0';
@@ -556,7 +555,7 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
 
     /* get the char until the next none escaped whitespace and save it into
      * the lhs */
-    while (**input && **input != ' ') {
+    while (**input && !VB_IS_SPACE(**input)) {
         /* if we find a backslash this escapes the next whitespace */
         if (**input == quote) {
             /* move pointer to the next char */
@@ -655,8 +654,7 @@ static gboolean execute(const ExArg *arg)
 
 static void skip_whitespace(const char **input)
 {
-    /* TODO should \t also be skipped here? */
-    while (**input && **input == ' ') {
+    while (**input && VB_IS_SPACE(**input)) {
         (*input)++;
     }
 }
@@ -956,7 +954,7 @@ static gboolean complete(short direction)
          * if tha command name parsing fails */
         before_cmdname = in;
 
-        if (parse_command_name(&in, arg) && *in == ' ') {
+        if (parse_command_name(&in, arg) && VB_IS_SPACE(*in)) {
             const char *token;
             /* get only the last word of input string for the completion for
              * bookmark tag completion */
@@ -964,7 +962,7 @@ static gboolean complete(short direction)
                 /* find the end of the input and search for the next
                  * whitespace toward the beginning */
                 token = strrchr(in, '\0');
-                while (token >= in && *token != ' ') {
+                while (token >= in && !VB_IS_SPACE(*token)) {
                     token--;
                 }
             } else {
