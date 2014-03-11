@@ -19,8 +19,10 @@
 
 #include "config.h"
 #include <stdio.h>
+#include <pwd.h>
 #include "ctype.h"
 #include "util.h"
+#include "ascii.h"
 
 char *util_get_config_dir(void)
 {
@@ -300,15 +302,15 @@ char *util_build_path(const char *path, const char *dir)
     char *fullPath = NULL, *fexp, *dexp, *p;
 
     /* if the path could be expanded */
-    if ((fexp = util_shell_expand(path))) {
-        if (*fexp == '/') {
+    if ((fexp = util_expand(path))) {
+        if (*fexp == G_DIR_SEPARATOR) {
             /* path is already absolute, no need to use given dir - there is
              * no need to free fexp, bacuse this should be done by the caller
              * on fullPath later */
             fullPath = fexp;
         } else if (dir) {
             /* try to expand also the dir given - this may be ~/path */
-            if ((dexp = util_shell_expand(dir))) {
+            if ((dexp = util_expand(dir))) {
                 /* use expanded dir and append expanded path */
                 fullPath = g_build_filename(dexp, fexp, NULL);
                 g_free(dexp);
@@ -332,31 +334,83 @@ char *util_build_path(const char *path, const char *dir)
 }
 
 /**
- * Run the shell to expand given string 'echo -n str'.
+ * Expand ~user, ~/, $ENV and ${ENV} for given string into new allocated
+ * string.
  *
  * Returned path must be g_freed.
  */
-char *util_shell_expand(const char *str)
+char *util_expand(const char *src)
 {
-    GError *error = NULL;
-    char *shellcmd, *cmd, *out = NULL;
+    GString *dst  = g_string_new("");
+    GString *name;
+    gboolean start = true;  /* is start of string of subpart */
+    const char *env;
+    char *result;
+    struct passwd *pwd;
 
-    /* first check if the string may contain expandable chars */
-    if (*str == '~' || strchr(str, '$')) {
-        cmd      = g_strconcat("echo -n ", str, NULL);
-        shellcmd = g_strdup_printf(SHELL_CMD, cmd);
-        if (!g_spawn_command_line_sync(shellcmd, &out, NULL, NULL, &error)) {
-            g_warning("Could not run shell expansion: %s", error->message);
-            g_clear_error(&error);
+    while (*src) {
+        /* expand ~/path and ~user */
+        if (*src == '~' && start) {
+            /* skip the ~ */
+            src++;
+            if (*src == G_DIR_SEPARATOR) {
+                g_string_append(dst, util_get_home_dir());
+            } else {
+                name = g_string_new("");
+                /* look ahead to / space or end of string */
+                while (*src && *src != G_DIR_SEPARATOR && !VB_IS_SPACE(*src)) {
+                    g_string_append_c(name, *src);
+                    src++;
+                }
+                /* append the name to the destination string */
+                if ((pwd = getpwnam(name->str))) {
+                    g_string_append(dst, pwd->pw_dir);
+                }
+                g_string_free(name, true);
+            }
+        } else if (*src == '$') {
+            name = g_string_new("");
+            /* skip the $ */
+            src++;
+            /* look for ${VAR}*/
+            if (*src == '{') {
+                /* skip { */
+                src++;
+                /* look ahead to } or end of string */
+                while (*src && *src != '}') {
+                    g_string_append_c(name, *src);
+                    src++;
+                }
+                /* if the } was reached - skip this */
+                if (*src == '}') {
+                    src++;
+                }
+            } else { /* process $VAR */
+                /* look ahead to /, space or end of string */
+                while (*src && VB_IS_IDENT(*src)) {
+                    g_string_append_c(name, *src);
+                    src++;
+                }
+            }
+            /* append the variable to the destination string */
+            if ((env = g_getenv(name->str))) {
+                g_string_append(dst, env);
+            }
+            g_string_free(name, true);
+        } else if (!VB_IS_ALNUM(*src)) {
+            /* if we match non alnum char - mark this as beginning of new part */
+            start = true;
+        } else {
+            /* we left the start of phrase behind */
+            start = false;
         }
-        g_free(shellcmd);
-        g_free(cmd);
+
+        g_string_append_c(dst, *src);
+        src++;
     }
 
-    /* if string needn't to be expanded or expansion fialed use it like it is */
-    if (!out) {
-        out = g_strdup(str);
-    }
+    result = dst->str;
+    g_string_free(dst, false);
 
-    return out;
+    return result;
 }

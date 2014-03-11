@@ -20,6 +20,66 @@
 #ifndef _ASCII_H
 #define _ASCII_H
 
+#define VB_UPPER  0x01
+#define VB_LOWER  0x02
+#define VB_DIGIT  0x04
+#define VB_SPACE  0x08
+#define VB_PUNKT  0x10
+#define VB_CTRL   0x20
+#define VB_IDENT  0x40
+#define VB_ALPHA  (VB_UPPER|VB_LOWER)
+#define VB_ALNUM  (VB_ALPHA|VB_DIGIT)
+
+#define U  VB_UPPER
+#define L  VB_LOWER
+#define D  VB_DIGIT
+#define P  VB_PUNKT
+#define S  VB_SPACE
+#define C  VB_CTRL
+#define I  VB_IDENT
+#define LI VB_LOWER|VB_IDENT
+#define UI VB_UPPER|VB_IDENT
+#define SC VB_SPACE|VB_CTRL
+#define PI VB_PUNKT|VB_IDENT
+static const unsigned char chartable[256] = {
+    C,  C,  C,  C,  C,  C,  C,  C,  C, SC, SC,  C, SC, SC,  C,  C,
+    C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,
+    S,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    D,  D,  D,  D,  D,  D,  D,  D,  D,  D,  P,  P,  P,  P,  P,  P,
+   PI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI,
+   UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI,  P,  P,  P,  P, PI,
+    P, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI,
+   LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI,  P,  P,  P,  P,  C,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P
+};
+#undef U
+#undef L
+#undef D
+#undef P
+#undef S
+#undef C
+#undef I
+#undef LI
+#undef UI
+#undef SC
+
+#define VB_IS_UPPER(c) ((chartable[(unsigned char)c] & VB_UPPER) != 0)
+#define VB_IS_LOWER(c) ((chartable[(unsigned char)c] & VB_LOWER) != 0)
+#define VB_IS_DIGIT(c) ((chartable[(unsigned char)c] & VB_DIGIT) != 0)
+#define VB_IS_PUNKT(c) ((chartable[(unsigned char)c] & VB_PUNKT) != 0)
+#define VB_IS_SPACE(c) ((chartable[(unsigned char)c] & VB_SPACE) != 0)
+#define VB_IS_CTRL(c)  ((chartable[(unsigned char)c] & VB_CTRL) != 0)
+#define VB_IS_IDENT(c) ((chartable[(unsigned char)c] & VB_IDENT) != 0)
+#define VB_IS_ALPHA(c) ((chartable[(unsigned char)c] & VB_ALPHA) != 0)
+#define VB_IS_ALNUM(c) ((chartable[(unsigned char)c] & VB_ALNUM) != 0)
+
 /* CSI (control sequence introducer) is the first byte of a control sequence
  * and is always followed by two bytes. */
 #define CSI         0x80
