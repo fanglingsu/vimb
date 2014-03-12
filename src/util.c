@@ -303,7 +303,7 @@ char *util_build_path(const char *path, const char *dir)
 
     /* if the path could be expanded */
     if ((fexp = util_expand(path))) {
-        if (*fexp == G_DIR_SEPARATOR) {
+        if (*fexp == '/') {
             /* path is already absolute, no need to use given dir - there is
              * no need to free fexp, bacuse this should be done by the caller
              * on fullPath later */
@@ -324,7 +324,7 @@ char *util_build_path(const char *path, const char *dir)
         fullPath = g_build_filename(g_get_current_dir(), path, NULL);
     }
 
-    if ((p = strrchr(fullPath, G_DIR_SEPARATOR))) {
+    if ((p = strrchr(fullPath, '/'))) {
         *p = '\0';
         util_create_dir_if_not_exists(fullPath);
         *p = '/';
@@ -353,12 +353,12 @@ char *util_expand(const char *src)
         if (*src == '~' && start) {
             /* skip the ~ */
             src++;
-            if (*src == G_DIR_SEPARATOR) {
+            if (*src == '/') {
                 g_string_append(dst, util_get_home_dir());
             } else {
                 name = g_string_new("");
                 /* look ahead to / space or end of string */
-                while (*src && *src != G_DIR_SEPARATOR && !VB_IS_SPACE(*src)) {
+                while (*src && *src != '/' && !VB_IS_SPACE(*src)) {
                     g_string_append_c(name, *src);
                     src++;
                 }

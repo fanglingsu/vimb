@@ -672,8 +672,8 @@ static SettingStatus download_path(const Setting *s, const SettingType type)
             vb.config.download_dir = NULL;
         }
         path = util_expand(s->arg.s);
-        /* if path is not absolute create it in the home directory */
-        if (*path != G_DIR_SEPARATOR) {
+        /* if path is not absolute set it in the home directory */
+        if (*path != '/') {
             vb.config.download_dir = g_build_filename(util_get_home_dir(), path, NULL);
             g_free(path);
         } else {
