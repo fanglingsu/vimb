@@ -879,7 +879,7 @@ static gboolean ex_shortcut(const ExArg *arg)
 {
     char *p;
 
-    /* TODO allow to set shortcust with set command like ':set
+    /* TODO allow to set shortcuts with set command like ':set
      * shortcut[name]=http://donain.tld/?q=$0' */
     switch (arg->code) {
         case EX_SCA:

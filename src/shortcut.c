@@ -145,7 +145,7 @@ static const char *shortcut_lookup(const char *string, const char **query)
         }
     }
 
-    if (!uri && (uri = g_hash_table_lookup(shortcuts, default_key))) {
+    if (!uri && default_key && (uri = g_hash_table_lookup(shortcuts, default_key))) {
         *query = string;
     }
 
