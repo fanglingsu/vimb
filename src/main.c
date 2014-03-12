@@ -34,7 +34,6 @@
 #include "ex.h"
 #include "input.h"
 #include "map.h"
-#include "default.h"
 #include "pass.h"
 #include "bookmark.h"
 #include "js.h"
@@ -694,13 +693,6 @@ static void marks_clear(void)
 static void read_config(void)
 {
     char *line, **lines;
-
-    /* load default config */
-    for (guint i = 0; default_config[i] != NULL; i++) {
-        if (!ex_run_string(default_config[i])) {
-            g_error("Invalid default config: '%s'", default_config[i]);
-        }
-    }
 
     /* read config from config files */
     lines = util_get_lines(vb.files[FILES_CONFIG]);
