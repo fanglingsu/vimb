@@ -308,7 +308,7 @@ char *util_build_path(const char *path, const char *dir)
              * no need to free fexp, bacuse this should be done by the caller
              * on fullPath later */
             fullPath = fexp;
-        } else if (dir) {
+        } else if (dir && *dir) {
             /* try to expand also the dir given - this may be ~/path */
             if ((dexp = util_expand(dir))) {
                 /* use expanded dir and append expanded path */

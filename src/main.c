@@ -955,7 +955,7 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
         if (!path || *path == '\0') {
             path = PROJECT "-download";
         }
-        file = g_build_filename(vb.config.download_dir, path, NULL);
+        file = util_build_path(path, vb.config.download_dir);
     }
 
     /* build the file uri from file path */
