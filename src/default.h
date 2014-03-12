@@ -34,7 +34,9 @@ static char *default_config[] = {
     "set stylesheet=on",
     "set proxy=on",
     "set pagecache=on",
+#ifdef FEATURE_COOKIE
     "set cookie-timeout=4800",
+#endif
     "set strict-ssl=on",
     "set strict-focus=off",
     "set scrollstep=40",

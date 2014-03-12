@@ -287,7 +287,9 @@ typedef struct {
 } State;
 
 typedef struct {
+#ifdef FEATURE_COOKIE
     time_t       cookie_timeout;
+#endif
     int          scrollstep;
     char         *home_page;
     char         *download_dir;
