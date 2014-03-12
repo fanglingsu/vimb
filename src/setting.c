@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "setting.h"
+#include "shortcut.h"
 #include "util.h"
 #include "completion.h"
 #include "js.h"
@@ -136,8 +137,15 @@ void setting_init(void)
         s = &default_settings[i];
         /* use alias as key if available */
         g_hash_table_insert(settings, (gpointer)s->alias != NULL ? s->alias : s->name, s);
+        /* set the default settings */
         s->func(s, false);
     }
+
+    /* initialize the shortcuts and set the default shortcuts */
+    shortcut_init();
+    shortcut_add("dl", "https://duckduckgo.com/html/?q=$0");
+    shortcut_add("dd", "https://duckduckgo.com/?q=$0");
+    shortcut_set_default("dl");
 }
 
 void setting_cleanup(void)
@@ -145,6 +153,7 @@ void setting_cleanup(void)
     if (settings) {
         g_hash_table_destroy(settings);
     }
+    shortcut_cleanup();
 }
 
 gboolean setting_run(char *name, const char *param)

@@ -360,7 +360,6 @@ void vb_quit(void)
     map_cleanup();
     mode_cleanup();
     setting_cleanup();
-    shortcut_cleanup();
     history_cleanup();
 
     for (int i = 0; i < FILES_LAST; i++) {
@@ -665,7 +664,6 @@ static void init_core(void)
     init_files();
     session_init();
     setting_init();
-    shortcut_init();
     read_config();
 
     /* initially apply input style */
