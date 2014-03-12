@@ -663,30 +663,10 @@ static SettingStatus home_page(const Setting *s, const SettingType type)
 
 static SettingStatus download_path(const Setting *s, const SettingType type)
 {
-    char *path;
     if (type == SETTING_GET) {
         print_value(s, vb.config.download_dir);
     } else {
-        if (vb.config.download_dir) {
-            g_free(vb.config.download_dir);
-            vb.config.download_dir = NULL;
-        }
-
-        path = util_expand(s->arg.s);
-        if (*path) {
-            /* if path is not absolute set it in the home directory */
-            if (*path != '/') {
-                vb.config.download_dir = g_build_filename(util_get_home_dir(), path, NULL);
-                g_free(path);
-            } else {
-                vb.config.download_dir = path;
-            }
-            /* create the path if it does not exist */
-            util_create_dir_if_not_exists(vb.config.download_dir);
-        } else {
-            /* set the empty path */
-            vb.config.download_dir = path;
-        }
+        OVERWRITE_STRING(vb.config.download_dir, s->arg.s);
     }
 
     return SETTING_OK;
