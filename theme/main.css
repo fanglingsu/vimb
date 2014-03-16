@@ -1,6 +1,6 @@
 *{margin:0;padding:0}
 html{background-color:#e0ddda}
-body{color:#333;font-family:"Dejavu sans-serif",sans-serif;line-height:1.5em}
+body{color:#000;font-family:"Dejavu sans-serif",sans-serif;line-height:1.5em}
 #content{background-color:#fff;margin:1em auto 2em;max-width:60em;border:1px solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
 #nav{font-size:1.3em;padding-bottom:1.5em}
 #nav ul{margin:0;padding:0}
@@ -25,8 +25,8 @@ ul li{list-style-type:square}
 ol li{list-style-type:decimal}
 li{line-height:1.5em;padding-left:.5em}
 img{border:1px solid #ddd;max-width:100%;padding:0 0 1em 0;height:auto}
-pre{line-height:1.7em;background:#f7f7f7;border:1px solid #ddd;box-shadow:.26em .26em .65em #eee;padding:.2em .4em;overflow:auto}
-code{font-family:monospace;color:#545454;white-space:pre}
+pre{line-height:1.7em;background:#f8f8f8;border:1px solid #ddd;box-shadow:.26em .26em .65em #eee;padding:.2em .4em;overflow:auto}
+code{font-family:monospace;color:#444;white-space:pre}
 a,a:link{color:#01579f;text-decoration:none;outline:none}
 a[href^="http://"]:after,a[href^="https://"]:after{content:"\2197"}
 a:visited{color:#751590}
