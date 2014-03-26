@@ -63,7 +63,10 @@ static gboolean new_window_policy_cb(
     WebKitWebView *view, WebKitWebFrame *frame, WebKitNetworkRequest *request,
     WebKitWebNavigationAction *navig, WebKitWebPolicyDecision *policy);
 static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *frame);
-static void create_web_view_received_uri_cb(WebKitWebView *view);
+static gboolean create_web_view_received_uri_cb(WebKitWebView *view,
+    WebKitWebFrame *frame, WebKitNetworkRequest *request,
+    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
+    gpointer data);
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link);
 static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title);
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
@@ -881,18 +884,24 @@ static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *fr
     WebKitWebView *new = WEBKIT_WEB_VIEW(webkit_web_view_new());
 
     /* wait until the new webview receives its new URI */
-    g_signal_connect(new, "notify::uri", G_CALLBACK(create_web_view_received_uri_cb), NULL);
+    g_signal_connect(new, "navigation-policy-decision-requested", G_CALLBACK(create_web_view_received_uri_cb), NULL);
 
     return new;
 }
 
-static void create_web_view_received_uri_cb(WebKitWebView *view)
+static gboolean create_web_view_received_uri_cb(WebKitWebView *view,
+    WebKitWebFrame *frame, WebKitNetworkRequest *request,
+    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
+    gpointer data)
 {
-    Arg a = {VB_TARGET_NEW, (char*)webkit_web_view_get_uri(view)};
-    /* destroy temporary webview */
-    webkit_web_view_stop_loading(view);
-    gtk_widget_destroy(GTK_WIDGET(view));
+    Arg a = {VB_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
     vb_load_uri(&a);
+
+    /* destroy temporary webview */
+    gtk_widget_destroy(GTK_WIDGET(view));
+
+    /* mark that we handled the signal */
+    return true;
 }
 
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
