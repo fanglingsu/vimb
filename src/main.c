@@ -43,6 +43,9 @@ static char **args;
 VbCore      vb;
 
 /* callbacks */
+static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
+    WebKitHitTestResult *hitTestResult, gboolean keyboard, gpointer data);
+static void context_menu_activate_cb(GtkMenuItem *item, gpointer data);
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
@@ -374,6 +377,28 @@ static gboolean hide_message()
     input_print(false, VB_MSG_NORMAL, false, "");
 
     return false;
+}
+
+static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
+    WebKitHitTestResult *hitTestResult, gboolean keyboard, gpointer data)
+{
+    GList *items = gtk_container_get_children(GTK_CONTAINER(GTK_MENU(menu)));
+    for (GList *l = items; l; l = l->next) {
+        g_signal_connect(l->data, "activate", G_CALLBACK(context_menu_activate_cb), NULL);
+    }
+    g_list_free(items);
+
+    return false;
+}
+
+static void context_menu_activate_cb(GtkMenuItem *item, gpointer data)
+{
+    WebKitContextMenuAction action = webkit_context_menu_item_get_action(item);
+    if (action == WEBKIT_CONTEXT_MENU_ACTION_COPY_LINK_TO_CLIPBOARD) {
+        vb_set_clipboard(
+            &((Arg){VB_CLIPBOARD_PRIMARY|VB_CLIPBOARD_SECONDARY, vb.state.linkhover})
+        );
+    }
 }
 
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
@@ -717,6 +742,7 @@ static void setup_signals()
     g_signal_connect(vb.gui.window, "destroy", G_CALLBACK(destroy_window_cb), NULL);
     g_object_connect(
         G_OBJECT(vb.gui.webview),
+        "signal::context-menu", G_CALLBACK(context_menu_cb), NULL,
         "signal::notify::progress", G_CALLBACK(webview_progress_cb), NULL,
         "signal::notify::load-status", G_CALLBACK(webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(button_relase_cb), NULL,
@@ -873,6 +899,10 @@ static void hover_link_cb(WebKitWebView *webview, const char *title, const char 
 {
     char *message;
     if (link) {
+        /* save the uri to have this if the user want's to copy the link
+         * location via context menu */
+        OVERWRITE_STRING(vb.state.linkhover, link);
+
         message = g_strconcat("Link: ", link, NULL);
         gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), message);
         g_free(message);

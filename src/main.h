@@ -284,6 +284,7 @@ typedef struct {
 #define PROMPT_SIZE 4
     char            prompt[PROMPT_SIZE];    /* current prompt ':', 'g;t', '/' including nul */
     gdouble         marks[VB_MARK_SIZE];    /* holds marks set to page with 'm{markchar}' */
+    char            *linkhover;             /* the uri of the curret hovered link */
 } State;
 
 typedef struct {
