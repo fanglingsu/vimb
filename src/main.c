@@ -396,12 +396,29 @@ static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
 
 static void context_menu_activate_cb(GtkMenuItem *item, gpointer data)
 {
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
     WebKitContextMenuAction action = webkit_context_menu_item_get_action(item);
     if (action == WEBKIT_CONTEXT_MENU_ACTION_COPY_LINK_TO_CLIPBOARD) {
         vb_set_clipboard(
             &((Arg){VB_CLIPBOARD_PRIMARY|VB_CLIPBOARD_SECONDARY, vb.state.linkhover})
         );
     }
+#else
+    const char *name;
+    GtkAction *action = gtk_activatable_get_related_action(GTK_ACTIVATABLE(item));
+
+    if (!action) {
+        return;
+    }
+
+    name = gtk_action_get_name(action);
+    /* context-menu-action-3 copy link location */
+    if (!g_strcmp0(name, "context-menu-action-3")) {
+        vb_set_clipboard(
+            &((Arg){VB_CLIPBOARD_PRIMARY|VB_CLIPBOARD_SECONDARY,vb.state.linkhover})
+        );
+    }
+#endif
 }
 
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
