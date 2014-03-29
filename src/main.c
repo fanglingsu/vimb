@@ -43,8 +43,12 @@ static char **args;
 VbCore      vb;
 
 /* callbacks */
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
 static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
     WebKitHitTestResult *hitTestResult, gboolean keyboard, gpointer data);
+#else
+static void context_menu_cb(WebKitWebView *view, GtkMenu *menu, gpointer data);
+#endif
 static void context_menu_activate_cb(GtkMenuItem *item, gpointer data);
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
@@ -382,6 +386,7 @@ static gboolean hide_message()
     return false;
 }
 
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
 static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
     WebKitHitTestResult *hitTestResult, gboolean keyboard, gpointer data)
 {
@@ -393,6 +398,16 @@ static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
 
     return false;
 }
+#else
+static void context_menu_cb(WebKitWebView *view, GtkMenu *menu, gpointer data)
+{
+    GList *items = gtk_container_get_children(GTK_CONTAINER(GTK_MENU(menu)));
+    for (GList *l = items; l; l = l->next) {
+        g_signal_connect(l->data, "activate", G_CALLBACK(context_menu_activate_cb), NULL);
+    }
+    g_list_free(items);
+}
+#endif
 
 static void context_menu_activate_cb(GtkMenuItem *item, gpointer data)
 {
@@ -762,7 +777,11 @@ static void setup_signals()
     g_signal_connect(vb.gui.window, "destroy", G_CALLBACK(destroy_window_cb), NULL);
     g_object_connect(
         G_OBJECT(vb.gui.webview),
+#if WEBKIT_CHECK_VERSION(1, 10, 0)
         "signal::context-menu", G_CALLBACK(context_menu_cb), NULL,
+#else
+        "signal::populate-popup", G_CALLBACK(context_menu_cb), NULL,
+#endif
         "signal::notify::progress", G_CALLBACK(webview_progress_cb), NULL,
         "signal::notify::load-status", G_CALLBACK(webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(button_relase_cb), NULL,
