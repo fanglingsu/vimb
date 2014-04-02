@@ -736,6 +736,24 @@ static void init_core(void)
 
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
+
+    vb.config.default_zoom = 1.0;
+
+#ifdef FEATURE_HIGH_DPI
+    /* fix for high dpi displays */
+    GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(vb.gui.window));
+    gdouble dpi = gdk_screen_get_resolution(screen);
+    if (dpi != -1) {
+        WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
+        webkit_web_view_set_full_content_zoom(gui->webview, true);
+        g_object_set(G_OBJECT(setting), "enforce-96-dpi", true, NULL);
+
+        /* calculate the zoom level based on 96 dpi */
+        vb.config.default_zoom = dpi/96;
+
+        webkit_web_view_set_zoom_level(gui->webview, vb.config.default_zoom);
+    }
+#endif
 }
 
 static void marks_clear(void)

@@ -775,7 +775,11 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
     count = info->count ? (float)info->count : 1.0;
 
     if (info->key2 == 'z') { /* zz reset zoom */
-        webkit_web_view_set_zoom_level(view, 1.0);
+#ifdef FEATURE_HIGH_DPI
+        /* to set the zoom for high dpi displays we need full content zoom */
+        webkit_web_view_set_full_content_zoom(view, true);
+#endif
+        webkit_web_view_set_zoom_level(view, vb.config.default_zoom);
 
         return RESULT_COMPLETE;
     }

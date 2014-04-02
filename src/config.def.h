@@ -38,6 +38,12 @@
 #define FEATURE_HISTORY_INDICATOR
 /* show wget style progressbar in status bar */
 #define FEATURE_WGET_PROGRESS_BAR
+#ifdef HAS_GTK3
+/* enables workaround for hight dpi displays */
+/* eventually the environment variable GDK_DPI_SCALE=2.0 must be set */
+/* to get the hack working */
+/* #define FEATURE_HIGH_DPI */
+#endif
 
 
 /* time in seconds after that message will be removed from inputbox if the

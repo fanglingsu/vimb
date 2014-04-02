@@ -305,6 +305,7 @@ typedef struct {
     char         *autocmd;        /* command given by --cmd option */
     char         *cafile;         /* path to the ca file */
     GTlsDatabase *tls_db;         /* tls database */
+    float        default_zoom;    /* default zoomlevel that is applied on zz zoom reset */
 } Config;
 
 typedef struct {
