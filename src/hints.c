@@ -108,6 +108,14 @@ void hints_clear(void)
         call_hints_function("clear", 0, NULL);
 
         g_signal_emit_by_name(vb.gui.webview, "hovering-over-link", NULL, NULL);
+
+#if WEBKIT_CHECK_VERSION(2, 0, 0)
+        /* if open window was not allowed for JavaScript, restore this */
+        if (!hints.allow_open_win) {
+            WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
+            g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", hints.allow_open_win, NULL);
+        }
+#endif
     }
 }
 
@@ -333,13 +341,5 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
         }
     }
     g_free(value);
-
-#if WEBKIT_CHECK_VERSION(2, 0, 0)
-    /* if open window was not allowed for JavaScript, restore this */
-    if (!hints.allow_open_win) {
-        WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
-        g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", hints.allow_open_win, NULL);
-    }
-#endif
     return true;
 }
