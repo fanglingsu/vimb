@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include <fcntl.h>
 #include <sys/file.h>
 #include <stdio.h>
 #include <pwd.h>

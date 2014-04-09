@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include <fcntl.h>
 #include <sys/file.h>
 #include "main.h"
 #include "history.h"
