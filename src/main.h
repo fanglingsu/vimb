@@ -66,12 +66,6 @@
 #define OVERWRITE_STRING(t, s) {if (t) {g_free(t); t = NULL;} t = g_strdup(s);}
 #define OVERWRITE_NSTRING(t, s, l) {if (t) {g_free(t); t = NULL;} t = g_strndup(s, l);}
 
-#define FILE_LOCK_SET(fd, cmd) \
-{ \
-    struct flock lock = { .l_type = cmd, .l_start = 0, .l_whence = SEEK_SET, .l_len = 0}; \
-    fcntl(fd, F_SETLK, lock); \
-}
-
 #ifdef HAS_GTK3
 #define VbColor GdkRGBA
 #define VB_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
