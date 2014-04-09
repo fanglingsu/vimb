@@ -161,6 +161,9 @@ if vimb has been compiled with QUEUE feature.
 
   Example: ``:shellcmd echo "`date` %" >> myhistory.txt``
 
+:sh[ellcmd]! *CMD*
+: Like `:shellcmd` but runs given shell *CMD* asyncron.
+
 \:s[ave] [*PATH*]
 : Download current opened page into configured download directory. If *PATH* is
   given, download under this file name or path. Possible value for PATH are
