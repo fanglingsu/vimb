@@ -30,7 +30,7 @@ PROJECT_UCFIRST = $(shell echo '${PROJECT}' | awk '{for(i=1;i<=NF;i++){$$i=toupp
 
 CPPFLAGS  = -DVERSION=\"${VERSION}\"
 CPPFLAGS += -DPROJECT=\"${PROJECT}\" -DPROJECT_UCFIRST=\"${PROJECT_UCFIRST}\"
-CPPFLAGS += -D_BSD_SOURCE -D_XOPEN_SOURCE=500
+CPPFLAGS += -D_XOPEN_SOURCE=500
 ifeq ($(USEGTK3), 1)
 CPPFLAGS += -DHAS_GTK3
 endif
@@ -40,7 +40,7 @@ LIBFLAGS = $(shell pkg-config --libs $(LIBS))
 
 # normal compiler flags
 CFLAGS  += $(shell pkg-config --cflags $(LIBS))
-CFLAGS  += -Wall -pipe -ansi -std=c99 -pedantic
+CFLAGS  += -Wall -pipe -std=c99 -pedantic
 CFLAGS  += -Wmissing-declarations -Wmissing-parameter-type -Wno-overlength-strings
 CFLAGS  += ${CPPFLAGS}
 LDFLAGS += ${LIBFLAGS}

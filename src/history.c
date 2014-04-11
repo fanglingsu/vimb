@@ -18,8 +18,6 @@
  */
 
 #include "config.h"
-#include <fcntl.h>
-#include <sys/file.h>
 #include "main.h"
 #include "history.h"
 #include "util.h"
@@ -212,7 +210,7 @@ static void write_to_file(GList *list, const char *file)
 {
     FILE *f;
     if ((f = fopen(file, "w"))) {
-        flock(fileno(f), LOCK_EX);
+        FLOCK(fileno(f), F_WRLCK);
 
         /* overwrite the history file with new unique history items */
         for (GList *link = list; link; link = link->next) {
@@ -224,7 +222,7 @@ static void write_to_file(GList *list, const char *file)
             }
         }
 
-        flock(fileno(f), LOCK_UN);
+        FLOCK(fileno(f), F_UNLCK);
         fclose(f);
     }
 }

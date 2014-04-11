@@ -18,8 +18,6 @@
  */
 
 #include "config.h"
-#include <fcntl.h>
-#include <sys/file.h>
 #include "main.h"
 #include "session.h"
 
@@ -82,7 +80,7 @@ static SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
 
 static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupCookie *new_cookie)
 {
-    flock(COOKIEJAR(self)->lock, LOCK_EX);
+    FLOCK(COOKIEJAR(self)->lock, F_WRLCK);
     SoupDate *expire;
     if (new_cookie && !new_cookie->expires && vb.config.cookie_timeout) {
         expire = soup_date_new_from_now(vb.config.cookie_timeout);
@@ -90,7 +88,7 @@ static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupC
         soup_date_free(expire);
     }
     SOUP_COOKIE_JAR_CLASS(cookiejar_parent_class)->changed(self, old_cookie, new_cookie);
-    flock(COOKIEJAR(self)->lock, LOCK_UN);
+    FLOCK(COOKIEJAR(self)->lock, F_UNLCK);
 }
 
 static void cookiejar_class_init(CookieJarClass *class)
@@ -116,8 +114,8 @@ static void cookiejar_init(CookieJar *self)
 static void cookiejar_set_property(GObject *self, guint prop_id, const
     GValue *value, GParamSpec *pspec)
 {
-    flock(COOKIEJAR(self)->lock, LOCK_SH);
+    FLOCK(COOKIEJAR(self)->lock, F_RDLCK);
     G_OBJECT_CLASS(cookiejar_parent_class)->set_property(self, prop_id, value, pspec);
-    flock(COOKIEJAR(self)->lock, LOCK_UN);
+    FLOCK(COOKIEJAR(self)->lock, F_UNLCK);
 }
 #endif
