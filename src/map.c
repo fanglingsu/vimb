@@ -169,13 +169,14 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
     Map *match = NULL;
     gboolean timeout = (keylen == 0); /* keylen 0 signalized timeout */
 
-    /* don't set the timeout function if a timeout is handled */
+    /* if a previous timeout function was set remove this */
+    if (map.timout_id) {
+        g_source_remove(map.timout_id);
+        map.timout_id = 0;
+    }
+
+    /* don't set the timeout function if the timeout is processed now */
     if (!timeout) {
-        /* if a previous timeout function was set remove this to start the
-         * timeout new */
-        if (map.timout_id) {
-            g_source_remove(map.timout_id);
-        }
         map.timout_id = g_timeout_add(vb.config.timeoutlen, (GSourceFunc)do_timeout, NULL);
     }
 
@@ -575,8 +576,10 @@ static gboolean do_timeout(gpointer data)
     /* signalize the timeout to the key handler */
     map_handle_keys((guchar*)"", 0, true);
 
-    /* call only once */
-    return false;
+    /* we return true to not automatically remove the resource - this is
+     * required to prevent critical error when we remove the source in
+     * map_handle_keys where we don't know if the timeout was called or not */
+    return true;
 }
 
 static void free_map(Map *map)
