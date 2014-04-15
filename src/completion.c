@@ -125,6 +125,9 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
     gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_SECOND);
 #endif
 
+    /* to set the height for the treeview the tree must be realized first */
+    gtk_widget_show_all(comp.tree);
+
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
     while (gtk_events_pending()) {
