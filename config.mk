@@ -41,7 +41,7 @@ LIBFLAGS = $(shell pkg-config --libs $(LIBS))
 # normal compiler flags
 CFLAGS  += $(shell pkg-config --cflags $(LIBS))
 CFLAGS  += -Wall -pipe -std=c99 -pedantic
-CFLAGS  += -Wmissing-declarations -Wmissing-parameter-type -Wno-overlength-strings
+CFLAGS  += -Wmissing-declarations -Wno-overlength-strings
 CFLAGS  += ${CPPFLAGS}
 LDFLAGS += ${LIBFLAGS}
 
