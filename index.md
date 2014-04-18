@@ -40,6 +40,7 @@ But following images may give a impression of they way vimb works.
 - open textareas with configurable editor
 - user defined url [shortcuts][] with up to 9 placeholders
 - xembed - so vimb can be used together with [tabbed][]
+- kiosk mode without keybindings and context menu
 - run shell commands from inputbox
 - manipulate http request headers
 
