@@ -53,6 +53,7 @@ static SettingStatus editor_command(const Setting *s, const SettingType type);
 static SettingStatus timeoutlen(const Setting *s, const SettingType type);
 static SettingStatus headers(const Setting *s, const SettingType type);
 static SettingStatus nextpattern(const Setting *s, const SettingType type);
+static SettingStatus fullscreen(const Setting *s, const SettingType type);
 
 static gboolean validate_js_regexp_list(const char *pattern);
 
@@ -125,6 +126,7 @@ static Setting default_settings[] = {
     {NULL, "header", TYPE_CHAR, headers, {.s = ""}},
     {NULL, "nextpattern", TYPE_CHAR, nextpattern, {.s = "/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i"}},
     {NULL, "previouspattern", TYPE_CHAR, nextpattern, {.s = "/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/"}},
+    {NULL, "fullscreen", TYPE_BOOLEAN, fullscreen, {.i = 0}},
 };
 
 void setting_init(void)
@@ -894,6 +896,31 @@ static SettingStatus nextpattern(const Setting *s, const SettingType type)
     }
 
     return SETTING_ERROR | SETTING_USER_NOTIFIED;
+}
+
+static SettingStatus fullscreen(const Setting *s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        print_value(s, &vb.config.fullscreen);
+
+        return SETTING_OK;
+    }
+
+    if (type == SETTING_SET) {
+        vb.config.fullscreen = s->arg.i ? true : false;
+    } else {
+        vb.config.fullscreen = !vb.config.fullscreen;
+        print_value(s, &vb.config.fullscreen);
+    }
+
+    /* apply the new set or toggled value */
+    if (vb.config.fullscreen) {
+        gtk_window_fullscreen(GTK_WINDOW(vb.gui.window));
+    } else {
+        gtk_window_unfullscreen(GTK_WINDOW(vb.gui.window));
+    }
+
+    return SETTING_OK;
 }
 
 /**
