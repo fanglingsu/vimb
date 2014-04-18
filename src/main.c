@@ -657,9 +657,6 @@ static void init_core(void)
     gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
 
 #ifdef FEATURE_NO_SCROLLBARS
-    /* don't remove scrollbars if kiosk mode is on else the user would have no
-     * way to navigation because keys are not processed */
-    if (!vb.config.kioskmode) {
 #ifdef HAS_GTK3
         /* set the default style for the application - this can be overwritten by
          * the users style in gtk-3.0/gtk.css */
@@ -673,10 +670,9 @@ static void init_core(void)
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
         );
 #else /* no GTK3 */
-        /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
-        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+    /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 #endif
-    }
 #endif
 
     /* Prepare the command line */
@@ -830,11 +826,12 @@ static void setup_signals()
         NULL
     );
 
-    if (!vb.config.kioskmode) {
 #ifdef FEATURE_NO_SCROLLBARS
-        WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
-        g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
+    g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
 #endif
+
+    if (!vb.config.kioskmode) {
         g_signal_connect(
             G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(map_keypress), NULL
         );
