@@ -627,6 +627,7 @@ static void set_status(const StatusType status)
 static void init_core(void)
 {
     Gui *gui = &vb.gui;
+    WebKitWebSettings *setting;
 
     if (vb.embed) {
         gui->window = gtk_plug_new(vb.embed);
@@ -656,22 +657,26 @@ static void init_core(void)
     gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
 
 #ifdef FEATURE_NO_SCROLLBARS
+    /* don't remove scrollbars if kiosk mode is on else the user would have no
+     * way to navigation because keys are not processed */
+    if (!vb.config.kioskmode) {
 #ifdef HAS_GTK3
-    /* set the default style for the application - this can be overwritten by
-     * the users style in gtk-3.0/gtk.css */
-    const char *style = "GtkScrollbar{-GtkRange-slider-width:0;-GtkRange-trough-border:0;}\
-                         GtkScrolledWindow{-GtkScrolledWindow-scrollbar-spacing:0;}";
-    GtkCssProvider *provider = gtk_css_provider_get_default();
-    gtk_css_provider_load_from_data(provider, style, -1, NULL);
-    gtk_style_context_add_provider_for_screen(
-        gdk_screen_get_default(),
-        GTK_STYLE_PROVIDER(provider),
-        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
-    );
+        /* set the default style for the application - this can be overwritten by
+         * the users style in gtk-3.0/gtk.css */
+        const char *style = "GtkScrollbar{-GtkRange-slider-width:0;-GtkRange-trough-border:0;}\
+                            GtkScrolledWindow{-GtkScrolledWindow-scrollbar-spacing:0;}";
+        GtkCssProvider *provider = gtk_css_provider_get_default();
+        gtk_css_provider_load_from_data(provider, style, -1, NULL);
+        gtk_style_context_add_provider_for_screen(
+            gdk_screen_get_default(),
+            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+        );
 #else /* no GTK3 */
-    /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+        /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 #endif
+    }
 #endif
 
     /* Prepare the command line */
@@ -714,9 +719,11 @@ static void init_core(void)
     /* initialize the modes */
     mode_init();
     mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
-    mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
-    mode_add('i', input_enter, input_leave, input_keypress, NULL);
-    mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
+    if (!vb.config.kioskmode) {
+        mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
+        mode_add('i', input_enter, input_leave, input_keypress, NULL);
+        mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
+    }
 
     /* initialize the marks with empty values */
     marks_clear();
@@ -731,11 +738,21 @@ static void init_core(void)
 
     setup_signals();
 
-    /* enter normal mode */
-    mode_enter('n');
+    setting = webkit_web_view_get_settings(gui->webview);
 
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
+    if (vb.config.kioskmode) {
+        /* hide input box - to not create it would be better, but this needs a
+         * lot of changes in the code where the input is used */
+        gtk_widget_hide(vb.gui.input);
+
+        /* disable context menu */
+        g_object_set(G_OBJECT(setting), "enable-default-context-menu", false, NULL);
+    }
+
+    /* enter normal mode */
+    mode_enter('n');
 
     vb.config.default_zoom = 1.0;
 
@@ -744,7 +761,6 @@ static void init_core(void)
     GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(vb.gui.window));
     gdouble dpi = gdk_screen_get_resolution(screen);
     if (dpi != -1) {
-        WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
         webkit_web_view_set_full_content_zoom(gui->webview, true);
         g_object_set(G_OBJECT(setting), "enforce-96-dpi", true, NULL);
 
@@ -814,22 +830,23 @@ static void setup_signals()
         NULL
     );
 
+    if (!vb.config.kioskmode) {
 #ifdef FEATURE_NO_SCROLLBARS
-    WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
-    g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
+        WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
+        g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
 #endif
-
-    g_signal_connect(
-        G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(map_keypress), NULL
-    );
-    g_signal_connect(
-        G_OBJECT(vb.gui.input), "focus-in-event", G_CALLBACK(mode_input_focusin), NULL
-    );
-    g_object_connect(
-        G_OBJECT(vb.gui.buffer),
-        "signal::changed", G_CALLBACK(mode_input_changed), NULL,
-        NULL
-    );
+        g_signal_connect(
+            G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(map_keypress), NULL
+        );
+        g_signal_connect(
+            G_OBJECT(vb.gui.input), "focus-in-event", G_CALLBACK(mode_input_focusin), NULL
+        );
+        g_object_connect(
+            G_OBJECT(vb.gui.buffer),
+            "signal::changed", G_CALLBACK(mode_input_changed), NULL,
+            NULL
+        );
+    }
 
     /* webview adjustment */
     g_object_connect(G_OBJECT(vb.gui.adjust_v),
@@ -1106,6 +1123,7 @@ int main(int argc, char *argv[])
         {"cmd", 'C', 0, G_OPTION_ARG_STRING, &vb.config.autocmd, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom cufiguration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+        {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "run in kiosk mode", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };

@@ -301,6 +301,7 @@ typedef struct {
     GTlsDatabase *tls_db;         /* tls database */
     float        default_zoom;    /* default zoomlevel that is applied on zz zoom reset */
     gboolean     fullscreen;      /* indicates if full screen mode is on */
+    gboolean     kioskmode;
 } Config;
 
 typedef struct {
