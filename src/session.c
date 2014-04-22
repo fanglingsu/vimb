@@ -42,7 +42,7 @@ G_DEFINE_TYPE(CookieJar, cookiejar, SOUP_TYPE_COOKIE_JAR_TEXT)
 
 static SoupCookieJar *cookiejar_new(const char *file, gboolean ro);
 static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old, SoupCookie *new);
-static void cookiejar_class_init(CookieJarClass *class);
+static void cookiejar_class_init(CookieJarClass *klass);
 static void cookiejar_finalize(GObject *self);
 static void cookiejar_init(CookieJar *self);
 static void cookiejar_set_property(GObject *self, guint prop_id,
@@ -92,13 +92,13 @@ static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupC
     flock(COOKIEJAR(self)->lock, LOCK_UN);
 }
 
-static void cookiejar_class_init(CookieJarClass *class)
+static void cookiejar_class_init(CookieJarClass *klass)
 {
-    SOUP_COOKIE_JAR_CLASS(class)->changed = cookiejar_changed;
-    G_OBJECT_CLASS(class)->get_property   = G_OBJECT_CLASS(cookiejar_parent_class)->get_property;
-    G_OBJECT_CLASS(class)->set_property   = cookiejar_set_property;
-    G_OBJECT_CLASS(class)->finalize       = cookiejar_finalize;
-    g_object_class_override_property(G_OBJECT_CLASS(class), 1, "filename");
+    SOUP_COOKIE_JAR_CLASS(klass)->changed = cookiejar_changed;
+    G_OBJECT_CLASS(klass)->get_property   = G_OBJECT_CLASS(cookiejar_parent_class)->get_property;
+    G_OBJECT_CLASS(klass)->set_property   = cookiejar_set_property;
+    G_OBJECT_CLASS(klass)->finalize       = cookiejar_finalize;
+    g_object_class_override_property(G_OBJECT_CLASS(klass), 1, "filename");
 }
 
 static void cookiejar_finalize(GObject *self)
