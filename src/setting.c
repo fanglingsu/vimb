@@ -860,7 +860,7 @@ static SettingStatus headers(const Setting *s, const SettingType type)
             }
 
             /* skip the first ',' we put into the headers string */
-            print_value(s, str->str + 1);
+            print_value(s, *(str->str) == ',' ? str->str + 1 : str->str);
             g_string_free(str, true);
         } else {
             print_value(s, &"");
