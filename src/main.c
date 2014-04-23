@@ -371,6 +371,7 @@ void vb_quit(void)
     mode_cleanup();
     setting_cleanup();
     history_cleanup();
+    session_cleanup();
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);

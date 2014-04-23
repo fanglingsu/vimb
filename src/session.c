@@ -21,6 +21,7 @@
 #include <sys/file.h>
 #include "main.h"
 #include "session.h"
+#include "hsts.h"
 
 #ifdef FEATURE_COOKIE
 
@@ -49,6 +50,7 @@ static void cookiejar_set_property(GObject *self, guint prop_id,
     const GValue *value, GParamSpec *pspec);
 #endif
 
+static HSTSProvider *hsts;
 extern VbCore vb;
 
 
@@ -66,6 +68,16 @@ void session_init(void)
         SOUP_SESSION_FEATURE(cookiejar_new(vb.files[FILES_COOKIE], false))
     );
 #endif
+    hsts = hsts_provider_new();
+    soup_session_add_feature(
+        vb.session,
+        SOUP_SESSION_FEATURE(hsts)
+    );
+}
+
+void session_cleanup(void)
+{
+    g_object_unref(hsts);
 }
 
 #ifdef FEATURE_COOKIE

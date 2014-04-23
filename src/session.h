@@ -21,5 +21,6 @@
 #define _SESSION_H
 
 void session_init(void);
+void session_cleanup(void);
 
 #endif /* end of include guard: _SESSION_H */
