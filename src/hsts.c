@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include "hsts.h"
+#include "main.h"
 #include <string.h>
 #include <glib-object.h>
 #include <libsoup/soup.h>
@@ -32,7 +33,7 @@ typedef struct _HSTSProviderPrivate {
 } HSTSProviderPrivate;
 
 typedef struct {
-    gint64   expires_at;
+    SoupDate *expires_at;
     gboolean include_sub_domains;
 } HSTSEntry;
 
@@ -44,7 +45,8 @@ static gboolean should_secure_host(HSTSProvider *provider,
 static void process_hsts_header(SoupMessage *msg, gpointer data);
 static void parse_hsts_header(HSTSProvider *provider,
     const char *host, const char *header);
-static HSTSEntry *get_new_entry(gint64 max_age, gboolean include_sub_domains);
+static HSTSEntry *get_new_entry(int max_age, gboolean include_sub_domains);
+static void free_entry(HSTSEntry *entry);
 static void add_host_entry(HSTSProvider *provider, const char *host,
     HSTSEntry *entry);
 static void remove_host_entry(HSTSProvider *provider, const char *host);
@@ -84,7 +86,7 @@ static void hsts_provider_init(HSTSProvider *self)
 {
     /* Initialize private fields */
     HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE(self);
-    priv->whitelist = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    priv->whitelist = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)free_entry);
 }
 
 static void hsts_provider_finalize(GObject* obj)
@@ -96,12 +98,13 @@ static void hsts_provider_finalize(GObject* obj)
 }
 
 /**
- * Checks if given host is a known https host according to RFC 6797 8.3
+ * Checks if given host is a known https host according to RFC 6797 8.2f
  */
 static gboolean should_secure_host(HSTSProvider *provider,
     const char *host)
 {
     HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE(provider);
+    HSTSEntry *entry;
     char *canonical, *p;
     gboolean result = false, is_subdomain = false;
 
@@ -114,11 +117,15 @@ static gboolean should_secure_host(HSTSProvider *provider,
     /* don't match empty host */
     if (*canonical) {
         p = canonical;
+        /* Try to find the whole congruent matching host in hash table - if
+         * not found strip of the first label and try to find a superdomain
+         * match. Specified is a from right to left comparison 8.3, but in the
+         * end this should be lead to the same result. */
         while (p != NULL) {
-            HSTSEntry *entry = g_hash_table_lookup(priv->whitelist, p);
+            entry = g_hash_table_lookup(priv->whitelist, p);
             if (entry != NULL) {
-                /* remove expired entries */
-                if (g_get_real_time() > entry->expires_at) {
+                /* remove expired entries RFC 6797 8.1.1 */
+                if (soup_date_is_past(entry->expires_at)) {
                     remove_host_entry(provider, p);
                 } else if(!is_subdomain || entry->include_sub_domains) {
                     result = true;
@@ -165,7 +172,7 @@ static void parse_hsts_header(HSTSProvider *provider,
     const char *host, const char *header)
 {
     GHashTable *directives = soup_header_parse_semi_param_list(header);
-    gint64 max_age = 0;
+    int max_age = G_MAXINT;
     gboolean include_sub_domains = false;
     GHashTableIter iter;
     gpointer key, value;
@@ -215,18 +222,20 @@ static void parse_hsts_header(HSTSProvider *provider,
  * Create a new hsts entry for given data.
  * Returned entry have to be freed if no more used.
  */
-static HSTSEntry *get_new_entry(gint64 max_age, gboolean include_sub_domains)
+static HSTSEntry *get_new_entry(int max_age, gboolean include_sub_domains)
 {
-    HSTSEntry *entry  = g_new(HSTSEntry, 1);
-    entry->expires_at = g_get_real_time();
-    if (max_age > (G_MAXINT64 - entry->expires_at)/G_USEC_PER_SEC) {
-        entry->expires_at = G_MAXINT64;
-    } else {
-        entry->expires_at += max_age * G_USEC_PER_SEC;
-    }
+    HSTSEntry *entry = g_new(HSTSEntry, 1);
+
+    entry->expires_at          = soup_date_new_from_now(max_age);
     entry->include_sub_domains = include_sub_domains;
 
     return entry;
+}
+
+static void free_entry(HSTSEntry *entry)
+{
+    soup_date_free(entry->expires_at);
+    g_free(entry);
 }
 
 

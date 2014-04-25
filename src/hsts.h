@@ -29,13 +29,6 @@
 #define HSTS_IS_PROVIDER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), HSTS_TYPE_PROVIDER))
 #define HSTS_PROVIDER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), HSTS_TYPE_PROVIDER, HSTSProviderClass))
 
-#ifndef false
-    #define false FALSE
-#endif
-#ifndef true
-    #define true TRUE
-#endif
-
 /* public interface of the provider */
 typedef struct {
     GObject parent_instance;
