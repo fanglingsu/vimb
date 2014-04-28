@@ -43,6 +43,11 @@
 /* check if the char x is a char with CTRL like ^C */
 #define IS_CTRL(x)   (((guchar)x) <= 0x1f)
 
+#define FLOCK(fd, cmd) { \
+    struct flock lock = {.l_type=cmd,.l_start=0,.l_whence=SEEK_SET,.l_len=0}; \
+    fcntl(fd, F_SETLK, lock); \
+}
+
 #ifdef DEBUG
 #define PRINT_DEBUG(...) { \
     fprintf(stderr, "\n\033[31;1mDEBUG:\033[0m %s:%d:%s()\t", __FILE__, __LINE__, __func__); \
