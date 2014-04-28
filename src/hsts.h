@@ -17,6 +17,9 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "config.h"
+#ifdef FEATURE_HSTS
+
 #ifndef _HSTS_H
 #define _HSTS_H
 
@@ -44,3 +47,4 @@ GType hsts_provider_get_type(void);
 HSTSProvider *hsts_provider_new(void);
 
 #endif /* end of include guard: _HSTS_H */
+#endif

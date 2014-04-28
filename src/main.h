@@ -201,7 +201,9 @@ typedef enum {
     FILES_QUEUE,
 #endif
     FILES_USER_STYLE,
+#ifdef FEATURE_HSTS
     FILES_HSTS,
+#endif
     FILES_LAST
 } VbFile;
 

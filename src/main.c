@@ -375,6 +375,7 @@ void vb_quit(void)
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
+        vb.files[i] = NULL;
     }
 
     gtk_main_quit();
@@ -899,6 +900,10 @@ static void init_files(void)
 #ifdef FEATURE_QUEUE
     vb.files[FILES_QUEUE] = g_build_filename(path, "queue", NULL);
     util_create_file_if_not_exists(vb.files[FILES_QUEUE]);
+#endif
+#ifdef FEATURE_HSTS
+    vb.files[FILES_HSTS] = g_build_filename(path, "hsts", NULL);
+    util_create_file_if_not_exists(vb.files[FILES_HSTS]);
 #endif
 
     vb.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);

@@ -18,14 +18,20 @@
  */
 
 #include "config.h"
+#ifdef FEATURE_HSTS
 #include "hsts.h"
+#include "util.h"
 #include "main.h"
+#include <sys/file.h>
 #include <string.h>
 #include <glib-object.h>
 #include <libsoup/soup.h>
 
 #define HSTS_HEADER_NAME "Strict-Transport-Security"
+#define HSTS_FILE_FORMAT "%s\t%s\t%c\n"
 #define HSTS_PROVIDER_GET_PRIVATE(o)  (G_TYPE_INSTANCE_GET_PRIVATE((o), HSTS_TYPE_PROVIDER, HSTSProviderPrivate))
+
+extern VbCore vb;
 
 /* private interface of the provider */
 typedef struct _HSTSProviderPrivate {
@@ -45,9 +51,10 @@ static gboolean should_secure_host(HSTSProvider *provider,
 static void process_hsts_header(SoupMessage *msg, gpointer data);
 static void parse_hsts_header(HSTSProvider *provider,
     const char *host, const char *header);
-static HSTSEntry *get_new_entry(int max_age, gboolean include_sub_domains);
 static void free_entry(HSTSEntry *entry);
 static void add_host_entry(HSTSProvider *provider, const char *host,
+    HSTSEntry *entry);
+static void add_host_entry_to_file(HSTSProvider *provider, const char *host,
     HSTSEntry *entry);
 static void remove_host_entry(HSTSProvider *provider, const char *host);
 /* session feature related functions */
@@ -59,6 +66,9 @@ static void request_started(SoupSessionFeature *feature,
     SoupSession *session, SoupMessage *msg, SoupSocket *socket);
 static void request_unqueued(SoupSessionFeature *feature,
     SoupSession *session, SoupMessage *msg);
+/* caching related functions */
+static void load_entries(HSTSProvider *provider, const char *file);
+static void save_entries(HSTSProvider *provider, const char *file);
 
 
 /**
@@ -77,21 +87,28 @@ G_DEFINE_TYPE_WITH_CODE(
 
 static void hsts_provider_class_init(HSTSProviderClass *klass)
 {
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
     hsts_provider_parent_class = g_type_class_peek_parent(klass);
     g_type_class_add_private(klass, sizeof(HSTSProviderPrivate));
-    G_OBJECT_CLASS(klass)->finalize = hsts_provider_finalize;
+    object_class->finalize = hsts_provider_finalize;
 }
 
 static void hsts_provider_init(HSTSProvider *self)
 {
-    /* Initialize private fields */
+    /* initialize private fields */
     HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE(self);
     priv->whitelist = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)free_entry);
+
+    /* load entries from hsts file */
+    load_entries(self, vb.files[FILES_HSTS]);
 }
 
 static void hsts_provider_finalize(GObject* obj)
 {
     HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE (obj);
+
+    /* save all the entries in hsts file */
+    save_entries(HSTS_PROVIDER(obj), vb.files[FILES_HSTS]);
 
     g_hash_table_destroy(priv->whitelist);
     G_OBJECT_CLASS(hsts_provider_parent_class)->finalize(obj);
@@ -172,6 +189,7 @@ static void parse_hsts_header(HSTSProvider *provider,
     const char *host, const char *header)
 {
     GHashTable *directives = soup_header_parse_semi_param_list(header);
+    HSTSEntry *entry;
     int max_age = G_MAXINT;
     gboolean include_sub_domains = false;
     GHashTableIter iter;
@@ -213,23 +231,14 @@ static void parse_hsts_header(HSTSProvider *provider,
         if (max_age == 0) {
             remove_host_entry(provider, host);
         } else {
-            add_host_entry(provider, host, get_new_entry(max_age, include_sub_domains));
+            entry = g_new(HSTSEntry, 1);
+            entry->expires_at          = soup_date_new_from_now(max_age);
+            entry->include_sub_domains = include_sub_domains;
+
+            add_host_entry(provider, host, entry);
+            add_host_entry_to_file(provider, host, entry);
         }
     }
-}
-
-/**
- * Create a new hsts entry for given data.
- * Returned entry have to be freed if no more used.
- */
-static HSTSEntry *get_new_entry(int max_age, gboolean include_sub_domains)
-{
-    HSTSEntry *entry = g_new(HSTSEntry, 1);
-
-    entry->expires_at          = soup_date_new_from_now(max_age);
-    entry->include_sub_domains = include_sub_domains;
-
-    return entry;
 }
 
 static void free_entry(HSTSEntry *entry)
@@ -246,12 +255,19 @@ static void free_entry(HSTSEntry *entry)
 static void add_host_entry(HSTSProvider *provider, const char *host,
     HSTSEntry *entry)
 {
-    if (g_hostname_is_ip_address(host)) {
-        return;
-    }
-
     HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE(provider);
     g_hash_table_replace(priv->whitelist, g_hostname_to_unicode(host), entry);
+}
+
+static void add_host_entry_to_file(HSTSProvider *provider, const char *host,
+    HSTSEntry *entry)
+{
+    char *date = soup_date_to_string(entry->expires_at, SOUP_DATE_ISO8601_FULL);
+
+    util_file_append(
+        vb.files[FILES_HSTS], HSTS_FILE_FORMAT, host, date, entry->include_sub_domains ? 'y' : 'n'
+    );
+    g_free(date);
 }
 
 /**
@@ -285,22 +301,19 @@ static void request_queued(SoupSessionFeature *feature,
 {
     HSTSProvider *provider = HSTS_PROVIDER(feature);
     SoupURI *uri           = soup_message_get_uri(msg);
-    if (soup_uri_get_scheme(uri) == SOUP_URI_SCHEME_HTTP
-        && should_secure_host(provider, soup_uri_get_host(uri))
-    ) {
+
+    /* only look for HSTS headers sent over https RFC 6797 7.2*/
+    if (soup_uri_get_scheme(uri) == SOUP_URI_SCHEME_HTTPS) {
+        soup_message_add_header_handler(
+            msg, "got-headers", HSTS_HEADER_NAME, G_CALLBACK(process_hsts_header), feature
+        );
+    } else if (should_secure_host(provider, soup_uri_get_host(uri))) {
         soup_uri_set_scheme(uri, SOUP_URI_SCHEME_HTTPS);
         /* change port if the is explicitly set */
         if (soup_uri_get_port(uri) == 80) {
             soup_uri_set_port(uri, 443);
         }
         soup_session_requeue_message(session, msg);
-    }
-
-    /* Only look for HSTS headers sent over https */
-    if (soup_uri_get_scheme(uri) == SOUP_URI_SCHEME_HTTPS) {
-        soup_message_add_header_handler(
-            msg, "got-headers", HSTS_HEADER_NAME, G_CALLBACK(process_hsts_header), feature
-        );
     }
 }
 
@@ -324,3 +337,80 @@ static void request_unqueued(SoupSessionFeature *feature,
 {
     g_signal_handlers_disconnect_by_func(msg, process_hsts_header, feature);
 }
+
+/**
+ * Reads the entries save in given file and store them in the whitelist.
+ */
+static void load_entries(HSTSProvider *provider, const char *file)
+{
+    char **lines, **parts, *host, *line;
+    int i, len, partlen;
+    gboolean include_sub_domains;
+    SoupDate *date;
+    HSTSEntry *entry;
+
+    lines = util_get_lines(file);
+    if (!(len = g_strv_length(lines))) {
+        return;
+    }
+
+    for (i = len - 1; i >= 0; i--) {
+        line = lines[i];
+        /* skip empty or commented lines */
+        if (!*line || *line == '#') {
+            continue;
+        }
+
+        parts   = g_strsplit(line, "\t", 3);
+        partlen = g_strv_length(parts);
+        if (partlen == 3) {
+            host = parts[0];
+            if (g_hostname_is_ip_address(host)) {
+                continue;
+            }
+            date = soup_date_new_from_string(parts[1]);
+            if (!date) {
+                continue;
+            }
+            include_sub_domains = (*parts[2] == 'y') ? true : false;
+
+            /* built the new entry to add */
+            entry = g_new(HSTSEntry, 1);
+            entry->expires_at          = soup_date_new_from_string(parts[1]);
+            entry->include_sub_domains = include_sub_domains;
+
+            add_host_entry(provider, host, entry);
+        } else {
+            g_warning("could not parse hsts line '%s'", line);
+        }
+        g_strfreev(parts);
+    }
+    g_strfreev(lines);
+}
+
+/**
+ * Saves all entries of given provider in given file.
+ */
+static void save_entries(HSTSProvider *provider, const char *file)
+{
+    GHashTableIter iter;
+    char *host, *date;
+    HSTSEntry *entry;
+    FILE *f;
+    HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE(provider);
+
+    if ((f = fopen(file, "w"))) {
+        flock(fileno(f), LOCK_EX);
+
+        g_hash_table_iter_init(&iter, priv->whitelist);
+        while (g_hash_table_iter_next (&iter, (gpointer)&host, (gpointer)&entry)) {
+            date = soup_date_to_string(entry->expires_at, SOUP_DATE_ISO8601_FULL);
+            fprintf(f, HSTS_FILE_FORMAT, host, date, entry->include_sub_domains ? 'y' : 'n');
+            g_free(date);
+        }
+
+        flock(fileno(f), LOCK_UN);
+        fclose(f);
+    }
+}
+#endif
