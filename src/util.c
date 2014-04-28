@@ -18,10 +18,10 @@
  */
 
 #include "config.h"
-#include <sys/file.h>
 #include <stdio.h>
 #include <pwd.h>
 #include <ctype.h>
+#include "main.h"
 #include "util.h"
 #include "ascii.h"
 
@@ -169,13 +169,13 @@ gboolean util_file_append(const char *file, const char *format, ...)
     FILE *f;
 
     if ((f = fopen(file, "a+"))) {
-        flock(fileno(f), LOCK_EX);
+        FLOCK(fileno(f), F_WRLCK);
 
         va_start(args, format);
         vfprintf(f, format, args);
         va_end(args);
 
-        flock(fileno(f), LOCK_UN);
+        FLOCK(fileno(f), F_UNLCK);
         fclose(f);
 
         return true;
@@ -198,7 +198,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
 
     content = util_get_file_contents(file, NULL);
     if ((f = fopen(file, "w"))) {
-        flock(fileno(f), LOCK_EX);
+        FLOCK(fileno(f), F_WRLCK);
 
         va_start(args, format);
         /* write new content to the file */
@@ -208,7 +208,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
         /* append previous file content */
         fputs(content, f);
 
-        flock(fileno(f), LOCK_UN);
+        FLOCK(fileno(f), F_UNLCK);
         fclose(f);
 
         res = true;

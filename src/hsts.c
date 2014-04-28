@@ -22,7 +22,6 @@
 #include "hsts.h"
 #include "util.h"
 #include "main.h"
-#include <sys/file.h>
 #include <string.h>
 #include <glib-object.h>
 #include <libsoup/soup.h>
@@ -400,7 +399,7 @@ static void save_entries(HSTSProvider *provider, const char *file)
     HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE(provider);
 
     if ((f = fopen(file, "w"))) {
-        flock(fileno(f), LOCK_EX);
+        FLOCK(fileno(f), F_WRLCK);
 
         g_hash_table_iter_init(&iter, priv->whitelist);
         while (g_hash_table_iter_next (&iter, (gpointer)&host, (gpointer)&entry)) {
@@ -409,7 +408,7 @@ static void save_entries(HSTSProvider *provider, const char *file)
             g_free(date);
         }
 
-        flock(fileno(f), LOCK_UN);
+        FLOCK(fileno(f), F_UNLCK);
         fclose(f);
     }
 }
