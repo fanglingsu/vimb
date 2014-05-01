@@ -29,6 +29,7 @@
 #include "shortcut.h"
 #include "history.h"
 #include "session.h"
+#include "hsts.h"
 #include "mode.h"
 #include "normal.h"
 #include "ex.h"
@@ -541,12 +542,21 @@ static void webview_request_starting_cb(WebKitWebView *view,
         return;
     }
 
-    /* set/remove/change user defined headers */
     msg = webkit_network_request_get_message(req);
-    if (!msg || !vb.config.headers) {
+    if (!msg) {
         return;
     }
 
+#ifdef FEATURE_HSTS
+    /* change uri for known and valid hsts hosts */
+    hsts_prepare_message(vb.session, msg);
+#endif
+
+    if (vb.config.headers) {
+        return;
+    }
+
+    /* set/remove/change user defined headers */
     g_hash_table_iter_init(&iter, vb.config.headers);
     while (g_hash_table_iter_next(&iter, (gpointer*)&name, (gpointer*)&value)) {
         /* allow to remove header with null value */

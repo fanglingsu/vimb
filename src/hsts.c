@@ -79,6 +79,35 @@ HSTSProvider *hsts_provider_new(void)
     return g_object_new(HSTS_TYPE_PROVIDER, NULL);
 }
 
+/**
+ * Change scheme and port of soup messages uri if the host is a known and
+ * valid hsts host.
+ * This logic should be implemented in request_queued function but the changes
+ * that are done there to the uri do not appear in webkit_web_view_get_uri().
+ * If a valid hsts host is requested via http and the url is changed to https
+ * vimb would still show the http uri in url bar. This seems to be a
+ * missbehaviour in webkit, but for now we provide this function to put in the
+ * logic in the scope of the resource-request-starting event of the webview.
+ */
+void hsts_prepare_message(SoupSession* session, SoupMessage *msg)
+{
+    SoupSessionFeature *feature;
+    HSTSProvider *provider;
+    SoupURI *uri;
+
+    feature = soup_session_get_feature_for_message(session, HSTS_TYPE_PROVIDER, msg);
+    uri     = soup_message_get_uri(msg);
+    if (!feature || !uri) {
+        return;
+    }
+
+    provider = HSTS_PROVIDER(feature);
+    if (should_secure_host(provider, uri->host)) {
+        /* the ports is set by soup uri if scheme is changed */
+        soup_uri_set_scheme(uri, SOUP_URI_SCHEME_HTTPS);
+    }
+}
+
 G_DEFINE_TYPE_WITH_CODE(
     HSTSProvider, hsts_provider, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE(SOUP_TYPE_SESSION_FEATURE, session_feature_init)
@@ -165,10 +194,10 @@ static void process_hsts_header(SoupMessage *msg, gpointer data)
 {
     HSTSProvider *provider = (HSTSProvider*)data;
     SoupURI *uri           = soup_message_get_uri(msg);
-    const char *header, *host = soup_uri_get_host(uri);
     SoupMessageHeaders *hdrs;
+    const char *header;
 
-    if (!g_hostname_is_ip_address(host)
+    if (!g_hostname_is_ip_address(uri->host)
         && (soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED)
     ){
         g_object_get(G_OBJECT(msg), SOUP_MESSAGE_RESPONSE_HEADERS, &hdrs, NULL);
@@ -176,7 +205,7 @@ static void process_hsts_header(SoupMessage *msg, gpointer data)
         /* TODO according to RFC 6797 8.1 we must only use the first header */
         header = soup_message_headers_get_one(hdrs, HSTS_HEADER_NAME);
         if (header) {
-            parse_hsts_header(provider, host, header);
+            parse_hsts_header(provider, uri->host, header);
         }
     }
 }
@@ -246,7 +275,6 @@ static void free_entry(HSTSEntry *entry)
     g_free(entry);
 }
 
-
 /**
  * Adds the host to the known host, if it already exists it replaces it with
  * the information contained in entry according to RFC 6797 8.1.
@@ -298,21 +326,13 @@ static void session_feature_init(
 static void request_queued(SoupSessionFeature *feature,
     SoupSession *session, SoupMessage *msg)
 {
-    HSTSProvider *provider = HSTS_PROVIDER(feature);
-    SoupURI *uri           = soup_message_get_uri(msg);
+    SoupURI *uri = soup_message_get_uri(msg);
 
     /* only look for HSTS headers sent over https RFC 6797 7.2*/
-    if (soup_uri_get_scheme(uri) == SOUP_URI_SCHEME_HTTPS) {
+    if (uri->scheme == SOUP_URI_SCHEME_HTTPS) {
         soup_message_add_header_handler(
             msg, "got-headers", HSTS_HEADER_NAME, G_CALLBACK(process_hsts_header), feature
         );
-    } else if (should_secure_host(provider, soup_uri_get_host(uri))) {
-        soup_uri_set_scheme(uri, SOUP_URI_SCHEME_HTTPS);
-        /* change port if the is explicitly set */
-        if (soup_uri_get_port(uri) == 80) {
-            soup_uri_set_port(uri, 443);
-        }
-        soup_session_requeue_message(session, msg);
     }
 }
 
@@ -321,9 +341,8 @@ static void request_started(SoupSessionFeature *feature,
 {
     HSTSProvider *provider = HSTS_PROVIDER(feature);
     SoupURI *uri           = soup_message_get_uri(msg);
-    const char *host       = soup_uri_get_host(uri);
-    if (should_secure_host(provider, host)) {
-        if (soup_uri_get_scheme(uri) != SOUP_URI_SCHEME_HTTPS
+    if (should_secure_host(provider, uri->host)) {
+        if (uri->scheme != SOUP_URI_SCHEME_HTTPS
             || !(soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED)
         ) {
             soup_session_cancel_message(session, msg, SOUP_STATUS_SSL_FAILED);

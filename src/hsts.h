@@ -24,6 +24,7 @@
 #define _HSTS_H
 
 #include <glib-object.h>
+#include <libsoup/soup.h>
 
 #define HSTS_TYPE_PROVIDER            (hsts_provider_get_type())
 #define HSTS_PROVIDER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), HSTS_TYPE_PROVIDER, HSTSProvider))
@@ -45,6 +46,7 @@ typedef struct {
 
 GType hsts_provider_get_type(void);
 HSTSProvider *hsts_provider_new(void);
+void hsts_prepare_message(SoupSession* session, SoupMessage *msg);
 
 #endif /* end of include guard: _HSTS_H */
 #endif
