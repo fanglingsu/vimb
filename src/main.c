@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include <stdio.h>
 #include <sys/stat.h>
 #include "main.h"
 #include "util.h"
