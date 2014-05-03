@@ -641,7 +641,7 @@ static SettingStatus ca_bundle(const Setting *s, const SettingType type)
         print_value(s, vb.config.cafile);
     } else {
         /* expand the given file and set it to the file database */
-        expanded         = util_expand(s->arg.s);
+        expanded         = util_expand(s->arg.s, UTIL_EXP_TILDE|UTIL_EXP_DOLLAR);
         vb.config.tls_db = g_tls_file_database_new(expanded, &error);
         g_free(expanded);
         if (error) {

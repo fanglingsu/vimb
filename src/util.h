@@ -22,6 +22,12 @@
 
 #include "main.h"
 
+enum {
+    UTIL_EXP_TILDE   = 0x01, /* ~/ and ~user expansion */
+    UTIL_EXP_DOLLAR  = 0x02, /* $ENV and ${ENV} expansion */
+    UTIL_EXP_SPECIAL = 0x04, /* expand % to current URI */
+};
+
 typedef gboolean (*Util_Comp_Func)(const char*, const char*);
 typedef void *(*Util_Content_Func)(const char*);
 
@@ -40,7 +46,8 @@ char* util_strcasestr(const char* haystack, const char* needle);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 gboolean util_create_tmp_file(const char *content, char **file);
 char *util_build_path(const char *path, const char *dir);
-char *util_expand(const char *src);
+char *util_expand(const char *src, int expflags);
+gboolean util_parse_expansion(const char **input, GString *str, int flags);
 gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src);
 
 #endif /* end of include guard: _UTIL_H */

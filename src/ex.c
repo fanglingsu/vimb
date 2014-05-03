@@ -117,7 +117,6 @@ static gboolean parse_command_name(const char **input, ExArg *arg);
 static gboolean parse_bang(const char **input, ExArg *arg);
 static gboolean parse_lhs(const char **input, ExArg *arg);
 static gboolean parse_rhs(const char **input, ExArg *arg);
-static void expand_input(const char **input, ExArg *arg);
 static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static gboolean execute(const ExArg *arg);
@@ -645,7 +644,8 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
  */
 static gboolean parse_rhs(const char **input, ExArg *arg)
 {
-    char quote = '\\';
+    char quote   = '\\';
+    int expflags = UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL;
 
     if (!*input || !**input) {
         return false;
@@ -670,9 +670,17 @@ static gboolean parse_rhs(const char **input, ExArg *arg)
             }
         } else { /* unquoted char */
             /* check for expansion placeholder */
-            if (arg->flags & EX_FLAG_EXP && strchr("%~", **input)) {
-                /* handle expansion */
-                expand_input(input, arg);
+            if (arg->flags & EX_FLAG_EXP) {
+                util_parse_expansion(input, arg->rhs, expflags);
+
+                if (VB_IS_SPACE(**input)) {
+                    /* add tilde expansion for next loop needs to be first
+                     * char or to be after a space */
+                    expflags |= UTIL_EXP_TILDE;
+                } else {
+                    /* remove tile expansion for next loop */
+                    expflags &= ~UTIL_EXP_TILDE;
+                }
             } else {
                 g_string_append_c(arg->rhs, **input);
             }
@@ -680,28 +688,6 @@ static gboolean parse_rhs(const char **input, ExArg *arg)
         (*input)++;
     }
     return true;
-}
-
-static void expand_input(const char **input, ExArg *arg)
-{
-    const char *uri;
-    switch (**input) {
-        case '%':
-            if ((uri = GET_URI())) {
-                /* TODO check for modifiers like :h:t:r:e */
-                g_string_append(arg->rhs, uri);
-            }
-            break;
-
-        case '~':
-            (*input)++;
-            /* expand only ~/ because ~user is not handled at the moment */
-            if (**input == '/') {
-                g_string_append(arg->rhs, g_get_home_dir());
-                g_string_append_c(arg->rhs, **input);
-            }
-            break;
-    }
 }
 
 /**

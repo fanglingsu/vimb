@@ -26,6 +26,8 @@
 #include "ascii.h"
 #include "completion.h"
 
+extern VbCore vb;
+
 char *util_get_config_dir(void)
 {
     char *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
@@ -302,9 +304,10 @@ gboolean util_create_tmp_file(const char *content, char **file)
 char *util_build_path(const char *path, const char *dir)
 {
     char *fullPath = NULL, *fexp, *dexp, *p;
+    int expflags   = UTIL_EXP_TILDE|UTIL_EXP_DOLLAR;
 
     /* if the path could be expanded */
-    if ((fexp = util_expand(path))) {
+    if ((fexp = util_expand(path, expflags))) {
         if (*fexp == '/') {
             /* path is already absolute, no need to use given dir - there is
              * no need to free fexp, bacuse this should be done by the caller
@@ -312,7 +315,7 @@ char *util_build_path(const char *path, const char *dir)
             fullPath = fexp;
         } else if (dir && *dir) {
             /* try to expand also the dir given - this may be ~/path */
-            if ((dexp = util_expand(dir))) {
+            if ((dexp = util_expand(dir, expflags))) {
                 /* use expanded dir and append expanded path */
                 fullPath = g_build_filename(dexp, fexp, NULL);
                 g_free(dexp);
@@ -341,80 +344,128 @@ char *util_build_path(const char *path, const char *dir)
  *
  * Returned path must be g_freed.
  */
-char *util_expand(const char *src)
+char *util_expand(const char *src, int expflags)
 {
-    GString *dst  = g_string_new("");
-    GString *name;
-    gboolean start = true;  /* is start of string of subpart */
-    const char *env;
+    const char **input = &src;
     char *result;
-    struct passwd *pwd;
+    GString *dst = g_string_new("");
+    int flags    = expflags;
 
-    while (*src) {
-        /* expand ~/path and ~user */
-        if (*src == '~' && start) {
-            /* skip the ~ */
-            src++;
-            if (*src == '/') {
-                g_string_append(dst, util_get_home_dir());
-            } else {
-                name = g_string_new("");
-                /* look ahead to / space or end of string */
-                while (*src && *src != '/' && !VB_IS_SPACE(*src)) {
-                    g_string_append_c(name, *src);
-                    src++;
-                }
-                /* append the name to the destination string */
-                if ((pwd = getpwnam(name->str))) {
-                    g_string_append(dst, pwd->pw_dir);
-                }
-                g_string_free(name, true);
-            }
-        } else if (*src == '$') {
-            name = g_string_new("");
-            /* skip the $ */
-            src++;
-            /* look for ${VAR}*/
-            if (*src == '{') {
-                /* skip { */
-                src++;
-                /* look ahead to } or end of string */
-                while (*src && *src != '}') {
-                    g_string_append_c(name, *src);
-                    src++;
-                }
-                /* if the } was reached - skip this */
-                if (*src == '}') {
-                    src++;
-                }
-            } else { /* process $VAR */
-                /* look ahead to /, space or end of string */
-                while (*src && VB_IS_IDENT(*src)) {
-                    g_string_append_c(name, *src);
-                    src++;
-                }
-            }
-            /* append the variable to the destination string */
-            if ((env = g_getenv(name->str))) {
-                g_string_append(dst, env);
-            }
-            g_string_free(name, true);
-        } else if (!VB_IS_ALNUM(*src)) {
-            /* if we match non alnum char - mark this as beginning of new part */
-            start = true;
+    while (**input) {
+        util_parse_expansion(input, dst, flags);
+        if (VB_IS_SEPARATOR(**input)) {
+            /* after space the tilde expansion is allowed */
+            flags = expflags;
         } else {
-            /* we left the start of phrase behind */
-            start = false;
+            /* remove tile expansion for next loop */
+            flags &= ~UTIL_EXP_TILDE;
         }
-
-        g_string_append_c(dst, *src);
-        src++;
+        /* move pointer to the next char */
+        (*input)++;
     }
 
     result = dst->str;
     g_string_free(dst, false);
 
     return result;
+}
+
+/**
+ * Reads given input and try to parse ~/, ~user, $VAR or ${VAR} expansion
+ * from the start of the input and moves the input pointer to the first
+ * not expanded char. If no expansion pattern was found, the first char is
+ * appended to given GString.
+ *
+ * @input:  String pointer with the content to be parsed.
+ * @str:    GString that will be filled with expanded content.
+ * @flags   Flags that determine which expansion are processed.
+ * Returns true if input started with expandable pattern.
+ */
+gboolean util_parse_expansion(const char **input, GString *str, int flags)
+{
+    GString *name;
+    const char *env, *prev;
+    struct passwd *pwd;
+    gboolean expanded = false;
+
+    prev = *input;
+    if (flags & UTIL_EXP_TILDE && **input == '~') {
+        /* skip ~ */
+        (*input)++;
+
+        if (**input == '/') {
+            g_string_append(str, util_get_home_dir());
+            expanded = true;
+        } else {
+            /* look ahead to / space or end of string to get a possible
+             * username for ~user pattern */
+            name = g_string_new("");
+            /* current char is ~ that is skipped to get the user name */
+            while (VB_IS_IDENT(**input)) {
+                g_string_append_c(name, **input);
+                (*input)++;
+            }
+            /* append the name to the destination string */
+            if ((pwd = getpwnam(name->str))) {
+                g_string_append(str, pwd->pw_dir);
+                expanded = true;
+            }
+            g_string_free(name, true);
+        }
+        /* move pointer back to last expanded char */
+        (*input)--;
+    } else if (flags & UTIL_EXP_DOLLAR && **input == '$') {
+        /* skip the $ */
+        (*input)++;
+
+        name = g_string_new("");
+        /* look for ${VAR}*/
+        if (**input == '{') {
+            /* skip { */
+            (*input)++;
+
+            /* look ahead to } or end of string */
+            while (**input && **input != '}') {
+                g_string_append_c(name, **input);
+                (*input)++;
+            }
+            /* if the } was reached - skip this */
+            if (**input == '}') {
+                (*input)++;
+            }
+        } else { /* process $VAR */
+            /* look ahead to /, space or end of string */
+            while (VB_IS_IDENT(**input)) {
+                g_string_append_c(name, **input);
+                (*input)++;
+            }
+        }
+        /* append the variable to the destination string */
+        if ((env = g_getenv(name->str))) {
+            g_string_append(str, env);
+        }
+        /* move pointer back to last expanded char */
+        (*input)--;
+        /* variable are expanded even if they do not exists */
+        expanded = true;
+        g_string_free(name, true);
+    } else if (flags & UTIL_EXP_SPECIAL && **input == '%') {
+        const char *uri;
+        if ((uri = GET_URI())) {
+            /* TODO check for modifiers like :h:t:r:e */
+            g_string_append(str, uri);
+            expanded = true;
+        }
+    }
+
+    if (!expanded) {
+        /* restore the pointer position if no expansion was found */
+        *input = prev;
+        /* take the char like it is */
+        g_string_append_c(str, **input);
+    }
+
+    return expanded;
 }
 
 /**
