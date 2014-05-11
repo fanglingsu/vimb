@@ -20,40 +20,13 @@
 #include "config.h"
 #include "main.h"
 #include "session.h"
+#ifdef FEATURE_COOKIE
+#include "cookiejar.h"
+#endif
 #ifdef FEATURE_HSTS
 #include "hsts.h"
 #endif
 
-#ifdef FEATURE_COOKIE
-
-#define COOKIEJAR_TYPE (cookiejar_get_type())
-#define COOKIEJAR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), COOKIEJAR_TYPE, CookieJar))
-
-typedef struct {
-    SoupCookieJarText parent_instance;
-    int lock;
-} CookieJar;
-
-typedef struct {
-    SoupCookieJarTextClass parent_class;
-} CookieJarClass;
-
-static GType cookiejar_get_type(void);
-
-G_DEFINE_TYPE(CookieJar, cookiejar, SOUP_TYPE_COOKIE_JAR_TEXT)
-
-static SoupCookieJar *cookiejar_new(const char *file, gboolean ro);
-static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old, SoupCookie *new);
-static void cookiejar_class_init(CookieJarClass *klass);
-static void cookiejar_finalize(GObject *self);
-static void cookiejar_init(CookieJar *self);
-static void cookiejar_set_property(GObject *self, guint prop_id,
-    const GValue *value, GParamSpec *pspec);
-#endif
-
-#ifdef FEATURE_HSTS
-static HSTSProvider *hsts;
-#endif
 extern VbCore vb;
 
 
@@ -66,76 +39,21 @@ void session_init(void)
     g_object_set(vb.session, "accept-language-auto", true, NULL);
 
 #ifdef FEATURE_COOKIE
-    soup_session_add_feature(
-        vb.session,
-        SOUP_SESSION_FEATURE(cookiejar_new(vb.files[FILES_COOKIE], false))
-    );
+    SoupCookieJar *cookie = cookiejar_new(vb.files[FILES_COOKIE], false);
+    soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(cookie));
+    g_object_unref(cookie);
 #endif
 #ifdef FEATURE_HSTS
-    hsts = hsts_provider_new();
+    HSTSProvider *hsts = hsts_provider_new();
     soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(hsts));
+    g_object_unref(hsts);
 #endif
 }
 
 void session_cleanup(void)
 {
 #ifdef FEATURE_HSTS
-    /* remove feature from session to make sure the feature is finalized on
-     * later call of g_object_unref */
-    soup_session_remove_feature(vb.session, SOUP_SESSION_FEATURE(hsts));
-    g_object_unref(hsts);
+    /* remove feature from session to make sure the feature is finalized */
+    soup_session_remove_feature_by_type(vb.session, HSTS_TYPE_PROVIDER);
 #endif
 }
-
-#ifdef FEATURE_COOKIE
-static SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
-{
-    return g_object_new(
-        COOKIEJAR_TYPE,
-        SOUP_COOKIE_JAR_TEXT_FILENAME, file,
-        SOUP_COOKIE_JAR_READ_ONLY, ro,
-        NULL
-    );
-}
-
-static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupCookie *new_cookie)
-{
-    FLOCK(COOKIEJAR(self)->lock, F_WRLCK);
-    SoupDate *expire;
-    if (new_cookie && !new_cookie->expires && vb.config.cookie_timeout) {
-        expire = soup_date_new_from_now(vb.config.cookie_timeout);
-        soup_cookie_set_expires(new_cookie, expire);
-        soup_date_free(expire);
-    }
-    SOUP_COOKIE_JAR_CLASS(cookiejar_parent_class)->changed(self, old_cookie, new_cookie);
-    FLOCK(COOKIEJAR(self)->lock, F_UNLCK);
-}
-
-static void cookiejar_class_init(CookieJarClass *klass)
-{
-    SOUP_COOKIE_JAR_CLASS(klass)->changed = cookiejar_changed;
-    G_OBJECT_CLASS(klass)->get_property   = G_OBJECT_CLASS(cookiejar_parent_class)->get_property;
-    G_OBJECT_CLASS(klass)->set_property   = cookiejar_set_property;
-    G_OBJECT_CLASS(klass)->finalize       = cookiejar_finalize;
-    g_object_class_override_property(G_OBJECT_CLASS(klass), 1, "filename");
-}
-
-static void cookiejar_finalize(GObject *self)
-{
-    close(COOKIEJAR(self)->lock);
-    G_OBJECT_CLASS(cookiejar_parent_class)->finalize(self);
-}
-
-static void cookiejar_init(CookieJar *self)
-{
-    self->lock = open(vb.files[FILES_COOKIE], 0);
-}
-
-static void cookiejar_set_property(GObject *self, guint prop_id, const
-    GValue *value, GParamSpec *pspec)
-{
-    FLOCK(COOKIEJAR(self)->lock, F_RDLCK);
-    G_OBJECT_CLASS(cookiejar_parent_class)->set_property(self, prop_id, value, pspec);
-    FLOCK(COOKIEJAR(self)->lock, F_UNLCK);
-}
-#endif
