@@ -28,7 +28,7 @@
 #include "hints.h"
 #include "shortcut.h"
 #include "history.h"
-#include "session.h"
+#include "cookiejar.h"
 #include "hsts.h"
 #include "mode.h"
 #include "normal.h"
@@ -89,6 +89,8 @@ static void marks_clear(void);
 static void read_config(void);
 static void setup_signals();
 static void init_files(void);
+static void session_init(void);
+static void session_cleanup(void);
 static gboolean hide_message();
 static void set_status(const StatusType status);
 static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message);
@@ -921,6 +923,34 @@ static void init_files(void)
     vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
 
     g_free(path);
+}
+
+static void session_init(void)
+{
+    /* init soup session */
+    vb.session = webkit_get_default_session();
+    g_object_set(vb.session, "max-conns", SETTING_MAX_CONNS , NULL);
+    g_object_set(vb.session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
+    g_object_set(vb.session, "accept-language-auto", true, NULL);
+
+#ifdef FEATURE_COOKIE
+    SoupCookieJar *cookie = cookiejar_new(vb.files[FILES_COOKIE], false);
+    soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(cookie));
+    g_object_unref(cookie);
+#endif
+#ifdef FEATURE_HSTS
+    HSTSProvider *hsts = hsts_provider_new();
+    soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(hsts));
+    g_object_unref(hsts);
+#endif
+}
+
+static void session_cleanup(void)
+{
+#ifdef FEATURE_HSTS
+    /* remove feature from session to make sure the feature is finalized */
+    soup_session_remove_feature_by_type(vb.session, HSTS_TYPE_PROVIDER);
+#endif
 }
 
 static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
