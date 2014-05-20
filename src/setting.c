@@ -638,11 +638,15 @@ static SettingStatus strict_focus(const Setting *s, const SettingType type)
 
 static SettingStatus ca_bundle(const Setting *s, const SettingType type)
 {
+    char *expanded;
+    GError *error = NULL;
     if (type == SETTING_GET) {
         print_value(s, vb.config.cafile);
     } else {
-        GError *error = NULL;
-        vb.config.tls_db = g_tls_file_database_new(s->arg.s, &error);
+        /* expand the given file and set it to the file database */
+        expanded         = util_expand(s->arg.s);
+        vb.config.tls_db = g_tls_file_database_new(expanded, &error);
+        g_free(expanded);
         if (error) {
             g_warning("Could not load ssl database '%s': %s", s->arg.s, error->message);
             g_error_free(error);
@@ -651,7 +655,7 @@ static SettingStatus ca_bundle(const Setting *s, const SettingType type)
         }
 
         /* there is no function to get the file back from tls file database so
-         * it's saves as seperate configuration */
+         * it's saved as seperate configuration */
         OVERWRITE_STRING(vb.config.cafile, s->arg.s);
         g_object_set(vb.session, "tls-database", vb.config.tls_db, NULL);
     }
