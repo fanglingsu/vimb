@@ -40,13 +40,13 @@ LIBFLAGS = $(shell pkg-config --libs $(LIBS))
 
 # normal compiler flags
 CFLAGS  += $(shell pkg-config --cflags $(LIBS))
-CFLAGS  += -Wall -pipe -ansi -std=c99 -pedantic
+CFLAGS  += -Wall -pipe -std=c99 -pedantic
 CFLAGS  += -Wno-overlength-strings
 CFLAGS  += ${CPPFLAGS}
 LDFLAGS += ${LIBFLAGS}
 
 # compiler flags for the debug target
-DFLAGS   += $(CFLAGS) -DDEBUG -ggdb -g
+DFLAGS   += $(CFLAGS) -ggdb -g
 DLDFLAGS += ${LIBFLAGS}
 
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
