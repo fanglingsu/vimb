@@ -1121,7 +1121,7 @@ int main(int argc, char *argv[])
         {"cmd", 'C', 0, G_OPTION_ARG_STRING, &vb.config.autocmd, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom cufiguration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
-        {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "run in kiosk mode", NULL},
+        {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
