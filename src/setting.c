@@ -20,6 +20,7 @@
 #include "config.h"
 #include "setting.h"
 #include "shortcut.h"
+#include "handlers.h"
 #include "util.h"
 #include "completion.h"
 #include "js.h"
@@ -148,6 +149,10 @@ void setting_init(void)
     shortcut_add("dl", "https://duckduckgo.com/html/?q=$0");
     shortcut_add("dd", "https://duckduckgo.com/?q=$0");
     shortcut_set_default("dl");
+
+    /* initialize the handlers */
+    handlers_init();
+    handler_add("magnet", "xdg-open %s");
 }
 
 void setting_cleanup(void)
@@ -156,6 +161,7 @@ void setting_cleanup(void)
         g_hash_table_destroy(settings);
     }
     shortcut_cleanup();
+    handlers_cleanup();
 }
 
 gboolean setting_run(char *name, const char *param)

@@ -28,6 +28,7 @@
 #include "dom.h"
 #include "hints.h"
 #include "shortcut.h"
+#include "handlers.h"
 #include "history.h"
 #include "session.h"
 #include "mode.h"
@@ -168,6 +169,10 @@ gboolean vb_load_uri(const Arg *arg)
     }
     if (!path || !*path) {
         path = vb.config.home_page;
+    }
+
+    if (handle_uri(path)) {
+        return true;
     }
 
     if (strstr(path, "://") || !strncmp(path, "about:", 6)) {
