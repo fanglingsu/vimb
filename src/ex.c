@@ -36,6 +36,7 @@
 #include "util.h"
 #include "bookmark.h"
 #include "shortcut.h"
+#include "handlers.h"
 #include "map.h"
 #include "js.h"
 
@@ -46,6 +47,8 @@ typedef enum {
     EX_HARDCOPY,
     EX_CMAP,
     EX_CNOREMAP,
+    EX_HANDADD,
+    EX_HANDREM,
     EX_IMAP,
     EX_NMAP,
     EX_NNOREMAP,
@@ -123,6 +126,7 @@ static gboolean ex_save(const ExArg *arg);
 static gboolean ex_set(const ExArg *arg);
 static gboolean ex_shellcmd(const ExArg *arg);
 static gboolean ex_shortcut(const ExArg *arg);
+static gboolean ex_handlers(const ExArg *arg);
 
 static gboolean complete(short direction);
 static void completion_select(char *match);
@@ -142,6 +146,8 @@ static ExInfo commands[] = {
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"cnoremap",         EX_CNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"cunmap",           EX_CUNMAP,      ex_unmap,      EX_FLAG_LHS},
+    {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
+    {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_RHS},
     {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
@@ -873,6 +879,26 @@ static gboolean ex_shellcmd(const ExArg *arg)
 
     g_free(cmd);
     return success;
+}
+
+static gboolean ex_handlers(const ExArg *arg)
+{
+    char *p;
+
+    switch (arg->code) {
+        case EX_HANDADD:
+            if (arg->rhs->len && (p = strchr(arg->rhs->str, '='))) {
+                *p++ = '\0';
+                return handler_add(arg->rhs->str, p);
+            }
+            return false;
+
+        case EX_HANDREM:
+            return handler_remove(arg->rhs->str);
+
+        default:
+            return false;
+    }
 }
 
 static gboolean ex_shortcut(const ExArg *arg)
