@@ -448,6 +448,28 @@ Save the current opened URI with \fITAGS\fP to the bookmark file.
 .BI ":bmr [" URI ]
 Removes all bookmarks for given \fIURI\fP or if not given the current opened
 page.
+.SS Handlers
+Handlers allow specifying external scripts to handle alternative URI methods.
+.TP
+.BI ":handler-add " "HANDLER" "=" "COMMAND"
+Adds a handler to direct \fIHANDLER\fP links to the external \fICOMMAND\fP.
+The \fICOMMAND\fP can contain one placeholder %s that will be filled by the
+full URI given when the command is called. Handlers only get check on newly
+spawned windows, either by CTRL-CLICK or F hinting. This allows handlers to
+act as overrides for default behavior and as a security precaution.
+
+.RS
+Examples:
+.IP ":handler-add magnet=xdg-open %s"
+to open magnet links with xdg-open.
+.IP ":handler-add magnet=transmission-gtk %s"
+to open magnet links directly with Transmission.
+.IP ":handler-add irc=irc-handler.sh %s"
+to direct irc://<host>:<port>/<channel> links to a wrapper for your irc client.
+.RE
+.TP
+.BI ":handler-remove " "HANDLER"
+Remove the handler for the given URI \fIHANDLER\fP.
 .SS Shortcuts
 Shortcuts allows to open URI build up from a named template with additional
 parameters. If a shortcut named 'dd' is defined, you can use it with `:open dd
