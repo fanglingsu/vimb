@@ -454,10 +454,7 @@ Handlers allow specifying external scripts to handle alternative URI methods.
 .BI ":handler-add " "HANDLER" "=" "COMMAND"
 Adds a handler to direct \fIHANDLER\fP links to the external \fICOMMAND\fP.
 The \fICOMMAND\fP can contain one placeholder %s that will be filled by the
-full URI given when the command is called. Handlers only get check on newly
-spawned windows, either by CTRL-CLICK or F hinting. This allows handlers to
-act as overrides for default behavior and as a security precaution.
-
+full URI given when the command is called.
 .RS
 Examples:
 .IP ":handler-add magnet=xdg-open %s"
