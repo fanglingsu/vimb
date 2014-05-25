@@ -73,6 +73,10 @@ static gboolean create_web_view_received_uri_cb(WebKitWebView *view,
     WebKitWebFrame *frame, WebKitNetworkRequest *request,
     WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
     gpointer data);
+static gboolean navigation_decision_requested_cb(WebKitWebView *view,
+    WebKitWebFrame *frame, WebKitNetworkRequest *request,
+    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
+    gpointer data);
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link);
 static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title);
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
@@ -169,10 +173,6 @@ gboolean vb_load_uri(const Arg *arg)
     }
     if (!path || !*path) {
         path = vb.config.home_page;
-    }
-
-    if (handle_uri(path)) {
-        return true;
     }
 
     if (strstr(path, "://") || !strncmp(path, "about:", 6)) {
@@ -829,6 +829,7 @@ static void setup_signals()
         "signal::download-requested", G_CALLBACK(vb_download), NULL,
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
         "signal::resource-request-starting", G_CALLBACK(webview_request_starting_cb), NULL,
+        "signal::navigation-policy-decision-requested", G_CALLBACK(navigation_decision_requested_cb), NULL,
         NULL
     );
 
@@ -976,6 +977,15 @@ static gboolean create_web_view_received_uri_cb(WebKitWebView *view,
 
     /* mark that we handled the signal */
     return true;
+}
+
+static gboolean navigation_decision_requested_cb(WebKitWebView *view,
+    WebKitWebFrame *frame, WebKitNetworkRequest *request,
+    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
+    gpointer data)
+{
+    /* try to find a protocall handler to open the uri */
+    return handle_uri(webkit_network_request_get_uri(request));
 }
 
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
