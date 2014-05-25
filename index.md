@@ -43,7 +43,7 @@ But following images may give a impression of they way vimb works.
 - kiosk mode without keybindings and context menu
 - run shell commands from inputbox
 - manipulate http request headers
-- custom protocol handler
+- custom [protocol handlers][handlers]
 
 ## packages
 
@@ -79,6 +79,7 @@ If you find a misbehaviour or have feature requests use the
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
 [keybindings]: keybindings.html "vimb keybindings"
+[handlers]:    commands.html#handlers "vimb custom protocol handlers"
 [hints]:       keybindings.html#hinting "vimb hinting"
 [history]:     keybindings.html#history "vimb keybindings to access history"
 [queue]:       commands.html#queue "vimb read it later queue feature"
