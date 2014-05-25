@@ -43,6 +43,7 @@ But following images may give a impression of they way vimb works.
 - kiosk mode without keybindings and context menu
 - run shell commands from inputbox
 - manipulate http request headers
+- custom protocol handler
 
 ## packages
 

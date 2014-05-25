@@ -119,6 +119,30 @@ same but a single parameter is user defined.
 : Set the shortcut for given *SHORTCUT* as the default. It doesn't matter if the
   *SHORTCUT* is already in use or not to be able to set it.
 
+## handlers
+{:#handlers}
+
+Handlers allow specifying external scripts to handle alternative URI methods.
+
+\:handler-add *HANDLER=COMMAND*
+: Adds a handler to direct *HANDLER* links to the external COMMAND. The COMMAND
+  can contain one placeholder %s that will be filled by the full URI given when
+  the command is called.
+
+  Examples:
+
+  - `:handler-add magnet=xdg-open %s`
+    to open magnet links with xdg-open.
+
+  - `:handler-add magnet=transmission-gtk %s`
+    to open magnet links directly with Transmission.
+
+  - `:handler-add irc=irc-handler.sh %s`
+    to direct `irc://<host>:<port>/<channel>` links to a wrapper for your irc client.
+
+:handler-remove *HANDLER*
+: Remove the handler for the given URI *HANDLER*.
+
 ## settings
 
 \:se[t] *VAR=VALUE*
