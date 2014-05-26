@@ -1024,6 +1024,11 @@ static gboolean complete(short direction)
                     found = bookmark_fill_tag_completion(store, token);
                     break;
 
+                case EX_HANDREM:
+                    sort  = true;
+                    found = handler_fill_completion(store, token);
+                    break;
+
                 default:
                     break;
             }

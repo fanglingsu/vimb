@@ -25,5 +25,6 @@ void handlers_cleanup(void);
 gboolean handler_add(const char *key, const char *uri);
 gboolean handler_remove(const char *key);
 gboolean handle_uri(const char *uri);
+gboolean handler_fill_completion(GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _HANDLERS_H */
