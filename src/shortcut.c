@@ -104,6 +104,15 @@ char *shortcut_get_uri(const char *string)
     return uri;
 }
 
+gboolean shortcut_fill_completion(GtkListStore *store, const char *input)
+{
+    GList *src = g_hash_table_get_keys(shortcuts);
+    gboolean found = util_fill_completion(store, input, src);
+    g_list_free(src);
+
+    return found;
+}
+
 /**
  * Retrieves th highest placesholder number used in given string.
  * If no placeholder is found -1 is returned.

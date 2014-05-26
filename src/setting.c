@@ -241,26 +241,8 @@ gboolean setting_run(char *name, const char *param)
 
 gboolean setting_fill_completion(GtkListStore *store, const char *input)
 {
-    gboolean found = false;
-    GtkTreeIter iter;
     GList *src = g_hash_table_get_keys(settings);
-
-    if (!input || !*input) {
-        for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = true;
-        }
-    } else {
-        for (GList *l = src; l; l = l->next) {
-            char *value = (char*)l->data;
-            if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-                found = true;
-            }
-        }
-    }
+    gboolean found = util_fill_completion(store, input, src);
     g_list_free(src);
 
     return found;

@@ -26,5 +26,6 @@ gboolean shortcut_add(const char *key, const char *uri);
 gboolean shortcut_remove(const char *key);
 gboolean shortcut_set_default(const char *key);
 char *shortcut_get_uri(const char *key);
+gboolean shortcut_fill_completion(GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _SHORTCUT_H */

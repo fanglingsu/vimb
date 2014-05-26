@@ -151,10 +151,9 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
 
 gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
 {
-    gboolean found = false;
+    gboolean found;
     unsigned int len, i;
-    GtkTreeIter iter;
-    GList *src = NULL, *tags = NULL, *l;
+    GList *src = NULL, *tags = NULL;
     Bookmark *bm;
 
     /* get all distinct tags from bookmark file */
@@ -172,21 +171,7 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
     }
 
     /* generate the completion with the found tags */
-    if (!input || !*input) {
-        for (l = tags; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = true;
-        }
-    } else {
-        for (l = tags; l; l = l->next) {
-            if (g_str_has_prefix(l->data, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-                found = true;
-            }
-        }
-    }
+    found = util_fill_completion(store, input, tags);
     g_list_free_full(src, (GDestroyNotify)free_bookmark);
     /* we don't need to free the values, because they where already removed by
      * freeing the src list - we never allocated new momory for them */
