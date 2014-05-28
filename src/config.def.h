@@ -44,6 +44,8 @@
 /* to get the hack working */
 /* #define FEATURE_HIGH_DPI */
 #endif
+/* enable HTTP Strict-Transport-Security*/
+#define FEATURE_HSTS
 
 
 /* time in seconds after that message will be removed from inputbox if the

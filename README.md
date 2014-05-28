@@ -29,6 +29,7 @@ the [vimb project page][vimb].
 - webinspector that opens ad the bottom of the browser window like in some
   other fat browsers
 - ssl validation against ca-certificate file
+- HTTP Strict Transport Security (HSTS)
 - custom configuration files
 - open input or textarea with configurable external editor
 - user defined URL-shortcuts with placeholders

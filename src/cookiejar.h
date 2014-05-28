@@ -17,9 +17,27 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _SESSION_H
-#define _SESSION_H
+#include "config.h"
+#ifdef FEATURE_COOKIE
 
-void session_init(void);
+#ifndef _COOKIEJAR_H
+#define _COOKIEJAR_H
 
-#endif /* end of include guard: _SESSION_H */
+#define COOKIEJAR_TYPE (cookiejar_get_type())
+#define COOKIEJAR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), COOKIEJAR_TYPE, CookieJar))
+
+
+typedef struct {
+    SoupCookieJarText parent_instance;
+    int lock;
+} CookieJar;
+
+typedef struct {
+    SoupCookieJarTextClass parent_class;
+} CookieJarClass;
+
+GType cookiejar_get_type(void);
+SoupCookieJar *cookiejar_new(const char *file, gboolean ro);
+
+#endif /* end of include guard: _COOKIEJAR_H */
+#endif

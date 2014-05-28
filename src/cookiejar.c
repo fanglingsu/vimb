@@ -18,57 +18,24 @@
  */
 
 #include "config.h"
-#include "main.h"
-#include "session.h"
 
 #ifdef FEATURE_COOKIE
-
-#define COOKIEJAR_TYPE (cookiejar_get_type())
-#define COOKIEJAR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), COOKIEJAR_TYPE, CookieJar))
-
-typedef struct {
-    SoupCookieJarText parent_instance;
-    int lock;
-} CookieJar;
-
-typedef struct {
-    SoupCookieJarTextClass parent_class;
-} CookieJarClass;
-
-static GType cookiejar_get_type(void);
+#include "main.h"
+#include "cookiejar.h"
 
 G_DEFINE_TYPE(CookieJar, cookiejar, SOUP_TYPE_COOKIE_JAR_TEXT)
 
-static SoupCookieJar *cookiejar_new(const char *file, gboolean ro);
 static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old, SoupCookie *new);
 static void cookiejar_class_init(CookieJarClass *klass);
 static void cookiejar_finalize(GObject *self);
 static void cookiejar_init(CookieJar *self);
 static void cookiejar_set_property(GObject *self, guint prop_id,
     const GValue *value, GParamSpec *pspec);
-#endif
 
 extern VbCore vb;
 
 
-void session_init(void)
-{
-    /* init soup session */
-    vb.session = webkit_get_default_session();
-    g_object_set(vb.session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vb.session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
-    g_object_set(vb.session, "accept-language-auto", true, NULL);
-
-#ifdef FEATURE_COOKIE
-    soup_session_add_feature(
-        vb.session,
-        SOUP_SESSION_FEATURE(cookiejar_new(vb.files[FILES_COOKIE], false))
-    );
-#endif
-}
-
-#ifdef FEATURE_COOKIE
-static SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
+SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
 {
     return g_object_new(
         COOKIEJAR_TYPE,
