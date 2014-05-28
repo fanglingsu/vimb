@@ -54,21 +54,26 @@ gboolean handler_remove(const char *key)
 
 gboolean handle_uri(const char *uri)
 {
-    char *handler = NULL;
+    char *handler;
+    GError *error = NULL;
+    char *cmd;
+    gboolean result;
 
     if (!(handler = handler_lookup(uri))) {
         return false;
     }
 
-    GError *error = NULL;
-    char *cmd = g_strdup_printf(handler, uri);
+    cmd = g_strdup_printf(handler, uri);
     if (!g_spawn_command_line_async(cmd, &error)) {
         g_warning("Can't run '%s': %s", cmd, error->message);
         g_clear_error(&error);
-        return false;
+        result = false;
+    } else {
+        result = true;
     }
 
-    return true;
+    g_free(cmd);
+    return result;
 }
 
 gboolean handler_fill_completion(GtkListStore *store, const char *input)
@@ -92,4 +97,3 @@ static char *handler_lookup(const char *uri)
 
     return handler;
 }
-
