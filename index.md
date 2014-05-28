@@ -44,6 +44,7 @@ But following images may give a impression of they way vimb works.
 - run shell commands from inputbox
 - manipulate http request headers
 - custom [protocol handlers][handlers]
+- HTTP Strict Transport Security (HSTS)
 
 ## packages
 
