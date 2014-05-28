@@ -341,11 +341,15 @@ static void request_started(SoupSessionFeature *feature,
 {
     HSTSProvider *provider = HSTS_PROVIDER(feature);
     SoupURI *uri           = soup_message_get_uri(msg);
+    GTlsCertificate *certificate;
+    GTlsCertificateFlags errors;
+
     if (should_secure_host(provider, uri->host)) {
         if (uri->scheme != SOUP_URI_SCHEME_HTTPS
-            || !(soup_message_get_flags(msg) & SOUP_MESSAGE_CERTIFICATE_TRUSTED)
+            || (soup_message_get_https_status(msg, &certificate, &errors) && errors)
         ) {
             soup_session_cancel_message(session, msg, SOUP_STATUS_SSL_FAILED);
+            g_warning("cancel invalid hsts request to %s://%s", uri->scheme, uri->host);
         }
     }
 }
