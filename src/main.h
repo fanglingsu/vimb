@@ -33,6 +33,9 @@
 #else
 #endif
 #include "config.h"
+#ifdef FEATURE_HSTS
+#include "hsts.h"
+#endif
 
 /* size of some I/O buffer */
 #define BUF_SIZE  512
@@ -310,6 +313,9 @@ typedef struct {
     float        default_zoom;    /* default zoomlevel that is applied on zz zoom reset */
     gboolean     fullscreen;      /* indicates if full screen mode is on */
     gboolean     kioskmode;
+#ifdef FEATURE_HSTS
+    HSTSProvider *hsts_provider;  /* the hsts session feature that is added to soup session */
+#endif
 } Config;
 
 typedef struct {

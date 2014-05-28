@@ -946,16 +946,18 @@ static void session_init(void)
     g_object_unref(cookie);
 #endif
 #ifdef FEATURE_HSTS
-    HSTSProvider *hsts = hsts_provider_new();
-    soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(hsts));
-    g_object_unref(hsts);
+    /* create only the session feature - the feature is added in setting.c
+     * when the setting hsts=on */
+    vb.config.hsts_provider = hsts_provider_new();
 #endif
 }
 
 static void session_cleanup(void)
 {
 #ifdef FEATURE_HSTS
-    /* remove feature from session to make sure the feature is finalized */
+    /* remove feature from session and unref the feature to make sure the
+     * feature is finalized */
+    g_object_unref(vb.config.hsts_provider);
     soup_session_remove_feature_by_type(vb.session, HSTS_TYPE_PROVIDER);
 #endif
 }

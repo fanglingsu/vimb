@@ -24,6 +24,9 @@
 #include "util.h"
 #include "completion.h"
 #include "js.h"
+#ifdef FEATURE_HSTS
+#include "hsts.h"
+#endif
 
 static GHashTable *settings;
 
@@ -55,6 +58,9 @@ static SettingStatus timeoutlen(const Setting *s, const SettingType type);
 static SettingStatus headers(const Setting *s, const SettingType type);
 static SettingStatus nextpattern(const Setting *s, const SettingType type);
 static SettingStatus fullscreen(const Setting *s, const SettingType type);
+#ifdef FEATURE_HSTS
+static SettingStatus hsts(const Setting *s, const SettingType type);
+#endif
 
 static gboolean validate_js_regexp_list(const char *pattern);
 
@@ -128,6 +134,9 @@ static Setting default_settings[] = {
     {NULL, "nextpattern", TYPE_CHAR, nextpattern, {.s = "/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i"}},
     {NULL, "previouspattern", TYPE_CHAR, nextpattern, {.s = "/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/"}},
     {NULL, "fullscreen", TYPE_BOOLEAN, fullscreen, {.i = 0}},
+#ifdef FEATURE_HSTS
+    {NULL, "hsts", TYPE_BOOLEAN, hsts, {.i = 1}},
+#endif
 };
 
 void setting_init(void)
@@ -914,6 +923,33 @@ static SettingStatus fullscreen(const Setting *s, const SettingType type)
 
     return SETTING_OK;
 }
+
+#ifdef FEATURE_HSTS
+static SettingStatus hsts(const Setting *s, const SettingType type)
+{
+    gboolean active;
+    if (type == SETTING_GET) {
+        active = soup_session_has_feature(vb.session, HSTS_TYPE_PROVIDER);
+        print_value(s, &active);
+
+        return SETTING_OK;
+    }
+
+    if (type == SETTING_TOGGLE) {
+        active = !soup_session_has_feature(vb.session, HSTS_TYPE_PROVIDER);
+        print_value(s, &active);
+    } else {
+        active = (s->arg.i != 0);
+    }
+
+    if (active) {
+        soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.hsts_provider));
+    } else {
+        soup_session_remove_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.hsts_provider));
+    }
+    return SETTING_OK;
+}
+#endif
 
 /**
  * Validated syntax given list of JavaScript RegExp patterns.
