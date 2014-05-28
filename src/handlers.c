@@ -63,6 +63,8 @@ gboolean handle_uri(const char *uri)
     GError *error = NULL;
     char *cmd = g_strdup_printf(handler, uri);
     if (!g_spawn_command_line_async(cmd, &error)) {
+        g_warning("Can't run '%s': %s", cmd, error->message);
+        g_clear_error(&error);
         return false;
     }
 
