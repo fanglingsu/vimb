@@ -44,7 +44,7 @@ the [vimb project page][vimb].
 ## dependencies
 - libwebkit >=1.5.0
 - libgtk+-2.0
-- libsoup-2.4
+- libsoup >=2.38
 
 ## install
 Edit config.mk to match your local setup.

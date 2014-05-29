@@ -929,14 +929,14 @@ static SettingStatus hsts(const Setting *s, const SettingType type)
 {
     gboolean active;
     if (type == SETTING_GET) {
-        active = soup_session_has_feature(vb.session, HSTS_TYPE_PROVIDER);
+        active = (soup_session_get_feature(vb.session, HSTS_TYPE_PROVIDER) != NULL);
         print_value(s, &active);
 
         return SETTING_OK;
     }
 
     if (type == SETTING_TOGGLE) {
-        active = !soup_session_has_feature(vb.session, HSTS_TYPE_PROVIDER);
+        active = (soup_session_get_feature(vb.session, HSTS_TYPE_PROVIDER) == NULL);
         print_value(s, &active);
     } else {
         active = (s->arg.i != 0);
