@@ -357,8 +357,9 @@ Moves the cursor after the char in inputbox.
 .B CTRL\-V
 Pass the next key press directly to gtk.
 .TP
-.B CTRL\-R {0-9a-z}
-Insert the content of given buffer at cursor position.
+.B CTRL\-R {a-z%:/}
+Insert the content of given buffer at cursor position. See also section
+REGISTERS.
 .SS Command Line History
 .TP
 .B <Tab>
@@ -580,6 +581,20 @@ Open configured editor with content of current form field.
 .TP
 .B CTRL\-Z
 Enter the pass-through mode.
+.SH REGISTERS
+There are different types of registers.
+.TP
+.BR \[char34]a " - " \[char34]z
+26 named registers "a to "z. Vimb fills these registers only when you say so.
+.TP
+.B \[char34]%
+Contains the curent opened URI.
+.TP
+.B \[char34]:
+Contains the most recent executed ex command.
+.TP
+.B \[char34]/
+Contains the most recent search-pattern.
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<shift-tab>` in the
 activated inputbox. Depending of the current inserted content different

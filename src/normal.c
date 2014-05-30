@@ -270,7 +270,7 @@ VbResult normal_keypress(int key)
     } else if ((char)key == '"') {
         info.phase      = PHASE_CUTBUF;
         vb.mode->flags |= FLAG_NOMAP;
-    } else if (info.phase ==  PHASE_CUTBUF) {
+    } else if (info.phase ==  PHASE_CUTBUF && strchr(VB_REG_CHARS, (char)key)) {
         info.cutbuf = (char)key;
         info.phase  = PHASE_START;
     } else {

@@ -427,9 +427,10 @@ static void input_activate(void)
     switch (*text) {
         case '/': count = 1; /* fall through */
         case '?':
-            history_add(HISTORY_SEARCH, cmd, NULL);
             mode_enter('n');
             command_search(&((Arg){count, cmd}));
+            vb_register_add('/', cmd);
+            history_add(HISTORY_SEARCH, cmd, NULL);
             break;
 
         case ';': /* fall through */
@@ -438,9 +439,10 @@ static void input_activate(void)
             break;
 
         case ':':
-            history_add(HISTORY_COMMAND, cmd, NULL);
             mode_enter('n');
             ex_run_string(cmd);
+            vb_register_add(':', cmd);
+            history_add(HISTORY_COMMAND, cmd, NULL);
             break;
 
     }

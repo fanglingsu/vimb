@@ -513,6 +513,8 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
             vb_update_statusbar();
             vb_update_urlbar(uri);
+            /* save the current URI in register % */
+            vb_register_add('%', uri);
 
             /* clear possible set marks */
             marks_clear();
