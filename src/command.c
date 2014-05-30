@@ -32,7 +32,7 @@ extern VbCore vb;
 gboolean command_search(const Arg *arg)
 {
     static short dir;   /* last direction 1 forward, -1 backward*/
-    static char *query = NULL;
+    const char *query;
     static gboolean newsearch = true;
     gboolean forward;
 
@@ -46,9 +46,12 @@ gboolean command_search(const Arg *arg)
 
     /* copy search query for later use */
     if (arg->s) {
-        OVERWRITE_STRING(query, arg->s);
         /* set dearch dir only when the searching is started */
-        dir = arg->i > 0 ? 1 : -1;
+        dir   = arg->i > 0 ? 1 : -1;
+        query = arg->s;
+    } else {
+        /* no search phrase given - continue a previous search */
+        query = vb_register_get('/');
     }
 
     forward = (arg->i * dir) > 0;
