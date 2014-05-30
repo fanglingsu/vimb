@@ -97,6 +97,8 @@ static void setup_signals();
 static void init_files(void);
 static void session_init(void);
 static void session_cleanup(void);
+static void register_init(void);
+static void register_cleanup(void);
 static gboolean hide_message();
 static void set_status(const StatusType status);
 static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message);
@@ -381,6 +383,7 @@ void vb_quit(void)
     setting_cleanup();
     history_cleanup();
     session_cleanup();
+    register_cleanup();
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
@@ -747,6 +750,7 @@ static void init_core(void)
     init_files();
     session_init();
     setting_init();
+    register_init();
     read_config();
 
     /* initially apply input style */
@@ -960,6 +964,51 @@ static void session_cleanup(void)
     g_object_unref(vb.config.hsts_provider);
     soup_session_remove_feature_by_type(vb.session, HSTS_TYPE_PROVIDER);
 #endif
+}
+
+static void register_init(void)
+{
+    memset(vb.state.reg, 0, sizeof(char*));
+}
+
+void vb_register_add(char buf, const char *value)
+{
+    char *mark;
+    int idx;
+
+    /* make sure the mark is a valid mark char */
+    if ((mark = strchr(VB_REG_CHARS, buf))) {
+        /* get the index of the mark char */
+        idx = mark - VB_REG_CHARS;
+
+        OVERWRITE_STRING(vb.state.reg[idx], value);
+    }
+}
+
+const char *vb_register_get(char buf)
+{
+    char *mark;
+    int idx;
+
+    /* make sure the mark is a valid mark char */
+    if ((mark = strchr(VB_REG_CHARS, buf))) {
+        /* get the index of the mark char */
+        idx = mark - VB_REG_CHARS;
+
+        return vb.state.reg[idx];
+    }
+
+    return NULL;
+}
+
+static void register_cleanup(void)
+{
+    int i;
+    for (i = 0; i < VB_REG_SIZE; i++) {
+        if (vb.state.reg[i]) {
+            g_free(vb.state.reg[i]);
+        }
+    }
 }
 
 static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)

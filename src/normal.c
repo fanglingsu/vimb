@@ -37,15 +37,19 @@ typedef enum {
     PHASE_KEY2,
     PHASE_KEY3,
     PHASE_COMPLETE,
+    PHASE_CUTBUF,
 } Phase;
 
-struct NormalCmdInfo_s {
+typedef struct NormalCmdInfo_s {
     int count;   /* count used for the command */
     char key;    /* command key */
     char key2;   /* second command key (optional) */
     char key3;   /* third command key only for hinting */
+    char cutbuf; /* char for the cut buffer */
     Phase phase; /* current parsing phase */
-} info = {0, '\0', '\0', PHASE_START};
+} NormalCmdInfo;
+
+static NormalCmdInfo info = {0, '\0', '\0', PHASE_START};
 
 typedef VbResult (*NormalCommand)(const NormalCmdInfo *info);
 
@@ -263,6 +267,12 @@ VbResult normal_keypress(int key)
         info.phase      = PHASE_KEY2;
         info.key        = key;
         vb.mode->flags |= FLAG_NOMAP;
+    } else if ((char)key == '"') {
+        info.phase      = PHASE_CUTBUF;
+        vb.mode->flags |= FLAG_NOMAP;
+    } else if (info.phase ==  PHASE_CUTBUF) {
+        info.cutbuf = (char)key;
+        info.phase  = PHASE_START;
     } else {
         info.key   = key;
         info.phase = PHASE_COMPLETE;
@@ -284,7 +294,7 @@ VbResult normal_keypress(int key)
 
     if (res == RESULT_COMPLETE) {
         /* unset the info */
-        info.key = info.key2 = info.key3 = info.count = 0;
+        info.key = info.key2 = info.key3 = info.count = info.cutbuf = 0;
         info.phase = PHASE_START;
     } else if (res == RESULT_MORE) {
         normal_showcmd(key);
@@ -564,9 +574,15 @@ static VbResult normal_open_clipboard(const NormalCmdInfo *info)
 {
     Arg a = {info->key == 'P' ? VB_TARGET_NEW : VB_TARGET_CURRENT};
 
-    a.s = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
-    if (!a.s) {
-        a.s = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
+    /* if cutbuffer is not the default - read out of the internal cutbuffer */
+    if (info->cutbuf) {
+        a.s = g_strdup(vb_register_get(info->cutbuf));
+    } else {
+        /* if no cutbuffer is given use the system clipboard */
+        a.s = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+        if (!a.s) {
+            a.s = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
+        }
     }
 
     if (a.s) {
@@ -763,7 +779,7 @@ static VbResult normal_yank(const NormalCmdInfo *info)
 {
     Arg a = {info->key == 'Y' ? COMMAND_YANK_SELECTION : COMMAND_YANK_URI};
 
-    return command_yank(&a) ? RESULT_COMPLETE : RESULT_ERROR;
+    return command_yank(&a, info->cutbuf) ? RESULT_COMPLETE : RESULT_ERROR;
 }
 
 static VbResult normal_zoom(const NormalCmdInfo *info)

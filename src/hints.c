@@ -327,7 +327,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
             case 'Y':
                 a.i = COMMAND_YANK_ARG;
                 a.s = v;
-                command_yank(&a);
+                command_yank(&a, '\0');
                 break;
 
 #ifdef FEATURE_QUEUE

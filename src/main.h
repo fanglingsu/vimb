@@ -115,6 +115,9 @@
 #define VB_MARK_TICK    0
 #define VB_MARK_SIZE    (sizeof(VB_MARK_CHARS) - 1)
 
+#define VB_REG_CHARS    "0123456789abcdefghijklmnopqrstuvwxyz"
+#define VB_REG_SIZE     (sizeof(VB_REG_CHARS) - 1)
+
 /* enums */
 typedef enum {
     RESULT_COMPLETE,
@@ -290,6 +293,8 @@ typedef struct {
     char            prompt[PROMPT_SIZE];    /* current prompt ':', 'g;t', '/' including nul */
     gdouble         marks[VB_MARK_SIZE];    /* holds marks set to page with 'm{markchar}' */
     char            *linkhover;             /* the uri of the curret hovered link */
+    GHashTable      *buffer;                /* holds the yank buffer */
+    char            *reg[VB_REG_SIZE];      /* holds the yank buffer */
 } State;
 
 typedef struct {
@@ -364,6 +369,8 @@ void vb_update_statusbar(void);
 void vb_update_status_style(void);
 void vb_update_input_style(void);
 void vb_update_urlbar(const char *uri);
+void vb_register_add(char buf, const char *value);
+const char *vb_register_get(char buf);
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);
 void vb_quit(void);
 

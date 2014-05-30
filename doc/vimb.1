@@ -112,11 +112,12 @@ Open the last closed page into a new window.
 Open the oldest entry from read it later queue in current browser window, if
 vimb has been compiled with QUEUE feature.
 .TP
-.B p
-Open the URI out of the clipboard.
+.BI [ \[char34]x ]p
+Open the URI out of the register \fIx\fP or if not given from clipboard.
 .TP
-.B P
-Open the URI out of the clipboard into new window.
+.BI [ \[char34]x ]P
+Open the URI out of the register \fIx\fP or if not given from clipboard into
+new window.
 .TP
 .BI [ N ]CTRL\-O
 Go back \fIN\fP steps in the browser history.
@@ -324,11 +325,11 @@ Full-Content Zoom-Out the page by \fIN\fP steps.
 Reset Zoom.
 .SS Yank
 .TP
-.B y
-Yank the URI or current page into clipboard.
+.BI [ \[char34]x ]y
+Yank the URI or current page into register \fIx\fP and clipboard.
 .TP
-.B Y
-Yank the current selection into clipboard.
+.BI [ \[char34]x ]Y
+Yank the current selection into register \fIx\fP and clipboard.
 .SH COMMAND MODE
 .SS Command Line Editing
 .TP
@@ -355,6 +356,9 @@ Moves the cursor after the char in inputbox.
 .TP
 .B CTRL\-V
 Pass the next key press directly to gtk.
+.TP
+.B CTRL\-R {0-9a-z}
+Insert the content of given buffer at cursor position.
 .SS Command Line History
 .TP
 .B <Tab>

@@ -41,7 +41,7 @@ enum {
 #endif
 
 gboolean command_search(const Arg *arg);
-gboolean command_yank(const Arg *arg);
+gboolean command_yank(const Arg *arg, char buf);
 gboolean command_save(const Arg *arg);
 #ifdef FEATURE_QUEUE
 gboolean command_queue(const Arg *arg);

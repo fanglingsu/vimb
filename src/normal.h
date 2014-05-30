@@ -23,8 +23,6 @@
 #include "config.h"
 #include "main.h"
 
-typedef struct NormalCmdInfo_s NormalCmdInfo;
-
 void normal_enter(void);
 void normal_leave(void);
 VbResult normal_keypress(int key);

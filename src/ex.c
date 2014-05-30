@@ -39,6 +39,7 @@
 #include "handlers.h"
 #include "map.h"
 #include "js.h"
+#include "normal.h"
 
 typedef enum {
     EX_BMA,
@@ -74,6 +75,11 @@ typedef enum {
     EX_TABOPEN,
 } ExCode;
 
+typedef enum {
+    PHASE_START,
+    PHASE_CUTBUF,
+} Phase;
+
 typedef struct {
     int        count;    /* commands count */
     int        idx;      /* index in commands array */
@@ -98,6 +104,11 @@ typedef struct {
 #define EX_FLAG_EXP    0x008  /* expand pattern like % or %:p in rhs */
     int        flags;
 } ExInfo;
+
+static struct {
+    char cutbuf; /* char for the cut buffer */
+    Phase phase; /* current parsing phase */
+} info = {'\0', PHASE_START};
 
 static void input_activate(void);
 static gboolean parse(const char **input, ExArg *arg);
@@ -215,92 +226,125 @@ VbResult ex_keypress(int key)
     GtkTextIter start, end;
     GtkTextBuffer *buffer = vb.gui.buffer;
     GtkTextMark *mark;
+    VbResult res;
+    const char *text;
 
     /* delegate call to the submode */
     if (RESULT_COMPLETE == hints_keypress(key)) {
         return RESULT_COMPLETE;
     }
 
-    switch (key) {
-        case KEY_TAB:
-            complete(1);
-            break;
+    /* process the custbuffer */
+    if (info.phase == PHASE_CUTBUF) {
+        info.cutbuf = (char)key;
+        info.phase  = PHASE_CUTBUF;
 
-        case KEY_SHIFT_TAB:
-            complete(-1);
-            break;
+        /* insert the cutbuffer text at cursor position */
+        text = vb_register_get((char)key);
+        if (text) {
+            gtk_text_buffer_insert_at_cursor(buffer, text, strlen(text));
+        }
 
-        case CTRL('['):
-        case CTRL('C'):
-            mode_enter('n');
-            vb_set_input_text("");
-            break;
+        res = RESULT_COMPLETE;
+    } else {
+        res = RESULT_COMPLETE;
+        switch (key) {
+            case KEY_TAB:
+                complete(1);
+                break;
 
-        case KEY_CR:
-            input_activate();
-            break;
+            case KEY_SHIFT_TAB:
+                complete(-1);
+                break;
 
-        case KEY_UP:
-            history(true);
-            break;
+            case CTRL('['):
+            case CTRL('C'):
+                mode_enter('n');
+                vb_set_input_text("");
+                break;
 
-        case KEY_DOWN:
-            history(false);
-            break;
+            case KEY_CR:
+                input_activate();
+                break;
 
-        /* basic command line editing */
-        case CTRL('H'):
-            /* delete the last char before the cursor */
-            mark = gtk_text_buffer_get_insert(buffer);
-            gtk_text_buffer_get_iter_at_mark(buffer, &start, mark);
-            gtk_text_buffer_backspace(buffer, &start, true, true);
-            break;
+            case KEY_UP:
+                history(true);
+                break;
 
-        case CTRL('W'):
-            /* delete word backward from cursor */
-            mark = gtk_text_buffer_get_insert(buffer);
-            gtk_text_buffer_get_iter_at_mark(buffer, &end, mark);
+            case KEY_DOWN:
+                history(false);
+                break;
 
-            /* copy the iter to build start and end point for deletion */
-            start = end;
+            /* basic command line editing */
+            case CTRL('H'):
+                /* delete the last char before the cursor */
+                mark = gtk_text_buffer_get_insert(buffer);
+                gtk_text_buffer_get_iter_at_mark(buffer, &start, mark);
+                gtk_text_buffer_backspace(buffer, &start, true, true);
+                break;
 
-            /* move the iterator to the beginning of previous word */
-            if (gtk_text_iter_backward_word_start(&start)) {
+            case CTRL('W'):
+                /* delete word backward from cursor */
+                mark = gtk_text_buffer_get_insert(buffer);
+                gtk_text_buffer_get_iter_at_mark(buffer, &end, mark);
+
+                /* copy the iter to build start and end point for deletion */
+                start = end;
+
+                /* move the iterator to the beginning of previous word */
+                if (gtk_text_iter_backward_word_start(&start)) {
+                    gtk_text_buffer_delete(buffer, &start, &end);
+                }
+                break;
+
+            case CTRL('B'):
+                /* move the cursor direct behind the prompt */
+                gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(vb.state.prompt));
+                gtk_text_buffer_place_cursor(buffer, &start);
+                break;
+
+            case CTRL('E'):
+                /* move the cursor to the end of line */
+                gtk_text_buffer_get_end_iter(buffer, &start);
+                gtk_text_buffer_place_cursor(buffer, &start);
+                break;
+
+            case CTRL('U'):
+                /* remove everythings between cursor and prompt */
+                mark = gtk_text_buffer_get_insert(buffer);
+                gtk_text_buffer_get_iter_at_mark(buffer, &end, mark);
+                gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(vb.state.prompt));
                 gtk_text_buffer_delete(buffer, &start, &end);
-            }
-            break;
+                break;
 
-        case CTRL('B'):
-            /* move the cursor direct behind the prompt */
-            gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(vb.state.prompt));
-            gtk_text_buffer_place_cursor(buffer, &start);
-            break;
+            case CTRL('R'):
+                info.cutbuf     = (char)key;
+                info.phase      = PHASE_CUTBUF;
+                vb.mode->flags |= FLAG_NOMAP;
+                res             = RESULT_MORE;
+                break;
 
-        case CTRL('E'):
-            /* move the cursor to the end of line */
-            gtk_text_buffer_get_end_iter(buffer, &start);
-            gtk_text_buffer_place_cursor(buffer, &start);
-            break;
-
-        case CTRL('U'):
-            /* remove everythings between cursor and prompt */
-            mark = gtk_text_buffer_get_insert(buffer);
-            gtk_text_buffer_get_iter_at_mark(buffer, &end, mark);
-            gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(vb.state.prompt));
-            gtk_text_buffer_delete(buffer, &start, &end);
-            break;
-
-        default:
-            /* if is printable ascii char, than write it at the cursor
-             * position into input box */
-            if (key >= 0x20 && key <= 0x7e) {
-                gtk_text_buffer_insert_at_cursor(buffer, (char[2]){key, 0}, 1);
-            } else {
-                vb.state.processed_key = false;
-            }
+            default:
+                /* if is printable ascii char, than write it at the cursor
+                * position into input box */
+                if (key >= 0x20 && key <= 0x7e) {
+                    gtk_text_buffer_insert_at_cursor(buffer, (char[2]){key, 0}, 1);
+                } else {
+                    vb.state.processed_key = false;
+                }
+        }
     }
 
-    return RESULT_COMPLETE;
+    if (res == RESULT_COMPLETE) {
+        info.cutbuf = 0;
+        info.phase  = PHASE_START;
+    } else {
+        /* if the key sequence is not complete show the already typed keys in
+         * status bar */
+        normal_showcmd(key);
+    }
+
+    return res;
 }
 
 /**
