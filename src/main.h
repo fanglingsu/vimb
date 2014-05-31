@@ -294,7 +294,6 @@ typedef struct {
     char            prompt[PROMPT_SIZE];    /* current prompt ':', 'g;t', '/' including nul */
     gdouble         marks[VB_MARK_SIZE];    /* holds marks set to page with 'm{markchar}' */
     char            *linkhover;             /* the uri of the curret hovered link */
-    GHashTable      *buffer;                /* holds the yank buffer */
     char            *reg[VB_REG_SIZE];      /* holds the yank buffer */
 } State;
 
