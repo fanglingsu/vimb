@@ -677,9 +677,9 @@ static void init_core(void)
     gui->inspector = webkit_web_view_get_inspector(gui->webview);
 
     /* Create a scrollable area */
-    gui->scroll = gtk_scrolled_window_new(NULL, NULL);
-    gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
-    gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(gui->scroll));
+    GtkWidget *scroll = gtk_scrolled_window_new(NULL, NULL);
+    gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(scroll));
+    gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll));
 
 #ifdef FEATURE_NO_SCROLLBARS
 #ifdef HAS_GTK3
@@ -696,7 +696,7 @@ static void init_core(void)
         );
 #else /* no GTK3 */
     /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(gui->scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
 #endif
 #endif
 
@@ -723,7 +723,7 @@ static void init_core(void)
     gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), true, true);
 
     /* Put all part together */
-    gtk_container_add(GTK_CONTAINER(gui->scroll), GTK_WIDGET(gui->webview));
+    gtk_container_add(GTK_CONTAINER(scroll), GTK_WIDGET(gui->webview));
     gtk_container_add(GTK_CONTAINER(gui->eventbox), GTK_WIDGET(gui->statusbar.box));
     gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->pane));
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
@@ -733,7 +733,7 @@ static void init_core(void)
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.cmd, false, false, 0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, false, false, 2);
 
-    gtk_box_pack_start(gui->box, gui->scroll, true, true, 0);
+    gtk_box_pack_start(gui->box, scroll, true, true, 0);
     gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
     gtk_box_pack_end(gui->box, gui->input, false, false, 0);
 

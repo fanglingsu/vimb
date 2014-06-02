@@ -266,7 +266,6 @@ typedef struct {
 /* gui */
 typedef struct {
     GtkWidget          *window;
-    GtkWidget          *scroll;
     WebKitWebView      *webview;
     WebKitWebInspector *inspector;
     GtkBox             *box;
@@ -275,8 +274,6 @@ typedef struct {
     GtkTextBuffer      *buffer; /* text buffer associated with the input for fast access */
     GtkWidget          *pane;
     StatusBar          statusbar;
-    GtkScrollbar       *sb_h;
-    GtkScrollbar       *sb_v;
     GtkAdjustment      *adjust_h;
     GtkAdjustment      *adjust_v;
 } Gui;
