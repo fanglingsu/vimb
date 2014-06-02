@@ -224,6 +224,7 @@ void ex_leave(void)
 VbResult ex_keypress(int key)
 {
     GtkTextIter start, end;
+    gboolean check_empty  = false;
     GtkTextBuffer *buffer = vb.gui.buffer;
     GtkTextMark *mark;
     VbResult res;
@@ -281,6 +282,7 @@ VbResult ex_keypress(int key)
                 mark = gtk_text_buffer_get_insert(buffer);
                 gtk_text_buffer_get_iter_at_mark(buffer, &start, mark);
                 gtk_text_buffer_backspace(buffer, &start, true, true);
+                check_empty = true;
                 break;
 
             case CTRL('W'):
@@ -295,6 +297,7 @@ VbResult ex_keypress(int key)
                 if (gtk_text_iter_backward_word_start(&start)) {
                     gtk_text_buffer_delete(buffer, &start, &end);
                 }
+                check_empty = true;
                 break;
 
             case CTRL('B'):
@@ -332,6 +335,16 @@ VbResult ex_keypress(int key)
                 } else {
                     vb.state.processed_key = false;
                 }
+        }
+    }
+
+    /* if the user deleted some content of the inputbox we check if the
+     * inputbox is empty - if so we switch back to normal like vim does */
+    if (check_empty) {
+        gtk_text_buffer_get_bounds(buffer, &start, &end);
+        if (gtk_text_iter_equal(&start, &end)) {
+            mode_enter('n');
+            vb_set_input_text("");
         }
     }
 
