@@ -853,7 +853,7 @@ static SettingStatus headers(const Setting *s, const SettingType type)
 
         if (vb.config.headers) {
             str = g_string_new("");
-            /* build a list woth the header values */
+            /* build a list with the header values */
             g_hash_table_iter_init(&iter, vb.config.headers);
             while (g_hash_table_iter_next(&iter, (gpointer*)&key, (gpointer*)&value)) {
                 g_string_append_c(str, ',');

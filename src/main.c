@@ -565,7 +565,7 @@ static void webview_request_starting_cb(WebKitWebView *view,
     hsts_prepare_message(vb.session, msg);
 #endif
 
-    if (vb.config.headers) {
+    if (!vb.config.headers) {
         return;
     }
 
