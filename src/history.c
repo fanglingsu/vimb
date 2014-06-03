@@ -68,8 +68,13 @@ void history_cleanup(void)
  */
 void history_add(HistoryType type, const char *value, const char *additional)
 {
-    const char *file = get_file_by_type(type);
+    const char *file;
 
+    if (!vb.state.enable_history) {
+        return;
+    }
+
+    file = get_file_by_type(type);
     if (additional) {
         util_file_append(file, "%s\t%s\n", value, additional);
     } else {

@@ -432,17 +432,12 @@ static void input_activate(void)
     text = vb_get_input_text();
 
     /* skip leading prompt char like ':' or '/' */
-    /* TODO should we use a flag to determine if we should record the command
-     * into the history - maybe it's not good to save commands in history that
-     * where triggered by a map like ':name \, :set scripts!<cr>' - by the way
-     * does vim also skip history recording for such mapped commands */
     cmd = text + 1;
     switch (*text) {
         case '/': count = 1; /* fall through */
         case '?':
             mode_enter('n');
             command_search(&((Arg){count, cmd}));
-            history_add(HISTORY_SEARCH, cmd, NULL);
             break;
 
         case ';': /* fall through */
@@ -453,10 +448,6 @@ static void input_activate(void)
         case ':':
             mode_enter('n');
             ex_run_string(cmd);
-            /* TODO fill register and history in ex_run_string but not if this
-             * is called on reading the config file */
-            vb_register_add(':', cmd);
-            history_add(HISTORY_COMMAND, cmd, NULL);
             break;
 
     }
@@ -468,6 +459,9 @@ gboolean ex_run_string(const char *input)
     ExArg *arg = g_new0(ExArg, 1);
     arg->lhs   = g_string_new("");
     arg->rhs   = g_string_new("");
+
+    vb_register_add(':', input);
+    history_add(HISTORY_COMMAND, input, NULL);
 
     while (input && *input) {
         if (!parse(&input, arg) || !execute(arg)) {

@@ -51,6 +51,7 @@ gboolean command_search(const Arg *arg)
         query = arg->s;
         /* add new search query to history and search register */
         vb_register_add('/', query);
+        history_add(HISTORY_SEARCH, query, NULL);
     } else {
         /* no search phrase given - continue a previous search */
         query = vb_register_get('/');

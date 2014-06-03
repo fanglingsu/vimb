@@ -292,6 +292,8 @@ typedef struct {
     gdouble         marks[VB_MARK_SIZE];    /* holds marks set to page with 'm{markchar}' */
     char            *linkhover;             /* the uri of the curret hovered link */
     char            *reg[VB_REG_SIZE];      /* holds the yank buffer */
+    gboolean        enable_register;        /* indicates if registers are filled */
+    gboolean        enable_history;         /* indicates if history entries are written */
 } State;
 
 typedef struct {

@@ -652,7 +652,6 @@ static void set_status(const StatusType status)
 static void init_core(void)
 {
     Gui *gui = &vb.gui;
-    WebKitWebSettings *setting;
 
     if (vb.embed) {
         gui->window = gtk_plug_new(vb.embed);
@@ -737,6 +736,10 @@ static void init_core(void)
     gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
     gtk_box_pack_end(gui->box, gui->input, false, false, 0);
 
+    /* init some state variable */
+    vb.state.enable_register = false;
+    vb.state.enable_history  = false;
+
     /* initialize the modes */
     mode_init();
     mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
@@ -760,11 +763,11 @@ static void init_core(void)
 
     setup_signals();
 
-    setting = webkit_web_view_get_settings(gui->webview);
-
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
     if (vb.config.kioskmode) {
+        WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
+
         /* hide input box - to not create it would be better, but this needs a
          * lot of changes in the code where the input is used */
         gtk_widget_hide(vb.gui.input);
@@ -774,6 +777,8 @@ static void init_core(void)
     }
 
     /* enter normal mode */
+    vb.state.enable_register = true;
+    vb.state.enable_history  = true;
     mode_enter('n');
 
     vb.config.default_zoom = 1.0;
@@ -783,6 +788,7 @@ static void init_core(void)
     GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(vb.gui.window));
     gdouble dpi = gdk_screen_get_resolution(screen);
     if (dpi != -1) {
+        WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
         webkit_web_view_set_full_content_zoom(gui->webview, true);
         g_object_set(G_OBJECT(setting), "enforce-96-dpi", true, NULL);
 
@@ -977,6 +983,10 @@ void vb_register_add(char buf, const char *value)
 {
     char *mark;
     int idx;
+
+    if (!vb.state.enable_register) {
+        return;
+    }
 
     /* make sure the mark is a valid mark char */
     if ((mark = strchr(VB_REG_CHARS, buf))) {
