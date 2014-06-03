@@ -102,9 +102,7 @@ gboolean command_yank(const Arg *arg, char buf)
         }
         if (text) {
             /* put the text into the yank buffer */
-            if (strchr(VB_USER_REG, buf)) {
-                vb_register_add(buf, text);
-            }
+            vb_register_add(buf, text);
             vb_echo(VB_MSG_NORMAL, false, tmpl, text);
             g_free(text);
 
@@ -125,9 +123,7 @@ gboolean command_yank(const Arg *arg, char buf)
     if (a.s) {
         /* put the text into the yank buffer */
         vb_set_clipboard(&a);
-        if (strchr(VB_USER_REG, buf)) {
-            vb_register_add(buf, a.s);
-        }
+        vb_register_add(buf, a.s);
         vb_echo(VB_MSG_NORMAL, false, tmpl, a.s);
 
         return true;

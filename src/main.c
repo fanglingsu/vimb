@@ -984,7 +984,7 @@ void vb_register_add(char buf, const char *value)
     char *mark;
     int idx;
 
-    if (!vb.state.enable_register) {
+    if (!vb.state.enable_register || !buf) {
         return;
     }
 
