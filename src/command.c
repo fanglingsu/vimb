@@ -49,6 +49,8 @@ gboolean command_search(const Arg *arg)
         /* set dearch dir only when the searching is started */
         dir   = arg->i > 0 ? 1 : -1;
         query = arg->s;
+        /* add new search query to history and search register */
+        vb_register_add('/', query);
     } else {
         /* no search phrase given - continue a previous search */
         query = vb_register_get('/');

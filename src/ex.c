@@ -442,7 +442,6 @@ static void input_activate(void)
         case '?':
             mode_enter('n');
             command_search(&((Arg){count, cmd}));
-            vb_register_add('/', cmd);
             history_add(HISTORY_SEARCH, cmd, NULL);
             break;
 
@@ -454,6 +453,8 @@ static void input_activate(void)
         case ':':
             mode_enter('n');
             ex_run_string(cmd);
+            /* TODO fill register and history in ex_run_string but not if this
+             * is called on reading the config file */
             vb_register_add(':', cmd);
             history_add(HISTORY_COMMAND, cmd, NULL);
             break;
