@@ -45,6 +45,7 @@ But following images may give a impression of they way vimb works.
 - manipulate http request headers
 - custom [protocol handlers][handlers]
 - HTTP Strict Transport Security (HSTS)
+- multiple yank/paste [registers][]
 
 ## packages
 
@@ -80,6 +81,7 @@ If you find a misbehaviour or have feature requests use the
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
 [keybindings]: keybindings.html "vimb keybindings"
+[registers]:   keybindings.html#registers "vimb yank/paste registers"
 [handlers]:    commands.html#handlers "vimb custom protocol handlers"
 [hints]:       keybindings.html#hinting "vimb hinting"
 [history]:     keybindings.html#history "vimb keybindings to access history"

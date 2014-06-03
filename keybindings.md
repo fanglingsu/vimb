@@ -66,11 +66,12 @@ CTRL-P
 : Open the oldest entry from read it later queue in current browser window, if
 : vimb has been compiled with QUEUE feature.
 
-p
-: Open the url out of the clipboard.
+[*"x*]p
+: Open the URI out of the register *x* or if not given from clipboard.
 
-P
-: Open the url out of the clipboard into new window.
+[*"x*]P
+: Open the URI out of the register *x* or if not given from clipboard into new
+  window.
 
 [*N*]UP
 : Go back *N* steps in the browser history.
@@ -277,11 +278,11 @@ zz
 
 ### yank
 
-y
-: Yank the URI or current page into clipboard.
+[*"x*]y
+: Yank the URI or current page into register *x* and clipboard.
 
-Y
-: Yank the current selection into clipboard.
+[*"x*]Y
+: Yank the current selection into register *x* and clipboard.
 
 ## command mode
 
@@ -311,6 +312,10 @@ CTRL-E
 CTRL-V
 : Pass the next key press directly to GTK.
 
+CTRL-R {a-z%:/}
+: Insert the content of given register at cursor position. See also section
+  [registers](#registers)
+
 ### command line history
 {:#history}
 
@@ -336,3 +341,21 @@ CTRL-T
 
 CTRL-Z
 : Enter the pass-through mode.
+
+## registers
+{:#registers}
+
+There are different types of registers.
+
+"a - "z
+: 26 named registers "a to "z. Vimb fills these registers only when you say
+  so.
+
+"%
+: Contains the curent opened URI.
+
+":
+: Contains the most recent executed ex command.
+
+"/
+: Contains the most recent search-pattern.
