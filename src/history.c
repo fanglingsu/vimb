@@ -22,6 +22,7 @@
 #include "history.h"
 #include "util.h"
 #include "completion.h"
+#include "ascii.h"
 
 extern VbCore vb;
 
@@ -237,7 +238,7 @@ static History *line_to_history(const char *line)
     char **parts;
     int len;
 
-    while (g_ascii_isspace(*line)) {
+    while (VB_IS_SPACE(*line)) {
         line++;
     }
     if (!*line) {

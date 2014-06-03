@@ -54,9 +54,8 @@ gboolean handler_remove(const char *key)
 
 gboolean handle_uri(const char *uri)
 {
-    char *handler;
+    char *handler, *cmd;
     GError *error = NULL;
-    char *cmd;
     gboolean result;
 
     if (!(handler = handler_lookup(uri))) {

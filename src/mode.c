@@ -22,6 +22,7 @@
 #include "mode.h"
 #include "normal.h"
 #include "ascii.h"
+#include <glib.h>
 
 static GHashTable *modes = NULL;
 extern VbCore vb;
@@ -62,10 +63,8 @@ void mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
 void mode_enter(char id)
 {
     Mode *new = g_hash_table_lookup(modes, GINT_TO_POINTER(id));
-    if (!new) {
-        PRINT_DEBUG("!mode %c not found", id);
-        return;
-    }
+
+    g_return_if_fail(new != NULL);
 
     if (vb.mode) {
         /* don't do anything if the mode isn't a new one */

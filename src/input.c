@@ -83,7 +83,7 @@ VbResult input_open_editor(void)
     GPid pid;
     gboolean success;
 
-    if (!vb.config.editor_command) {
+    if (!vb.config.editor_command || !*vb.config.editor_command) {
         vb_echo(VB_MSG_ERROR, true, "No editor-command configured");
         return RESULT_ERROR;
     }

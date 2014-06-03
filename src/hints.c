@@ -263,9 +263,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
 {
     char *value = js_object_call_function(hints.ctx, hints.obj, func, count, params);
 
-    if (!value) {
-        return false;
-    }
+    g_return_val_if_fail(value != NULL, false);
 
     if (!strncmp(value, "ERROR:", 6)) {
         g_free(value);

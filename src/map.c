@@ -311,8 +311,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
         }
     }
 
-    /* should never be reached */
-    return MAP_DONE;
+    g_return_val_if_reached(MAP_DONE);
 }
 
 /**

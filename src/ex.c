@@ -329,7 +329,7 @@ VbResult ex_keypress(int key)
 
             default:
                 /* if is printable ascii char, than write it at the cursor
-                * position into input box */
+                 * position into input box */
                 if (key >= 0x20 && key <= 0x7e) {
                     gtk_text_buffer_insert_at_cursor(buffer, (char[2]){key, 0}, 1);
                 } else {
@@ -821,9 +821,8 @@ static gboolean ex_open(const ExArg *arg)
 {
     if (arg->code == EX_TABOPEN) {
         return vb_load_uri(&((Arg){VB_TARGET_NEW, arg->rhs->str}));
-    } else {
-        return vb_load_uri(&((Arg){VB_TARGET_CURRENT, arg->rhs->str}));
     }
+    return vb_load_uri(&((Arg){VB_TARGET_CURRENT, arg->rhs->str}));
 }
 
 #ifdef FEATURE_QUEUE
@@ -875,7 +874,6 @@ static gboolean ex_save(const ExArg *arg)
 
 static gboolean ex_set(const ExArg *arg)
 {
-    gboolean success;
     char *param = NULL;
 
     if (!arg->rhs->len) {
@@ -885,12 +883,10 @@ static gboolean ex_set(const ExArg *arg)
     /* split the input string into parameter and value part */
     if ((param = strchr(arg->rhs->str, '='))) {
         *param++ = '\0';
-        success  = setting_run(arg->rhs->str, param ? param : NULL);
-    } else {
-        success = setting_run(arg->rhs->str, NULL);
+        return setting_run(arg->rhs->str, param ? param : NULL);
     }
 
-    return success;
+    return setting_run(arg->rhs->str, NULL);
 }
 
 static gboolean ex_shellcmd(const ExArg *arg)

@@ -102,9 +102,7 @@ char* js_object_call_function(JSContextRef ctx, JSObjectRef obj,
     JSStringRef js_func = NULL;
     char *value;
 
-    if (!obj) {
-        return NULL;
-    }
+    g_return_val_if_fail(obj != NULL, NULL);
 
     js_func = JSStringCreateWithUTF8CString(func);
     if (!JSObjectHasProperty(ctx, obj, js_func)) {
@@ -124,7 +122,7 @@ char* js_object_call_function(JSContextRef ctx, JSObjectRef obj,
 }
 
 /**
- * Retrune a new allocates string for given valeu reference.
+ * Retrune a new allocates string for given value reference.
  * String must be freed if not used anymore.
  */
 char* js_ref_to_string(JSContextRef ctx, JSValueRef ref)
@@ -133,9 +131,7 @@ char* js_ref_to_string(JSContextRef ctx, JSValueRef ref)
     size_t len;
     JSStringRef str_ref;
 
-    if (!ref) {
-        return NULL;
-    }
+    g_return_val_if_fail(ref != NULL, NULL);
 
     str_ref = JSValueToStringCopy(ctx, ref, NULL);
     len     = JSStringGetMaximumUTF8CStringSize(str_ref);
