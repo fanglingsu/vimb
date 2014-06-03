@@ -660,7 +660,7 @@ static gboolean parse_rhs(const char **input, ExArg *arg)
             if (!*input) {
                 /* if input ends here - use only the backslash */
                 g_string_append_c(arg->rhs, quote);
-            } else if (**input == '|') {
+            } else if (**input == '|' || **input == '%') {
                 /* escaped char becomes only char */
                 g_string_append_c(arg->rhs, **input);
             } else {
