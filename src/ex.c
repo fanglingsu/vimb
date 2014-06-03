@@ -21,8 +21,8 @@
  * This file contains function to handle input editing, parsing of called ex
  * commands from inputbox and the ex commands.
  */
-#include <sys/wait.h>
 #include "config.h"
+#include <sys/wait.h>
 #include "main.h"
 #include "ex.h"
 #include "ascii.h"

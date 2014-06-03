@@ -24,6 +24,7 @@
 #include "input.h"
 #include "dom.h"
 #include "util.h"
+#include "ascii.h"
 
 typedef struct {
     char    *file;

@@ -507,13 +507,11 @@ static char *convert_keys(char *in, int inlen, int *len)
             if (symlen == 5 && p[2] == '-') {
                 /* is it a <C-X> */
                 if (p[1] == 'C') {
-                    /* TODO add macro to check if the char is a upper or lower
-                     * with these ranges */
-                    if (p[3] >= 0x41 && p[3] <= 0x5d) {
+                    if (VB_IS_UPPER(p[3])) {
                         ch[0]  = p[3] - 0x40;
                         raw    = ch;
                         rawlen = 1;
-                    } else if (p[3] >= 0x61 && p[3] <= 0x7a) {
+                    } else if (VB_IS_LOWER(p[3])) {
                         ch[0]  = p[3] - 0x60;
                         raw    = ch;
                         rawlen = 1;

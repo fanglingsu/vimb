@@ -42,22 +42,22 @@
 #define SC VB_SPACE|VB_CTRL
 #define PI VB_PUNKT|VB_IDENT
 static const unsigned char chartable[256] = {
-    C,  C,  C,  C,  C,  C,  C,  C,  C, SC, SC,  C, SC, SC,  C,  C,
-    C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,
-    S,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    D,  D,  D,  D,  D,  D,  D,  D,  D,  D,  P,  P,  P,  P,  P,  P,
-   PI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI,
-   UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI,  P,  P,  P,  P, PI,
-    P, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI,
-   LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI,  P,  P,  P,  P,  C,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
-    P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P
+/* 0x00-0x0f */  C,  C,  C,  C,  C,  C,  C,  C,  C, SC, SC,  C, SC, SC,  C,  C,
+/* 0x10-0x1f */  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,  C,
+/* 0x20-0x2f */  S,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0x30-0x3f */  D,  D,  D,  D,  D,  D,  D,  D,  D,  D,  P,  P,  P,  P,  P,  P,
+/* 0x40-0x4f */ PI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI,
+/* 0x50-0x5f */ UI, UI, UI, UI, UI, UI, UI, UI, UI, UI, UI,  P,  P,  P,  P, PI,
+/* 0x60-0x6f */  P, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI,
+/* 0x70-0x7f */ LI, LI, LI, LI, LI, LI, LI, LI, LI, LI, LI,  P,  P,  P,  P,  C,
+/* 0x80-0x8f */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0x90-0x9f */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0xa0-0xaf */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0xb0-0xbf */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0xc0-0xcf */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0xd0-0xdf */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0xe0-0xef */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,
+/* 0xf0-0xff */  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P,  P
 };
 #undef U
 #undef L
@@ -84,6 +84,10 @@ static const unsigned char chartable[256] = {
  * and is always followed by two bytes. */
 #define CSI         0x80
 #define CSI_STR     "\x80"
+
+/* check if the char c is a char with CTRL like ^C */
+#define IS_CTRL(c)  (((unsigned char)c) <= 0x1f)
+#define CTRL(c)     ((c) ^ 0x40)
 
 #define IS_SPECIAL(c)       (c < 0)
 

@@ -22,6 +22,7 @@
 #include "pass.h"
 #include "mode.h"
 #include "dom.h"
+#include "ascii.h"
 
 extern VbCore vb;
 

@@ -42,10 +42,6 @@
 
 #define LENGTH(x) (sizeof x / sizeof x[0])
 
-#define CTRL(x)      ((x) ^ 0x40)
-/* check if the char x is a char with CTRL like ^C */
-#define IS_CTRL(x)   (((guchar)x) <= 0x1f)
-
 #define FLOCK(fd, cmd) { \
     struct flock lock = {.l_type=cmd,.l_start=0,.l_whence=SEEK_SET,.l_len=0}; \
     fcntl(fd, F_SETLK, lock); \

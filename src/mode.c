@@ -21,6 +21,7 @@
 #include "main.h"
 #include "mode.h"
 #include "normal.h"
+#include "ascii.h"
 
 static GHashTable *modes = NULL;
 extern VbCore vb;
