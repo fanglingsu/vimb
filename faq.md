@@ -15,6 +15,17 @@ plugged into another xembed aware window that allows tabbing like [tabbed][].
 
     tabbed -c vimb -e
 
+To manage the tabs from within the vim like browser, you can use [xdotool][]
+to run keyevents on tabbed and call the xdotool from within vimb.
+
+Following keybindings simulate a little bit the vim behaviour.
+
+    nnoremap gt :sh! xdotool key --window %@ ctrl+shift+l<CR><Esc>
+    nnoremap gT :sh! xdotool key --window %@ ctrl+shift+h<CR><Esc>
+    nnoremap 1gt :sh! xdotool key --window %@ ctrl+1<CR><Esc>
+    ...
+    nnoremap 9gt :sh! xdotool key --window %@ ctrl+9<CR><Esc>
+
 ## User-Scripts does not seem to have any effect
 {:#user-scripts}
 
@@ -61,4 +72,5 @@ use the `!importen` flag on your style definition to take effect
     }
 
 
-[tabbed]: http://tools.suckless.org/tabbed/
+[tabbed]:  http://tools.suckless.org/tabbed/
+[xdotool]: http://www.semicomplete.com/projects/xdotool/
