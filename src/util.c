@@ -352,7 +352,7 @@ char *util_expand(const char *src, int expflags)
     int flags    = expflags;
 
     while (**input) {
-        util_parse_expansion(input, dst, flags, "~$%\\");
+        util_parse_expansion(input, dst, flags, "\\");
         if (VB_IS_SEPARATOR(**input)) {
             /* after space the tilde expansion is allowed */
             flags = expflags;
@@ -379,7 +379,7 @@ char *util_expand(const char *src, int expflags)
  * @input:    String pointer with the content to be parsed.
  * @str:      GString that will be filled with expanded content.
  * @flags     Flags that determine which expansion are processed.
- * @quoteable String of chars that are allowed to be escaped by \.
+ * @quoteable String of chars that are additionally escapable by \.
  * Returns true if input started with expandable pattern.
  */
 gboolean util_parse_expansion(const char **input, GString *str, int flags,
@@ -471,7 +471,11 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
             if (!*input) {
                 /* if input ends here - use only the quote char */
                 g_string_append_c(str, quote);
-            } else if (strchr(quoteable, **input)) {
+            } else if (strchr(quoteable, **input)
+                || (flags & UTIL_EXP_TILDE && **input == '~')
+                || (flags & UTIL_EXP_DOLLAR && **input == '$')
+                || (flags & UTIL_EXP_SPECIAL && **input == '%')
+            ) {
                 /* escaped char becomes only char */
                 g_string_append_c(str, **input);
             } else {

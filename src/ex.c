@@ -645,25 +645,20 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
 static gboolean parse_rhs(const char **input, ExArg *arg)
 {
     int expflags, flags;
-    const char *quoteable;
 
     if (!*input || !**input) {
         return false;
     }
 
-    if (arg->flags & EX_FLAG_EXP) {
-        expflags  = UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL;
-        quoteable = "|~$%\\";
-    } else {
-        expflags  = 0;
-        quoteable = "|\\";
-    }
+    expflags = (arg->flags & EX_FLAG_EXP)
+        ? UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL
+        : 0;
     flags = expflags;
 
     /* get char until the end of command */
     while (**input && **input != '\n' && **input != '|') {
         /* check for expansion placeholder */
-        util_parse_expansion(input, arg->rhs, flags, quoteable);
+        util_parse_expansion(input, arg->rhs, flags, "|\\");
 
         if (VB_IS_SEPARATOR(**input)) {
             /* add tilde expansion for next loop needs to be first char or to
