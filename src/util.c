@@ -352,7 +352,7 @@ char *util_expand(const char *src, int expflags)
     int flags    = expflags;
 
     while (**input) {
-        util_parse_expansion(input, dst, flags, "~$%");
+        util_parse_expansion(input, dst, flags, "~$%\\");
         if (VB_IS_SEPARATOR(**input)) {
             /* after space the tilde expansion is allowed */
             flags = expflags;
