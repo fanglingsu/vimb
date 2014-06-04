@@ -334,7 +334,7 @@ static char *transchar(int c)
 {
     static char trans[5];
     int i = 0;
-    if (IS_CTRL(c)) {
+    if (VB_IS_CTRL(c)) {
         trans[i++] = '^';
         trans[i++] = CTRL(c);
     } else if ((unsigned)c >= 0x80) {

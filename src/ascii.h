@@ -76,8 +76,7 @@ static const unsigned char chartable[256] = {
 #define CSI         0x80
 #define CSI_STR     "\x80"
 
-/* check if the char c is a char with CTRL like ^C */
-#define IS_CTRL(c)  (((unsigned char)c) <= 0x1f)
+/* get internal representation for conrol character ^C */
 #define CTRL(c)     ((c) ^ 0x40)
 
 #define IS_SPECIAL(c)       (c < 0)
