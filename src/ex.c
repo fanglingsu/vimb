@@ -663,7 +663,7 @@ static gboolean parse_rhs(const char **input, ExArg *arg)
     /* get char until the end of command */
     while (**input && **input != '\n' && **input != '|') {
         /* check for expansion placeholder */
-        util_parse_expansion(input, arg->rhs, flags, "|~$%\\");
+        util_parse_expansion(input, arg->rhs, flags, quoteable);
 
         if (VB_IS_SEPARATOR(**input)) {
             /* add tilde expansion for next loop needs to be first char or to
