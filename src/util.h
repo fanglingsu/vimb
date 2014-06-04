@@ -47,7 +47,8 @@ char *util_str_replace(const char* search, const char* replace, const char* stri
 gboolean util_create_tmp_file(const char *content, char **file);
 char *util_build_path(const char *path, const char *dir);
 char *util_expand(const char *src, int expflags);
-gboolean util_parse_expansion(const char **input, GString *str, int flags);
+gboolean util_parse_expansion(const char **input, GString *str, int flags,
+    const char *quoteable);
 gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src);
 
 #endif /* end of include guard: _UTIL_H */

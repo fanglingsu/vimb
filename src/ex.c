@@ -644,46 +644,28 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
  */
 static gboolean parse_rhs(const char **input, ExArg *arg)
 {
-    char quote   = '\\';
-    int expflags = UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL;
+    int expflags, flags;
 
     if (!*input || !**input) {
         return false;
     }
 
+    flags = expflags = (arg->flags & EX_FLAG_EXP)
+        ? UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL
+        : 0;
+
     /* get char until the end of command */
     while (**input && **input != '\n' && **input != '|') {
-        /* if we find a backslash this escapes the next char */
-        if (**input == quote) {
-            /* move pointer to the next char */
-            (*input)++;
-            if (!*input) {
-                /* if input ends here - use only the backslash */
-                g_string_append_c(arg->rhs, quote);
-            } else if (**input == '|' || **input == '%') {
-                /* escaped char becomes only char */
-                g_string_append_c(arg->rhs, **input);
-            } else {
-                /* put escape char and next char into the result string */
-                g_string_append_c(arg->rhs, quote);
-                g_string_append_c(arg->rhs, **input);
-            }
-        } else { /* unquoted char */
-            /* check for expansion placeholder */
-            if (arg->flags & EX_FLAG_EXP) {
-                util_parse_expansion(input, arg->rhs, expflags);
+        /* check for expansion placeholder */
+        util_parse_expansion(input, arg->rhs, flags, "|~$%");
 
-                if (VB_IS_SPACE(**input)) {
-                    /* add tilde expansion for next loop needs to be first
-                     * char or to be after a space */
-                    expflags |= UTIL_EXP_TILDE;
-                } else {
-                    /* remove tile expansion for next loop */
-                    expflags &= ~UTIL_EXP_TILDE;
-                }
-            } else {
-                g_string_append_c(arg->rhs, **input);
-            }
+        if (VB_IS_SPACE(**input)) {
+            /* add tilde expansion for next loop needs to be first char or to
+             * be after a space */
+            flags = expflags;
+        } else {
+            /* remove tile expansion for next loop */
+            flags &= ~UTIL_EXP_TILDE;
         }
         (*input)++;
     }

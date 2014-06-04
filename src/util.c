@@ -352,7 +352,7 @@ char *util_expand(const char *src, int expflags)
     int flags    = expflags;
 
     while (**input) {
-        util_parse_expansion(input, dst, flags);
+        util_parse_expansion(input, dst, flags, "~$%");
         if (VB_IS_SEPARATOR(**input)) {
             /* after space the tilde expansion is allowed */
             flags = expflags;
@@ -376,15 +376,17 @@ char *util_expand(const char *src, int expflags)
  * not expanded char. If no expansion pattern was found, the first char is
  * appended to given GString.
  *
- * @input:  String pointer with the content to be parsed.
- * @str:    GString that will be filled with expanded content.
- * @flags   Flags that determine which expansion are processed.
+ * @input:    String pointer with the content to be parsed.
+ * @str:      GString that will be filled with expanded content.
+ * @flags     Flags that determine which expansion are processed.
+ * @quoteable String of chars that are allowed to be escaped by \.
  * Returns true if input started with expandable pattern.
  */
-gboolean util_parse_expansion(const char **input, GString *str, int flags)
+gboolean util_parse_expansion(const char **input, GString *str, int flags,
+    const char *quoteable)
 {
     GString *name;
-    const char *env, *prev;
+    const char *env, *prev, quote = '\\';
     struct passwd *pwd;
     gboolean expanded = false;
 
@@ -461,8 +463,26 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags)
     if (!expanded) {
         /* restore the pointer position if no expansion was found */
         *input = prev;
-        /* take the char like it is */
-        g_string_append_c(str, **input);
+
+        /* handle escaping of quoteable chars */
+        if (**input == quote) {
+            /* move pointer to the next char */
+            (*input)++;
+            if (!*input) {
+                /* if input ends here - use only the quote char */
+                g_string_append_c(str, quote);
+            } else if (strchr(quoteable, **input)) {
+                /* escaped char becomes only char */
+                g_string_append_c(str, **input);
+            } else {
+                /* put escape char and next char into the result string */
+                g_string_append_c(str, quote);
+                g_string_append_c(str, **input);
+            }
+        } else {
+            /* take the char like it is */
+            g_string_append_c(str, **input);
+        }
     }
 
     return expanded;
