@@ -74,7 +74,4 @@
 #define PROGRESS_BAR_LEN            20
 #endif
 
-/* template to run shell command for vimb command :shellcmd */
-#define SHELL_CMD "/bin/sh -c '%s'"
-
 #endif /* end of include guard: _CONFIG_H */

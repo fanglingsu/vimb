@@ -866,7 +866,7 @@ static gboolean ex_set(const ExArg *arg)
 static gboolean ex_shellcmd(const ExArg *arg)
 {
     int status;
-    char *cmd, *stdOut = NULL, *stdErr = NULL;
+    char *stdOut = NULL, *stdErr = NULL;
     gboolean success;
     GError *error = NULL;
 
@@ -874,9 +874,8 @@ static gboolean ex_shellcmd(const ExArg *arg)
         return false;
     }
 
-    cmd = g_strdup_printf(SHELL_CMD, arg->rhs->str);
     if (arg->bang) {
-        if (!g_spawn_command_line_async(cmd, &error)) {
+        if (!g_spawn_command_line_async(arg->rhs->str, &error)) {
             g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
             g_clear_error(&error);
             success = false;
@@ -884,7 +883,7 @@ static gboolean ex_shellcmd(const ExArg *arg)
             success = true;
         }
     } else {
-        if (!g_spawn_command_line_sync(cmd, &stdOut, &stdErr, &status, &error)) {
+        if (!g_spawn_command_line_sync(arg->rhs->str, &stdOut, &stdErr, &status, &error)) {
             g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
             g_clear_error(&error);
             success = false;
@@ -901,7 +900,6 @@ static gboolean ex_shellcmd(const ExArg *arg)
         }
     }
 
-    g_free(cmd);
     return success;
 }
 
