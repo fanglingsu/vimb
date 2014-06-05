@@ -398,6 +398,11 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
         if (**input == '/') {
             g_string_append(str, util_get_home_dir());
             expanded = true;
+            /* if there is no char or space after ~/ skip the / to get
+             * /home/user instead of /home/user/ */
+            if (!*(*input + 1) || VB_IS_SPACE(*(*input + 1))) {
+                (*input)++;
+            }
         } else {
             /* look ahead to / space or end of string to get a possible
              * username for ~user pattern */
@@ -468,9 +473,10 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
         if (**input == quote) {
             /* move pointer to the next char */
             (*input)++;
-            if (!*input) {
+            if (!**input) {
                 /* if input ends here - use only the quote char */
                 g_string_append_c(str, quote);
+                (*input)--;
             } else if (strchr(quoteable, **input)
                 || (flags & UTIL_EXP_TILDE && **input == '~')
                 || (flags & UTIL_EXP_DOLLAR && **input == '$')
