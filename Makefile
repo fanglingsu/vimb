@@ -2,8 +2,10 @@ include config.mk
 
 -include $(DEPS)
 
-all: $(TARGET)
+all:   $(TARGET)
 debug: $(DTARGET)
+test:  $(LIBTARGET)
+	@$(MAKE) $(MFLAGS) -s -C tests
 
 options:
 	@echo "$(PROJECT) build options:"
@@ -11,36 +13,6 @@ options:
 	@echo "CFLAGS  = $(CFLAGS)"
 	@echo "LDFLAGS = $(LDFLAGS)"
 	@echo "CC      = $(CC)"
-
-src/hints.o: src/hints.js.h
-src/hints.do: src/hints.js.h
-
-src/hints.js.h: src/hints.js
-	@echo "minify $<"
-	@cat $< | src/js2h.sh > $@
-
-$(OBJ): src/config.h config.mk
-$(DOBJ): src/config.h config.mk
-
-$(TARGET): $(OBJ)
-	@echo "$(CC) $@"
-	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
-
-$(DTARGET): $(DOBJ)
-	@echo "$(CC) $@"
-	@$(CC) $(DFLAGS) $(DOBJ) -o $(DTARGET) $(DLDFLAGS)
-
-src/config.h:
-	@echo create $@ from src/config.def.h
-	@cp src/config.def.h $@
-
-%.o: %.c %.h
-	@echo "${CC} $<"
-	@$(CC) -c -o $@ $< $(CFLAGS)
-
-%.do: %.c %.h
-	@echo "${CC} $<"
-	@$(CC) -c -o $@ $< $(DFLAGS)
 
 install: $(TARGET) doc/$(MAN1)
 	install -d $(DESTDIR)$(BINDIR)
@@ -55,14 +27,58 @@ uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
 	$(RM) $(DESTDIR)$(MANDIR1)/$(MAN1)
 
-clean:
-	$(RM) src/*.o src/*.do src/hints.js.h $(TARGET) $(DTARGET)
+clean: test-clean
+	$(RM) src/*.o src/*.do src/*.lo src/hints.js.h
+	$(RM) tests/$(LIBTARGET) $(TARGET) $(DTARGET)
 
-dist: distclean
+test-clean:
+	@$(MAKE) $(MFLAGS) -C tests clean
+
+dist: dist-clean
 	@echo "Creating tarball."
 	@git archive --format tar -o $(DIST_FILE) HEAD
 
-distclean:
+dist-clean:
 	$(RM) $(DIST_FILE)
 
-.PHONY: clean debug all install uninstall options dist
+src/hints.o:  src/hints.js.h
+src/hints.do: src/hints.js.h
+src/hints.lo: src/hints.js.h
+
+src/hints.js.h: src/hints.js
+	@echo "minify $<"
+	@cat $< | src/js2h.sh > $@
+
+$(OBJ):  src/config.h config.mk
+$(DOBJ): src/config.h config.mk
+$(LOBJ): src/config.h config.mk
+
+$(TARGET): $(OBJ)
+	@echo "$(CC) $@"
+	@$(CC) $(OBJ) -o $@ $(LDFLAGS)
+
+$(DTARGET): $(DOBJ)
+	@echo "$(CC) $@"
+	@$(CC) $(DOBJ) -o $@ $(DLDFLAGS)
+
+$(LIBTARGET): $(LOBJ)
+	@echo "$(CC) tests/$@"
+	@$(CC) -shared ${LOBJ} -o ./tests/$(LIBTARGET)
+
+src/config.h:
+	@echo create $@ from src/config.def.h
+	@cp src/config.def.h $@
+
+%.o: %.c %.h
+	@echo "${CC} $@"
+	@$(CC) $(CFLAGS) -c -o $@ $<
+
+%.do: %.c %.h
+	@echo "${CC} $@"
+	@$(CC) $(DFLAGS) -c -o $@ $<
+
+%.lo: %.c %.h
+	@echo "${CC} $@"
+	@$(CC) $(CFLAGS) -fPIC -c -o $@ $<
+
+.PHONY: clean debug all install uninstall options dist test

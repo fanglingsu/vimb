@@ -46,15 +46,19 @@ CFLAGS  += ${CPPFLAGS}
 LDFLAGS += ${LIBFLAGS}
 
 # compiler flags for the debug target
-DFLAGS   += $(CFLAGS) -ggdb -g
+DFLAGS   += $(CFLAGS) -ggdb -g -O0
 DLDFLAGS += ${LIBFLAGS}
 
 OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
 DOBJ      = $(patsubst %.c, %.do, $(wildcard src/*.c))
+LOBJ      = $(patsubst %.c, %.lo, $(wildcard src/*.c))
 DEPS      = $(OBJ:%.o=%.d)
 
 TARGET    = $(PROJECT)
 DTARGET   = $(TARGET)_dbg
+LIBTARGET = lib$(PROJECT).so
 DIST_FILE = $(PROJECT)_$(VERSION).tar.gz
 MANDIR1   = $(MANDIR)/man1
 MAN1      = $(PROJECT).1
+
+MFLAGS    =

@@ -1,7 +1,10 @@
 *.[oa]
-*.do
+*.[ld]o
 vimb
 vimb_dbg
 *.tar.gz
 src/hints.js.h
 src/config.h
+tests/*
+!tests/Makefile
+!tests/*.c
