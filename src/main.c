@@ -53,6 +53,7 @@ static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
 static void context_menu_cb(WebKitWebView *view, GtkMenu *menu, gpointer data);
 #endif
 static void context_menu_activate_cb(GtkMenuItem *item, gpointer data);
+static void uri_change_cb(WebKitWebView *view, GParamSpec param_spec);
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
@@ -450,6 +451,13 @@ static void context_menu_activate_cb(GtkMenuItem *item, gpointer data)
 #endif
 }
 
+static void uri_change_cb(WebKitWebView *view, GParamSpec param_spec)
+{
+    g_free(vb.state.uri);
+    g_object_get(view, "uri", &vb.state.uri, NULL);
+    vb_update_urlbar(vb.state.uri);
+}
+
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
 {
     vb.state.progress = webkit_web_view_get_progress(view) * 100;
@@ -739,6 +747,7 @@ static void init_core(void)
     /* init some state variable */
     vb.state.enable_register = false;
     vb.state.enable_history  = false;
+    vb.state.uri             = g_strdup("");
 
     /* initialize the modes */
     mode_init();
@@ -844,6 +853,7 @@ static void setup_signals()
 #else
         "signal::populate-popup", G_CALLBACK(context_menu_cb), NULL,
 #endif
+        "signal::notify::uri", G_CALLBACK(uri_change_cb), NULL,
         "signal::notify::progress", G_CALLBACK(webview_progress_cb), NULL,
         "signal::notify::load-status", G_CALLBACK(webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(button_relase_cb), NULL,
