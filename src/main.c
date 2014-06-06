@@ -485,6 +485,8 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 /* save the current uri */
                 g_free(vb.state.uri);
                 g_object_get(view, "uri", &vb.state.uri, NULL);
+                /* export the uri */
+                g_setenv("VIMB_URI", vb.state.uri, true);
 
                 WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
                 /* set the status */

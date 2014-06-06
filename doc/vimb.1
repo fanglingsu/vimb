@@ -535,16 +535,14 @@ Removes all entries from queue.
 .SS Misc
 .TP
 .BI ":sh[ellcmd] " CMD
-Runs given shell \fICMD\fP syncron and print the output into inputbox. The
-\fICMD\fP can contain multiple '%' chars that are expanded to the current
-opened URI to input a % this has to be escaped by a '\'. Also the '~/' to home
-dir expansion is available.
+Runs given shell \fICMD\fP syncron and print the output into inputbox.
+Follwing pattern in \fICMD\fP are expanded, '~username', '~/', '$VAR'
+and '${VAR}'. A '\\' before these patterns disables the expansion.
+
+Example: :sh! echo "$VIMB_URI" >> myhistory.txt
 .TP
 .BI ":sh[ellcmd]! " CMD
-Runs given shell \fICMD\fP asyncron. The '%' and '~/' expanshion of the :sh
-command are also expanded for this command too.
-
-Example: :sh! echo "`date` %" >> myhistory.txt
+Like :shellcmd, but asyncron.
 .TP
 .BI ":s[ave] [" PATH "]"
 Download current opened page into configured download directory. If \fIPATH\fP
@@ -910,9 +908,9 @@ File for userdefined css styles. These file is used if the config variable
 .RE
 .SH ENVIRONMENT
 .TP
-.B HOME
-If this is set and not empty this will be used to get the path of the home
-directory. If not set the entry out of the passwd file will be used instead.
+.B VIMB_URI
+This variable is set by vimb everytime a new page is opened to the URI of the
+page.
 .TP
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
