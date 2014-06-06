@@ -539,10 +539,12 @@ Runs given shell \fICMD\fP syncron and print the output into inputbox.
 Follwing pattern in \fICMD\fP are expanded, '~username', '~/', '$VAR'
 and '${VAR}'. A '\\' before these patterns disables the expansion.
 
-Example: :sh! echo "$VIMB_URI" >> myhistory.txt
+Example: :sh ls -l $HOME
 .TP
 .BI ":sh[ellcmd]! " CMD
 Like :shellcmd, but asyncron.
+
+Example: :sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
 .TP
 .BI ":s[ave] [" PATH "]"
 Download current opened page into configured download directory. If \fIPATH\fP
