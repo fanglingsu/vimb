@@ -183,10 +183,16 @@ if vimb has been compiled with QUEUE feature.
   *CMD* can contain multiple '%' chars that are expanded to the current opened
   uri. Also the '~/' to home directory expansion is available.
 
-  Example: ``:shellcmd echo "`date` %" >> myhistory.txt``
+  Runs given shell *CMD* syncronous and print the output into inputbox.
+  Follwing pattern in *CMD* are expanded, '~username', '~/', '$VAR' and
+  '${VAR}'. A '\' before these patterns disables the expansion.
+
+  Example: ``:sh ls -la $HOME``
 
 :sh[ellcmd]! *CMD*
 : Like `:shellcmd` but runs given shell *CMD* asyncron.
+
+  Example: ``:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'``
 
 \:s[ave] [*PATH*]
 : Download current opened page into configured download directory. If *PATH* is
