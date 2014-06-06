@@ -115,7 +115,7 @@ gboolean command_yank(const Arg *arg, char buf)
     Arg a = {VB_CLIPBOARD_PRIMARY|VB_CLIPBOARD_SECONDARY};
     if (arg->i == COMMAND_YANK_URI) {
         /* yank current uri */
-        a.s = (char*)GET_URI();
+        a.s = vb.state.uri;
     } else {
         /* use current arg.s as new clipboard content */
         a.s = arg->s;
@@ -138,7 +138,7 @@ gboolean command_save(const Arg *arg)
     const char *uri, *path = NULL;
 
     if (arg->i == COMMAND_SAVE_CURRENT) {
-        uri = GET_URI();
+        uri = vb.state.uri;
         /* given string is the path to save the download to */
         if (arg->s && *(arg->s) != '\0') {
             path = arg->s;
@@ -174,14 +174,14 @@ gboolean command_queue(const Arg *arg)
             break;
 
         case COMMAND_QUEUE_PUSH:
-            res = bookmark_queue_push(arg->s ? arg->s : GET_URI());
+            res = bookmark_queue_push(arg->s ? arg->s : vb.state.uri);
             if (res) {
                 vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
             }
             break;
 
         case COMMAND_QUEUE_UNSHIFT:
-            res = bookmark_queue_unshift(arg->s ? arg->s : GET_URI());
+            res = bookmark_queue_unshift(arg->s ? arg->s : vb.state.uri);
             if (res) {
                 vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
             }

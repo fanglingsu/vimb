@@ -364,7 +364,7 @@ static VbResult normal_descent(const NormalCmdInfo *info)
     int count = info->count ? info->count : 1;
     const char *uri, *p = NULL, *domain = NULL;
 
-    uri = GET_URI();
+    uri = vb.state.uri;
 
     /* get domain part */
     if (!uri || !*uri
@@ -497,7 +497,10 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
     if (strchr("ot", info->key)) {
         vb_set_input_text(info->key == 't' ? ":tabopen " : ":open ");
     } else {
-        vb_echo(VB_MSG_NORMAL, false, ":%s %s", info->key == 'T' ? "tabopen" : "open", GET_URI());
+        vb_echo(
+            VB_MSG_NORMAL, false,
+            ":%s %s", info->key == 'T' ? "tabopen" : "open", vb.state.uri
+        );
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */

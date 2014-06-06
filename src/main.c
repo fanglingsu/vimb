@@ -53,7 +53,6 @@ static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
 static void context_menu_cb(WebKitWebView *view, GtkMenu *menu, gpointer data);
 #endif
 static void context_menu_activate_cb(GtkMenuItem *item, gpointer data);
-static void uri_change_cb(WebKitWebView *view, GParamSpec param_spec);
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
@@ -369,10 +368,9 @@ void vb_update_urlbar(const char *uri)
 
 void vb_quit(void)
 {
-    const char *uri = GET_URI();
     /* write last URL into file for recreation */
-    if (uri) {
-        g_file_set_contents(vb.files[FILES_CLOSED], uri, -1, NULL);
+    if (vb.state.uri) {
+        g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
     }
 
     completion_clean();
@@ -451,13 +449,6 @@ static void context_menu_activate_cb(GtkMenuItem *item, gpointer data)
 #endif
 }
 
-static void uri_change_cb(WebKitWebView *view, GParamSpec param_spec)
-{
-    g_free(vb.state.uri);
-    g_object_get(view, "uri", &vb.state.uri, NULL);
-    vb_update_urlbar(vb.state.uri);
-}
-
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
 {
     vb.state.progress = webkit_web_view_get_progress(view) * 100;
@@ -481,8 +472,6 @@ static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec)
 
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 {
-    const char *uri = GET_URI();
-
     switch (webkit_web_view_get_load_status(view)) {
         case WEBKIT_LOAD_PROVISIONAL:
             /* update load progress in statusbar */
@@ -493,9 +482,13 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_COMMITTED:
             {
+                /* save the current uri */
+                g_free(vb.state.uri);
+                g_object_get(view, "uri", &vb.state.uri, NULL);
+
                 WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
                 /* set the status */
-                if (g_str_has_prefix(uri, "https://")) {
+                if (g_str_has_prefix(vb.state.uri, "https://")) {
                     WebKitWebDataSource *src      = webkit_web_frame_get_data_source(frame);
                     WebKitNetworkRequest *request = webkit_web_data_source_get_request(src);
                     SoupMessage *msg              = webkit_network_request_get_message(request);
@@ -520,9 +513,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             }
 
             vb_update_statusbar();
-            vb_update_urlbar(uri);
+            vb_update_urlbar(vb.state.uri);
             /* save the current URI in register % */
-            vb_register_add('%', uri);
+            vb_register_add('%', vb.state.uri);
 
             /* clear possible set marks */
             marks_clear();
@@ -537,9 +530,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             vb_update_statusbar();
             update_title();
 
-            if (strncmp(uri, "about:", 6)) {
+            if (strncmp(vb.state.uri, "about:", 6)) {
                 dom_check_auto_insert(view);
-                history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
+                history_add(HISTORY_URL, vb.state.uri, webkit_web_view_get_title(view));
             }
             break;
 
@@ -853,7 +846,6 @@ static void setup_signals()
 #else
         "signal::populate-popup", G_CALLBACK(context_menu_cb), NULL,
 #endif
-        "signal::notify::uri", G_CALLBACK(uri_change_cb), NULL,
         "signal::notify::progress", G_CALLBACK(webview_progress_cb), NULL,
         "signal::notify::load-status", G_CALLBACK(webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(button_relase_cb), NULL,

@@ -63,7 +63,6 @@
 #define TIMER_END
 #endif
 
-#define GET_URI() (vb.state.uri)
 #define PRIMARY_CLIPBOARD() gtk_clipboard_get(GDK_SELECTION_PRIMARY)
 #define SECONDARY_CLIPBOARD() gtk_clipboard_get(GDK_NONE)
 

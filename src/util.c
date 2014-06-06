@@ -457,10 +457,9 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
         expanded = true;
         g_string_free(name, true);
     } else if (flags & UTIL_EXP_SPECIAL && **input == '%') {
-        const char *uri;
-        if ((uri = GET_URI())) {
+        if (*vb.state.uri) {
             /* TODO check for modifiers like :h:t:r:e */
-            g_string_append(str, uri);
+            g_string_append(str, vb.state.uri);
             expanded = true;
         }
     }

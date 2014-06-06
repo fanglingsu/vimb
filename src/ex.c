@@ -702,12 +702,12 @@ static void free_cmdarg(ExArg *arg)
 static gboolean ex_bookmark(const ExArg *arg)
 {
     if (arg->code == EX_BMR) {
-        if (bookmark_remove(*arg->rhs->str ? arg->rhs->str : GET_URI())) {
+        if (bookmark_remove(*arg->rhs->str ? arg->rhs->str : vb.state.uri)) {
             vb_echo_force(VB_MSG_NORMAL, false, "  Bookmark removed");
 
             return true;
         }
-    } else if (bookmark_add(GET_URI(), webkit_web_view_get_title(vb.gui.webview), arg->rhs->str)) {
+    } else if (bookmark_add(vb.state.uri, webkit_web_view_get_title(vb.gui.webview), arg->rhs->str)) {
         vb_echo_force(VB_MSG_NORMAL, false, "  Bookmark added");
 
         return true;
