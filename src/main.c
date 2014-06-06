@@ -20,6 +20,8 @@
 #include "config.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <gdk/gdkx.h>
 #include "main.h"
 #include "util.h"
 #include "command.h"
@@ -655,17 +657,28 @@ static void set_status(const StatusType status)
 static void init_core(void)
 {
     Gui *gui = &vb.gui;
+    char *xid;
 
     if (vb.embed) {
         gui->window = gtk_plug_new(vb.embed);
+        xid = g_strdup_printf("%u", (int)vb.embed);
     } else {
+
         gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 #ifdef HAS_GTK3
         gtk_window_set_has_resize_grip(GTK_WINDOW(gui->window), false);
 #endif
         gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT_UCFIRST);
         gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT_UCFIRST);
+
+        gtk_widget_realize(GTK_WIDGET(gui->window));
+
+        /* set the x window id to env */
+        xid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(GTK_WIDGET(gui->window))));
     }
+
+    g_setenv("VIMB_XID", xid, true);
+    g_free(xid);
 
     GdkGeometry hints = {10, 10};
     gtk_window_set_default_size(GTK_WINDOW(gui->window), WIN_WIDTH, WIN_HEIGHT);
@@ -1121,6 +1134,7 @@ static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, cons
 {
     OVERWRITE_STRING(vb.state.title, title);
     update_title();
+    g_setenv("VIMB_TITLE", title ? title : "", true);
 }
 
 static void update_title(void)
@@ -1244,6 +1258,7 @@ int main(int argc, char *argv[])
     static char *winid = NULL;
     static gboolean ver = false;
     static GError *err;
+    char *pid;
 
     static GOptionEntry opts[] = {
         {"cmd", 'C', 0, G_OPTION_ARG_STRING, &vb.config.autocmd, "Ex command run before first page is loaded", NULL},
@@ -1272,6 +1287,10 @@ int main(int argc, char *argv[])
     if (winid) {
         vb.embed = strtol(winid, NULL, 0);
     }
+
+    pid = g_strdup_printf("%d", getpid());
+    g_setenv("VIMB_PID", pid, true);
+    g_free(pid);
 
     init_core();
 

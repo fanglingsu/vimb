@@ -914,6 +914,16 @@ File for userdefined css styles. These file is used if the config variable
 This variable is set by vimb everytime a new page is opened to the URI of the
 page.
 .TP
+.B VIMB_TITLE
+Contains the title of the current opened page.
+.TP
+.B VIMB_PID
+Contains the pid of the running vimb instance.
+.TP
+.B VIMB_XID
+Holds the X-Window id of the vim window or of the embedding window if vimb is
+started with -e option.
+.TP
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
 `proxy' is enabled, this will be used as http proxy.
