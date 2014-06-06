@@ -20,11 +20,11 @@ to run keyevents on tabbed and call the xdotool from within vimb.
 
 Following keybindings simulate a little bit the vim behaviour.
 
-    nnoremap gt :sh! xdotool key ctrl+shift+l<CR><Esc>
-    nnoremap gT :sh! xdotool key ctrl+shift+h<CR><Esc>
-    nnoremap 1gt :sh! xdotool key ctrl+1<CR><Esc>
+    nnoremap gt :sh! xdotool key --window $VIMB_XID ctrl+shift+l<CR><Esc>
+    nnoremap gT :sh! xdotool key --window $VIMB_XID ctrl+shift+h<CR><Esc>
+    nnoremap 1gt :sh! xdotool key --window $VIMB_XID ctrl+1<CR><Esc>
     ...
-    nnoremap 9gt :sh! xdotool key ctrl+9<CR><Esc>
+    nnoremap 9gt :sh! xdotool key --window $VIMB_XID ctrl+9<CR><Esc>
 
 ## User-Scripts does not seem to have any effect
 {:#user-scripts}
