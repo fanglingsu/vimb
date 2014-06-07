@@ -88,7 +88,9 @@ void mode_enter(char id)
         new->enter();
     }
 
+#ifndef TESTLIB
     vb_update_statusbar();
+#endif
 }
 
 /**

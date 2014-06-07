@@ -220,7 +220,9 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
 
             /* send the key to the parser */
             if (RESULT_MORE != mode_handle_key((int)qk)) {
+#ifndef TESTLIB
                 normal_showcmd(0);
+#endif
             }
         }
 
@@ -243,6 +245,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
 
                 /* find ambiguous matches */
                 if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue, map.qlen)) {
+#ifndef TESTLIB
                     if (ambiguous == 0) {
                         /* show command chars for the ambiguous commands */
                         int i = map.qlen > SHOWCMD_LEN ? map.qlen - SHOWCMD_LEN : 0;
@@ -254,6 +257,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
                             normal_showcmd(map.queue[i++]);
                         }
                     }
+#endif
                     ambiguous++;
                 }
                 /* complete match or better/longer match than previous found */
@@ -280,7 +284,9 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
             /* flush ths show command to make room for possible mapped command
              * chars to show for example if :nmap foo 12g is use we want to
              * display the incomplete 12g command */
+#ifndef TESTLIB
             normal_showcmd(0);
+#endif
             if (match->inlen < match->mappedlen) {
                 /* make some space within the queue */
                 for (i = map.qlen + match->mappedlen - match->inlen, j = map.qlen; j > match->inlen; ) {

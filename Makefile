@@ -63,7 +63,7 @@ $(DTARGET): $(DOBJ)
 
 $(LIBTARGET): $(LOBJ)
 	@echo "$(CC) tests/$@"
-	@$(CC) -shared ${LOBJ} -o ./tests/$(LIBTARGET)
+	@$(CC) -shared ${LOBJ} -o ./tests/$(LIBTARGET) $(LDFLAGS)
 
 src/config.h:
 	@echo create $@ from src/config.def.h
@@ -79,6 +79,6 @@ src/config.h:
 
 %.lo: %.c %.h
 	@echo "${CC} $@"
-	@$(CC) $(CFLAGS) -fPIC -c -o $@ $<
+	@$(CC) -DTESTLIB $(DFLAGS) -fPIC -c -o $@ $<
 
 .PHONY: clean debug all install uninstall options dist test
