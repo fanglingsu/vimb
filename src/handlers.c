@@ -21,8 +21,6 @@
 #include "handlers.h"
 #include "util.h"
 
-extern VbCore vb;
-
 static GHashTable *handlers = NULL;
 
 static char *handler_lookup(const char *uri);
@@ -40,9 +38,9 @@ void handlers_cleanup(void)
     }
 }
 
-gboolean handler_add(const char *key, const char *uri)
+gboolean handler_add(const char *key, const char *cmd)
 {
-    g_hash_table_insert(handlers, g_strdup(key), g_strdup(uri));
+    g_hash_table_insert(handlers, g_strdup(key), g_strdup(cmd));
 
     return true;
 }
@@ -86,12 +84,12 @@ gboolean handler_fill_completion(GtkListStore *store, const char *input)
 
 static char *handler_lookup(const char *uri)
 {
-    char *p, *handler = NULL;
+    char *p, *schema, *handler = NULL;
 
     if ((p = strchr(uri, ':'))) {
-        *p = '\0';
-        handler = g_hash_table_lookup(handlers, uri);
-        *p = ':';
+        schema  = g_strndup(uri, p - uri);
+        handler = g_hash_table_lookup(handlers, schema);
+        g_free(schema);
     }
 
     return handler;

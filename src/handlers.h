@@ -22,7 +22,7 @@
 
 void handlers_init(void);
 void handlers_cleanup(void);
-gboolean handler_add(const char *key, const char *uri);
+gboolean handler_add(const char *key, const char *cmd);
 gboolean handler_remove(const char *key);
 gboolean handle_uri(const char *uri);
 gboolean handler_fill_completion(GtkListStore *store, const char *input);
