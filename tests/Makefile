@@ -3,7 +3,7 @@ include ../config.mk
 CPPFLAGS += -I ../
 CFLAGS   += -fPIC
 
-TEST_PROGS = test-util test-handlers
+TEST_PROGS = test-util test-handlers test-shortcut
 
 all: $(TEST_PROGS)
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):." gtester --verbose $(TEST_PROGS)

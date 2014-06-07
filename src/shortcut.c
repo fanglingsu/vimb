@@ -134,24 +134,21 @@ static int get_max_placeholder(const char *str)
 }
 
 /**
- * Retrieves the shortcut uri template for given string.
- * If the string contains the shortcut key the shortcut for this wee be
- * returned, else the default shortcur uri well be returned.
- * In given query pointer will be filled with the query part of the string,
- * thats the string without a possible shortcut key.
+ * Retrieves the shortcut uri template for given string. And fills given query
+ * pointer with the query part of the given string (everithing except of the
+ * shortcut identifier).
  */
 static const char *shortcut_lookup(const char *string, const char **query)
 {
     char *p, *uri = NULL;
 
     if ((p = strchr(string, ' '))) {
-        *p = '\0';
-        /* is the first word the key? */
-        if ((uri = g_hash_table_lookup(shortcuts, string))) {
+        char *key  = g_strndup(string, p - string);
+        /* is the first word might be a shortcut */
+        if ((uri = g_hash_table_lookup(shortcuts, key))) {
             *query = p + 1;
-        } else {
-            *p = ' ';
         }
+        g_free(key);
     }
 
     if (!uri && default_key && (uri = g_hash_table_lookup(shortcuts, default_key))) {
