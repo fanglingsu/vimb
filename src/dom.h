@@ -22,7 +22,7 @@
 
 #include <webkit/webkit.h>
 
-// Types
+/* Types */
 #define Document            WebKitDOMDocument
 #define HtmlElement         WebKitDOMHTMLElement
 #define Element             WebKitDOMElement
