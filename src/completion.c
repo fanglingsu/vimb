@@ -130,6 +130,7 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
 
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
+    gtk_widget_show_all(comp.win);
     while (gtk_events_pending()) {
         gtk_main_iteration();
     }
@@ -155,8 +156,6 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
     /* set to -1 to have the cursor on first or last item set in move_cursor */
     comp.active = -1;
     completion_next(back);
-
-    gtk_widget_show_all(comp.win);
 
     return true;
 }
