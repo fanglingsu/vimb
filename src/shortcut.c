@@ -20,6 +20,7 @@
 #include "main.h"
 #include "shortcut.h"
 #include "util.h"
+#include "ascii.h"
 
 extern VbCore vb;
 
@@ -70,20 +71,20 @@ gboolean shortcut_set_default(const char *key)
 char *shortcut_get_uri(const char *string)
 {
     const char *tmpl, *query = NULL;
-    char *uri, **argv, *quoted_param, ph[3] = "$0";
-    int i, max, argc;
-    GError *error = NULL;
+    char *uri, *quoted_param;
+    int max_num, current_num;
+    GString *token;
 
     tmpl = shortcut_lookup(string, &query);
     if (!tmpl) {
         return NULL;
     }
 
-    max = get_max_placeholder(tmpl);
+    max_num = get_max_placeholder(tmpl);
     /* if there are only $0 placeholders we don't need to split the parameters */
-    if (max == 0) {
+    if (max_num == 0) {
         quoted_param = soup_uri_encode(query, "&");
-        uri          = util_str_replace(ph, quoted_param, tmpl);
+        uri          = util_str_replace("$0", quoted_param, tmpl);
         g_free(quoted_param);
 
         return uri;
@@ -92,46 +93,65 @@ char *shortcut_get_uri(const char *string)
     uri = g_strdup(tmpl);
 
     /* skip if no placeholders found */
-    if (max < 0) {
+    if (max_num < 0) {
         return uri;
     }
 
-    /* for multiple placeholders - split the parameters */
-    if (!g_shell_parse_argv(query, &argc, &argv, &error)) {
-#ifndef TESTLIB
-        vb_echo(VB_MSG_ERROR, true, error->message);
-#endif
-        g_clear_error(&error);
+    current_num = 0;
+    token       = g_string_new(NULL);
+    while (*query) {
+        /* parse the query tokens */
+        if (*query == '"' || *query == '\'') {
+            /* save the last used quote char to find it's matching counterpart */
+            char last_quote = *query;
 
-        /* us the shortcut template uri like it is */
-        return uri;
-    }
+            /* skip the quote */
+            query++;
+            /* collect the char until the closing quote or end of string */
+            while (*query && *query != last_quote) {
+                g_string_append_c(token, *query);
+                query++;
+            }
+            /* if we end up at the closing quote - skip this quote too */
+            if (*query == last_quote) {
+                query++;
+            }
+        } else if (VB_IS_SPACE(*query)) {
+            /* skip whitespace */
+            query++;
 
-    for (i = 0; i < argc; i++) {
-        char *new, *qs, *combined;
+            continue;
+        } else if (current_num >= max_num) {
+            /* if we have parsed as many params like placeholders - put the
+             * rest of the query as last parameter */
+            while (*query) {
+                g_string_append_c(token, *query);
+                query++;
+            }
+        } else {
+            /* collect the following character up to the next whitespace */
+            while (*query && !VB_IS_SPACE(*query)) {
+                g_string_append_c(token, *query);
+                query++;
+            }
+        }
 
-        ph[1] = i + '0';
-        /* if we reached the last placeholder put all other tokens into it */
-        if (i >= max) {
-            combined = g_strjoinv(" ", &(argv[i]));
-            qs       = soup_uri_encode(combined, "&");
-            new      = util_str_replace(ph, qs, uri);
-            g_free(combined);
-            g_free(qs);
+        /* replace the placeholders with parsed token */
+        if (token->len) {
+            char *new;
+
+            quoted_param = soup_uri_encode(token->str, "&");
+            new = util_str_replace((char[]){'$', current_num + '0', '\0'}, quoted_param, uri);
+            g_free(quoted_param);
             g_free(uri);
             uri = new;
 
-            /* we are done - break the loop */
-            break;
+            /* truncate the last token to fill for next loop */
+            g_string_truncate(token, 0);
         }
-
-        qs  = soup_uri_encode(argv[i], "&");
-        new = util_str_replace(ph, qs, uri);
-        g_free(qs);
-        g_free(uri);
-        uri = new;
+        current_num++;
     }
-    g_strfreev(argv);
+    g_string_free(token, true);
 
     return uri;
 }

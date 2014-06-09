@@ -75,27 +75,29 @@ static void test_shortcut_shell_param(void)
 {
     char *uri;
 
+    /* double quotes */
+    uri = shortcut_get_uri("_vimb6_ \"rail station\" city hall");
+    g_assert_cmpstr(uri, ==, "shell:rail%20station-city%20hall");
+    g_free(uri);
+
     /* single quotes */
     uri = shortcut_get_uri("_vimb6_ 'rail station' 'city hall'");
     g_assert_cmpstr(uri, ==, "shell:rail%20station-city%20hall");
     g_free(uri);
 
-    /* double quotes */
-    uri = shortcut_get_uri("_vimb6_ \"rail station\" city hall");
+    /* ignore none matching quote errors */
+    uri = shortcut_get_uri("_vimb6_ \"rail station\" \"city hall");
     g_assert_cmpstr(uri, ==, "shell:rail%20station-city%20hall");
     g_free(uri);
-}
 
-static void test_shortcut_shell_param_invalid(void)
-{
-    char *uri;
-    /* if parsing fails we expect the shortcut template to be returned */
-    uri = shortcut_get_uri("_vimb6_ 'rail station' 'city hall");
-    g_assert_cmpstr(uri, ==, "shell:$0-$1");
+    /* don't fill up quoted param with unquoted stuff */
+    uri = shortcut_get_uri("_vimb6_ \"param 1\" \"param 2\" ignored params");
+    g_assert_cmpstr(uri, ==, "shell:param%201-param%202");
     g_free(uri);
 
-    uri = shortcut_get_uri("_vimb6_ can't parse");
-    g_assert_cmpstr(uri, ==, "shell:$0-$1");
+    /* allo quotes within tha last parameter */
+    uri = shortcut_get_uri("_vimb6_ param1 param2 \"containing quotes\"");
+    g_assert_cmpstr(uri, ==, "shell:param1-param2%20%22containing%20quotes%22");
     g_free(uri);
 }
 
@@ -130,7 +132,6 @@ int main(int argc, char *argv[])
     g_test_add_func("/test-shortcut/get_uri/keep-unmatched", test_shortcut_keep_unmatched);
     g_test_add_func("/test-shortcut/get_uri/fullrange", test_shortcut_fullrange);
     g_test_add_func("/test-shortcut/get_uri/shell-param", test_shortcut_shell_param);
-    g_test_add_func("/test-shortcut/get_uri/shell-param-invalid", test_shortcut_shell_param_invalid);
     g_test_add_func("/test-shortcut/remove", test_shortcut_remove);
 
     result = g_test_run();
