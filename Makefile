@@ -29,9 +29,10 @@ uninstall:
 
 clean: test-clean
 	$(RM) src/*.o src/*.do src/*.lo src/hints.js.h
-	$(RM) tests/$(LIBTARGET) $(TARGET) $(DTARGET)
+	$(RM) $(TARGET) $(DTARGET)
 
 test-clean:
+	$(RM) $(LIBTARGET)
 	@$(MAKE) $(MFLAGS) -C tests clean
 
 dist: dist-clean
@@ -62,8 +63,8 @@ $(DTARGET): $(DOBJ)
 	@$(CC) $(DOBJ) -o $@ $(DLDFLAGS)
 
 $(LIBTARGET): $(LOBJ)
-	@echo "$(CC) tests/$@"
-	@$(CC) -shared ${LOBJ} -o ./tests/$(LIBTARGET) $(LDFLAGS)
+	@echo "$(CC) $@"
+	@$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
 
 src/config.h:
 	@echo create $@ from src/config.def.h
@@ -81,4 +82,4 @@ src/config.h:
 	@echo "${CC} $@"
 	@$(CC) -DTESTLIB $(DFLAGS) -fPIC -c -o $@ $<
 
-.PHONY: clean debug all install uninstall options dist test
+.PHONY: clean debug all install uninstall options dist dist-clean test test-clean

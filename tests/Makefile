@@ -11,7 +11,7 @@ TEST_PROGS = test-handlers \
 all: $(TEST_PROGS)
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):." gtester --verbose $(TEST_PROGS)
 
-${TEST_PROGS}: $(LIBTARGET)
+${TEST_PROGS}: $(notdir $(LIBTARGET))
 
 clean:
 	rm -f $(TEST_PROGS)
