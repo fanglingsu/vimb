@@ -145,7 +145,7 @@ static void hsts_provider_finalize(GObject* obj)
 /**
  * Checks if given host is a known https host according to RFC 6797 8.2f
  */
-static gboolean should_secure_host(HSTSProvider *provider,
+static inline gboolean should_secure_host(HSTSProvider *provider,
     const char *host)
 {
     HSTSProviderPrivate *priv = HSTS_PROVIDER_GET_PRIVATE(provider);
