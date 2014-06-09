@@ -791,6 +791,11 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
     WebKitWebSettings *setting;
     WebKitWebView *view = vb.gui.webview;
 
+    /* check if the second key is allowed */
+    if (!strchr("iIoOz", info->key2)) {
+        return RESULT_ERROR;
+    }
+
     count = info->count ? (float)info->count : 1.0;
 
     if (info->key2 == 'z') { /* zz reset zoom */
