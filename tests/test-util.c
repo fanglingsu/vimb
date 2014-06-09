@@ -22,10 +22,11 @@
 
 extern VbCore vb;
 
-#define EXPAND(in, out) { \
-    char *value = util_expand(in, UTIL_EXP_DOLLAR|UTIL_EXP_TILDE|UTIL_EXP_SPECIAL); \
-    g_assert_cmpstr(value, ==, out); \
-    g_free(value); \
+static void check_expand(const char *str, const char *expected)
+{
+    char *result = util_expand(str, UTIL_EXP_DOLLAR|UTIL_EXP_TILDE|UTIL_EXP_SPECIAL);
+    g_assert_cmpstr(result, ==, expected);
+    g_free(result);
 }
 
 static void test_expand_evn(void)
@@ -33,36 +34,36 @@ static void test_expand_evn(void)
     /* set environment var for testing expansion */
     g_setenv("VIMB_VAR", "value", true);
 
-    EXPAND("$VIMB_VAR", "value");
-    EXPAND("$VIMB_VAR", "value");
-    EXPAND("$VIMB_VAR$VIMB_VAR", "valuevalue");
-    EXPAND("${VIMB_VAR}", "value");
-    EXPAND("my$VIMB_VAR", "myvalue");
-    EXPAND("'$VIMB_VAR'", "'value'");
-    EXPAND("${VIMB_VAR}s ", "values ");
+    check_expand("$VIMB_VAR", "value");
+    check_expand("$VIMB_VAR", "value");
+    check_expand("$VIMB_VAR$VIMB_VAR", "valuevalue");
+    check_expand("${VIMB_VAR}", "value");
+    check_expand("my$VIMB_VAR", "myvalue");
+    check_expand("'$VIMB_VAR'", "'value'");
+    check_expand("${VIMB_VAR}s ", "values ");
 
     g_unsetenv("UNKNOWN");
 
-    EXPAND("$UNKNOWN", "");
-    EXPAND("${UNKNOWN}", "");
-    EXPAND("'$UNKNOWN'", "''");
+    check_expand("$UNKNOWN", "");
+    check_expand("${UNKNOWN}", "");
+    check_expand("'$UNKNOWN'", "''");
 }
 
 static void test_expand_escaped(void)
 {
     g_setenv("VIMB_VAR", "value", true);
 
-    EXPAND("\\$VIMB_VAR", "$VIMB_VAR");
-    EXPAND("\\${VIMB_VAR}", "${VIMB_VAR}");
+    check_expand("\\$VIMB_VAR", "$VIMB_VAR");
+    check_expand("\\${VIMB_VAR}", "${VIMB_VAR}");
 
-    EXPAND("\\~/", "~/");
-    EXPAND("\\~/vimb", "~/vimb");
-    EXPAND("\\~root", "~root");
+    check_expand("\\~/", "~/");
+    check_expand("\\~/vimb", "~/vimb");
+    check_expand("\\~root", "~root");
 
-    EXPAND("\\%", "%");
+    check_expand("\\%", "%");
 
-    EXPAND("\\\\$VIMB_VAR", "\\value");         /* \\$VAR becomes \ExpandedVar */
-    EXPAND("\\\\\\$VIMB_VAR", "\\$VIMB_VAR");   /* \\\$VAR becomes \$VAR */
+    check_expand("\\\\$VIMB_VAR", "\\value");         /* \\$VAR becomes \ExpandedVar */
+    check_expand("\\\\\\$VIMB_VAR", "\\$VIMB_VAR");   /* \\\$VAR becomes \$VAR */
 }
 
 static void test_expand_tilde_home(void)
@@ -70,19 +71,19 @@ static void test_expand_tilde_home(void)
     char *dir;
     const char *home = util_get_home_dir();
 
-    EXPAND("~", "~");
-    EXPAND("~/", home);
-    EXPAND("foo~/bar", "foo~/bar");
-    EXPAND("~/foo", (dir = g_strdup_printf("%s/foo", home)));
+    check_expand("~", "~");
+    check_expand("~/", home);
+    check_expand("foo~/bar", "foo~/bar");
+    check_expand("~/foo", (dir = g_strdup_printf("%s/foo", home)));
     g_free(dir);
 
-    EXPAND("foo ~/bar", (dir = g_strdup_printf("foo %s/bar", home)));
+    check_expand("foo ~/bar", (dir = g_strdup_printf("foo %s/bar", home)));
     g_free(dir);
 
-    EXPAND("~/~", (dir = g_strdup_printf("%s/~", home)));
+    check_expand("~/~", (dir = g_strdup_printf("%s/~", home)));
     g_free(dir);
 
-    EXPAND("~/~/", (dir = g_strdup_printf("%s/~/", home)));
+    check_expand("~/~/", (dir = g_strdup_printf("%s/~/", home)));
     g_free(dir);
 }
 
@@ -93,17 +94,18 @@ static void test_expand_tilde_user(void)
     char *in, *out;
 
     /* don't expand within words */
-    EXPAND((in = g_strdup_printf("foo~%s/bar", user)), in);
+    in = g_strdup_printf("foo~%s/bar", user);
+    check_expand(in, in);
     g_free(in);
 
-    EXPAND((in = g_strdup_printf("foo ~%s", user)), (out = g_strdup_printf("foo %s", home)));
+    check_expand((in = g_strdup_printf("foo ~%s", user)), (out = g_strdup_printf("foo %s", home)));
     g_free(in);
     g_free(out);
 
-    EXPAND((in = g_strdup_printf("~%s", user)), home);
+    check_expand((in = g_strdup_printf("~%s", user)), home);
     g_free(in);
 
-    EXPAND((in = g_strdup_printf("~%s/bar", user)), (out = g_strdup_printf("%s/bar", home)));
+    check_expand((in = g_strdup_printf("~%s/bar", user)), (out = g_strdup_printf("%s/bar", home)));
     g_free(in);
     g_free(out);
 }
@@ -112,8 +114,8 @@ static void test_expand_speacial(void)
 {
     vb.state.uri = "http://fanglingsu.github.io/vimb/";
 
-    EXPAND("%", "http://fanglingsu.github.io/vimb/");
-    EXPAND("'%'", "'http://fanglingsu.github.io/vimb/'");
+    check_expand("%", "http://fanglingsu.github.io/vimb/");
+    check_expand("'%'", "'http://fanglingsu.github.io/vimb/'");
 }
 
 static void test_strcasestr(void)

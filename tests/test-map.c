@@ -31,11 +31,6 @@ static int  qpos = 0;   /* points to the queue entry for the next keypress */
     queue[qpos]   = '\0';    \
 }
 #define QUEUE_CLEAR() {queue[(qpos = 0)] = '\0';}
-#define TEST_HANDLE_STRING(in, expected) { \
-    QUEUE_CLEAR();                         \
-    map_handle_string(in, true);           \
-    g_assert_cmpstr(queue, ==, expected);  \
-}
 
 typedef struct {
     guint state;
@@ -50,62 +45,69 @@ VbResult keypress(int key)
     return RESULT_COMPLETE;
 }
 
+static void check_handle_string(const char *str, const char *expected)
+{
+    QUEUE_CLEAR();
+    map_handle_string(str, true);
+    g_assert_cmpstr(queue, ==, expected);
+}
+
 static void test_handle_string_simple(void)
 {
     /* test simple mappings */
-    TEST_HANDLE_STRING("a", "[a]");
-    TEST_HANDLE_STRING("b", "[b]");
-    TEST_HANDLE_STRING("<Tab>", "[tab]");
-    TEST_HANDLE_STRING("<S-Tab>", "[shift-tab]");
-    TEST_HANDLE_STRING("<C-F>", "[ctrl-f]");
-    TEST_HANDLE_STRING("<C-f>", "[ctrl-f]");
-    TEST_HANDLE_STRING("<CR>", "[cr]");
-    TEST_HANDLE_STRING("foobar", "[baz]");
+    check_handle_string("a", "[a]");
+    check_handle_string("b", "[b]");
+    check_handle_string("<Tab>", "[tab]");
+    check_handle_string("<S-Tab>", "[shift-tab]");
+    check_handle_string("<C-F>", "[ctrl-f]");
+    check_handle_string("<C-f>", "[ctrl-f]");
+    check_handle_string("<CR>", "[cr]");
+    check_handle_string("foobar", "[baz]");
 }
 
 static void test_handle_string_alias(void)
 {
     /* CTRL-I is the same like <Tab> and CTRL-M like <CR> */
-    TEST_HANDLE_STRING("<C-I>", "[tab]");
-    TEST_HANDLE_STRING("<C-M>", "[cr]");
+    check_handle_string("<C-I>", "[tab]");
+    check_handle_string("<C-M>", "[cr]");
 }
 
 static void test_handle_string_multiple(void)
 {
     /* test multiple mappings together */
-    TEST_HANDLE_STRING("ba", "[b][a]");
+    check_handle_string("ba", "[b][a]");
 
     /* incomplete ambiguous sequences are not matched jet */
-    TEST_HANDLE_STRING("foob", "");
-    TEST_HANDLE_STRING("ar", "[baz]");
+    check_handle_string("foob", "");
+    check_handle_string("ar", "[baz]");
 }
 
 static void test_handle_string_remapped(void)
 {
     /* test multiple mappings together */
-    TEST_HANDLE_STRING("ba", "[b][a]");
+    check_handle_string("ba", "[b][a]");
 
     /* incomplete ambiguous sequences are not matched jet */
-    TEST_HANDLE_STRING("foob", "");
-    TEST_HANDLE_STRING("ar", "[baz]");
+    check_handle_string("foob", "");
+    check_handle_string("ar", "[baz]");
 
     /* test remapping */
     map_insert("c", "baza", 't', true);
-    TEST_HANDLE_STRING("c", "[b][a]z[a]");
+    check_handle_string("c", "[b][a]z[a]");
     map_insert("d", "cki", 't', true);
-    TEST_HANDLE_STRING("d", "[b][a]z[a]ki");
+    check_handle_string("d", "[b][a]z[a]ki");
 }
 
 static void test_remove(void)
 {
     map_insert("x", "[x]", 't', false);
     /* make sure that the mapping works */
-    TEST_HANDLE_STRING("x", "[x]");
+    check_handle_string("x", "[x]");
 
     map_delete("x", 't');
 
     /* make sure the mapping  removed */
-    TEST_HANDLE_STRING("x", "x");
+    check_handle_string("x", "x");
 }
 
 static void test_keypress_single(void)
