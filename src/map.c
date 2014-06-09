@@ -46,8 +46,8 @@ static struct {
 static gboolean map_delete_by_lhs(const char *lhs, int len, char mode);
 static int keyval_to_string(guint keyval, guint state, guchar *string);
 static int utf_char2bytes(guint c, guchar *buf);
-static char *convert_keys(char *in, int inlen, int *len);
-static char *convert_keylabel(char *in, int inlen, int *len);
+static char *convert_keys(const char *in, int inlen, int *len);
+static char *convert_keylabel(const char *in, int inlen, int *len);
 static gboolean do_timeout(gpointer data);
 static void free_map(Map *map);
 
@@ -324,7 +324,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
  * Like map_handle_keys but use a null terminates string with untranslated
  * keys like <C-T> that are converted here before calling map_handle_keys.
  */
-void map_handle_string(char *str, gboolean use_map)
+void map_handle_string(const char *str, gboolean use_map)
 {
     int len;
     char *keys = convert_keys(str, strlen(str), &len);
@@ -332,7 +332,7 @@ void map_handle_string(char *str, gboolean use_map)
     map_handle_keys((guchar*)keys, len, use_map);
 }
 
-void map_insert(char *in, char *mapped, char mode, gboolean remap)
+void map_insert(const char *in, const char *mapped, char mode, gboolean remap)
 {
     int inlen, mappedlen;
     char *lhs = convert_keys(in, strlen(in), &inlen);
@@ -352,7 +352,7 @@ void map_insert(char *in, char *mapped, char mode, gboolean remap)
     map.list = g_slist_prepend(map.list, new);
 }
 
-gboolean map_delete(char *in, char mode)
+gboolean map_delete(const char *in, char mode)
 {
     int len;
     char *lhs = convert_keys(in, strlen(in), &len);
@@ -478,11 +478,12 @@ static int utf_char2bytes(guint c, guchar *buf)
  * Converts a keysequence into a internal raw keysequence.
  * Returned keyseqence must be freed if not used anymore.
  */
-static char *convert_keys(char *in, int inlen, int *len)
+static char *convert_keys(const char *in, int inlen, int *len)
 {
     int symlen, rawlen;
-    char *p, *dest, *raw;
+    char *dest;
     char ch[1];
+    const char *p, *raw;
     GString *str = g_string_new("");
 
     *len = 0;
@@ -556,7 +557,7 @@ static char *convert_keys(char *in, int inlen, int *len)
  * Translate given key string into a internal representation <cr> -> \n.
  * The len of the translated key sequence is put into given *len pointer.
  */
-static char *convert_keylabel(char *in, int inlen, int *len)
+static char *convert_keylabel(const char *in, int inlen, int *len)
 {
     for (int i = 0; i < LENGTH(key_labels); i++) {
         if (inlen == key_labels[i].len
