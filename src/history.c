@@ -56,6 +56,12 @@ void history_cleanup(void)
 {
     const char *file;
     GList *list;
+
+    /* don't cleanup the history file if history max size is 0 */
+    if (!vb.config.history_max) {
+        return;
+    }
+
     for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
         file = get_file_by_type(i);
         list = load(file);
@@ -71,7 +77,9 @@ void history_add(HistoryType type, const char *value, const char *additional)
 {
     const char *file;
 
-    if (!vb.state.enable_history) {
+    /* don't write a history entry to the file if history is disabled or
+     * history max size is set to 0 */
+    if (!vb.state.enable_history || !vb.config.history_max) {
         return;
     }
 

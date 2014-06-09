@@ -778,7 +778,8 @@ Header completely from request.
 .RE
 .TP
 .B history-max-items (int)
-Maximum number of unique items stored in search-, command or URI history.
+Maximum number of unique items stored in search-, command or URI history. If
+history-max-items is set to 0, the history file will not be changed.
 .TP
 .B home-page (string)
 Homepage that vimb opens if started without a URI.

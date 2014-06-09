@@ -122,11 +122,17 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     /* yes, the whole file is read and wen possible don not need all the
      * lines, but this is easier to implement compared to reading the file
      * line wise from ent to begining */
-    char *line, **lines = util_get_lines(filename);
+    char *line, **lines;
     void *value;
     int len, num_items = 0;
 
-    len = g_strv_length(lines);
+    /* return empty list if max items is 0 */
+    if (!max_items) {
+        return gl;
+    }
+
+    lines = util_get_lines(filename);
+    len   = g_strv_length(lines);
     if (!len) {
         return gl;
     }
