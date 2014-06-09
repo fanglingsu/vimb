@@ -28,6 +28,16 @@ static void test_shortcut_single(void)
     uri = shortcut_get_uri("_vimb1_ zero one");
     g_assert_cmpstr(uri, ==, "only-zero:zero%20one");
     g_free(uri);
+
+    /* don't fail on unmatches quotes if there are only $0 placeholders */
+    uri = shortcut_get_uri("_vimb1_ 'unmatched quote");
+    g_assert_cmpstr(uri, ==, "only-zero:'unmatched%20quote");
+    g_free(uri);
+
+    /* check if all placeholders $0 are replaces */
+    uri = shortcut_get_uri("_vimb5_ one two");
+    g_assert_cmpstr(uri, ==, "double-zero:one%20two-one%20two");
+    g_free(uri);
 }
 
 static void test_shortcut_default(void)
@@ -61,6 +71,34 @@ static void test_shortcut_fullrange(void)
     g_free(uri);
 }
 
+static void test_shortcut_shell_param(void)
+{
+    char *uri;
+
+    /* single quotes */
+    uri = shortcut_get_uri("_vimb6_ 'rail station' 'city hall'");
+    g_assert_cmpstr(uri, ==, "shell:rail%20station-city%20hall");
+    g_free(uri);
+
+    /* double quotes */
+    uri = shortcut_get_uri("_vimb6_ \"rail station\" city hall");
+    g_assert_cmpstr(uri, ==, "shell:rail%20station-city%20hall");
+    g_free(uri);
+}
+
+static void test_shortcut_shell_param_invalid(void)
+{
+    char *uri;
+    /* if parsing fails we expect the shortcut template to be returned */
+    uri = shortcut_get_uri("_vimb6_ 'rail station' 'city hall");
+    g_assert_cmpstr(uri, ==, "shell:$0-$1");
+    g_free(uri);
+
+    uri = shortcut_get_uri("_vimb6_ can't parse");
+    g_assert_cmpstr(uri, ==, "shell:$0-$1");
+    g_free(uri);
+}
+
 static void test_shortcut_remove(void)
 {
     char *uri;
@@ -81,6 +119,8 @@ int main(int argc, char *argv[])
     g_assert_true(shortcut_add("_vimb2_", "default:$0-$2"));
     g_assert_true(shortcut_add("_vimb3_", "fullrange:$0-$1-$9"));
     g_assert_true(shortcut_add("_vimb4_", "for-remove:$0"));
+    g_assert_true(shortcut_add("_vimb5_", "double-zero:$0-$0"));
+    g_assert_true(shortcut_add("_vimb6_", "shell:$0-$1"));
     g_assert_true(shortcut_set_default("_vimb2_"));
 
     g_test_init(&argc, &argv, NULL);
@@ -89,6 +129,8 @@ int main(int argc, char *argv[])
     g_test_add_func("/test-shortcut/get_uri/default", test_shortcut_default);
     g_test_add_func("/test-shortcut/get_uri/keep-unmatched", test_shortcut_keep_unmatched);
     g_test_add_func("/test-shortcut/get_uri/fullrange", test_shortcut_fullrange);
+    g_test_add_func("/test-shortcut/get_uri/shell-param", test_shortcut_shell_param);
+    g_test_add_func("/test-shortcut/get_uri/shell-param-invalid", test_shortcut_shell_param_invalid);
     g_test_add_func("/test-shortcut/remove", test_shortcut_remove);
 
     result = g_test_run();

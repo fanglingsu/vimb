@@ -487,12 +487,19 @@ given when the shortcut is called. The parameters given when the shortcut is
 called will be split into as many parameters like the highest used
 placeholder.
 
+To use spaces within the parameters, the parameters can be grouped by
+surrounding them with single- or double quotes like shown in example shortcut
+`map'.
+
 .RS
 Examples:
 .IP ":shortcut-add dl=https://duckduckgo.com/lite/?q=$0"
 to setup a search engine. Can be called by `:open dl my search phrase'.
 .IP ":shortcut-add gh=https://github.com/$0/$1"
 to build URIs from given parameters. Can be called `:open gh fanglingsu vimb'.
+.IP ":shortcut-add map=https://maps.google.com/maps?saddr=$0&daddr=$1"
+to search for a route, all but the last parameter must be quoted if they
+contain spaces like `:open map "city hall, London" railway station, London'
 .RE
 .TP
 .BI ":shortcut-remove " "SHORTCUT"

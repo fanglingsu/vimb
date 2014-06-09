@@ -70,36 +70,68 @@ gboolean shortcut_set_default(const char *key)
 char *shortcut_get_uri(const char *string)
 {
     const char *tmpl, *query = NULL;
-    char *uri, **parts, ph[3] = "$0";
-    unsigned int len;
-    int max;
+    char *uri, **argv, *quoted_param, ph[3] = "$0";
+    int i, max, argc;
+    GError *error = NULL;
 
     tmpl = shortcut_lookup(string, &query);
     if (!tmpl) {
         return NULL;
     }
 
-    uri = g_strdup(tmpl);
     max = get_max_placeholder(tmpl);
+    /* if there are only $0 placeholders we don't need to split the parameters */
+    if (max == 0) {
+        quoted_param = soup_uri_encode(query, "&");
+        uri          = util_str_replace(ph, quoted_param, tmpl);
+        g_free(quoted_param);
+
+        return uri;
+    }
+
+    uri = g_strdup(tmpl);
+
     /* skip if no placeholders found */
     if (max < 0) {
         return uri;
     }
 
-    /* split the parameters */
-    parts = g_strsplit(query, " ", max + 1);
-    len   = g_strv_length(parts);
+    /* for multiple placeholders - split the parameters */
+    if (!g_shell_parse_argv(query, &argc, &argv, &error)) {
+#ifndef TESTLIB
+        vb_echo(VB_MSG_ERROR, true, error->message);
+#endif
+        g_clear_error(&error);
 
-    for (unsigned int n = 0; n < len; n++) {
-        char *new, *qs;
-        ph[1] = n + '0';
-        qs  = soup_uri_encode(parts[n], "&");
+        /* us the shortcut template uri like it is */
+        return uri;
+    }
+
+    for (i = 0; i < argc; i++) {
+        char *new, *qs, *combined;
+
+        ph[1] = i + '0';
+        /* if we reached the last placeholder put all other tokens into it */
+        if (i >= max) {
+            combined = g_strjoinv(" ", &(argv[i]));
+            qs       = soup_uri_encode(combined, "&");
+            new      = util_str_replace(ph, qs, uri);
+            g_free(combined);
+            g_free(qs);
+            g_free(uri);
+            uri = new;
+
+            /* we are done - break the loop */
+            break;
+        }
+
+        qs  = soup_uri_encode(argv[i], "&");
         new = util_str_replace(ph, qs, uri);
         g_free(qs);
         g_free(uri);
         uri = new;
     }
-    g_strfreev(parts);
+    g_strfreev(argv);
 
     return uri;
 }
