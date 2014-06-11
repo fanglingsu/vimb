@@ -1,20 +1,20 @@
-# vimb
-Vimb is a web browser that behaves like Vimprobable, but with some
-paradigms from dwb and hopefully a cleaner code base. The goal of Vimb is to
-build a completely keyboard-driven, efficient and pleasurable
-browsing-experience with low memory and cpu usage.
+# vimb - the vim like browser
+Vimb is vim like webbrowser that is inspired by pentadactyl and vimprobable.
+The goal of Vimb is to build a completely keyboard-driven, efficient and
+pleasurable browsing-experience with low memory and cpu usage that is
+intuitive to use for vim users.
 
 More information and some screenshots of vimb browser in action can be found on
-the [vimb project page][vimb].
+the project page of [vimb][].
 
 ## features
 - vim-like modal
-- vim-like keybindings
+- vim-like [keybindings][]
 - nearly every configuration can be changed on runtime with `:set varname=value`
   - allow to inspect the current set values of variables `:set varname?`
   - allow to toggle boolean variables with `:set varname!`
 - keybindings for each browser mode assignable
-- history for
+- [history][] for
   - commands
   - search queries
   - urls
@@ -24,8 +24,8 @@ the [vimb project page][vimb].
   - bookmarked urls
   - variable names of settings
   - search-queries
-- hinting - marks links, form fields and other clickable elements to be
-  clicked, opened or inspected
+- [hinting][hints] - marks links, form fields and other clickable elements to
+  be clicked, opened or inspected
 - webinspector that opens ad the bottom of the browser window like in some
   other fat browsers
 - ssl validation against ca-certificate file
@@ -33,8 +33,10 @@ the [vimb project page][vimb].
 - custom configuration files
 - open input or textarea with configurable external editor
 - user defined URL-shortcuts with placeholders
+- custom [protocol handlers][handlers]
 - run shell commands from inpubox
-- read it later queue to collect URIs for later use
+- read it later [queue][] to collect URIs for later use
+- multiple yank/paste [registers][]
 
 ## packages
 
@@ -72,7 +74,13 @@ Information about the license are found in the file LICENSE.
 # mailing list
 - feature requests, issues and patches can be discussed on the [mailing list][mail]
 
-[vimb]:        http://fanglingsu.github.io/vimb/ "vimb - vim-like webkit browser project page"
+[vimb]:        http://fanglingsu.github.io/vimb/ "vimb - vim like browser project page"
+[keybindings]: http://fanglingsu.github.io/vimb/keybindings.html "vimb keybindings"
+[hints]:       http://fanglingsu.github.io/vimb/keybindings.html#hinting "vimb hinting"
+[queue]:       http://fanglingsu.github.io/vimb/commands.html#queue "vimb read it later queue feature"
+[history]:     http://fanglingsu.github.io/vimb/keybindings.html#history "vimb keybindings to access history"
+[handlers]:    http://fanglingsu.github.io/vimb/commands.html#handlers "vimb custom protocol handlers"
+[registers]:   http://fanglingsu.github.io/vimb/keybindings.html#registers "vimb yank/paste registers"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
 [archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
