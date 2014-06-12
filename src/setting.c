@@ -85,7 +85,7 @@ static Setting default_settings[] = {
     {NULL, "print-backgrounds", TYPE_BOOLEAN, webkit, {.i = 1}},
     {"sansfont", "sans-serif-font-family", TYPE_CHAR, webkit, {.s = "sans-serif"}},
     {"seriffont", "serif-font-family", TYPE_CHAR, webkit, {.s = "serif"}},
-    {"useragent", "user-agent", TYPE_CHAR, webkit, {.s = PROJECT "/" VERSION " (X11; Linux i686) AppleWebKit/535.22+ Compatible (Safari)"}},
+    {"useragent", "user-agent", TYPE_CHAR, webkit, {.s = "Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Safari/538.15 Version/6.0"}},
     {"spacial-navigation", "enable-spatial-navigation", TYPE_BOOLEAN, webkit, {.i = 0}},
 #if WEBKIT_CHECK_VERSION(2, 0, 0)
     {"insecure-content-show", "enable-display-of-insecure-content", TYPE_BOOLEAN, webkit, {.i = 0}},
