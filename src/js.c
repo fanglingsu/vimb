@@ -30,10 +30,9 @@ static gboolean evaluate_string(JSContextRef ctx, const char *script,
 gboolean js_eval_file(WebKitWebFrame *frame, const char *file)
 {
     char *js = NULL, *value = NULL;
-    GError *error = NULL;
 
     if (g_file_test(file, G_FILE_TEST_IS_REGULAR)
-        && g_file_get_contents(file, &js, NULL, &error)
+        && g_file_get_contents(file, &js, NULL, NULL)
     ) {
         gboolean success = js_eval(frame, js, file, &value);
         if (!success) {
