@@ -54,6 +54,8 @@ static SettingStatus proxy(const Setting *s, const SettingType type);
 static SettingStatus user_style(const Setting *s, const SettingType type);
 static SettingStatus history_max_items(const Setting *s, const SettingType type);
 static SettingStatus editor_command(const Setting *s, const SettingType type);
+static SettingStatus download_command(const Setting *s, const SettingType type);
+static SettingStatus download_use_external(const Setting *s, const SettingType type);
 static SettingStatus timeoutlen(const Setting *s, const SettingType type);
 static SettingStatus headers(const Setting *s, const SettingType type);
 static SettingStatus nextpattern(const Setting *s, const SettingType type);
@@ -130,6 +132,8 @@ static Setting default_settings[] = {
     {NULL, "download-path", TYPE_CHAR, download_path, {.s = ""}},
     {NULL, "history-max-items", TYPE_INTEGER, history_max_items, {.i = 2000}},
     {NULL, "editor-command", TYPE_CHAR, editor_command, {.s = "x-terminal-emulator -e vi %s"}},
+    {NULL, "download-command", TYPE_CHAR, download_command, {.s = "/bin/sh -c \"curl -sLJOC - -A '$VIMB_USER_AGENT' -e '$VIMB_URI' -b '$VIMB_COOKIES' %s\""}},
+    {NULL, "download-use-external", TYPE_BOOLEAN, download_use_external, {.i = 0}},
     {NULL, "header", TYPE_CHAR, headers, {.s = ""}},
     {NULL, "nextpattern", TYPE_CHAR, nextpattern, {.s = "/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i"}},
     {NULL, "previouspattern", TYPE_CHAR, nextpattern, {.s = "/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/"}},
@@ -819,6 +823,35 @@ static SettingStatus editor_command(const Setting *s, const SettingType type)
     }
 
     OVERWRITE_STRING(vb.config.editor_command, s->arg.s);
+
+    return SETTING_OK;
+}
+
+static SettingStatus download_command(const Setting *s, const SettingType type)
+{
+    if (type == SETTING_GET) {
+        print_value(s, vb.config.download_command);
+
+        return SETTING_OK;
+    }
+
+    OVERWRITE_STRING(vb.config.download_command, s->arg.s);
+
+    return SETTING_OK;
+}
+
+static SettingStatus download_use_external(const Setting *s, const SettingType type)
+{
+    if (type != SETTING_SET) {
+        if (type == SETTING_TOGGLE) {
+            vb.config.download_use_external = !vb.config.download_use_external;
+        }
+        print_value(s, &vb.config.download_use_external);
+
+        return SETTING_OK;
+    }
+
+    vb.config.download_use_external = s->arg.i ? true : false;
 
     return SETTING_OK;
 }

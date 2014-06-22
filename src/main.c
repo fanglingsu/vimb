@@ -86,6 +86,9 @@ static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, cons
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
     WebKitWebFrame *frame, WebKitNetworkRequest *request, char*
     mime_type, WebKitWebPolicyDecision *decision);
+gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);
+void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const char *file);
+void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 
 /* functions */
@@ -1185,8 +1188,7 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
 
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path)
 {
-    WebKitDownloadStatus status;
-    char *uri, *file, *dir;
+    char *file, *dir;
 
     /* prepare the path to save the download */
     if (path) {
@@ -1208,17 +1210,38 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
         file = util_build_path(path, vb.config.download_dir);
     }
 
+    if (vb.config.download_use_external && *vb.config.download_command) {
+        /* run download with external programm */
+        vb_download_external(view, download, file);
+        g_free(file);
+
+        /* signalize that we handle the download ourself */
+        return false;
+    } else {
+        /* use webkit download helpr to download the uri */
+        vb_download_internal(view, download, file);
+        g_free(file);
+
+        return true;
+    }
+}
+
+void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const char *file)
+{
+    char *uri;
+    guint64 size;
+    WebKitDownloadStatus status;
+
     /* build the file uri from file path */
     uri = g_filename_to_uri(file, NULL, NULL);
     webkit_download_set_destination_uri(download, uri);
-    g_free(file);
     g_free(uri);
 
-    guint64 size = webkit_download_get_total_size(download);
+    size = webkit_download_get_total_size(download);
     if (size > 0) {
-        vb_echo(VB_MSG_NORMAL, false, "Download %s [~%uB] started ...", path, size);
+        vb_echo(VB_MSG_NORMAL, false, "Download %s [%uB] started ...", file, size);
     } else {
-        vb_echo(VB_MSG_NORMAL, false, "Download %s started ...", path);
+        vb_echo(VB_MSG_NORMAL, false, "Download %s started ...", file);
     }
 
     status = webkit_download_get_status(download);
@@ -1234,8 +1257,73 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
     g_signal_connect(download, "notify::progress", G_CALLBACK(webview_download_progress_cb), NULL);
 
     vb_update_statusbar();
+}
 
-    return true;
+void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file)
+{
+    const char *user_agent = NULL, *mimetype = NULL;
+    char **argv, **envp;
+    char *cmd;
+    int argc;
+    guint64 size;
+    SoupMessage *msg;
+    WebKitNetworkRequest *request;
+    GError *error = NULL;
+
+    request = webkit_download_get_network_request(download);
+    msg     = webkit_network_request_get_message(request);
+    /* if the download is started by the :save command or hinting we get no
+     * message here */
+    if (msg) {
+        user_agent = soup_message_headers_get_one(msg->request_headers, "User-Agent");
+        mimetype   = soup_message_headers_get_one(msg->request_headers, "Content-Type");
+    }
+
+    /* set the required download information as environment */
+    envp = g_get_environ();
+    envp = g_environ_setenv(envp, "VIMB_FILE", file, true);
+#ifdef FEATURE_COOKIE
+    envp = g_environ_setenv(envp, "VIMB_COOKIES", vb.files[FILES_COOKIE], true);
+#endif
+    if (mimetype) {
+        envp = g_environ_setenv(envp, "VIMB_MIME_TYPE", mimetype, true);
+    }
+
+    if (!user_agent) {
+        WebKitWebSettings *setting = webkit_web_view_get_settings(view);
+        g_object_get(G_OBJECT(setting), "user-agent", &user_agent, NULL);
+    }
+    envp = g_environ_setenv(envp, "VIMB_USER_AGENT", user_agent, true);
+
+    cmd  = g_strdup_printf(vb.config.download_command, webkit_download_get_uri(download));
+
+    if (!g_shell_parse_argv(cmd, &argc, &argv, &error)) {
+        g_warning(
+            "Could not parse download-command '%s': %s",
+            vb.config.download_command,
+            error->message
+        );
+        g_error_free(error);
+        g_free(cmd);
+
+        return;
+    }
+    g_free(cmd);
+
+    if (g_spawn_async(NULL, argv, envp, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
+        size = webkit_download_get_total_size(download);
+        if (size > 0) {
+            vb_echo(VB_MSG_NORMAL, true, "Download of %uB started", size);
+        } else {
+            vb_echo(VB_MSG_NORMAL, true, "Download started");
+        }
+    } else {
+        g_warning("%s", error->message);
+        g_clear_error(&error);
+        vb_echo(VB_MSG_ERROR, true, "Could not start download");
+    }
+    g_strfreev(argv);
+    g_strfreev(envp);
 }
 
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)

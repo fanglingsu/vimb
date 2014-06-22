@@ -301,6 +301,8 @@ typedef struct {
     char         *download_dir;
     guint        history_max;
     char         *editor_command;
+    char         *download_command;
+    gboolean     download_use_external;
     guint        timeoutlen;      /* timeout for ambiguous mappings */
     gboolean     strict_focus;
     GHashTable   *headers;        /* holds user defined header appended to requests */
