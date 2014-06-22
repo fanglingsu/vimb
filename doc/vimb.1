@@ -19,7 +19,7 @@ Mandatory arguments to long options are mandatory for short options too.
 Run \fICMD\fP as ex command line right before the first page is loaded.
 Several ex commands can be used separated by "|".
 
-Example: `vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"`
+Example: vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"
 .TP
 .BI "\-c, \-\-config " "CONFIG-FILE"
 Use custom configuration given as \fICONFIG-FILE\fP. This will also be applied
@@ -218,10 +218,12 @@ element has been selected, it is automatically clicked or used (depending on
 The filtering of hints by text splits the query at ' ' and use the single parts
 as separate queries to filter the hints. This is useful for hints that have a
 lot of filterable chars in common and it needs many chars to make a distinct
-selection. For example ';ove to' will easily select the second hint out of
+selection. For example ';over tw' will easily select the second hint out of
 {'very long link text one', 'very long link text two'}.
 .RS 0
+.TP
 Following keys have special meanings in Hints mode:
+.PD 0
 .IP \fB<CR>\fP
 Selects the first highlighted element, or the current focused.
 .IP "\fB<Tab>\fP"
@@ -230,7 +232,11 @@ Moves the focus to the next hint element.
 Moves the focus to the previous hint element.
 .IP "\fB<Esc>, CTRL\-C, CTRL\-[\fP"
 Exits Hints mode without selecting an element
+.PD
 .RE
+.TP
+Hint modes:
+.PD 0
 .TP
 .B f
 Is an alias for the \fB;o\fP hint mode.
@@ -279,6 +285,7 @@ Yank hint's destination location into primary and secondary clipboard.
 .B ;Y
 Yank hint's text description or form text into primary and secondary
 clipboard.
+.PD
 .TP
 .BI Syntax: " g;{mode}{hint}"
 Start an extended hints mode and stay there until <Esc> is pressed. Like the
@@ -392,6 +399,8 @@ Note that the \fIlhs\fP ends with the first found space. If you want to use
 space also in the {lhs} you have to escape this with a single `\\' like shown
 in the examples.
 .RS 0
+.TP
+.PD 0
 Standard key mapping commands are provided for these modes \fIm\fP:
 .IP \fBn\fP
 Normal mode: When browsing normally.
@@ -399,6 +408,8 @@ Normal mode: When browsing normally.
 Insert mode: When interacting with text fields on a website.
 .IP \fBc\fP
 Command Line mode: When typing into the vimbs command line.
+.PD
+.P
 .RE
 Most keys in key sequences are represented simply by the character that you
 see on the screen when you type them. However, as a number of these characters
@@ -417,9 +428,10 @@ be used <Left>, <Up>, <Right>, <Down> for the cursor keys, <Tab>, <Esc>, <CR>,
 Map the key sequence \fIlhs\fP to \fIrhs\fP for the modes where the map
 command applies. The result, including \fIrhs\fP, is then further scanned for
 mappings. This allows for nested and recursive use of mappings.
-
 .RS
+.P
 Example:
+.PD 0
 .IP ":cmap <C-G>h /home/user/downloads/"
 Adds a keybind to insert a file path into the input box. This could be useful
 for the `:save' command that could be used as ":save ^Gh".
@@ -428,6 +440,7 @@ This will enable scripts and lookup the first bookmarked URI with the tag
 `glib' and open it immediately if F1 key is pressed.
 .IP ":nmap \\\\\ \\\\\  50G;o"
 Example which mappes two spaces to go to 50% of the page, start hinting mode.
+.PD
 .RE
 .TP
 .BI ":nn[oremap] {" lhs "} {" rhs }
@@ -461,13 +474,16 @@ Adds a handler to direct \fIHANDLER\fP links to the external \fICOMMAND\fP.
 The \fICOMMAND\fP can contain one placeholder %s that will be filled by the
 full URI given when the command is called.
 .RS
+.P
 Examples:
+.PD 0
 .IP ":handler-add magnet=xdg-open %s"
 to open magnet links with xdg-open.
 .IP ":handler-add magnet=transmission-gtk %s"
 to open magnet links directly with Transmission.
 .IP ":handler-add irc=irc-handler.sh %s"
 to direct irc://<host>:<port>/<channel> links to a wrapper for your irc client.
+.PD
 .RE
 .TP
 .BI ":handler-remove " "HANDLER"
@@ -490,9 +506,10 @@ placeholder.
 To use spaces within the parameters, the parameters can be grouped by
 surrounding them with single- or double quotes like shown in example shortcut
 `map'.
-
 .RS
+.P
 Examples:
+.PD 0
 .IP ":shortcut-add dl=https://duckduckgo.com/lite/?q=$0"
 to setup a search engine. Can be called by `:open dl my search phrase'.
 .IP ":shortcut-add gh=https://github.com/$0/$1"
@@ -500,6 +517,7 @@ to build URIs from given parameters. Can be called `:open gh fanglingsu vimb'.
 .IP ":shortcut-add map=https://maps.google.com/maps?saddr=$0&daddr=$1"
 to search for a route, all but the last parameter must be quoted if they
 contain spaces like `:open map "city hall, London" railway station, London'
+.PD
 .RE
 .TP
 .BI ":shortcut-remove " "SHORTCUT"
@@ -565,16 +583,14 @@ Close the browser.
 Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated
 value.
 
-Example:
-":eval document.cookie"
+Example: :eval document.cookie
 .TP
 .BI ":no[rmal][!] [" CMDS ]
 Execute normal mode commands \fICMDS\fP. This makes it possible to execute
 normal mode commands typed on the input box. If the \fI!\fP is given, mappings
 will not be used.
 
-Example:
-":set scripts!|no! R"
+Example: :set scripts!|no! R
 .TP
 .B :ha[rdcopy]
 Print current document. Open a GUI dialog where you can select the printer,
@@ -750,10 +766,47 @@ cookies)}.
 .B cookie-timeout (int)
 Cookie timeout in seconds.
 .TP
+.B download-command (string)
+A command with placeholder '%s' that will be invoked to download a uri.
+.RS
+.TP
+Following additional environment variable are available:
+.PD 0
+.TP
+.B $VIMB_URI
+The URI of the current opened page, normally the page where the download was
+started from, also known as referer.
+.TP
+.B $VIMB_FILE
+The target file that is calculated by vimb according to the `download-path'.
+Note that this file might already exists, so it's strongly recommended to
+check the path in this variable before usage.
+.TP
+.B $VIMB_COOKIES
+Path to the cookie file vimb uses. This is only available if vimb is compiled
+with COOKIE feature.
+.TP
+.B $VIMB_USER_AGENT
+Holds the user agent string that vimb uses.
+.TP
+.B $VIMB_MIME_TYPE
+The mime-type of the download. This variable is only available when der server
+sent the mime-type header with the response and only if the download was not
+start by the `:save' command or the `;s' hinting.
+.PD
+.P
+Example: :set download-command=/bin/sh -c "wget -c %s -O $VIMB_FILE
+--load-cookies $VIMB_COOKIES"
+.RE
+.TP
 .B download-path (string)
 Path to the default download directory. If the directory is not set download
 will be written into current directory. Following pattern will be expanded if
 the download is started '~/', '~user', '$VAR' and '${VAR}'.
+.TP
+.B download-use-external (bool)
+Indicates if the external download tool set as `download-command' should be
+used to handle downloads. If this is disabled vimb will handle the download.
 .TP
 .B editor-command (string)
 Command with placeholder '%s' called if form filed is opened with editor to
@@ -771,10 +824,13 @@ no '=' after the header name, than the complete header will be removed from
 the request, if the '=' is present means that the header value is set to empty
 value.
 .RS
+.P
 Example:
+.PD 0
 .IP ":set header=DNT=1,User-Agent"
 Send the 'Do Not Track' header with each request and remove the User-Agent
 Header completely from request.
+.PD
 .RE
 .TP
 .B history-max-items (int)
@@ -867,52 +923,42 @@ If 'on' the user defined styles-sheet is used.
 The time in milliseconds that is waited for a key code or mapped key sequence
 to complete.
 .SH FILES
-.I $XDG_CONFIG_HOME/vimb/config
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/config
 Configuration file to set webkit setting, some GUI styles and keybindings.
-.RE
-.I $XDG_CONFIG_HOME/vimb/cookies
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/cookies
 Cookie store file.
-.RE
-.I $XDG_CONFIG_HOME/vimb/closed
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/closed
 Holds the URI of the last closed browser window.
-.RE
-.I $XDG_CONFIG_HOME/vimb/history
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/history
 This file holds the history of unique opened URIs.
-.RE
-.I $XDG_CONFIG_HOME/vimb/command
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/command
 This file holds the history of commands and search queries performed via input
 box.
-.RE
-.I $XDG_CONFIG_HOME/vimb/search
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/search
 This file holds the history of search queries.
-.RE
-.I $XDG_CONFIG_HOME/vimb/bookmark
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/bookmark
 Holds the bookmarks saved with command `bma'.
-.RE
-.I $XDG_CONFIG_HOME/vimb/queue
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/queue
 Holds the read it later queue filled by `qpush' if
 vimb has been compiled with QUEUE feature.
-.RE
-.I $XDG_CONFIG_HOME/vimb/hsts
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/hsts
 Holds the known hsts hosts if vimb is compliled with HTTP strict transport
 security feature.
-.RE
-.I $XDG_CONFIG_HOME/vimb/scripts.js
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/scripts.js
 This file can be used to run user scripts, that are injected into every paged
 that is opened.
-.RE
-.I $XDG_CONFIG_HOME/vimb/style.css
-.RS
+.TP
+.B $XDG_CONFIG_HOME/vimb/style.css
 File for userdefined css styles. These file is used if the config variable
 `stylesheet' is enabled.
 .RE
