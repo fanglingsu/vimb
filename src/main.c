@@ -180,7 +180,7 @@ gboolean vb_load_uri(const Arg *arg)
         path = g_strstrip(arg->s);
     }
     if (!path || !*path) {
-        path = vb.config.home_page;
+        path = GET_CHAR("home-page");
     }
 
     if (strstr(path, "://") || !strncmp(path, "about:", 6)) {

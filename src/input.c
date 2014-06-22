@@ -78,12 +78,13 @@ VbResult input_keypress(int key)
 VbResult input_open_editor(void)
 {
     char **argv, *file_path = NULL;
-    const char *text;
+    const char *text, *editor_command;
     int argc;
     GPid pid;
     gboolean success;
 
-    if (!vb.config.editor_command || !*vb.config.editor_command) {
+    editor_command = GET_CHAR("editor-command");
+    if (!editor_command || !*editor_command) {
         vb_echo(VB_MSG_ERROR, true, "No editor-command configured");
         return RESULT_ERROR;
     }
@@ -104,7 +105,7 @@ VbResult input_open_editor(void)
     }
 
     /* spawn editor */
-    char* command = g_strdup_printf(vb.config.editor_command, file_path);
+    char* command = g_strdup_printf(editor_command, file_path);
     if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
         g_critical("Could not parse editor-command '%s'", command);
         g_free(command);

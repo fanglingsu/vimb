@@ -69,6 +69,10 @@
 #define OVERWRITE_STRING(t, s) {if (t) {g_free(t); t = NULL;} t = g_strdup(s);}
 #define OVERWRITE_NSTRING(t, s, l) {if (t) {g_free(t); t = NULL;} t = g_strndup(s, l);}
 
+#define GET_CHAR(n)  (((Setting*)g_hash_table_lookup(vb.config.settings, n))->value.s)
+#define GET_INT(n)   (((Setting*)g_hash_table_lookup(vb.config.settings, n))->value.i)
+#define GET_BOOL(n)  (((Setting*)g_hash_table_lookup(vb.config.settings, n))->value.b)
+
 #ifdef HAS_GTK3
 #define VbColor GdkRGBA
 #define VB_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
@@ -218,7 +222,6 @@ typedef enum {
     TYPE_CHAR,
     TYPE_BOOLEAN,
     TYPE_INTEGER,
-    TYPE_FLOAT,
     TYPE_COLOR,
     TYPE_FONT,
 } Type;
@@ -227,6 +230,20 @@ enum {
     VB_CLIPBOARD_PRIMARY   = (1<<1),
     VB_CLIPBOARD_SECONDARY = (1<<2)
 };
+
+typedef int (*SettingFunction)(const char *name, Type type, void *value, void *data);
+typedef union {
+    gboolean b;
+    int      i;
+    char     *s;
+} SettingValue;
+typedef struct {
+    const char      *name;
+    Type            type;
+    SettingValue    value;
+    SettingFunction setter;
+    void            *data;  /* data given to the setter */
+} Setting;
 
 /* structs */
 typedef struct {
@@ -297,10 +314,8 @@ typedef struct {
     time_t       cookie_timeout;
 #endif
     int          scrollstep;
-    char         *home_page;
     char         *download_dir;
     guint        history_max;
-    char         *editor_command;
     guint        timeoutlen;      /* timeout for ambiguous mappings */
     gboolean     strict_focus;
     GHashTable   *headers;        /* holds user defined header appended to requests */
@@ -311,11 +326,11 @@ typedef struct {
     char         *cafile;         /* path to the ca file */
     GTlsDatabase *tls_db;         /* tls database */
     float        default_zoom;    /* default zoomlevel that is applied on zz zoom reset */
-    gboolean     fullscreen;      /* indicates if full screen mode is on */
     gboolean     kioskmode;
 #ifdef FEATURE_HSTS
     HSTSProvider *hsts_provider;  /* the hsts session feature that is added to soup session */
 #endif
+    GHashTable   *settings;
 } Config;
 
 typedef struct {
