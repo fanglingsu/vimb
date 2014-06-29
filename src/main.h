@@ -115,7 +115,7 @@
 #define VB_MARK_SIZE    (sizeof(VB_MARK_CHARS) - 1)
 
 #define VB_USER_REG     "abcdefghijklmnopqrstuvwxyz"
-#define VB_REG_CHARS    VB_USER_REG "%:/"
+#define VB_REG_CHARS    VB_USER_REG "%:/;"
 #define VB_REG_SIZE     (sizeof(VB_REG_CHARS) - 1)
 
 /* enums */

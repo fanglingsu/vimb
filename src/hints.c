@@ -218,10 +218,10 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     gboolean res;
     char pmode = '\0';
 #ifdef FEATURE_QUEUE
-    static char *modes   = "eiIoOpPstTyY";
+    static char *modes   = "eiIoOpPstTxyY";
     static char *g_modes = "IpPstyY";
 #else
-    static char *modes   = "eiIoOstTyY";
+    static char *modes   = "eiIoOstTxyY";
     static char *g_modes = "IstyY";
 #endif
 
@@ -296,8 +296,10 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
             mode_enter('n');
         }
 
-        char *v   = (value + 5);
-        Arg a     = {0};
+        char *v = (value + 5);
+        Arg a   = {0};
+        /* put the hinted value into register "; */
+        vb_register_add(';', v);
         switch (hints.mode) {
             /* used if images should be opened */
             case 'i':
@@ -319,6 +321,10 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
                 a.s = v;
                 a.i = COMMAND_SAVE_URI;
                 command_save(&a);
+                break;
+
+            case 'x':
+                map_handle_string(GET_CHAR("x-hint-command"), true);
                 break;
 
             case 'y':

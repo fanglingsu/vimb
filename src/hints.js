@@ -513,17 +513,17 @@ Object.freeze((function(){
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
-                    otY:    "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
-                    e:      "//input[not(@type) or @type='text'] | //textarea",
-                    iI:     "//img[@src]",
-                    OpPsTy: "//*[@href] | //img[@src and not(ancestor::a)] | //iframe[@src]"
+                    otY:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
+                    e:       "//input[not(@type) or @type='text'] | //textarea",
+                    iI:      "//img[@src]",
+                    OpPsTxy: "//*[@href] | //img[@src and not(ancestor::a)] | //iframe[@src]"
                 },
                 /* holds the actions to perform on hint fire */
                 actionmap = {
-                    o:         function(e) {open(e, false); return "DONE:";},
-                    t:         function(e) {open(e, true); return "DONE:";},
-                    eiIOpPsTy: function(e) {return "DATA:" + getSrc(e);},
-                    Y:         function(e) {return "DATA:" + (e.textContent || "");}
+                    o:          function(e) {open(e, false); return "DONE:";},
+                    t:          function(e) {open(e, true); return "DONE:";},
+                    eiIOpPsTxy: function(e) {return "DATA:" + getSrc(e);},
+                    Y:          function(e) {return "DATA:" + (e.textContent || "");}
                 };
 
             config = {

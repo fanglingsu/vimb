@@ -285,6 +285,10 @@ Push the hint's URI to the beginning of the read it later queue like the
 `:qunshift' command. This is only available if vimb was compiled with QUEUE
 feature.
 .TP
+.B ;x
+Hints like ;o, but instead of opening the hinted URI, the
+`x-hint-command' is run in vimb.
+.TP
 .B ;y
 Yank hint's destination location into primary and secondary clipboard.
 .TP
@@ -370,7 +374,7 @@ Moves the cursor after the char in inputbox.
 .B CTRL\-V
 Pass the next key press directly to gtk.
 .TP
-.B CTRL\-R {a-z%:/}
+.B CTRL\-R {a-z%:/;}
 Insert the content of given register at cursor position. See also section
 REGISTERS.
 .SS Command Line History
@@ -625,6 +629,10 @@ Contains the most recent executed ex command.
 .TP
 .B \[char34]/
 Contains the most recent search-pattern.
+.TP
+.B \[char34];
+Contains the last hinted URL. This can be used in `x-hint-command' to get the
+URL of the hint.
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<shift-tab>` in the
 activated inputbox. Depending of the current inserted content different
@@ -933,6 +941,21 @@ If 'on' the user defined styles-sheet is used.
 .B timeoutlen (int)
 The time in milliseconds that is waited for a key code or mapped key sequence
 to complete.
+.TP
+.B x-hint-command (string)
+Command used if hint mode ;x is fired. The command can be any vimb command
+string. Note that the command is run through the mapping mechanism of vimb so
+it might change the behaviour by adding or changing mappings.
+.RS
+.P
+.PD 0
+.IP ":set x-hint-command=50G"
+Not really useful. If the hint is fired, scroll to the middle of the page.
+.IP ":set x-hint-command=:sh! curl -e <C-R>% <C-R>;"
+This fills the inputbox with the prefilled download command and replaces
+`<C-R>%' with the current URI and `<C-R>;' with the URI of the hinted element.
+.PD
+.RE
 .SH FILES
 .TP
 .B $XDG_CONFIG_HOME/vimb/config
@@ -962,7 +985,7 @@ Holds the read it later queue filled by `qpush' if
 vimb has been compiled with QUEUE feature.
 .TP
 .B $XDG_CONFIG_HOME/vimb/hsts
-Holds the known hsts hosts if vimb is compliled with HTTP strict transport
+Holds the known hsts hosts if vimb is compiled with HTTP strict transport
 security feature.
 .TP
 .B $XDG_CONFIG_HOME/vimb/scripts.js

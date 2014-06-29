@@ -140,6 +140,7 @@ void setting_init()
 #ifdef FEATURE_HSTS
     setting_add("hsts", TYPE_BOOLEAN, &on, hsts, NULL);
 #endif
+    setting_add("x-hint-command", TYPE_CHAR, &":o <C-R>;", NULL, NULL);
 
     /* initialize the shortcuts and set the default shortcuts */
     shortcut_init();
