@@ -183,7 +183,7 @@ gboolean vb_load_uri(const Arg *arg)
         path = g_strstrip(arg->s);
     }
     if (!path || !*path) {
-        path = vb.config.home_page;
+        path = GET_CHAR("home-page");
     }
 
     if (strstr(path, "://") || !strncmp(path, "about:", 6)) {
@@ -1189,6 +1189,8 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path)
 {
     char *file, *dir;
+    const char *download_cmd = GET_CHAR("download-command");
+    gboolean use_external    = GET_BOOL("download-use-external");
 
     /* prepare the path to save the download */
     if (path) {
@@ -1210,7 +1212,7 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
         file = util_build_path(path, vb.config.download_dir);
     }
 
-    if (vb.config.download_use_external && *vb.config.download_command) {
+    if (use_external && *download_cmd) {
         /* run download with external programm */
         vb_download_external(view, download, file);
         g_free(file);
@@ -1261,7 +1263,7 @@ void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const c
 
 void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file)
 {
-    const char *user_agent = NULL, *mimetype = NULL;
+    const char *user_agent = NULL, *mimetype = NULL, *download_cmd;
     char **argv, **envp;
     char *cmd;
     int argc;
@@ -1293,16 +1295,12 @@ void vb_download_external(WebKitWebView *view, WebKitDownload *download, const c
         WebKitWebSettings *setting = webkit_web_view_get_settings(view);
         g_object_get(G_OBJECT(setting), "user-agent", &user_agent, NULL);
     }
-    envp = g_environ_setenv(envp, "VIMB_USER_AGENT", user_agent, true);
-
-    cmd  = g_strdup_printf(vb.config.download_command, webkit_download_get_uri(download));
+    envp         = g_environ_setenv(envp, "VIMB_USER_AGENT", user_agent, true);
+    download_cmd = GET_CHAR("download-command");
+    cmd          = g_strdup_printf(download_cmd, webkit_download_get_uri(download));
 
     if (!g_shell_parse_argv(cmd, &argc, &argv, &error)) {
-        g_warning(
-            "Could not parse download-command '%s': %s",
-            vb.config.download_command,
-            error->message
-        );
+        g_warning("Could not parse download-command '%s': %s", download_cmd, error->message);
         g_error_free(error);
         g_free(cmd);
 

@@ -1,12 +1,18 @@
 .\" vim: ft=groff
 .\" Process this file with
-.\" groff -man -Tascii vimb.1
+.\" groff -man -Tutf8 vimb.1
 .TH vimb 1 "DATE" "vimb/VERSION" "Vimb Manual"
 .SH NAME
 vimb - Vim Browser - A modal web browser based on webkit, inspired by vim the
 great editor.
 .SH SYNOPSIS
-.BI "vimb [" "OPTION" "] [" "URI" "]"
+.SY vimb
+.OP \-hkv
+.OP \-C cmd
+.OP \-c config
+.OP \-e winid
+.RI [ URI ]
+.YS
 .SH DESCRIPTION
 vimb is a webkit based web browser that behaves like the vimperator
 plugin for the firefox and usage paradigms from the great editor vim. The goal
