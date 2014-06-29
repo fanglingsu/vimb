@@ -218,11 +218,9 @@ gboolean setting_run(char *name, const char *param)
         setting_print(s);
     } else {
         setting_print(s);
-
-        return true;
     }
 
-    return false;
+    return true;
 }
 
 gboolean setting_fill_completion(GtkListStore *store, const char *input)
