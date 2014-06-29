@@ -799,6 +799,11 @@ Holds the user agent string that vimb uses.
 The mime-type of the download. This variable is only available when der server
 sent the mime-type header with the response and only if the download was not
 start by the `:save' command or the `;s' hinting.
+.TP
+.B $VIMB_USE_PROXY
+Indicates if the proxy is enabled in vimb. If enable this variable is `1',
+otherwise `0'. Note that this variable gives no hint if the proxy settings
+apply to the URL to be downloaded, only if proxy is enabled in general.
 .PD
 .P
 Example: :set download-command=/bin/sh -c "wget -c %s -O $VIMB_FILE

@@ -1284,6 +1284,7 @@ void vb_download_external(WebKitWebView *view, WebKitDownload *download, const c
     /* set the required download information as environment */
     envp = g_get_environ();
     envp = g_environ_setenv(envp, "VIMB_FILE", file, true);
+    envp = g_environ_setenv(envp, "VIMB_USE_PROXY", GET_BOOL("proxy") ? "1" : "0", true);
 #ifdef FEATURE_COOKIE
     envp = g_environ_setenv(envp, "VIMB_COOKIES", vb.files[FILES_COOKIE], true);
 #endif
