@@ -129,7 +129,7 @@ VbResult input_open_editor(void)
     /* disable the active element */
     dom_editable_element_set_disable(active, true);
 
-    EditorData *data = g_new0(EditorData, 1);
+    EditorData *data = g_slice_new0(EditorData);
     data->file    = file_path;
     data->element = active;
 
@@ -152,6 +152,6 @@ static void resume_editor(GPid pid, int status, EditorData *data)
 
     g_unlink(data->file);
     g_free(data->file);
-    g_free(data);
+    g_slice_free(EditorData, data);
     g_spawn_close_pid(pid);
 }

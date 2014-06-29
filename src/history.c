@@ -253,7 +253,7 @@ static History *line_to_history(const char *line)
         return NULL;
     }
 
-    History *item = g_new0(History, 1);
+    History *item = g_slice_new0(History);
 
     parts = g_strsplit(line, "\t", 2);
     len   = g_strv_length(parts);
@@ -301,5 +301,5 @@ static void free_history(History *item)
 {
     g_free(item->first);
     g_free(item->second);
-    g_free(item);
+    g_slice_free(History, item);
 }

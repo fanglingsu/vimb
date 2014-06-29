@@ -27,9 +27,12 @@
 static GHashTable *modes = NULL;
 extern VbCore vb;
 
+static void free_mode(Mode *mode);
+
+
 void mode_init(void)
 {
-    modes = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+    modes = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify)free_mode);
 }
 
 void mode_cleanup(void)
@@ -46,7 +49,7 @@ void mode_cleanup(void)
 void mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
     ModeKeyFunc keypress, ModeInputChangedFunc input_changed)
 {
-    Mode *new = g_new(Mode, 1);
+    Mode *new = g_slice_new(Mode);
     new->id            = id;
     new->enter         = enter;
     new->leave         = leave;
@@ -181,4 +184,9 @@ void mode_input_changed(GtkTextBuffer* buffer, gpointer data)
 
         g_free(text);
     }
+}
+
+static void free_mode(Mode *mode)
+{
+    g_slice_free(Mode, mode);
 }

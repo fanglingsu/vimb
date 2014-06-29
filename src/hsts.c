@@ -259,7 +259,7 @@ static void parse_hsts_header(HSTSProvider *provider,
         if (max_age == 0) {
             remove_host_entry(provider, host);
         } else {
-            entry = g_new(HSTSEntry, 1);
+            entry = g_slice_new(HSTSEntry);
             entry->expires_at          = soup_date_new_from_now(max_age);
             entry->include_sub_domains = include_sub_domains;
 
@@ -272,7 +272,7 @@ static void parse_hsts_header(HSTSProvider *provider,
 static void free_entry(HSTSEntry *entry)
 {
     soup_date_free(entry->expires_at);
-    g_free(entry);
+    g_slice_free(HSTSEntry, entry);
 }
 
 /**
@@ -397,7 +397,7 @@ static void load_entries(HSTSProvider *provider, const char *file)
             include_sub_domains = (*parts[2] == 'y') ? true : false;
 
             /* built the new entry to add */
-            entry = g_new(HSTSEntry, 1);
+            entry = g_slice_new(HSTSEntry);
             entry->expires_at          = soup_date_new_from_string(parts[1]);
             entry->include_sub_domains = include_sub_domains;
 

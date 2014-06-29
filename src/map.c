@@ -341,7 +341,7 @@ void map_insert(const char *in, const char *mapped, char mode, gboolean remap)
     /* if lhs was already mapped, remove this first */
     map_delete_by_lhs(lhs, inlen, mode);
 
-    Map *new = g_new(Map, 1);
+    Map *new = g_slice_new(Map);
     new->in        = lhs;
     new->inlen     = inlen;
     new->mapped    = rhs;
@@ -590,5 +590,5 @@ static void free_map(Map *map)
 {
     g_free(map->in);
     g_free(map->mapped);
-    g_free(map);
+    g_slice_free(Map, map);
 }

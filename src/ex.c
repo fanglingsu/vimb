@@ -455,7 +455,7 @@ static void input_activate(void)
 
 gboolean ex_run_string(const char *input)
 {
-    ExArg *arg = g_new0(ExArg, 1);
+    ExArg *arg = g_slice_new0(ExArg);
     arg->lhs   = g_string_new("");
     arg->rhs   = g_string_new("");
 
@@ -696,7 +696,7 @@ static void free_cmdarg(ExArg *arg)
     if (arg->rhs) {
         g_string_free(arg->rhs, true);
     }
-    g_free(arg);
+    g_slice_free(ExArg, arg);
 }
 
 static gboolean ex_bookmark(const ExArg *arg)
@@ -988,7 +988,7 @@ static gboolean complete(short direction)
         /* skipt the first : */
         in++;
 
-        ExArg *arg = g_new0(ExArg, 1);
+        ExArg *arg = g_slice_new0(ExArg);
 
         skip_whitespace(&in);
         parse_count(&in, arg);

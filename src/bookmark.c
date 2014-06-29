@@ -306,7 +306,7 @@ static Bookmark *line_to_bookmark(const char *line)
         return NULL;
     }
 
-    Bookmark *item = g_new0(Bookmark, 1);
+    Bookmark *item = g_slice_new0(Bookmark);
 
     parts = g_strsplit(line, "\t", 3);
     len   = g_strv_length(parts);
@@ -335,5 +335,5 @@ static void free_bookmark(Bookmark *bm)
     g_free(bm->uri);
     g_free(bm->title);
     g_strfreev(bm->tags);
-    g_free(bm);
+    g_slice_free(Bookmark, bm);
 }
