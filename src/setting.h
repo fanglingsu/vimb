@@ -37,7 +37,6 @@ typedef enum {
 void setting_init(void);
 void setting_cleanup(void);
 gboolean setting_run(char* name, const char* param);
-gboolean setting_NEW_run(char *name, const char *param);
 gboolean setting_fill_completion(GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _SETTING_H */
