@@ -1,7 +1,5 @@
 include config.mk
 
--include $(DEPS)
-
 all:   $(TARGET)
 debug: $(DTARGET)
 test:  $(LIBTARGET)
@@ -81,5 +79,7 @@ src/config.h:
 %.lo: %.c %.h
 	@echo "${CC} $@"
 	@$(CC) -DTESTLIB $(DFLAGS) -fPIC -c -o $@ $<
+
+-include $(DEPS)
 
 .PHONY: clean debug all install uninstall options dist dist-clean test test-clean
