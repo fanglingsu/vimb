@@ -563,7 +563,7 @@ static int headers(const char *name, Type type, void *value, void *data)
 static int prevnext(const char *name, Type type, void *value, void *data)
 {
     if (validate_js_regexp_list((char*)value)) {
-        if (*name == 'p') {
+        if (*name == 'n') {
             OVERWRITE_STRING(vb.config.nextpattern, (char*)value);
         } else {
             OVERWRITE_STRING(vb.config.prevpattern, (char*)value);
