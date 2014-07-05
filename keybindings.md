@@ -223,6 +223,10 @@ F
 : Push the hint's URL to the end of the read it later queue like the ':qpush'
   command. This is only available if vimb was compiled with QUEUE feature.
 
+;x
+: Hints like `;o` but instead of opening the hinted URI, the configured
+  `x-hint-command` is run in vimb.
+
 ;y
 : Yank hint's destination location into primary and secondary clipboard.
 
@@ -312,7 +316,7 @@ CTRL-E
 CTRL-V
 : Pass the next key press directly to GTK.
 
-CTRL-R {a-z%:/}
+CTRL-R {a-z%:/;}
 : Insert the content of given register at cursor position. See also section
   [registers](#registers)
 
@@ -359,3 +363,7 @@ There are different types of registers.
 
 "/
 : Contains the most recent search-pattern.
+
+";
+: Contains the last hinted URL. This can be used in `x-hint-command` to get
+  the URL of the hint.
