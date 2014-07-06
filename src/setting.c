@@ -130,12 +130,12 @@ void setting_init()
     setting_add("download-path", TYPE_CHAR, &"", internal, &vb.config.download_dir);
     i = 2000;
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, &vb.config.history_max);
-    setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi %s", NULL, NULL);
+    setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, NULL);
     setting_add("header", TYPE_CHAR, &"", headers, NULL);
     setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, NULL);
     setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, NULL);
     setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, NULL);
-    setting_add("download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -A '$VIMB_USER_AGENT' -e '$VIMB_URI' -b '$VIMB_COOKIES' %s\"", NULL, NULL);
+    setting_add("download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -A '$VIMB_USER_AGENT' -e '$VIMB_URI' -b '$VIMB_COOKIES' '%s'\"", NULL, NULL);
     setting_add("download-use-external", TYPE_BOOLEAN, &off, NULL, NULL);
 #ifdef FEATURE_HSTS
     setting_add("hsts", TYPE_BOOLEAN, &on, hsts, NULL);
@@ -150,7 +150,7 @@ void setting_init()
 
     /* initialize the handlers */
     handlers_init();
-    handler_add("magnet", "xdg-open %s");
+    handler_add("magnet", "xdg-open '%s'");
 }
 
 gboolean setting_run(char *name, const char *param)
