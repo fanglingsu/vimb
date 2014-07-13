@@ -127,6 +127,8 @@ void setting_init()
     setting_add("completion-bg-active", TYPE_COLOR, &"#777777", input_color, &vb.style.comp_bg[VB_COMP_ACTIVE]);
     setting_add("ca-bundle", TYPE_CHAR, &"/etc/ssl/certs/ca-certificates.crt", ca_bundle, NULL);
     setting_add("home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, NULL);
+    i = 1000;
+    setting_add("hint-timeout", TYPE_INTEGER, &i, NULL, NULL);
     setting_add("download-path", TYPE_CHAR, &"", internal, &vb.config.download_dir);
     i = 2000;
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, &vb.config.history_max);

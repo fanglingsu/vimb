@@ -21,6 +21,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
+#include "main.h"
 #include "ascii.h"
 #include "dom.h"
 #include "command.h"
@@ -43,11 +44,14 @@ static struct {
      * have to change to open windows via hinting */
     gboolean       allow_open_win;
 #endif
+    guint          timeout_id;
 } hints;
 
 extern VbCore vb;
 
 static gboolean call_hints_function(const char *func, int count, JSValueRef params[]);
+static void fire_timeout(gboolean on);
+static gboolean fire_cb(gpointer data);
 
 
 void hints_init(WebKitWebFrame *frame)
@@ -77,25 +81,31 @@ VbResult hints_keypress(int key)
 
         return RESULT_COMPLETE;
     } else if (key == CTRL('H')) {
+        fire_timeout(false);
         arguments[0] = JSValueMakeNull(hints.ctx);
         if (call_hints_function("update", 1, arguments)) {
             return RESULT_COMPLETE;
         }
     } else if (VB_IS_DIGIT(key)) {
+        fire_timeout(true);
+
         arguments[0] = JSValueMakeNumber(hints.ctx, key - '0');
         if (call_hints_function("update", 1, arguments)) {
             return RESULT_COMPLETE;
         }
     } else if (key == KEY_TAB) {
+        fire_timeout(false);
         hints_focus_next(false);
 
         return RESULT_COMPLETE;
     } else if (key == KEY_SHIFT_TAB) {
+        fire_timeout(false);
         hints_focus_next(true);
 
         return RESULT_COMPLETE;
     }
 
+    fire_timeout(false);
     return RESULT_ERROR;
 }
 
@@ -281,15 +291,18 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
 
     /* following return values mark fired hints */
     if (!strncmp(value, "DONE:", 5)) {
+        fire_timeout(false);
         if (!hints.gmode) {
             mode_enter('n');
         }
     } else if (!strncmp(value, "INSERT:", 7)) {
+        fire_timeout(false);
         mode_enter('i');
         if (hints.mode == 'e') {
             input_open_editor();
         }
     } else if (!strncmp(value, "DATA:", 5)) {
+        fire_timeout(false);
         /* switch first to normal mode - else we would clear the inputbox
          * on switching mode also if we want to show yanked data */
         if (!hints.gmode) {
@@ -346,4 +359,31 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
     }
     g_free(value);
     return true;
+}
+
+static void fire_timeout(gboolean on)
+{
+    int millis;
+    /* remove possible timeout function */
+    if (hints.timeout_id) {
+        g_source_remove(hints.timeout_id);
+        hints.timeout_id = 0;
+    }
+
+    if (on) {
+        millis = GET_INT("hint-timeout");
+        if (millis) {
+            hints.timeout_id = g_timeout_add(millis, (GSourceFunc)fire_cb, NULL);
+        }
+    }
+}
+
+static gboolean fire_cb(gpointer data)
+{
+    hints_fire();
+
+    /* remove timeout id for the timeout that is removed by return value of
+     * false automatic */
+    hints.timeout_id = 0;
+    return false;
 }

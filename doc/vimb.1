@@ -852,6 +852,10 @@ Header completely from request.
 .PD
 .RE
 .TP
+.B hint-timeout (int)
+Timeout before automatically following a non-unique numerical hint. To disable
+auto fire of hints, set this value to 0.
+.TP
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history. If
 history-max-items is set to 0, the history file will not be changed.
