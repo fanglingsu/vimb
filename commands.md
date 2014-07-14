@@ -201,7 +201,10 @@ if vimb has been compiled with QUEUE feature.
   '/tmp/file.html'.
 
 \:q[uit]
-: Close the browser.
+: Close the browser. This will be refused if there are running downloads.
+
+\:q[uit]!
+: Close the browser independent from an running download.
 
 \:e[val] *JAVASCRIPT*
 : Runs the given *JAVASCRIPT* in the current page and display the evaluated
