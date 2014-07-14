@@ -87,7 +87,7 @@ Opend the Web Inspector for current page.
 Pass the next key press directly to gtk.
 .TP
 .B CTRL\-Q
-Quit the browser.
+Quit the browser if there are no running downloads.
 .SS Navigation
 .TP
 .B o
@@ -587,7 +587,10 @@ is given, download under this file name or path. \fIPATH\fP is expanded and
 can therefor contain '~/', '${ENV}' and '~user' pattern.
 .TP
 .B :q[uit]
-Close the browser.
+Close the browser. This will be refused if there are running downloads.
+.TP
+.B :q[uit]!
+Close the browser independent from an running download.
 .TP
 .BI :e[val] " JAVASCRIPT"
 Runs the given \fIJAVASCRIPT\fP in the current page and display the evaluated

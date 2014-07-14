@@ -637,7 +637,7 @@ static VbResult normal_queue(const NormalCmdInfo *info)
 
 static VbResult normal_quit(const NormalCmdInfo *info)
 {
-    vb_quit();
+    vb_quit(false);
     return RESULT_COMPLETE;
 }
 

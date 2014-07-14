@@ -372,8 +372,14 @@ void vb_update_urlbar(const char *uri)
 #endif
 }
 
-void vb_quit(void)
+void vb_quit(gboolean force)
 {
+    /* if not forced quit - don't quit if there are still runinng downloads */
+    if (!force && vb.state.downloads) {
+        vb_echo_force(VB_MSG_ERROR, true, "Can't quit: there are running downloads");
+        return;
+    }
+
     /* write last URL into file for recreation */
     if (vb.state.uri) {
         g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
@@ -600,7 +606,7 @@ static void webview_request_starting_cb(WebKitWebView *view,
 
 static void destroy_window_cb(GtkWidget *widget)
 {
-    vb_quit();
+    vb_quit(true);
 }
 
 static void scroll_cb(GtkAdjustment *adjustment)

@@ -382,6 +382,6 @@ void vb_update_urlbar(const char *uri);
 void vb_register_add(char buf, const char *value);
 const char *vb_register_get(char buf);
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);
-void vb_quit(void);
+void vb_quit(gboolean force);
 
 #endif /* end of include guard: _MAIN_H */

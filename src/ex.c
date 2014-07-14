@@ -168,7 +168,7 @@ static ExInfo commands[] = {
     {"normal",           EX_NORMAL,      ex_normal,     EX_FLAG_BANG|EX_FLAG_LHS},
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"open",             EX_OPEN,        ex_open,       EX_FLAG_RHS},
-    {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE},
+    {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE|EX_FLAG_BANG},
 #ifdef FEATURE_QUEUE
     {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
     {"qclear",           EX_QCLEAR,      ex_queue,      EX_FLAG_RHS},
@@ -832,7 +832,7 @@ static gboolean ex_queue(const ExArg *arg)
 
 static gboolean ex_quit(const ExArg *arg)
 {
-    vb_quit();
+    vb_quit(arg->bang);
     return true;
 }
 
