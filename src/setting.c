@@ -64,33 +64,68 @@ void setting_init()
     gboolean on = true, off = false;
 
     vb.config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
-
-    setting_add("images", TYPE_BOOLEAN, &on, webkit, "auto-load-images");
+#if WEBKIT_CHECK_VERSION(1, 7, 5)
+    setting_add("accelerated-compositing", TYPE_BOOLEAN, &off, webkit, "enable-accelerated-compositing");
+#endif
+    setting_add("auto-resize-window", TYPE_BOOLEAN, &off, webkit, "auto-resize-window");
+    setting_add("auto-shrink-images", TYPE_BOOLEAN, &on, webkit, "auto-shrink-images");
+    setting_add("caret", TYPE_BOOLEAN, &off, webkit, "enable-caret-browsing");
     setting_add("cursivfont", TYPE_CHAR, &"serif", webkit, "cursive-font-family");
     setting_add("defaultencoding", TYPE_CHAR, &"utf-8", webkit, "default-encoding");
     setting_add("defaultfont", TYPE_CHAR, &"sans-serif", webkit, "default-font-family");
+    setting_add("dns-prefetching", TYPE_BOOLEAN, &on, webkit, "enable-dns-prefetching");
+    setting_add("dom-paste", TYPE_BOOLEAN, &off, webkit, "enable-dom-paste");
+    setting_add("file-access-from-file-uris", TYPE_BOOLEAN, &off, webkit, "enable-file-access-from-file-uris");
     i = SETTING_DEFAULT_FONT_SIZE;
     setting_add("fontsize", TYPE_INTEGER, &i, webkit, "default-font-size");
-    setting_add("monofontsize", TYPE_INTEGER, &i, webkit, "default-monospace-font-size");
-    setting_add("caret", TYPE_BOOLEAN, &off, webkit, "enable-caret-browsing");
-    setting_add("webinspector", TYPE_BOOLEAN, &off, webkit, "enable-developer-extras");
-    setting_add("offlinecache", TYPE_BOOLEAN, &on, webkit, "enable-offline-web-application-cache");
-    setting_add("pagecache", TYPE_BOOLEAN, &on, webkit, "enable-page-cache");
-    setting_add("plugins", TYPE_BOOLEAN, &on, webkit, "enable-plugins");
-    setting_add("scripts", TYPE_BOOLEAN, &on, webkit, "enable-scripts");
-    setting_add("xssauditor", TYPE_BOOLEAN, &on, webkit, "enable-xss-auditor");
-    i = 5;
-    setting_add("minimumfontsize", TYPE_INTEGER, &i, webkit, "minimum-font-size");
-    setting_add("monofont", TYPE_CHAR, &"monospace", webkit, "monospace-font-family");
-    setting_add("print-backgrounds", TYPE_BOOLEAN, &on, webkit, "print-backgrounds");
-    setting_add("sansfont", TYPE_CHAR, &"sans-serif", webkit, "sans-serif-font-family");
-    setting_add("seriffont", TYPE_CHAR, &"serif", webkit, "serif-font-family");
-    setting_add("useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Safari/538.15 Version/6.0", webkit, "user-agent");
-    setting_add("spacial-navigation", TYPE_BOOLEAN, &off, webkit, "enable-spatial-navigation");
+    setting_add("frame-flattening", TYPE_BOOLEAN, &off, webkit, "enable-frame-flattening");
+    setting_add("html5-database", TYPE_BOOLEAN, &on, webkit, "enable-html5-database");
+    setting_add("html5-local-storage", TYPE_BOOLEAN, &on, webkit, "enable-html5-local-storage");
+    setting_add("hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, "enable-hyperlink-auditing");
+    setting_add("images", TYPE_BOOLEAN, &on, webkit, "auto-load-images");
 #if WEBKIT_CHECK_VERSION(2, 0, 0)
     setting_add("insecure-content-show", TYPE_BOOLEAN, &off, webkit, "enable-display-of-insecure-content");
     setting_add("insecure-content-run", TYPE_BOOLEAN, &off, webkit, "enable-running-of-insecure-content");
 #endif
+    setting_add("java-applet", TYPE_BOOLEAN, &on, webkit, "enable-java-applet");
+    setting_add("javascript-can-access-clipboard", TYPE_BOOLEAN, &off, webkit, "javascript-can-access-clipboard");
+    setting_add("javascript-can-open-windows-automatically", TYPE_BOOLEAN, &off, webkit, "javascript-can-open-windows-automatically");
+    setting_add("media-playback-allows-inline", TYPE_BOOLEAN, &on, webkit, "media-playback-allows-inline");
+    setting_add("media-playback-requires-user-gesture", TYPE_BOOLEAN, &off, webkit, "media-playback-requires-user-gesture");
+#if WEBKIT_CHECK_VERSION(2, 4, 0)
+    setting_add("media-stream", TYPE_BOOLEAN, &off, webkit, "enable-media-stream");
+    setting_add("mediasource", TYPE_BOOLEAN, &off, webkit, "enable-mediasource");
+#endif
+    i = 5;
+    setting_add("minimumfontsize", TYPE_INTEGER, &i, webkit, "minimum-font-size");
+    setting_add("monofont", TYPE_CHAR, &"monospace", webkit, "monospace-font-family");
+    i = SETTING_DEFAULT_FONT_SIZE;
+    setting_add("monofontsize", TYPE_INTEGER, &i, webkit, "default-monospace-font-size");
+    setting_add("offlinecache", TYPE_BOOLEAN, &on, webkit, "enable-offline-web-application-cache");
+    setting_add("pagecache", TYPE_BOOLEAN, &on, webkit, "enable-page-cache");
+    setting_add("plugins", TYPE_BOOLEAN, &on, webkit, "enable-plugins");
+    setting_add("print-backgrounds", TYPE_BOOLEAN, &on, webkit, "print-backgrounds");
+    setting_add("private-browsing", TYPE_BOOLEAN, &off, webkit, "enable-private-browsing");
+    setting_add("resizable-text-areas", TYPE_BOOLEAN, &on, webkit, "resizable-text-areas");
+    setting_add("respect-image-orientation", TYPE_BOOLEAN, &off, webkit, "respect-image-orientation");
+    setting_add("sansfont", TYPE_CHAR, &"sans-serif", webkit, "sans-serif-font-family");
+    setting_add("scripts", TYPE_BOOLEAN, &on, webkit, "enable-scripts");
+    setting_add("seriffont", TYPE_CHAR, &"serif", webkit, "serif-font-family");
+    setting_add("site-specific-quirks", TYPE_BOOLEAN, &off, webkit, "enable-site-specific-quirks");
+#if WEBKIT_CHECK_VERSION(1, 9, 0)
+    setting_add("smooth-scrolling", TYPE_BOOLEAN, &off, webkit, "enable-smooth-scrolling");
+#endif
+    setting_add("spacial-navigation", TYPE_BOOLEAN, &off, webkit, "enable-spatial-navigation");
+    setting_add("spell-checking", TYPE_BOOLEAN, &off, webkit, "enable-spell-checking");
+    setting_add("spell-checking-languages", TYPE_CHAR, NULL, webkit, "spell-checking-languages");
+    setting_add("tab-key-cycles-through-elements", TYPE_BOOLEAN, &on, webkit, "tab-key-cycles-through-elements");
+    setting_add("universal-access-from-file-uris", TYPE_BOOLEAN, &off, webkit, "enable-universal-access-from-file-uris");
+    setting_add("useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Safari/538.15 Version/6.0", webkit, "user-agent");
+    setting_add("webaudio", TYPE_BOOLEAN, &off, webkit, "enable-webaudio");
+    setting_add("webgl", TYPE_BOOLEAN, &off, webkit, "enable-webgl");
+    setting_add("webinspector", TYPE_BOOLEAN, &off, webkit, "enable-developer-extras");
+    setting_add("xssauditor", TYPE_BOOLEAN, &on, webkit, "enable-xss-auditor");
+
     /* internal variables */
     setting_add("stylesheet", TYPE_BOOLEAN, &on, user_style, NULL);
     setting_add("proxy", TYPE_BOOLEAN, &on, proxy, NULL);

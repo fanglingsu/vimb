@@ -683,6 +683,20 @@ comparison for further typed chars.
 All settings listed below can be set with the `:set' command.
 .SS Webkit-Settings
 .TP
+.B accelerated-compositing (bool)
+Enable or disable support for accelerated compositing on pages. Accelerated
+compositing uses the GPU to render animations on pages smoothly and also
+allows proper rendering of 3D CSS transforms.
+.TP
+.B auto-load-images (bool)
+Load images automatically.
+.TP
+.B auto-resize-window (bool)
+Indicates if vimb will honor size and position changes of the windo by various
+DOM methods.
+.TP auto-shrink-images (bool)
+Automatically shrink standalone images to fit.
+.TP
 .B caret (bool)
 Whether to enable accessibility enhanced keyboard navigation.
 .TP
@@ -697,8 +711,36 @@ charset.
 The font family to use as the default for content that does not specify a
 font.
 .TP
+.B dns-prefetching (bool)
+Indicates if vimb prefetches domain names.
+.TP
+.B dom-paste (bool)
+Whether to enable DOM paste. If set to TRUE, document.execCommand("Paste")
+will correctly execute and paste content of the clipboard.
+.TP
+.B file-access-from-file-uris (bool)
+Boolean property to control file access for file:// URIs. If this option is
+enabled every file:// will have its own security unique domain.
+.TP
 .B fontsize (int)
 The default font size used to display text.
+.TP
+.B frame-flattening (bool)
+Whether to enable the Frame Flattening. With this setting each subframe is
+expanded to its contents, which will flatten all the frames to become one
+scrollable page.
+.TP
+.B html5-database (bool)
+Whether to enable HTML5 client-side SQL database support. Client-side SQL
+database allows web pages to store structured data and be able to use SQL to
+manipulate that data asynchronously.
+.TP
+.B html5-local-storage (bool)
+Whether to enable HTML5 localStorage support. localStorage provides simple
+synchronous storage access.
+.TP
+.B hyperlink-auditing (bool)
+Enable or disable support for <a ping>.
 .TP
 .B images (bool)
 Determines whether images should be automatically loaded or not.
@@ -710,6 +752,38 @@ frames from non-HTTPS URIs. Only for webkit>=2.0.
 .B insecure-content-run (bool)
 Whether pages loaded via HTTPS should run subresources such as CSS, scripts,
 and plugins from non-HTTPS URIs. Only for webkit>=2.0.
+.TP
+.B java-applet (bool)
+Enable or disable support for the Java <applet> tag. Keep in mind that Java
+content can be still shown in the page through <object> or <embed>, which are
+the preferred tags for this task.
+.TP
+.B javascript-can-access-clipboard (bool)
+Whether JavaScript can access Clipboard.
+.TP
+.B javascript-can-open-windows-automatically (bool)
+Whether JavaScript can open popup windows automatically without user
+intervention.
+.TP
+.B media-playback-allows-inline (bool)
+Whether media playback is full-screen only or inline playback is allowed.
+Setting it to false allows specifying that media playback should be always
+fullscreen.
+.TP
+.B media-playback-requires-user-gesture (bool)
+Whether a user gesture (such as clicking the play button) would be required to
+start media playback or load media. Setting it on requires a gesture by the
+user to start playback, or to load the media.
+.TP
+.B media-stream (bool)
+Enable or disable support for MediaSource on pages. MediaSource is an
+experimental proposal which extends HTMLMediaElement to allow JavaScript to
+generate media streams for playback.
+.TP
+.B mediasource (bool)
+Enable or disable support for MediaSource on pages. MediaSource is an
+experimental proposal which extends HTMLMediaElement to allow JavaScript to
+generate media streams for playback.
 .TP
 .B minimumfontsize (int)
 The minimum font size used to display text.
@@ -730,11 +804,24 @@ Enable or disable the page cache. Disabling the page cache is generally only
 useful for special circumstances like low-memory scenarios or special purpose
 applications like static HTML viewers.
 .TP
+.B print-backgrounds (bool)
+Whether background images should be printed.
+.TP
+.B private-browsing (bool)
+Whether to enable private browsing mode. This supresses printing of messages
+into JavaScript Console.
+.TP
 .B plugins (bool)
 Determines whether or not plugins on the page are enabled.
 .TP
 .B print-backgrounds (bool)
 Whether background images should be drawn during printing.
+.TP
+.B resizable-text-areas (bool)
+Whether text areas are resizable.
+.TP
+.B respect-image-orientation (bool)
+Whether vimb should respect image orientation.
 .TP
 .B sansfont (string)
 The font family used as the default for content using sans-serif font.
@@ -745,8 +832,54 @@ Determines whether or not JavaScript executes within a page.
 .B seriffont (string)
 The font family used as the default for content using serif font.
 .TP
+.B site-specific-quirks (bool)
+Enables the site-specific compatibility workarounds.
+.TP
+.B smooth-scrolling (bool)
+Enable or disable support for smooth scrolling.
+.TP
+.B spacial-navigation (bool)
+Whether to enable the Spatial Navigation. This feature consists in the ability
+to navigate between focusable elements in a Web page, such as hyperlinks and
+form controls, by using Left, Right, Up and Down arrow keys. For example, if
+an user presses the Right key, heuristics determine whether there is an
+element he might be trying to reach towards the right, and if there are
+multiple elements, which element he probably wants.
+.TP
+.B spell-checking (bool)
+Whether to enable spell checking while typing.
+.TP
+.B spell-checking-languages (string)
+The languages to be used for spell checking, separated by commas.
+
+The locale string typically is in the form lang_COUNTRY, where lang is an
+ISO-639 language code, and COUNTRY is an ISO-3166 country code. For instance,
+sv_FI for Swedish as written in Finland or pt_BR for Portuguese as written in
+Brazil.
+
+If no value is specified the default value for gtk is used.
+.TP
+.B tab-key-cycles-through-elements (bool)
+Whether the tab key cycles through elements on the page.
+
+If true, pressing the tab key will focus the next element in the web view.
+Else the wen view will interpret tab key presses as normal key presses. If the
+selected element is editable, the tab key will cause the insertion of a tab
+character.
+.TP
+.B universal-access-from-file-uris (bool)
+Whether to allow files loaded through file:// URIs universal access to all
+pages.
+.TP
 .B useragent (string)
 The user-agent string used by WebKit.
+.TP
+.B webaudio (bool)
+Enable or disable support for WebAudio on pages. WebAudio is an experimental
+proposal for allowing web pages to generate Audio WAVE data from JavaScript.
+.TP
+.B webgl (bool)
+Enable or disable support for WebGL on pages.
 .TP
 .B webinspector (bool)
 Determines whether or not developer tools, such as the Web Inspector, are
