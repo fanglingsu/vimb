@@ -23,12 +23,6 @@
 #include "main.h"
 
 typedef enum {
-    SETTING_SET,
-    SETTING_GET,
-    SETTING_TOGGLE
-} SettingType;
-
-typedef enum {
     SETTING_OK,
     SETTING_ERROR         = (1 << 1),
     SETTING_USER_NOTIFIED = (1 << 2)

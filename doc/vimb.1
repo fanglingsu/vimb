@@ -539,10 +539,24 @@ the \fISHORTCUT\fP is already in use or not to be able to set it.
 .SS Settings
 .TP
 .BI ":se[t] " VAR = VALUE
-Set configuration values named by
-.IR VAR .
-To set boolean variable you should use 'on', 'off' or 'true'
-and 'false'. Colors are given as hexadecimal value like '#f57700'.
+Set configuration values named by \fIVAR\fP.  To set boolean variable you
+should use 'on', 'off' or 'true' and 'false'. Colors are given as hexadecimal
+value like '#f57700'.
+.TP
+.BI ":se[t] " VAR += VALUE
+Add the \fIVALUE\fP to a number option, or apend the \fIVALUE\fP to a string
+option. When the option is a comma separated list, a comma is added, unless
+the value was empty.
+.TP
+.BI ":se[t] " VAR ^= VALUE
+Multiply the \fIVALUE\fP to a number option, or prepend the \fIVALUE\fP to a
+string option. When the option is a comma separated list, a comma is added,
+unless the value was empty.
+.TP
+.BI ":se[t] " VAR -= VALUE
+Subtract the \fIVALUE\fP from a number option, or remove the \fIVALUE\fP from
+a string option, if it is there. When the option is a comma separated st, a
+comma is deleted, unless the option becomes empty.
 .TP
 .BI ":se[t] " VAR ?
 Show the current set value of variable

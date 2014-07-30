@@ -29,34 +29,56 @@
 #include "hsts.h"
 #endif
 
+typedef enum {
+    TYPE_BOOLEAN,
+    TYPE_INTEGER,
+    TYPE_CHAR,
+    TYPE_COLOR,
+    TYPE_FONT,
+} Type;
+
+typedef enum {
+    SETTING_SET,        /* :set option=value */
+    SETTING_APPEND,     /* :set option+=vlaue */
+    SETTING_PREPEND,    /* :set option^=vlaue */
+    SETTING_SUBTRACT,   /* :set option-=value */
+    SETTING_GET,        /* :set option? */
+    SETTING_TOGGLE      /* :set option! */
+} SettingType;
+
+enum {
+    FLAG_LIST = (1<<1), /* setting contains a ',' separated list of values */
+};
+
 extern VbCore vb;
 
-static int setting_set_value(Setting *prop, void *value);
-static gboolean setting_add(const char *name, Type type, void *value,
-    SettingFunction setter, void *data);
+static int setting_set_value(Setting *prop, void *value, SettingType type);
+static gboolean setting_add(const char *name, int type, void *value,
+    SettingFunction setter, int flags, void *data);
 static void setting_print(Setting *s);
 static void setting_free(Setting *s);
-static int webkit(const char *name, Type type, void *value, void *data);
-static int soup(const char *name, Type type, void *value, void *data);
-static int internal(const char *name, Type type, void *value, void *data);
-static int input_color(const char *name, Type type, void *value, void *data);
-static int status_color(const char *name, Type type, void *value, void *data);
-static int input_font(const char *name, Type type, void *value, void *data);
-static int status_font(const char *name, Type type, void *value, void *data);
+static int webkit(const char *name, int type, void *value, void *data);
+static int soup(const char *name, int type, void *value, void *data);
+static int internal(const char *name, int type, void *value, void *data);
+static int input_color(const char *name, int type, void *value, void *data);
+static int status_color(const char *name, int type, void *value, void *data);
+static int input_font(const char *name, int type, void *value, void *data);
+static int status_font(const char *name, int type, void *value, void *data);
 gboolean setting_fill_completion(GtkListStore *store, const char *input);
 #ifdef FEATURE_COOKIE
-static int cookie_accept(const char *name, Type type, void *value, void *data);
+static int cookie_accept(const char *name, int type, void *value, void *data);
 #endif
-static int ca_bundle(const char *name, Type type, void *value, void *data);
-static int proxy(const char *name, Type type, void *value, void *data);
-static int user_style(const char *name, Type type, void *value, void *data);
-static int headers(const char *name, Type type, void *value, void *data);
-static int prevnext(const char *name, Type type, void *value, void *data);
-static int fullscreen(const char *name, Type type, void *value, void *data);
+static int ca_bundle(const char *name, int type, void *value, void *data);
+static int proxy(const char *name, int type, void *value, void *data);
+static int user_style(const char *name, int type, void *value, void *data);
+static int headers(const char *name, int type, void *value, void *data);
+static int prevnext(const char *name, int type, void *value, void *data);
+static int fullscreen(const char *name, int type, void *value, void *data);
 #ifdef FEATURE_HSTS
-static int hsts(const char *name, Type type, void *value, void *data);
+static int hsts(const char *name, int type, void *value, void *data);
 #endif
 static gboolean validate_js_regexp_list(const char *pattern);
+static char* value_remove_match(const char *list, const char *remove, gboolean aslist);
 
 void setting_init()
 {
@@ -65,119 +87,119 @@ void setting_init()
 
     vb.config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
 #if WEBKIT_CHECK_VERSION(1, 7, 5)
-    setting_add("accelerated-compositing", TYPE_BOOLEAN, &off, webkit, "enable-accelerated-compositing");
+    setting_add("accelerated-compositing", TYPE_BOOLEAN, &off, webkit, 0, "enable-accelerated-compositing");
 #endif
-    setting_add("auto-resize-window", TYPE_BOOLEAN, &off, webkit, "auto-resize-window");
-    setting_add("auto-shrink-images", TYPE_BOOLEAN, &on, webkit, "auto-shrink-images");
-    setting_add("caret", TYPE_BOOLEAN, &off, webkit, "enable-caret-browsing");
-    setting_add("cursivfont", TYPE_CHAR, &"serif", webkit, "cursive-font-family");
-    setting_add("defaultencoding", TYPE_CHAR, &"utf-8", webkit, "default-encoding");
-    setting_add("defaultfont", TYPE_CHAR, &"sans-serif", webkit, "default-font-family");
-    setting_add("dns-prefetching", TYPE_BOOLEAN, &on, webkit, "enable-dns-prefetching");
-    setting_add("dom-paste", TYPE_BOOLEAN, &off, webkit, "enable-dom-paste");
-    setting_add("file-access-from-file-uris", TYPE_BOOLEAN, &off, webkit, "enable-file-access-from-file-uris");
+    setting_add("auto-resize-window", TYPE_BOOLEAN, &off, webkit, 0, "auto-resize-window");
+    setting_add("auto-shrink-images", TYPE_BOOLEAN, &on, webkit, 0, "auto-shrink-images");
+    setting_add("caret", TYPE_BOOLEAN, &off, webkit, 0, "enable-caret-browsing");
+    setting_add("cursivfont", TYPE_CHAR, &"serif", webkit, 0, "cursive-font-family");
+    setting_add("defaultencoding", TYPE_CHAR, &"utf-8", webkit, 0, "default-encoding");
+    setting_add("defaultfont", TYPE_CHAR, &"sans-serif", webkit, 0, "default-font-family");
+    setting_add("dns-prefetching", TYPE_BOOLEAN, &on, webkit, 0, "enable-dns-prefetching");
+    setting_add("dom-paste", TYPE_BOOLEAN, &off, webkit, 0, "enable-dom-paste");
+    setting_add("file-access-from-file-uris", TYPE_BOOLEAN, &off, webkit, 0, "enable-file-access-from-file-uris");
     i = SETTING_DEFAULT_FONT_SIZE;
-    setting_add("fontsize", TYPE_INTEGER, &i, webkit, "default-font-size");
-    setting_add("frame-flattening", TYPE_BOOLEAN, &off, webkit, "enable-frame-flattening");
-    setting_add("html5-database", TYPE_BOOLEAN, &on, webkit, "enable-html5-database");
-    setting_add("html5-local-storage", TYPE_BOOLEAN, &on, webkit, "enable-html5-local-storage");
-    setting_add("hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, "enable-hyperlink-auditing");
-    setting_add("images", TYPE_BOOLEAN, &on, webkit, "auto-load-images");
+    setting_add("fontsize", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
+    setting_add("frame-flattening", TYPE_BOOLEAN, &off, webkit, 0, "enable-frame-flattening");
+    setting_add("html5-database", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-database");
+    setting_add("html5-local-storage", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-local-storage");
+    setting_add("hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing");
+    setting_add("images", TYPE_BOOLEAN, &on, webkit, 0, "auto-load-images");
 #if WEBKIT_CHECK_VERSION(2, 0, 0)
-    setting_add("insecure-content-show", TYPE_BOOLEAN, &off, webkit, "enable-display-of-insecure-content");
-    setting_add("insecure-content-run", TYPE_BOOLEAN, &off, webkit, "enable-running-of-insecure-content");
+    setting_add("insecure-content-show", TYPE_BOOLEAN, &off, webkit, 0, "enable-display-of-insecure-content");
+    setting_add("insecure-content-run", TYPE_BOOLEAN, &off, webkit, 0, "enable-running-of-insecure-content");
 #endif
-    setting_add("java-applet", TYPE_BOOLEAN, &on, webkit, "enable-java-applet");
-    setting_add("javascript-can-access-clipboard", TYPE_BOOLEAN, &off, webkit, "javascript-can-access-clipboard");
-    setting_add("javascript-can-open-windows-automatically", TYPE_BOOLEAN, &off, webkit, "javascript-can-open-windows-automatically");
-    setting_add("media-playback-allows-inline", TYPE_BOOLEAN, &on, webkit, "media-playback-allows-inline");
-    setting_add("media-playback-requires-user-gesture", TYPE_BOOLEAN, &off, webkit, "media-playback-requires-user-gesture");
+    setting_add("java-applet", TYPE_BOOLEAN, &on, webkit, 0, "enable-java-applet");
+    setting_add("javascript-can-access-clipboard", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-access-clipboard");
+    setting_add("javascript-can-open-windows-automatically", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-open-windows-automatically");
+    setting_add("media-playback-allows-inline", TYPE_BOOLEAN, &on, webkit, 0, "media-playback-allows-inline");
+    setting_add("media-playback-requires-user-gesture", TYPE_BOOLEAN, &off, webkit, 0, "media-playback-requires-user-gesture");
 #if WEBKIT_CHECK_VERSION(2, 4, 0)
-    setting_add("media-stream", TYPE_BOOLEAN, &off, webkit, "enable-media-stream");
-    setting_add("mediasource", TYPE_BOOLEAN, &off, webkit, "enable-mediasource");
+    setting_add("media-stream", TYPE_BOOLEAN, &off, webkit, 0, "enable-media-stream");
+    setting_add("mediasource", TYPE_BOOLEAN, &off, webkit, 0, "enable-mediasource");
 #endif
     i = 5;
-    setting_add("minimumfontsize", TYPE_INTEGER, &i, webkit, "minimum-font-size");
-    setting_add("monofont", TYPE_CHAR, &"monospace", webkit, "monospace-font-family");
+    setting_add("minimumfontsize", TYPE_INTEGER, &i, webkit, 0, "minimum-font-size");
+    setting_add("monofont", TYPE_CHAR, &"monospace", webkit, 0, "monospace-font-family");
     i = SETTING_DEFAULT_FONT_SIZE;
-    setting_add("monofontsize", TYPE_INTEGER, &i, webkit, "default-monospace-font-size");
-    setting_add("offlinecache", TYPE_BOOLEAN, &on, webkit, "enable-offline-web-application-cache");
-    setting_add("pagecache", TYPE_BOOLEAN, &on, webkit, "enable-page-cache");
-    setting_add("plugins", TYPE_BOOLEAN, &on, webkit, "enable-plugins");
-    setting_add("print-backgrounds", TYPE_BOOLEAN, &on, webkit, "print-backgrounds");
-    setting_add("private-browsing", TYPE_BOOLEAN, &off, webkit, "enable-private-browsing");
-    setting_add("resizable-text-areas", TYPE_BOOLEAN, &on, webkit, "resizable-text-areas");
-    setting_add("respect-image-orientation", TYPE_BOOLEAN, &off, webkit, "respect-image-orientation");
-    setting_add("sansfont", TYPE_CHAR, &"sans-serif", webkit, "sans-serif-font-family");
-    setting_add("scripts", TYPE_BOOLEAN, &on, webkit, "enable-scripts");
-    setting_add("seriffont", TYPE_CHAR, &"serif", webkit, "serif-font-family");
-    setting_add("site-specific-quirks", TYPE_BOOLEAN, &off, webkit, "enable-site-specific-quirks");
+    setting_add("monofontsize", TYPE_INTEGER, &i, webkit, 0, "default-monospace-font-size");
+    setting_add("offlinecache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache");
+    setting_add("pagecache", TYPE_BOOLEAN, &on, webkit, 0, "enable-page-cache");
+    setting_add("plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");
+    setting_add("print-backgrounds", TYPE_BOOLEAN, &on, webkit, 0, "print-backgrounds");
+    setting_add("private-browsing", TYPE_BOOLEAN, &off, webkit, 0, "enable-private-browsing");
+    setting_add("resizable-text-areas", TYPE_BOOLEAN, &on, webkit, 0, "resizable-text-areas");
+    setting_add("respect-image-orientation", TYPE_BOOLEAN, &off, webkit, 0, "respect-image-orientation");
+    setting_add("sansfont", TYPE_CHAR, &"sans-serif", webkit, 0, "sans-serif-font-family");
+    setting_add("scripts", TYPE_BOOLEAN, &on, webkit, 0, "enable-scripts");
+    setting_add("seriffont", TYPE_CHAR, &"serif", webkit, 0, "serif-font-family");
+    setting_add("site-specific-quirks", TYPE_BOOLEAN, &off, webkit, 0, "enable-site-specific-quirks");
 #if WEBKIT_CHECK_VERSION(1, 9, 0)
-    setting_add("smooth-scrolling", TYPE_BOOLEAN, &off, webkit, "enable-smooth-scrolling");
+    setting_add("smooth-scrolling", TYPE_BOOLEAN, &off, webkit, 0, "enable-smooth-scrolling");
 #endif
-    setting_add("spacial-navigation", TYPE_BOOLEAN, &off, webkit, "enable-spatial-navigation");
-    setting_add("spell-checking", TYPE_BOOLEAN, &off, webkit, "enable-spell-checking");
-    setting_add("spell-checking-languages", TYPE_CHAR, NULL, webkit, "spell-checking-languages");
-    setting_add("tab-key-cycles-through-elements", TYPE_BOOLEAN, &on, webkit, "tab-key-cycles-through-elements");
-    setting_add("universal-access-from-file-uris", TYPE_BOOLEAN, &off, webkit, "enable-universal-access-from-file-uris");
-    setting_add("useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Safari/538.15 Version/6.0", webkit, "user-agent");
-    setting_add("webaudio", TYPE_BOOLEAN, &off, webkit, "enable-webaudio");
-    setting_add("webgl", TYPE_BOOLEAN, &off, webkit, "enable-webgl");
-    setting_add("webinspector", TYPE_BOOLEAN, &off, webkit, "enable-developer-extras");
-    setting_add("xssauditor", TYPE_BOOLEAN, &on, webkit, "enable-xss-auditor");
+    setting_add("spacial-navigation", TYPE_BOOLEAN, &off, webkit, 0, "enable-spatial-navigation");
+    setting_add("spell-checking", TYPE_BOOLEAN, &off, webkit, 0, "enable-spell-checking");
+    setting_add("spell-checking-languages", TYPE_CHAR, NULL, webkit, 0, "spell-checking-languages");
+    setting_add("tab-key-cycles-through-elements", TYPE_BOOLEAN, &on, webkit, 0, "tab-key-cycles-through-elements");
+    setting_add("universal-access-from-file-uris", TYPE_BOOLEAN, &off, webkit, 0, "enable-universal-access-from-file-uris");
+    setting_add("useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Safari/538.15 Version/6.0", webkit, 0, "user-agent");
+    setting_add("webaudio", TYPE_BOOLEAN, &off, webkit, 0, "enable-webaudio");
+    setting_add("webgl", TYPE_BOOLEAN, &off, webkit, 0, "enable-webgl");
+    setting_add("webinspector", TYPE_BOOLEAN, &off, webkit, 0, "enable-developer-extras");
+    setting_add("xssauditor", TYPE_BOOLEAN, &on, webkit, 0, "enable-xss-auditor");
 
     /* internal variables */
-    setting_add("stylesheet", TYPE_BOOLEAN, &on, user_style, NULL);
-    setting_add("proxy", TYPE_BOOLEAN, &on, proxy, NULL);
+    setting_add("stylesheet", TYPE_BOOLEAN, &on, user_style, 0, NULL);
+    setting_add("proxy", TYPE_BOOLEAN, &on, proxy, 0, NULL);
 #ifdef FEATURE_COOKIE
-    setting_add("cookie-accept", TYPE_CHAR, &"always", cookie_accept, NULL);
+    setting_add("cookie-accept", TYPE_CHAR, &"always", cookie_accept, 0, NULL);
     i = 4800;
-    setting_add("cookie-timeout", TYPE_INTEGER, &i, internal, &vb.config.cookie_timeout);
+    setting_add("cookie-timeout", TYPE_INTEGER, &i, internal, 0, &vb.config.cookie_timeout);
 #endif
-    setting_add("strict-ssl", TYPE_BOOLEAN, &on, soup, "ssl-strict");
-    setting_add("strict-focus", TYPE_BOOLEAN, &off, internal, &vb.config.strict_focus);
+    setting_add("strict-ssl", TYPE_BOOLEAN, &on, soup, 0, "ssl-strict");
+    setting_add("strict-focus", TYPE_BOOLEAN, &off, internal, 0, &vb.config.strict_focus);
     i = 40;
-    setting_add("scrollstep", TYPE_INTEGER, &i, internal, &vb.config.scrollstep);
-    setting_add("status-color-bg", TYPE_COLOR, &"#000000", status_color, &vb.style.status_bg[VB_STATUS_NORMAL]);
-    setting_add("status-color-fg", TYPE_COLOR, &"#ffffff", status_color, &vb.style.status_fg[VB_STATUS_NORMAL]);
-    setting_add("status-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, &vb.style.status_font[VB_STATUS_NORMAL]);
-    setting_add("status-ssl-color-bg", TYPE_COLOR, &"#95e454", status_color, &vb.style.status_bg[VB_STATUS_SSL_VALID]);
-    setting_add("status-ssl-color-fg", TYPE_COLOR, &"#000000", status_color, &vb.style.status_fg[VB_STATUS_SSL_VALID]);
-    setting_add("status-ssl-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, &vb.style.status_font[VB_STATUS_SSL_VALID]);
-    setting_add("status-sslinvalid-color-bg", TYPE_COLOR, &"#ff7777", status_color, &vb.style.status_bg[VB_STATUS_SSL_INVALID]);
-    setting_add("status-sslinvalid-color-fg", TYPE_COLOR, &"#000000", status_color, &vb.style.status_fg[VB_STATUS_SSL_INVALID]);
-    setting_add("status-sslinvalid-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, &vb.style.status_font[VB_STATUS_SSL_INVALID]);
+    setting_add("scrollstep", TYPE_INTEGER, &i, internal, 0, &vb.config.scrollstep);
+    setting_add("status-color-bg", TYPE_COLOR, &"#000000", status_color, 0, &vb.style.status_bg[VB_STATUS_NORMAL]);
+    setting_add("status-color-fg", TYPE_COLOR, &"#ffffff", status_color, 0, &vb.style.status_fg[VB_STATUS_NORMAL]);
+    setting_add("status-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, 0, &vb.style.status_font[VB_STATUS_NORMAL]);
+    setting_add("status-ssl-color-bg", TYPE_COLOR, &"#95e454", status_color, 0, &vb.style.status_bg[VB_STATUS_SSL_VALID]);
+    setting_add("status-ssl-color-fg", TYPE_COLOR, &"#000000", status_color, 0, &vb.style.status_fg[VB_STATUS_SSL_VALID]);
+    setting_add("status-ssl-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, 0, &vb.style.status_font[VB_STATUS_SSL_VALID]);
+    setting_add("status-sslinvalid-color-bg", TYPE_COLOR, &"#ff7777", status_color, 0, &vb.style.status_bg[VB_STATUS_SSL_INVALID]);
+    setting_add("status-sslinvalid-color-fg", TYPE_COLOR, &"#000000", status_color, 0, &vb.style.status_fg[VB_STATUS_SSL_INVALID]);
+    setting_add("status-sslinvalid-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, 0, &vb.style.status_font[VB_STATUS_SSL_INVALID]);
     i = 1000;
-    setting_add("timeoutlen", TYPE_INTEGER, &i, internal, &vb.config.timeoutlen);
-    setting_add("input-bg-normal", TYPE_COLOR, &"#ffffff", input_color, &vb.style.input_bg[VB_MSG_NORMAL]);
-    setting_add("input-bg-error", TYPE_COLOR, &"#ff7777", input_color, &vb.style.input_bg[VB_MSG_ERROR]);
-    setting_add("input-fg-normal", TYPE_COLOR, &"#000000", input_color, &vb.style.input_fg[VB_MSG_NORMAL]);
-    setting_add("input-fg-error", TYPE_COLOR, &"#000000", input_color, &vb.style.input_fg[VB_MSG_ERROR]);
-    setting_add("input-font-normal", TYPE_FONT, &SETTING_GUI_FONT_NORMAL, input_font, &vb.style.input_font[VB_MSG_NORMAL]);
-    setting_add("input-font-error", TYPE_FONT, &SETTING_GUI_FONT_EMPH, input_font, &vb.style.input_font[VB_MSG_ERROR]);
-    setting_add("completion-font", TYPE_FONT, &SETTING_GUI_FONT_NORMAL, input_font, &vb.style.comp_font);
-    setting_add("completion-fg-normal", TYPE_COLOR, &"#f6f3e8", input_color, &vb.style.comp_fg[VB_COMP_NORMAL]);
-    setting_add("completion-fg-active", TYPE_COLOR, &"#ffffff", input_color, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    setting_add("completion-bg-normal", TYPE_COLOR, &"#656565", input_color, &vb.style.comp_bg[VB_COMP_NORMAL]);
-    setting_add("completion-bg-active", TYPE_COLOR, &"#777777", input_color, &vb.style.comp_bg[VB_COMP_ACTIVE]);
-    setting_add("ca-bundle", TYPE_CHAR, &"/etc/ssl/certs/ca-certificates.crt", ca_bundle, NULL);
-    setting_add("home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, NULL);
+    setting_add("timeoutlen", TYPE_INTEGER, &i, internal, 0, &vb.config.timeoutlen);
+    setting_add("input-bg-normal", TYPE_COLOR, &"#ffffff", input_color, 0, &vb.style.input_bg[VB_MSG_NORMAL]);
+    setting_add("input-bg-error", TYPE_COLOR, &"#ff7777", input_color, 0, &vb.style.input_bg[VB_MSG_ERROR]);
+    setting_add("input-fg-normal", TYPE_COLOR, &"#000000", input_color, 0, &vb.style.input_fg[VB_MSG_NORMAL]);
+    setting_add("input-fg-error", TYPE_COLOR, &"#000000", input_color, 0, &vb.style.input_fg[VB_MSG_ERROR]);
+    setting_add("input-font-normal", TYPE_FONT, &SETTING_GUI_FONT_NORMAL, input_font, 0, &vb.style.input_font[VB_MSG_NORMAL]);
+    setting_add("input-font-error", TYPE_FONT, &SETTING_GUI_FONT_EMPH, input_font, 0, &vb.style.input_font[VB_MSG_ERROR]);
+    setting_add("completion-font", TYPE_FONT, &SETTING_GUI_FONT_NORMAL, input_font, 0, &vb.style.comp_font);
+    setting_add("completion-fg-normal", TYPE_COLOR, &"#f6f3e8", input_color, 0, &vb.style.comp_fg[VB_COMP_NORMAL]);
+    setting_add("completion-fg-active", TYPE_COLOR, &"#ffffff", input_color, 0, &vb.style.comp_fg[VB_COMP_ACTIVE]);
+    setting_add("completion-bg-normal", TYPE_COLOR, &"#656565", input_color, 0, &vb.style.comp_bg[VB_COMP_NORMAL]);
+    setting_add("completion-bg-active", TYPE_COLOR, &"#777777", input_color, 0, &vb.style.comp_bg[VB_COMP_ACTIVE]);
+    setting_add("ca-bundle", TYPE_CHAR, &"/etc/ssl/certs/ca-certificates.crt", ca_bundle, 0, NULL);
+    setting_add("home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, 0, NULL);
     i = 1000;
-    setting_add("hint-timeout", TYPE_INTEGER, &i, NULL, NULL);
-    setting_add("download-path", TYPE_CHAR, &"", internal, &vb.config.download_dir);
+    setting_add("hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
+    setting_add("download-path", TYPE_CHAR, &"", internal, 0, &vb.config.download_dir);
     i = 2000;
-    setting_add("history-max-items", TYPE_INTEGER, &i, internal, &vb.config.history_max);
-    setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, NULL);
-    setting_add("header", TYPE_CHAR, &"", headers, NULL);
-    setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, NULL);
-    setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, NULL);
-    setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, NULL);
-    setting_add("download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -A '$VIMB_USER_AGENT' -e '$VIMB_URI' -b '$VIMB_COOKIES' '%s'\"", NULL, NULL);
-    setting_add("download-use-external", TYPE_BOOLEAN, &off, NULL, NULL);
+    setting_add("history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
+    setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
+    setting_add("header", TYPE_CHAR, &"", headers, FLAG_LIST, NULL);
+    setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, FLAG_LIST, NULL);
+    setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST, NULL);
+    setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
+    setting_add("download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -A '$VIMB_USER_AGENT' -e '$VIMB_URI' -b '$VIMB_COOKIES' '%s'\"", NULL, 0, NULL);
+    setting_add("download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
 #ifdef FEATURE_HSTS
-    setting_add("hsts", TYPE_BOOLEAN, &on, hsts, NULL);
+    setting_add("hsts", TYPE_BOOLEAN, &on, hsts, 0, NULL);
 #endif
-    setting_add("x-hint-command", TYPE_CHAR, &":o <C-R>;", NULL, NULL);
+    setting_add("x-hint-command", TYPE_CHAR, &":o <C-R>;", NULL, 0, NULL);
 
     /* initialize the shortcuts and set the default shortcuts */
     shortcut_init();
@@ -193,71 +215,84 @@ void setting_init()
 gboolean setting_run(char *name, const char *param)
 {
     SettingType type = SETTING_SET;
-    int res;
+    char modifier;
+    int res, len;
 
     /* determine the type to names last char and param */
-    int len = strlen(name);
-    if (name[len - 1] == '?') {
+    len      = strlen(name);
+    modifier = name[len - 1];
+    if (modifier == '?') {
         name[len - 1] = '\0';
-        type = SETTING_GET;
-    } else if (name[len - 1] == '!') {
+        type          = SETTING_GET;
+    } else if (modifier == '+') {
         name[len - 1] = '\0';
-        type = SETTING_TOGGLE;
+        type          = SETTING_APPEND;
+    } else if (modifier == '^') {
+        name[len - 1] = '\0';
+        type          = SETTING_PREPEND;
+    } else if (modifier == '-') {
+        name[len - 1] = '\0';
+        type          = SETTING_SUBTRACT;
+    } else if (modifier == '!') {
+        name[len - 1] = '\0';
+        type          = SETTING_TOGGLE;
     } else if (!param) {
         type = SETTING_GET;
     }
 
+    /* lookup a matching setting */
     Setting *s = g_hash_table_lookup(vb.config.settings, name);
     if (!s) {
         vb_echo(VB_MSG_ERROR, true, "Config '%s' not found", name);
         return false;
     }
 
-    if (type == SETTING_SET) {
+    if (type == SETTING_GET) {
+        setting_print(s);
+        return true;
+    }
+
+    if (type == SETTING_TOGGLE) {
+        if (s->type != TYPE_BOOLEAN) {
+            vb_echo(VB_MSG_ERROR, true, "Could not toggle none boolean %s", s->name);
+            return false;
+        }
+        gboolean value = !s->value.b;
+        res = setting_set_value(s, &value, SETTING_SET);
+        setting_print(s);
+    } else {
         if (!param) {
             vb_echo(VB_MSG_ERROR, true, "No valid value");
 
             return false;
         }
 
+        /* convert sting value into internal used data type */
         gboolean boolvar;
         int intvar;
         switch (s->type) {
             case TYPE_BOOLEAN:
                 boolvar = g_ascii_strncasecmp(param, "true", 4) == 0
                     || g_ascii_strncasecmp(param, "on", 2) == 0;
-                res = setting_set_value(s, &boolvar);
+                res = setting_set_value(s, &boolvar, type);
                 break;
 
             case TYPE_INTEGER:
                 intvar = g_ascii_strtoull(param, (char**)NULL, 10);
-                res = setting_set_value(s, &intvar);
+                res = setting_set_value(s, &intvar, type);
                 break;
 
             default:
-                res = setting_set_value(s, (void*)param);
+                res = setting_set_value(s, (void*)param, type);
                 break;
         }
-        if (res == SETTING_OK || res & SETTING_USER_NOTIFIED) {
-            return true;
-        }
-
-        vb_echo(VB_MSG_ERROR, true, "Could not set %s", s->name);
-        return false;
-    } else if (type == SETTING_TOGGLE) {
-        if (s->type != TYPE_BOOLEAN) {
-            vb_echo(VB_MSG_ERROR, true, "Could not toggle none boolean %s", s->name);
-
-            return false;
-        }
-        gboolean value = !s->value.b;
-        setting_set_value(s, &value);
-        setting_print(s);
-    } else {
-        setting_print(s);
+    }
+    if (res == SETTING_OK || res & SETTING_USER_NOTIFIED) {
+        return true;
     }
 
-    return true;
+    vb_echo(VB_MSG_ERROR, true, "Could not set %s", s->name);
+    return false;
 }
 
 gboolean setting_fill_completion(GtkListStore *store, const char *input)
@@ -278,48 +313,104 @@ void setting_cleanup(void)
     handlers_cleanup();
 }
 
-static int setting_set_value(Setting *prop, void *value)
+static int setting_set_value(Setting *prop, void *value, SettingType type)
 {
-    int res;
+    int res = SETTING_OK;
+    /* by default given value is also the new value */
+    void *new_value = value;
+    gboolean free_new_value = false;
 
-    /* if there is a estter defined - call this first to check if the value is
+    /* prepare the value according to given setting type */
+    switch (type) {
+        case SETTING_APPEND:
+            if (prop->type == TYPE_INTEGER) {
+                /* if setting is integer - summarize given value to current one */
+                int newint = prop->value.i + *((int*)value);
+                new_value  = (void*)&newint;
+            } else if (prop->type == TYPE_CHAR && *prop->value.s) {
+                /* if current set calue is not empty - append the new one */
+                new_value = g_strconcat(
+                    prop->value.s,
+                    prop->flags & FLAG_LIST ? "," : "",
+                    (char*)value,
+                    NULL
+                );
+                free_new_value = true;
+            }
+            break;
+
+        case SETTING_PREPEND:
+            if (prop->type == TYPE_INTEGER) {
+                int newint = prop->value.i * *((int*)value);
+                new_value  = (void*)&newint;
+            } else if (prop->type == TYPE_CHAR && *prop->value.s) {
+                new_value = g_strconcat(
+                    (char*)value,
+                    prop->flags & FLAG_LIST ? "," : "",
+                    prop->value.s,
+                    NULL
+                );
+                free_new_value = true;
+            }
+            break;
+
+        case SETTING_SUBTRACT:
+            if (prop->type == TYPE_INTEGER) {
+                int newint = prop->value.i - *((int*)value);
+                new_value  = (void*)&newint;
+            } else if (prop->type == TYPE_CHAR && *prop->value.s) {
+                new_value = value_remove_match(prop->value.s, (char*)value, prop->flags & FLAG_LIST);
+                free_new_value = true;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    /* if there is a setter defined - call this first to check if the value is
      * accepted */
     if (prop->setter) {
-        res = prop->setter(prop->name, prop->type, value, prop->data);
-        /* brek here on error and don't change the setting */
+        res = prop->setter(prop->name, prop->type, new_value, prop->data);
+        /* break here on error and don't change the setting */
         if (res & SETTING_ERROR) {
-            return res;
+            goto free;
         }
     }
 
     /* save the new value also in the setting */
     switch (prop->type) {
         case TYPE_BOOLEAN:
-            prop->value.b = *((gboolean*)value);
+            prop->value.b = *((gboolean*)new_value);
             break;
 
         case TYPE_INTEGER:
-            prop->value.i = *((int*)value);
+            prop->value.i = *((int*)new_value);
             break;
 
         default:
-            OVERWRITE_STRING(prop->value.s, value);
+            OVERWRITE_STRING(prop->value.s, new_value);
             break;
     }
 
-    return SETTING_OK;
+free:
+    if (free_new_value) {
+        g_free(new_value);
+    }
+    return res;
 }
 
-static gboolean setting_add(const char *name, Type type, void *value,
-    SettingFunction setter, void *data)
+static gboolean setting_add(const char *name, int type, void *value,
+    SettingFunction setter, int flags, void *data)
 {
     Setting *prop = g_slice_new0(Setting);
     prop->name   = name;
     prop->type   = type;
     prop->setter = setter;
+    prop->flags  = flags;
     prop->data   = data;
 
-    setting_set_value(prop, value);
+    setting_set_value(prop, value, SETTING_SET);
 
     g_hash_table_insert(vb.config.settings, (char*)name, prop);
     return true;
@@ -350,7 +441,7 @@ static void setting_free(Setting *s)
     g_slice_free(Setting, s);
 }
 
-static int webkit(const char *name, Type type, void *value, void *data)
+static int webkit(const char *name, int type, void *value, void *data)
 {
     const char *property = (const char*)data;
     WebKitWebSettings *web_setting = webkit_web_view_get_settings(vb.gui.webview);
@@ -371,7 +462,7 @@ static int webkit(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int soup(const char *name, Type type, void *value, void *data)
+static int soup(const char *name, int type, void *value, void *data)
 {
     const char *property = (const char*)data;
     switch (type) {
@@ -390,7 +481,7 @@ static int soup(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int internal(const char *name, Type type, void *value, void *data)
+static int internal(const char *name, int type, void *value, void *data)
 {
     char **str;
     switch (type) {
@@ -410,7 +501,7 @@ static int internal(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int input_color(const char *name, Type type, void *value, void *data)
+static int input_color(const char *name, int type, void *value, void *data)
 {
     VB_COLOR_PARSE((VbColor*)data, (char*)value);
     vb_update_input_style();
@@ -418,7 +509,7 @@ static int input_color(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int status_color(const char *name, Type type, void *value, void *data)
+static int status_color(const char *name, int type, void *value, void *data)
 {
     VB_COLOR_PARSE((VbColor*)data, (char*)value);
     vb_update_status_style();
@@ -426,7 +517,7 @@ static int status_color(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int input_font(const char *name, Type type, void *value, void *data)
+static int input_font(const char *name, int type, void *value, void *data)
 {
     PangoFontDescription **font = (PangoFontDescription**)data;
     if (*font) {
@@ -439,7 +530,7 @@ static int input_font(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int status_font(const char *name, Type type, void *value, void *data)
+static int status_font(const char *name, int type, void *value, void *data)
 {
     PangoFontDescription **font = (PangoFontDescription**)data;
     if (*font) {
@@ -453,7 +544,7 @@ static int status_font(const char *name, Type type, void *value, void *data)
 }
 
 #ifdef FEATURE_COOKIE
-static int cookie_accept(const char *name, Type type, void *value, void *data)
+static int cookie_accept(const char *name, int type, void *value, void *data)
 {
     char *policy = (char*)value;
     int i;
@@ -482,7 +573,7 @@ static int cookie_accept(const char *name, Type type, void *value, void *data)
 }
 #endif
 
-static int ca_bundle(const char *name, Type type, void *value, void *data)
+static int ca_bundle(const char *name, int type, void *value, void *data)
 {
     char *expanded;
     GError *error = NULL;
@@ -498,14 +589,14 @@ static int ca_bundle(const char *name, Type type, void *value, void *data)
     }
 
     /* there is no function to get the file back from tls file database so
-     * it's saved as seperate configuration */
+     * it's saved as separate configuration */
     g_object_set(vb.session, "tls-database", vb.config.tls_db, NULL);
 
     return SETTING_OK;
 }
 
 
-static int proxy(const char *name, Type type, void *value, void *data)
+static int proxy(const char *name, int type, void *value, void *data)
 {
     gboolean enabled = *(gboolean*)value;
 #if SOUP_CHECK_VERSION(2, 42, 2)
@@ -526,7 +617,7 @@ static int proxy(const char *name, Type type, void *value, void *data)
             const char *no_proxy;
             char **ignored_hosts = NULL;
             /* check for no_proxy environment variable that contains comma
-             * seperated domains or ip addresses to skip from proxy */
+             * separated domains or ip addresses to skip from proxy */
             if ((no_proxy = g_getenv("no_proxy"))) {
                 ignored_hosts = g_strsplit(no_proxy, ",", 0);
             }
@@ -558,7 +649,7 @@ static int proxy(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int user_style(const char *name, Type type, void *value, void *data)
+static int user_style(const char *name, int type, void *value, void *data)
 {
     gboolean enabled = *(gboolean*)value;
     WebKitWebSettings *web_setting = webkit_web_view_get_settings(vb.gui.webview);
@@ -585,7 +676,7 @@ static int user_style(const char *name, Type type, void *value, void *data)
  * the request (NAME3), if the '=' is present means that the header value is
  * set to empty value.
  */
-static int headers(const char *name, Type type, void *value, void *data)
+static int headers(const char *name, int type, void *value, void *data)
 {
     /* remove previous parsed headers */
     if (vb.config.headers) {
@@ -597,7 +688,7 @@ static int headers(const char *name, Type type, void *value, void *data)
     return SETTING_OK;
 }
 
-static int prevnext(const char *name, Type type, void *value, void *data)
+static int prevnext(const char *name, int type, void *value, void *data)
 {
     if (validate_js_regexp_list((char*)value)) {
         if (*name == 'n') {
@@ -611,7 +702,7 @@ static int prevnext(const char *name, Type type, void *value, void *data)
     return SETTING_ERROR | SETTING_USER_NOTIFIED;
 }
 
-static int fullscreen(const char *name, Type type, void *value, void *data)
+static int fullscreen(const char *name, int type, void *value, void *data)
 {
     if (*(gboolean*)value) {
         gtk_window_fullscreen(GTK_WINDOW(vb.gui.window));
@@ -623,7 +714,7 @@ static int fullscreen(const char *name, Type type, void *value, void *data)
 }
 
 #ifdef FEATURE_HSTS
-static int hsts(const char *name, Type type, void *value, void *data)
+static int hsts(const char *name, int type, void *value, void *data)
 {
     if (*(gboolean*)value) {
         soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.hsts_provider));
@@ -654,4 +745,48 @@ static gboolean validate_js_regexp_list(const char *pattern)
         return false;
     }
     return true;
+}
+
+/**
+ * Removes a value from a comma separated list or a simple string.
+ * Returned value must be freed.
+ */
+static char* value_remove_match(const char *list, const char *remove, gboolean aslist)
+{
+    int  rlen = strlen(remove);
+    char *p, *origval = g_strdup(list);
+
+    /* without list mode - remove first occourance of value in the list */
+    if (!aslist) {
+        if ((p = strstr(origval, remove))) {
+            memmove(p, p + rlen, 1 + strlen(p + rlen));
+        }
+        return origval;
+    }
+
+    /* in list mode - remove only full matching list elements and make sure
+     * that there are no trailing and leading commas left */
+    for (p = origval; *p; p++) {
+        if ((p == origval || (p[-1] == ','))
+            && strncmp(p, remove, rlen) == 0
+            && (p[rlen] == ',' || p[rlen] == '\0')
+        ) {
+            int i = rlen;
+            if (aslist) {
+                if (p == origval) {
+                    /* include the comma after the matched string */
+                    if (p[rlen] == ',') {
+                        i++;
+                    }
+                } else {
+                    /* include the comma before the string */
+                    p--;
+                    i++;
+                }
+            }
+            memmove(p, p + i, 1 + strlen(p + rlen));
+            break;
+        }
+    }
+    return origval;
 }

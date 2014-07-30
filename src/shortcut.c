@@ -84,7 +84,7 @@ char *shortcut_get_uri(const char *string)
     /* if there are only $0 placeholders we don't need to split the parameters */
     if (max_num == 0) {
         quoted_param = soup_uri_encode(query, "&");
-        uri          = util_str_replace("$0", quoted_param, tmpl);
+        uri          = util_str_replace("$0", quoted_param, tmpl, -1);
         g_free(quoted_param);
 
         return uri;
@@ -141,7 +141,7 @@ char *shortcut_get_uri(const char *string)
             char *new;
 
             quoted_param = soup_uri_encode(token->str, "&");
-            new = util_str_replace((char[]){'$', current_num + '0', '\0'}, quoted_param, uri);
+            new = util_str_replace((char[]){'$', current_num + '0', '\0'}, quoted_param, uri, -1);
             g_free(quoted_param);
             g_free(uri);
             uri = new;

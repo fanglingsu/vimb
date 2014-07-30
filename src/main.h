@@ -218,30 +218,24 @@ typedef enum {
     FILES_LAST
 } VbFile;
 
-typedef enum {
-    TYPE_CHAR,
-    TYPE_BOOLEAN,
-    TYPE_INTEGER,
-    TYPE_COLOR,
-    TYPE_FONT,
-} Type;
-
 enum {
     VB_CLIPBOARD_PRIMARY   = (1<<1),
     VB_CLIPBOARD_SECONDARY = (1<<2)
 };
 
-typedef int (*SettingFunction)(const char *name, Type type, void *value, void *data);
+typedef int (*SettingFunction)(const char *name, int type, void *value, void *data);
 typedef union {
     gboolean b;
     int      i;
     char     *s;
 } SettingValue;
+
 typedef struct {
     const char      *name;
-    Type            type;
+    int             type;
     SettingValue    value;
     SettingFunction setter;
+    int             flags;
     void            *data;  /* data given to the setter */
 } Setting;
 
