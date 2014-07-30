@@ -316,7 +316,7 @@ void normal_showcmd(int c)
         extra      = strlen(translated);
         overflow   = old + extra - SHOWCMD_LEN;
         if (overflow > 0) {
-            g_memmove(showcmd_buf, showcmd_buf + overflow, old - overflow + 1);
+            memmove(showcmd_buf, showcmd_buf + overflow, old - overflow + 1);
         }
         strcat(showcmd_buf, translated);
     } else {

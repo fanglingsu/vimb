@@ -203,7 +203,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
                 map.resolved -= 3;
                 map.qlen     -= 3;
                 /* move all other queue entries three steps to the left */
-                g_memmove(map.queue, map.queue + 3, map.qlen);
+                memmove(map.queue, map.queue + 3, map.qlen);
             } else {
                 /* get first char of queue */
                 qk = map.queue[0];
@@ -212,7 +212,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
                 map.qlen--;
 
                 /* move all other queue entries one step to the left */
-                g_memmove(map.queue, map.queue + 1, map.qlen);
+                memmove(map.queue, map.queue + 1, map.qlen);
             }
 
             /* remove the nomap flag */
