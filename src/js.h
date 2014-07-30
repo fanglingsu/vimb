@@ -22,10 +22,10 @@
 
 #include "main.h"
 
-gboolean js_eval_file(WebKitWebFrame *frame, const char *file);
-gboolean js_eval(WebKitWebFrame *frame, const char *script, const char *file,
+gboolean js_eval_file(JSContextRef ctx, const char *file);
+gboolean js_eval(JSContextRef ctx, const char *script, const char *file,
     char **value);
-JSObjectRef js_create_object(WebKitWebFrame *frame, const char *script);
+JSObjectRef js_create_object(JSContextRef ctx, const char *script);
 char* js_object_call_function(JSContextRef ctx, JSObjectRef obj,
     const char *func, int count, JSValueRef params[]);
 char *js_ref_to_string(JSContextRef ctx, JSValueRef ref);

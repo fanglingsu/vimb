@@ -507,6 +507,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             uri = webkit_web_view_get_uri(view);
             {
                 WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
+                JSContextRef ctx;
                 /* set the status */
                 if (g_str_has_prefix(uri, "https://")) {
                     WebKitWebDataSource *src      = webkit_web_frame_get_data_source(frame);
@@ -524,7 +525,8 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 hints_init(frame);
 
                 /* run user script file */
-                js_eval_file(frame, vb.files[FILES_SCRIPT]);
+                ctx = webkit_web_frame_get_global_context(frame);
+                js_eval_file(ctx, vb.files[FILES_SCRIPT]);
             }
 
             /* if we load a page from a submitted form, leafe the insert mode */

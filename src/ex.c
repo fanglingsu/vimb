@@ -726,7 +726,8 @@ static gboolean ex_eval(const ExArg *arg)
     }
 
     success = js_eval(
-        webkit_web_view_get_main_frame(vb.gui.webview), arg->rhs->str, NULL, &value
+        webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(vb.gui.webview)),
+        arg->rhs->str, NULL, &value
     );
     if (success) {
         vb_echo(VB_MSG_NORMAL, false, "%s", value);

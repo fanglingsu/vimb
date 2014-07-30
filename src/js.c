@@ -27,14 +27,14 @@ static gboolean evaluate_string(JSContextRef ctx, const char *script,
 /**
  * Run scripts out of given file in the given frame.
  */
-gboolean js_eval_file(WebKitWebFrame *frame, const char *file)
+gboolean js_eval_file(JSContextRef ctx, const char *file)
 {
     char *js = NULL, *value = NULL;
 
     if (g_file_test(file, G_FILE_TEST_IS_REGULAR)
         && g_file_get_contents(file, &js, NULL, NULL)
     ) {
-        gboolean success = js_eval(frame, js, file, &value);
+        gboolean success = js_eval(ctx, js, file, &value);
         if (!success) {
             g_warning("JavaScript error in %s: %s", file, value);
         }
@@ -53,12 +53,11 @@ gboolean js_eval_file(WebKitWebFrame *frame, const char *file)
  * else with the exception message. In both cases this must be freed by the
  * caller if no longer used.
  */
-gboolean js_eval(WebKitWebFrame *frame, const char *script, const char *file,
+gboolean js_eval(JSContextRef ctx, const char *script, const char *file,
     char **value)
 {
     gboolean   success;
     JSValueRef result = NULL;
-    JSContextRef ctx  = webkit_web_frame_get_global_context(frame);
 
     success = evaluate_string(ctx, script, file, &result);
     *value  = js_ref_to_string(ctx, result);
@@ -69,12 +68,10 @@ gboolean js_eval(WebKitWebFrame *frame, const char *script, const char *file,
 /**
  * Creates a JavaScript object in contect of given frame.
  */
-JSObjectRef js_create_object(WebKitWebFrame *frame, const char *script)
+JSObjectRef js_create_object(JSContextRef ctx, const char *script)
 {
     JSValueRef result = NULL, exc = NULL;
     JSObjectRef object;
-    JSContextRef ctx  = webkit_web_frame_get_global_context(frame);
-
     if (!evaluate_string(ctx, script, NULL, &result)) {
         return NULL;
     }

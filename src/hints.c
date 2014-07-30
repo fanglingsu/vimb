@@ -62,7 +62,7 @@ void hints_init(WebKitWebFrame *frame)
     }
     if (!hints.obj) {
         hints.ctx = webkit_web_frame_get_global_context(frame);
-        hints.obj = js_create_object(frame, HINTS_JS);
+        hints.obj = js_create_object(hints.ctx, HINTS_JS);
     }
 }
 

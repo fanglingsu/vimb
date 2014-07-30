@@ -642,9 +642,10 @@ static gboolean validate_js_regexp_list(const char *pattern)
 {
     gboolean result;
     char *js, *value = NULL;
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
 
     js     = g_strdup_printf("var i;for(i=0;i<[%s].length;i++);", pattern);
-    result = js_eval(webkit_web_view_get_main_frame(vb.gui.webview), js, NULL, &value);
+    result = js_eval(webkit_web_frame_get_global_context(frame), js, NULL, &value);
     g_free(js);
     if (!result) {
         vb_echo(VB_MSG_ERROR, true, "%s", value);
