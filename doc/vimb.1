@@ -992,11 +992,14 @@ Note that these headers will replace already existing headers. If there is
 no '=' after the header name, than the complete header will be removed from
 the request, if the '=' is present means that the header value is set to empty
 value.
+
+To use '=' within a header value the value must be quoted like shown in
+Example for the Cookie header.
 .RS
 .P
 Example:
 .PD 0
-.IP ":set header=DNT=1,User-Agent"
+.IP ":set header=DNT=1,User-Agent,Cookie='name=value'"
 Send the 'Do Not Track' header with each request and remove the User-Agent
 Header completely from request.
 .PD
