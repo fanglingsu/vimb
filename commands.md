@@ -150,6 +150,21 @@ Handlers allow specifying external scripts to handle alternative URI methods.
   use 'on', 'off' or 'true' and 'false'. Colors are given as hexadecimal value
   like '#f57700'.
 
+\:se[t] *VAR+=VALUE*
+: Add the *VALUE* to a number option, or apend the *VALUE* to a string option.
+  When the option is a comma separated list, a comma is added, unless the
+  value was empty.
+
+\:set[t] *VAR^=VALUE*
+: Multiply the *VALUE* to a number option, or prepend the *VALUE* to a string
+  option. When the option is a comma separated list, a comma is added, unless
+  the value was empty.
+
+\:se[t] *VAR-=VALUE*
+: Subtract the *VALUE* from a number option, or remove the *VALUE* from a
+  string option, if it is there. When the option is a comma separated list, a
+  comma is deleted, unless the option becomes empty.
+
 \:se[t] *VAR*?
 : Show the current set value of variable *VAR*.
 
@@ -181,13 +196,13 @@ if vimb has been compiled with QUEUE feature.
 \:sh[ellcmd] *CMD*
 : Runs given shell *CMD* synchronous and print the output into inputbox. The
   *CMD* can contain multiple '%' chars that are expanded to the current opened
-  uri. Also the '~/' to home directory expansion is available.
+  uri. Also the `~/` to home directory expansion is available.
 
   Runs given shell *CMD* syncronous and print the output into inputbox.
-  Follwing pattern in *CMD* are expanded, '~username', '~/', '$VAR' and
-  '${VAR}'. A '\' before these patterns disables the expansion.
+  Follwing pattern in *CMD* are expanded, `~username`, `~/`, `$VAR` and
+  `${VAR}`. A '``\``' before these patterns disables the expansion.
 
-  Example: ``:sh ls -la $HOME``
+  Example: `:sh ls -la $HOME`
 
 :sh[ellcmd]! *CMD*
 : Like `:shellcmd` but runs given shell *CMD* asyncron.
