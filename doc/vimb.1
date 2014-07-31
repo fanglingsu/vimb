@@ -984,7 +984,7 @@ spawn the editor like `x-terminal-emulator -e vi %s'.
 .B fullscreen (bool)
 Show the current window full-screen.
 .TP
-.B header (string)
+.B header (list)
 Comma separated list of headers that replaces default header sent by webkit or
 new headers. The format for the header list elements is `name[=[value]]'.
 
@@ -1037,7 +1037,7 @@ Font user in inputbox if error is shown.
 .B input-font-normal (string)
 Font used for inputbox.
 .TP
-.B nextpattern (string)
+.B nextpattern (list)
 Patterns to use when guessing the next page in a document. Each pattern is
 successively tested against each link in the page beginning from the last
 link. Default
@@ -1045,7 +1045,7 @@ link. Default
 you have to escape the '|' as '\\|' else the '|' will terminate the :set
 command and start a new command.
 .TP
-.B previouspattern (string)
+.B previouspattern (list)
 Patterns to use when guessing the previous page in a document. Each pattern is
 successively tested against each link in the page beginning from the last
 link. Default "/\\bnext\\b/i,/^(>|>>|»)$/,/^(>|>>|»)/,/(>|>>|»)$/,/\\bmore\\b/i"
