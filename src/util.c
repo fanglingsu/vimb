@@ -253,13 +253,13 @@ next:
  * Replaces appearances of search in string by given replace.
  * Returne a new allocated string if search was found.
  */
-char *util_str_replace(const char* search, const char* replace, const char* string, int max_replaces)
+char *util_str_replace(const char* search, const char* replace, const char* string)
 {
     if (!string) {
         return NULL;
     }
 
-    char **buf = g_strsplit(string, search, max_replaces + 1);
+    char **buf = g_strsplit(string, search, -1);
     char *ret  = g_strjoinv(replace, buf);
     g_strfreev(buf);
 
