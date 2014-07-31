@@ -198,7 +198,8 @@ static gboolean element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* el
 
 static gboolean auto_insert(Element *element)
 {
-    if (dom_is_editable(element)) {
+    /* don't change mode if we are in pass through mode */
+    if (vb.mode->id != 'p' && dom_is_editable(element)) {
         mode_enter('i');
 
         return true;

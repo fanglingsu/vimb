@@ -529,7 +529,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 js_eval_file(ctx, vb.files[FILES_SCRIPT]);
             }
 
-            /* if we load a page from a submitted form, leafe the insert mode */
+            /* if we load a page from a submitted form, leave the insert mode */
             if (vb.mode->id == 'i') {
                 mode_enter('n');
             }
@@ -1078,7 +1078,9 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
 
             propagate = true;
         }
-    } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE) {
+    } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE && vb.mode->id != 'p') {
+        /* don't switch back to input mode if we are currently in pass through
+         * mode when the user clicks into a form field */
         mode_enter('i');
         propagate = true;
     }
