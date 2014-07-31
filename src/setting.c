@@ -364,8 +364,8 @@ free:
 static gboolean prepare_setting_value(Setting *prop, void *value, SettingType type, void **newvalue)
 {
     gboolean islist, res = false;
-    int i, vlen;
-    char *p;
+    int vlen, i = 0;
+    char *p = NULL;
 
     if ((type != SETTING_APPEND && type != SETTING_PREPEND && type != SETTING_REMOVE)
         || prop->type == TYPE_BOOLEAN
@@ -449,7 +449,7 @@ static gboolean prepare_setting_value(Setting *prop, void *value, SettingType ty
             *newvalue = g_strconcat(value, prop->value.s, NULL);
         }
         res = true;
-    } else if (type == SETTING_REMOVE) {
+    } else if (type == SETTING_REMOVE && p) {
         char *copy = g_strdup(prop->value.s);
         /* make p to point to the same position in the copy */
         p = copy + (p - prop->value.s);
