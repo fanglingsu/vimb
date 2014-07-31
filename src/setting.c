@@ -41,18 +41,20 @@ typedef enum {
     SETTING_SET,        /* :set option=value */
     SETTING_APPEND,     /* :set option+=vlaue */
     SETTING_PREPEND,    /* :set option^=vlaue */
-    SETTING_SUBTRACT,   /* :set option-=value */
+    SETTING_REMOVE,     /* :set option-=value */
     SETTING_GET,        /* :set option? */
     SETTING_TOGGLE      /* :set option! */
 } SettingType;
 
 enum {
-    FLAG_LIST = (1<<1), /* setting contains a ',' separated list of values */
+    FLAG_LIST  = (1<<1),    /* setting contains a ',' separated list of values */
+    FLAG_NODUP = (1<<2),    /* dont allow duplicate strings within list values */
 };
 
 extern VbCore vb;
 
 static int setting_set_value(Setting *prop, void *value, SettingType type);
+static gboolean prepare_setting_value(Setting *prop, void *value, SettingType type, void **newvalue);
 static gboolean setting_add(const char *name, int type, void *value,
     SettingFunction setter, int flags, void *data);
 static void setting_print(Setting *s);
@@ -78,7 +80,6 @@ static int fullscreen(const char *name, int type, void *value, void *data);
 static int hsts(const char *name, int type, void *value, void *data);
 #endif
 static gboolean validate_js_regexp_list(const char *pattern);
-static char* value_remove_match(const char *list, const char *remove, gboolean aslist);
 
 void setting_init()
 {
@@ -190,9 +191,9 @@ void setting_init()
     i = 2000;
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
     setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
-    setting_add("header", TYPE_CHAR, &"", headers, FLAG_LIST, NULL);
-    setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, FLAG_LIST, NULL);
-    setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST, NULL);
+    setting_add("header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, NULL);
+    setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
+    setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
     setting_add("download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -A '$VIMB_USER_AGENT' -e '$VIMB_URI' -b '$VIMB_COOKIES' '%s'\"", NULL, 0, NULL);
     setting_add("download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
@@ -232,7 +233,7 @@ gboolean setting_run(char *name, const char *param)
         type          = SETTING_PREPEND;
     } else if (modifier == '-') {
         name[len - 1] = '\0';
-        type          = SETTING_SUBTRACT;
+        type          = SETTING_REMOVE;
     } else if (modifier == '!') {
         name[len - 1] = '\0';
         type          = SETTING_TOGGLE;
@@ -317,61 +318,16 @@ static int setting_set_value(Setting *prop, void *value, SettingType type)
 {
     int res = SETTING_OK;
     /* by default given value is also the new value */
-    void *new_value = value;
-    gboolean free_new_value = false;
+    void *newvalue = NULL;
+    gboolean free_newvalue;
 
-    /* prepare the value according to given setting type */
-    switch (type) {
-        case SETTING_APPEND:
-            if (prop->type == TYPE_INTEGER) {
-                /* if setting is integer - summarize given value to current one */
-                int newint = prop->value.i + *((int*)value);
-                new_value  = (void*)&newint;
-            } else if (prop->type == TYPE_CHAR && *prop->value.s) {
-                /* if current set calue is not empty - append the new one */
-                new_value = g_strconcat(
-                    prop->value.s,
-                    prop->flags & FLAG_LIST ? "," : "",
-                    (char*)value,
-                    NULL
-                );
-                free_new_value = true;
-            }
-            break;
-
-        case SETTING_PREPEND:
-            if (prop->type == TYPE_INTEGER) {
-                int newint = prop->value.i * *((int*)value);
-                new_value  = (void*)&newint;
-            } else if (prop->type == TYPE_CHAR && *prop->value.s) {
-                new_value = g_strconcat(
-                    (char*)value,
-                    prop->flags & FLAG_LIST ? "," : "",
-                    prop->value.s,
-                    NULL
-                );
-                free_new_value = true;
-            }
-            break;
-
-        case SETTING_SUBTRACT:
-            if (prop->type == TYPE_INTEGER) {
-                int newint = prop->value.i - *((int*)value);
-                new_value  = (void*)&newint;
-            } else if (prop->type == TYPE_CHAR && *prop->value.s) {
-                new_value = value_remove_match(prop->value.s, (char*)value, prop->flags & FLAG_LIST);
-                free_new_value = true;
-            }
-            break;
-
-        default:
-            break;
-    }
+    /* get prepared value according to setting type */
+    free_newvalue = prepare_setting_value(prop, value, type, &newvalue);
 
     /* if there is a setter defined - call this first to check if the value is
      * accepted */
     if (prop->setter) {
-        res = prop->setter(prop->name, prop->type, new_value, prop->data);
+        res = prop->setter(prop->name, prop->type, newvalue, prop->data);
         /* break here on error and don't change the setting */
         if (res & SETTING_ERROR) {
             goto free;
@@ -381,22 +337,128 @@ static int setting_set_value(Setting *prop, void *value, SettingType type)
     /* save the new value also in the setting */
     switch (prop->type) {
         case TYPE_BOOLEAN:
-            prop->value.b = *((gboolean*)new_value);
+            prop->value.b = *((gboolean*)newvalue);
             break;
 
         case TYPE_INTEGER:
-            prop->value.i = *((int*)new_value);
+            prop->value.i = *((int*)newvalue);
             break;
 
         default:
-            OVERWRITE_STRING(prop->value.s, new_value);
+            OVERWRITE_STRING(prop->value.s, newvalue);
             break;
     }
 
 free:
-    if (free_new_value) {
-        g_free(new_value);
+    if (free_newvalue) {
+        g_free(newvalue);
     }
+    return res;
+}
+
+/**
+ * Prepares the vlaue for the setting for the diefferent setting types.
+ * Return value true indicates that the memory of newvalue must be freed by
+ * the caller.
+ */
+static gboolean prepare_setting_value(Setting *prop, void *value, SettingType type, void **newvalue)
+{
+    gboolean islist, res = false;
+    int i, vlen;
+    char *p;
+
+    if ((type != SETTING_APPEND && type != SETTING_PREPEND && type != SETTING_REMOVE)
+        || prop->type == TYPE_BOOLEAN
+    ) {
+        /* if type is not appen, prepend or remove there is nothing to be done */
+        *newvalue = value;
+        return res;
+    }
+
+    /* perform arithmetic operation for integer values */
+    if (prop->type == TYPE_INTEGER) {
+        int newint;
+        if (type == SETTING_APPEND) {
+            newint = prop->value.i + *((int*)value);
+        } else if (type == SETTING_PREPEND) {
+            newint = prop->value.i * *((int*)value);
+        } else if (type == SETTING_REMOVE) {
+            newint = prop->value.i - *((int*)value);
+        }
+        *newvalue = (void*)&newint;
+        return res;
+    }
+
+    /* handle operations on currently empty value */
+    if (!*prop->value.s) {
+        if (type == SETTING_APPEND || type == SETTING_PREPEND) {
+            *newvalue = value;
+        } else {
+            *newvalue = prop->value.s;
+        }
+        return res;
+    }
+
+    islist = (prop->flags & FLAG_LIST);
+    vlen   = strlen((char*)value);
+
+    /* check if value already exists in current set option */
+    if (type == SETTING_REMOVE || prop->flags & FLAG_NODUP) {
+        for (p = prop->value.s; *p; p++) {
+            if ((!islist || p == prop->value.s || (p[-1] == ','))
+                && strncmp(p, value, vlen) == 0
+                && (!islist || p[vlen] == ',' || p[vlen] == '\0')
+            ) {
+                i = vlen;
+                if (islist) {
+                    if (p == prop->value.s) {
+                        /* include the comma after the matched string */
+                        if (p[vlen] == ',') {
+                            i++;
+                        }
+                    } else {
+                        /* include the comma before the string */
+                        p--;
+                        i++;
+                    }
+                }
+                break;
+            }
+        }
+
+        /* do not add the value if it already exists */
+        if ((type == SETTING_APPEND || type == SETTING_PREPEND) && *p) {
+            *newvalue = value;
+            return res;
+        }
+    }
+
+    if (type == SETTING_APPEND) {
+        if (islist && *(char*)value) {
+            /* don't append a comma if the value is empty */
+            *newvalue = g_strconcat(prop->value.s, ",", value, NULL);
+        } else {
+            *newvalue = g_strconcat(prop->value.s, value, NULL);
+        }
+        res = true;
+    } else if (type == SETTING_PREPEND) {
+        if (islist && *(char*)value) {
+            /* don't prepend a comma if the value is empty */
+            *newvalue = g_strconcat(value, ",", prop->value.s, NULL);
+        } else {
+            *newvalue = g_strconcat(value, prop->value.s, NULL);
+        }
+        res = true;
+    } else if (type == SETTING_REMOVE) {
+        char *copy = g_strdup(prop->value.s);
+        /* make p to point to the same position in the copy */
+        p = copy + (p - prop->value.s);
+
+        memmove(p, p + i, 1 + strlen(p + vlen));
+        *newvalue = copy;
+        res = true;
+    }
+
     return res;
 }
 
@@ -745,48 +807,4 @@ static gboolean validate_js_regexp_list(const char *pattern)
         return false;
     }
     return true;
-}
-
-/**
- * Removes a value from a comma separated list or a simple string.
- * Returned value must be freed.
- */
-static char* value_remove_match(const char *list, const char *remove, gboolean aslist)
-{
-    int  rlen = strlen(remove);
-    char *p, *origval = g_strdup(list);
-
-    /* without list mode - remove first occourance of value in the list */
-    if (!aslist) {
-        if ((p = strstr(origval, remove))) {
-            memmove(p, p + rlen, 1 + strlen(p + rlen));
-        }
-        return origval;
-    }
-
-    /* in list mode - remove only full matching list elements and make sure
-     * that there are no trailing and leading commas left */
-    for (p = origval; *p; p++) {
-        if ((p == origval || (p[-1] == ','))
-            && strncmp(p, remove, rlen) == 0
-            && (p[rlen] == ',' || p[rlen] == '\0')
-        ) {
-            int i = rlen;
-            if (aslist) {
-                if (p == origval) {
-                    /* include the comma after the matched string */
-                    if (p[rlen] == ',') {
-                        i++;
-                    }
-                } else {
-                    /* include the comma before the string */
-                    p--;
-                    i++;
-                }
-            }
-            memmove(p, p + i, 1 + strlen(p + rlen));
-            break;
-        }
-    }
-    return origval;
 }
