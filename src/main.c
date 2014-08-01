@@ -918,21 +918,21 @@ static void setup_signals()
             "signal::changed", G_CALLBACK(mode_input_changed), NULL,
             NULL
         );
+
+        /* inspector */
+        g_object_connect(
+            G_OBJECT(vb.gui.inspector),
+            "signal::inspect-web-view", G_CALLBACK(inspector_new), NULL,
+            "signal::show-window", G_CALLBACK(inspector_show), NULL,
+            "signal::close-window", G_CALLBACK(inspector_close), NULL,
+            "signal::finished", G_CALLBACK(inspector_finished), NULL,
+            NULL
+        );
     }
 
     /* webview adjustment */
     g_object_connect(G_OBJECT(vb.gui.adjust_v),
         "signal::value-changed", G_CALLBACK(scroll_cb), NULL,
-        NULL
-    );
-
-    /* inspector */
-    g_object_connect(
-        G_OBJECT(vb.gui.inspector),
-        "signal::inspect-web-view", G_CALLBACK(inspector_new), NULL,
-        "signal::show-window", G_CALLBACK(inspector_show), NULL,
-        "signal::close-window", G_CALLBACK(inspector_close), NULL,
-        "signal::finished", G_CALLBACK(inspector_finished), NULL,
         NULL
     );
 }
