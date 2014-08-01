@@ -142,7 +142,6 @@ VbResult mode_handle_key(int key)
 #ifdef DEBUG
         int flags = vb.mode->flags;
         int id    = vb.mode->id;
-#endif
         res = vb.mode->keypress(key);
         if (vb.mode) {
             PRINT_DEBUG(
@@ -151,6 +150,9 @@ VbResult mode_handle_key(int key)
                 vb.mode->id - ' ', vb.mode->flags
             );
         }
+#else
+        res = vb.mode->keypress(key);
+#endif
         return res;
     }
     return RESULT_ERROR;
