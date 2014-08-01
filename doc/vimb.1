@@ -81,7 +81,7 @@ Switch vimb into Pass-Through Mode.
 Toggle show html source of current page.
 .TP
 .B gF
-Opend the Web Inspector for current page.
+Open the Web Inspector for current page.
 .TP
 .B CTRL\-V
 Pass the next key press directly to gtk.
@@ -103,7 +103,7 @@ Start Command Mode and print `:tabopen ' to input box.
 Start Command Mode and print `:tabopen URI' to input box.
 .TP
 .B gh
-Opend the configured home-page.
+Open the configured home-page.
 .TP
 .B gH
 Open the configured home-page into new window.
@@ -318,11 +318,11 @@ Note that this commands will yank the text selection into the clipboard and
 may remove other content from there!
 .TP
 .BI [ N ]n
-Search for \fIN\fPnth next search result depending on current serach
+Search for \fIN\fPnth next search result depending on current search
 direction.
 .TP
 .BI [ N ]N
-Search for \fIN\fPnth previous search result depending on current serach
+Search for \fIN\fPnth previous search result depending on current search
 direction.
 .SS Zooming
 .TP
@@ -544,7 +544,7 @@ should use 'on', 'off' or 'true' and 'false'. Colors are given as hexadecimal
 value like '#f57700'.
 .TP
 .BI ":se[t] " VAR += VALUE
-Add the \fIVALUE\fP to a number option, or apend the \fIVALUE\fP to a string
+Add the \fIVALUE\fP to a number option, or append the \fIVALUE\fP to a string
 option. When the option is a comma separated list, a comma is added, unless
 the value was empty.
 .TP
@@ -565,7 +565,7 @@ Show the current set value of variable
 .BI ":se[t] " VAR !
 Toggle the value of boolean variable \fIVAR\fP and display the new set value.
 .SS Queue
-The queue allows to mark URIs for later reding (something like a read it later
+The queue allows to mark URIs for later reading (something like a read it later
 list). This list is shared between the single instances of vimb. Only
 available if vimb has been compiled with QUEUE feature.
 .TP
@@ -585,7 +585,7 @@ Removes all entries from queue.
 .TP
 .BI ":sh[ellcmd] " CMD
 Runs given shell \fICMD\fP syncron and print the output into inputbox.
-Follwing pattern in \fICMD\fP are expanded, '~username', '~/', '$VAR'
+Following pattern in \fICMD\fP are expanded, '~username', '~/', '$VAR'
 and '${VAR}'. A '\\' before these patterns disables the expansion.
 
 Example: :sh ls -l $HOME
@@ -598,7 +598,7 @@ Example: :sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
 .BI ":s[ave] [" PATH "]"
 Download current opened page into configured download directory. If \fIPATH\fP
 is given, download under this file name or path. \fIPATH\fP is expanded and
-can therefor contain '~/', '${ENV}' and '~user' pattern.
+can therefore contain '~/', '${ENV}' and '~user' pattern.
 .TP
 .B :q[uit]
 Close the browser. This will be refused if there are running downloads.
@@ -686,7 +686,7 @@ Example:
 "foot" and tags starting with "ba" like "ball".
 .TP
 .B boomark tags
-The boomark tag completion allows to insert already used bookmars for the
+The boomark tag completion allows to insert already used bookmarks for the
 `:bma ` commands.
 .TP
 .B search
@@ -702,13 +702,11 @@ Enable or disable support for accelerated compositing on pages. Accelerated
 compositing uses the GPU to render animations on pages smoothly and also
 allows proper rendering of 3D CSS transforms.
 .TP
-.B auto-load-images (bool)
-Load images automatically.
-.TP
 .B auto-resize-window (bool)
-Indicates if vimb will honor size and position changes of the windo by various
+Indicates if vimb will honor size and position changes of the window by various
 DOM methods.
-.TP auto-shrink-images (bool)
+.TP
+.B auto-shrink-images (bool)
 Automatically shrink standalone images to fit.
 .TP
 .B caret (bool)
@@ -759,14 +757,6 @@ Enable or disable support for <a ping>.
 .B images (bool)
 Determines whether images should be automatically loaded or not.
 .TP
-.B insecure-content-show (bool)
-Whether pages loaded via HTTPS should load subresources such as images and
-frames from non-HTTPS URIs. Only for webkit>=2.0.
-.TP
-.B insecure-content-run (bool)
-Whether pages loaded via HTTPS should run subresources such as CSS, scripts,
-and plugins from non-HTTPS URIs. Only for webkit>=2.0.
-.TP
 .B java-applet (bool)
 Enable or disable support for the Java <applet> tag. Keep in mind that Java
 content can be still shown in the page through <object> or <embed>, which are
@@ -788,16 +778,6 @@ fullscreen.
 Whether a user gesture (such as clicking the play button) would be required to
 start media playback or load media. Setting it on requires a gesture by the
 user to start playback, or to load the media.
-.TP
-.B media-stream (bool)
-Enable or disable support for MediaSource on pages. MediaSource is an
-experimental proposal which extends HTMLMediaElement to allow JavaScript to
-generate media streams for playback.
-.TP
-.B mediasource (bool)
-Enable or disable support for MediaSource on pages. MediaSource is an
-experimental proposal which extends HTMLMediaElement to allow JavaScript to
-generate media streams for playback.
 .TP
 .B minimumfontsize (int)
 The minimum font size used to display text.
@@ -989,7 +969,7 @@ Comma separated list of headers that replaces default header sent by webkit or
 new headers. The format for the header list elements is `name[=[value]]'.
 
 Note that these headers will replace already existing headers. If there is
-no '=' after the header name, than the complete header will be removed from
+no '=' after the header name, then the complete header will be removed from
 the request, if the '=' is present means that the header value is set to empty
 value.
 
@@ -1087,7 +1067,7 @@ Statusbar font for untrusted https pages.
 .B strict-focus (bool)
 Indicates if vimb follows the instruction of the page to focus a form field
 without user interaction. If set the true, vimb will no switch to input mode
-if the pages say so and vimb will remove the focus fro the form field.
+if the pages say so and vimb will remove the focus from the form field.
 .TP
 .B strict-ssl (bool)
 If 'on', vimb will not load a untrusted https site.
