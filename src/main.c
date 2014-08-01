@@ -778,11 +778,16 @@ static void init_core(void)
 
     /* initialize the modes */
     mode_init();
-    mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
     if (!vb.config.kioskmode) {
+        mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
         mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
         mode_add('i', input_enter, input_leave, input_keypress, NULL);
         mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
+    } else {
+        mode_add('n', NULL, NULL, NULL, NULL);
+        mode_add('c', NULL, NULL, NULL, NULL);
+        mode_add('i', NULL, NULL, NULL, NULL);
+        mode_add('p', NULL, NULL, NULL, NULL);
     }
 
     /* initialize the marks with empty values */
