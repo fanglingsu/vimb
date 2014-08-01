@@ -529,11 +529,6 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 js_eval_file(ctx, vb.files[FILES_SCRIPT]);
             }
 
-            /* if we load a page from a submitted form, leave the insert mode */
-            if (vb.mode->id == 'i') {
-                mode_enter('n');
-            }
-
             vb_update_statusbar();
             vb_update_urlbar(uri);
             /* save the current URI in register % */
@@ -544,6 +539,10 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
+            /* if we load a page from a submitted form, leave the insert mode */
+            if (vb.mode->id == 'i') {
+                mode_enter('n');
+            }
             break;
 
         case WEBKIT_LOAD_FINISHED:
