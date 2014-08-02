@@ -40,7 +40,7 @@ extern VbCore vb;
  */
 void input_enter(void)
 {
-    /* switch focus first to make shure we can write to the inputbox without
+    /* switch focus first to make sure we can write to the inputbox without
      * disturbing the user */
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
     vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");

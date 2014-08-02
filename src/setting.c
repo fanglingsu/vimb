@@ -39,8 +39,8 @@ typedef enum {
 
 typedef enum {
     SETTING_SET,        /* :set option=value */
-    SETTING_APPEND,     /* :set option+=vlaue */
-    SETTING_PREPEND,    /* :set option^=vlaue */
+    SETTING_APPEND,     /* :set option+=value */
+    SETTING_PREPEND,    /* :set option^=value */
     SETTING_REMOVE,     /* :set option-=value */
     SETTING_GET,        /* :set option? */
     SETTING_TOGGLE      /* :set option! */
@@ -48,7 +48,7 @@ typedef enum {
 
 enum {
     FLAG_LIST  = (1<<1),    /* setting contains a ',' separated list of values */
-    FLAG_NODUP = (1<<2),    /* dont allow duplicate strings within list values */
+    FLAG_NODUP = (1<<2),    /* don't allow duplicate strings within list values */
 };
 
 extern VbCore vb;
@@ -357,7 +357,7 @@ free:
 }
 
 /**
- * Prepares the vlaue for the setting for the diefferent setting types.
+ * Prepares the value for the setting for the different setting types.
  * Return value true indicates that the memory of newvalue must be freed by
  * the caller.
  */
@@ -370,7 +370,7 @@ static gboolean prepare_setting_value(Setting *prop, void *value, SettingType ty
     if ((type != SETTING_APPEND && type != SETTING_PREPEND && type != SETTING_REMOVE)
         || prop->type == TYPE_BOOLEAN
     ) {
-        /* if type is not appen, prepend or remove there is nothing to be done */
+        /* if type is not append, prepend or remove there is nothing to be done */
         *newvalue = value;
         return res;
     }

@@ -194,7 +194,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
 
             /* skip csi indicator and the next 2 chars - if the csi sequence
              * isn't part of a mapped command we let gtk handle the key - this
-             * is required allo to move cursor in inputbox with <Left> and
+             * is required allow to move cursor in inputbox with <Left> and
              * <Right> keys */
             if ((map.queue[0] & 0xff) == CSI && map.qlen >= 3) {
                 /* get next 2 chars to build the termcap key */
@@ -215,7 +215,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
                 memmove(map.queue, map.queue + 1, map.qlen);
             }
 
-            /* remove the nomap flag */
+            /* remove the no-map flag */
             vb.mode->flags &= ~FLAG_NOMAP;
 
             /* send the key to the parser */

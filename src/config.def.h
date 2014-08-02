@@ -24,7 +24,7 @@
 /* features */
 /* enable cookie support */
 #define FEATURE_COOKIE
-/* highlich search reasults */
+/* highlight search results */
 #define FEATURE_SEARCH_HIGHLIGHT
 /* disable scrollbars */
 #define FEATURE_NO_SCROLLBARS

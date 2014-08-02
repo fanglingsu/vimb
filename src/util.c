@@ -111,7 +111,7 @@ char **util_get_lines(const char *filename)
  * @filename:    file to read items from
  * @func:        function to parse a single line to item
  * @unique_func: function to decide if two items are equal
- * @free_func:   function to free already converted item if this isn't unque
+ * @free_func:   function to free already converted item if this isn't unique
  * @max_items:   maximum number of items that are returned, use 0 for
  *               unlimited items
  */
@@ -121,7 +121,7 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     GList *gl = NULL;
     /* yes, the whole file is read and wen possible don not need all the
      * lines, but this is easier to implement compared to reading the file
-     * line wise from ent to begining */
+     * line wise from end to beginning */
     char *line, **lines;
     void *value;
     int len, num_items = 0;
@@ -137,9 +137,9 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         return gl;
     }
 
-    /* begin with tha last line of the file to make unique check easier -
+    /* begin with the last line of the file to make unique check easier -
      * every already existing item in the list is the latest, so we don't need
-     * to romove items from the list which takes some time */
+     * to remove items from the list which takes some time */
     for (int i = len - 1; i >= 0; i--) {
         line = lines[i];
         g_strstrip(line);
@@ -169,7 +169,7 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
 /**
  * Append new data to file.
  *
- * @file:   File to appen the data
+ * @file:   File to append the data
  * @format: Format string used to process va_list
  */
 gboolean util_file_append(const char *file, const char *format, ...)
@@ -251,7 +251,7 @@ next:
 
 /**
  * Replaces appearances of search in string by given replace.
- * Returne a new allocated string if search was found.
+ * Returns a new allocated string if search was found.
  */
 char *util_str_replace(const char* search, const char* replace, const char* string)
 {

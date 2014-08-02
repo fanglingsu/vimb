@@ -66,7 +66,7 @@ gboolean js_eval(JSContextRef ctx, const char *script, const char *file,
 }
 
 /**
- * Creates a JavaScript object in contect of given frame.
+ * Creates a JavaScript object in context of given frame.
  */
 JSObjectRef js_create_object(JSContextRef ctx, const char *script)
 {
@@ -118,7 +118,7 @@ char* js_object_call_function(JSContextRef ctx, JSObjectRef obj,
 }
 
 /**
- * Retrune a new allocates string for given value reference.
+ * Returns a new allocates string for given value reference.
  * String must be freed if not used anymore.
  */
 char* js_ref_to_string(JSContextRef ctx, JSValueRef ref)

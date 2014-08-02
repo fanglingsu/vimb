@@ -191,7 +191,7 @@ GList *history_get_list(VbInputType type, const char *query)
     g_list_free_full(src, (GDestroyNotify)free_history);
 
     /* prepend the original query as own item like done in vim to have the
-     * origianl input string in input box if we step before the first real
+     * original input string in input box if we step before the first real
      * item */
     result = g_list_prepend(result, g_strdup(query));
 
@@ -204,7 +204,7 @@ static const char *get_file_by_type(HistoryType type)
 }
 
 /**
- * Loads history items form file but eleminate duplicates in FIFO order.
+ * Loads history items form file but eliminate duplicates in FIFO order.
  *
  * Returned list must be freed with (GDestroyNotify) free_history.
  */

@@ -327,7 +327,7 @@ void normal_showcmd(int c)
 }
 
 /**
- * Transalte a singe char into a readable representation to be show to the
+ * Translate a singe char into a readable representation to be show to the
  * user in status bar.
  */
 static char *transchar(int c)

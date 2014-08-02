@@ -164,7 +164,7 @@ void vb_set_input_text(const char *text)
 
 /**
  * Retrieves the content of the command line.
- * Retruned string must be freed with g_free.
+ * Returned string must be freed with g_free.
  */
 char *vb_get_input_text(void)
 {
@@ -229,7 +229,7 @@ gboolean vb_load_uri(const Arg *arg)
     } else {
         /* Load a web page into the browser instance */
         webkit_web_view_load_uri(vb.gui.webview, uri);
-        /* show the url to be opened in the windo title until we receive the
+        /* show the url to be opened in the window title until we receive the
          * page title */
         OVERWRITE_STRING(vb.state.title, uri);
         update_title();
@@ -374,7 +374,7 @@ void vb_update_urlbar(const char *uri)
 
 void vb_quit(gboolean force)
 {
-    /* if not forced quit - don't quit if there are still runinng downloads */
+    /* if not forced quit - don't quit if there are still running downloads */
     if (!force && vb.state.downloads) {
         vb_echo_force(VB_MSG_ERROR, true, "Can't quit: there are running downloads");
         return;
@@ -1137,7 +1137,7 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
     WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
     gpointer data)
 {
-    /* try to find a protocall handler to open the uri */
+    /* try to find a protocol handler to open the uri */
     return handle_uri(webkit_network_request_get_uri(request));
 }
 
@@ -1233,7 +1233,7 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
     }
 
     if (use_external && *download_cmd) {
-        /* run download with external programm */
+        /* run download with external program */
         vb_download_external(view, download, file);
         g_free(file);
 
@@ -1354,7 +1354,7 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
     }
 
     const char *file = webkit_download_get_destination_uri(download);
-    /* skip the file protocoll for the display */
+    /* skip the file protocol for the display */
     if (!strncmp(file, "file://", 7)) {
         file += 7;
     }
@@ -1364,7 +1364,7 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
         vb_echo(VB_MSG_NORMAL, false, "Download %s finished", file);
     }
 
-    /* remove the donwload from the list */
+    /* remove the download from the list */
     vb.state.downloads = g_list_remove(vb.state.downloads, download);
 
     vb_update_statusbar();
@@ -1379,7 +1379,7 @@ int main(int argc, char *argv[])
 
     static GOptionEntry opts[] = {
         {"cmd", 'C', 0, G_OPTION_ARG_STRING, &vb.config.autocmd, "Ex command run before first page is loaded", NULL},
-        {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom cufiguration file", NULL},
+        {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},

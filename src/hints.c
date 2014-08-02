@@ -36,8 +36,8 @@
 static struct {
     JSObjectRef    obj;       /* the js object */
     char           mode;      /* mode identifying char - that last char of the hint prompt */
-    int            promptlen; /* lenfth of the hint prompt chars 2 or 3 */
-    gboolean       gmode;     /* indicate if the hints g mode is used */
+    int            promptlen; /* length of the hint prompt chars 2 or 3 */
+    gboolean       gmode;     /* indicate if the hints 'g' mode is used */
     JSContextRef   ctx;
 #if WEBKIT_CHECK_VERSION(2, 0, 0)
     /* holds the setting if JavaScript can open windows automatically that we
@@ -132,7 +132,7 @@ void hints_clear(void)
 void hints_create(const char *input)
 {
     /* don't start hinting if the hinting object isn't created - for example
-     * if hinting is started before the first data of page are recieved */
+     * if hinting is started before the first data of page are received */
     if (!hints.obj) {
         return;
     }
@@ -171,7 +171,7 @@ void hints_create(const char *input)
         };
         call_hints_function("init", 3, arguments);
 
-        /* if hinting is started there won't be any aditional filter given and
+        /* if hinting is started there won't be any additional filter given and
          * we can go out of this function */
         return;
     }

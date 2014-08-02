@@ -57,8 +57,8 @@ gboolean shortcut_remove(const char *key)
 
 gboolean shortcut_set_default(const char *key)
 {
-    /* do not check if the shotcut exists to be able to set the default
-     * before defining the shotcut */
+    /* do not check if the shortcut exists to be able to set the default
+     * before defining the shortcut */
     OVERWRITE_STRING(default_key, key);
 
     return true;
@@ -166,7 +166,7 @@ gboolean shortcut_fill_completion(GtkListStore *store, const char *input)
 }
 
 /**
- * Retrieves th highest placesholder number used in given string.
+ * Retrieves th highest placeholder number used in given string.
  * If no placeholder is found -1 is returned.
  */
 static int get_max_placeholder(const char *str)
@@ -187,7 +187,7 @@ static int get_max_placeholder(const char *str)
 
 /**
  * Retrieves the shortcut uri template for given string. And fills given query
- * pointer with the query part of the given string (everithing except of the
+ * pointer with the query part of the given string (everything except of the
  * shortcut identifier).
  */
 static const char *shortcut_lookup(const char *string, const char **query)

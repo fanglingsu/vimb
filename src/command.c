@@ -46,7 +46,7 @@ gboolean command_search(const Arg *arg)
 
     /* copy search query for later use */
     if (arg->s) {
-        /* set dearch dir only when the searching is started */
+        /* set search direction only when the searching is started */
         dir   = arg->i > 0 ? 1 : -1;
         query = arg->s;
         /* add new search query to history and search register */
@@ -72,7 +72,7 @@ gboolean command_search(const Arg *arg)
 
             newsearch = false;
             /* skip first search because this is done during typing in ex
-             * mode, else the search wil mark the next match as active */
+             * mode, else the search will mark the next match as active */
             if (count) {
                 count -= 1;
             }

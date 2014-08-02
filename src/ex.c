@@ -94,7 +94,7 @@ typedef struct {
 typedef gboolean (*ExFunc)(const ExArg *arg);
 
 typedef struct {
-    const char *name;         /* full name of the command even if called abreviated */
+    const char *name;         /* full name of the command even if called abbreviated */
     ExCode    code;           /* constant id for the command */
     ExFunc    func;
 #define EX_FLAG_NONE   0x000  /* no flags set */
@@ -145,7 +145,7 @@ static void history_rewind(void);
 
 /* The order of following command names is significant. If there exists
  * ambiguous commands matching to the users input, the first defined will be
- * the prefered match.
+ * the preferred match.
  * Also the sorting and grouping of command names matters, so we give up
  * searching for a matching command if the next compared character did not
  * match. */
@@ -234,7 +234,7 @@ VbResult ex_keypress(int key)
         return RESULT_COMPLETE;
     }
 
-    /* process the custbuffer */
+    /* process the cutbuffer */
     if (info.phase == PHASE_CUTBUF) {
         info.cutbuf = (char)key;
         info.phase  = PHASE_CUTBUF;
@@ -312,7 +312,7 @@ VbResult ex_keypress(int key)
                 break;
 
             case CTRL('U'):
-                /* remove everythings between cursor and prompt */
+                /* remove everything between cursor and prompt */
                 mark = gtk_text_buffer_get_insert(buffer);
                 gtk_text_buffer_get_iter_at_mark(buffer, &end, mark);
                 gtk_text_buffer_get_iter_at_offset(buffer, &start, strlen(vb.state.prompt));
@@ -370,7 +370,7 @@ void ex_input_changed(const char *text)
 
     /* don't add line breaks if content is pasted from clipboard into inputbox */
     if (gtk_text_buffer_get_line_count(buffer) > 1) {
-        /* remove everething from the buffer, except of the first line */
+        /* remove everything from the buffer, except of the first line */
         gtk_text_buffer_get_iter_at_line(buffer, &start, 0);
         if (gtk_text_iter_forward_to_line_end(&start)) {
             gtk_text_buffer_get_end_iter(buffer, &end);
@@ -559,7 +559,7 @@ static gboolean parse_command_name(const char **input, ExArg *arg)
             if (commands[i].name[len - 1] == **input) {
                 /* partial match found */
                 if (!matches) {
-                    /* if this is the first then remeber it */
+                    /* if this is the first then remember it */
                     first = i;
                 }
                 matches++;
@@ -1017,7 +1017,7 @@ static gboolean complete(short direction)
 
             /* save the string prefix that will not be part of completion like
              * the ':open ' if ':open something' is completed. this means that
-             * the complation will only the none prefix part of the input */
+             * the completion will only the none prefix part of the input */
             OVERWRITE_NSTRING(excomp.prefix, input, token - input + 1);
 
             /* the token points to a space, skip this */
@@ -1094,7 +1094,7 @@ static gboolean complete(short direction)
 
 /**
  * Callback called from the completion if a item is selected to write the
- * matche item accordings with previously saved prefix and command name to the
+ * matched item according with previously saved prefix and command name to the
  * inputbox.
  */
 static void completion_select(char *match)

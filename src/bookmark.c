@@ -212,7 +212,7 @@ gboolean bookmark_queue_unshift(const char *uri)
  * Retrieves the oldest entry from queue.
  *
  * @item_count: will be filled with the number of remaining items in queue.
- * Retruned uri must be freed with g_free.
+ * Returned uri must be freed with g_free.
  */
 char *bookmark_queue_pop(int *item_count)
 {
@@ -293,7 +293,7 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
         found        = false;
 
         /* we want to do a prefix match on all bookmark tags - so we check for
-         * a match on string beginn - if this fails we move the cursor to the
+         * a match on string begin - if this fails we move the cursor to the
          * next space and do the test again */
         while (cursor && *cursor) {
             /* match was not found at current cursor position */
