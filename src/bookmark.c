@@ -28,7 +28,7 @@ extern VbCore vb;
 typedef struct {
     char *uri;
     char *title;
-    char **tags;
+    char *tags;
 } Bookmark;
 
 static GList *load(const char *file);
@@ -153,29 +153,36 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
 {
     gboolean found;
     unsigned int len, i;
-    GList *src = NULL, *tags = NULL;
+    char **tags, *tag;
+    GList *src = NULL, *taglist = NULL;
     Bookmark *bm;
 
     /* get all distinct tags from bookmark file */
     src = load(vb.files[FILES_BOOKMARK]);
     for (GList *l = src; l; l = l->next) {
         bm = (Bookmark*)l->data;
-        len = (bm->tags) ? g_strv_length(bm->tags) : 0;
+        /* if bookmark contains no tags we can go to the next bookmark */
+        if (!bm->tags) {
+            continue;
+        }
+
+        tags = g_strsplit(bm->tags, " ", -1);
+        len  = g_strv_length(tags);
         for (i = 0; i < len; i++) {
-            char *tag = bm->tags[i];
+            tag = tags[i];
             /* add tag only if it isn't already in the list */
-            if (!g_list_find_custom(tags, tag, (GCompareFunc)strcmp)) {
-                tags = g_list_prepend(tags, tag);
+            if (!g_list_find_custom(taglist, tag, (GCompareFunc)strcmp)) {
+                taglist = g_list_prepend(taglist, g_strdup(tag));
             }
         }
+        g_strfreev(tags);
     }
 
     /* generate the completion with the found tags */
-    found = util_fill_completion(store, input, tags);
+    found = util_fill_completion(store, input, taglist);
+
     g_list_free_full(src, (GDestroyNotify)free_bookmark);
-    /* we don't need to free the values, because they where already removed by
-     * freeing the src list - we never allocated new momory for them */
-    g_list_free(tags);
+    g_list_free_full(taglist, (GDestroyNotify)g_free);
 
     return found;
 }
@@ -192,7 +199,7 @@ gboolean bookmark_queue_push(const char *uri)
 }
 
 /**
- * Push a uri to the bginning of the queue.
+ * Push a uri to the beginning of the queue.
  *
  * @uri: URI to put into the queue
  */
@@ -268,25 +275,39 @@ static GList *load(const char *file)
 static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     unsigned int qlen)
 {
-    unsigned int i, n, tlen;
+    unsigned int i;
+    gboolean found;
 
     if (!qlen) {
         return true;
     }
     /* don't use bookmarks without tags if tags are used to filter */
-    if (!bm->tags || !(tlen = g_strv_length(bm->tags))) {
+    if (!bm->tags) {
         return false;
     }
 
     /* iterate over all query parts */
     for (i = 0; i < qlen; i++) {
-        gboolean found = false;
-        for (n = 0; n < tlen; n++) {
-            if (g_str_has_prefix(bm->tags[n], query[i])) {
+        /* put the cursor to the tags string of the bookmarks */
+        char *cursor = bm->tags;
+        found        = false;
+
+        /* we want to do a prefix match on all bookmark tags - so we check for
+         * a match on string beginn - if this fails we move the cursor to the
+         * next space and do the test again */
+        while (cursor && *cursor) {
+            /* match was not found at current cursor position */
+            if (g_str_has_prefix(cursor, query[i])) {
                 found = true;
                 break;
             }
+            /* if match was not found at the cursor position - move cursor
+             * behind the next space */
+            if ((cursor = strchr(cursor, ' '))) {
+                cursor++;
+            }
         }
+
         if (!found) {
             return false;
         }
@@ -299,6 +320,7 @@ static Bookmark *line_to_bookmark(const char *line)
 {
     char **parts;
     int len;
+    Bookmark *bm;
     while (g_ascii_isspace(*line)) {
         line++;
     }
@@ -306,23 +328,22 @@ static Bookmark *line_to_bookmark(const char *line)
         return NULL;
     }
 
-    Bookmark *item = g_slice_new0(Bookmark);
-
     parts = g_strsplit(line, "\t", 3);
     len   = g_strv_length(parts);
+
+    bm        = g_slice_new(Bookmark);
+    bm->uri   = g_strdup(parts[0]);
+    bm->tags  = NULL;
+    bm->title = NULL;
     if (len == 3) {
-        item->tags = g_strsplit(parts[2], " ", 0);
-        item->title = g_strdup(parts[1]);
-        item->uri = g_strdup(parts[0]);
+        bm->title = g_strdup(parts[1]);
+        bm->tags  = g_strdup(parts[2]);
     } else if (len == 2) {
-        item->title = g_strdup(parts[1]);
-        item->uri = g_strdup(parts[0]);
-    } else {
-        item->uri = g_strdup(parts[0]);
+        bm->title = g_strdup(parts[1]);
     }
     g_strfreev(parts);
 
-    return item;
+    return bm;
 }
 
 static int bookmark_comp(Bookmark *a, Bookmark *b)
@@ -334,6 +355,6 @@ static void free_bookmark(Bookmark *bm)
 {
     g_free(bm->uri);
     g_free(bm->title);
-    g_strfreev(bm->tags);
+    g_free(bm->tags);
     g_slice_free(Bookmark, bm);
 }

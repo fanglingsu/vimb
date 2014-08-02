@@ -482,7 +482,7 @@ static gboolean parse(const char **input, ExArg *arg)
         return false;
     }
 
-    /* trunkacate string from potentially previous run */
+    /* truncate string from potentially previous run */
     g_string_truncate(arg->lhs, 0);
     g_string_truncate(arg->rhs, 0);
 
