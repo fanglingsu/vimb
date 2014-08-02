@@ -49,7 +49,7 @@ gboolean js_eval_file(JSContextRef ctx, const char *file)
 
 /**
  * Evaluates given string as script and return if this call succeed or not.
- * On success the given **value pointer is filles with the returned string,
+ * On success the given **value pointer is filled with the returned string,
  * else with the exception message. In both cases this must be freed by the
  * caller if no longer used.
  */

@@ -800,11 +800,10 @@ static gboolean validate_js_regexp_list(const char *pattern)
     js     = g_strdup_printf("var i;for(i=0;i<[%s].length;i++);", pattern);
     result = js_eval(webkit_web_frame_get_global_context(frame), js, NULL, &value);
     g_free(js);
+
     if (!result) {
         vb_echo(VB_MSG_ERROR, true, "%s", value);
-        g_free(value);
-
-        return false;
     }
-    return true;
+    g_free(value);
+    return result;
 }
