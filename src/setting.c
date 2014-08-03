@@ -60,6 +60,7 @@ static gboolean setting_add(const char *name, int type, void *value,
 static void setting_print(Setting *s);
 static void setting_free(Setting *s);
 static int webkit(const char *name, int type, void *value, void *data);
+static int pagecache(const char *name, int type, void *value, void *data);
 static int soup(const char *name, int type, void *value, void *data);
 static int internal(const char *name, int type, void *value, void *data);
 static int input_color(const char *name, int type, void *value, void *data);
@@ -125,7 +126,7 @@ void setting_init()
     i = SETTING_DEFAULT_FONT_SIZE;
     setting_add("monofontsize", TYPE_INTEGER, &i, webkit, 0, "default-monospace-font-size");
     setting_add("offlinecache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache");
-    setting_add("pagecache", TYPE_BOOLEAN, &on, webkit, 0, "enable-page-cache");
+    setting_add("pagecache", TYPE_BOOLEAN, &on, pagecache, 0, "enable-page-cache");
     setting_add("plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");
     setting_add("print-backgrounds", TYPE_BOOLEAN, &on, webkit, 0, "print-backgrounds");
     setting_add("private-browsing", TYPE_BOOLEAN, &off, webkit, 0, "enable-private-browsing");
@@ -522,6 +523,24 @@ static int webkit(const char *name, int type, void *value, void *data)
             break;
     }
     return SETTING_OK;
+}
+
+static int pagecache(const char *name, int type, void *value, void *data)
+{
+    int res;
+    gboolean on = *((gboolean*)value);
+
+    /* first set the setting on the web settings */
+    res = webkit(name, type, value, data);
+
+    if (res == SETTING_OK && on) {
+        webkit_set_cache_model(WEBKIT_CACHE_MODEL_WEB_BROWSER);
+    } else {
+        /* reduce memory usage if caching is not used */
+        webkit_set_cache_model(WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
+    }
+
+    return res;
 }
 
 static int soup(const char *name, int type, void *value, void *data)
