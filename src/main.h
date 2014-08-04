@@ -324,6 +324,9 @@ typedef struct {
 #ifdef FEATURE_HSTS
     HSTSProvider *hsts_provider;  /* the hsts session feature that is added to soup session */
 #endif
+#ifdef FEATURE_SOUP_CACHE
+    SoupCache    *soup_cache;     /* soup caching feature model */
+#endif
     GHashTable   *settings;
 } Config;
 

@@ -80,6 +80,9 @@ static int fullscreen(const char *name, int type, void *value, void *data);
 #ifdef FEATURE_HSTS
 static int hsts(const char *name, int type, void *value, void *data);
 #endif
+#ifdef FEATURE_SOUP_CACHE
+static int soup_cache(const char *name, int type, void *value, void *data);
+#endif
 static gboolean validate_js_regexp_list(const char *pattern);
 
 void setting_init()
@@ -200,6 +203,10 @@ void setting_init()
     setting_add("download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
 #ifdef FEATURE_HSTS
     setting_add("hsts", TYPE_BOOLEAN, &on, hsts, 0, NULL);
+#endif
+#ifdef FEATURE_SOUP_CACHE
+    i = 2000;
+    setting_add("maximum-cache-size", TYPE_INTEGER, &i, soup_cache, 0, NULL);
 #endif
     setting_add("x-hint-command", TYPE_CHAR, &":o <C-R>;", NULL, 0, NULL);
 
@@ -801,6 +808,22 @@ static int hsts(const char *name, int type, void *value, void *data)
         soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.hsts_provider));
     } else {
         soup_session_remove_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.hsts_provider));
+    }
+    return SETTING_OK;
+}
+#endif
+
+#ifdef FEATURE_SOUP_CACHE
+static int soup_cache(const char *name, int type, void *value, void *data)
+{
+    int kilobytes = *(int*)value;
+
+    soup_cache_set_max_size(vb.config.soup_cache, kilobytes * 1000);
+
+    /* clear the cache if maximum-cache-size is set to zero - note that this
+     * will also effect other vimb instances */
+    if (!kilobytes) {
+        soup_cache_clear(vb.config.soup_cache);
     }
     return SETTING_OK;
 }

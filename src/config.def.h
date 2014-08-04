@@ -46,7 +46,8 @@
 #endif
 /* enable HTTP Strict-Transport-Security*/
 #define FEATURE_HSTS
-
+/* enable soup caching - size can be configure by maximum-cache-size setting */
+#define FEATURE_SOUP_CACHE
 
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */

@@ -1004,6 +1004,14 @@ static void session_init(void)
      * when the setting hsts=on */
     vb.config.hsts_provider = hsts_provider_new();
 #endif
+#ifdef FEATURE_SOUP_CACHE
+    /* setup the soup cache but without setting the cache size - this is done in setting.c */
+    char *cache_dir      = util_get_cache_dir();
+    vb.config.soup_cache = soup_cache_new(cache_dir, SOUP_CACHE_SINGLE_USER);
+    soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.soup_cache));
+    soup_cache_load(vb.config.soup_cache);
+    g_free(cache_dir);
+#endif
 }
 
 static void session_cleanup(void)
@@ -1013,6 +1021,12 @@ static void session_cleanup(void)
      * feature is finalized */
     g_object_unref(vb.config.hsts_provider);
     soup_session_remove_feature_by_type(vb.session, HSTS_TYPE_PROVIDER);
+#endif
+#ifdef FEATURE_SOUP_CACHE
+    /* commit all cache writes */
+    soup_cache_flush(vb.config.soup_cache);
+    /* make sure that the cache will be kept on next browser start */
+    soup_cache_dump(vb.config.soup_cache);
 #endif
 }
 

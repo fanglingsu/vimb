@@ -36,6 +36,10 @@ char *util_get_config_dir(void)
     return path;
 }
 
+/**
+ * Retrieves the path to the cach dir.
+ * Returned string must be freed.
+ */
 char *util_get_cache_dir(void)
 {
     char *path = g_build_filename(g_get_user_cache_dir(), PROJECT, NULL);
