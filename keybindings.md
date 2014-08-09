@@ -85,6 +85,13 @@ CTRL-P
 gU
 : Go to the domain of the current opened page.
 
+[*N*]CTRL-A
+: Increments the last number in URL by 1, or by *N* if given.
+
+[*N*]CTRL-X
+: Decrements the last number in URL by 1, or by *N* if given. Negative numbers
+  are not supported as trailing numbers in URLs are often preceded by hyphens.
+
 r
 : Reload the website.
 
