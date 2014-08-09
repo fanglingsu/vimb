@@ -266,7 +266,7 @@ Object.freeze((function(){
                 /* assign the new hint number to the hint */
                 hint.num = num;
                 /* check for number filter */
-                if (!filterNum || 0 === num.toString().indexOf(filterNum.toString())) {
+                if (!filterNum || 0 === String(num).indexOf(String(filterNum))) {
                     hint.show();
                     validHints.push(hint);
                 } else {
