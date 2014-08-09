@@ -27,6 +27,7 @@ VbResult hints_keypress(int key);
 void hints_create(const char *input);
 void hints_fire(void);
 void hints_follow_link(const gboolean back, int count);
+void hints_increment_uri(int count);
 gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode);
 void hints_clear(void);
 void hints_focus_next(const gboolean back);

@@ -210,6 +210,15 @@ void hints_follow_link(const gboolean back, int count)
     call_hints_function("followLink", 3, arguments);
 }
 
+void hints_increment_uri(int count)
+{
+    JSValueRef arguments[] = {
+        JSValueMakeNumber(hints.ctx, count)
+    };
+
+    call_hints_function("incrementUri", 1, arguments);
+}
+
 /**
  * Checks if the given hint prompt belong to a known and valid hints mode and
  * parses the mode and is_gmode into given pointers.

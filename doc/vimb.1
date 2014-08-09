@@ -137,6 +137,14 @@ Go to the \fIN\fPth descendent directory of the current opened URI.
 .B gU
 Go to the domain of the current opened page.
 .TP
+.BI [ N ]CTRL\-A
+Increments the last number in URL by 1, or by \fIN\fP if given.
+.TP
+.BI [ N ]CTRL\-X
+Decrements the last number in URL by 1, or by \fIN\fP if given. Negative
+numbers are not supported as trailing numbers in URLs are often preceded by
+hyphens.
+.TP
 .B r
 Reload the website.
 .TP

@@ -62,6 +62,7 @@ static VbResult normal_focus_input(const NormalCmdInfo *info);
 static VbResult normal_g_cmd(const NormalCmdInfo *info);
 static VbResult normal_hint(const NormalCmdInfo *info);
 static VbResult normal_do_hint(const char *prompt);
+static VbResult normal_increment_decrement(const NormalCmdInfo *info);
 static VbResult normal_input_open(const NormalCmdInfo *info);
 static VbResult normal_mark(const NormalCmdInfo *info);
 static VbResult normal_navigate(const NormalCmdInfo *info);
@@ -83,7 +84,7 @@ static struct {
     NormalCommand func;
 } commands[] = {
 /* NUL 0x00 */ {NULL},
-/* ^A  0x01 */ {NULL},
+/* ^A  0x01 */ {normal_increment_decrement},
 /* ^B  0x02 */ {normal_scroll},
 /* ^C  0x03 */ {normal_navigate},
 /* ^D  0x04 */ {normal_scroll},
@@ -106,7 +107,7 @@ static struct {
 /* ^U  0x15 */ {normal_scroll},
 /* ^V  0x16 */ {NULL},
 /* ^W  0x17 */ {NULL},
-/* ^X  0x18 */ {NULL},
+/* ^X  0x18 */ {normal_increment_decrement},
 /* ^Y  0x19 */ {NULL},
 /* ^Z  0x1a */ {normal_pass},
 /* ^[  0x1b */ {normal_clear_input},
@@ -489,6 +490,14 @@ static VbResult normal_do_hint(const char *prompt)
     }
 
     mode_enter_prompt('c', prompt, true);
+    return RESULT_COMPLETE;
+}
+
+static VbResult normal_increment_decrement(const NormalCmdInfo *info)
+{
+    int count = info->count ? info->count : 1;
+    hints_increment_uri(info->key == CTRL('A') ? count : -count);
+
     return RESULT_COMPLETE;
 }
 

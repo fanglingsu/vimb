@@ -499,6 +499,26 @@ Object.freeze((function(){
         return "ERROR:";
     }
 
+    function incrementUri(count) {
+        var oldnum, newnum, matches = location.href.match(/(.*?)(\d+)(\D*)$/);
+        if (matches) {
+            oldnum = matches[2];
+            newnum = String(Math.max(parseInt(oldnum) + count, 0));
+            /* keep prepending zeros */
+            if (/^0/.test(oldnum)) {
+                while (newnum.length < oldnum.length) {
+                    newnum = "0" + newnum;
+                }
+            }
+            matches[2] = newnum;
+
+            location.href = matches.slice(1).join("");
+
+            return "DONE:";
+        }
+        return "ERROR:";
+    }
+
     function allFrames(win) {
         var i, f, frames = [win];
         for (i = 0; i < win.frames.length; i++) {
@@ -570,10 +590,11 @@ Object.freeze((function(){
             }
             return "ERROR:";
         },
-        clear:      clear,
-        fire:       fire,
-        focus:      focus,
+        clear:        clear,
+        fire:         fire,
+        focus:        focus,
         /* not really hintings but uses similar logic */
-        followLink: followLink
+        followLink:   followLink,
+        incrementUri: incrementUri,
     };
 })());
