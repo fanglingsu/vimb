@@ -51,6 +51,7 @@ But following images may give a impression of they way vimb works.
 
 - [archlinux][]
 - [NetBSD][]
+- [FreeBSD][]
 
 ## download
 - You can get vimb from github by following command.
@@ -90,3 +91,4 @@ If you find a misbehaviour or have feature requests use the
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
 [archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
+[FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
