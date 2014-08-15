@@ -25,6 +25,7 @@
 #include "dom.h"
 #include "util.h"
 #include "ascii.h"
+#include "normal.h"
 
 typedef struct {
     char    *file;
@@ -59,10 +60,30 @@ void input_leave(void)
  */
 VbResult input_keypress(int key)
 {
+    static gboolean ctrlo = false;
+
+    if (ctrlo) {
+        /* if we are in ctrl-O mode perform the next keys as normal mode
+         * commands until the command is complete or error */
+        VbResult res = normal_keypress(key);
+        if (res != RESULT_MORE) {
+            ctrlo = false;
+            vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
+        }
+        return res;
+    }
+
     switch (key) {
         case CTRL('['): /* esc */
             mode_enter('n');
             return RESULT_COMPLETE;
+
+        case CTRL('O'):
+            /* enter CTRL-0 mode to execute next command in normal mode */
+            ctrlo           = true;
+            vb.mode->flags |= FLAG_NOMAP;
+            vb_echo(VB_MSG_NORMAL, false, "-- (input) --");
+            return RESULT_MORE;
 
         case CTRL('T'):
             return input_open_editor();
@@ -71,6 +92,7 @@ VbResult input_keypress(int key)
             mode_enter('p');
             return RESULT_COMPLETE;
     }
+
     vb.state.processed_key = false;
     return RESULT_ERROR;
 }
