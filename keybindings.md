@@ -347,8 +347,14 @@ CTRL-R {a-z%:/;}
 \<Esc\>, CTRL-[
 : Switch back to normal mode.
 
+CTRL-O
+: Executes the next command as normal mode command and return to input mode.
+
 CTRL-T
 : Open configured editor with content of current form field.
+
+CTRL-V
+: Pass the next key press directly to GTK.
 
 CTRL-Z
 : Enter the pass-through mode.
