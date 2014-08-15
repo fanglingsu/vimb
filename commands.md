@@ -144,6 +144,7 @@ Handlers allow specifying external scripts to handle alternative URI methods.
 : Remove the handler for the given URI *HANDLER*.
 
 ## settings
+{:#settings}
 
 \:se[t] *VAR=VALUE*
 : Set configuration values named by *VAR*. To set boolean variable you should

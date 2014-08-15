@@ -15,6 +15,31 @@ keyboard driven and does not detract you from your daily work.
 If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
+## latest features
+
+Input [CTRL-O](keybindings.html#i_CTRL-O) command
+: Allow to run normal mode command in input mode with `CTRL-O`. This allows to
+  yank selected text within form fields by pressing `CTRL-O Y` or to zoom the
+  page like `CTRL-O 2zi`
+
+[CTRL-A](keybindings.html#n_CTRL-A) and [CTRL-X](keybindings.html#n_CTRL-X) commands
+: These commands allow to increment the last number of the current opened URL.
+  This allows really efficient access to pages with pagers. These commands can
+  also be prefixed by a number to page in larger steps. 
+
+Soup Webcaching
+: Vimb supports no caching of some page data on disk, to make pages load
+  faster. The maximum used cache size can be configured by the new setting
+  `maximum-cache-size` which is by default set to 2000kB. To disable the
+  caching this config should be set to 0.
+
+Extended [:set-Syntax](commands.html#settings)
+: Like vim, vimb supports the following `:set` flavors: `:set+=val`,
+  `:set-=val` and `:set^=val`. These works for strings, numbers and even
+  lists.  So you can now easily add or remove a customer header by something
+  like `:set header+=DNT=1`, without retyping the headers you have defined
+  before.
+
 ## screenshots
 
 There isn't really much to see for a browser that is controlled via keyboard.
@@ -25,15 +50,13 @@ But following images may give a impression of they way vimb works.
 
 ## features
 
-- modal like vim
-- vim oriented [keybindings][]
+- vim like usage and [keybindings][]
 - follow links via keyboard [hints][]
 - read it later [queue][] to collect URIs for later use
 - page marks
 - tagged bookmarks
 - cookie support
-- userscripts support
-- customer stylesheet support
+- userscripts and user style sheet support
 - completions for commands, url history, bookmarks, bookmark tags, variables
   and search queries
 - [history][] for commands, url and search queries
@@ -41,7 +64,6 @@ But following images may give a impression of they way vimb works.
 - user defined url [shortcuts][] with up to 9 placeholders
 - xembed - so vimb can be used together with [tabbed][]
 - kiosk mode without keybindings and context menu
-- run shell commands from inputbox
 - manipulate http request headers
 - custom [protocol handlers][handlers]
 - HTTP Strict Transport Security (HSTS)
@@ -78,7 +100,7 @@ If you find a misbehaviour or have feature requests use the
 [releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
 [bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
 [surf]:        http://surf.suckless.org/
-[vimb]:        https://github.com/fanglingsu/vimb "vimb vim like browser sources"
+[vimb]:        https://github.com/fanglingsu/vimb "vimb project sources"
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [tabbed]:      http://tools.suckless.org/tabbed/
 [keybindings]: keybindings.html "vimb keybindings"
@@ -92,3 +114,4 @@ If you find a misbehaviour or have feature requests use the
 [archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
 [FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
+*[vimb]:       vim browser - the vim like browser

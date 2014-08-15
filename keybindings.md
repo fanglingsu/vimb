@@ -16,146 +16,191 @@ effect of the command. If a command supports the count this is shown as [*N*].
 
 \:
 : Start Command Mode and print ':' to the input box.
+{:#n_:}
 
 gi
 : Set cursor to the first editable element in the page and switch to Input
   Mode.
+{:#n_gi}
 
 CTRL-Z
 : Switch vimb into Pass-Through Mode.
+{:#n_CTRL-Z}
 
 gf
 : Toggle show html source of current page.
+{:#n_gf}
 
 gF
 : Opend the Web Inspector for current page.
+{:#n_gF}
 
 CTRL-V
 : Pass the next key press directly to GTK.
+{:#n_CTRL-V}
 
 CTRL-Q
 : Quit the browser.
+{:#n_CTRL-Q}
 
 ### navigation
 
 o
 : Start Command Mode and print ':open ' to input box.
+{:#n_o}
 
 O
 : Start Command Mode and print ':open URI' to input box.
+{:#n_O}
 
 t
 : Start Command Mode and print ':tabopen ' to input box.
+{:#n_t}
 
 T
 : Start Command Mode and print ':tabopen URI' to input box.
+{:#n_T}
 
 gh
 : Open the configured home-page.
+{:#n_gh}
 
 gH
 : Open the configured home-page into new window.
+{:#n_gH}
 
 u
 : Open the last closed page.
+{:#n_u}
 
 U
 : Open the last closed page into a new window.
+{:#n_U}
 
 CTRL-P
 : Open the oldest entry from read it later queue in current browser window, if
-: vimb has been compiled with QUEUE feature.
+  vimb has been compiled with QUEUE feature.
+{:#n_CTRL-P}
 
 [*"x*]p
 : Open the URI out of the register *x* or if not given from clipboard.
+{:#n_p}
 
 [*"x*]P
 : Open the URI out of the register *x* or if not given from clipboard into new
   window.
+{:#n_P}
 
 [*N*]UP
 : Go back *N* steps in the browser history.
+{:#n_UP}
 
 [*N*]DOWN
 : Go forward *N* steps in the browser history.
+{:#n_DOWN}
 
 [*N*]gu
 : Go to the *N*th descendent directory of the current opened URL.
+{:#n_gu}
 
 gU
 : Go to the domain of the current opened page.
+{:#n_gU}
 
 [*N*]CTRL-A
-: Increments the last number in URL by 1, or by *N* if given.
+: Increments the last number in URL by 1, or by *N* if
+  given.
+{:#n_CTRL-A}
 
 [*N*]CTRL-X
 : Decrements the last number in URL by 1, or by *N* if given. Negative numbers
   are not supported as trailing numbers in URLs are often preceded by hyphens.
+{:#n_CTRL-X}
 
 r
 : Reload the website.
+{:#n_r}
 
 R
 : Reload the website without using caches.
+{:#n_R}
 
 CTRL-C
 : Stop loading the current page.
+{:#n_CTRL-C}
 
 ### motion
 
 [*N*]CTRL-F
 : Scroll *N* pages down.
+{:#n_CTRL-F}
 
 [*N*]CTRL-B
 : Scroll *N* pages up.
+{:#n_CTRL-B}
 
 [*N*]CTRL-D
 : Scroll *N* half pages down.
+{:#n_CTRL-D}
 
 [*N*]CTRL-U
 : Scroll *N* half pages up.
+{:#n_CTRL-U}
 
 [*N*]gg
 : Scroll to the top of the current page. Or if N is given to *N*% of the page.
+{:#n_gg}
 
 [*N*]G
 : Scroll to the bottom of the current page. Or if *N* is given to *N*% of the page.
+{:#n_G}
 
 [*N*]0
 : Scroll *N* steps to the left of current page.
+{:#n_0}
 
 [*N*]$
 : Scroll *N* steps to the right of current page.
+{:#n_dollar}
 
 [*N*]h
 : Scroll *N* steps to the left of page.
+{:#n_h}
 
 [*N*]l
 : Scroll *N* steps to the right of page.
+{:#n_l}
 
 [*N*]j
 : Scroll page *N* steps down.
+{:#n_j}
 
 [*N*]k
 : Scroll page *N* steps up.
+{:#n_k}
 
 [*N*]]]
 : Follow the last *N*th link matching `nextpattern`.
+{:#n_]]}
 
 [*N*][[
 : Follow the last *N*th link matching `previouspattern`.
+{:#n_[[}
 
 m{a-z}
 : Set a page mark `{a-z}` at current possition on page. Such set marks are only
   available on the current page, if the page is left, all marks will be
   removed.
+{:#n_m}
 
 '{a-z}
 : Jump to the mark `{a-z}` on current page.
+{:#n_quote}
 
 ''
 : Jumps to the position before the latest jump, or where the last `m'` command
   was given.
+{:#n_doublequote}
 
 ### hinting
 {:#hinting}
@@ -346,18 +391,23 @@ CTRL-R {a-z%:/;}
 
 \<Esc\>, CTRL-[
 : Switch back to normal mode.
+{:#i_ESC}
 
 CTRL-O
 : Executes the next command as normal mode command and return to input mode.
+{:#i_CTRL-O}
 
 CTRL-T
 : Open configured editor with content of current form field.
+{:#i_CTRL-T}
 
 CTRL-V
 : Pass the next key press directly to GTK.
+{:#i_CTRL-V}
 
 CTRL-Z
 : Enter the pass-through mode.
+{:#i_CTRL-Z}
 
 ## registers
 {:#registers}
