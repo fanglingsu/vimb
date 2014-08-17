@@ -8,6 +8,7 @@ active: faq
 # FAQ
 
 ## How can I have tabs?
+{:#tabbed}
 
 Vimb does not support tabs. Every new page is opened in a new browser instance
 with own settings which makes things easier and secure. But vimb can be

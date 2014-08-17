@@ -4,9 +4,9 @@ pygments: true
 markdown: kramdown
 
 kramdown:
-  auto_ids: true,
-  footnote_nr: 1
+  auto_ids:      false
+  footnote_nr:   1
   entity_output: as_char
-  toc_levels: 2..5
+  toc_levels:    2..5
 
 exclude: [README.md]

@@ -5,6 +5,7 @@ meta:   vimb - the vim like browser is a fast, keyboard driven and lightweight w
 active: home
 ---
 
+
 # vimb - the vim like browser
 
 [Vimb][vimb] is a fast and lightweight vim like web browser based on the
@@ -62,11 +63,11 @@ But following images may give a impression of they way vimb works.
 - [history][] for commands, url and search queries
 - open textareas with configurable editor
 - user defined url [shortcuts][] with up to 9 placeholders
-- xembed - so vimb can be used together with [tabbed][]
+- xembed - so vimb can be used together with [tabbed](faq.html#tabbed)
 - kiosk mode without keybindings and context menu
 - manipulate http request headers
 - custom [protocol handlers][handlers]
-- HTTP Strict Transport Security (HSTS)
+- HSTS -- HTTP Strict Transport Security
 - multiple yank/paste [registers][]
 
 ## packages
@@ -95,23 +96,23 @@ If you find a misbehaviour or have feature requests use the
 - [surf][] a really minimalistic browser of the suckless project. No runtime
   configuration.
 
-[zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
-[tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
-[releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
+[FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
+[NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
+[archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
-[surf]:        http://surf.suckless.org/
-[vimb]:        https://github.com/fanglingsu/vimb "vimb project sources"
-[vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
-[tabbed]:      http://tools.suckless.org/tabbed/
-[keybindings]: keybindings.html "vimb keybindings"
-[registers]:   keybindings.html#registers "vimb yank/paste registers"
 [handlers]:    commands.html#handlers "vimb custom protocol handlers"
 [hints]:       keybindings.html#hinting "vimb hinting"
 [history]:     keybindings.html#history "vimb keybindings to access history"
-[queue]:       commands.html#queue "vimb read it later queue feature"
-[shortcuts]:   commands.html#shortcuts "vimb shortcuts"
+[keybindings]: keybindings.html "vimb keybindings"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
-[archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
-[NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
-[FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
+[queue]:       commands.html#queue "vimb read it later queue feature"
+[registers]:   keybindings.html#registers "vimb yank/paste registers"
+[releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
+[shortcuts]:   commands.html#shortcuts "vimb shortcuts"
+[surf]:        http://surf.suckless.org/
+[tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
+[vimb]:        https://github.com/fanglingsu/vimb "vimb project sources"
+[vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
+[zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
+*[HSTS]:       HTTP Strict Transport Security
 *[vimb]:       vim browser - the vim like browser
