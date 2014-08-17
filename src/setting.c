@@ -385,15 +385,16 @@ static gboolean prepare_setting_value(Setting *prop, void *value, SettingType ty
 
     /* perform arithmetic operation for integer values */
     if (prop->type == TYPE_INTEGER) {
-        int newint;
+        int *newint = g_malloc(sizeof(int));
+        res         = true;
         if (type == SETTING_APPEND) {
-            newint = prop->value.i + *((int*)value);
+            *newint = prop->value.i + *((int*)value);
         } else if (type == SETTING_PREPEND) {
-            newint = prop->value.i * *((int*)value);
+            *newint = prop->value.i * *((int*)value);
         } else if (type == SETTING_REMOVE) {
-            newint = prop->value.i - *((int*)value);
+            *newint = prop->value.i - *((int*)value);
         }
-        *newvalue = (void*)&newint;
+        *newvalue = (void*)newint;
         return res;
     }
 
