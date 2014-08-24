@@ -127,8 +127,7 @@ Handlers allow specifying external scripts to handle alternative URI methods.
 \:handler-add *HANDLER=COMMAND*
 : Adds a handler to direct *HANDLER* links to the external COMMAND. The COMMAND
   can contain one placeholder %s that will be filled by the full URI given when
-  the command is called.
-
+  the command is called.  
   Examples:
 
   - `:handler-add magnet=xdg-open %s`
@@ -197,17 +196,14 @@ if vimb has been compiled with QUEUE feature.
 \:sh[ellcmd] *CMD*
 : Runs given shell *CMD* synchronous and print the output into inputbox. The
   *CMD* can contain multiple '%' chars that are expanded to the current opened
-  uri. Also the `~/` to home directory expansion is available.
-
+  uri. Also the `~/` to home directory expansion is available.  
   Runs given shell *CMD* syncronous and print the output into inputbox.
   Follwing pattern in *CMD* are expanded, `~username`, `~/`, `$VAR` and
-  `${VAR}`. A '``\``' before these patterns disables the expansion.
-
+  `${VAR}`. A '``\``' before these patterns disables the expansion.  
   Example: `:sh ls -la $HOME`
 
 :sh[ellcmd]! *CMD*
-: Like `:shellcmd` but runs given shell *CMD* asyncron.
-
+: Like `:shellcmd` but runs given shell *CMD* asyncron.  
   Example: ``:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'``
 
 \:s[ave] [*PATH*]
@@ -224,24 +220,18 @@ if vimb has been compiled with QUEUE feature.
 
 \:e[val] *JAVASCRIPT*
 : Runs the given *JAVASCRIPT* in the current page and display the evaluated
-  value.
-  
+  value.  
   This comman cannot be followed by antoher command, since any '|' is
-  considered part of the command.
-  
+  considered part of the command.  
   Example: `:eval document.cookie`
 
 \:no[rmal][!] [*CMDS*]
 : Execute normal mode commands *CMDS*. This makes it possible to execute normal
   mode commands typed on the input box. If the '!' is given, mappings will not
-  be used.
-  
-  *CMDS* cannot start with a space. Put a count of 1 (one) before it, "1 " is
-  one space.
-  
+  be used.  
+  *CMDS cannot start with a space. Put a count of 1 (one) before it, "1 " is one space.
   This comman cannot be followed by antoher command, since any '|' is
-  considered part of the command.
-  
+  considered part of the command.  
   Example: `:set scripts!|no! R`
 
 \:ha[rdcopy]
