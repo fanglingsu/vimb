@@ -102,6 +102,7 @@ typedef struct {
 #define EX_FLAG_LHS    0x002  /* command has a single word after the command name */
 #define EX_FLAG_RHS    0x004  /* command has a right hand side */
 #define EX_FLAG_EXP    0x008  /* expand pattern like % or %:p in rhs */
+#define EX_FLAG_CMD    0x010  /* like EX_FLAG_RHS but can contain | chars */
     int        flags;
 } ExInfo;
 
@@ -159,13 +160,13 @@ static ExInfo commands[] = {
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
     {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
-    {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_RHS},
+    {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_CMD},
     {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"inoremap",         EX_INOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"iunmap",           EX_IUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"nmap",             EX_NMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"nnoremap",         EX_NNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
-    {"normal",           EX_NORMAL,      ex_normal,     EX_FLAG_BANG|EX_FLAG_LHS},
+    {"normal",           EX_NORMAL,      ex_normal,     EX_FLAG_BANG|EX_FLAG_CMD},
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"open",             EX_OPEN,        ex_open,       EX_FLAG_RHS},
     {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE|EX_FLAG_BANG},
@@ -509,9 +510,7 @@ static gboolean parse(const char **input, ExArg *arg)
     }
     /* parse the rhs if this is available */
     skip_whitespace(input);
-    if (arg->flags & EX_FLAG_RHS) {
-        parse_rhs(input, arg);
-    }
+    parse_rhs(input, arg);
 
     if (**input) {
         (*input)++;
@@ -640,23 +639,32 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
 }
 
 /**
- * Parses the right hand side of command args.
+ * Parses the right hand side of command args. If flag EX_FLAG_CMD is set the
+ * command can contain any char accept of the newline, else the right hand
+ * side end on the first none escaped | or newline.
  */
 static gboolean parse_rhs(const char **input, ExArg *arg)
 {
     int expflags, flags;
+    gboolean cmdlist;
 
-    if (!*input || !**input) {
+    /* don't do anything if command has no right hand side or command list or
+     * there is nothing to parse */
+    if ((arg->flags & (EX_FLAG_RHS|EX_FLAG_CMD)) == 0
+        || !*input || !**input
+    ) {
         return false;
     }
 
+    cmdlist  = (arg->flags & EX_FLAG_CMD) != 0;
     expflags = (arg->flags & EX_FLAG_EXP)
         ? UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL
         : 0;
     flags = expflags;
 
-    /* get char until the end of command */
-    while (**input && **input != '\n' && **input != '|') {
+    /* Get char until the end of command. Command ends on newline, and if
+     * EX_FLAG_CMD is not set also on | */
+    while (**input && **input != '\n' && (cmdlist || **input != '|')) {
         /* check for expansion placeholder */
         util_parse_expansion(input, arg->rhs, flags, "|\\");
 
@@ -782,7 +790,7 @@ static gboolean ex_normal(const ExArg *arg)
     mode_enter('n');
 
     /* if called with bang - don't apply mapping */
-    map_handle_string(arg->lhs->str, !arg->bang);
+    map_handle_string(arg->rhs->str, !arg->bang);
 
     return true;
 }
