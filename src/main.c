@@ -42,6 +42,7 @@
 #include "pass.h"
 #include "bookmark.h"
 #include "js.h"
+#include "autocmd.h"
 
 /* variables */
 static char **args;
@@ -404,6 +405,9 @@ void vb_quit(gboolean force)
     history_cleanup();
     session_cleanup();
     register_cleanup();
+#ifdef FEATURE_AUTOCMD
+    autocmd_cleanup();
+#endif
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
@@ -502,10 +506,13 @@ static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec)
 
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 {
-    const char *uri;
+    const char *uri = webkit_web_view_get_uri(view);
 
     switch (webkit_web_view_get_load_status(view)) {
         case WEBKIT_LOAD_PROVISIONAL:
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(NULL, AU_PAGE_LOAD_PROVISIONAL, uri);
+#endif
             /* update load progress in statusbar */
             vb.state.progress = 0;
             vb_update_statusbar();
@@ -513,7 +520,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_COMMITTED:
-            uri = webkit_web_view_get_uri(view);
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(NULL, AU_PAGE_LOAD_COMMITED, uri);
+#endif
             {
                 WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
                 JSContextRef ctx;
@@ -548,6 +557,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(NULL, AU_PAGE_LOAD_FIRST_LAYOUT, uri);
+#endif
             /* if we load a page from a submitted form, leave the insert mode */
             if (vb.mode->id == 'i') {
                 mode_enter('n');
@@ -555,8 +567,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FINISHED:
-            uri = webkit_web_view_get_uri(view);
-
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(NULL, AU_PAGE_LOAD_FINISHED, uri);
+#endif
             /* update load progress in statusbar */
             vb.state.progress = 100;
             vb_update_statusbar();
@@ -569,6 +582,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FAILED:
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(NULL, AU_PAGE_LOAD_FAILED, uri);
+#endif
             break;
     }
 }
@@ -807,6 +823,9 @@ static void init_core(void)
     session_init();
     setting_init();
     register_init();
+#ifdef FEATURE_AUTOCMD
+    autocmd_init();
+#endif
     read_config();
 
     /* initially apply input style */

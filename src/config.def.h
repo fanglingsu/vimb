@@ -48,6 +48,8 @@
 #define FEATURE_HSTS
 /* enable soup caching - size can be configure by maximum-cache-size setting */
 #define FEATURE_SOUP_CACHE
+/* enable the :autocmd feature */
+#define FEATURE_AUTOCMD
 
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */

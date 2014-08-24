@@ -40,8 +40,15 @@
 #include "map.h"
 #include "js.h"
 #include "normal.h"
+#ifdef FEATURE_AUTOCMD
+#include "autocmd.h"
+#endif
 
 typedef enum {
+#ifdef FEATURE_AUTOCMD
+    EX_AUTOCMD,
+    EX_AUGROUP,
+#endif
     EX_BMA,
     EX_BMR,
     EX_EVAL,
@@ -122,6 +129,8 @@ static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static gboolean execute(const ExArg *arg);
 
+static gboolean ex_augroup(const ExArg *arg);
+static gboolean ex_autocmd(const ExArg *arg);
 static gboolean ex_bookmark(const ExArg *arg);
 static gboolean ex_eval(const ExArg *arg);
 static gboolean ex_hardcopy(const ExArg *arg);
@@ -152,6 +161,10 @@ static void history_rewind(void);
  * match. */
 static ExInfo commands[] = {
     /* command           code            func           flags */
+#ifdef FEATURE_AUTOCMD
+    {"autocmd",          EX_AUTOCMD,     ex_autocmd,    EX_FLAG_CMD|EX_FLAG_BANG},
+    {"augroup",          EX_AUGROUP,     ex_augroup,    EX_FLAG_LHS|EX_FLAG_BANG},
+#endif
     {"bma",              EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
     {"bmr",              EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
@@ -706,6 +719,18 @@ static void free_cmdarg(ExArg *arg)
     }
     g_slice_free(ExArg, arg);
 }
+
+#ifdef FEATURE_AUTOCMD
+static gboolean ex_augroup(const ExArg *arg)
+{
+    return autocmd_augroup(arg->lhs->str, arg->bang);
+}
+
+static gboolean ex_autocmd(const ExArg *arg)
+{
+    return autocmd_add(arg->rhs->str, arg->bang);
+}
+#endif
 
 static gboolean ex_bookmark(const ExArg *arg)
 {
