@@ -1,6 +1,6 @@
 save: true
 lsi: false
-pygments: true
+highlighter: true
 markdown: kramdown
 
 kramdown:

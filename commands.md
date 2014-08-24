@@ -61,7 +61,7 @@ used \<Left\>, \<Up\>, \<Right\>, \<Down\> for the cursor keys, \<Tab\>,
   The result, including *rhs*, is then further scanned for mappings. This allows
   for nested and recursive use of mappings.
 
-  - `:cmap <C-G>h /home/user/downloads/`
+: - `:cmap <C-G>h /home/user/downloads/`
     Adds a keybind to insert a file path into the input box. This could be
     useful for the ':save' command that could be used as ':save ^Gh'.
   - `:nmap <F1> :set scripts=on<CR>:open !glib<Tab><CR>`
@@ -107,7 +107,7 @@ same but a single parameter is user defined.
   the shortcut is called. The parameters given when the shortcut is called
   will be split into as many parameters like the highest used placeholder.
 
-  - `:shortcut-add dl=https://duckduckgo.com/lite/?q=$0`
+: - `:shortcut-add dl=https://duckduckgo.com/lite/?q=$0`
     to setup a search engine. Can be called by ':open dl my search phrase'.
   - `:shortcut-add gh=https://github.com/$0/$1`
     to build url from given parameters. Can be called ':open gh fanglingsu vimb'.
@@ -127,15 +127,13 @@ Handlers allow specifying external scripts to handle alternative URI methods.
 \:handler-add *HANDLER=COMMAND*
 : Adds a handler to direct *HANDLER* links to the external COMMAND. The COMMAND
   can contain one placeholder %s that will be filled by the full URI given when
-  the command is called.  
-  Examples:
+  the command is called.
+: Examples:
 
-  - `:handler-add magnet=xdg-open %s`
+: - `:handler-add magnet=xdg-open %s`
     to open magnet links with xdg-open.
-
   - `:handler-add magnet=transmission-gtk %s`
     to open magnet links directly with Transmission.
-
   - `:handler-add irc=irc-handler.sh %s`
     to direct `irc://<host>:<port>/<channel>` links to a wrapper for your irc client.
 
@@ -196,15 +194,15 @@ if vimb has been compiled with QUEUE feature.
 \:sh[ellcmd] *CMD*
 : Runs given shell *CMD* synchronous and print the output into inputbox. The
   *CMD* can contain multiple '%' chars that are expanded to the current opened
-  uri. Also the `~/` to home directory expansion is available.  
-  Runs given shell *CMD* syncronous and print the output into inputbox.
+  uri. Also the `~/` to home directory expansion is available.
+: Runs given shell *CMD* syncronous and print the output into inputbox.
   Follwing pattern in *CMD* are expanded, `~username`, `~/`, `$VAR` and
-  `${VAR}`. A '``\``' before these patterns disables the expansion.  
-  Example: `:sh ls -la $HOME`
+  `${VAR}`. A '``\``' before these patterns disables the expansion.
+: Example: `:sh ls -la $HOME`
 
 :sh[ellcmd]! *CMD*
-: Like `:shellcmd` but runs given shell *CMD* asyncron.  
-  Example: ``:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'``
+: Like `:shellcmd` but runs given shell *CMD* asyncron.
+: Example: ``:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'``
 
 \:s[ave] [*PATH*]
 : Download current opened page into configured download directory. If *PATH* is
@@ -220,19 +218,19 @@ if vimb has been compiled with QUEUE feature.
 
 \:e[val] *JAVASCRIPT*
 : Runs the given *JAVASCRIPT* in the current page and display the evaluated
-  value.  
-  This comman cannot be followed by antoher command, since any '|' is
-  considered part of the command.  
-  Example: `:eval document.cookie`
+  value.
+: This comman cannot be followed by antoher command, since any '|' is
+  considered part of the command.
+: Example: `:eval document.cookie`
 
 \:no[rmal][!] [*CMDS*]
 : Execute normal mode commands *CMDS*. This makes it possible to execute normal
   mode commands typed on the input box. If the '!' is given, mappings will not
-  be used.  
-  *CMDS cannot start with a space. Put a count of 1 (one) before it, "1 " is one space.
+  be used.
+: *CMDS cannot start with a space. Put a count of 1 (one) before it, "1 " is one space.
   This comman cannot be followed by antoher command, since any '|' is
-  considered part of the command.  
-  Example: `:set scripts!|no! R`
+  considered part of the command.
+: Example: `:set scripts!|no! R`
 
 \:ha[rdcopy]
 : Print current document. Open a GUI dialog where you can select the printer,
