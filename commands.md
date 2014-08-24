@@ -227,7 +227,6 @@ if vimb has been compiled with QUEUE feature.
   value.
   This comman cannot be followed by antoher command, since any '|' is
   considered part of the command.
-
   Example: `:eval document.cookie`
 
 \:no[rmal][!] [*CMDS*]
@@ -238,7 +237,6 @@ if vimb has been compiled with QUEUE feature.
   one space.
   This comman cannot be followed by antoher command, since any '|' is
   considered part of the command.
-
   Example: `:set scripts!|no! R`
 
 \:ha[rdcopy]
