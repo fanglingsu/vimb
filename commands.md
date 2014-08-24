@@ -225,7 +225,6 @@ if vimb has been compiled with QUEUE feature.
 \:e[val] *JAVASCRIPT*
 : Runs the given *JAVASCRIPT* in the current page and display the evaluated
   value.
-
   This comman cannot be followed by antoher command, since any '|' is
   considered part of the command.
 
@@ -235,10 +234,8 @@ if vimb has been compiled with QUEUE feature.
 : Execute normal mode commands *CMDS*. This makes it possible to execute normal
   mode commands typed on the input box. If the '!' is given, mappings will not
   be used.
-
   *CMDS* cannot start with a space. Put a count of 1 (one) before it, "1 " is
   one space.
-
   This comman cannot be followed by antoher command, since any '|' is
   considered part of the command.
 
