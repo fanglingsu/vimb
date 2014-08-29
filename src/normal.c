@@ -36,8 +36,8 @@ typedef enum {
     PHASE_START,
     PHASE_KEY2,
     PHASE_KEY3,
-    PHASE_COMPLETE,
     PHASE_CUTBUF,
+    PHASE_COMPLETE,
 } Phase;
 
 typedef struct NormalCmdInfo_s {
@@ -245,38 +245,53 @@ VbResult normal_keypress(int key)
     State *s = &vb.state;
     VbResult res;
 
-    if (info.phase == PHASE_START && info.count == 0 && key == '0') {
-        info.key   = key;
-        info.phase = PHASE_COMPLETE;
-    } else if (info.phase == PHASE_KEY2) {
-        info.key2  = key;
+    switch (info.phase) {
+        case PHASE_START:
+            if (info.count == 0 && key == '0') {
+                info.key   = key;
+                info.phase = PHASE_COMPLETE;
+            } else if (VB_IS_DIGIT(key)) {
+                info.count = info.count * 10 + key - '0';
+            } else if (strchr(";zg[]'m", key)) {
+                /* handle commands that needs additional char */
+                info.phase      = PHASE_KEY2;
+                info.key        = key;
+                vb.mode->flags |= FLAG_NOMAP;
+            } else if (key == '"') {
+                info.phase      = PHASE_CUTBUF;
+                vb.mode->flags |= FLAG_NOMAP;
+            } else {
+                info.key   = key;
+                info.phase = PHASE_COMPLETE;
+            }
+            break;
 
-        /* hinting g; mode requires a third key */
-        if (info.key == 'g' && info.key2 == ';') {
-            info.phase      = PHASE_KEY3;
-            vb.mode->flags |= FLAG_NOMAP;
-        } else {
+        case PHASE_KEY2:
+            info.key2 = key;
+
+            /* hinting g; mode requires a third key */
+            if (info.key == 'g' && info.key2 == ';') {
+                info.phase      = PHASE_KEY3;
+                vb.mode->flags |= FLAG_NOMAP;
+            } else {
+                info.phase = PHASE_COMPLETE;
+            }
+            break;
+
+        case PHASE_KEY3:
+            info.key3  = key;
             info.phase = PHASE_COMPLETE;
-        }
-    } else if (info.phase == PHASE_KEY3) {
-        info.key3  = key;
-        info.phase = PHASE_COMPLETE;
-    } else if (info.phase == PHASE_START && VB_IS_DIGIT(key)) {
-        info.count = info.count * 10 + key - '0';
-    } else if (strchr(";zg[]'m", (char)key)) {
-        /* handle commands that needs additional char */
-        info.phase      = PHASE_KEY2;
-        info.key        = key;
-        vb.mode->flags |= FLAG_NOMAP;
-    } else if ((char)key == '"') {
-        info.phase      = PHASE_CUTBUF;
-        vb.mode->flags |= FLAG_NOMAP;
-    } else if (info.phase ==  PHASE_CUTBUF && strchr(VB_REG_CHARS, (char)key)) {
-        info.cutbuf = (char)key;
-        info.phase  = PHASE_START;
-    } else {
-        info.key   = key;
-        info.phase = PHASE_COMPLETE;
+            break;
+
+        case PHASE_CUTBUF:
+            if (strchr(VB_REG_CHARS, key)) {
+                info.cutbuf = key;
+                info.phase  = PHASE_START;
+            }
+            break;
+
+        case PHASE_COMPLETE:
+            break;
     }
 
     if (info.phase == PHASE_COMPLETE) {
@@ -289,15 +304,15 @@ VbResult normal_keypress(int key)
             s->processed_key = false;
             res = RESULT_COMPLETE;
         }
+
+        /* unset the info */
+        info.key = info.key2 = info.key3 = info.count = info.cutbuf = 0;
+        info.phase = PHASE_START;
     } else {
         res = RESULT_MORE;
     }
 
-    if (res == RESULT_COMPLETE) {
-        /* unset the info */
-        info.key = info.key2 = info.key3 = info.count = info.cutbuf = 0;
-        info.phase = PHASE_START;
-    } else if (res == RESULT_MORE) {
+    if (res == RESULT_MORE) {
         normal_showcmd(key);
     }
     return res;
