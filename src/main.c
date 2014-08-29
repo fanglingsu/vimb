@@ -186,7 +186,9 @@ gboolean vb_load_uri(const Arg *arg)
         path = GET_CHAR("home-page");
     }
 
-    if (strstr(path, "://") || !strncmp(path, "about:", 6)) {
+    /* If path contains :// but no space we open it direct. This is required
+     * to use :// also with shortcuts */
+    if ((strstr(path, "://") && !strchr(path, ' ')) || !strncmp(path, "about:", 6)) {
         uri = g_strdup(path);
     } else if (stat(path, &st) == 0) {
         /* check if the path is a file path */
