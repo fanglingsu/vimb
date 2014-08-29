@@ -130,7 +130,7 @@ VbResult mode_handle_key(int key)
 
         return RESULT_COMPLETE;
     }
-    if (key == CTRL('V')) {
+    if (vb.mode->id != 'p' && key == CTRL('V')) {
         vb.mode->flags |= FLAG_NOMAP;
         ctrl_v = true;
         normal_showcmd(key);
