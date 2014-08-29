@@ -1214,9 +1214,13 @@ static gboolean mimetype_decision_cb(WebKitWebView *webview,
         return false;
     }
 
-    /* don't start a download when the response has no 2xx status code */
+    /* Don't start a download when the response has no 2xx status code. Or the
+     * message was not sent before - this seems to be the case when the server
+     * responds with a Accept-Ranges header. */
     msg = webkit_network_request_get_message(request);
-    if (SOUP_STATUS_IS_SUCCESSFUL(msg->status_code)) {
+    if (SOUP_STATUS_IS_SUCCESSFUL(msg->status_code)
+        || msg->status_code == SOUP_STATUS_NONE
+    ) {
         webkit_web_policy_decision_download(decision);
         return true;
     }
