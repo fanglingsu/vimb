@@ -297,6 +297,13 @@ void vb_update_statusbar()
         g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
     }
 
+#ifdef FEATURE_SEARCH_HIGHLIGHT
+    /* show the number of matches search results */
+    if (vb.state.search_matches) {
+        g_string_append_printf(status, " (%d)", vb.state.search_matches);
+    }
+#endif
+
     /* show load status of page or the downloads */
     if (vb.state.progress != 100) {
 #ifdef FEATURE_WGET_PROGRESS_BAR
