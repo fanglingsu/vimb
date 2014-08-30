@@ -369,6 +369,7 @@ static gboolean map_delete_by_lhs(const char *lhs, int len, char mode)
         if (m->mode == mode && m->inlen == len && !strcmp(m->in, lhs)) {
             /* remove the found list item */
             map.list = g_slist_delete_link(map.list, l);
+            free_map(m);
             return true;
         }
     }
