@@ -22,6 +22,7 @@
 #include "autocmd.h"
 #include "ascii.h"
 #include "ex.h"
+#include "util.h"
 
 typedef struct {
     guint bits;
@@ -166,8 +167,9 @@ gboolean autocmd_add(char *name, gboolean delete)
             if (!(cmd->bits & bits)) {
                 continue;
             }
-            /* skip it pattern does not match - '*' matches everithing */
-            if (strcmp(cmd->pattern, "*") && strcmp(cmd->pattern, pattern)) {
+            /* skip if pattern does not match - we check the pattern against
+             * another pattern */
+            if (!util_wildmatch(pattern, cmd->pattern)) {
                 continue;
             }
             /* remove the bits from the item */
@@ -217,9 +219,13 @@ gboolean autocmd_run(const char *group, AuEvent event, const char *uri)
             if (!(bits & cmd->bits)) {
                 continue;
             }
-            /* TODO skip if pattern does not match */
+            /* check pattern only if uri was given */
+            /* skip if pattern does not match */
+            if (uri && !util_wildmatch(cmd->pattern, uri)) {
+                continue;
+            }
             /* run the command */
-            /* TODO shoult hte result be tested for RESULT_COMPLETE? */
+            /* TODO shoult the result be tested for RESULT_COMPLETE? */
             ex_run_string(cmd->excmd);
         }
     }

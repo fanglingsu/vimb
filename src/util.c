@@ -508,6 +508,78 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
 }
 
 /**
+ * Compares given string against also given pattern.
+ * *    matches any sequence of characters
+ * ?    matches any single character except of /
+ * \?   matches a ?
+ * .    matches a .
+ * ~    matches a ~
+ */
+gboolean util_wildmatch(const char *pattern, const char *string)
+{
+    int i;
+    char ul, pl;
+    const char *p, *s;
+
+    p = pattern;
+    s = string;
+
+    while (*p) {
+        switch (*p) {
+            case '?':
+                /* match single char except of / or end */
+                if (*s == '/' || !*s) {
+                    return false;
+                }
+                break;
+
+            case '\\':
+                /* \ escapes next * or ? char */
+                if (*(p + 1) == '*' || *(p + 1) == '?') {
+                    p++;
+                    if (*p != *s) {
+                        return false;
+                    }
+                }
+                break;
+
+            case '*':
+                /* Try to match as much as possible. Try to match the complete
+                 * uri, if that fails move forward in uri and chack for a
+                 * match. */
+                i = strlen(s);
+                while (i >= 0 && !util_wildmatch(p + 1, s + i)) {
+                    i--;
+                }
+                return i >= 0;
+
+            default:
+                ul = *s;
+                if (VB_IS_UPPER(ul)) {
+                    ul += 'a' - 'A';
+                }
+                pl = *p;
+                if (VB_IS_UPPER(pl)) {
+                    pl += 'a' - 'A';
+                }
+                if (ul != pl) {
+                    return false;
+                }
+                break;
+        }
+        p++;
+        s++;
+    }
+
+    /* if there is uri left on pattern end - this is no match */
+    if (!*p) {
+        return !*s;
+    }
+
+    return false;
+}
+
+/**
  * Fills the given list store by matching data of also given src list.
  */
 gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src)

@@ -137,6 +137,54 @@ static void test_str_replace(void)
     g_free(value);
 }
 
+static void test_wildmatch_simple(void)
+{
+    g_assert_true(util_wildmatch("", ""));
+    g_assert_true(util_wildmatch("w", "w"));
+    g_assert_true(util_wildmatch(".", "."));
+    g_assert_true(util_wildmatch("~", "~"));
+    g_assert_true(util_wildmatch("wildmatch", "WildMatch"));
+    g_assert_true(util_wildmatch("wild\\match", "wild\\match"));
+
+    /* no special meaning of . and ~ in pattern */
+    g_assert_false(util_wildmatch(".", "w"));
+    g_assert_false(util_wildmatch("~", "w"));
+    g_assert_false(util_wildmatch("wild", "wild "));
+    g_assert_false(util_wildmatch("wild", " wild"));
+    g_assert_false(util_wildmatch("wild", "\\ wild"));
+    g_assert_false(util_wildmatch("wild", "\\wild"));
+    g_assert_false(util_wildmatch("wild", "wild\\"));
+    g_assert_false(util_wildmatch("wild\\1", "wild\\2"));
+}
+
+static void test_wildmatch_questionmark(void)
+{
+    g_assert_true(util_wildmatch("wild?atch", "wildmatch"));
+    g_assert_true(util_wildmatch("wild?atch", "wildBatch"));
+    g_assert_true(util_wildmatch("wild?atch", "wild?atch"));
+    g_assert_true(util_wildmatch("?ild?atch", "MildBatch"));
+    g_assert_true(util_wildmatch("foo\\?bar", "foo?bar"));
+    g_assert_true(util_wildmatch("???", "foo"));
+    g_assert_true(util_wildmatch("???", "bar"));
+
+    g_assert_false(util_wildmatch("foo\\?bar", "foorbar"));
+    g_assert_false(util_wildmatch("?", ""));
+}
+
+static void test_wildmatch_wildcard(void)
+{
+    g_assert_true(util_wildmatch("*", ""));
+    g_assert_true(util_wildmatch("*", "Match as much as possible"));
+    g_assert_true(util_wildmatch("*match", "prefix match"));
+    g_assert_true(util_wildmatch("match*", "match suffix"));
+    g_assert_true(util_wildmatch("match*", "match*"));
+    g_assert_true(util_wildmatch("match\\*", "match*"));
+    g_assert_true(util_wildmatch("do * match", "do a infix match"));
+    g_assert_true(util_wildmatch("*://*.io/*", "http://fanglingsu.github.io/vimb/"));
+
+    g_assert_false(util_wildmatch("match\\*", "match fail"));
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
@@ -148,6 +196,9 @@ int main(int argc, char *argv[])
     g_test_add_func("/test-util/expand-spacial", test_expand_speacial);
     g_test_add_func("/test-util/strcasestr", test_strcasestr);
     g_test_add_func("/test-util/str_replace", test_str_replace);
+    g_test_add_func("/test-util/wildmatch-simple", test_wildmatch_simple);
+    g_test_add_func("/test-util/wildmatch-questionmark", test_wildmatch_questionmark);
+    g_test_add_func("/test-util/wildmatch-wildcard", test_wildmatch_wildcard);
 
     return g_test_run();
 }
