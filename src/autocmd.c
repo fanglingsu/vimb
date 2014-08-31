@@ -47,6 +47,8 @@ static struct {
     {"PageLoadFailed",      0x0010},
 };
 
+extern VbCore vb;
+
 static AuGroup *curgroup = NULL;
 static GSList  *groups = NULL;
 
@@ -205,6 +207,9 @@ gboolean autocmd_run(const char *group, AuEvent event, const char *uri)
     AutoCmd *cmd;
     guint bits = events[event].bits;
 
+    /* don't record commands in history runed by autocmd */
+    vb.state.enable_history = false;
+
     /* loop over the groups and find matching commands */
     for (lg = groups; lg; lg = lg->next) {
         grp = lg->data;
@@ -229,6 +234,7 @@ gboolean autocmd_run(const char *group, AuEvent event, const char *uri)
             ex_run_string(cmd->excmd);
         }
     }
+    vb.state.enable_history = true;
 
     return true;
 }
