@@ -29,9 +29,6 @@
 #include "history.h"
 #include "util.h"
 
-/* convert the lower 4 bits of byte n to its hex character */
-#define NR2HEX(n)   (n & 0xf) <= 9 ? (n & 0xf) + '0' : (c & 0xf) - 10 + 'a'
-
 typedef enum {
     PHASE_START,
     PHASE_KEY2,
@@ -52,8 +49,6 @@ typedef struct NormalCmdInfo_s {
 static NormalCmdInfo info = {0, '\0', '\0', PHASE_START};
 
 typedef VbResult (*NormalCommand)(const NormalCmdInfo *info);
-
-static char *transchar(int c);
 
 static VbResult normal_clear_input(const NormalCmdInfo *info);
 static VbResult normal_descent(const NormalCmdInfo *info);
@@ -215,8 +210,6 @@ static struct {
 
 extern VbCore vb;
 
-static char showcmd_buf[SHOWCMD_LEN + 1];   /* buffer to show ambiguous key sequence */
-
 /**
  * Function called when vimb enters the normal mode.
  */
@@ -312,58 +305,7 @@ VbResult normal_keypress(int key)
         res = RESULT_MORE;
     }
 
-    if (res == RESULT_MORE) {
-        normal_showcmd(key);
-    }
     return res;
-}
-
-/**
- * Put the given char onto the show command buffer.
- */
-void normal_showcmd(int c)
-{
-    char *translated;
-    int old, extra, overflow;
-
-    if (c) {
-        translated = transchar(c);
-        old        = strlen(showcmd_buf);
-        extra      = strlen(translated);
-        overflow   = old + extra - SHOWCMD_LEN;
-        if (overflow > 0) {
-            memmove(showcmd_buf, showcmd_buf + overflow, old - overflow + 1);
-        }
-        strcat(showcmd_buf, translated);
-    } else {
-        showcmd_buf[0] = '\0';
-    }
-    /* show the typed keys */
-    gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.cmd), showcmd_buf);
-}
-
-/**
- * Translate a singe char into a readable representation to be show to the
- * user in status bar.
- */
-static char *transchar(int c)
-{
-    static char trans[5];
-    int i = 0;
-    if (VB_IS_CTRL(c)) {
-        trans[i++] = '^';
-        trans[i++] = CTRL(c);
-    } else if ((unsigned)c >= 0x80) {
-        trans[i++] = '<';
-        trans[i++] = NR2HEX((unsigned)c >> 4);
-        trans[i++] = NR2HEX((unsigned)c);
-        trans[i++] = '>';
-    } else {
-        trans[i++] = c;
-    }
-    trans[i++] = '\0';
-
-    return trans;
 }
 
 static VbResult normal_clear_input(const NormalCmdInfo *info)

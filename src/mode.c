@@ -20,7 +20,7 @@
 #include "config.h"
 #include "main.h"
 #include "mode.h"
-#include "normal.h"
+#include "map.h"
 #include "ascii.h"
 #include <glib.h>
 
@@ -133,7 +133,7 @@ VbResult mode_handle_key(int key)
     if (vb.mode->id != 'p' && key == CTRL('V')) {
         vb.mode->flags |= FLAG_NOMAP;
         ctrl_v = true;
-        normal_showcmd(key);
+        map_showcmd(key);
 
         return RESULT_MORE;
     }

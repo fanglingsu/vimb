@@ -24,7 +24,8 @@
 #include "ascii.h"
 #include "mode.h"
 
-extern VbCore vb;
+/* convert the lower 4 bits of byte n to its hex character */
+#define NR2HEX(n)   (n & 0xf) <= 9 ? (n & 0xf) + '0' : (c & 0xf) - 10 + 'a'
 
 typedef struct {
     char     *in;       /* input keys */
@@ -35,14 +36,19 @@ typedef struct {
     gboolean remap;     /* if false do not remap the {rhs} of this map */
 } Map;
 
+/* this is only to keep the variables together */
 static struct {
     GSList *list;
-    char   queue[MAP_QUEUE_SIZE];   /* queue holding typed keys */
-    int    qlen;                    /* pointer to last char in queue */
-    int    resolved;                /* number of resolved keys (no mapping required) */
-    guint  timout_id;               /* source id of the timeout function */
+    char   queue[MAP_QUEUE_SIZE];       /* queue holding typed keys */
+    int    qlen;                        /* pointer to last char in queue */
+    int    resolved;                    /* number of resolved keys (no mapping required) */
+    guint  timout_id;                   /* source id of the timeout function */
+    char   showcmd[SHOWCMD_LEN + 1];    /* buffer to show ambiguous key sequence */
 } map;
 
+extern VbCore vb;
+
+static char *transchar(int c);
 static gboolean map_delete_by_lhs(const char *lhs, int len, char mode);
 static int keyval_to_string(guint keyval, guint state, guchar *string);
 static int utf_char2bytes(guint c, guchar *buf);
@@ -168,6 +174,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
     int ambiguous;
     Map *match = NULL;
     gboolean timeout = (keylen == 0); /* keylen 0 signalized timeout */
+    static int showlen = 0;           /* track the number of keys in showcmd of status bar */
 
     /* if a previous timeout function was set remove this */
     if (map.timout_id) {
@@ -220,9 +227,12 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
 
             /* send the key to the parser */
             if (RESULT_MORE != mode_handle_key((int)qk)) {
-#ifndef TESTLIB
-                normal_showcmd(0);
-#endif
+                map_showcmd(0);
+                showlen = 0;
+            } else if (showlen > 0) {
+                showlen--;
+            } else {
+                map_showcmd(qk);
             }
         }
 
@@ -245,19 +255,16 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
 
                 /* find ambiguous matches */
                 if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue, map.qlen)) {
-#ifndef TESTLIB
                     if (ambiguous == 0) {
                         /* show command chars for the ambiguous commands */
                         int i = map.qlen > SHOWCMD_LEN ? map.qlen - SHOWCMD_LEN : 0;
-                        /* only appending the last queue char does not work
-                         * with the multi char termcap entries, so we flush
-                         * the show command and put the chars into it again */
-                        normal_showcmd(0);
+                        /* appen only those chars that are not already in showcmd */
+                        i += showlen;
                         while (i < map.qlen) {
-                            normal_showcmd(map.queue[i++]);
+                            map_showcmd(map.queue[i++]);
+                            showlen++;
                         }
                     }
-#endif
                     ambiguous++;
                 }
                 /* complete match or better/longer match than previous found */
@@ -281,12 +288,12 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
          * is the result of the mapping */
         if (match) {
             int i, j;
-            /* flush ths show command to make room for possible mapped command
+            /* flush the show command to make room for possible mapped command
              * chars to show for example if :nmap foo 12g is use we want to
              * display the incomplete 12g command */
-#ifndef TESTLIB
-            normal_showcmd(0);
-#endif
+            map_showcmd(0);
+            showlen = 0;
+
             if (match->inlen < match->mappedlen) {
                 /* make some space within the queue */
                 for (i = map.qlen + match->mappedlen - match->inlen, j = map.qlen; j > match->inlen; ) {
@@ -358,6 +365,56 @@ gboolean map_delete(const char *in, char mode)
     char *lhs = convert_keys(in, strlen(in), &len);
 
     return map_delete_by_lhs(lhs, len, mode);
+}
+
+/**
+ * Put the given char onto the show command buffer.
+ */
+void map_showcmd(int c)
+{
+    char *translated;
+    int old, extra, overflow;
+
+    if (c) {
+        translated = transchar(c);
+        old        = strlen(map.showcmd);
+        extra      = strlen(translated);
+        overflow   = old + extra - SHOWCMD_LEN;
+        if (overflow > 0) {
+            memmove(map.showcmd, map.showcmd + overflow, old - overflow + 1);
+        }
+        strcat(map.showcmd, translated);
+    } else {
+        map.showcmd[0] = '\0';
+    }
+#ifndef TESTLIB
+    /* show the typed keys */
+    gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.cmd), map.showcmd);
+#endif
+}
+
+/**
+ * Translate a singe char into a readable representation to be show to the
+ * user in status bar.
+ */
+static char *transchar(int c)
+{
+    static char trans[5];
+    int i = 0;
+    if (VB_IS_CTRL(c)) {
+        trans[i++] = '^';
+        trans[i++] = CTRL(c);
+    } else if ((unsigned)c >= 0x80) {
+        trans[i++] = '<';
+        trans[i++] = NR2HEX((unsigned)c >> 4);
+        trans[i++] = NR2HEX((unsigned)c);
+        trans[i++] = '>';
+    } else {
+        trans[i++] = c;
+    }
+    trans[i++] = '\0';
+
+    return trans;
 }
 
 static gboolean map_delete_by_lhs(const char *lhs, int len, char mode)
