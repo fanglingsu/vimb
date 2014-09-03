@@ -39,7 +39,6 @@
 #include "handlers.h"
 #include "map.h"
 #include "js.h"
-#include "normal.h"
 #ifdef FEATURE_AUTOCMD
 #include "autocmd.h"
 #endif
@@ -367,7 +366,7 @@ VbResult ex_keypress(int key)
     } else {
         /* if the key sequence is not complete show the already typed keys in
          * status bar */
-        normal_showcmd(key);
+        map_showcmd(key);
     }
 
     return res;
