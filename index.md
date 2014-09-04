@@ -18,6 +18,12 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+Read HTML from `stdin`
+: Vimb can be started with `-` as URI parameter to read HTML from stdin.
+  ```
+  markdown_py README.md | vimb -
+  ```
+
 Input [CTRL-O](keybindings.html#i_CTRL-O) command
 : Allow to run normal mode command in input mode with `CTRL-O`. This allows to
   yank selected text within form fields by pressing `CTRL-O Y` or to zoom the
