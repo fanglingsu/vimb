@@ -53,7 +53,7 @@ static AuGroup *curgroup = NULL;
 static GSList  *groups = NULL;
 
 static guint get_event_bits(const char *name);
-static AuGroup *get_group(const char *name);
+static GSList *get_group(const char *name);
 static char *get_next_word(char **line);
 static gboolean wildmatch(char *patterns, const char *uri);
 static AuGroup *new_group(const char *name);
@@ -80,7 +80,7 @@ void autocmd_cleanup(void)
  */
 gboolean autocmd_augroup(char *name, gboolean delete)
 {
-    AuGroup *grp;
+    GSList *item;
 
     if (!*name) {
         return false;
@@ -92,11 +92,31 @@ gboolean autocmd_augroup(char *name, gboolean delete)
         return true;
     }
 
+    item = get_group(name);
+
+    /* check if the group is going to be removed */
+    if (delete) {
+        /* group does not exist - so do nothing */
+        if (!item) {
+            return true;
+        }
+        if (curgroup == (AuGroup*)item->data) {
+            /* if the group to delete is the current - switch the the default
+             * group after removing it */
+            curgroup = (AuGroup*)groups->data;
+        }
+
+        /* now remove the group */
+        free_group((AuGroup*)item->data);
+        groups = g_slist_delete_link(groups, item);
+
+        return true;
+    }
+
     /* check if the group does already exists */
-    grp = get_group(name);
-    if (grp) {
+    if (item) {
         /* if the group is found in the known groups use it as current */
-        curgroup = grp;
+        curgroup = (AuGroup*)item->data;
 
         return true;
     }
@@ -120,6 +140,7 @@ gboolean autocmd_add(char *name, gboolean delete)
 {
     guint bits;
     char *parse, *word, *pattern, *excmd;
+    GSList *item;
     AuGroup *grp;
 
     parse = name;
@@ -128,8 +149,10 @@ gboolean autocmd_add(char *name, gboolean delete)
     word = get_next_word(&parse);
     if (word) {
         /* check if the word is a known group name */
-        grp = get_group(word);
-        if (grp) {
+        item = get_group(word);
+        if (item) {
+            grp = (AuGroup*)item->data;
+
             /* group is found - get the next word */
             word = get_next_word(&parse);
         } else {
@@ -243,7 +266,7 @@ gboolean autocmd_run(const char *group, AuEvent event, const char *uri)
 /**
  * Get the augroup by it's name.
  */
-static AuGroup *get_group(const char *name)
+static GSList *get_group(const char *name)
 {
     GSList  *lg;
     AuGroup *grp;
@@ -251,7 +274,7 @@ static AuGroup *get_group(const char *name)
     for (lg = groups; lg; lg = lg->next) {
         grp = lg->data;
         if (!strcmp(grp->name, name)) {
-            return grp;
+            return lg;
         }
     }
 
