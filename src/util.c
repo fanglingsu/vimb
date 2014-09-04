@@ -512,8 +512,6 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
  * *    matches any sequence of characters
  * ?    matches any single character except of /
  * \?   matches a ?
- * .    matches a .
- * ~    matches a ~
  */
 gboolean util_wildmatch(const char *pattern, const char *string)
 {
