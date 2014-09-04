@@ -90,6 +90,7 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
 void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const char *file);
 void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
+static void read_from_stdin(void);
 
 /* functions */
 #ifdef FEATURE_WGET_PROGRESS_BAR
@@ -186,25 +187,9 @@ gboolean vb_load_uri(const Arg *arg)
         path = GET_CHAR("home-page");
     }
 
-    if (strcmp(path, "-") == 0) {
-        /* read content from stdin */
-        GIOChannel *ch = g_io_channel_unix_new(fileno(stdin));
-        gchar *buf = NULL; gsize len; GError *err = NULL;
-        g_io_channel_read_to_end(ch, &buf, &len, &err);
-        g_io_channel_unref(ch);
-        if (err) {
-            g_warning("Error loading from stdin: %s\n", err->message);
-            g_error_free(err);
-            g_free(buf);
-        } else {
-            webkit_web_view_load_string(
-                vb.gui.webview, buf, "text/html", NULL, "(stdin)");
-            g_free(buf);
-            return true;
-        }
-    } else if ((strstr(path, "://") && !strchr(path, ' ')) || !strncmp(path, "about:", 6)) {
-        /* If path contains :// but no space we open it direct. This is required
-         * to use :// also with shortcuts */
+    /* If path contains :// but no space we open it direct. This is required
+     * to use :// also with shortcuts */
+    if ((strstr(path, "://") && !strchr(path, ' ')) || !strncmp(path, "about:", 6)) {
         uri = g_strdup(path);
     } else if (stat(path, &st) == 0) {
         /* check if the path is a file path */
@@ -1414,6 +1399,25 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
     vb_update_statusbar();
 }
 
+static void read_from_stdin(void)
+{
+    /* read content from stdin */
+    GIOChannel *ch = g_io_channel_unix_new(fileno(stdin));
+    gchar *buf     = NULL;
+    GError *err    = NULL;
+    gsize len;
+
+    g_io_channel_read_to_end(ch, &buf, &len, &err);
+    g_io_channel_unref(ch);
+    if (err) {
+        g_warning("Error loading from stdin: %s", err->message);
+        g_error_free(err);
+    } else {
+        webkit_web_view_load_string(vb.gui.webview, buf, "text/html", NULL, "(stdin)");
+    }
+    g_free(buf);
+}
+
 int main(int argc, char *argv[])
 {
     static char *winid = NULL;
@@ -1460,8 +1464,16 @@ int main(int argc, char *argv[])
         ex_run_string(vb.config.autocmd);
     }
 
-    /* command line argument: URL */
-    vb_load_uri(&(Arg){VB_TARGET_CURRENT, argc > 1 ? argv[argc - 1] : NULL});
+    /* open uri given as last argument */
+    if (argc <= 1) {
+        /* open configured home page if no uri was given */
+        vb_load_uri(&(Arg){VB_TARGET_CURRENT, NULL});
+    } else if (!strcmp(argv[argc - 1], "-")) {
+        /* read from stdin if uri is - */
+        read_from_stdin();
+    } else {
+        vb_load_uri(&(Arg){VB_TARGET_CURRENT, argv[argc - 1]});
+    }
 
     /* Run the main GTK+ event loop */
     gtk_main();
