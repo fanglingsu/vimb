@@ -25,9 +25,9 @@
 #include "util.h"
 
 typedef struct {
-    guint bits;
-    char *excmd;
-    char *pattern;
+    guint bits;     /* the bits identify the events the command applies to */
+    char *excmd;    /* ex command string to be run on matches event */
+    char *pattern;  /* list of patterns the uri is matched agains */
 } AutoCmd;
 
 typedef struct {
@@ -50,10 +50,12 @@ static struct {
 extern VbCore vb;
 
 static AuGroup *curgroup = NULL;
-static GSList  *groups = NULL;
+static GSList  *groups   = NULL;
+static guint   usedbits  = 0;       /* holds all used event bits */
 
-static guint get_event_bits(const char *name);
 static GSList *get_group(const char *name);
+static guint get_event_bits(const char *name);
+static void rebuild_used_bits(void);
 static char *get_next_word(char **line);
 static gboolean wildmatch(char *patterns, const char *uri);
 static AuGroup *new_group(const char *name);
@@ -109,6 +111,9 @@ gboolean autocmd_augroup(char *name, gboolean delete)
         /* now remove the group */
         free_group((AuGroup*)item->data);
         groups = g_slist_delete_link(groups, item);
+
+        /* there where autocmds remove - so recreate the usedbits */
+        rebuild_used_bits();
 
         return true;
     }
@@ -185,6 +190,7 @@ gboolean autocmd_add(char *name, gboolean delete)
     if (delete) {
         GSList *lc;
         AutoCmd *cmd;
+        gboolean removed = false;
 
         /* check if the group does already exists */
         for (lc = grp->cmds; lc; lc = lc->next) {
@@ -204,6 +210,13 @@ gboolean autocmd_add(char *name, gboolean delete)
             /* if the command has no matching events - remove it */
             grp->cmds = g_slist_delete_link(grp->cmds, lc);
             free_autocmd(cmd);
+
+            removed = true;
+        }
+
+        /* if ther was at least one command removed - rebuilt the used bits */
+        if (removed) {
+            rebuild_used_bits();
         }
 
         return true;
@@ -216,6 +229,9 @@ gboolean autocmd_add(char *name, gboolean delete)
 
         /* add the new autocmd to the group */
         grp->cmds = g_slist_append(grp->cmds, cmd);
+
+        /* merge the autocmd bits into the used bits */
+        usedbits |= cmd->bits;
     }
 
     return true;
@@ -230,6 +246,11 @@ gboolean autocmd_run(const char *group, AuEvent event, const char *uri)
     AuGroup *grp;
     AutoCmd *cmd;
     guint bits = events[event].bits;
+
+    /* if there is no autocmd for this event - skip here */
+    if (!(usedbits & bits)) {
+        return true;
+    }
 
     /* don't record commands in history runed by autocmd */
     vb.state.enable_history = false;
@@ -320,6 +341,28 @@ static guint get_event_bits(const char *name)
     }
 
     return result;
+}
+
+/**
+ * Rebuild the usedbits from scratch.
+ * Save all used autocmd event bits in the bitmap.
+ */
+static void rebuild_used_bits(void)
+{
+    GSList *lc, *lg;
+    AuGroup *grp;
+
+    /* clear the current set bits */
+    usedbits = 0;
+    /* loop over the groups */
+    for (lg = groups; lg; lg = lg->next) {
+        grp = (AuGroup*)lg->data;
+
+        /* merge the used event bints into the bitmap */
+        for (lc = grp->cmds; lc; lc = lc->next) {
+            usedbits |= ((AutoCmd*)lc->data)->bits;
+        }
+    }
 }
 
 /**
