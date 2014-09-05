@@ -542,8 +542,13 @@ gboolean util_wildmatch(const char *pattern, const char *string)
                 break;
 
             case '*':
+                /* easiest case - the '*' ist the last char in pattern - this
+                 * will always match */
+                if (*(p + 1) == '\0') {
+                    return true;
+                }
                 /* Try to match as much as possible. Try to match the complete
-                 * uri, if that fails move forward in uri and chack for a
+                 * uri, if that fails move forward in uri and check for a
                  * match. */
                 i = strlen(s);
                 while (i >= 0 && !util_wildmatch(p + 1, s + i)) {
