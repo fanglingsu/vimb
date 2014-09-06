@@ -28,6 +28,9 @@
 
 extern VbCore vb;
 
+static int match_list(const char *pattern, const char *subject);
+
+
 char *util_get_config_dir(void)
 {
     char *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
@@ -509,78 +512,148 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
 
 /**
  * Compares given string against also given pattern.
- * *    matches any sequence of characters
- * ?    matches any single character except of /
- * \?   matches a ?
+ *
+ * *         Matches any sequence of characters.
+ * ?         Matches any single character except of '/'.
+ * {foo,bar} Matches foo or bar - '{', ',' and '}' within this pattern must be
+ *           escaped by '\'. '*' and '?' have no special meaning within the
+ *           curly braces.
+ * *?{}      these chars must always be escaped by '\' to match them literally
  */
-gboolean util_wildmatch(const char *pattern, const char *string)
+gboolean util_wildmatch(const char *pattern, const char *subject)
 {
     int i;
-    char ul, pl;
-    const char *p, *s;
+    char sl, pl;
 
-    p = pattern;
-    s = string;
-
-    while (*p) {
-        switch (*p) {
+    while (*pattern) {
+        switch (*pattern) {
             case '?':
-                /* match single char except of / or end */
-                if (*s == '/' || !*s) {
+                /* '?' matches a single char except of / and subject end */
+                if (*subject == '/' || !*subject) {
                     return false;
-                }
-                break;
-
-            case '\\':
-                /* \ escapes next * or ? char */
-                if (*(p + 1) == '*' || *(p + 1) == '?') {
-                    p++;
-                    if (*p != *s) {
-                        return false;
-                    }
                 }
                 break;
 
             case '*':
                 /* easiest case - the '*' ist the last char in pattern - this
                  * will always match */
-                if (*(p + 1) == '\0') {
+                if (!pattern[1]) {
                     return true;
                 }
                 /* Try to match as much as possible. Try to match the complete
                  * uri, if that fails move forward in uri and check for a
                  * match. */
-                i = strlen(s);
-                while (i >= 0 && !util_wildmatch(p + 1, s + i)) {
+                i = strlen(subject);
+                while (i >= 0 && !util_wildmatch(pattern + 1, subject + i)) {
                     i--;
                 }
                 return i >= 0;
 
-            default:
-                ul = *s;
-                if (VB_IS_UPPER(ul)) {
-                    ul += 'a' - 'A';
+            case '}':
+                /* spurious '}' in pattern */
+                return false;
+
+            case '{':
+                /* possible {foo,bar} pattern */
+                return match_list(pattern, subject);
+
+            case '\\':
+                /* '\' escapes next special char */
+                if (strchr("*?{}", pattern[1])) {
+                    pattern++;
+                    if (*pattern != *subject) {
+                        return false;
+                    }
                 }
-                pl = *p;
+                break;
+
+            default:
+                /* compare case insensitive */
+                sl = *subject;
+                if (VB_IS_UPPER(sl)) {
+                    sl += 'a' - 'A';
+                }
+                pl = *pattern;
                 if (VB_IS_UPPER(pl)) {
                     pl += 'a' - 'A';
                 }
-                if (ul != pl) {
+                if (sl != pl) {
                     return false;
                 }
                 break;
         }
-        p++;
-        s++;
+        /* do another loop run with next pattern and subject char */
+        pattern++;
+        subject++;
     }
 
-    /* if there is uri left on pattern end - this is no match */
-    if (!*p) {
-        return !*s;
-    }
-
-    return false;
+    /* on end of pattern only a also ended subject is a match */
+    return !*subject;
 }
+
+static int match_list(const char *pattern, const char *subject)
+{
+    const char *end, *s;
+
+    /* finde the next none escaped '}' */
+    for (end = pattern; *end && *end != '}'; end++) {
+        /* if escape char - move pointer one additional step */
+        if (*end == '\\') {
+            end++;
+        }
+    }
+
+    if (!*end) {
+        /* unterminated '{' in pattern */
+        return false;
+    }
+
+    s = subject;
+    end++;      /* skip over } */
+    pattern++;  /* skip over { */
+    while (true) {
+        switch (*pattern) {
+            case ',':
+                if (util_wildmatch(end, s)) {
+                    return true;
+                }
+                s = subject;
+                pattern++;
+                break;
+
+            case '}':
+                return util_wildmatch(end, s);
+
+            case '\\':
+                if (pattern[1] == ',' || pattern[1] == '}' || pattern[1] == '{') {
+                    pattern += 1;
+                }
+                /* fall through */
+
+            default:
+                if (*pattern == *s) {
+                    pattern++;
+                    s++;
+                } else {
+                    /* this item of the list does not match - move forward to
+                     * the next none escaped ',' or '}' */
+                    s = subject;
+                    while (*pattern != ',' && *pattern != '}') {
+                        /* if escape char is found - skip next char */
+                        if (*pattern == '\\') {
+                            pattern++;
+                        }
+                        pattern++;
+                    }
+                    /* found ',' skip over it to check the next list item */
+                    if (*pattern == ',') {
+                        pattern++;
+                    }
+                }
+        }
+    }
+}
+
 
 /**
  * Fills the given list store by matching data of also given src list.
