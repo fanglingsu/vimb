@@ -648,17 +648,13 @@ static gboolean match_list(const char *pattern, int patlen, const char *subject)
     int endlen;
     const char *end, *s;
 
-    end    = pattern;
-    endlen = patlen;
     /* finde the next none escaped '}' */
-    while (endlen > 0 && *end != '}') {
+    for (end = pattern, endlen = patlen; endlen > 0 && *end != '}'; end++, endlen--) {
         /* if escape char - move pointer one additional step */
         if (*end == '\\') {
             end++;
             endlen--;
         }
-        end++;
-        endlen--;
     }
 
     if (!*end) {
@@ -701,14 +697,12 @@ static gboolean match_list(const char *pattern, int patlen, const char *subject)
                     /* this item of the list does not match - move forward to
                      * the next none escaped ',' or '}' */
                     s = subject;
-                    while (*pattern != ',' && *pattern != '}') {
+                    for (s = subject; *pattern != ',' && *pattern != '}'; pattern++, patlen--) {
                         /* if escape char is found - skip next char */
                         if (*pattern == '\\') {
                             pattern++;
                             patlen--;
                         }
-                        pattern++;
-                        patlen--;
                     }
                     /* found ',' skip over it to check the next list item */
                     if (*pattern == ',') {
