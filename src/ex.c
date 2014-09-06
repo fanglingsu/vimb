@@ -128,8 +128,10 @@ static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static gboolean execute(const ExArg *arg);
 
+#ifdef FEATURE_AUTOCMD
 static gboolean ex_augroup(const ExArg *arg);
 static gboolean ex_autocmd(const ExArg *arg);
+#endif
 static gboolean ex_bookmark(const ExArg *arg);
 static gboolean ex_eval(const ExArg *arg);
 static gboolean ex_hardcopy(const ExArg *arg);
