@@ -169,6 +169,7 @@ static void test_wildmatch_questionmark(void)
 
     g_assert_false(util_wildmatch("foo\\?bar", "foorbar"));
     g_assert_false(util_wildmatch("?", ""));
+    g_assert_false(util_wildmatch("b??r", "bar"));
 }
 
 static void test_wildmatch_wildcard(void)
@@ -181,8 +182,13 @@ static void test_wildmatch_wildcard(void)
     g_assert_true(util_wildmatch("match\\*", "match*"));
     g_assert_true(util_wildmatch("do * match", "do a infix match"));
     g_assert_true(util_wildmatch("*://*.io/*", "http://fanglingsu.github.io/vimb/"));
+    /* multiple * should act like a single one */
+    g_assert_true(util_wildmatch("**", ""));
+    g_assert_true(util_wildmatch("match **", "Match as much as possible"));
+    g_assert_true(util_wildmatch("f***u", "fu"));
 
     g_assert_false(util_wildmatch("match\\*", "match fail"));
+    g_assert_false(util_wildmatch("f***u", "full"));
 }
 
 int main(int argc, char *argv[])
