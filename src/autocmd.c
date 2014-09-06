@@ -57,7 +57,6 @@ static GSList *get_group(const char *name);
 static guint get_event_bits(const char *name);
 static void rebuild_used_bits(void);
 static char *get_next_word(char **line);
-static gboolean wildmatch(char *patterns, const char *uri);
 static AuGroup *new_group(const char *name);
 static void free_group(AuGroup *group);
 static AutoCmd *new_autocmd(const char *excmd, const char *pattern);
@@ -201,7 +200,7 @@ gboolean autocmd_add(char *name, gboolean delete)
             }
             /* skip if pattern does not match - we check the pattern against
              * another pattern */
-            if (!wildmatch(pattern, cmd->pattern)) {
+            if (!util_wildmatch_multi(pattern, cmd->pattern)) {
                 continue;
             }
             /* remove the bits from the item */
@@ -271,7 +270,7 @@ gboolean autocmd_run(const char *group, AuEvent event, const char *uri)
             }
             /* check pattern only if uri was given */
             /* skip if pattern does not match */
-            if (uri && !wildmatch(cmd->pattern, uri)) {
+            if (uri && !util_wildmatch_multi(cmd->pattern, uri)) {
                 continue;
             }
             /* run the command */
@@ -396,36 +395,6 @@ static char *get_next_word(char **line)
     }
 
     return word;
-}
-
-/**
- * Check if given uri matches one of the patterns given as comma separated
- * string.
- */
-static gboolean wildmatch(char *patterns, const char *uri)
-{
-    char *cur, *start;
-    gboolean matched;
-
-    for (cur = start = patterns; *cur; cur++) {
-        /* iterate through the patterns until the next ',' */
-        if (*cur == ',') {
-            *cur    = '\0';
-            matched = util_wildmatch(start, uri);
-            *cur    = ',';
-
-            /* return if the first match is found */
-            if (matched) {
-                return true;
-            }
-
-            /* set the start right after the ',' */
-            start = cur + 1;
-        }
-    }
-
-    /* still no match found - check the last pattern */
-    return util_wildmatch(start, uri);
 }
 
 static AuGroup *new_group(const char *name)

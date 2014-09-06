@@ -248,6 +248,23 @@ static void test_wildmatch_complete(void)
     g_assert_true(util_wildmatch("http{s,}://{fanglingsu.,}github.{io,com}/*vimb/", "https://github.com/fanglingsu/vimb/"));
 }
 
+static void test_wildmatch_multi(void)
+{
+    /* check if sinlge pattern matching works */
+    g_assert_true(util_wildmatch_multi("", ""));
+    g_assert_true(util_wildmatch_multi("single", "single"));
+    g_assert_true(util_wildmatch_multi("s*e", "single"));
+
+    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "foo"));
+    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "bar"));
+    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "bor"));
+    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "br"));
+    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "baz"));
+    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "bat"));
+
+    g_assert_false(util_wildmatch_multi("foo,b{a,o,}r,ba?", "foo,"));
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
@@ -264,6 +281,7 @@ int main(int argc, char *argv[])
     g_test_add_func("/test-util/wildmatch-wildcard", test_wildmatch_wildcard);
     g_test_add_func("/test-util/wildmatch-curlybraces", test_wildmatch_curlybraces);
     g_test_add_func("/test-util/wildmatch-complete", test_wildmatch_complete);
+    g_test_add_func("/test-util/wildmatch-multi", test_wildmatch_multi);
 
     return g_test_run();
 }
