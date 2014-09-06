@@ -145,7 +145,7 @@ gboolean autocmd_add(char *name, gboolean delete)
     guint bits;
     char *parse, *word, *pattern, *excmd;
     GSList *item;
-    AuGroup *grp;
+    AuGroup *grp = NULL;
 
     parse = name;
 
@@ -222,7 +222,7 @@ gboolean autocmd_add(char *name, gboolean delete)
     }
 
     /* add the new autocmd */
-    if (excmd) {
+    if (excmd && grp) {
         AutoCmd *cmd = new_autocmd(excmd, pattern);
         cmd->bits    = bits;
 
