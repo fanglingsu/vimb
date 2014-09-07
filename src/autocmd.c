@@ -242,7 +242,7 @@ gboolean autocmd_add(char *name, gboolean delete)
 /**
  * Run named auto command.
  */
-gboolean autocmd_run(const char *group, AuEvent event, const char *uri)
+gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
 {
     GSList  *lg, *lc;
     AuGroup *grp;

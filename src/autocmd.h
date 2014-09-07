@@ -42,7 +42,7 @@ void autocmd_init(void);
 void autocmd_cleanup(void);
 gboolean autocmd_augroup(char *name, gboolean delete);
 gboolean autocmd_add(char *name, gboolean delete);
-gboolean autocmd_run(const char *group, AuEvent event, const char *uri);
+gboolean autocmd_run(AuEvent event, const char *uri, const char *group);
 
 #endif /* end of include guard: _AUTOCMD_H */
 #endif
