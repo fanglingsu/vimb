@@ -2,6 +2,14 @@
 .\" Process this file with
 .\" groff -man -Tutf8 vimb.1
 .TH vimb 1 "DATE" "vimb/VERSION" "Vimb Manual"
+.de EX
+.nf
+.ft CW
+..
+.de EE
+.ft R
+.fi
+..
 .SH NAME
 vimb - Vim Browser - A modal web browser based on webkit, inspired by vim the
 great editor.
@@ -592,6 +600,118 @@ queue.
 .TP
 .B :qc[lear]
 Removes all entries from queue.
+.SS Automatic commands
+An autocommand is a command that is executed automatically in response to some
+event, such as a URI being opened. Autocommands are very powerful. Use them
+with care and they will help you avoid typing many commands.
+.PP
+Note: The ":autocmd" command cannot be followed by another command, since
+any '|' is considered part of the command.
+.RS 0
+.TP
+Autocommands are built with following properties.
+.TP
+.I group
+When the [\fIgroup\fP] argument is not given, Vimb uses the current group as
+defined with ':augroup', otherwise, vimb uses the group defined with
+[\fIgroup\fP]. Groups are useful to remove multiple grouped autocommands.
+.TP
+.I event
+You can specify a comma separated list of event names. No white space can be
+used in this list.
+.RS
+.PP
+.PD 0
+Events:
+.TP
+.B LoadProvisional
+Fired if a new page is going to opened. No data has been received yet, the load
+may still fail for transport issues. Out of this reason this event has no
+associated URL to match.
+.TP
+.B LoadCommited
+Fired if first data chunk has arrived, meaning that the necessary transport
+requirements are stabilished, and the load is being performed. This is the
+right event to toggle content related setting like 'scripts', 'plugins' and
+such things.
+.TP
+.B LoadFirstLayout
+fired if the first layout with actual visible content is shown.
+.TP
+.B LoadFinished
+Fires when everything that was required to display on the page has been loaded.
+.PD
+.TP
+.B LoadFailed
+Fired when some error occurred during the page load that prevented it from
+being completed.
+.RE
+.TP
+.I pat
+Comma separated list of patterns, matches in order to check if a autocommand
+applies to the URI associated to an event. To use ',' within the single
+patterns this must be escaped as '\[char92],'.
+.RS
+.PP
+.PD 0
+Patterns:
+.IP "\fB*\fP"
+Matches any sequence of characters. This includes also '/' in contrast to
+shell patterns.
+.IP "\fB?\fP"
+Matches any single character except of '/'.
+.IP "\fB{one,two}\fP"
+Matches 'one' or 'two'. Any '{', ',' and '}' within this pattern must be
+escaped by a '\'. '*' and '?' have no special meaning within the curly braces.
+.IP "\fB\[char92]\fP"
+Use backslash to escape the special meaning of '?*{},' in the pattern or
+pattern list.
+.PD
+.RE
+.TP
+.I cmd
+Any ex command vimb understands. The leading ':' is not required. Multiple
+commands can be separated by '|'.
+.TP
+.BI ":au[tocmd] [" group "] {" event "} {" pat "} {" cmd "}"
+Add \fIcmd\fP to the list of commands that vimb will execute automatically on
+\fIevent\fP for a URI matching \fIpat\fP autocmd-patterns. Vimb always adds
+the \fIcmd\fP after existing autocommands, so that the autocommands are
+executed in the order in which they were given.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "} {" pat "} {" cmd "}"
+Remove all autocommands associated with \fIevent\fP and which pattern match
+\fIpat\fP, and add the command \fIcmd\fP. Note that the pattern is not matches
+literally to find autocommands to remove, like vim does. Vimb matches the
+autocommand pattern with \fIpat\fP.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "} {" pat "}"
+Remove all autocommands associated with \fIevent\fP and which pattern matches
+\fIpat\fP.
+.TP
+.BI ":au[tocmd]! [" group "] * {" pat "}"
+Remove all autocommands with patterns matching \fIpat\fP for all events.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "}"
+Remove all autocommands for \fIevent\fP.
+.TP
+.BI ":au[tocmd]! [" group "]"
+Remove all autocommands.
+.TP
+.BI ":aug[roup] {" name "}"
+Define the autocmd group \fIname\fP for the following ":autocmd" commands. The name
+"end" selects the default group.
+.TP
+.BI ":aug[roup]! {" name "}"
+Delete the autocmd group \fIname\fP.
+.TP
+Example
+.EX
+:augroup github
+:    autocmd LoadCommited * set scripts=off|set cookie-accept=never
+:    autocmd LoadCommited http{s,}://github.com/* set scripts=on|set cookie-accept=origin
+:augroup end
+.EE
 .SS Misc
 .TP
 .BI ":sh[ellcmd] " CMD
