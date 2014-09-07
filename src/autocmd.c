@@ -39,12 +39,15 @@ static struct {
     const char *name;
     guint      bits;
 } events[] = {
-    {"*",               0x001f},
-    {"LoadProvisional", 0x0001},
-    {"LoadCommited",    0x0002},
-    {"LoadFirstLayout", 0x0004},
-    {"LoadFinished",    0x0008},
-    {"LoadFailed",      0x0010},
+    {"*",                0x00ff},
+    {"LoadProvisional",  0x0001},
+    {"LoadCommited",     0x0002},
+    {"LoadFirstLayout",  0x0004},
+    {"LoadFinished",     0x0008},
+    {"LoadFailed",       0x0010},
+    {"DownloadStart",    0x0020},
+    {"DownloadFinished", 0x0040},
+    {"DownloadFailed",   0x0080},
 };
 
 extern VbCore vb;

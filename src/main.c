@@ -1284,6 +1284,9 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
         file = util_build_path(path, vb.config.download_dir);
     }
 
+#ifdef FEATURE_AUTOCMD
+    autocmd_run(NULL, AU_DOWNLOAD_START, webkit_download_get_uri(download));
+#endif
     if (use_external && *download_cmd) {
         /* run download with external program */
         vb_download_external(view, download, file);
@@ -1411,8 +1414,14 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
         file += 7;
     }
     if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
+#ifdef FEATURE_AUTOCMD
+        autocmd_run(NULL, AU_DOWNLOAD_FAILED, webkit_download_get_uri(download));
+#endif
         vb_echo(VB_MSG_ERROR, false, "Error downloading %s", file);
     } else {
+#ifdef FEATURE_AUTOCMD
+        autocmd_run(NULL, AU_DOWNLOAD_FINISHED, webkit_download_get_uri(download));
+#endif
         vb_echo(VB_MSG_NORMAL, false, "Download %s finished", file);
     }
 

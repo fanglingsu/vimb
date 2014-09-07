@@ -631,7 +631,7 @@ associated URL to match.
 .TP
 .B LoadCommited
 Fired if first data chunk has arrived, meaning that the necessary transport
-requirements are stabilished, and the load is being performed. This is the
+requirements are established, and the load is being performed. This is the
 right event to toggle content related setting like 'scripts', 'plugins' and
 such things.
 .TP
@@ -640,11 +640,23 @@ fired if the first layout with actual visible content is shown.
 .TP
 .B LoadFinished
 Fires when everything that was required to display on the page has been loaded.
-.PD
 .TP
 .B LoadFailed
 Fired when some error occurred during the page load that prevented it from
 being completed.
+.TP
+.B DownloadStart
+Fired right before a download is started. This is fired for vimb downloads as
+well as external downloads if 'download-use-external' is enabled.
+.TP
+.B DownloadFinished
+Fired if a vimb managed download is finished. For external download this event
+is not available.
+.TP
+.B DownloadFailed
+Fired if a vimb managed download failed. For external download this event
+is not available.
+.PD
 .RE
 .TP
 .I pat

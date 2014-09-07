@@ -33,6 +33,9 @@ typedef enum {
     AU_PAGE_LOAD_FIRST_LAYOUT,
     AU_PAGE_LOAD_FINISHED,
     AU_PAGE_LOAD_FAILED,
+    AU_DOWNLOAD_START,
+    AU_DOWNLOAD_FINISHED,
+    AU_DOWNLOAD_FAILED,
 } AuEvent;
 
 void autocmd_init(void);
