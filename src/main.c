@@ -512,7 +512,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
     switch (webkit_web_view_get_load_status(view)) {
         case WEBKIT_LOAD_PROVISIONAL:
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(AU_PAGE_LOAD_PROVISIONAL, NULL, NULL);
+            autocmd_run(AU_LOAD_PROVISIONAL, NULL, NULL);
 #endif
             /* update load progress in statusbar */
             vb.state.progress = 0;
@@ -523,7 +523,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
         case WEBKIT_LOAD_COMMITTED:
             uri = webkit_web_view_get_uri(view);
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(AU_PAGE_LOAD_COMMITED, uri, NULL);
+            autocmd_run(AU_LOAD_COMMITED, uri, NULL);
 #endif
             {
                 WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
@@ -561,7 +561,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
 #ifdef FEATURE_AUTOCMD
             uri = webkit_web_view_get_uri(view);
-            autocmd_run(AU_PAGE_LOAD_FIRST_LAYOUT, uri, NULL);
+            autocmd_run(AU_LOAD_FIRST_LAYOUT, uri, NULL);
 #endif
             /* if we load a page from a submitted form, leave the insert mode */
             if (vb.mode->id == 'i') {
@@ -572,7 +572,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
         case WEBKIT_LOAD_FINISHED:
             uri = webkit_web_view_get_uri(view);
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(AU_PAGE_LOAD_FINISHED, uri, NULL);
+            autocmd_run(AU_LOAD_FINISHED, uri, NULL);
 #endif
             /* update load progress in statusbar */
             vb.state.progress = 100;
@@ -588,7 +588,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
         case WEBKIT_LOAD_FAILED:
 #ifdef FEATURE_AUTOCMD
             uri = webkit_web_view_get_uri(view);
-            autocmd_run(AU_PAGE_LOAD_FAILED, uri, NULL);
+            autocmd_run(AU_LOAD_FAILED, uri, NULL);
 #endif
             break;
     }
