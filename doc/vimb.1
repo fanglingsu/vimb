@@ -260,7 +260,8 @@ Exits Hints mode without selecting an element
 .PD
 .RE
 .TP
-Hint modes:
+.B Hint modes:
+.RS
 .PD 0
 .TP
 .B f
@@ -315,6 +316,7 @@ Yank hint's destination location into primary and secondary clipboard.
 Yank hint's text description or form text into primary and secondary
 clipboard.
 .PD
+.RE
 .TP
 .BI Syntax: " g;{mode}{hint}"
 Start an extended hints mode and stay there until <Esc> is pressed. Like the
@@ -459,7 +461,7 @@ command applies. The result, including \fIrhs\fP, is then further scanned for
 mappings. This allows for nested and recursive use of mappings.
 .RS
 .P
-Example:
+Examples:
 .PD 0
 .IP ":cmap <C-G>h /home/user/downloads/"
 Adds a keybind to insert a file path into the input box. This could be useful
@@ -716,13 +718,13 @@ Define the autocmd group \fIname\fP for the following ":autocmd" commands. The n
 .TP
 .BI ":aug[roup]! {" name "}"
 Delete the autocmd group \fIname\fP.
-.TP
+.PP
 Example
 .EX
-:augroup github
-:    autocmd LoadCommited * set scripts=off|set cookie-accept=never
-:    autocmd LoadCommited http{s,}://github.com/* set scripts=on|set cookie-accept=origin
-:augroup end
+:aug github
+:  au LoadCommited * set scripts=off|set cookie-accept=never
+:  au LoadCommited http{s,}://github.com/* set scripts=on
+:aug end
 .EE
 .SS Misc
 .TP
@@ -762,10 +764,8 @@ Example: :eval document.cookie
 Execute normal mode commands \fICMDS\fP. This makes it possible to execute
 normal mode commands typed on the input box. If the \fI!\fP is given, mappings
 will not be used.
-
 \fICMDS\fP cannot start with a space. Put a count of 1 (one) before it, "1 "
 is one space.
-
 This comman cannot be followed by antoher command, since any '|' is considered
 part of the command.
 
@@ -829,9 +829,13 @@ The history of URIs is shown for the `:open ` and `:tabopen ` commands. This
 completion looks up for every given word in the history URI and titles. Only
 those history items are shown, where the title or URI contains all tags.
 
-Example:
-":open foo bar<Tab>" will complete only URIs that contain the words foo and
-bar.
+Example
+.RS
+.PD 0
+.IP ":open foo bar<Tab>"
+will complete only URIs that contain the words foo and bar.
+.PD
+.RE
 .TP
 .B bookmarks
 The bookmark completion is similar to the history completion, but does match
@@ -839,9 +843,14 @@ only the tags of the bookmarks. The bookmark completion ist started by `:open
 \fB!\fP` or `:tabopen \fB!\fP` and does a prefix search for all given words in
 the bookmark tags.
 
-Example:
-":open \fB!\fPfoo ba" will match all bookmark that have the tags "foo" or
-"foot" and tags starting with "ba" like "ball".
+Example
+.RS
+.PD 0
+.IP ":open \fB!\fPfoo ba"
+will match all bookmark that have the tags "foo" or "foot" and tags starting
+with "ba" like "ball".
+.PD
+.RE
 .TP
 .B boomark tags
 The boomark tag completion allows to insert already used bookmarks for the
@@ -1122,10 +1131,11 @@ start by the `:save' command or the `;s' hinting.
 Indicates if the proxy is enabled in vimb. If enable this variable is `1',
 otherwise `0'. Note that this variable gives no hint if the proxy settings
 apply to the URL to be downloaded, only if proxy is enabled in general.
+
+.PP
+Example
+.IP ":set download-command=/bin/sh -c \[char34]wget -c %s -O $VIMB_FILE --load-cookies $VIMB_COOKIES\[char34]"
 .PD
-.P
-Example: :set download-command=/bin/sh -c "wget -c %s -O $VIMB_FILE
---load-cookies $VIMB_COOKIES"
 .RE
 .TP
 .B download-path (string)
@@ -1156,7 +1166,7 @@ value.
 To use '=' within a header value the value must be quoted like shown in
 Example for the Cookie header.
 .RS
-.P
+.PP
 Example:
 .PD 0
 .IP ":set header=DNT=1,User-Agent,Cookie='name=value'"
