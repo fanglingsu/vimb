@@ -507,12 +507,12 @@ static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec)
 
 static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 {
-    const char *uri = webkit_web_view_get_uri(view);
+    const char *uri;
 
     switch (webkit_web_view_get_load_status(view)) {
         case WEBKIT_LOAD_PROVISIONAL:
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(NULL, AU_PAGE_LOAD_PROVISIONAL, uri);
+            autocmd_run(NULL, AU_PAGE_LOAD_PROVISIONAL, NULL);
 #endif
             /* update load progress in statusbar */
             vb.state.progress = 0;
@@ -521,6 +521,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_COMMITTED:
+            uri = webkit_web_view_get_uri(view);
 #ifdef FEATURE_AUTOCMD
             autocmd_run(NULL, AU_PAGE_LOAD_COMMITED, uri);
 #endif
@@ -559,6 +560,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
 #ifdef FEATURE_AUTOCMD
+            uri = webkit_web_view_get_uri(view);
             autocmd_run(NULL, AU_PAGE_LOAD_FIRST_LAYOUT, uri);
 #endif
             /* if we load a page from a submitted form, leave the insert mode */
@@ -568,6 +570,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FINISHED:
+            uri = webkit_web_view_get_uri(view);
 #ifdef FEATURE_AUTOCMD
             autocmd_run(NULL, AU_PAGE_LOAD_FINISHED, uri);
 #endif
@@ -584,6 +587,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_FAILED:
 #ifdef FEATURE_AUTOCMD
+            uri = webkit_web_view_get_uri(view);
             autocmd_run(NULL, AU_PAGE_LOAD_FAILED, uri);
 #endif
             break;
