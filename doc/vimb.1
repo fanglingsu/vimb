@@ -1279,44 +1279,54 @@ This fills the inputbox with the prefilled download command and replaces
 .RE
 .SH FILES
 .TP
-.B $XDG_CONFIG_HOME/vimb/config
+.I $XDG_CONFIG_HOME/vimb/
+Default directory for configuration data.
+.PP
+.RS
+.PD 0
+.TP
+.I config
 Configuration file to set webkit setting, some GUI styles and keybindings.
 .TP
-.B $XDG_CONFIG_HOME/vimb/cookies
+.I cookies
 Cookie store file.
 .TP
-.B $XDG_CONFIG_HOME/vimb/closed
+.I closed
 Holds the URI of the last closed browser window.
 .TP
-.B $XDG_CONFIG_HOME/vimb/history
+.I history
 This file holds the history of unique opened URIs.
 .TP
-.B $XDG_CONFIG_HOME/vimb/command
+.I command
 This file holds the history of commands and search queries performed via input
 box.
 .TP
-.B $XDG_CONFIG_HOME/vimb/search
+.I search
 This file holds the history of search queries.
 .TP
-.B $XDG_CONFIG_HOME/vimb/bookmark
+.I bookmark
 Holds the bookmarks saved with command `bma'.
 .TP
-.B $XDG_CONFIG_HOME/vimb/queue
+.I queue
 Holds the read it later queue filled by `qpush' if
 vimb has been compiled with QUEUE feature.
 .TP
-.B $XDG_CONFIG_HOME/vimb/hsts
+.I hsts
 Holds the known hsts hosts if vimb is compiled with HTTP strict transport
 security feature.
 .TP
-.B $XDG_CONFIG_HOME/vimb/scripts.js
+.I scripts.js
 This file can be used to run user scripts, that are injected into every paged
 that is opened.
 .TP
-.B $XDG_CONFIG_HOME/vimb/style.css
+.I style.css
 File for userdefined css styles. These file is used if the config variable
 `stylesheet' is enabled.
+.PD
 .RE
+.TP
+.I $XDG_CACHE_HOME/vimb/
+Default directory for cache data.
 .SH ENVIRONMENT
 .TP
 .B VIMB_URI
