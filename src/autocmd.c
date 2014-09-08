@@ -23,6 +23,7 @@
 #include "ascii.h"
 #include "ex.h"
 #include "util.h"
+#include "completion.h"
 
 typedef struct {
     guint bits;     /* the bits identify the events the command applies to */
@@ -284,6 +285,59 @@ gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
     vb.state.enable_history = true;
 
     return true;
+}
+
+gboolean autocmd_fill_group_completion(GtkListStore *store, const char *input)
+{
+    GSList *lg;
+    gboolean found = false;
+    GtkTreeIter iter;
+
+    if (!input || !*input) {
+        for (lg = groups; lg; lg = lg->next) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, ((AuGroup*)lg->data)->name, -1);
+            found = true;
+        }
+    } else {
+        for (lg = groups; lg; lg = lg->next) {
+            char *value = ((AuGroup*)lg->data)->name;
+            if (g_str_has_prefix(value, input)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, value, -1);
+                found = true;
+            }
+        }
+    }
+
+    return found;
+}
+
+gboolean autocmd_fill_event_completion(GtkListStore *store, const char *input)
+{
+    int i;
+    const char *value;
+    gboolean found = false;
+    GtkTreeIter iter;
+
+    if (!input || !*input) {
+        for (i = 0; i < LENGTH(events); i++) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, events[i].name, -1);
+            found = true;
+        }
+    } else {
+        for (i = 0; i < LENGTH(events); i++) {
+            value = events[i].name;
+            if (g_str_has_prefix(value, input)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, value, -1);
+                found = true;
+            }
+        }
+    }
+
+    return found;
 }
 
 /**

@@ -43,6 +43,8 @@ void autocmd_cleanup(void);
 gboolean autocmd_augroup(char *name, gboolean delete);
 gboolean autocmd_add(char *name, gboolean delete);
 gboolean autocmd_run(AuEvent event, const char *uri, const char *group);
+gboolean autocmd_fill_group_completion(GtkListStore *store, const char *input);
+gboolean autocmd_fill_event_completion(GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _AUTOCMD_H */
 #endif
