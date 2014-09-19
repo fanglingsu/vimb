@@ -64,6 +64,7 @@ static int pagecache(const char *name, int type, void *value, void *data);
 static int soup(const char *name, int type, void *value, void *data);
 static int internal(const char *name, int type, void *value, void *data);
 static int input_color(const char *name, int type, void *value, void *data);
+static int statusbar(const char *name, int type, void *value, void *data);
 static int status_color(const char *name, int type, void *value, void *data);
 static int input_font(const char *name, int type, void *value, void *data);
 static int status_font(const char *name, int type, void *value, void *data);
@@ -165,6 +166,7 @@ void setting_init()
     setting_add("strict-focus", TYPE_BOOLEAN, &off, internal, 0, &vb.config.strict_focus);
     i = 40;
     setting_add("scrollstep", TYPE_INTEGER, &i, internal, 0, &vb.config.scrollstep);
+    setting_add("statusbar", TYPE_BOOLEAN, &on, statusbar, 0, NULL);
     setting_add("status-color-bg", TYPE_COLOR, &"#000000", status_color, 0, &vb.style.status_bg[VB_STATUS_NORMAL]);
     setting_add("status-color-fg", TYPE_COLOR, &"#ffffff", status_color, 0, &vb.style.status_fg[VB_STATUS_NORMAL]);
     setting_add("status-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, 0, &vb.style.status_font[VB_STATUS_NORMAL]);
@@ -594,6 +596,13 @@ static int input_color(const char *name, int type, void *value, void *data)
 {
     VB_COLOR_PARSE((VbColor*)data, (char*)value);
     vb_update_input_style();
+
+    return SETTING_OK;
+}
+
+static int statusbar(const char *name, int type, void *value, void *data)
+{
+    gtk_widget_set_visible(GTK_WIDGET(vb.gui.statusbar.box), *(gboolean*)value);
 
     return SETTING_OK;
 }
