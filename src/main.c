@@ -161,6 +161,9 @@ static void input_print(gboolean force, const MessageType type, gboolean hide,
 void vb_set_input_text(const char *text)
 {
     gtk_text_buffer_set_text(vb.gui.buffer, text, -1);
+    if (vb.config.input_autohide) {
+        gtk_widget_set_visible(GTK_WIDGET(vb.gui.input), *text != '\0');
+    }
 }
 
 /**
