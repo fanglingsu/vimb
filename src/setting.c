@@ -63,7 +63,9 @@ static int webkit(const char *name, int type, void *value, void *data);
 static int pagecache(const char *name, int type, void *value, void *data);
 static int soup(const char *name, int type, void *value, void *data);
 static int internal(const char *name, int type, void *value, void *data);
+static int input_autohide(const char *name, int type, void *value, void *data);
 static int input_color(const char *name, int type, void *value, void *data);
+static int statusbar(const char *name, int type, void *value, void *data);
 static int status_color(const char *name, int type, void *value, void *data);
 static int input_font(const char *name, int type, void *value, void *data);
 static int status_font(const char *name, int type, void *value, void *data);
@@ -165,6 +167,7 @@ void setting_init()
     setting_add("strict-focus", TYPE_BOOLEAN, &off, internal, 0, &vb.config.strict_focus);
     i = 40;
     setting_add("scrollstep", TYPE_INTEGER, &i, internal, 0, &vb.config.scrollstep);
+    setting_add("statusbar", TYPE_BOOLEAN, &on, statusbar, 0, NULL);
     setting_add("status-color-bg", TYPE_COLOR, &"#000000", status_color, 0, &vb.style.status_bg[VB_STATUS_NORMAL]);
     setting_add("status-color-fg", TYPE_COLOR, &"#ffffff", status_color, 0, &vb.style.status_fg[VB_STATUS_NORMAL]);
     setting_add("status-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, 0, &vb.style.status_font[VB_STATUS_NORMAL]);
@@ -176,6 +179,7 @@ void setting_init()
     setting_add("status-sslinvalid-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, 0, &vb.style.status_font[VB_STATUS_SSL_INVALID]);
     i = 1000;
     setting_add("timeoutlen", TYPE_INTEGER, &i, internal, 0, &vb.config.timeoutlen);
+    setting_add("input-autohide", TYPE_BOOLEAN, &off, input_autohide, 0, &vb.config.input_autohide);
     setting_add("input-bg-normal", TYPE_COLOR, &"#ffffff", input_color, 0, &vb.style.input_bg[VB_MSG_NORMAL]);
     setting_add("input-bg-error", TYPE_COLOR, &"#ff7777", input_color, 0, &vb.style.input_bg[VB_MSG_ERROR]);
     setting_add("input-fg-normal", TYPE_COLOR, &"#000000", input_color, 0, &vb.style.input_fg[VB_MSG_NORMAL]);
@@ -590,10 +594,38 @@ static int internal(const char *name, int type, void *value, void *data)
     return SETTING_OK;
 }
 
+static int input_autohide(const char *name, int type, void *value, void *data)
+{
+    char *text;
+    /* save selected value in internal variable */
+    *(gboolean*)data = *(gboolean*)value;
+
+    /* if autohide is on and inputbox contains no text - hide it now */
+    if (*(gboolean*)value) {
+        text = vb_get_input_text();
+        if (!*text) {
+            gtk_widget_set_visible(GTK_WIDGET(vb.gui.input), false);
+        }
+        g_free(text);
+    } else {
+        /* autohide is off - make sure the input box is shown */
+        gtk_widget_set_visible(GTK_WIDGET(vb.gui.input), true);
+    }
+
+    return SETTING_OK;
+}
+
 static int input_color(const char *name, int type, void *value, void *data)
 {
     VB_COLOR_PARSE((VbColor*)data, (char*)value);
     vb_update_input_style();
+
+    return SETTING_OK;
+}
+
+static int statusbar(const char *name, int type, void *value, void *data)
+{
+    gtk_widget_set_visible(GTK_WIDGET(vb.gui.statusbar.box), *(gboolean*)value);
 
     return SETTING_OK;
 }

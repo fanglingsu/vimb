@@ -162,6 +162,9 @@ static void input_print(gboolean force, const MessageType type, gboolean hide,
 void vb_set_input_text(const char *text)
 {
     gtk_text_buffer_set_text(vb.gui.buffer, text, -1);
+    if (vb.config.input_autohide) {
+        gtk_widget_set_visible(GTK_WIDGET(vb.gui.input), *text != '\0');
+    }
 }
 
 /**
@@ -291,8 +294,13 @@ static void wget_bar(int len, int progress, char *string)
 void vb_update_statusbar()
 {
     int max, val, num;
-    GString *status = g_string_new("");
+    GString *status;
 
+    if (!gtk_widget_get_visible(GTK_WIDGET(vb.gui.statusbar.box))) {
+        return;
+    }
+
+    status = g_string_new("");
     /* show the active downloads */
     if (vb.state.downloads) {
         num = g_list_length(vb.state.downloads);
