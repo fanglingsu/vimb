@@ -250,19 +250,17 @@ static void test_wildmatch_complete(void)
 
 static void test_wildmatch_multi(void)
 {
-    /* check if sinlge pattern matching works */
-    g_assert_true(util_wildmatch_multi("", ""));
-    g_assert_true(util_wildmatch_multi("single", "single"));
-    g_assert_true(util_wildmatch_multi("s*e", "single"));
+    g_assert_true(util_wildmatch("foo,?", "foo"));
+    g_assert_true(util_wildmatch("foo,?", "f"));
+    g_assert_true(util_wildmatch("foo,b{a,o,}r,ba?", "foo"));
+    g_assert_true(util_wildmatch("foo,b{a,o,}r,ba?", "bar"));
+    g_assert_true(util_wildmatch("foo,b{a,o,}r,ba?", "bor"));
+    g_assert_true(util_wildmatch("foo,b{a,o,}r,ba?", "br"));
+    g_assert_true(util_wildmatch("foo,b{a,o,}r,ba?", "baz"));
+    g_assert_true(util_wildmatch("foo,b{a,o,}r,ba?", "bat"));
 
-    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "foo"));
-    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "bar"));
-    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "bor"));
-    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "br"));
-    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "baz"));
-    g_assert_true(util_wildmatch_multi("foo,b{a,o,}r,ba?", "bat"));
-
-    g_assert_false(util_wildmatch_multi("foo,b{a,o,}r,ba?", "foo,"));
+    g_assert_false(util_wildmatch("foo,b{a,o,}r,ba?", "foo,"));
+    g_assert_false(util_wildmatch("foo,?", "fo"));
 }
 
 int main(int argc, char *argv[])

@@ -204,7 +204,7 @@ gboolean autocmd_add(char *name, gboolean delete)
             }
             /* skip if pattern does not match - we check the pattern against
              * another pattern */
-            if (!util_wildmatch_multi(pattern, cmd->pattern)) {
+            if (!util_wildmatch(pattern, cmd->pattern)) {
                 continue;
             }
             /* remove the bits from the item */
@@ -274,7 +274,7 @@ gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
             }
             /* check pattern only if uri was given */
             /* skip if pattern does not match */
-            if (uri && !util_wildmatch_multi(cmd->pattern, uri)) {
+            if (uri && !util_wildmatch(cmd->pattern, uri)) {
                 continue;
             }
             /* run the command */

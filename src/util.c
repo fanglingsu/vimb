@@ -512,15 +512,22 @@ gboolean util_parse_expansion(const char **input, GString *str, int flags,
 }
 
 /**
- * Like util_wildmatch, but allow to use a list of patterns,
+ * Compares given string against also given list of patterns.
+ *
+ * *         Matches any sequence of characters.
+ * ?         Matches any single character except of '/'.
+ * {foo,bar} Matches foo or bar - '{', ',' and '}' within this pattern must be
+ *           escaped by '\'. '*' and '?' have no special meaning within the
+ *           curly braces.
+ * *?{}      these chars must always be escaped by '\' to match them literally
  */
-gboolean util_wildmatch_multi(const char *pattern, const char *subject)
+gboolean util_wildmatch(const char *pattern, const char *subject)
 {
     const char *end;
-    int braces, patlen;
+    int braces, patlen, count;
 
     /* loop through all pattens */
-    for (; *pattern; pattern = (*end == ',' ? end + 1 : end)) {
+    for (count = 0; *pattern; pattern = (*end == ',' ? end + 1 : end), count++) {
         /* find end of the pattern - but be careful with comma in curly braces */
         braces = 0;
         for (end = pattern; *end && (*end != ',' || braces || *(end - 1) == '\\'); ++end) {
@@ -543,23 +550,12 @@ gboolean util_wildmatch_multi(const char *pattern, const char *subject)
         }
     }
 
-    /* empty pattern matches only on empty subject */
-    return !*subject;
-}
-
-/**
- * Compares given string against also given pattern.
- *
- * *         Matches any sequence of characters.
- * ?         Matches any single character except of '/'.
- * {foo,bar} Matches foo or bar - '{', ',' and '}' within this pattern must be
- *           escaped by '\'. '*' and '?' have no special meaning within the
- *           curly braces.
- * *?{}      these chars must always be escaped by '\' to match them literally
- */
-gboolean util_wildmatch(const char *pattern, const char *subject)
-{
-    return match(pattern, strlen(pattern), subject);
+    if (!count) {
+        /* empty pattern matches only on empty subject */
+        return !*subject;
+    }
+    /* there where one or more patterns but none of them matched */
+    return false;
 }
 
 /**
