@@ -626,10 +626,12 @@ part of the command.
 
 Example: :eval document.cookie
 .TP
-.BI ":no[rmal][!] [" CMDS ]
+.BI :e[val]! " JAVASCRIPT"
+Like :e[val], but there is nothing print to the input box.
+.TP
+.BI ":no[rmal] [" CMDS ]
 Execute normal mode commands \fICMDS\fP. This makes it possible to execute
-normal mode commands typed on the input box. If the \fI!\fP is given, mappings
-will not be used.
+normal mode commands typed on the input box.
 
 \fICMDS\fP cannot start with a space. Put a count of 1 (one) before it, "1 "
 is one space.
@@ -638,6 +640,9 @@ This comman cannot be followed by antoher command, since any '|' is considered
 part of the command.
 
 Example: :set scripts!|no! R
+.TP
+.BI ":no[rmal]! [" CMDS ]
+Like :no[rmal] but no mapping is applied to \fICMDS\fP.
 .TP
 .B :ha[rdcopy]
 Print current document. Open a GUI dialog where you can select the printer,

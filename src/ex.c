@@ -159,7 +159,7 @@ static ExInfo commands[] = {
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
     {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
-    {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_CMD},
+    {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_CMD|EX_FLAG_BANG},
     {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"inoremap",         EX_INOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"iunmap",           EX_IUNMAP,      ex_unmap,      EX_FLAG_LHS},
@@ -736,10 +736,12 @@ static gboolean ex_eval(const ExArg *arg)
         webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(vb.gui.webview)),
         arg->rhs->str, NULL, &value
     );
-    if (success) {
-        vb_echo(VB_MSG_NORMAL, false, "%s", value);
-    } else {
-        vb_echo(VB_MSG_ERROR, true, "%s", value);
+    if (!arg->bang) {
+        if (success) {
+            vb_echo(VB_MSG_NORMAL, false, "%s", value);
+        } else {
+            vb_echo(VB_MSG_ERROR, true, "%s", value);
+        }
     }
     g_free(value);
 
