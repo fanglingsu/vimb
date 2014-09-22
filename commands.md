@@ -189,6 +189,103 @@ if vimb has been compiled with QUEUE feature.
 \:qc[lear]
 : Removes all entries from queue.
 
+## automatic commands
+{:#autocmd}
+
+An autocommand is a command that is executed automatically in response to some
+event, such as a URI being opened. Autocommands are very powerful. Use them
+with care and they will help you avoid typing many commands.
+
+Note: The `:autocmd` command cannot be followed by another command, since any
+'|' is considered part of the command.
+
+Autocommands are built with following properties.
+
+*group*
+: When the [group] argument is not given, Vimb uses the current group as
+  defined with ':augroup', otherwise, vimb uses the group defined with [group].
+  Groups are useful to remove multiple grouped autocommands.
+
+*event*
+: You can specify a comma separated list of event names. No white space can be
+  used in this list.
+: Events:
+: - `LoadProvisional` Fired if a new page is going to opened. No data has been received yet,
+  the load may still fail for transport issues. Out of this reason this
+  event has no associated URL to match.
+  - `LoadCommited` Fired if first data chunk has arrived, meaning that the
+    necessary transport requirements are established, and the load is being
+    performed. This is the right event to toggle content related setting like
+    'scripts', 'plugins' and such things.
+  - `LoadFirstLayout` fired if the first layout with actual visible content is shown.
+  - `LoadFinished` Fires when everything that was required to display on the
+    page has been loaded.
+  - `LoadFailed` Fired when some error occurred during the page load that
+    prevented it from being completed.
+  - `DownloadStart` Fired right before a download is started. This is fired
+    for vimb downloads as well as external downloads if
+    'down‐load-use-external' is enabled.
+  - `DownloadFinished` Fired if a vimb managed download is finished. For
+    external download this event is not available.
+  - `DownloadFailed` Fired if a vimb managed download failed. For external
+    download this event is not available.
+
+*pat*
+: Comma separated list of patterns, matches in order to check if a autocommand
+  applies to the URI associated to an event. To use ',' within the single
+  patterns this must be escaped as '\,'.
+: Patterns:
+: - `\*` Matches any sequence of characters. This includes also `/` in contrast to shell patterns.
+  - `?` Matches any single character except of `/`.
+  - `{one,two}` Matches 'one' or 'two'. Any `{`, `,` and `}` within this
+    pattern must be escaped by a '`\`'. `*` and `?` have no special meaning
+    within the curly braces.
+  - `\` Use backslash to escape the special meaning of '`?*{},`' in the pattern or pattern list.
+
+*cmd*
+: Any ex command vimb understands. The leading ':' is not required. Multiple
+  commands can be separated by '|'.
+
+\:au[tocmd] [*group*] {*event*} {*pat*} {*cmd*}
+: Add cmd to the list of commands that vimb will execute automatically on event
+  for a URI matching pat autocmd-patterns. Vimb always adds the cmd after
+  existing autocommands, so that the autocommands are executed in the order in
+  which they were given.
+
+\:au[tocmd]! [*group*] {*event*} {*pat*} {*cmd*}
+: Remove all autocommands associated with *event* and which pattern match
+  *pat*, and add the command *cmd*. Note that the pattern is not matches
+  literally to find autocommands to remove, like vim does. Vimb matches
+  the autocommand pattern with *pat*.
+
+\:au[tocmd]! [*group*] {*event*} {*pat*}
+: Remove all autocommands associated with *event* and which pattern matches
+  *pat*.
+
+\:au[tocmd]! [*group*] * {*pat*}
+: Remove all autocommands with patterns matching *pat* for all events.
+
+\:au[tocmd]! [*group*] {*event*}
+: Remove all autocommands for *event*.
+
+\:au[tocmd]! [*group*]
+: Remove all autocommands.
+
+\:aug[roup] {*name*}
+: Define the autocmd group *name* for the following `:autocmd` commands. The
+  name "end" selects the default group.
+
+\:aug[roup]! {*name*}
+: Delete the autocmd group *name*.
+
+Example:
+
+    :aug mygroup
+    :  au LoadCommited * set scripts=off|set cookie-accept=never
+    :  au LoadCommited http{s,}://github.com/*.https://maps.google.de/* set scripts=on
+    :  au LoadFinished https://maps.google.de/* set useragent=foo
+    :aug end
+
 ## misc
 
 \:sh[ellcmd] *CMD*

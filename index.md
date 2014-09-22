@@ -18,6 +18,10 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+[Auto commands](commands.html#autocmd)
+: Vimb provides another nice feature of vim to run command on various events and
+  pattern matches URIs, `:autocmd` and `:augroup`.
+
 Read HTML from `stdin`
 : Vimb can be started with `-` as URI parameter to read HTML from stdin.
   ```
@@ -33,19 +37,6 @@ Input [CTRL-O](keybindings.html#i_CTRL-O) command
 : These commands allow to increment the last number of the current opened URL.
   This allows really efficient access to pages with pagers. These commands can
   also be prefixed by a number to page in larger steps. 
-
-Soup Webcaching
-: Vimb supports no caching of some page data on disk, to make pages load
-  faster. The maximum used cache size can be configured by the new setting
-  `maximum-cache-size` which is by default set to 2000kB. To disable the
-  caching this config should be set to 0.
-
-Extended [:set-Syntax](commands.html#settings)
-: Like vim, vimb supports the following `:set` flavors: `:set+=val`,
-  `:set-=val` and `:set^=val`. These works for strings, numbers and even
-  lists.  So you can now easily add or remove a customer header by something
-  like `:set header+=DNT=1`, without retyping the headers you have defined
-  before.
 
 ## screenshots
 
