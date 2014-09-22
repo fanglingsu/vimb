@@ -54,9 +54,9 @@ As special key names have the format \<...\>. Following special keys can be
 used \<Left\>, \<Up\>, \<Right\>, \<Down\> for the cursor keys, \<Tab\>,
 \<Esc\>, \<CR\>, \<F1\>-\<F12\> and \<C-A\>-\<C-Z\>.
 
-\:nm[ap] *{lhs} {rhs}*
-\:im[ap] *{lhs} {rhs}*
-\:cm[ap] *{lhs} {rhs}*
+\:nm[ap] {*lhs*} {*rhs*}
+\:im[ap] {*lhs*} {*rhs*}
+\:cm[ap] {*lhs*} {*rhs*}
 : Map the key sequence *lhs* to *rhs* for the modes where the map command applies.
   The result, including *rhs*, is then further scanned for mappings. This allows
   for nested and recursive use of mappings.
@@ -71,22 +71,22 @@ used \<Left\>, \<Up\>, \<Right\>, \<Down\> for the cursor keys, \<Tab\>,
     Example which mappes two spaces to go to 50% of the page, start hinting
     mode.
 
-\:nn[oremap] *{lhs} {rhs}*
-\:ino[remap] *{lhs} {rhs}*
-\:cno[remap] *{lhs} {rhs}*
+\:nn[oremap] {*lhs*} {*rhs*}
+\:ino[remap] {*lhs*} {*rhs*}
+\:cno[remap] {*lhs*} {*rhs*}
 : Map the key sequence *lhs* to *rhs* for the mode where the map command applies.
   Disallow mapping of *rhs*, to avoid nested and recursive mappings. Often used
   to redefine a command.
 
-\:nu[nmap] *{lhs}*
-\:iu[nmap] *{lhs}*
-\:cu[nmap] *{lhs}*
+\:nu[nmap] {*lhs*}
+\:iu[nmap] {*lhs*}
+\:cu[nmap] {*lhs*}
 : Remove the mapping of *lhs* for the applicable mode.
 
 ## bookmarks
 
-\:bma [*TAGS*]
-: Save the current opened uri with *TAGS* to the bookmark file.
+\:bma [*tags*]
+: Save the current opened uri with *tags* to the bookmark file.
 
 \:bmr [*URI*]
 : Removes all bookmarks for given *URI* or if not given the current opened page.
@@ -101,8 +101,8 @@ list of parameters' to open the generated URL.
 Shortcuts are a good to use with search engines where the URL is nearly the
 same but a single parameter is user defined.
 
-\:shortcut-add *SHORTCUT=URI*
-: Adds a shortcut with the SHORTCUT and URI template. The URI can contain
+\:shortcut-add *shortcut=URI*
+: Adds a shortcut with the *shortcut* and URI template. The URI can contain
   multiple placeholders `$0-$9` that will be filled by the parameters given when
   the shortcut is called. The parameters given when the shortcut is called
   will be split into as many parameters like the highest used placeholder.
@@ -112,21 +112,21 @@ same but a single parameter is user defined.
   - `:shortcut-add gh=https://github.com/$0/$1`
     to build url from given parameters. Can be called ':open gh fanglingsu vimb'.
 
-\:shortcut-remove *SHORTCUT*
-: Remove the search engine to the given *SHORTCUT*.
+\:shortcut-remove *shortcut*
+: Remove the search engine to the given *shortcut*.
 
-\:shortcut-default *SHORTCUT*
-: Set the shortcut for given *SHORTCUT* as the default. It doesn't matter if the
-  *SHORTCUT* is already in use or not to be able to set it.
+\:shortcut-default *shortcut*
+: Set the shortcut for given *shortcut* as the default. It doesn't matter if the
+  *shortcut* is already in use or not to be able to set it.
 
 ## handlers
 {:#handlers}
 
 Handlers allow specifying external scripts to handle alternative URI methods.
 
-\:handler-add *HANDLER=COMMAND*
-: Adds a handler to direct *HANDLER* links to the external COMMAND. The COMMAND
-  can contain one placeholder %s that will be filled by the full URI given when
+\:handler-add *handler=cmd*
+: Adds a handler to direct *cmd* links to the external *cmd*. The *cmd* can
+  contain one placeholder %s that will be filled by the full URI given when
   the command is called.
 : Examples:
 
@@ -137,37 +137,37 @@ Handlers allow specifying external scripts to handle alternative URI methods.
   - `:handler-add irc=irc-handler.sh %s`
     to direct `irc://<host>:<port>/<channel>` links to a wrapper for your irc client.
 
-:handler-remove *HANDLER*
-: Remove the handler for the given URI *HANDLER*.
+:handler-remove *handler*
+: Remove the handler for the given URI *handler*.
 
 ## settings
 {:#settings}
 
-\:se[t] *VAR=VALUE*
-: Set configuration values named by *VAR*. To set boolean variable you should
+\:se[t] *var=value*
+: Set configuration values named by *var*. To set boolean variable you should
   use 'on', 'off' or 'true' and 'false'. Colors are given as hexadecimal value
   like '#f57700'.
 
-\:se[t] *VAR+=VALUE*
-: Add the *VALUE* to a number option, or apend the *VALUE* to a string option.
+\:se[t] *var+=value*
+: Add the *value* to a number option, or apend the *value* to a string option.
   When the option is a comma separated list, a comma is added, unless the
   value was empty.
 
-\:set[t] *VAR^=VALUE*
-: Multiply the *VALUE* to a number option, or prepend the *VALUE* to a string
+\:set[t] *var^=value*
+: Multiply the *value* to a number option, or prepend the *value* to a string
   option. When the option is a comma separated list, a comma is added, unless
   the value was empty.
 
-\:se[t] *VAR-=VALUE*
-: Subtract the *VALUE* from a number option, or remove the *VALUE* from a
+\:se[t] *var-=value*
+: Subtract the *value* from a number option, or remove the *value* from a
   string option, if it is there. When the option is a comma separated list, a
   comma is deleted, unless the option becomes empty.
 
-\:se[t] *VAR*?
-: Show the current set value of variable *VAR*.
+\:se[t] *var*?
+: Show the current set value of variable *var*.
 
-\:se[t] *VAR*!
-: Toggle the value of boolean variable *VAR* and display the new set value.
+\:se[t] *var*!
+: Toggle the value of boolean variable *var* and display the new set value.
 
 ## queue
 {:#queue}
@@ -288,21 +288,21 @@ Example:
 
 ## misc
 
-\:sh[ellcmd] *CMD*
-: Runs given shell *CMD* synchronous and print the output into inputbox. The
+\:sh[ellcmd] *cmd*
+: Runs given shell *cmd* synchronous and print the output into inputbox. The
   *CMD* can contain multiple '%' chars that are expanded to the current opened
   uri. Also the `~/` to home directory expansion is available.
-: Runs given shell *CMD* syncronous and print the output into inputbox.
-  Follwing pattern in *CMD* are expanded, `~username`, `~/`, `$VAR` and
+: Runs given shell *cmd* syncronous and print the output into inputbox.
+  Follwing pattern in *cmd* are expanded, `~username`, `~/`, `$VAR` and
   `${VAR}`. A '``\``' before these patterns disables the expansion.
 : Example: `:sh ls -la $HOME`
 
-:sh[ellcmd]! *CMD*
-: Like `:shellcmd` but runs given shell *CMD* asyncron.
+:sh[ellcmd]! *cmd*
+: Like `:shellcmd` but runs given shell *cmd* asyncron.
 : Example: ``:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'``
 
-\:s[ave] [*PATH*]
-: Download current opened page into configured download directory. If *PATH* is
+\:s[ave] [*path*]
+: Download current opened page into configured download directory. If *path* is
   given, download under this file name or path. Possible value for PATH are
   'page.html', 'subdir/img1.png', '~/download.html' or absolute paths
   '/tmp/file.html'.
@@ -313,26 +313,26 @@ Example:
 \:q[uit]!
 : Close the browser independent from an running download.
 
-\:e[val] *JAVASCRIPT*
-: Runs the given *JAVASCRIPT* in the current page and display the evaluated
+\:e[val] *javascript*
+: Runs the given *javascript* in the current page and display the evaluated
   value.
 : This comman cannot be followed by antoher command, since any '|' is
   considered part of the command.
 : Example: `:eval document.cookie`
 
-\:e[val]! *JAVASCRIPT*
+\:e[val]! *javascript*
 : Like `:e[val]`, but there is nothing print to the input box.
 
-\:no[rmal] [*CMDS*]
-: Execute normal mode commands *CMDS*. This makes it possible to execute normal
+\:no[rmal] [*cmds*]
+: Execute normal mode commands *cmds*. This makes it possible to execute normal
   mode commands typed on the input box.
-: *CMDS cannot start with a space. Put a count of 1 (one) before it, "1 " is one space.
+: *cmds* cannot start with a space. Put a count of 1 (one) before it, "1 " is one space.
   This comman cannot be followed by antoher command, since any '|' is
   considered part of the command.
 : Example: `:set scripts!|no! R`
 
-\:no[rmal]! [*CMDS*]
-: Like `:no[rmal]`, but no mapping is applied to *CMDS*.
+\:no[rmal]! [*cmds*]
+: Like `:no[rmal]`, but no mapping is applied to *cmds*.
 
 \:ha[rdcopy]
 : Print current document. Open a GUI dialog where you can select the printer,
