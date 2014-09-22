@@ -42,6 +42,7 @@
 #include "pass.h"
 #include "bookmark.h"
 #include "js.h"
+#include "autocmd.h"
 
 /* variables */
 static char **args;
@@ -413,6 +414,9 @@ void vb_quit(gboolean force)
     history_cleanup();
     session_cleanup();
     register_cleanup();
+#ifdef FEATURE_AUTOCMD
+    autocmd_cleanup();
+#endif
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
@@ -515,6 +519,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
     switch (webkit_web_view_get_load_status(view)) {
         case WEBKIT_LOAD_PROVISIONAL:
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(AU_LOAD_PROVISIONAL, NULL, NULL);
+#endif
             /* update load progress in statusbar */
             vb.state.progress = 0;
             vb_update_statusbar();
@@ -523,6 +530,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_COMMITTED:
             uri = webkit_web_view_get_uri(view);
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(AU_LOAD_COMMITED, uri, NULL);
+#endif
             {
                 WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
                 JSContextRef ctx;
@@ -557,6 +567,10 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
+#ifdef FEATURE_AUTOCMD
+            uri = webkit_web_view_get_uri(view);
+            autocmd_run(AU_LOAD_FIRST_LAYOUT, uri, NULL);
+#endif
             /* if we load a page from a submitted form, leave the insert mode */
             if (vb.mode->id == 'i') {
                 mode_enter('n');
@@ -565,7 +579,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
         case WEBKIT_LOAD_FINISHED:
             uri = webkit_web_view_get_uri(view);
-
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(AU_LOAD_FINISHED, uri, NULL);
+#endif
             /* update load progress in statusbar */
             vb.state.progress = 100;
             vb_update_statusbar();
@@ -578,6 +594,10 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FAILED:
+#ifdef FEATURE_AUTOCMD
+            uri = webkit_web_view_get_uri(view);
+            autocmd_run(AU_LOAD_FAILED, uri, NULL);
+#endif
             break;
     }
 }
@@ -816,6 +836,9 @@ static void init_core(void)
     session_init();
     setting_init();
     register_init();
+#ifdef FEATURE_AUTOCMD
+    autocmd_init();
+#endif
     read_config();
 
     /* initially apply input style */
@@ -1269,6 +1292,9 @@ gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *
         file = util_build_path(path, vb.config.download_dir);
     }
 
+#ifdef FEATURE_AUTOCMD
+    autocmd_run(AU_DOWNLOAD_START, webkit_download_get_uri(download), NULL);
+#endif
     if (use_external && *download_cmd) {
         /* run download with external program */
         vb_download_external(view, download, file);
@@ -1396,8 +1422,14 @@ static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
         file += 7;
     }
     if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
+#ifdef FEATURE_AUTOCMD
+        autocmd_run(AU_DOWNLOAD_FAILED, webkit_download_get_uri(download), NULL);
+#endif
         vb_echo(VB_MSG_ERROR, false, "Error downloading %s", file);
     } else {
+#ifdef FEATURE_AUTOCMD
+        autocmd_run(AU_DOWNLOAD_FINISHED, webkit_download_get_uri(download), NULL);
+#endif
         vb_echo(VB_MSG_NORMAL, false, "Download %s finished", file);
     }
 

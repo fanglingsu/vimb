@@ -39,8 +39,15 @@
 #include "handlers.h"
 #include "map.h"
 #include "js.h"
+#ifdef FEATURE_AUTOCMD
+#include "autocmd.h"
+#endif
 
 typedef enum {
+#ifdef FEATURE_AUTOCMD
+    EX_AUTOCMD,
+    EX_AUGROUP,
+#endif
     EX_BMA,
     EX_BMR,
     EX_EVAL,
@@ -121,6 +128,10 @@ static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static gboolean execute(const ExArg *arg);
 
+#ifdef FEATURE_AUTOCMD
+static gboolean ex_augroup(const ExArg *arg);
+static gboolean ex_autocmd(const ExArg *arg);
+#endif
 static gboolean ex_bookmark(const ExArg *arg);
 static gboolean ex_eval(const ExArg *arg);
 static gboolean ex_hardcopy(const ExArg *arg);
@@ -151,6 +162,10 @@ static void history_rewind(void);
  * match. */
 static ExInfo commands[] = {
     /* command           code            func           flags */
+#ifdef FEATURE_AUTOCMD
+    {"autocmd",          EX_AUTOCMD,     ex_autocmd,    EX_FLAG_CMD|EX_FLAG_BANG},
+    {"augroup",          EX_AUGROUP,     ex_augroup,    EX_FLAG_LHS|EX_FLAG_BANG},
+#endif
     {"bma",              EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
     {"bmr",              EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
@@ -706,6 +721,18 @@ static void free_cmdarg(ExArg *arg)
     g_slice_free(ExArg, arg);
 }
 
+#ifdef FEATURE_AUTOCMD
+static gboolean ex_augroup(const ExArg *arg)
+{
+    return autocmd_augroup(arg->lhs->str, arg->bang);
+}
+
+static gboolean ex_autocmd(const ExArg *arg)
+{
+    return autocmd_add(arg->rhs->str, arg->bang);
+}
+#endif
+
 static gboolean ex_bookmark(const ExArg *arg)
 {
     if (arg->code == EX_BMR) {
@@ -1003,29 +1030,32 @@ static gboolean complete(short direction)
         skip_whitespace(&in);
         parse_count(&in, arg);
 
-        /* packup the current pointer so that we can restore the input pointer
-         * if tha command name parsing fails */
+        /* Backup the current pointer so that we can restore the input pointer
+         * if tha command name parsing fails. */
         before_cmdname = in;
 
-        if (parse_command_name(&in, arg) && VB_IS_SPACE(*in)) {
+        /* Do ex command specific completion if the comman is recognized and
+         * there is a space after the command and the optional '!' bang. */
+        if (parse_command_name(&in, arg) && parse_bang(&in, arg) && VB_IS_SPACE(*in)) {
             const char *token;
-            /* get only the last word of input string for the completion for
-             * bookmark tag completion */
+
+            /* Get only the last word of input string for the completion for
+             * bookmark tag completion. */
             if (arg->code == EX_BMA) {
-                /* find the end of the input and search for the next
-                 * whitespace toward the beginning */
+                /* Find the end of the input and search for the next
+                 * whitespace toward the beginning. */
                 token = strrchr(in, '\0');
                 while (token >= in && !VB_IS_SPACE(*token)) {
                     token--;
                 }
             } else {
-                /* use all input except ot the command itself for the
-                 * completion */
+                /* Use all input except of the command and it's possible bang
+                 * itself for the completion. */
                 token = in;
             }
 
-            /* save the string prefix that will not be part of completion like
-             * the ':open ' if ':open something' is completed. this means that
+            /* Save the string prefix that will not be part of completion like
+             * the ':open ' if ':open something' is completed. This means that
              * the completion will only the none prefix part of the input */
             OVERWRITE_NSTRING(excomp.prefix, input, token - input + 1);
 
@@ -1042,7 +1072,7 @@ static gboolean complete(short direction)
                     break;
 
                 case EX_SET:
-                    sort = true;
+                    sort  = true;
                     found = setting_fill_completion(store, token);
                     break;
 
@@ -1061,6 +1091,18 @@ static gboolean complete(short direction)
                     found = handler_fill_completion(store, token);
                     break;
 
+#ifdef FEATURE_AUTOCMD
+                case EX_AUTOCMD:
+                    sort  = true;
+                    found = autocmd_fill_event_completion(store, token);
+                    break;
+
+                case EX_AUGROUP:
+                    sort  = true;
+                    found = autocmd_fill_group_completion(store, token);
+                    break;
+#endif
+
                 default:
                     break;
             }
@@ -1068,8 +1110,8 @@ static gboolean complete(short direction)
             /* restore the 'in' pointer after try to parse command name */
             in = before_cmdname;
 
-            /* backup the parsed data so we can access them in
-             * completion_select function */
+            /* Backup the parsed data so we can access them in
+             * completion_select function. */
             excomp.count = arg->count;
 
             if (ex_fill_completion(store, in)) {

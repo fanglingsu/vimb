@@ -2,6 +2,14 @@
 .\" Process this file with
 .\" groff -man -Tutf8 vimb.1
 .TH vimb 1 "DATE" "vimb/VERSION" "Vimb Manual"
+.de EX
+.nf
+.ft CW
+..
+.de EE
+.ft R
+.fi
+..
 .SH NAME
 vimb - Vim Browser - A modal web browser based on webkit, inspired by vim the
 great editor.
@@ -252,7 +260,8 @@ Exits Hints mode without selecting an element
 .PD
 .RE
 .TP
-Hint modes:
+.B Hint modes:
+.RS
 .PD 0
 .TP
 .B f
@@ -307,6 +316,7 @@ Yank hint's destination location into primary and secondary clipboard.
 Yank hint's text description or form text into primary and secondary
 clipboard.
 .PD
+.RE
 .TP
 .BI Syntax: " g;{mode}{hint}"
 Start an extended hints mode and stay there until <Esc> is pressed. Like the
@@ -451,7 +461,7 @@ command applies. The result, including \fIrhs\fP, is then further scanned for
 mappings. This allows for nested and recursive use of mappings.
 .RS
 .P
-Example:
+Examples:
 .PD 0
 .IP ":cmap <C-G>h /home/user/downloads/"
 Adds a keybind to insert a file path into the input box. This could be useful
@@ -592,6 +602,130 @@ queue.
 .TP
 .B :qc[lear]
 Removes all entries from queue.
+.SS Automatic commands
+An autocommand is a command that is executed automatically in response to some
+event, such as a URI being opened. Autocommands are very powerful. Use them
+with care and they will help you avoid typing many commands.
+.PP
+Note: The ":autocmd" command cannot be followed by another command, since
+any '|' is considered part of the command.
+.RS 0
+.TP
+Autocommands are built with following properties.
+.TP
+.I group
+When the [\fIgroup\fP] argument is not given, Vimb uses the current group as
+defined with ':augroup', otherwise, vimb uses the group defined with
+[\fIgroup\fP]. Groups are useful to remove multiple grouped autocommands.
+.TP
+.I event
+You can specify a comma separated list of event names. No white space can be
+used in this list.
+.RS
+.PP
+.PD 0
+Events:
+.TP
+.B LoadProvisional
+Fired if a new page is going to opened. No data has been received yet, the load
+may still fail for transport issues. Out of this reason this event has no
+associated URL to match.
+.TP
+.B LoadCommited
+Fired if first data chunk has arrived, meaning that the necessary transport
+requirements are established, and the load is being performed. This is the
+right event to toggle content related setting like 'scripts', 'plugins' and
+such things.
+.TP
+.B LoadFirstLayout
+fired if the first layout with actual visible content is shown.
+.TP
+.B LoadFinished
+Fires when everything that was required to display on the page has been loaded.
+.TP
+.B LoadFailed
+Fired when some error occurred during the page load that prevented it from
+being completed.
+.TP
+.B DownloadStart
+Fired right before a download is started. This is fired for vimb downloads as
+well as external downloads if 'download-use-external' is enabled.
+.TP
+.B DownloadFinished
+Fired if a vimb managed download is finished. For external download this event
+is not available.
+.TP
+.B DownloadFailed
+Fired if a vimb managed download failed. For external download this event
+is not available.
+.PD
+.RE
+.TP
+.I pat
+Comma separated list of patterns, matches in order to check if a autocommand
+applies to the URI associated to an event. To use ',' within the single
+patterns this must be escaped as '\[char92],'.
+.RS
+.PP
+.PD 0
+Patterns:
+.IP "\fB*\fP"
+Matches any sequence of characters. This includes also '/' in contrast to
+shell patterns.
+.IP "\fB?\fP"
+Matches any single character except of '/'.
+.IP "\fB{one,two}\fP"
+Matches 'one' or 'two'. Any '{', ',' and '}' within this pattern must be
+escaped by a '\'. '*' and '?' have no special meaning within the curly braces.
+.IP "\fB\[char92]\fP"
+Use backslash to escape the special meaning of '?*{},' in the pattern or
+pattern list.
+.PD
+.RE
+.TP
+.I cmd
+Any ex command vimb understands. The leading ':' is not required. Multiple
+commands can be separated by '|'.
+.TP
+.BI ":au[tocmd] [" group "] {" event "} {" pat "} {" cmd "}"
+Add \fIcmd\fP to the list of commands that vimb will execute automatically on
+\fIevent\fP for a URI matching \fIpat\fP autocmd-patterns. Vimb always adds
+the \fIcmd\fP after existing autocommands, so that the autocommands are
+executed in the order in which they were given.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "} {" pat "} {" cmd "}"
+Remove all autocommands associated with \fIevent\fP and which pattern match
+\fIpat\fP, and add the command \fIcmd\fP. Note that the pattern is not matches
+literally to find autocommands to remove, like vim does. Vimb matches the
+autocommand pattern with \fIpat\fP.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "} {" pat "}"
+Remove all autocommands associated with \fIevent\fP and which pattern matches
+\fIpat\fP.
+.TP
+.BI ":au[tocmd]! [" group "] * {" pat "}"
+Remove all autocommands with patterns matching \fIpat\fP for all events.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "}"
+Remove all autocommands for \fIevent\fP.
+.TP
+.BI ":au[tocmd]! [" group "]"
+Remove all autocommands.
+.TP
+.BI ":aug[roup] {" name "}"
+Define the autocmd group \fIname\fP for the following ":autocmd" commands. The name
+"end" selects the default group.
+.TP
+.BI ":aug[roup]! {" name "}"
+Delete the autocmd group \fIname\fP.
+.PP
+Example
+.EX
+:aug github
+:  au LoadCommited * set scripts=off|set cookie-accept=never
+:  au LoadCommited http{s,}://github.com/* set scripts=on
+:aug end
+.EE
 .SS Misc
 .TP
 .BI ":sh[ellcmd] " CMD
@@ -635,7 +769,6 @@ normal mode commands typed on the input box.
 
 \fICMDS\fP cannot start with a space. Put a count of 1 (one) before it, "1 "
 is one space.
-
 This comman cannot be followed by antoher command, since any '|' is considered
 part of the command.
 
@@ -702,9 +835,13 @@ The history of URIs is shown for the `:open ` and `:tabopen ` commands. This
 completion looks up for every given word in the history URI and titles. Only
 those history items are shown, where the title or URI contains all tags.
 
-Example:
-":open foo bar<Tab>" will complete only URIs that contain the words foo and
-bar.
+Example
+.RS
+.PD 0
+.IP ":open foo bar<Tab>"
+will complete only URIs that contain the words foo and bar.
+.PD
+.RE
 .TP
 .B bookmarks
 The bookmark completion is similar to the history completion, but does match
@@ -712,9 +849,14 @@ only the tags of the bookmarks. The bookmark completion ist started by `:open
 \fB!\fP` or `:tabopen \fB!\fP` and does a prefix search for all given words in
 the bookmark tags.
 
-Example:
-":open \fB!\fPfoo ba" will match all bookmark that have the tags "foo" or
-"foot" and tags starting with "ba" like "ball".
+Example
+.RS
+.PD 0
+.IP ":open \fB!\fPfoo ba"
+will match all bookmark that have the tags "foo" or "foot" and tags starting
+with "ba" like "ball".
+.PD
+.RE
 .TP
 .B boomark tags
 The boomark tag completion allows to insert already used bookmarks for the
@@ -995,10 +1137,11 @@ start by the `:save' command or the `;s' hinting.
 Indicates if the proxy is enabled in vimb. If enable this variable is `1',
 otherwise `0'. Note that this variable gives no hint if the proxy settings
 apply to the URL to be downloaded, only if proxy is enabled in general.
+
+.PP
+Example
+.IP ":set download-command=/bin/sh -c \[char34]wget -c %s -O $VIMB_FILE --load-cookies $VIMB_COOKIES\[char34]"
 .PD
-.P
-Example: :set download-command=/bin/sh -c "wget -c %s -O $VIMB_FILE
---load-cookies $VIMB_COOKIES"
 .RE
 .TP
 .B download-path (string)
@@ -1029,7 +1172,7 @@ value.
 To use '=' within a header value the value must be quoted like shown in
 Example for the Cookie header.
 .RS
-.P
+.PP
 Example:
 .PD 0
 .IP ":set header=DNT=1,User-Agent,Cookie='name=value'"
@@ -1158,44 +1301,54 @@ This fills the inputbox with the prefilled download command and replaces
 .RE
 .SH FILES
 .TP
-.B $XDG_CONFIG_HOME/vimb/config
+.I $XDG_CONFIG_HOME/vimb/
+Default directory for configuration data.
+.PP
+.RS
+.PD 0
+.TP
+.I config
 Configuration file to set webkit setting, some GUI styles and keybindings.
 .TP
-.B $XDG_CONFIG_HOME/vimb/cookies
+.I cookies
 Cookie store file.
 .TP
-.B $XDG_CONFIG_HOME/vimb/closed
+.I closed
 Holds the URI of the last closed browser window.
 .TP
-.B $XDG_CONFIG_HOME/vimb/history
+.I history
 This file holds the history of unique opened URIs.
 .TP
-.B $XDG_CONFIG_HOME/vimb/command
+.I command
 This file holds the history of commands and search queries performed via input
 box.
 .TP
-.B $XDG_CONFIG_HOME/vimb/search
+.I search
 This file holds the history of search queries.
 .TP
-.B $XDG_CONFIG_HOME/vimb/bookmark
+.I bookmark
 Holds the bookmarks saved with command `bma'.
 .TP
-.B $XDG_CONFIG_HOME/vimb/queue
+.I queue
 Holds the read it later queue filled by `qpush' if
 vimb has been compiled with QUEUE feature.
 .TP
-.B $XDG_CONFIG_HOME/vimb/hsts
+.I hsts
 Holds the known hsts hosts if vimb is compiled with HTTP strict transport
 security feature.
 .TP
-.B $XDG_CONFIG_HOME/vimb/scripts.js
+.I scripts.js
 This file can be used to run user scripts, that are injected into every paged
 that is opened.
 .TP
-.B $XDG_CONFIG_HOME/vimb/style.css
+.I style.css
 File for userdefined css styles. These file is used if the config variable
 `stylesheet' is enabled.
+.PD
 .RE
+.TP
+.I $XDG_CACHE_HOME/vimb/
+Default directory for cache data.
 .SH ENVIRONMENT
 .TP
 .B VIMB_URI
