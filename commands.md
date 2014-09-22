@@ -223,14 +223,19 @@ if vimb has been compiled with QUEUE feature.
   considered part of the command.
 : Example: `:eval document.cookie`
 
-\:no[rmal][!] [*CMDS*]
+\:e[val]! *JAVASCRIPT*
+: Like `:e[val]`, but there is nothing print to the input box.
+
+\:no[rmal] [*CMDS*]
 : Execute normal mode commands *CMDS*. This makes it possible to execute normal
-  mode commands typed on the input box. If the '!' is given, mappings will not
-  be used.
+  mode commands typed on the input box.
 : *CMDS cannot start with a space. Put a count of 1 (one) before it, "1 " is one space.
   This comman cannot be followed by antoher command, since any '|' is
   considered part of the command.
 : Example: `:set scripts!|no! R`
+
+\:no[rmal]! [*CMDS*]
+: Like `:no[rmal]`, but no mapping is applied to *CMDS*.
 
 \:ha[rdcopy]
 : Print current document. Open a GUI dialog where you can select the printer,
