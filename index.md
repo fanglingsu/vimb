@@ -69,7 +69,7 @@ But following images may give a impression of they way vimb works.
 
 ## packages
 
-- [archlinux][]
+- archlinux [vimb-git][arch-git], [vimb][arch]
 - [NetBSD][]
 - [FreeBSD][]
 
@@ -95,7 +95,8 @@ If you find a misbehaviour or have feature requests use the
 
 [FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
 [NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
-[archlinux]:   https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
+[arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
+[arch]:        https://aur.archlinux.org/packages/vimb/ "vimb - archlinux package"
 [bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
 [handlers]:    commands.html#handlers "vimb custom protocol handlers"
 [hints]:       keybindings.html#hinting "vimb hinting"
