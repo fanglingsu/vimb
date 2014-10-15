@@ -35,6 +35,7 @@ gboolean command_search(const Arg *arg)
     const char *query;
     static gboolean newsearch = true;
     gboolean forward;
+    gboolean found = false;
 
     if (arg->i == 0) {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
@@ -84,7 +85,12 @@ gboolean command_search(const Arg *arg)
             if (!webkit_web_view_search_text(vb.gui.webview, query, false, forward, true)) {
                 break;
             }
+            found = true;
         };
+
+        if (found == false) {
+            vb_echo(VB_MSG_ERROR, true, "Pattern not found: %s", query);
+        }
     }
 
     return true;

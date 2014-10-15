@@ -19,7 +19,6 @@
 
 #include "config.h"
 #ifdef FEATURE_AUTOCMD
-#include "autocmd.h"
 #include "ascii.h"
 #include "ex.h"
 #include "util.h"
@@ -49,6 +48,14 @@ static struct {
     {"DownloadStart",    0x0020},
     {"DownloadFinished", 0x0040},
     {"DownloadFailed",   0x0080},
+    {"NormalEnter",      0x0100},
+    {"NormalLeave",      0x0200},
+    {"InsertEnter",      0x0400},
+    {"InsertLeave",      0x0800},
+    {"CommandEnter",     0x1000},
+    {"CommandLeave",     0x2000},
+    {"PassthroughEnter", 0x4000},
+    {"PassthroughLeave", 0x8000},
 };
 
 extern VbCore vb;
@@ -250,10 +257,18 @@ gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
     AutoCmd *cmd;
     guint bits = events[event].bits;
 
+    /* if autocommand is already running, return early to avoid recursion */
+    if (vb.state.autocmd_busy) {
+        return true;
+    }
+
     /* if there is no autocmd for this event - skip here */
     if (!(usedbits & bits)) {
         return true;
     }
+
+    /* take autocmd lock */
+    vb.state.autocmd_busy = true;
 
     /* don't record commands in history runed by autocmd */
     vb.state.enable_history = false;
@@ -283,6 +298,9 @@ gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
         }
     }
     vb.state.enable_history = true;
+
+    /* free autocmd lock */
+    vb.state.autocmd_busy = false;
 
     return true;
 }

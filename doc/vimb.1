@@ -658,6 +658,12 @@ is not available.
 .B DownloadFailed
 Fired if a vimb managed download failed. For external download this event
 is not available.
+.TP
+.B CommandEnter, NormalEnter, PassthroughEnter, InsertEnter
+Fired just before vimb enters command/normal/passthrough/input mode.
+.TP
+.B CommandLeave, NormalLeave, PassthroughLeave, InsertLeave
+Fired just after vimb leaves command/normal/passthrough/input mode.
 .PD
 .RE
 .TP
