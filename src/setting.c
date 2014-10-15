@@ -191,7 +191,7 @@ void setting_init()
     setting_add("completion-fg-active", TYPE_COLOR, &"#ffffff", input_color, 0, &vb.style.comp_fg[VB_COMP_ACTIVE]);
     setting_add("completion-bg-normal", TYPE_COLOR, &"#656565", input_color, 0, &vb.style.comp_bg[VB_COMP_NORMAL]);
     setting_add("completion-bg-active", TYPE_COLOR, &"#777777", input_color, 0, &vb.style.comp_bg[VB_COMP_ACTIVE]);
-    setting_add("ca-bundle", TYPE_CHAR, &"/etc/ssl/certs/ca-certificates.crt", ca_bundle, 0, NULL);
+    setting_add("ca-bundle", TYPE_CHAR, &SETTING_CA_BUNDLE, ca_bundle, 0, NULL);
     setting_add("home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, 0, NULL);
     i = 1000;
     setting_add("hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);

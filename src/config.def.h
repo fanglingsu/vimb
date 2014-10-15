@@ -58,6 +58,8 @@
 /* number of chars to be shown for ambiguous commands */
 #define SHOWCMD_LEN                 10
 
+/* parh to crt file for the certificate validation */
+#define SETTING_CA_BUNDLE           "/etc/ssl/certs/ca-certificates.crt"
 #define SETTING_MAX_CONNS           25
 #define SETTING_MAX_CONNS_PER_HOST   5
 /* default font size for fonts in webview */
