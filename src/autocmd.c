@@ -163,10 +163,11 @@ gboolean autocmd_add(char *name, gboolean delete)
 
             /* group is found - get the next word */
             word = get_next_word(&parse);
-        } else {
-            /* no group found - use the current one */
-            grp = curgroup;
         }
+    }
+    if (!grp) {
+        /* no group found - use the current one */
+        grp = curgroup;
     }
 
     /* parse event name - if none was matched run it for all events */
