@@ -1129,31 +1129,34 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
 
     g_object_get(result, "context", &context, NULL);
-    if (vb.mode->id == 'i' && !(context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE)) {
-        /* make sure we leave insert mode if the user click on a none editable
-         * element - make sure the click is processed by webkit for example if
-         * it ws a link */
-        mode_enter('n');
-        propagate = false;
-    } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK) {
-        if (event->button == 2 || (event->button == 1 && event->state & GDK_CONTROL_MASK)) {
-            /* ctrl click or middle mouse click onto link */
-            Arg a = {VB_TARGET_NEW};
-            g_object_get(result, "link-uri", &a.s, NULL);
-            vb_load_uri(&a);
+    /* ctrl click or middle mouse click onto link */
+    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK
+        && (event->button == 2 || (event->button == 1 && event->state & GDK_CONTROL_MASK))
+    ) {
+        Arg a = {VB_TARGET_NEW};
+        g_object_get(result, "link-uri", &a.s, NULL);
+        vb_load_uri(&a);
 
-            propagate = true;
-        }
-    } else if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE && vb.mode->id != 'p') {
+        propagate = true;
+    } else if (vb.mode->id != 'p') {
         /* don't switch back to input mode if we are currently in pass through
          * mode when the user clicks into a form field */
-        mode_enter('i');
-        propagate = true;
-    } else if (vb.mode->id == 'n' && dom_is_editable(dom_get_active_element(vb.gui.webview))) {
-        /* if the focus is on an editable element after the click - switch
-         * also to insert mode - this seems to work also for WYSIWYG editors */
-        mode_enter('i');
-        propagate = true;
+        if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE
+            || dom_is_editable(dom_get_active_element(vb.gui.webview))
+        ) {
+            /* If click to editable elemen or if the focus is on an editable
+             * element after a click - switch to insert mode. The later is
+             * used for WYSIWYG editors where the click runs into a div and
+             * not the editable element itself. */
+            mode_enter('i');
+            propagate = true;
+        } else if (vb.mode->id == 'i') {
+            /* make sure we leave insert mode if the user click on a none
+             * editable element */
+            mode_enter('n');
+            /* let webkit handle the click - for example on a link */
+            propagate = false;
+        }
     }
     g_object_unref(result);
 
