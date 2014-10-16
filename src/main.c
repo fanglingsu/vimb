@@ -1143,6 +1143,11 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
          * mode when the user clicks into a form field */
         mode_enter('i');
         propagate = true;
+    } else if (vb.mode->id == 'n' && dom_is_editable(dom_get_active_element(vb.gui.webview))) {
+        /* if the focus is on an editable element after the click - switch
+         * also to insert mode - this seems to work also for WYSIWYG editors */
+        mode_enter('i');
+        propagate = true;
     }
     g_object_unref(result);
 
