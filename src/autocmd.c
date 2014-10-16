@@ -191,7 +191,7 @@ gboolean autocmd_add(char *name, gboolean delete)
     excmd = parse;
 
     /* delete the autocmd if bang was given */
-    if (delete) {
+    if (delete && grp) {
         GSList *lc;
         AutoCmd *cmd;
         gboolean removed = false;
