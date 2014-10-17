@@ -149,7 +149,7 @@ void setting_init()
     setting_add("spell-checking-languages", TYPE_CHAR, NULL, webkit, 0, "spell-checking-languages");
     setting_add("tab-key-cycles-through-elements", TYPE_BOOLEAN, &on, webkit, 0, "tab-key-cycles-through-elements");
     setting_add("universal-access-from-file-uris", TYPE_BOOLEAN, &off, webkit, 0, "enable-universal-access-from-file-uris");
-    setting_add("useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Safari/538.15 Version/6.0", webkit, 0, "user-agent");
+    setting_add("useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Version/8.0 Safari/538.15", webkit, 0, "user-agent");
     setting_add("webaudio", TYPE_BOOLEAN, &off, webkit, 0, "enable-webaudio");
     setting_add("webgl", TYPE_BOOLEAN, &off, webkit, 0, "enable-webgl");
     setting_add("webinspector", TYPE_BOOLEAN, &off, webkit, 0, "enable-developer-extras");
