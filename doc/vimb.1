@@ -697,20 +697,23 @@ executed in the order in which they were given.
 Remove all autocommands associated with \fIevent\fP and which pattern match
 \fIpat\fP, and add the command \fIcmd\fP. Note that the pattern is not matches
 literally to find autocommands to remove, like vim does. Vimb matches the
-autocommand pattern with \fIpat\fP.
+autocommand pattern with \fIpat\fP. If [\fIgroup\fP] is not given, deletes
+autocommands in current group, as noted above.
 .TP
 .BI ":au[tocmd]! [" group "] {" event "} {" pat "}"
 Remove all autocommands associated with \fIevent\fP and which pattern matches
-\fIpat\fP.
+\fIpat\fP in given group (current group by default).
 .TP
 .BI ":au[tocmd]! [" group "] * {" pat "}"
-Remove all autocommands with patterns matching \fIpat\fP for all events.
+Remove all autocommands with patterns matching \fIpat\fP for all events
+in given group (current group by default).
 .TP
 .BI ":au[tocmd]! [" group "] {" event "}"
-Remove all autocommands for \fIevent\fP.
+Remove all autocommands for \fIevent\fP in given group (current group
+by default).
 .TP
 .BI ":au[tocmd]! [" group "]"
-Remove all autocommands.
+Remove all autocommands in given group (current group by default).
 .TP
 .BI ":aug[roup] {" name "}"
 Define the autocmd group \fIname\fP for the following ":autocmd" commands. The name
