@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include "main.h"
 #include "setting.h"
 #include "shortcut.h"
@@ -730,7 +731,7 @@ static int proxy(const char *name, int type, void *value, void *data)
         const char *http_proxy = g_getenv("http_proxy");
 
         if (http_proxy != NULL && *http_proxy != '\0') {
-            char *proxy_new = g_str_has_prefix(http_proxy, "http://")
+            char *proxy_new = strstr(http_proxy, "://")
                 ? g_strdup(http_proxy)
                 : g_strconcat("http://", http_proxy, NULL);
 

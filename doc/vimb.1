@@ -1370,7 +1370,8 @@ started with -e option.
 .TP
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
-`proxy' is enabled, this will be used as http proxy.
+`proxy' is enabled, this will be used as http proxy. If the proxy URL has no
+scheme set, http is assumed.
 .TP
 .B no_proxy
 A comma separated list of domains and/or ips which should not be proxied. Note
