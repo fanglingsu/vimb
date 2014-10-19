@@ -309,7 +309,7 @@ typedef struct {
 typedef struct {
 #ifdef FEATURE_COOKIE
     time_t       cookie_timeout;
-    int		 cookie_expire_time;
+    int          cookie_expire_time;
 #endif
     int          scrollstep;
     char         *download_dir;
