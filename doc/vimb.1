@@ -1108,6 +1108,13 @@ cookies)}.
 .B cookie-timeout (int)
 Cookie timeout in seconds.
 .TP
+.B cookie-expire-time (int)
+Enforce expire-time on cookies. The default value `-1' keep expire-time as
+defined by server side. The value `0' convert all cookies as session-only
+cookies (`cookie-timeout' setting is used as for any other session-cookie). Any
+other value enforce the expire-time (the expire-time value will be the lower
+between server-side request and time defined with `cookie-expire-time').
+.TP
 .B download-command (string)
 A command with placeholder '%s' that will be invoked to download a uri.
 .RS

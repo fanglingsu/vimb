@@ -163,6 +163,8 @@ void setting_init()
     setting_add("cookie-accept", TYPE_CHAR, &"always", cookie_accept, 0, NULL);
     i = 4800;
     setting_add("cookie-timeout", TYPE_INTEGER, &i, internal, 0, &vb.config.cookie_timeout);
+    i = -1;
+    setting_add("cookie-expire-time", TYPE_INTEGER, &i, internal, 0, &vb.config.cookie_expire_time);
 #endif
     setting_add("strict-ssl", TYPE_BOOLEAN, &on, soup, 0, "ssl-strict");
     setting_add("strict-focus", TYPE_BOOLEAN, &off, internal, 0, &vb.config.strict_focus);
