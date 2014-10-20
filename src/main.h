@@ -320,7 +320,7 @@ typedef struct {
     char         *nextpattern;    /* regex patter nfor prev link matching */
     char         *prevpattern;    /* regex patter nfor next link matching */
     char         *file;           /* path to the custome config file */
-    char         *autocmd;        /* command given by --cmd option */
+    GList        *autocmd;        /* list of commands given by --cmd option */
     char         *cafile;         /* path to the ca file */
     GTlsDatabase *tls_db;         /* tls database */
     float        default_zoom;    /* default zoomlevel that is applied on zz zoom reset */

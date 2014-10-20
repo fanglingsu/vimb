@@ -211,8 +211,15 @@ gboolean vb_load_uri(const Arg *arg)
 
     if (arg->i == VB_TARGET_NEW) {
         guint i = 0;
-        char *cmd[9];
 
+        /* memory allocation */
+        char ** cmd = g_malloc_n(3
+                + (vb.embed ? 2 : 0)
+                + (vb.config.file ? 2 : 0)
+                + g_list_length(vb.config.autocmd) * 2
+                , sizeof(char *));
+
+        /* build commandline */
         cmd[i++] = *args;
         if (vb.embed) {
             char xid[64];
@@ -224,15 +231,18 @@ gboolean vb_load_uri(const Arg *arg)
             cmd[i++] = "-c";
             cmd[i++] = vb.config.file;
         }
-        if (vb.config.autocmd) {
+        for (GList *l = vb.config.autocmd; l; l = l->next) {
             cmd[i++] = "-C";
-            cmd[i++] = vb.config.autocmd;
+            cmd[i++] = l->data;
         }
         cmd[i++] = uri;
         cmd[i++] = NULL;
 
         /* spawn a new browser instance */
         g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+
+        /* free commandline */
+        g_free(cmd);
     } else {
         /* Load a web page into the browser instance */
         webkit_web_view_load_uri(vb.gui.webview, uri);
@@ -417,6 +427,8 @@ void vb_quit(gboolean force)
 #ifdef FEATURE_AUTOCMD
     autocmd_cleanup();
 #endif
+
+    g_list_free_full(vb.config.autocmd, g_free);
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
@@ -1472,6 +1484,12 @@ static void read_from_stdin(void)
     g_free(buf);
 }
 
+static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
+{
+    vb.config.autocmd = g_list_append(vb.config.autocmd, g_strdup(value));
+    return TRUE;
+}
+
 int main(int argc, char *argv[])
 {
     static char *winid = NULL;
@@ -1480,7 +1498,7 @@ int main(int argc, char *argv[])
     char *pid;
 
     static GOptionEntry opts[] = {
-        {"cmd", 'C', 0, G_OPTION_ARG_STRING, &vb.config.autocmd, "Ex command run before first page is loaded", NULL},
+        {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
@@ -1514,8 +1532,8 @@ int main(int argc, char *argv[])
     init_core();
 
     /* process the --cmd if this was given */
-    if (vb.config.autocmd) {
-        ex_run_string(vb.config.autocmd);
+    for (GList *l = vb.config.autocmd; l; l = l->next) {
+        ex_run_string(l->data);
     }
 
     /* open uri given as last argument */
