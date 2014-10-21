@@ -216,7 +216,7 @@ gboolean vb_load_uri(const Arg *arg)
         char ** cmd = g_malloc_n(3
                 + (vb.embed ? 2 : 0)
                 + (vb.config.file ? 2 : 0)
-                + g_slist_length(vb.config.autocmd) * 2
+                + g_slist_length(vb.config.cmdargs) * 2
                 , sizeof(char *));
 
         /* build commandline */
@@ -231,7 +231,7 @@ gboolean vb_load_uri(const Arg *arg)
             cmd[i++] = "-c";
             cmd[i++] = vb.config.file;
         }
-        for (GSList *l = vb.config.autocmd; l; l = l->next) {
+        for (GSList *l = vb.config.cmdargs; l; l = l->next) {
             cmd[i++] = "-C";
             cmd[i++] = l->data;
         }
@@ -428,7 +428,7 @@ void vb_quit(gboolean force)
     autocmd_cleanup();
 #endif
 
-    g_slist_free_full(vb.config.autocmd, g_free);
+    g_slist_free_full(vb.config.cmdargs, g_free);
 
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
@@ -1486,7 +1486,7 @@ static void read_from_stdin(void)
 
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
 {
-    vb.config.autocmd = g_slist_append(vb.config.autocmd, g_strdup(value));
+    vb.config.cmdargs = g_slist_append(vb.config.cmdargs, g_strdup(value));
     return TRUE;
 }
 
@@ -1532,7 +1532,7 @@ int main(int argc, char *argv[])
     init_core();
 
     /* process the --cmd if this was given */
-    for (GSList *l = vb.config.autocmd; l; l = l->next) {
+    for (GSList *l = vb.config.cmdargs; l; l = l->next) {
         ex_run_string(l->data);
     }
 
