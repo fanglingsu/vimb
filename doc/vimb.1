@@ -34,7 +34,9 @@ Mandatory arguments to long options are mandatory for short options too.
 .TP
 .BI "\-C, \-\-cmd " "CMD"
 Run \fICMD\fP as ex command line right before the first page is loaded.
-Several ex commands can be used separated by "|".
+If the flag is used more than one time, the ordering is preserved when
+\fICMD\fP are executed. You could also pass several ex commands in one
+\fICMD\fP, if there are separated by "|".
 
 Example: vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"
 .TP
