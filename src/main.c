@@ -92,6 +92,8 @@ void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const c
 void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 static void read_from_stdin(void);
+static void contentsecuritypolicy_request_queued_cb(SoupSession *session, SoupMessage *msg,
+    gpointer data);
 
 /* functions */
 #ifdef FEATURE_WGET_PROGRESS_BAR
@@ -961,6 +963,8 @@ static void setup_signals()
         NULL
     );
 
+    g_signal_connect(vb.session, "request-queued", G_CALLBACK(contentsecuritypolicy_request_queued_cb), NULL);
+
 #ifdef FEATURE_NO_SCROLLBARS
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
     g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
@@ -1488,6 +1492,18 @@ static void read_from_stdin(void)
         webkit_web_view_load_string(vb.gui.webview, buf, "text/html", NULL, "(stdin)");
     }
     g_free(buf);
+}
+
+static void contentsecuritypolicy_request_queued_cb(SoupSession *session, SoupMessage *msg,
+        gpointer data)
+{
+    if (!vb.config.contentsecuritypolicy || g_str_equal("", vb.config.contentsecuritypolicy)) {
+        soup_message_headers_remove(msg->response_headers, "Content-Security-Policy");
+
+    } else {
+        soup_message_headers_replace(msg->response_headers, "Content-Security-Policy",
+                vb.config.contentsecuritypolicy);
+    }
 }
 
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
