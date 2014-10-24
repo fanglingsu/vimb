@@ -734,9 +734,6 @@ static void init_core(void)
     } else {
 
         gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-#ifdef HAS_GTK3
-        gtk_window_set_has_resize_grip(GTK_WINDOW(gui->window), false);
-#endif
         gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT_UCFIRST);
         gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT_UCFIRST);
 
@@ -810,10 +807,12 @@ static void init_core(void)
     gtk_container_add(GTK_CONTAINER(scroll), GTK_WIDGET(gui->webview));
     gtk_container_add(GTK_CONTAINER(gui->eventbox), GTK_WIDGET(gui->statusbar.box));
     gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->pane));
+#ifdef HAS_GTK3
+    gtk_widget_set_halign(gui->statusbar.left, GTK_ALIGN_START);
+#else
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
+#endif
     gtk_label_set_ellipsize(GTK_LABEL(gui->statusbar.left), PANGO_ELLIPSIZE_END);
-    gtk_misc_set_alignment(GTK_MISC(gui->statusbar.right), 1.0, 0.0);
-    gtk_misc_set_alignment(GTK_MISC(gui->statusbar.cmd), 1.0, 0.0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, true, true, 2);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.cmd, false, false, 0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, false, false, 2);
