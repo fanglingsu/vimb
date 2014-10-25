@@ -203,6 +203,7 @@ void setting_init()
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
     setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
     setting_add("header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, NULL);
+    setting_add("content-security-policy", TYPE_CHAR, &"", internal, 0, &vb.config.contentsecuritypolicy);
     setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);

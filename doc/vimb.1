@@ -630,8 +630,8 @@ Events:
 .TP
 .B LoadProvisional
 Fired if a new page is going to opened. No data has been received yet, the load
-may still fail for transport issues. Out of this reason this event has no
-associated URL to match.
+may still fail for transport issues. This is the right event to set `content-security-policy'
+setting.
 .TP
 .B LoadCommited
 Fired if first data chunk has arrived, meaning that the necessary transport
@@ -1190,6 +1190,25 @@ Example:
 .IP ":set header=DNT=1,User-Agent,Cookie='name=value'"
 Send the 'Do Not Track' header with each request and remove the User-Agent
 Header completely from request.
+.PD
+.RE
+.TP
+.B content-security-policy (string)
+Prepend a `Content-Security-Policy' HTTP-Header to responses received from server.
+This setting has to be setted early if managed with `autocmd' (at LoadProvisional),
+in order to be managed by webkit.
+
+It could be used to implement a whitelist policy for visited uri.
+
+Note that this setting will not remplace existing headers, but add one.
+
+Please refer to `http://www.w3.org/TR/CSP/' for syntax.
+.RS
+.PP
+Example:
+.PD 0
+.IP ":set content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'"
+Webkit will see the `Content-Security-Policy' header defined with each response.
 .PD
 .RE
 .TP
