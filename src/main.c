@@ -1497,7 +1497,7 @@ static void read_from_stdin(void)
 static void contentsecuritypolicy_request_queued_cb(SoupSession *session, SoupMessage *msg,
         gpointer data)
 {
-    if (!vb.config.contentsecuritypolicy || g_str_equal("", vb.config.contentsecuritypolicy)) {
+    if (!vb.config.contentsecuritypolicy || *vb.config.contentsecuritypolicy == '\0') {
         soup_message_headers_remove(msg->response_headers, "Content-Security-Policy");
 
     } else {
