@@ -819,7 +819,17 @@ static void init_core(void)
 
     gtk_box_pack_start(gui->box, scroll, true, true, 0);
     gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
+
+#ifdef HAS_GTK3
+    /* use a scrolled window to hide overflowing text in inputbox like GTK2 */
+    GtkWidget *inputscroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(inputscroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
+    gtk_container_add(GTK_CONTAINER(inputscroll), gui->input);
+
+    gtk_box_pack_end(gui->box, inputscroll, false, false, 0);
+#else
     gtk_box_pack_end(gui->box, gui->input, false, false, 0);
+#endif
 
     /* init some state variable */
     vb.state.enable_register = false;
