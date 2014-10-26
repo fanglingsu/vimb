@@ -1144,7 +1144,8 @@ static void register_cleanup(void)
 
 static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
 {
-    gboolean propagate = false;
+    /* let webkit handle the click - for example on a link */
+    gboolean nopropagate = false;
     WebKitHitTestResultContext context;
 
     WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
@@ -1158,7 +1159,7 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
         g_object_get(result, "link-uri", &a.s, NULL);
         vb_load_uri(&a);
 
-        propagate = true;
+        nopropagate = true;
     } else if (vb.mode->id != 'p') {
         /* don't switch back to input mode if we are currently in pass through
          * mode when the user clicks into a form field */
@@ -1170,18 +1171,15 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
              * used for WYSIWYG editors where the click runs into a div and
              * not the editable element itself. */
             mode_enter('i');
-            propagate = true;
         } else if (vb.mode->id == 'i') {
             /* make sure we leave insert mode if the user click on a none
              * editable element */
             mode_enter('n');
-            /* let webkit handle the click - for example on a link */
-            propagate = false;
         }
     }
     g_object_unref(result);
 
-    return propagate;
+    return nopropagate;
 }
 
 static gboolean new_window_policy_cb(
