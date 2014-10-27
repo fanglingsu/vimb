@@ -45,7 +45,7 @@ typedef struct {
 static void hsts_provider_class_init(HSTSProviderClass *klass);
 static void hsts_provider_init(HSTSProvider *self);
 static void hsts_provider_finalize(GObject* obj);
-static gboolean should_secure_host(HSTSProvider *provider,
+static inline gboolean should_secure_host(HSTSProvider *provider,
     const char *host);
 static void process_hsts_header(SoupMessage *msg, gpointer data);
 static void parse_hsts_header(HSTSProvider *provider,
