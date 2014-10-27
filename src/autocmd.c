@@ -49,6 +49,7 @@ static struct {
     {"DownloadStart",    0x0020},
     {"DownloadFinished", 0x0040},
     {"DownloadFailed",   0x0080},
+    {"RequestQueued",    0x0100},
 };
 
 extern VbCore vb;

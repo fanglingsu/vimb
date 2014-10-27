@@ -92,8 +92,7 @@ void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const c
 void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 static void read_from_stdin(void);
-static void contentsecuritypolicy_request_queued_cb(SoupSession *session, SoupMessage *msg,
-    gpointer data);
+static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data);
 
 /* functions */
 #ifdef FEATURE_WGET_PROGRESS_BAR
@@ -963,7 +962,7 @@ static void setup_signals()
         NULL
     );
 
-    g_signal_connect(vb.session, "request-queued", G_CALLBACK(contentsecuritypolicy_request_queued_cb), NULL);
+    g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
 
 #ifdef FEATURE_NO_SCROLLBARS
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
@@ -1494,14 +1493,27 @@ static void read_from_stdin(void)
     g_free(buf);
 }
 
-static void contentsecuritypolicy_request_queued_cb(SoupSession *session, SoupMessage *msg,
-        gpointer data)
+static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data)
 {
-    if (!vb.config.contentsecuritypolicy || *vb.config.contentsecuritypolicy == '\0') {
-        soup_message_headers_remove(msg->response_headers, "Content-Security-Policy");
+    SoupURI   *suri = soup_message_get_uri(msg);
+    const char *uri = soup_uri_to_string(suri, false);
 
-    } else {
-        soup_message_headers_replace(msg->response_headers, "Content-Security-Policy",
+    autocmd_run(AU_REQUEST_QUEUED, uri, NULL);
+
+#ifdef DEBUG
+    SoupMessageHeadersIter iter;
+    const char *name, *value;
+
+    soup_message_headers_iter_init(&iter, msg->response_headers);
+    while (soup_message_headers_iter_next(&iter, &name, &value)) {
+        PRINT_DEBUG("unexpected header> %s: %s", name, value);
+        abort();
+    }
+#endif
+
+    /* add a fake Content-Security-Policy header in server-response header */
+    if (vb.config.contentsecuritypolicy && *vb.config.contentsecuritypolicy != '\0') {
+        soup_message_headers_append(msg->response_headers, "Content-Security-Policy",
                 vb.config.contentsecuritypolicy);
     }
 }
