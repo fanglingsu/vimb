@@ -630,8 +630,7 @@ Events:
 .TP
 .B LoadProvisional
 Fired if a new page is going to opened. No data has been received yet, the load
-may still fail for transport issues. This is the right event to set `content-security-policy'
-setting.
+may still fail for transport issues.
 .TP
 .B LoadCommited
 Fired if first data chunk has arrived, meaning that the necessary transport
@@ -648,6 +647,11 @@ Fires when everything that was required to display on the page has been loaded.
 .B LoadFailed
 Fired when some error occurred during the page load that prevented it from
 being completed.
+.TP
+.B RequestQueued
+Fired before each request (and so, multiple times in one page: one time for
+each image, css, scripts, frames...). This is the right event to set
+`content-security-policy' setting.
 .TP
 .B DownloadStart
 Fired right before a download is started. This is fired for vimb downloads as
@@ -1194,9 +1198,9 @@ Header completely from request.
 .RE
 .TP
 .B content-security-policy (string)
-Prepend a `Content-Security-Policy' HTTP-Header to responses received from server.
-This setting has to be setted early if managed with `autocmd' (at LoadProvisional),
-in order to be managed by webkit.
+Prepend a `Content-Security-Policy' HTTP-Header to responses received from
+server. This setting has to be setted early if managed with `autocmd' (at
+RequestQueued), in order to be managed by webkit.
 
 It could be used to implement a whitelist policy for visited uri.
 
