@@ -1495,13 +1495,14 @@ static void read_from_stdin(void)
 
 static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data)
 {
+#ifdef FEATURE_AUTOCMD
     SoupURI *suri = soup_message_get_uri(msg);
     char     *uri = soup_uri_to_string(suri, false);
 
     autocmd_run(AU_REQUEST_QUEUED, uri, NULL);
 
     g_free(uri);
-
+#endif
 #ifdef DEBUG
     SoupMessageHeadersIter iter;
     const char *name, *value;
