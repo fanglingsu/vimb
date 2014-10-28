@@ -243,6 +243,14 @@ gboolean autocmd_add(char *name, gboolean delete)
 }
 
 /**
+ * Return if an event is actually used by autocmd
+ */
+gboolean autocmd_in_use(AuEvent event)
+{
+    return usedbits & events[event].bits;
+}
+
+/**
  * Run named auto command.
  */
 gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
