@@ -222,6 +222,9 @@ gboolean autocmd_add(char *name, gboolean delete)
         /* if ther was at least one command removed - rebuilt the used bits */
         if (removed) {
             rebuild_used_bits();
+
+            /* update signals dependants of autocmd */
+            vb_update_signals();
         }
 
         return true;
@@ -237,6 +240,9 @@ gboolean autocmd_add(char *name, gboolean delete)
 
         /* merge the autocmd bits into the used bits */
         usedbits |= cmd->bits;
+
+        /* update signals dependants of autocmd */
+        vb_update_signals();
     }
 
     return true;

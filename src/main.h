@@ -382,6 +382,7 @@ void vb_update_statusbar(void);
 void vb_update_status_style(void);
 void vb_update_input_style(void);
 void vb_update_urlbar(const char *uri);
+void vb_update_signals(void);
 void vb_register_add(char buf, const char *value);
 const char *vb_register_get(char buf);
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);

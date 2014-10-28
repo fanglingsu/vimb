@@ -402,6 +402,43 @@ void vb_update_urlbar(const char *uri)
 #endif
 }
 
+void vb_update_signals()
+{
+    /**
+     * search the signal handler for signal associated to vb.session
+     * and matching function session_request_queued_cb
+     */
+    gulong hdl = g_signal_handler_find(vb.session,
+            G_SIGNAL_MATCH_FUNC,
+            0, 0, NULL, session_request_queued_cb, NULL);
+
+    if ((vb.config.contentsecuritypolicy && *vb.config.contentsecuritypolicy != '\0')
+#ifdef FEATURE_AUTOCMD
+            || autocmd_in_use(AU_REQUEST_QUEUED)
+#endif
+       ) {
+        /**
+         * content-security-policy OR AU_REQUEST_QUEUED are in used:
+         * the signal should be connected
+         */
+        if (hdl == 0) {
+            /* the signal wasn't found: connect it */
+	    g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
+
+            PRINT_DEBUG("request-queued connected");
+        }
+
+    } else {
+        /* the signal should not be here */
+        if (hdl != 0) {
+            /* the signal was found: disconnect it */
+            g_signal_handler_disconnect(vb.session, hdl);
+
+            PRINT_DEBUG("request-queued disconnected");
+        }
+    }
+}
+
 void vb_quit(gboolean force)
 {
     /* if not forced quit - don't quit if there are still running downloads */
@@ -961,8 +998,6 @@ static void setup_signals()
         "signal::navigation-policy-decision-requested", G_CALLBACK(navigation_decision_requested_cb), NULL,
         NULL
     );
-
-    g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
 
 #ifdef FEATURE_NO_SCROLLBARS
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
