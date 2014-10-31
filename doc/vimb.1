@@ -650,8 +650,7 @@ being completed.
 .TP
 .B RequestQueued
 Fired before each request (and so, multiple times in one page: one time for
-each image, css, scripts, frames...). This is the right event to set
-`content-security-policy' setting.
+each image, css, scripts, frames...).
 .TP
 .B DownloadStart
 Fired right before a download is started. This is fired for vimb downloads as
@@ -1197,22 +1196,27 @@ Header completely from request.
 .PD
 .RE
 .TP
-.B content-security-policy (string)
-Prepend a `Content-Security-Policy' HTTP-Header to responses received from
-server. This setting has to be setted early if managed with `autocmd' (at
-RequestQueued), in order to be managed by webkit.
+.B auto-response-header (list)
+Prepend HTTP-Header to responses received from server, based on pattern
+matching. The purpose of this setting is to enforce some security setting in
+the client. For example, you could set Content-Security-Policy (see
+`http://www.w3.org/TR/CSP/') for implement a whitelist policy, or set
+Strict-Transport-Security for server that don't provide this header whereas
+they propose https website.
 
-It could be used to implement a whitelist policy for visited uri.
+Note that this setting will not remplace existing headers, but add a new one.
+If multiple patterns match a request uri, the last matched rule will be
+applied. You could also specified differents headers for same pattern.
 
-Note that this setting will not remplace existing headers, but add one.
-
-Please refer to `http://www.w3.org/TR/CSP/' for syntax.
+The format is: `pattern name=value`. For each request matching `pattern`, an
+HTTP header "name: value" will be added to the response.
 .RS
 .PP
 Example:
 .PD 0
-.IP ":set content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'"
-Webkit will see the `Content-Security-Policy' header defined with each response.
+.IP ":set auto-response-header=* Content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'
+.IP ":set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/
+.IP ":set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000
 .PD
 .RE
 .TP

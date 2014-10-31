@@ -29,6 +29,7 @@
 #ifdef FEATURE_HSTS
 #include "hsts.h"
 #endif
+#include "arh.h"
 
 typedef enum {
     TYPE_BOOLEAN,
@@ -78,6 +79,7 @@ static int ca_bundle(const char *name, int type, void *value, void *data);
 static int proxy(const char *name, int type, void *value, void *data);
 static int user_style(const char *name, int type, void *value, void *data);
 static int headers(const char *name, int type, void *value, void *data);
+static int autoresponseheader(const char *name, int type, void *value, void *data);
 static int prevnext(const char *name, int type, void *value, void *data);
 static int fullscreen(const char *name, int type, void *value, void *data);
 #ifdef FEATURE_HSTS
@@ -203,7 +205,7 @@ void setting_init()
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
     setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
     setting_add("header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, NULL);
-    setting_add("content-security-policy", TYPE_CHAR, &"", internal, 0, &vb.config.contentsecuritypolicy);
+    setting_add("auto-response-header", TYPE_CHAR, &"", autoresponseheader, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
@@ -811,6 +813,27 @@ static int headers(const char *name, int type, void *value, void *data)
     vb.config.headers = soup_header_parse_param_list((char*)value);
 
     return SETTING_OK;
+}
+
+static int autoresponseheader(const char *name, int type, void *value, void *data)
+{
+    const char *error = NULL;
+
+    GSList *new = arh_parse((char *)value, &error);
+
+    if (! error) {
+        /* remove previous parsed headers */
+        arh_free(vb.config.autoresponseheader);
+
+        /* add the new one */
+        vb.config.autoresponseheader = new;
+
+        return SETTING_OK;
+
+    } else {
+        vb_echo(VB_MSG_ERROR, true, "auto-response-header: %s", error);
+        return SETTING_ERROR | SETTING_USER_NOTIFIED;
+    }
 }
 
 static int prevnext(const char *name, int type, void *value, void *data)

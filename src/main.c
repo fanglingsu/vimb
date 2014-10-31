@@ -43,6 +43,7 @@
 #include "bookmark.h"
 #include "js.h"
 #include "autocmd.h"
+#include "arh.h"
 
 /* variables */
 static char **args;
@@ -1495,14 +1496,13 @@ static void read_from_stdin(void)
 
 static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data)
 {
-#ifdef FEATURE_AUTOCMD
     SoupURI *suri = soup_message_get_uri(msg);
     char     *uri = soup_uri_to_string(suri, false);
 
+#ifdef FEATURE_AUTOCMD
     autocmd_run(AU_REQUEST_QUEUED, uri, NULL);
-
-    g_free(uri);
 #endif
+
 #ifdef DEBUG
     SoupMessageHeadersIter iter;
     const char *name, *value;
@@ -1514,11 +1514,8 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
     }
 #endif
 
-    /* add a fake Content-Security-Policy header in server-response header */
-    if (vb.config.contentsecuritypolicy && *vb.config.contentsecuritypolicy != '\0') {
-        soup_message_headers_append(msg->response_headers, "Content-Security-Policy",
-                vb.config.contentsecuritypolicy);
-    }
+    arh_run(vb.config.autoresponseheader, uri, msg);
+    g_free(uri);
 }
 
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
