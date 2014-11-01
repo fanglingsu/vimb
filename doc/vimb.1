@@ -1209,7 +1209,8 @@ If multiple patterns match a request uri, the last matched rule will be
 applied. You could also specified differents headers for same pattern.
 
 The format is: `pattern name=value`. For each request matching `pattern`, an
-HTTP header "name: value" will be added to the response.
+HTTP header "name: value" will be added to the response. If value is empty, a
+previously added header could be removed.
 .RS
 .PP
 Example:

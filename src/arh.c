@@ -50,7 +50,7 @@ GSList *arh_parse(const char *data, const char **error)
         char *name    = read_name(&parse);
         char *value   = read_value(&parse);
 
-        if (pattern && name && value) {
+        if (pattern && name) {
             MatchARH *marh = g_slice_new0(MatchARH);
 
             marh->pattern = g_strdup(pattern);
@@ -103,12 +103,20 @@ void arh_run(GSList *list, const char *uri, SoupMessage *msg)
         MatchARH *marh = (MatchARH *)l->data;
 
         if (util_wildmatch(marh->pattern, uri)) {
-            /* the pattern match, so replace headers 
-	     * as side-effect, for one header the last matched will be keeped */
-            soup_message_headers_replace(msg->response_headers,
-                    marh->name, marh->value);
+            if (marh->value) {
+                /* the pattern match, so replace headers
+                 * as side-effect, for one header the last matched will be keeped */
+                soup_message_headers_replace(msg->response_headers,
+                        marh->name, marh->value);
 
-            PRINT_DEBUG(" header added: %s: %s", marh->name, marh->value);
+                PRINT_DEBUG(" header added: %s: %s", marh->name, marh->value);
+            } else {
+                /* remove a previously setted auto-reponse-header */
+                soup_message_headers_remove(msg->response_headers, marh->name);
+
+                PRINT_DEBUG(" header removed: %s", marh->name);
+            }
+
         }
     }
 }
