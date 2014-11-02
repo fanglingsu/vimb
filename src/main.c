@@ -732,9 +732,7 @@ static void init_core(void)
         gui->window = gtk_plug_new(vb.embed);
         xid = g_strdup_printf("%u", (int)vb.embed);
     } else {
-
         gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_wmclass(GTK_WINDOW(gui->window), PROJECT, PROJECT_UCFIRST);
         gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT_UCFIRST);
 
         gtk_widget_realize(GTK_WIDGET(gui->window));
