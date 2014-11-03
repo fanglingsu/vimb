@@ -1514,7 +1514,10 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
     }
 #endif
 
+#ifdef FEATURE_ARH
     arh_run(vb.config.autoresponseheader, uri, msg);
+#endif
+
     g_free(uri);
 }
 

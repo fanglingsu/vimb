@@ -18,6 +18,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 #include "config.h"
+#ifdef FEATURE_ARH
 
 #ifndef _ARH_H
 #define _ARH_H
@@ -29,3 +30,4 @@ void    arh_free(GSList *);
 void    arh_run(GSList *, const char *, SoupMessage *);
 
 #endif /* end of include guard: _ARH_H */
+#endif

@@ -18,6 +18,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 #include "config.h"
+#ifdef FEATURE_ARH
 #include "ascii.h"
 #include "arh.h"
 #include "util.h"
@@ -228,3 +229,4 @@ static char *read_value(char **line)
 
     return value;
 }
+#endif

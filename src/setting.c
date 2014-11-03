@@ -79,7 +79,9 @@ static int ca_bundle(const char *name, int type, void *value, void *data);
 static int proxy(const char *name, int type, void *value, void *data);
 static int user_style(const char *name, int type, void *value, void *data);
 static int headers(const char *name, int type, void *value, void *data);
+#ifdef FEATURE_ARH
 static int autoresponseheader(const char *name, int type, void *value, void *data);
+#endif
 static int prevnext(const char *name, int type, void *value, void *data);
 static int fullscreen(const char *name, int type, void *value, void *data);
 #ifdef FEATURE_HSTS
@@ -205,7 +207,9 @@ void setting_init()
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
     setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
     setting_add("header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, NULL);
+#ifdef FEATURE_ARH
     setting_add("auto-response-header", TYPE_CHAR, &"", autoresponseheader, FLAG_LIST|FLAG_NODUP, NULL);
+#endif
     setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
@@ -815,6 +819,7 @@ static int headers(const char *name, int type, void *value, void *data)
     return SETTING_OK;
 }
 
+#ifdef FEATURE_ARH
 static int autoresponseheader(const char *name, int type, void *value, void *data)
 {
     const char *error = NULL;
@@ -835,6 +840,7 @@ static int autoresponseheader(const char *name, int type, void *value, void *dat
         return SETTING_ERROR | SETTING_USER_NOTIFIED;
     }
 }
+#endif
 
 static int prevnext(const char *name, int type, void *value, void *data)
 {
