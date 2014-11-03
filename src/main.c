@@ -1507,17 +1507,6 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
     SoupURI *suri = soup_message_get_uri(msg);
     char     *uri = soup_uri_to_string(suri, false);
 
-#ifdef DEBUG
-    SoupMessageHeadersIter iter;
-    const char *name, *value;
-
-    soup_message_headers_iter_init(&iter, msg->response_headers);
-    while (soup_message_headers_iter_next(&iter, &name, &value)) {
-        PRINT_DEBUG("unexpected header> %s: %s", name, value);
-        abort();
-    }
-#endif
-
     arh_run(vb.config.autoresponseheader, uri, msg);
 
     g_free(uri);

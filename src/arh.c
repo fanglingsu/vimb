@@ -60,9 +60,6 @@ GSList *arh_parse(const char *data, const char **error)
 
             parsed = g_slist_append(parsed, marh);
 
-            PRINT_DEBUG("append pattern='%s' name='%s' value='%s'",
-                   marh->pattern, marh->name, marh->value);
-
         } else {
             /* one error occurs: free already parsed list */
             arh_free(parsed);
