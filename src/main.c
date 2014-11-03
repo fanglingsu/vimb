@@ -93,7 +93,9 @@ void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const c
 void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 static void read_from_stdin(void);
+#if defined(FEATURE_AUTOCMD) || defined(FEATURE_ARH)
 static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data);
+#endif
 
 /* functions */
 #ifdef FEATURE_WGET_PROGRESS_BAR
@@ -966,7 +968,9 @@ static void setup_signals()
         NULL
     );
 
+#if defined(FEATURE_AUTOCMD) || defined(FEATURE_ARH)
     g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
+#endif
 
 #ifdef FEATURE_NO_SCROLLBARS
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
@@ -1497,6 +1501,7 @@ static void read_from_stdin(void)
     g_free(buf);
 }
 
+#if defined(FEATURE_AUTOCMD) || defined(FEATURE_ARH)
 static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data)
 {
     SoupURI *suri = soup_message_get_uri(msg);
@@ -1523,6 +1528,7 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
 
     g_free(uri);
 }
+#endif
 
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
 {
