@@ -429,6 +429,9 @@ void vb_quit(gboolean force)
 #ifdef FEATURE_AUTOCMD
     autocmd_cleanup();
 #endif
+#ifdef FEATURE_ARH
+    arh_free(vb.config.autoresponseheader);
+#endif
 
     g_slist_free_full(vb.config.cmdargs, g_free);
 
