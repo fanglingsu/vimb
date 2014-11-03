@@ -36,7 +36,6 @@ typedef enum {
     AU_DOWNLOAD_START,
     AU_DOWNLOAD_FINISHED,
     AU_DOWNLOAD_FAILED,
-    AU_REQUEST_QUEUED,
 } AuEvent;
 
 void autocmd_init(void);

@@ -93,7 +93,7 @@ void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const c
 void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 static void read_from_stdin(void);
-#if defined(FEATURE_AUTOCMD) || defined(FEATURE_ARH)
+#ifdef FEATURE_ARH
 static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data);
 #endif
 
@@ -968,7 +968,7 @@ static void setup_signals()
         NULL
     );
 
-#if defined(FEATURE_AUTOCMD) || defined(FEATURE_ARH)
+#ifdef FEATURE_ARH
     g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
 #endif
 
@@ -1501,15 +1501,11 @@ static void read_from_stdin(void)
     g_free(buf);
 }
 
-#if defined(FEATURE_AUTOCMD) || defined(FEATURE_ARH)
+#ifdef FEATURE_ARH
 static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data)
 {
     SoupURI *suri = soup_message_get_uri(msg);
     char     *uri = soup_uri_to_string(suri, false);
-
-#ifdef FEATURE_AUTOCMD
-    autocmd_run(AU_REQUEST_QUEUED, uri, NULL);
-#endif
 
 #ifdef DEBUG
     SoupMessageHeadersIter iter;
@@ -1522,9 +1518,7 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
     }
 #endif
 
-#ifdef FEATURE_ARH
     arh_run(vb.config.autoresponseheader, uri, msg);
-#endif
 
     g_free(uri);
 }
