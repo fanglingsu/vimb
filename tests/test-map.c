@@ -143,7 +143,12 @@ int main(int argc, char *argv[])
 
     /* add a test mode to handle the maped sequences */
     mode_init();
+#ifdef FEATURE_AUTOCMD
+    mode_add('t', NULL, NULL, keypress, NULL, AU_COMMAND_ENTER, AU_COMMAND_LEAVE);
+#endif
+#ifndef FEATURE_AUTOCMD
     mode_add('t', NULL, NULL, keypress, NULL);
+#endif
     mode_enter('t');
 
     g_test_add_func("/test-map/handle_string/simple", test_handle_string_simple);

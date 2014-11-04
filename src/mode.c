@@ -47,7 +47,12 @@ void mode_cleanup(void)
  * Creates a new mode with given callback functions.
  */
 void mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
-    ModeKeyFunc keypress, ModeInputChangedFunc input_changed)
+    ModeKeyFunc keypress, ModeInputChangedFunc input_changed
+#ifdef FEATURE_AUTOCMD
+    , AuEvent au_enter
+    , AuEvent au_leave
+#endif
+)
 {
     Mode *new = g_slice_new(Mode);
     new->id            = id;
@@ -56,6 +61,10 @@ void mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
     new->keypress      = keypress;
     new->input_changed = input_changed;
     new->flags         = 0;
+#ifdef FEATURE_AUTOCMD
+    new->au_enter  = au_enter;
+    new->au_leave  = au_leave;
+#endif
 
     g_hash_table_insert(modes, GINT_TO_POINTER(id), new);
 }
@@ -78,6 +87,11 @@ void mode_enter(char id)
         /* if there is a active mode, leave this first */
         if (vb.mode->leave) {
             vb.mode->leave();
+#ifdef FEATURE_AUTOCMD
+            if (vb.mode->au_leave) {
+                autocmd_run(vb.mode->au_leave, vb.state.uri, NULL);
+            }
+#endif
         }
     }
 
@@ -88,6 +102,11 @@ void mode_enter(char id)
     vb.mode = new;
     /* call enter only if the new mode isn't the current mode */
     if (new->enter) {
+#ifdef FEATURE_AUTOCMD
+        if (new->au_enter) {
+            autocmd_run(new->au_enter, vb.state.uri, NULL);
+        }
+#endif
         new->enter();
     }
 

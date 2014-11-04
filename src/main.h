@@ -37,6 +37,8 @@
 #include "hsts.h"
 #endif
 
+#include "autocmd.h"
+
 /* size of some I/O buffer */
 #define BUF_SIZE  512
 
@@ -259,6 +261,10 @@ typedef struct {
 #define FLAG_COMPLETION  0x0004  /* marks active completion submode */
 #define FLAG_PASSTHROUGH 0x0008  /* don't handle any other keybind than <esc> */
     unsigned int         flags;
+#ifdef FEATURE_AUTOCMD
+    AuEvent              au_enter;
+    AuEvent              au_leave;
+#endif
 } Mode;
 
 /* statusbar */
@@ -303,6 +309,9 @@ typedef struct {
     gboolean        enable_history;         /* indicates if history entries are written */
 #ifdef FEATURE_SEARCH_HIGHLIGHT
     int             search_matches;         /* number of matches search results */
+#endif
+#ifdef FEATURE_AUTOCMD
+    gboolean        autocmd_busy;
 #endif
 } State;
 

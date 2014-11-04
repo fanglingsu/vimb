@@ -39,9 +39,6 @@
 #include "handlers.h"
 #include "map.h"
 #include "js.h"
-#ifdef FEATURE_AUTOCMD
-#include "autocmd.h"
-#endif
 
 typedef enum {
 #ifdef FEATURE_AUTOCMD

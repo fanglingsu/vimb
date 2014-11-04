@@ -26,7 +26,12 @@
 void mode_init(void);
 void mode_cleanup(void);
 void mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
-    ModeKeyFunc keypress, ModeInputChangedFunc input_changed);
+    ModeKeyFunc keypress, ModeInputChangedFunc input_changed
+#ifdef FEATURE_AUTOCMD
+    , AuEvent au_enter
+    , AuEvent au_leave
+#endif
+    );
 void mode_enter(char id);
 void mode_enter_prompt(char id, const char *prompt, gboolean print_prompt);
 VbResult mode_handle_key(int key);

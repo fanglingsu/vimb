@@ -42,7 +42,6 @@
 #include "pass.h"
 #include "bookmark.h"
 #include "js.h"
-#include "autocmd.h"
 
 /* variables */
 static char **args;
@@ -832,20 +831,38 @@ static void init_core(void)
     /* init some state variable */
     vb.state.enable_register = false;
     vb.state.enable_history  = false;
+    vb.state.autocmd_busy    = false;
     vb.state.uri             = g_strdup("");
 
     /* initialize the modes */
     mode_init();
     if (!vb.config.kioskmode) {
+#ifdef FEATURE_AUTOCMD
+        mode_add('n', normal_enter, normal_leave, normal_keypress, NULL, AU_NORMAL_ENTER, AU_NORMAL_LEAVE);
+        mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed, AU_COMMAND_ENTER, AU_COMMAND_LEAVE);
+        mode_add('i', input_enter, input_leave, input_keypress, NULL, AU_INSERT_ENTER, AU_INSERT_LEAVE);
+        mode_add('p', pass_enter, pass_leave, pass_keypress, NULL, AU_PASSTHROUGH_ENTER, AU_PASSTHROUGH_LEAVE);
+#endif
+#ifndef FEATURE_AUTOCMD
         mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
         mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
         mode_add('i', input_enter, input_leave, input_keypress, NULL);
         mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
+#endif
     } else {
+#ifdef FEATURE_AUTOCMD
+        mode_add('n', NULL, NULL, NULL, NULL, AU_NORMAL_ENTER, AU_NORMAL_LEAVE);
+        mode_add('c', NULL, NULL, NULL, NULL, AU_COMMAND_ENTER, AU_COMMAND_LEAVE);
+        mode_add('i', NULL, NULL, NULL, NULL, AU_INSERT_ENTER, AU_INSERT_LEAVE);
+        mode_add('p', NULL, NULL, NULL, NULL, AU_PASSTHROUGH_ENTER, AU_PASSTHROUGH_LEAVE);
+#endif
+#ifndef FEATURE_AUTOCMD
         mode_add('n', NULL, NULL, NULL, NULL);
         mode_add('c', NULL, NULL, NULL, NULL);
         mode_add('i', NULL, NULL, NULL, NULL);
         mode_add('p', NULL, NULL, NULL, NULL);
+#endif
+
     }
 
     /* initialize the marks with empty values */
