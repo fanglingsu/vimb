@@ -24,16 +24,12 @@
 #include "util.h"
 
 typedef struct {
-    char *pattern; /* pattern the uri is matched against */
-    char *name;    /* header name */
-    char *value;   /* header value */
+    char       *pattern; /* pattern the uri is matched against */
+    GHashTable *headers; /* header list */
 } MatchARH;
 
 static void marh_free(MatchARH *);
-static char *read_pattern(char **parse);
-static char *read_name(char **parse);
-static char *read_value(char **parse);
-
+static char *read_pattern(char **);
 
 /**
  * parse the data string to a list of MatchARH
@@ -43,25 +39,53 @@ static char *read_value(char **parse);
 GSList *arh_parse(const char *data, const char **error)
 {
     GSList *parsed = NULL;
-    char *data_dup = g_strdup(data);
-    char *parse = data_dup;
+    GSList *data_list = NULL;
 
-    while (*parse) {
-        char *pattern = read_pattern(&parse);
-        char *name    = read_name(&parse);
-        char *value   = read_value(&parse);
+    /* parse data as comma separated list
+     * of "pattern1 HEADERS-GROUP1","pattern2 HEADERS-GROUP2",... */
+    data_list = soup_header_parse_list(data);
 
-        if (pattern && name) {
+    /* iter the list for parsing each elements */
+    for (GSList *l = data_list; l; l = g_slist_next(l)) {
+        char *one_data = (char *)l->data;
+        char *pattern;
+        GHashTable *headers;
+
+        /* remove QUOTE around one_data if any */
+        if (one_data && *one_data == '"') {
+            int last = strlen(one_data) - 1;
+            if (last >= 0 && one_data[last] == '"') {
+                one_data[last] = '\0';
+                one_data++;
+            }
+        }
+
+        /* read pattern and parse headers */
+        pattern = read_pattern(&one_data);
+        headers = soup_header_parse_param_list(one_data);
+
+        /* check result (need a pattern and at least one header) */
+        if (pattern && g_hash_table_size(headers)) {
             MatchARH *marh = g_slice_new0(MatchARH);
-
             marh->pattern = g_strdup(pattern);
-            marh->name    = g_strdup(name);
-            marh->value   = g_strdup(value);
+            marh->headers = headers;
 
             parsed = g_slist_append(parsed, marh);
 
+#ifdef DEBUG
+            PRINT_DEBUG("append pattern='%s' headers[%d]='0x%lx'",
+                   marh->pattern, g_hash_table_size(marh->headers), (long)marh->headers);
+            GHashTableIter iterHeaders;
+            const char *name, *value;
+            g_hash_table_iter_init(&iterHeaders, headers);
+            while (g_hash_table_iter_next(&iterHeaders, (gpointer)&name, (gpointer)&value)) {
+                PRINT_DEBUG(" %s=%s", name, value);
+            }
+#endif
         } else {
-            /* one error occurs: free already parsed list */
+            /* an error occurs: cleanup */
+            soup_header_free_param_list(headers);
+            soup_header_free_list(data_list);
             arh_free(parsed);
 
             /* set error if asked */
@@ -69,12 +93,12 @@ GSList *arh_parse(const char *data, const char **error)
                 *error = "syntax error";
             }
 
-            g_free(data_dup);
             return NULL;
         }
     }
 
-    g_free(data_dup);
+    soup_header_free_list(data_list);
+
     return parsed;
 }
 
@@ -101,20 +125,25 @@ void arh_run(GSList *list, const char *uri, SoupMessage *msg)
         MatchARH *marh = (MatchARH *)l->data;
 
         if (util_wildmatch(marh->pattern, uri)) {
-            if (marh->value) {
-                /* the pattern match, so replace headers
-                 * as side-effect, for one header the last matched will be keeped */
-                soup_message_headers_replace(msg->response_headers,
-                        marh->name, marh->value);
+            GHashTableIter iter;
+            const char *name  = NULL;
+            const char *value = NULL;
 
-                PRINT_DEBUG(" header added: %s: %s", marh->name, marh->value);
-            } else {
-                /* remove a previously setted auto-reponse-header */
-                soup_message_headers_remove(msg->response_headers, marh->name);
+            g_hash_table_iter_init(&iter, marh->headers);
+            while (g_hash_table_iter_next(&iter, (gpointer)&name, (gpointer)&value)) {
+                if (value) {
+                    /* the pattern match, so replace headers
+                     * as side-effect, for one header the last matched will be keeped */
+                    soup_message_headers_replace(msg->response_headers, name, value);
 
-                PRINT_DEBUG(" header removed: %s", marh->name);
+                    PRINT_DEBUG(" header added: %s: %s", name, value);
+                } else {
+                    /* remove a previously setted auto-reponse-header */
+                    soup_message_headers_remove(msg->response_headers, name);
+
+                    PRINT_DEBUG(" header removed: %s", name);
+                }
             }
-
         }
     }
 }
@@ -127,8 +156,7 @@ static void marh_free(MatchARH *marh)
 {
     if (marh) {
         g_free(marh->pattern);
-        g_free(marh->name);
-        g_free(marh->value);
+        soup_header_free_param_list(marh->headers);
 
         g_slice_free(MatchARH, marh);
     }
@@ -168,62 +196,5 @@ static char *read_pattern(char **line)
         /* end-of-line was encounter */
         return NULL;
     }
-}
-
-/**
- * read until '='
- */
-static char *read_name(char **line)
-{
-    char *name;
-
-    if (!*line || !**line) {
-        return NULL;
-    }
-
-    /* remember where the name starts */
-    name = *line;
-
-    /* move pointer to the end of the name (or end-of-line) */
-    while (**line && **line != '=') {
-        (*line)++;
-    }
-
-    if (**line) {
-        /* end the name */
-        *(*line)++ = '\0';
-        return name;
-
-    } else {
-        /* end-of-line was encounter */
-        return NULL;
-    }
-}
-
-/**
- * read until ',' or end-of-line
- */
-static char *read_value(char **line)
-{
-    char *value;
-
-    if (!*line || !**line) {
-        return NULL;
-    }
-
-    /* remember where the value starts */
-    value = *line;
-
-    /* move pointer to the end of the value or of the line */
-    while (**line && **line != ',') {
-        (*line)++;
-    }
-
-    /* end the value */
-    if (**line) {
-        *(*line)++ = '\0';
-    }
-
-    return value;
 }
 #endif

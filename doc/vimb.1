@@ -1204,9 +1204,9 @@ Note that this setting will not remplace existing headers, but add a new one.
 If multiple patterns match a request uri, the last matched rule will be
 applied. You could also specified differents headers for same pattern.
 
-The format is: `pattern name=value`. For each request matching `pattern`, an
-HTTP header "name: value" will be added to the response. If value is empty, a
-previously added header could be removed.
+The format is a list of `pattern header-list`. If `header-list` has not than
+one element, enclosing with QUOTE is mandatory: `"pattern header-list"`. The
+header-list format is the same as `header` setting.
 .RS
 .PP
 Example:
@@ -1214,6 +1214,7 @@ Example:
 .IP ":set auto-response-header=* Content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'"
 .IP ":set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/"
 .IP ":set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000"
+.IP ":set auto-response-header+=""https://*.example.org/sub/* Content-security-policy,X-Test=ok"""
 .PD
 .RE
 .TP
