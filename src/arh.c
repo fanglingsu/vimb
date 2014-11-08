@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
+
 #include "config.h"
 #ifdef FEATURE_ARH
 #include "ascii.h"
@@ -30,6 +31,7 @@ typedef struct {
 
 static void marh_free(MatchARH *);
 static char *read_pattern(char **);
+
 
 /**
  * parse the data string to a list of MatchARH
@@ -89,7 +91,7 @@ GSList *arh_parse(const char *data, const char **error)
             arh_free(parsed);
 
             /* set error if asked */
-            if ( error != NULL ) {
+            if (error != NULL) {
                 *error = "syntax error";
             }
 
@@ -102,7 +104,6 @@ GSList *arh_parse(const char *data, const char **error)
     return parsed;
 }
 
-
 /**
  * free the list of MatchARH
  */
@@ -110,7 +111,6 @@ void arh_free(GSList *list)
 {
     g_slist_free_full(list, (GDestroyNotify)marh_free);
 }
-
 
 /**
  * append to reponse-header of SoupMessage,
@@ -147,7 +147,6 @@ void arh_run(GSList *list, const char *uri, SoupMessage *msg)
         }
     }
 }
-
 
 /**
  * free a MatchARH
