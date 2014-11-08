@@ -18,6 +18,18 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+Auto-Response-Header
+: Prepend HTTP-Header to responses received from server, based on pattern matching. The purpose of this setting is to enforce some security setting in the client. For example, you could set [Content-Security-Policy](http://www.w3.org/TR/CSP/) to implement a whitelist policy, or set Strict-Transport-Security for server that don't provide this header whereas they propose https website.
+: Note that this setting will not remplace existing headers, but add a new one. If multiple patterns match a request uri, the last matched rule will be applied. You could also specified differents headers for same pattern.
+: The format is a list of `pattern header-list`. If `header-list` has not than one element, enclosing with QUOTE is mandatory: `"pattern header-list"`. The header-list format is the same as `header` setting.
+: Example:
+
+      :set auto-response-header=* Content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'
+      :set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/
+      :set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000
+      :set auto-response-header+="https://*.example.org/sub/* Content-security-policy,X-Test=ok"
+
+
 [Auto commands](commands.html#autocmd)
 : Vimb provides another nice feature of vim to run command on various events and
   pattern matches URIs, `:autocmd` and `:augroup`.
@@ -32,11 +44,6 @@ Input [CTRL-O](keybindings.html#i_CTRL-O) command
 : Allow to run normal mode command in input mode with `CTRL-O`. This allows to
   yank selected text within form fields by pressing `CTRL-O Y` or to zoom the
   page like `CTRL-O 2zi`
-
-[CTRL-A](keybindings.html#n_CTRL-A) and [CTRL-X](keybindings.html#n_CTRL-X) commands
-: These commands allow to increment the last number of the current opened URL.
-  This allows really efficient access to pages with pagers. These commands can
-  also be prefixed by a number to page in larger steps. 
 
 ## screenshots
 
