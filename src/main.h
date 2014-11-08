@@ -147,7 +147,8 @@ enum {
 
 enum {
     VB_TARGET_CURRENT,
-    VB_TARGET_NEW
+    VB_TARGET_NEW_PAGE_REQUEST,
+    VB_TARGET_NEW_USER_REQUEST
 };
 
 enum {
@@ -314,6 +315,7 @@ typedef struct {
     int          scrollstep;
     char         *download_dir;
     guint        history_max;
+    gboolean     page_request_open_window; /* allow open new window on page request */
     guint        timeoutlen;      /* timeout for ambiguous mappings */
     gboolean     strict_focus;
     GHashTable   *headers;        /* holds user defined header appended to requests */

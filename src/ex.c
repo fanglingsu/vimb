@@ -826,7 +826,7 @@ static gboolean ex_normal(const ExArg *arg)
 static gboolean ex_open(const ExArg *arg)
 {
     if (arg->code == EX_TABOPEN) {
-        return vb_load_uri(&((Arg){VB_TARGET_NEW, arg->rhs->str}));
+        return vb_load_uri(&((Arg){VB_TARGET_NEW_USER_REQUEST, arg->rhs->str}));
     }
     return vb_load_uri(&((Arg){VB_TARGET_CURRENT, arg->rhs->str}));
 }

@@ -209,7 +209,8 @@ gboolean vb_load_uri(const Arg *arg)
         uri = g_strconcat("http://", path, NULL);
     }
 
-    if (arg->i == VB_TARGET_NEW) {
+    if (((arg->i == VB_TARGET_NEW_PAGE_REQUEST) && vb.config.page_request_open_window)
+            || (arg->i == VB_TARGET_NEW_USER_REQUEST)) {
         guint i = 0;
 
         /* memory allocation */
@@ -1153,7 +1154,7 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
     if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK
         && (event->button == 2 || (event->button == 1 && event->state & GDK_CONTROL_MASK))
     ) {
-        Arg a = {VB_TARGET_NEW};
+        Arg a = {VB_TARGET_NEW_USER_REQUEST};
         g_object_get(result, "link-uri", &a.s, NULL);
         vb_load_uri(&a);
 
@@ -1187,7 +1188,7 @@ static gboolean new_window_policy_cb(
     if (webkit_web_navigation_action_get_reason(navig) == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
         webkit_web_policy_decision_ignore(policy);
         /* open in a new window */
-        Arg a = {VB_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
+        Arg a = {VB_TARGET_NEW_PAGE_REQUEST, (char*)webkit_network_request_get_uri(request)};
         vb_load_uri(&a);
         return true;
     }
@@ -1209,7 +1210,7 @@ static gboolean create_web_view_received_uri_cb(WebKitWebView *view,
     WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
     gpointer data)
 {
-    Arg a = {VB_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
+    Arg a = {VB_TARGET_NEW_PAGE_REQUEST, (char*)webkit_network_request_get_uri(request)};
     vb_load_uri(&a);
 
     /* destroy temporary webview */

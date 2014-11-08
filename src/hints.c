@@ -327,7 +327,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
             case 'i':
             case 'I':
                 a.s = v;
-                a.i = (hints.mode == 'I') ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+                a.i = (hints.mode == 'I') ? VB_TARGET_NEW_USER_REQUEST : VB_TARGET_CURRENT;
                 vb_load_uri(&a);
                 break;
 
