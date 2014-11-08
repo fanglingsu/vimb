@@ -48,6 +48,8 @@ typedef enum {
     EX_AUTOCMD,
     EX_AUGROUP,
 #endif
+    EX_BACK,
+    EX_FORWARD,
     EX_BMA,
     EX_BMR,
     EX_EVAL,
@@ -133,6 +135,8 @@ static gboolean ex_augroup(const ExArg *arg);
 static gboolean ex_autocmd(const ExArg *arg);
 #endif
 static gboolean ex_bookmark(const ExArg *arg);
+static gboolean ex_back(const ExArg *arg);
+static gboolean ex_forward(const ExArg *arg);
 static gboolean ex_eval(const ExArg *arg);
 static gboolean ex_hardcopy(const ExArg *arg);
 static gboolean ex_map(const ExArg *arg);
@@ -166,6 +170,7 @@ static ExInfo commands[] = {
     {"autocmd",          EX_AUTOCMD,     ex_autocmd,    EX_FLAG_CMD|EX_FLAG_BANG},
     {"augroup",          EX_AUGROUP,     ex_augroup,    EX_FLAG_LHS|EX_FLAG_BANG},
 #endif
+    {"back",             EX_BACK,        ex_back,       EX_FLAG_NONE|EX_FLAG_RHS},
     {"bma",              EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
     {"bmr",              EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
@@ -175,6 +180,7 @@ static ExInfo commands[] = {
     {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
     {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
     {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_CMD|EX_FLAG_BANG},
+    {"forward",          EX_FORWARD,     ex_forward,    EX_FLAG_NONE|EX_FLAG_RHS},
     {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"inoremap",         EX_INOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
     {"iunmap",           EX_IUNMAP,      ex_unmap,      EX_FLAG_LHS},
@@ -748,6 +754,33 @@ static gboolean ex_bookmark(const ExArg *arg)
     }
 
     return false;
+}
+
+static void forward_or_back(const ExArg *arg, gboolean back)
+{
+    int count = 1;
+    if (arg->rhs->len > 0) {
+        count = strtol(arg->rhs->str, NULL, 10);
+    }
+
+    if (back) {
+        count = -count;
+    }
+
+    WebKitWebView *view = vb.gui.webview;
+    webkit_web_view_go_back_or_forward(view, count);
+}
+
+static gboolean ex_back(const ExArg *arg)
+{
+    forward_or_back(arg, true);
+    return true;
+}
+
+static gboolean ex_forward(const ExArg *arg)
+{
+    forward_or_back(arg, false);
+    return true;
 }
 
 static gboolean ex_eval(const ExArg *arg)
