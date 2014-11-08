@@ -416,7 +416,7 @@ static VbResult normal_g_cmd(const NormalCmdInfo *info)
 
         case 'H':
         case 'h':
-            a.i = info->key2 == 'H' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+            a.i = info->key2 == 'H' ? VB_TARGET_NEW_USER_REQUEST : VB_TARGET_CURRENT;
             a.s = NULL;
             vb_load_uri(&a);
             return RESULT_COMPLETE;
@@ -541,7 +541,7 @@ static VbResult normal_navigate(const NormalCmdInfo *info)
 
 static VbResult normal_open_clipboard(const NormalCmdInfo *info)
 {
-    Arg a = {info->key == 'P' ? VB_TARGET_NEW : VB_TARGET_CURRENT};
+    Arg a = {info->key == 'P' ? VB_TARGET_NEW_USER_REQUEST : VB_TARGET_CURRENT};
 
     /* if cutbuffer is not the default - read out of the internal cutbuffer */
     if (info->cutbuf) {
@@ -568,7 +568,7 @@ static VbResult normal_open(const NormalCmdInfo *info)
 {
     Arg a;
     /* open last closed */
-    a.i = info->key == 'U' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+    a.i = info->key == 'U' ? VB_TARGET_NEW_USER_REQUEST : VB_TARGET_CURRENT;
     a.s = util_get_file_contents(vb.files[FILES_CLOSED], NULL);
     vb_load_uri(&a);
     g_free(a.s);

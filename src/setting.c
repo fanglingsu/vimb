@@ -184,6 +184,7 @@ void setting_init()
     setting_add("status-sslinvalid-color-bg", TYPE_COLOR, &"#ff7777", status_color, 0, &vb.style.status_bg[VB_STATUS_SSL_INVALID]);
     setting_add("status-sslinvalid-color-fg", TYPE_COLOR, &"#000000", status_color, 0, &vb.style.status_fg[VB_STATUS_SSL_INVALID]);
     setting_add("status-sslinvalid-font", TYPE_FONT, &SETTING_GUI_FONT_EMPH, status_font, 0, &vb.style.status_font[VB_STATUS_SSL_INVALID]);
+    setting_add("allow-page-request-open-window", TYPE_BOOLEAN, &on, internal, 0, &vb.config.page_request_open_window);
     i = 1000;
     setting_add("timeoutlen", TYPE_INTEGER, &i, internal, 0, &vb.config.timeoutlen);
     setting_add("input-autohide", TYPE_BOOLEAN, &off, input_autohide, 0, &vb.config.input_autohide);

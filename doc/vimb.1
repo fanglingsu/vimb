@@ -1318,6 +1318,13 @@ If 'on', vimb will not load a untrusted https site.
 .B stylesheet (bool)
 If 'on' the user defined styles-sheet is used.
 .TP
+.B allow-page-request-open-window (bool)
+If 'on' (the default), vimb will allow opening new window per page request.
+This change the behaviour for javascript function `window.open` or
+`target="_blank"` attribute link. If 'off', the page will be opened in the same
+window. The setting don't alter user request of new window (with `:tabopen`,
+hints...)
+.TP
 .B timeoutlen (int)
 The time in milliseconds that is waited for a key code or mapped key sequence
 to complete.
