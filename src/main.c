@@ -43,6 +43,7 @@
 #include "bookmark.h"
 #include "js.h"
 #include "autocmd.h"
+#include "arh.h"
 
 /* variables */
 static char **args;
@@ -92,6 +93,9 @@ void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const c
 void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
 static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
 static void read_from_stdin(void);
+#ifdef FEATURE_ARH
+static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data);
+#endif
 
 /* functions */
 #ifdef FEATURE_WGET_PROGRESS_BAR
@@ -427,6 +431,9 @@ void vb_quit(gboolean force)
 #ifdef FEATURE_AUTOCMD
     autocmd_cleanup();
 #endif
+#ifdef FEATURE_ARH
+    arh_free(vb.config.autoresponseheader);
+#endif
 
     g_slist_free_full(vb.config.cmdargs, g_free);
 
@@ -532,7 +539,13 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
     switch (webkit_web_view_get_load_status(view)) {
         case WEBKIT_LOAD_PROVISIONAL:
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(AU_LOAD_PROVISIONAL, NULL, NULL);
+            {
+                WebKitWebFrame *frame     = webkit_web_view_get_main_frame(view);
+                WebKitWebDataSource *src  = webkit_web_frame_get_provisional_data_source(frame);
+                WebKitNetworkRequest *req = webkit_web_data_source_get_initial_request(src);
+                uri = webkit_network_request_get_uri(req);
+                autocmd_run(AU_LOAD_PROVISIONAL, uri, NULL);
+            }
 #endif
             /* update load progress in statusbar */
             vb.state.progress = 0;
@@ -961,6 +974,10 @@ static void setup_signals()
         "signal::navigation-policy-decision-requested", G_CALLBACK(navigation_decision_requested_cb), NULL,
         NULL
     );
+
+#ifdef FEATURE_ARH
+    g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
+#endif
 
 #ifdef FEATURE_NO_SCROLLBARS
     WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
@@ -1488,6 +1505,18 @@ static void read_from_stdin(void)
     }
     g_free(buf);
 }
+
+#ifdef FEATURE_ARH
+static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data)
+{
+    SoupURI *suri = soup_message_get_uri(msg);
+    char     *uri = soup_uri_to_string(suri, false);
+
+    arh_run(vb.config.autoresponseheader, uri, msg);
+
+    g_free(uri);
+}
+#endif
 
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
 {

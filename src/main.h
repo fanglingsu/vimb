@@ -317,6 +317,9 @@ typedef struct {
     guint        timeoutlen;      /* timeout for ambiguous mappings */
     gboolean     strict_focus;
     GHashTable   *headers;        /* holds user defined header appended to requests */
+#ifdef FEATURE_ARH
+    GSList       *autoresponseheader; /* holds user defined list of auto-response-header */
+#endif
     char         *nextpattern;    /* regex patter nfor prev link matching */
     char         *prevpattern;    /* regex patter nfor next link matching */
     char         *file;           /* path to the custome config file */
