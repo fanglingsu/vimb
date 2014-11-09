@@ -124,12 +124,12 @@ gboolean dom_is_editable(Element *element)
 
     tagname = webkit_dom_element_get_tag_name(element);
     type    = webkit_dom_element_get_attribute(element, "type");
+    /* element is editable if it's a text area or input with no type, text or
+     * pasword */
     if (!g_ascii_strcasecmp(tagname, "textarea")) {
         result = true;
     } else if (!g_ascii_strcasecmp(tagname, "input")
-        && g_ascii_strcasecmp(type, "submit")
-        && g_ascii_strcasecmp(type, "reset")
-        && g_ascii_strcasecmp(type, "image")
+        && (!*type || !g_ascii_strcasecmp(type, "text") || !g_ascii_strcasecmp(type, "password"))
     ) {
         result = true;
     } else {
