@@ -1166,7 +1166,8 @@ used to handle downloads. If this is disabled vimb will handle the download.
 .TP
 .B editor-command (string)
 Command with placeholder '%s' called if form filed is opened with editor to
-spawn the editor like `x-terminal-emulator -e vi %s'.
+spawn the editor like `x-terminal-emulator -e vi %s'. To use gvim as editor,
+it's necessary to call it with `-f' to run it in foreground.
 .TP
 .B fullscreen (bool)
 Show the current window full-screen.
