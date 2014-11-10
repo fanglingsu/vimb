@@ -7,6 +7,22 @@ active: faq
 
 # FAQ
 
+## Editor opens without the contents of textarea
+
+There are two known cases of the `editor-command` setting that do not work.
+
+1. If gvim or vim -g is used without the `-f` option. So to use gvim as editor
+   you should use
+
+       :set editor-command=gvim -f %s
+
+2. If an editor ist started in `urxvtc` terminal as client for the `urxvtd`
+   daemon. This does not work. So if you intend to use vim or another cli
+   editor together with `urxvt` make sure you use `urxvt` and not `urxvtc`
+   even if you still have the daemon running.
+
+       :set editor-command=urxvt -e vim %s
+
 ## How can I have tabs?
 {:#tabbed}
 
