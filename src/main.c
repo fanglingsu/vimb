@@ -44,6 +44,7 @@
 #include "js.h"
 #include "autocmd.h"
 #include "arh.h"
+#include "io.h"
 
 /* variables */
 static char **args;
@@ -433,6 +434,9 @@ void vb_quit(gboolean force)
 #endif
 #ifdef FEATURE_ARH
     arh_free(vb.config.autoresponseheader);
+#endif
+#ifdef FEATURE_FIFO
+    io_cleanup();
 #endif
 
     g_slist_free_full(vb.config.cmdargs, g_free);
@@ -1527,6 +1531,9 @@ static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *valu
 int main(int argc, char *argv[])
 {
     static char *winid = NULL;
+#ifdef FEATURE_FIFO
+    static char *fifo_name = NULL;
+#endif
     static gboolean ver = false;
     static GError *err;
     char *pid;
@@ -1536,6 +1543,9 @@ int main(int argc, char *argv[])
         {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
+#ifdef FEATURE_FIFO
+        {"fifo-name", 'n', 0, G_OPTION_ARG_STRING, &fifo_name, "Name used to create control fifo", NULL},
+#endif
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
@@ -1559,7 +1569,7 @@ int main(int argc, char *argv[])
         vb.embed = strtol(winid, NULL, 0);
     }
 
-    pid = g_strdup_printf("%d", getpid());
+    pid = g_strdup_printf("%d", (int)getpid());
     g_setenv("VIMB_PID", pid, true);
     g_free(pid);
 
@@ -1580,6 +1590,13 @@ int main(int argc, char *argv[])
     } else {
         vb_load_uri(&(Arg){VB_TARGET_CURRENT, argv[argc - 1]});
     }
+
+#ifdef FEATURE_FIFO
+    /* setup the control fifo - quit vimb if this failed */
+    if (fifo_name && *fifo_name && !io_init_fifo(fifo_name)) {
+        return EXIT_FAILURE;
+    }
+#endif
 
     /* Run the main GTK+ event loop */
     gtk_main();

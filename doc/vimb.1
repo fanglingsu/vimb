@@ -15,10 +15,7 @@ vimb - Vim Browser - A modal web browser based on webkit, inspired by vim the
 great editor.
 .SH SYNOPSIS
 .SY vimb
-.OP \-hkv
-.OP \-C cmd
-.OP \-c config
-.OP \-e winid
+.OP OPTIONS
 .RI [ URI "|" file "|" - ]
 .YS
 .SH DESCRIPTION
@@ -54,6 +51,10 @@ Show help options.
 .B \-k, \-\-kiosk
 Run vimb in kiosk mode with nearly no keybindings, not inputbox and no context
 menu.
+.TP
+.B \-n, \-\-fifo-name
+If given vimb will create a control fifo in vimb's config directory
+named 'vimb-fifo-{name}'.
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
@@ -1402,6 +1403,10 @@ Contains the pid of the running vimb instance.
 .B VIMB_XID
 Holds the X-Window id of the vim window or of the embedding window if vimb is
 started with -e option.
+.TP
+.B VIMB_FILE
+Holds the full path to the control fifo, if vimb is compiled with FIFO feature
+and started with `--fifo-name' option.
 .TP
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
