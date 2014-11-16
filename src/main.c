@@ -647,11 +647,6 @@ static void webview_request_starting_cb(WebKitWebView *view,
         return;
     }
 
-#ifdef FEATURE_HSTS
-    /* change uri for known and valid hsts hosts */
-    hsts_prepare_message(vb.session, msg);
-#endif
-
     if (!vb.config.headers) {
         return;
     }

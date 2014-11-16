@@ -79,35 +79,6 @@ HSTSProvider *hsts_provider_new(void)
     return g_object_new(HSTS_TYPE_PROVIDER, NULL);
 }
 
-/**
- * Change scheme and port of soup messages uri if the host is a known and
- * valid hsts host.
- * This logic should be implemented in request_queued function but the changes
- * that are done there to the uri do not appear in webkit_web_view_get_uri().
- * If a valid hsts host is requested via http and the url is changed to https
- * vimb would still show the http uri in url bar. This seems to be a
- * missbehaviour in webkit, but for now we provide this function to put in the
- * logic in the scope of the resource-request-starting event of the webview.
- */
-void hsts_prepare_message(SoupSession* session, SoupMessage *msg)
-{
-    SoupSessionFeature *feature;
-    HSTSProvider *provider;
-    SoupURI *uri;
-
-    feature = soup_session_get_feature_for_message(session, HSTS_TYPE_PROVIDER, msg);
-    uri     = soup_message_get_uri(msg);
-    if (!feature || !uri) {
-        return;
-    }
-
-    provider = HSTS_PROVIDER(feature);
-    if (should_secure_host(provider, uri->host)) {
-        /* the ports is set by soup uri if scheme is changed */
-        soup_uri_set_scheme(uri, SOUP_URI_SCHEME_HTTPS);
-    }
-}
-
 G_DEFINE_TYPE_WITH_CODE(
     HSTSProvider, hsts_provider, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE(SOUP_TYPE_SESSION_FEATURE, session_feature_init)
@@ -327,12 +298,17 @@ static void request_queued(SoupSessionFeature *feature,
     SoupSession *session, SoupMessage *msg)
 {
     SoupURI *uri = soup_message_get_uri(msg);
+    HSTSProvider *provider = HSTS_PROVIDER(feature);
 
     /* only look for HSTS headers sent over https RFC 6797 7.2*/
     if (uri->scheme == SOUP_URI_SCHEME_HTTPS) {
         soup_message_add_header_handler(
             msg, "got-headers", HSTS_HEADER_NAME, G_CALLBACK(process_hsts_header), feature
         );
+    } else if (should_secure_host(provider, uri->host)) {
+        /* the ports is set by soup uri if scheme is changed */
+        soup_uri_set_scheme(uri, SOUP_URI_SCHEME_HTTPS);
+        soup_session_requeue_message(session, msg);
     }
 }
 
