@@ -34,6 +34,7 @@ typedef enum {
 
 void map_cleanup(void);
 gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data);
+gboolean map_buttonpress(GtkWidget *widget, GdkEventButton* event, gpointer data);
 MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map);
 void map_handle_string(const char *str, gboolean use_map);
 void map_insert(const char *in, const char *mapped, char mode, gboolean remap);

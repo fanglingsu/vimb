@@ -934,6 +934,7 @@ static void setup_signals()
         "signal::notify::progress", G_CALLBACK(webview_progress_cb), NULL,
         "signal::notify::load-status", G_CALLBACK(webview_load_status_cb), NULL,
         "signal::button-release-event", G_CALLBACK(button_relase_cb), NULL,
+        "signal::button-press-event", G_CALLBACK(map_buttonpress), NULL,
         "signal::new-window-policy-decision-requested", G_CALLBACK(new_window_policy_cb), NULL,
         "signal::create-web-view", G_CALLBACK(create_web_view_cb), NULL,
         "signal::hovering-over-link", G_CALLBACK(hover_link_cb), NULL,
@@ -956,6 +957,7 @@ static void setup_signals()
 #endif
 
     if (!vb.config.kioskmode) {
+
         g_signal_connect(
             G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(map_keypress), NULL
         );
