@@ -115,6 +115,7 @@ static void register_cleanup(void);
 static gboolean hide_message();
 static void set_status(const StatusType status);
 static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message);
+static void vb_cleanup(void);
 
 void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
 {
@@ -417,33 +418,6 @@ void vb_quit(gboolean force)
     /* write last URL into file for recreation */
     if (vb.state.uri) {
         g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
-    }
-
-    completion_clean();
-
-    webkit_web_view_stop_loading(vb.gui.webview);
-
-    map_cleanup();
-    mode_cleanup();
-    setting_cleanup();
-    history_cleanup();
-    session_cleanup();
-    register_cleanup();
-#ifdef FEATURE_AUTOCMD
-    autocmd_cleanup();
-#endif
-#ifdef FEATURE_ARH
-    arh_free(vb.config.autoresponseheader);
-#endif
-#ifdef FEATURE_FIFO
-    io_cleanup();
-#endif
-
-    g_slist_free_full(vb.config.cmdargs, g_free);
-
-    for (int i = 0; i < FILES_LAST; i++) {
-        g_free(vb.files[i]);
-        vb.files[i] = NULL;
     }
 
     gtk_main_quit();
@@ -1522,6 +1496,40 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
 }
 #endif
 
+/**
+ * Free some memory when vimb is quit.
+ */
+static void vb_cleanup(void)
+{
+
+    completion_clean();
+
+    webkit_web_view_stop_loading(vb.gui.webview);
+
+    map_cleanup();
+    mode_cleanup();
+    setting_cleanup();
+    history_cleanup();
+    session_cleanup();
+    register_cleanup();
+#ifdef FEATURE_AUTOCMD
+    autocmd_cleanup();
+#endif
+#ifdef FEATURE_ARH
+    arh_free(vb.config.autoresponseheader);
+#endif
+#ifdef FEATURE_FIFO
+    io_cleanup();
+#endif
+
+    g_slist_free_full(vb.config.cmdargs, g_free);
+
+    for (int i = 0; i < FILES_LAST; i++) {
+        g_free(vb.files[i]);
+        vb.files[i] = NULL;
+    }
+}
+
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
 {
     vb.config.cmdargs = g_slist_append(vb.config.cmdargs, g_strdup(value));
@@ -1600,6 +1608,9 @@ int main(int argc, char *argv[])
 
     /* Run the main GTK+ event loop */
     gtk_main();
+
+    /* cleanup memory */
+    vb_cleanup();
 
     return EXIT_SUCCESS;
 }
