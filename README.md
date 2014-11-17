@@ -31,6 +31,7 @@ the project page of [vimb][].
 - archlinux [vimb-git][arch-git], [vimb][arch]
 - [NetBSD][]
 - [FreeBSD][]
+- [Void Linux][]
 
 ## dependencies
 
@@ -81,3 +82,4 @@ Information about the license are found in the file LICENSE.
 [arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [arch]:        https://aur.archlinux.org/packages/vimb/ "vimb - archlinux package"
 [FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
+[Void Linux]:  https://github.com/voidlinux/void-packages/blob/master/srcpkgs/vimb/template "vimb - Void Linux package"
