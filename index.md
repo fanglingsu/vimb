@@ -79,6 +79,7 @@ But following images may give a impression of they way vimb works.
 - archlinux [vimb-git][arch-git], [vimb][arch]
 - [NetBSD][]
 - [FreeBSD][]
+- [Void Linux][]
 
 ## download
 - You can get vimb from github by following command.
@@ -119,5 +120,6 @@ If you find a misbehaviour or have feature requests use the
 [vimb]:        https://github.com/fanglingsu/vimb "vimb project sources"
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
+[Void Linux]:  https://github.com/voidlinux/void-packages/blob/master/srcpkgs/vimb/template "vimb - Void Linux package"
 *[HSTS]:       HTTP Strict Transport Security
 *[vimb]:       vim browser - the vim like browser
