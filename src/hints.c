@@ -353,7 +353,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
             case 'Y':
                 a.i = COMMAND_YANK_ARG;
                 a.s = v;
-                command_yank(&a, '\0');
+                command_yank(&a, vb.state.current_register);
                 break;
 
 #ifdef FEATURE_QUEUE

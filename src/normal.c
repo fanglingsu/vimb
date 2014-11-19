@@ -438,6 +438,12 @@ static VbResult normal_hint(const NormalCmdInfo *info)
 {
     const char prompt[3] = {info->key, info->key2, 0};
 
+    /* Save the current cutbuf char to make it available in case of ;y
+     * hinting. This is only a hack, because we don't need this state variable
+     * somewhere else - it's only use is for hinting. It might be better to
+     * allow to set various data to the mode itself to avoid toggling
+     * variables in global skope. */
+    vb.state.current_register = info->cutbuf;
     return normal_do_hint(prompt);
 }
 
