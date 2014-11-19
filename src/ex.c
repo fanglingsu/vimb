@@ -365,10 +365,6 @@ VbResult ex_keypress(int key)
     if (res == RESULT_COMPLETE) {
         info.cutbuf = 0;
         info.phase  = PHASE_START;
-    } else {
-        /* if the key sequence is not complete show the already typed keys in
-         * status bar */
-        map_showcmd(key);
     }
 
     return res;
