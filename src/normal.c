@@ -280,6 +280,8 @@ VbResult normal_keypress(int key)
             if (strchr(VB_REG_CHARS, key)) {
                 info.cutbuf = key;
                 info.phase  = PHASE_START;
+            } else {
+                info.phase = PHASE_COMPLETE;
             }
             break;
 
