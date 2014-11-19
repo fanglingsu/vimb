@@ -409,25 +409,3 @@ CTRL-V
 CTRL-Z
 : Enter the pass-through mode.
 {:#i_CTRL-Z}
-
-## registers
-{:#registers}
-
-There are different types of registers.
-
-"a - "z
-: 26 named registers "a to "z. Vimb fills these registers only when you say
-  so.
-
-"%
-: Contains the curent opened URI.
-
-":
-: Contains the most recent executed ex command.
-
-"/
-: Contains the most recent search-pattern.
-
-";
-: Contains the last hinted URL. This can be used in `x-hint-command` to get
-  the URL of the hint.

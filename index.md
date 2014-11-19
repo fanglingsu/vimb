@@ -72,7 +72,7 @@ But following images may give a impression of they way vimb works.
 - manipulate http request headers
 - custom [protocol handlers][handlers]
 - HSTS -- HTTP Strict Transport Security
-- multiple yank/paste [registers][]
+- multiple yank/paste registers
 
 ## packages
 
@@ -112,7 +112,6 @@ If you find a misbehaviour or have feature requests use the
 [keybindings]: keybindings.html "vimb keybindings"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
 [queue]:       commands.html#queue "vimb read it later queue feature"
-[registers]:   keybindings.html#registers "vimb yank/paste registers"
 [releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
 [shortcuts]:   commands.html#shortcuts "vimb shortcuts"
 [surf]:        http://surf.suckless.org/
