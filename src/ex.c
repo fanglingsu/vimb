@@ -72,6 +72,7 @@ typedef enum {
     EX_QUNSHIFT,
 #endif
     EX_QUIT,
+    EX_REG,
     EX_SAVE,
     EX_SCA,
     EX_SCD,
@@ -142,6 +143,7 @@ static gboolean ex_open(const ExArg *arg);
 #ifdef FEATURE_QUEUE
 static gboolean ex_queue(const ExArg *arg);
 #endif
+static gboolean ex_register(const ExArg *arg);
 static gboolean ex_quit(const ExArg *arg);
 static gboolean ex_save(const ExArg *arg);
 static gboolean ex_set(const ExArg *arg);
@@ -190,6 +192,7 @@ static ExInfo commands[] = {
     {"qpop",             EX_QPOP,        ex_queue,      EX_FLAG_NONE},
     {"qpush",            EX_QPUSH,       ex_queue,      EX_FLAG_RHS},
 #endif
+    {"register",         EX_REG,         ex_register,   EX_FLAG_NONE},
     {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS|EX_FLAG_EXP},
     {"set",              EX_SET,         ex_set,        EX_FLAG_RHS},
     {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS|EX_FLAG_EXP|EX_FLAG_BANG},
@@ -862,6 +865,32 @@ static gboolean ex_queue(const ExArg *arg)
     return command_queue(&a);
 }
 #endif
+
+/**
+ * Show the contents of the registers :reg.
+ */
+static gboolean ex_register(const ExArg *arg)
+{
+    int idx;
+    char *reg;
+    const char *regchars = VB_REG_CHARS;
+    GString *str = g_string_new("-- Register --");
+
+    for (idx = 0; idx < VB_REG_SIZE; idx++) {
+        /* show only filled registers */
+        if (vb.state.reg[idx]) {
+            /* replace all newlines */
+            reg = util_str_replace("\n", "^J", vb.state.reg[idx]);
+            g_string_append_printf(str, "\n\"%c   %s", regchars[idx], reg);
+            g_free(reg);
+        }
+    }
+
+    vb_echo(VB_MSG_NORMAL, false, "%s", str->str);
+    g_string_free(str, true);
+
+    return true;
+}
 
 static gboolean ex_quit(const ExArg *arg)
 {

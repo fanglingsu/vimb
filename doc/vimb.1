@@ -755,6 +755,31 @@ Close the browser. This will be refused if there are running downloads.
 .B :q[uit]!
 Close the browser independent from an running download.
 .TP
+.B :reg[ister]
+Display the contents of all registers.
+.RS
+.PP
+.PD 0
+Registers:
+.TP
+.BR \[char34]a " - " \[char34]z
+26 named registers "a to "z. Vimb fills these registers only when you say so.
+.TP
+.B \[char34]%
+Contains the curent opened URI.
+.TP
+.B \[char34]:
+Contains the most recent executed ex command.
+.TP
+.B \[char34]/
+Contains the most recent search-pattern.
+.TP
+.B \[char34];
+Contains the last hinted URL. This can be used in `x-hint-command' to get the
+URL of the hint.
+.PD
+.RE
+.TP
 .BI :e[val] " javascript"
 Runs the given \fIjavascript\fP in the current page and display the evaluated
 value.
@@ -800,24 +825,6 @@ Pass the next key press directly to gtk.
 .TP
 .B CTRL\-Z
 Enter the pass-through mode.
-.SH REGISTERS
-There are different types of registers.
-.TP
-.BR \[char34]a " - " \[char34]z
-26 named registers "a to "z. Vimb fills these registers only when you say so.
-.TP
-.B \[char34]%
-Contains the curent opened URI.
-.TP
-.B \[char34]:
-Contains the most recent executed ex command.
-.TP
-.B \[char34]/
-Contains the most recent search-pattern.
-.TP
-.B \[char34];
-Contains the last hinted URL. This can be used in `x-hint-command' to get the
-URL of the hint.
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<shift-tab>` in the
 activated inputbox. Depending of the current inserted content different
