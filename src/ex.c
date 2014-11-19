@@ -338,7 +338,6 @@ VbResult ex_keypress(int key)
                 break;
 
             case CTRL('R'):
-                info.cutbuf     = (char)key;
                 info.phase      = PHASE_CUTBUF;
                 vb.mode->flags |= FLAG_NOMAP;
                 res             = RESULT_MORE;
