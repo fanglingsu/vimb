@@ -279,12 +279,13 @@ F
 : Hints like `;o` but instead of opening the hinted URI, the configured
   `x-hint-command` is run in vimb.
 
-;y
-: Yank hint's destination location into primary and secondary clipboard.
+["x];y
+: Yank hint's destination location into primary and secondary clipboard and
+  into register `x`.
 
-;Y
+["x];Y
 : Yank hint's text description or form text into primary and secondary
-  clipboard.
+  clipboard and into register `x`.
 
 Syntax: *g;{mode}{hint}*
 

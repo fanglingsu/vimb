@@ -313,6 +313,17 @@ Example:
 \:q[uit]!
 : Close the browser independent from an running download.
 
+\:reg[ister]
+: Display the contents of all registers.
+: Register:
+: - `"a` -- `"z` 26 named registers. Vimb fills these registers only when you
+    say so.
+  - `"%` Contains the curent opened URI.
+  - `":` Contains the most recent executed ex command.
+  - `"/` Contains the most recent search-pattern.
+  - `";` Contains the last hinted URL. This can be used in `x-hint-command` to
+    get the URL of the hint.
+
 \:e[val] *javascript*
 : Runs the given *javascript* in the current page and display the evaluated
   value.
