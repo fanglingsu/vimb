@@ -33,7 +33,7 @@ typedef enum {
     PHASE_START,
     PHASE_KEY2,
     PHASE_KEY3,
-    PHASE_CUTBUF,
+    PHASE_REG,
     PHASE_COMPLETE,
 } Phase;
 
@@ -42,7 +42,7 @@ typedef struct NormalCmdInfo_s {
     char key;    /* command key */
     char key2;   /* second command key (optional) */
     char key3;   /* third command key only for hinting */
-    char cutbuf; /* char for the cut buffer */
+    char reg;    /* char for the yank register */
     Phase phase; /* current parsing phase */
 } NormalCmdInfo;
 
@@ -251,7 +251,7 @@ VbResult normal_keypress(int key)
                 info.key        = key;
                 vb.mode->flags |= FLAG_NOMAP;
             } else if (key == '"') {
-                info.phase      = PHASE_CUTBUF;
+                info.phase      = PHASE_REG;
                 vb.mode->flags |= FLAG_NOMAP;
             } else {
                 info.key   = key;
@@ -276,10 +276,10 @@ VbResult normal_keypress(int key)
             info.phase = PHASE_COMPLETE;
             break;
 
-        case PHASE_CUTBUF:
+        case PHASE_REG:
             if (strchr(VB_REG_CHARS, key)) {
-                info.cutbuf = key;
-                info.phase  = PHASE_START;
+                info.reg   = key;
+                info.phase = PHASE_START;
             } else {
                 info.phase = PHASE_COMPLETE;
             }
@@ -301,7 +301,7 @@ VbResult normal_keypress(int key)
         }
 
         /* unset the info */
-        info.key = info.key2 = info.key3 = info.count = info.cutbuf = 0;
+        info.key = info.key2 = info.key3 = info.count = info.reg = 0;
         info.phase = PHASE_START;
     } else {
         res = RESULT_MORE;
@@ -438,12 +438,12 @@ static VbResult normal_hint(const NormalCmdInfo *info)
 {
     const char prompt[3] = {info->key, info->key2, 0};
 
-    /* Save the current cutbuf char to make it available in case of ;y
+    /* Save the current register char to make it available in case of ;y
      * hinting. This is only a hack, because we don't need this state variable
      * somewhere else - it's only use is for hinting. It might be better to
      * allow to set various data to the mode itself to avoid toggling
      * variables in global skope. */
-    vb.state.current_register = info->cutbuf;
+    vb.state.current_register = info->reg;
     return normal_do_hint(prompt);
 }
 
@@ -551,11 +551,11 @@ static VbResult normal_open_clipboard(const NormalCmdInfo *info)
 {
     Arg a = {info->key == 'P' ? VB_TARGET_NEW : VB_TARGET_CURRENT};
 
-    /* if cutbuffer is not the default - read out of the internal cutbuffer */
-    if (info->cutbuf) {
-        a.s = g_strdup(vb_register_get(info->cutbuf));
+    /* if register is not the default - read out of the internal register */
+    if (info->reg) {
+        a.s = g_strdup(vb_register_get(info->reg));
     } else {
-        /* if no cutbuffer is given use the system clipboard */
+        /* if no register is given use the system clipboard */
         a.s = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
         if (!a.s) {
             a.s = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
@@ -756,7 +756,7 @@ static VbResult normal_yank(const NormalCmdInfo *info)
 {
     Arg a = {info->key == 'Y' ? COMMAND_YANK_SELECTION : COMMAND_YANK_URI};
 
-    return command_yank(&a, info->cutbuf) ? RESULT_COMPLETE : RESULT_ERROR;
+    return command_yank(&a, info->reg) ? RESULT_COMPLETE : RESULT_ERROR;
 }
 
 static VbResult normal_zoom(const NormalCmdInfo *info)

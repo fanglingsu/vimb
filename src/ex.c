@@ -84,7 +84,7 @@ typedef enum {
 
 typedef enum {
     PHASE_START,
-    PHASE_CUTBUF,
+    PHASE_REG,
 } Phase;
 
 typedef struct {
@@ -114,7 +114,7 @@ typedef struct {
 } ExInfo;
 
 static struct {
-    char cutbuf; /* char for the cut buffer */
+    char reg;    /* char for the yank register */
     Phase phase; /* current parsing phase */
 } info = {'\0', PHASE_START};
 
@@ -252,12 +252,12 @@ VbResult ex_keypress(int key)
         return RESULT_COMPLETE;
     }
 
-    /* process the cutbuffer */
-    if (info.phase == PHASE_CUTBUF) {
-        info.cutbuf = (char)key;
-        info.phase  = PHASE_CUTBUF;
+    /* process the register */
+    if (info.phase == PHASE_REG) {
+        info.reg   = (char)key;
+        info.phase = PHASE_REG;
 
-        /* insert the cutbuffer text at cursor position */
+        /* insert the register text at cursor position */
         text = vb_register_get((char)key);
         if (text) {
             gtk_text_buffer_insert_at_cursor(buffer, text, strlen(text));
@@ -338,7 +338,7 @@ VbResult ex_keypress(int key)
                 break;
 
             case CTRL('R'):
-                info.phase      = PHASE_CUTBUF;
+                info.phase      = PHASE_REG;
                 vb.mode->flags |= FLAG_NOMAP;
                 res             = RESULT_MORE;
                 break;
@@ -365,8 +365,8 @@ VbResult ex_keypress(int key)
     }
 
     if (res == RESULT_COMPLETE) {
-        info.cutbuf = 0;
-        info.phase  = PHASE_START;
+        info.reg   = 0;
+        info.phase = PHASE_START;
     }
 
     return res;
