@@ -226,18 +226,18 @@ was given.
 .SS Hinting
 The hinting is the way to do what you would do with the mouse in common
 mouse-driven browsers. Open URI, yank URI, save page and so on. If the hinting
-is started, the relevant elements on the page will be marked by numbered
-labels. Hints can be selected by using <Tab>, <C-I> or <C-Tab>, <C-O>, by
-typing the number of the label, or filtering the elements by some text that is
-part of the hinted element (like URI, link text, button label) and any
-combination of this methods. If <enter> is pressed, the current active hint
-will be fired. If only one possible hint remains, this will be fired
-automatically.
+is started, the relevant elements on the page will be marked by labels
+generated from configured `hintkeys'. Hints can be selected by using <Tab>,
+<C-I> or <C-Tab>, <C-O>, by typing the chars of the label, or filtering the
+elements by some text that is part of the hinted element (like URI, link text,
+button label) and any combination of this methods. If <enter> is pressed, the
+current active hint will be fired. If only one possible hint remains, this
+will be fired automatically.
 
 .BI Syntax: " ;{mode}{hint}"
 
 Start hint mode. Different elements depending on \fImode\fP are highlighted
-and numbered. Elements can be selected either by typing their number, or by
+and numbered. Elements can be selected either by typing their label, or by
 typing part of their text (\fIhint\fP) to narrow down the result. When an
 element has been selected, it is automatically clicked or used (depending on
 \fImode\fP) and hint mode ends.
@@ -1230,6 +1230,12 @@ Example:
 .B hint-timeout (int)
 Timeout before automatically following a non-unique numerical hint. To disable
 auto fire of hints, set this value to 0.
+.TP
+.B hintkeys (string)
+The keys used to label and select hints. With its default value, each hint has
+a unique number which can be typed to select it, while all other characters
+are used to filter hints based on their text. With a value such as asdfg;lkjh,
+each hint is `numbered' based on the characters of the home row.
 .TP
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history. If

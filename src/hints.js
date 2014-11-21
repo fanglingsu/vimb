@@ -252,8 +252,9 @@ Object.freeze((function(){
 
     function show(fireLast) {
         var i, hint, newIdx,
-            num     = 1,
-            matcher = getMatcher(filterText);
+            n       = 1,
+            matcher = getMatcher(filterText),
+            str     = getHintString(filterNum);
 
         /* clear the array of valid hints */
         validHints = [];
@@ -263,16 +264,15 @@ Object.freeze((function(){
             if (!matcher(hint.text)) {
                 hint.hide();
             } else {
-                /* assign the new hint number to the hint */
-                hint.num = num;
+                /* assign the new hint number/letters as label to the hint */
+                hint.num = getHintString(n++);
                 /* check for number filter */
-                if (!filterNum || 0 === String(num).indexOf(String(filterNum))) {
+                if (!filterNum || 0 === hint.num.indexOf(str)) {
                     hint.show();
                     validHints.push(hint);
                 } else {
                     hint.hide();
                 }
-                num++;
             }
         }
         if (fireLast && validHints.length <= 1) {
@@ -296,6 +296,33 @@ Object.freeze((function(){
                 return 0 <= itemText.indexOf(token);
             });
         };
+    }
+
+    /* Retrun the hint string for a given number based on configured hintkeys */
+    function getHintString(n) {
+        var res = [],
+            len = config.hintKeys.length;
+        do {
+            res.push(config.hintKeys[n % len]);
+            n = Math.floor(n / len);
+        } while (n > 0);
+
+        return res.reverse().join("");
+    }
+
+    /* Return the hint index to a given hint string. This is the reverse of */
+    /* getHintString() */
+    function getHintNumber(str) {
+        var base = config.hintKeys.length,
+            res  = 0,
+            ch, i;
+
+        for (i = 0; i < base; i++) {
+            ch  = str.charAt(i);
+            res = res * base + config.hintKeys.indexOf(ch);
+        }
+
+        return res;
     }
 
     function getOffsets(doc) {
@@ -529,7 +556,7 @@ Object.freeze((function(){
 
     /* the api */
     return {
-        init: function init(mode, keepOpen, maxHints) {
+        init: function init(mode, keepOpen, maxHints, hintKeys) {
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
@@ -552,7 +579,8 @@ Object.freeze((function(){
                 /* handle forms only useful when there are form fields in xpath */
                 /* don't handle form for Y to allow to yank form filed content */
                 /* instead of switching to input mode */
-                handleForm: ("eot".indexOf(mode) >= 0)
+                handleForm: ("eot".indexOf(mode) >= 0),
+                hintKeys:   hintKeys
             };
             for (prop in xpathmap) {
                 if (prop.indexOf(mode) >= 0) {
@@ -578,14 +606,15 @@ Object.freeze((function(){
             return show(true);
         },
         update: function update(n) {
+            var pos,
+                keys = config.hintKeys;
             /* delete last filter number digit */
             if (null === n && filterNum) {
-                filterNum = Math.floor(filterNum / 10);
+                filterNum = Math.floor(filterNum / keys.length);
                 return show(false);
             }
-            if ((n >= 1 && n <= 9) || (n === 0 && filterNum)) {
-                /* allow a zero as non-first number */
-                filterNum = (filterNum ? filterNum * 10 : 0) + n;
+            if ((pos = keys.indexOf(n)) >= 0) {
+                filterNum = filterNum * keys.length + pos;
                 return show(true);
             }
             return "ERROR:";
