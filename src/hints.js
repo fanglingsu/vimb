@@ -310,21 +310,6 @@ Object.freeze((function(){
         return res.reverse().join("");
     }
 
-    /* Return the hint index to a given hint string. This is the reverse of */
-    /* getHintString() */
-    function getHintNumber(str) {
-        var base = config.hintKeys.length,
-            res  = 0,
-            ch, i;
-
-        for (i = 0; i < base; i++) {
-            ch  = str.charAt(i);
-            res = res * base + config.hintKeys.indexOf(ch);
-        }
-
-        return res;
-    }
-
     function getOffsets(doc) {
         var body  = doc.body || doc.documentElement,
             style = body.style,
