@@ -18,6 +18,26 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+Remote-Control
+: If vimb is started with `-n` or `--fifo-name` option, vimb creates a fifo
+  names 'vimb-fifo-{name}' in the `$XDG_CONFIG_HOME/vimb` directory. All
+  commands written into the fifo are executed in the same way like the right
+  hand side of the `map` commands.
+: Example:
+
+  ```bash
+  # start vimb with control fifo
+  vimb -n main &
+  # open a page
+  echo ":o google.com<CR>" > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
+  # start completion for tagged urls
+  echo ':o !<Tab>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
+  # switch to second entry and open it
+  echo '<Tab><CR>'
+  # quit vimb browser instance
+  echo '<C-Q>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
+  ```
+
 Auto-Response-Header
 : Prepend HTTP-Header to responses received from server, based on pattern matching. The purpose of this setting is to enforce some security setting in the client. For example, you could set [Content-Security-Policy](http://www.w3.org/TR/CSP/) to implement a whitelist policy, or set Strict-Transport-Security for server that don't provide this header whereas they propose https website.
 : Note that this setting will not remplace existing headers, but add a new one. If multiple patterns match a request uri, the last matched rule will be applied. You could also specified differents headers for same pattern.
