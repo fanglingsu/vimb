@@ -468,7 +468,7 @@ static void input_activate(void)
 
 gboolean ex_run_string(const char *input)
 {
-    VbCmdResult res;
+    VbCmdResult res = VB_CMD_ERROR;
     ExArg *arg = g_slice_new0(ExArg);
     arg->lhs   = g_string_new("");
     arg->rhs   = g_string_new("");
