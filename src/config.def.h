@@ -52,6 +52,8 @@
 #define FEATURE_AUTOCMD
 /* enable the :auto-response-header feature */
 #define FEATURE_ARH
+/* allow to use fifo to remote control vimb */
+#define FEATURE_FIFO
 
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */

@@ -311,6 +311,7 @@ typedef struct {
 #ifdef FEATURE_SEARCH_HIGHLIGHT
     int             search_matches;         /* number of matches search results */
 #endif
+    char            *fifo_path;             /* holds the path to the control fifo */
 } State;
 
 typedef struct {

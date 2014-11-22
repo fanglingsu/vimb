@@ -44,6 +44,7 @@
 #include "js.h"
 #include "autocmd.h"
 #include "arh.h"
+#include "io.h"
 
 /* variables */
 static char **args;
@@ -114,6 +115,7 @@ static void register_cleanup(void);
 static gboolean hide_message();
 static void set_status(const StatusType status);
 static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message);
+static void vb_cleanup(void);
 
 void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
 {
@@ -416,30 +418,6 @@ void vb_quit(gboolean force)
     /* write last URL into file for recreation */
     if (vb.state.uri) {
         g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
-    }
-
-    completion_clean();
-
-    webkit_web_view_stop_loading(vb.gui.webview);
-
-    map_cleanup();
-    mode_cleanup();
-    setting_cleanup();
-    history_cleanup();
-    session_cleanup();
-    register_cleanup();
-#ifdef FEATURE_AUTOCMD
-    autocmd_cleanup();
-#endif
-#ifdef FEATURE_ARH
-    arh_free(vb.config.autoresponseheader);
-#endif
-
-    g_slist_free_full(vb.config.cmdargs, g_free);
-
-    for (int i = 0; i < FILES_LAST; i++) {
-        g_free(vb.files[i]);
-        vb.files[i] = NULL;
     }
 
     gtk_main_quit();
@@ -1511,6 +1489,40 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
 }
 #endif
 
+/**
+ * Free some memory when vimb is quit.
+ */
+static void vb_cleanup(void)
+{
+
+    completion_clean();
+
+    webkit_web_view_stop_loading(vb.gui.webview);
+
+    map_cleanup();
+    mode_cleanup();
+    setting_cleanup();
+    history_cleanup();
+    session_cleanup();
+    register_cleanup();
+#ifdef FEATURE_AUTOCMD
+    autocmd_cleanup();
+#endif
+#ifdef FEATURE_ARH
+    arh_free(vb.config.autoresponseheader);
+#endif
+#ifdef FEATURE_FIFO
+    io_cleanup();
+#endif
+
+    g_slist_free_full(vb.config.cmdargs, g_free);
+
+    for (int i = 0; i < FILES_LAST; i++) {
+        g_free(vb.files[i]);
+        vb.files[i] = NULL;
+    }
+}
+
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
 {
     vb.config.cmdargs = g_slist_append(vb.config.cmdargs, g_strdup(value));
@@ -1520,6 +1532,9 @@ static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *valu
 int main(int argc, char *argv[])
 {
     static char *winid = NULL;
+#ifdef FEATURE_FIFO
+    static char *fifo_name = NULL;
+#endif
     static gboolean ver = false;
     static GError *err;
     char *pid;
@@ -1529,6 +1544,9 @@ int main(int argc, char *argv[])
         {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
+#ifdef FEATURE_FIFO
+        {"fifo-name", 'n', 0, G_OPTION_ARG_STRING, &fifo_name, "Name used to create control fifo", NULL},
+#endif
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
@@ -1552,7 +1570,7 @@ int main(int argc, char *argv[])
         vb.embed = strtol(winid, NULL, 0);
     }
 
-    pid = g_strdup_printf("%d", getpid());
+    pid = g_strdup_printf("%d", (int)getpid());
     g_setenv("VIMB_PID", pid, true);
     g_free(pid);
 
@@ -1583,8 +1601,18 @@ int main(int argc, char *argv[])
         vb_load_uri(&(Arg){VB_TARGET_CURRENT, argv[argc - 1]});
     }
 
+#ifdef FEATURE_FIFO
+    /* setup the control fifo - quit vimb if this failed */
+    if (fifo_name && *fifo_name && !io_init_fifo(fifo_name)) {
+        return EXIT_FAILURE;
+    }
+#endif
+
     /* Run the main GTK+ event loop */
     gtk_main();
+
+    /* cleanup memory */
+    vb_cleanup();
 
     return EXIT_SUCCESS;
 }
