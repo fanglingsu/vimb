@@ -22,15 +22,9 @@
 
 #include "main.h"
 
-typedef enum {
-    SETTING_OK,
-    SETTING_ERROR         = (1 << 1),
-    SETTING_USER_NOTIFIED = (1 << 2)
-} SettingStatus;
-
 void setting_init(void);
 void setting_cleanup(void);
-gboolean setting_run(char* name, const char* param);
+VbCmdResult setting_run(char* name, const char* param);
 gboolean setting_fill_completion(GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _SETTING_H */

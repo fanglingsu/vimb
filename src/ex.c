@@ -98,7 +98,7 @@ typedef struct {
     int        flags;    /* flags for the already parsed command */
 } ExArg;
 
-typedef gboolean (*ExFunc)(const ExArg *arg);
+typedef VbCmdResult (*ExFunc)(const ExArg *arg);
 
 typedef struct {
     const char *name;         /* full name of the command even if called abbreviated */
@@ -127,29 +127,29 @@ static gboolean parse_lhs(const char **input, ExArg *arg);
 static gboolean parse_rhs(const char **input, ExArg *arg);
 static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
-static gboolean execute(const ExArg *arg);
+static VbCmdResult execute(const ExArg *arg);
 
 #ifdef FEATURE_AUTOCMD
-static gboolean ex_augroup(const ExArg *arg);
-static gboolean ex_autocmd(const ExArg *arg);
+static VbCmdResult ex_augroup(const ExArg *arg);
+static VbCmdResult ex_autocmd(const ExArg *arg);
 #endif
-static gboolean ex_bookmark(const ExArg *arg);
-static gboolean ex_eval(const ExArg *arg);
-static gboolean ex_hardcopy(const ExArg *arg);
-static gboolean ex_map(const ExArg *arg);
-static gboolean ex_unmap(const ExArg *arg);
-static gboolean ex_normal(const ExArg *arg);
-static gboolean ex_open(const ExArg *arg);
+static VbCmdResult ex_bookmark(const ExArg *arg);
+static VbCmdResult ex_eval(const ExArg *arg);
+static VbCmdResult ex_hardcopy(const ExArg *arg);
+static VbCmdResult ex_map(const ExArg *arg);
+static VbCmdResult ex_unmap(const ExArg *arg);
+static VbCmdResult ex_normal(const ExArg *arg);
+static VbCmdResult ex_open(const ExArg *arg);
 #ifdef FEATURE_QUEUE
-static gboolean ex_queue(const ExArg *arg);
+static VbCmdResult ex_queue(const ExArg *arg);
 #endif
-static gboolean ex_register(const ExArg *arg);
-static gboolean ex_quit(const ExArg *arg);
-static gboolean ex_save(const ExArg *arg);
-static gboolean ex_set(const ExArg *arg);
-static gboolean ex_shellcmd(const ExArg *arg);
-static gboolean ex_shortcut(const ExArg *arg);
-static gboolean ex_handlers(const ExArg *arg);
+static VbCmdResult ex_register(const ExArg *arg);
+static VbCmdResult ex_quit(const ExArg *arg);
+static VbCmdResult ex_save(const ExArg *arg);
+static VbCmdResult ex_set(const ExArg *arg);
+static VbCmdResult ex_shellcmd(const ExArg *arg);
+static VbCmdResult ex_shortcut(const ExArg *arg);
+static VbCmdResult ex_handlers(const ExArg *arg);
 
 static gboolean complete(short direction);
 static void completion_select(char *match);
@@ -468,6 +468,7 @@ static void input_activate(void)
 
 gboolean ex_run_string(const char *input)
 {
+    VbCmdResult res;
     ExArg *arg = g_slice_new0(ExArg);
     arg->lhs   = g_string_new("");
     arg->rhs   = g_string_new("");
@@ -476,10 +477,15 @@ gboolean ex_run_string(const char *input)
     history_add(HISTORY_COMMAND, input, NULL);
 
     while (input && *input) {
-        if (!parse(&input, arg) || !execute(arg)) {
+        if (!parse(&input, arg) || !(res = execute(arg))) {
             free_cmdarg(arg);
             return false;
         }
+    }
+    /* check the result of the last executed command */
+    if (!(res & VB_CMD_KEEPINPUT)) {
+        /* clear input text on success if this is not explicit ommited */
+        vb_set_input_text("");
     }
     free_cmdarg(arg);
 
@@ -696,7 +702,7 @@ static gboolean parse_rhs(const char **input, ExArg *arg)
 /**
  * Executes the command given by ExArg.
  */
-static gboolean execute(const ExArg *arg)
+static VbCmdResult execute(const ExArg *arg)
 {
     return (commands[arg->idx].func)(arg);
 }
@@ -720,38 +726,39 @@ static void free_cmdarg(ExArg *arg)
 }
 
 #ifdef FEATURE_AUTOCMD
-static gboolean ex_augroup(const ExArg *arg)
+static VbCmdResult ex_augroup(const ExArg *arg)
 {
-    return autocmd_augroup(arg->lhs->str, arg->bang);
+    return autocmd_augroup(arg->lhs->str, arg->bang) ? VB_CMD_SUCCESS : VB_CMD_ERROR;
 }
 
-static gboolean ex_autocmd(const ExArg *arg)
+static VbCmdResult ex_autocmd(const ExArg *arg)
 {
-    return autocmd_add(arg->rhs->str, arg->bang);
+    return autocmd_add(arg->rhs->str, arg->bang) ? VB_CMD_SUCCESS : VB_CMD_ERROR;
 }
 #endif
 
-static gboolean ex_bookmark(const ExArg *arg)
+static VbCmdResult ex_bookmark(const ExArg *arg)
 {
     if (arg->code == EX_BMR) {
         if (bookmark_remove(*arg->rhs->str ? arg->rhs->str : vb.state.uri)) {
-            vb_echo_force(VB_MSG_NORMAL, false, "  Bookmark removed");
+            vb_echo_force(VB_MSG_NORMAL, true, "  Bookmark removed");
 
-            return true;
+            return VB_CMD_SUCCESS | VB_CMD_KEEPINPUT;
         }
     } else if (bookmark_add(vb.state.uri, webkit_web_view_get_title(vb.gui.webview), arg->rhs->str)) {
-        vb_echo_force(VB_MSG_NORMAL, false, "  Bookmark added");
+        vb_echo_force(VB_MSG_NORMAL, true, "  Bookmark added");
 
-        return true;
+        return VB_CMD_SUCCESS | VB_CMD_KEEPINPUT;
     }
 
-    return false;
+    return VB_CMD_ERROR;
 }
 
-static gboolean ex_eval(const ExArg *arg)
+static VbCmdResult ex_eval(const ExArg *arg)
 {
     gboolean success;
-    char *value = NULL;
+    char *value  = NULL;
+    VbCmdResult res = VB_CMD_SUCCESS;
 
     if (!arg->rhs->len) {
         return false;
@@ -764,39 +771,41 @@ static gboolean ex_eval(const ExArg *arg)
     if (!arg->bang) {
         if (success) {
             vb_echo(VB_MSG_NORMAL, false, "%s", value);
+            res = VB_CMD_SUCCESS | VB_CMD_KEEPINPUT;
         } else {
             vb_echo(VB_MSG_ERROR, true, "%s", value);
+            res = VB_CMD_ERROR | VB_CMD_KEEPINPUT;
         }
     }
     g_free(value);
 
-    return success;
+    return res;
 }
 
-static gboolean ex_hardcopy(const ExArg *arg)
+static VbCmdResult ex_hardcopy(const ExArg *arg)
 {
     webkit_web_frame_print(webkit_web_view_get_main_frame(vb.gui.webview));
-    return true;
+    return VB_CMD_SUCCESS;
 }
 
-static gboolean ex_map(const ExArg *arg)
+static VbCmdResult ex_map(const ExArg *arg)
 {
     if (!arg->lhs->len || !arg->rhs->len) {
-        return false;
+        return VB_CMD_ERROR;
     }
 
     /* instead of using the EX_XMAP constants we use the first char of the
      * command name as mode and the second to determine if noremap is used */
     map_insert(arg->lhs->str, arg->rhs->str, arg->name[0], arg->name[1] != 'n');
 
-    return true;;
+    return VB_CMD_SUCCESS;
 }
 
-static gboolean ex_unmap(const ExArg *arg)
+static VbCmdResult ex_unmap(const ExArg *arg)
 {
     char *lhs;
     if (!arg->lhs->len) {
-        return false;
+        return VB_CMD_ERROR;
     }
 
     lhs = arg->lhs->str;
@@ -808,29 +817,29 @@ static gboolean ex_unmap(const ExArg *arg)
     } else {
         map_delete(lhs, 'i');
     }
-    return true;
+    return VB_CMD_SUCCESS;
 }
 
-static gboolean ex_normal(const ExArg *arg)
+static VbCmdResult ex_normal(const ExArg *arg)
 {
     mode_enter('n');
 
     /* if called with bang - don't apply mapping */
     map_handle_string(arg->rhs->str, !arg->bang);
 
-    return true;
+    return VB_CMD_SUCCESS;
 }
 
-static gboolean ex_open(const ExArg *arg)
+static VbCmdResult ex_open(const ExArg *arg)
 {
     if (arg->code == EX_TABOPEN) {
-        return vb_load_uri(&((Arg){VB_TARGET_NEW, arg->rhs->str}));
+        return vb_load_uri(&((Arg){VB_TARGET_NEW, arg->rhs->str})) ? VB_CMD_SUCCESS : VB_CMD_ERROR;
     }
-    return vb_load_uri(&((Arg){VB_TARGET_CURRENT, arg->rhs->str}));
+    return vb_load_uri(&((Arg){VB_TARGET_CURRENT, arg->rhs->str})) ? VB_CMD_SUCCESS :VB_CMD_ERROR;
 }
 
 #ifdef FEATURE_QUEUE
-static gboolean ex_queue(const ExArg *arg)
+static VbCmdResult ex_queue(const ExArg *arg)
 {
     Arg a = {0};
 
@@ -852,7 +861,7 @@ static gboolean ex_queue(const ExArg *arg)
             break;
 
         default:
-            return false;
+            return VB_CMD_ERROR;
     }
 
     /* if no argument is found in rhs, keep the uri in arg null to force
@@ -861,14 +870,16 @@ static gboolean ex_queue(const ExArg *arg)
         a.s = arg->rhs->str;
     }
 
-    return command_queue(&a);
+    return command_queue(&a)
+        ? VB_CMD_SUCCESS | VB_CMD_KEEPINPUT
+        : VB_CMD_ERROR | VB_CMD_KEEPINPUT;
 }
 #endif
 
 /**
  * Show the contents of the registers :reg.
  */
-static gboolean ex_register(const ExArg *arg)
+static VbCmdResult ex_register(const ExArg *arg)
 {
     int idx;
     char *reg;
@@ -888,21 +899,23 @@ static gboolean ex_register(const ExArg *arg)
     vb_echo(VB_MSG_NORMAL, false, "%s", str->str);
     g_string_free(str, true);
 
-    return true;
+    return VB_CMD_SUCCESS | VB_CMD_KEEPINPUT;
 }
 
-static gboolean ex_quit(const ExArg *arg)
+static VbCmdResult ex_quit(const ExArg *arg)
 {
     vb_quit(arg->bang);
-    return true;
+    return VB_CMD_SUCCESS;
 }
 
-static gboolean ex_save(const ExArg *arg)
+static VbCmdResult ex_save(const ExArg *arg)
 {
-    return command_save(&((Arg){COMMAND_SAVE_CURRENT, arg->rhs->str}));
+    return command_save(&((Arg){COMMAND_SAVE_CURRENT, arg->rhs->str}))
+        ? VB_CMD_SUCCESS | VB_CMD_KEEPINPUT
+        : VB_CMD_ERROR | VB_CMD_KEEPINPUT;
 }
 
-static gboolean ex_set(const ExArg *arg)
+static VbCmdResult ex_set(const ExArg *arg)
 {
     char *param = NULL;
 
@@ -919,34 +932,34 @@ static gboolean ex_set(const ExArg *arg)
     return setting_run(arg->rhs->str, NULL);
 }
 
-static gboolean ex_shellcmd(const ExArg *arg)
+static VbCmdResult ex_shellcmd(const ExArg *arg)
 {
     int status;
     char *stdOut = NULL, *stdErr = NULL;
-    gboolean success;
+    VbCmdResult res;
     GError *error = NULL;
 
     if (!*arg->rhs->str) {
-        return false;
+        return VB_CMD_ERROR;
     }
 
     if (arg->bang) {
         if (!g_spawn_command_line_async(arg->rhs->str, &error)) {
             g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
             g_clear_error(&error);
-            success = false;
+            res = VB_CMD_ERROR | VB_CMD_KEEPINPUT;
         } else {
-            success = true;
+            res = VB_CMD_SUCCESS;
         }
     } else {
         if (!g_spawn_command_line_sync(arg->rhs->str, &stdOut, &stdErr, &status, &error)) {
             g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
             g_clear_error(&error);
-            success = false;
+            res = VB_CMD_ERROR | VB_CMD_KEEPINPUT;
         } else {
             /* the commands success depends not on the return code of the
              * called shell command, so we know the result already here */
-            success = true;
+            res = VB_CMD_SUCCESS | VB_CMD_KEEPINPUT;
         }
 
         if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
@@ -956,32 +969,37 @@ static gboolean ex_shellcmd(const ExArg *arg)
         }
     }
 
-    return success;
+    return res;
 }
 
-static gboolean ex_handlers(const ExArg *arg)
+static VbCmdResult ex_handlers(const ExArg *arg)
 {
     char *p;
+    gboolean success = false;
 
     switch (arg->code) {
         case EX_HANDADD:
             if (arg->rhs->len && (p = strchr(arg->rhs->str, '='))) {
                 *p++ = '\0';
-                return handler_add(arg->rhs->str, p);
+                success = handler_add(arg->rhs->str, p);
             }
-            return false;
+            break;
 
         case EX_HANDREM:
-            return handler_remove(arg->rhs->str);
+            success = handler_remove(arg->rhs->str);
+            break;
 
         default:
-            return false;
+            break;
     }
+
+    return success ? VB_CMD_SUCCESS : VB_CMD_ERROR;
 }
 
-static gboolean ex_shortcut(const ExArg *arg)
+static VbCmdResult ex_shortcut(const ExArg *arg)
 {
     char *p;
+    gboolean success = false;
 
     /* TODO allow to set shortcuts with set command like ':set
      * shortcut[name]=http://donain.tld/?q=$0' */
@@ -989,19 +1007,22 @@ static gboolean ex_shortcut(const ExArg *arg)
         case EX_SCA:
             if (arg->rhs->len && (p = strchr(arg->rhs->str, '='))) {
                 *p++ = '\0';
-                return shortcut_add(arg->rhs->str, p);
+                success = shortcut_add(arg->rhs->str, p);
             }
-            return false;
+            break;
 
         case EX_SCR:
-            return shortcut_remove(arg->rhs->str);
+            success = shortcut_remove(arg->rhs->str);
+            break;
 
         case EX_SCD:
-            return shortcut_set_default(arg->rhs->str);
+            success = shortcut_set_default(arg->rhs->str);
+            break;
 
         default:
-            return false;
+            break;
     }
+    return success ? VB_CMD_SUCCESS : VB_CMD_ERROR;
 }
 
 /**

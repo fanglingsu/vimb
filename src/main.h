@@ -192,6 +192,12 @@ typedef enum {
 } StatusType;
 
 typedef enum {
+    VB_CMD_ERROR,               /* command could not be parses or executed */
+    VB_CMD_SUCCESS   = 0x01,    /* command runned successfully */
+    VB_CMD_KEEPINPUT = 0x02,    /* don't clear inputbox after command run */
+} VbCmdResult;
+
+typedef enum {
     VB_COMP_NORMAL,
     VB_COMP_ACTIVE,
     VB_COMP_LAST

@@ -235,7 +235,7 @@ void setting_init()
     handler_add("magnet", "xdg-open '%s'");
 }
 
-gboolean setting_run(char *name, const char *param)
+VbCmdResult setting_run(char *name, const char *param)
 {
     SettingType type = SETTING_SET;
     char modifier;
@@ -267,18 +267,19 @@ gboolean setting_run(char *name, const char *param)
     Setting *s = g_hash_table_lookup(vb.config.settings, name);
     if (!s) {
         vb_echo(VB_MSG_ERROR, true, "Config '%s' not found", name);
-        return false;
+        return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
     }
 
     if (type == SETTING_GET) {
         setting_print(s);
-        return true;
+        return VB_CMD_SUCCESS | VB_CMD_KEEPINPUT;
     }
 
     if (type == SETTING_TOGGLE) {
         if (s->type != TYPE_BOOLEAN) {
             vb_echo(VB_MSG_ERROR, true, "Could not toggle none boolean %s", s->name);
-            return false;
+
+            return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
         }
         gboolean value = !s->value.b;
         res = setting_set_value(s, &value, SETTING_SET);
@@ -287,7 +288,7 @@ gboolean setting_run(char *name, const char *param)
         if (!param) {
             vb_echo(VB_MSG_ERROR, true, "No valid value");
 
-            return false;
+            return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
         }
 
         /* convert sting value into internal used data type */
@@ -310,12 +311,13 @@ gboolean setting_run(char *name, const char *param)
                 break;
         }
     }
-    if (res == SETTING_OK || res & SETTING_USER_NOTIFIED) {
-        return true;
+
+    if (res & (VB_CMD_SUCCESS | VB_CMD_KEEPINPUT)) {
+        return res;
     }
 
     vb_echo(VB_MSG_ERROR, true, "Could not set %s", s->name);
-    return false;
+    return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
 }
 
 gboolean setting_fill_completion(GtkListStore *store, const char *input)
@@ -338,7 +340,7 @@ void setting_cleanup(void)
 
 static int setting_set_value(Setting *prop, void *value, SettingType type)
 {
-    int res = SETTING_OK;
+    int res = VB_CMD_SUCCESS;
     /* by default given value is also the new value */
     void *newvalue = NULL;
     gboolean free_newvalue;
@@ -351,7 +353,7 @@ static int setting_set_value(Setting *prop, void *value, SettingType type)
     if (prop->setter) {
         res = prop->setter(prop->name, prop->type, newvalue, prop->data);
         /* break here on error and don't change the setting */
-        if (res & SETTING_ERROR) {
+        if (res & VB_CMD_ERROR) {
             goto free;
         }
     }
@@ -544,7 +546,7 @@ static int webkit(const char *name, int type, void *value, void *data)
             g_object_set(G_OBJECT(web_setting), property, (char*)value, NULL);
             break;
     }
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int pagecache(const char *name, int type, void *value, void *data)
@@ -555,7 +557,7 @@ static int pagecache(const char *name, int type, void *value, void *data)
     /* first set the setting on the web settings */
     res = webkit(name, type, value, data);
 
-    if (res == SETTING_OK && on) {
+    if (res == VB_CMD_SUCCESS && on) {
         webkit_set_cache_model(WEBKIT_CACHE_MODEL_WEB_BROWSER);
     } else {
         /* reduce memory usage if caching is not used */
@@ -581,7 +583,7 @@ static int soup(const char *name, int type, void *value, void *data)
             g_object_set(G_OBJECT(vb.session), property, (char*)value, NULL);
             break;
     }
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int internal(const char *name, int type, void *value, void *data)
@@ -601,7 +603,7 @@ static int internal(const char *name, int type, void *value, void *data)
             OVERWRITE_STRING(*str, (char*)value);
             break;
     }
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int input_autohide(const char *name, int type, void *value, void *data)
@@ -622,7 +624,7 @@ static int input_autohide(const char *name, int type, void *value, void *data)
         gtk_widget_set_visible(GTK_WIDGET(vb.gui.input), true);
     }
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int input_color(const char *name, int type, void *value, void *data)
@@ -630,14 +632,14 @@ static int input_color(const char *name, int type, void *value, void *data)
     VB_COLOR_PARSE((VbColor*)data, (char*)value);
     vb_update_input_style();
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int statusbar(const char *name, int type, void *value, void *data)
 {
     gtk_widget_set_visible(GTK_WIDGET(vb.gui.statusbar.box), *(gboolean*)value);
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int status_color(const char *name, int type, void *value, void *data)
@@ -645,7 +647,7 @@ static int status_color(const char *name, int type, void *value, void *data)
     VB_COLOR_PARSE((VbColor*)data, (char*)value);
     vb_update_status_style();
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int input_font(const char *name, int type, void *value, void *data)
@@ -658,7 +660,7 @@ static int input_font(const char *name, int type, void *value, void *data)
     *font = pango_font_description_from_string((char*)value);
     vb_update_input_style();
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int status_font(const char *name, int type, void *value, void *data)
@@ -671,7 +673,7 @@ static int status_font(const char *name, int type, void *value, void *data)
     *font = pango_font_description_from_string((char*)value);
     vb_update_status_style();
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 #ifdef FEATURE_COOKIE
@@ -695,12 +697,12 @@ static int cookie_accept(const char *name, int type, void *value, void *data)
         if (!strcmp(map[i].name, policy)) {
             g_object_set(jar, SOUP_COOKIE_JAR_ACCEPT_POLICY, map[i].policy, NULL);
 
-            return SETTING_OK;
+            return VB_CMD_SUCCESS;
         }
     }
     vb_echo(VB_MSG_ERROR, true, "%s must be in [always, origin, never]", name);
 
-    return SETTING_ERROR | SETTING_USER_NOTIFIED;
+    return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
 }
 #endif
 
@@ -716,14 +718,14 @@ static int ca_bundle(const char *name, int type, void *value, void *data)
         g_warning("Could not load ssl database '%s': %s", (char*)value, error->message);
         g_error_free(error);
 
-        return SETTING_ERROR;
+        return VB_CMD_ERROR;
     }
 
     /* there is no function to get the file back from tls file database so
      * it's saved as separate configuration */
     g_object_set(vb.session, "tls-database", vb.config.tls_db, NULL);
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 
@@ -777,7 +779,7 @@ static int proxy(const char *name, int type, void *value, void *data)
 #endif
     }
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 static int user_style(const char *name, int type, void *value, void *data)
@@ -793,7 +795,7 @@ static int user_style(const char *name, int type, void *value, void *data)
         g_object_set(web_setting, "user-stylesheet-uri", NULL, NULL);
     }
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 
@@ -816,7 +818,7 @@ static int headers(const char *name, int type, void *value, void *data)
     }
     vb.config.headers = soup_header_parse_param_list((char*)value);
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 #ifdef FEATURE_ARH
@@ -833,11 +835,11 @@ static int autoresponseheader(const char *name, int type, void *value, void *dat
         /* add the new one */
         vb.config.autoresponseheader = new;
 
-        return SETTING_OK;
+        return VB_CMD_SUCCESS;
 
     } else {
         vb_echo(VB_MSG_ERROR, true, "auto-response-header: %s", error);
-        return SETTING_ERROR | SETTING_USER_NOTIFIED;
+        return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
     }
 }
 #endif
@@ -850,10 +852,10 @@ static int prevnext(const char *name, int type, void *value, void *data)
         } else {
             OVERWRITE_STRING(vb.config.prevpattern, (char*)value);
         }
-        return SETTING_OK;
+        return VB_CMD_SUCCESS;
     }
 
-    return SETTING_ERROR | SETTING_USER_NOTIFIED;
+    return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
 }
 
 static int fullscreen(const char *name, int type, void *value, void *data)
@@ -864,7 +866,7 @@ static int fullscreen(const char *name, int type, void *value, void *data)
         gtk_window_unfullscreen(GTK_WINDOW(vb.gui.window));
     }
 
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 
 #ifdef FEATURE_HSTS
@@ -875,7 +877,7 @@ static int hsts(const char *name, int type, void *value, void *data)
     } else {
         soup_session_remove_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.hsts_provider));
     }
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 #endif
 
@@ -891,7 +893,7 @@ static int soup_cache(const char *name, int type, void *value, void *data)
     if (!kilobytes) {
         soup_cache_clear(vb.config.soup_cache);
     }
-    return SETTING_OK;
+    return VB_CMD_SUCCESS;
 }
 #endif
 
