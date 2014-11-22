@@ -842,11 +842,6 @@ static void init_core(void)
     gtk_box_pack_end(gui->box, gui->input, false, false, 0);
 #endif
 
-    /* init some state variable */
-    vb.state.enable_register = false;
-    vb.state.enable_history  = false;
-    vb.state.uri             = g_strdup("");
-
     /* initialize the modes */
     mode_init();
     if (!vb.config.kioskmode) {
@@ -892,8 +887,6 @@ static void init_core(void)
     }
 
     /* enter normal mode */
-    vb.state.enable_register = true;
-    vb.state.enable_history  = true;
     mode_enter('n');
 
     vb.config.default_zoom = 1.0;
@@ -1563,12 +1556,21 @@ int main(int argc, char *argv[])
     g_setenv("VIMB_PID", pid, true);
     g_free(pid);
 
+    /* init some state variable */
+    vb.state.enable_register = false;
+    vb.state.enable_history  = false;
+    vb.state.uri             = g_strdup("");
+
     init_core();
 
     /* process the --cmd if this was given */
     for (GSList *l = vb.config.cmdargs; l; l = l->next) {
         ex_run_string(l->data);
     }
+
+    /* active the registers and writing of command history */
+    vb.state.enable_register = true;
+    vb.state.enable_history  = true;
 
     /* open uri given as last argument */
     if (argc <= 1) {
