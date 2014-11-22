@@ -22,21 +22,15 @@ Remote-Control
 : If vimb is started with `-n` or `--fifo-name` option, vimb creates a fifo
   names 'vimb-fifo-{name}' in the `$XDG_CONFIG_HOME/vimb` directory. All
   commands written into the fifo are executed in the same way like the right
-  hand side of the `map` commands.
+  hand side of the `map` commands. This allow to perform normal mode commands
+  as well as ex commands.
 : Example:
 
-  ```bash
-  # start vimb with control fifo
-  vimb -n main &
-  # open a page
-  echo ":o google.com<CR>" > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
-  # start completion for tagged urls
-  echo ':o !<Tab>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
-  # switch to second entry and open it
-  echo '<Tab><CR>'
-  # quit vimb browser instance
-  echo '<C-Q>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
-  ```
+      vimb -n main &
+      echo ":o google.com<CR>" > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
+      echo ':o !<Tab>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
+      echo '<Tab><CR>'
+      echo '<C-Q>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
 
 Auto-Response-Header
 : Prepend HTTP-Header to responses received from server, based on pattern matching. The purpose of this setting is to enforce some security setting in the client. For example, you could set [Content-Security-Policy](http://www.w3.org/TR/CSP/) to implement a whitelist policy, or set Strict-Transport-Security for server that don't provide this header whereas they propose https website.
