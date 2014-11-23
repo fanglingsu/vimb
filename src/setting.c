@@ -284,6 +284,9 @@ VbCmdResult setting_run(char *name, const char *param)
         gboolean value = !s->value.b;
         res = setting_set_value(s, &value, SETTING_SET);
         setting_print(s);
+
+        /* make sure the new value set by the toggle keep visible */
+        res |= VB_CMD_KEEPINPUT;
     } else {
         if (!param) {
             vb_echo(VB_MSG_ERROR, true, "No valid value");
