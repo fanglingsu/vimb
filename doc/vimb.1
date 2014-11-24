@@ -1239,6 +1239,11 @@ each hint is `numbered' based on the characters of the home row.
 Note that the hint matching by label built of hintkeys is case sensitive. In
 this vimb differs from some other browsers that show hint labels in upper
 case, but match them lowercase.
+.RS
+To have upper case hint labels, it's possible to add following css to the
+`style.css' file in vimb's configuration directory.
+.IP "._hintLabel {text-transform: uppercase !important;}"
+.RE
 .TP
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history. If
