@@ -97,10 +97,10 @@ VbResult hints_keypress(int key)
 
         return RESULT_COMPLETE;
     } else {
+        fire_timeout(true);
         /* try to handle the key by the javascript */
         arguments[0] = js_string_to_ref(hints.ctx, (char[]){key, '\0'});
         if (call_hints_function("update", 1, arguments)) {
-            fire_timeout(true);
             return RESULT_COMPLETE;
         }
     }
