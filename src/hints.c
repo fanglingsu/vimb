@@ -86,13 +86,6 @@ VbResult hints_keypress(int key)
         if (call_hints_function("update", 1, arguments)) {
             return RESULT_COMPLETE;
         }
-    } else if (VB_IS_DIGIT(key)) {
-        fire_timeout(true);
-
-        arguments[0] = JSValueMakeNumber(hints.ctx, key - '0');
-        if (call_hints_function("update", 1, arguments)) {
-            return RESULT_COMPLETE;
-        }
     } else if (key == KEY_TAB) {
         fire_timeout(false);
         hints_focus_next(false);
@@ -103,6 +96,13 @@ VbResult hints_keypress(int key)
         hints_focus_next(true);
 
         return RESULT_COMPLETE;
+    } else {
+        /* try to handle the key by the javascript */
+        arguments[0] = js_string_to_ref(hints.ctx, (char[]){key, '\0'});
+        if (call_hints_function("update", 1, arguments)) {
+            fire_timeout(true);
+            return RESULT_COMPLETE;
+        }
     }
 
     fire_timeout(false);
@@ -167,9 +167,10 @@ void hints_create(const char *input)
         JSValueRef arguments[] = {
             js_string_to_ref(hints.ctx, (char[]){hints.mode, '\0'}),
             JSValueMakeBoolean(hints.ctx, hints.gmode),
-            JSValueMakeNumber(hints.ctx, MAXIMUM_HINTS)
+            JSValueMakeNumber(hints.ctx, MAXIMUM_HINTS),
+            js_string_to_ref(hints.ctx, GET_CHAR("hintkeys")),
         };
-        call_hints_function("init", 3, arguments);
+        call_hints_function("init", 4, arguments);
 
         /* if hinting is started there won't be any additional filter given and
          * we can go out of this function */
