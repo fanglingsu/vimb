@@ -69,6 +69,44 @@ static void request_unqueued(SoupSessionFeature *feature,
 static void load_entries(HSTSProvider *provider, const char *file);
 static void save_entries(HSTSProvider *provider, const char *file);
 
+/**
+ * Change scheme and port of soup messages uri if the host is a known and
+ * valid hsts host.
+ *
+ * This logic should be implemented in request_queued function but the changes
+ * that are done there to the uri do not appear in webkit_web_view_get_uri().
+ * If a valid hsts host is requested via http and the url is changed to https
+ * vimb would still show the http uri in url bar. This seems to be a
+ * missbehaviour in webkit, but for now we provide this function to put in the
+ * logic in the scope of the navigation-policy-decision-requested event of the
+ * webview.
+ *
+ * Returns newly allocated string with new URI if the URI was change to
+ * fullfill HSTS, else NULL.
+ */
+char *hsts_get_changed_uri(SoupSession* session, SoupMessage *msg)
+{
+    SoupSessionFeature *feature;
+    HSTSProvider *provider;
+    SoupURI *uri;
+
+    feature = soup_session_get_feature_for_message(session, HSTS_TYPE_PROVIDER, msg);
+    uri     = soup_message_get_uri(msg);
+    if (!feature || !uri) {
+        return NULL;
+    }
+
+    provider = HSTS_PROVIDER(feature);
+    /* if URI uses still https we don't nee to rewrite it */
+    if (uri->scheme != SOUP_URI_SCHEME_HTTPS
+        && should_secure_host(provider, uri->host)
+    ) {
+        /* the ports is set by soup uri if scheme is changed */
+        soup_uri_set_scheme(uri, SOUP_URI_SCHEME_HTTPS);
+        return soup_uri_to_string(uri, false);
+    }
+    return NULL;
+}
 
 /**
  * Generates a new hsts provider instance.

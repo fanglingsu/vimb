@@ -1236,6 +1236,20 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
     WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
     gpointer data)
 {
+#ifdef FEATURE_HSTS
+    char *uri;
+    SoupMessage *msg = webkit_network_request_get_message(request);
+
+    /* change uri for known and valid hsts hosts */
+    uri = hsts_get_changed_uri(vb.session, msg);
+    if (uri) {
+        webkit_web_view_load_uri(view, uri);
+
+        /* mark the request as handled */
+        return true;
+    }
+#endif
+
     /* try to find a protocol handler to open the uri */
     return handle_uri(webkit_network_request_get_uri(request));
 }

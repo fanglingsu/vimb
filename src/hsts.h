@@ -44,6 +44,7 @@ typedef struct {
 } HSTSProviderClass;
 
 
+char *hsts_get_changed_uri(SoupSession* session, SoupMessage *msg);
 GType hsts_provider_get_type(void);
 HSTSProvider *hsts_provider_new(void);
 
