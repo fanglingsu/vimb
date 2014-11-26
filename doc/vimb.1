@@ -317,8 +317,8 @@ Yank hint's destination location into primary and secondary clipboard and into
 the register \fIx\fP.
 .TP
 .BI [ \[char34]x ];Y
-Yank hint's text description or form text into primary and secondary
-clipboard and into the register \fIx\fP.
+Yank hint's text description or form text into primary and secondary clipboard
+and into the register \fIx\fP.
 .PD
 .RE
 .TP
@@ -399,7 +399,7 @@ Moves the cursor after the char in inputbox.
 .B CTRL\-V
 Pass the next key press directly to gtk.
 .TP
-.B CTRL\-R {a-z%:/;}
+.B CTRL\-R {a-z"%:/;}
 Insert the content of given register at cursor position. See also section
 REGISTERS.
 .SS Command Line History
@@ -767,14 +767,17 @@ Registers:
 .BR \[char34]a " - " \[char34]z
 26 named registers "a to "z. Vimb fills these registers only when you say so.
 .TP
-.B \[char34]%
-Contains the curent opened URI.
-.TP
 .B \[char34]:
-Contains the most recent executed ex command.
+Last executed ex command.
+.TP
+.B \[char34]"
+Last yanked content.
+.TP
+.B \[char34]%
+Curent opened URI.
 .TP
 .B \[char34]/
-Contains the most recent search-pattern.
+Last search phrase.
 .TP
 .B \[char34];
 Contains the last hinted URL. This can be used in `x-hint-command' to get the

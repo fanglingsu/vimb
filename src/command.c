@@ -103,8 +103,9 @@ gboolean command_yank(const Arg *arg, char buf)
             text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
         }
         if (text) {
-            /* put the text into the yank buffer */
+            /* save in given register and default "" register */
             vb_register_add(buf, text);
+            vb_register_add('"', text);
             vb_echo(VB_MSG_NORMAL, false, tmpl, text);
             g_free(text);
 
@@ -123,9 +124,10 @@ gboolean command_yank(const Arg *arg, char buf)
         a.s = arg->s;
     }
     if (a.s) {
-        /* put the text into the yank buffer */
         vb_set_clipboard(&a);
+        /* save in given register and default "" register */
         vb_register_add(buf, a.s);
+        vb_register_add('"', a.s);
         vb_echo(VB_MSG_NORMAL, false, tmpl, a.s);
 
         return true;
