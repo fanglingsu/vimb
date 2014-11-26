@@ -32,10 +32,7 @@ extern VbCore vb;
  */
 void pass_enter(void)
 {
-    /* switch focus first to make sure we can write to the inputbox without
-     * disturbing the user */
-    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    vb_echo(VB_MSG_NORMAL, false, "-- PASS THROUGH --");
+    vb_update_mode_label("-- PASS THROUGH --");
 }
 
 /**
@@ -43,7 +40,7 @@ void pass_enter(void)
  */
 void pass_leave(void)
 {
-    vb_set_input_text("");
+    vb_update_mode_label("");
 }
 
 VbResult pass_keypress(int key)

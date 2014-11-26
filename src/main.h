@@ -271,6 +271,7 @@ typedef struct {
 /* statusbar */
 typedef struct {
     GtkBox    *box;
+    GtkWidget *mode;
     GtkWidget *left;
     GtkWidget *right;
     GtkWidget *cmd;
@@ -393,6 +394,7 @@ void vb_update_statusbar(void);
 void vb_update_status_style(void);
 void vb_update_input_style(void);
 void vb_update_urlbar(const char *uri);
+void vb_update_mode_label(const char *label);
 void vb_register_add(char buf, const char *value);
 const char *vb_register_get(char buf);
 gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);

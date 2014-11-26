@@ -366,6 +366,9 @@ void vb_update_status_style(void)
         vb.gui.eventbox, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
     );
     vb_set_widget_font(
+        vb.gui.statusbar.mode, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
+    );
+    vb_set_widget_font(
         vb.gui.statusbar.left, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
     );
     vb_set_widget_font(
@@ -405,6 +408,16 @@ void vb_update_urlbar(const char *uri)
 #else
     gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
 #endif
+}
+
+void vb_update_mode_label(const char *label)
+{
+    if (GET_BOOL("input-autohide")) {
+        /* if the inputbox is potentially not shown write mode into statusbar */
+        gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.mode), label);
+    } else {
+        vb_echo(VB_MSG_NORMAL, false, "%s", label);
+    }
 }
 
 void vb_quit(gboolean force)
@@ -780,6 +793,7 @@ static void init_core(void)
     gui->box             = GTK_BOX(gtk_vbox_new(false, 0));
     gui->statusbar.box   = GTK_BOX(gtk_hbox_new(false, 0));
 #endif
+    gui->statusbar.mode  = gtk_label_new(NULL);
     gui->statusbar.left  = gtk_label_new(NULL);
     gui->statusbar.right = gtk_label_new(NULL);
     gui->statusbar.cmd   = gtk_label_new(NULL);
@@ -794,11 +808,14 @@ static void init_core(void)
     gtk_container_add(GTK_CONTAINER(gui->eventbox), GTK_WIDGET(gui->statusbar.box));
     gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->pane));
 #ifdef HAS_GTK3
+    gtk_widget_set_halign(gui->statusbar.mode, GTK_ALIGN_START);
     gtk_widget_set_halign(gui->statusbar.left, GTK_ALIGN_START);
 #else
+    gtk_misc_set_alignment(GTK_MISC(gui->statusbar.mode), 0.0, 0.0);
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
 #endif
     gtk_label_set_ellipsize(GTK_LABEL(gui->statusbar.left), PANGO_ELLIPSIZE_END);
+    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.mode, false, true, 0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, true, true, 2);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.cmd, false, false, 0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, false, false, 2);

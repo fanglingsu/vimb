@@ -44,7 +44,7 @@ void input_enter(void)
     /* switch focus first to make sure we can write to the inputbox without
      * disturbing the user */
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
+    vb_update_mode_label("-- INPUT --");
 }
 
 /**
@@ -52,7 +52,7 @@ void input_enter(void)
  */
 void input_leave(void)
 {
-    vb_set_input_text("");
+    vb_update_mode_label("");
 }
 
 /**
@@ -68,7 +68,13 @@ VbResult input_keypress(int key)
         VbResult res = normal_keypress(key);
         if (res != RESULT_MORE) {
             ctrlo = false;
-            vb_echo(VB_MSG_NORMAL, false, "-- INPUT --");
+            /* Don't overwrite the mode label in case we landed in another
+             * mode. This might occurre by CTRL-0 CTRL-Z or after running ex
+             * command, where we mainly end up in normal mode. */
+            if (vb.mode->id == 'i') {
+                /* reenter the input mode */
+                input_enter();
+            }
         }
         return res;
     }
@@ -82,7 +88,7 @@ VbResult input_keypress(int key)
             /* enter CTRL-0 mode to execute next command in normal mode */
             ctrlo           = true;
             vb.mode->flags |= FLAG_NOMAP;
-            vb_echo(VB_MSG_NORMAL, false, "-- (input) --");
+            vb_update_mode_label("-- (input) --");
             return RESULT_MORE;
 
         case CTRL('T'):
