@@ -625,11 +625,6 @@ static void webview_request_starting_cb(WebKitWebView *view,
         return;
     }
 
-#ifdef FEATURE_HSTS
-    /* change uri for known and valid hsts hosts */
-    hsts_prepare_message(vb.session, msg);
-#endif
-
     if (!vb.config.headers) {
         return;
     }
@@ -1212,8 +1207,29 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
     WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
     gpointer data)
 {
+#ifdef FEATURE_HSTS
+    char *uri;
+    SoupMessage *msg = webkit_network_request_get_message(request);
+
+    /* change uri for known and valid hsts hosts */
+    uri = hsts_get_changed_uri(vb.session, msg);
+    if (uri) {
+        webkit_web_view_load_uri(view, uri);
+        webkit_web_policy_decision_ignore(policy);
+
+        g_free(uri);
+        /* mark the request as handled */
+        return true;
+    }
+#endif
+
     /* try to find a protocol handler to open the uri */
-    return handle_uri(webkit_network_request_get_uri(request));
+    if (handle_uri(webkit_network_request_get_uri(request))) {
+        webkit_web_policy_decision_ignore(policy);
+
+        return true;
+    }
+    return false;
 }
 
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
