@@ -415,6 +415,8 @@ void vb_quit(gboolean force)
         return;
     }
 
+    webkit_web_view_stop_loading(vb.gui.webview);
+
     /* write last URL into file for recreation */
     if (vb.state.uri) {
         g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
@@ -1512,9 +1514,6 @@ static void vb_cleanup(void)
 {
 
     completion_clean();
-
-    webkit_web_view_stop_loading(vb.gui.webview);
-
     map_cleanup();
     mode_cleanup();
     setting_cleanup();
