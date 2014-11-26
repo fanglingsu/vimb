@@ -38,6 +38,5 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map);
 void map_handle_string(const char *str, gboolean use_map);
 void map_insert(const char *in, const char *mapped, char mode, gboolean remap);
 gboolean map_delete(const char *in, char mode);
-void map_showcmd(int c);
 
 #endif /* end of include guard: _MAP_H */

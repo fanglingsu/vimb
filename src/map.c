@@ -48,6 +48,7 @@ static struct {
 
 extern VbCore vb;
 
+static void showcmd(int c);
 static char *transchar(int c);
 static gboolean map_delete_by_lhs(const char *lhs, int len, char mode);
 static int keyval_to_string(guint keyval, guint state, guchar *string);
@@ -227,12 +228,12 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
 
             /* send the key to the parser */
             if (RESULT_MORE != mode_handle_key((int)qk)) {
-                map_showcmd(0);
+                showcmd(0);
                 showlen = 0;
             } else if (showlen > 0) {
                 showlen--;
             } else {
-                map_showcmd(qk);
+                showcmd(qk);
             }
         }
 
@@ -261,7 +262,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
                         /* appen only those chars that are not already in showcmd */
                         i += showlen;
                         while (i < map.qlen) {
-                            map_showcmd(map.queue[i++]);
+                            showcmd(map.queue[i++]);
                             showlen++;
                         }
                     }
@@ -291,7 +292,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
             /* flush the show command to make room for possible mapped command
              * chars to show for example if :nmap foo 12g is use we want to
              * display the incomplete 12g command */
-            map_showcmd(0);
+            showcmd(0);
             showlen = 0;
 
             if (match->inlen < match->mappedlen) {
@@ -370,7 +371,7 @@ gboolean map_delete(const char *in, char mode)
 /**
  * Put the given char onto the show command buffer.
  */
-void map_showcmd(int c)
+static void showcmd(int c)
 {
     char *translated;
     int old, extra, overflow;
