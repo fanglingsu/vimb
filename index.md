@@ -18,6 +18,11 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+Hinting by Letters
+: Vimb allow now to set the chars used to built the hint labels. To have a
+  more vimium like behaviour you can `:set hintkeys=sdfghjkla`. This allows
+  fast filtering without moving you hands from the home row of the keyboard.
+
 Remote-Control
 : If vimb is started with `-n` or `--fifo-name` option, vimb creates a fifo
   names 'vimb-fifo-{name}' in the `$XDG_CONFIG_HOME/vimb` directory. All
@@ -53,11 +58,6 @@ Read HTML from `stdin`
   ```
   markdown_py README.md | vimb -
   ```
-
-Input [CTRL-O](keybindings.html#i_CTRL-O) command
-: Allow to run normal mode command in input mode with `CTRL-O`. This allows to
-  yank selected text within form fields by pressing `CTRL-O Y` or to zoom the
-  page like `CTRL-O 2zi`
 
 ## screenshots
 

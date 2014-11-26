@@ -318,11 +318,12 @@ Example:
 : Register:
 : - `"a` -- `"z` 26 named registers. Vimb fills these registers only when you
     say so.
-  - `"%` Contains the curent opened URI.
-  - `":` Contains the most recent executed ex command.
-  - `"/` Contains the most recent search-pattern.
-  - `";` Contains the last hinted URL. This can be used in `x-hint-command` to
-    get the URL of the hint.
+  - `""` Last yanked content.
+  - `"%` Curent opened URI.
+  - `":` Last executed ex command.
+  - `"/` Last search phrase.
+  - `";` Last hinted URL. This can be used in `x-hint-command` to get the URL
+    of the hint.
 
 \:e[val] *javascript*
 : Runs the given *javascript* in the current page and display the evaluated
