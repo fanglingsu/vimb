@@ -90,6 +90,10 @@ char *hsts_get_changed_uri(SoupSession* session, SoupMessage *msg)
     HSTSProvider *provider;
     SoupURI *uri;
 
+    if (!msg) {
+        return NULL;
+    }
+
     feature = soup_session_get_feature_for_message(session, HSTS_TYPE_PROVIDER, msg);
     uri     = soup_message_get_uri(msg);
     if (!feature || !uri) {
