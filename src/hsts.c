@@ -102,7 +102,7 @@ char *hsts_get_changed_uri(SoupSession* session, SoupMessage *msg)
 
     provider = HSTS_PROVIDER(feature);
     /* if URI uses still https we don't nee to rewrite it */
-    if (strcmp(uri->scheme, SOUP_URI_SCHEME_HTTPS)
+    if (uri->scheme != SOUP_URI_SCHEME_HTTPS
         && should_secure_host(provider, uri->host)
     ) {
         /* the ports is set by soup uri if scheme is changed */
@@ -343,7 +343,7 @@ static void request_queued(SoupSessionFeature *feature,
     HSTSProvider *provider = HSTS_PROVIDER(feature);
 
     /* only look for HSTS headers sent over https RFC 6797 7.2*/
-    if (!strcmp(uri->scheme, SOUP_URI_SCHEME_HTTPS)) {
+    if (uri->scheme == SOUP_URI_SCHEME_HTTPS) {
         soup_message_add_header_handler(
             msg, "got-headers", HSTS_HEADER_NAME, G_CALLBACK(process_hsts_header), feature
         );
@@ -363,7 +363,7 @@ static void request_started(SoupSessionFeature *feature,
     GTlsCertificateFlags errors;
 
     if (should_secure_host(provider, uri->host)) {
-        if (strcmp(uri->scheme, SOUP_URI_SCHEME_HTTPS)
+        if (uri->scheme != SOUP_URI_SCHEME_HTTPS
             || (soup_message_get_https_status(msg, &certificate, &errors) && errors)
         ) {
             soup_session_cancel_message(session, msg, SOUP_STATUS_SSL_FAILED);
