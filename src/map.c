@@ -123,7 +123,7 @@ void map_cleanup(void)
 
 gboolean map_buttonpress(GtkWidget *widget, GdkEventButton* event, gpointer data)
 {
-    guchar *string;
+    char *string;
 
     switch (event->button) {
         case 8:
@@ -140,7 +140,7 @@ gboolean map_buttonpress(GtkWidget *widget, GdkEventButton* event, gpointer data
     }
 
     vb.state.processed_key = true;
-    map_handle_keys(string, 3, true);
+    map_handle_keys((guchar*) string, 3, true);
     return vb.state.processed_key;
 }
 
