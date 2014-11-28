@@ -1216,7 +1216,7 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
     /* change uri for known and valid hsts hosts */
     uri = hsts_get_changed_uri(vb.session, msg);
     if (uri) {
-        webkit_web_view_load_uri(view, uri);
+        webkit_web_frame_load_uri(frame, uri);
         webkit_web_policy_decision_ignore(policy);
 
         g_free(uri);
