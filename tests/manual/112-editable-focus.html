@@ -1,0 +1,32 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>iFrame URI change by HSTS (#146)</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript">
+//<![CDATA[
+function setFocus() {
+    document.getElementById("text").focus();
+}
+//]]>
+</script>
+</head>
+<body onload="setFocus();">
+    <p>
+    Run with <code>scripts=on</code> and <code>strict-focus=off</code>
+    <ol>
+        <li>If page is loade, vimb should be in input mode.</li>
+        <li>Set <code>strict-focus=on</code> and reload page. Vimb should keep
+            in normal mode</li>
+        <li>Independent from the <code>strict-focus</code> should vimb switch
+            to input mode if the button is clicked</li>
+    </ol>
+    </p>
+    <form action="#">
+        <div>
+            <textarea name="text" id="text" rows="11" cols="50"></textarea><br/>
+            <input type="button" value="Focus Textarea" onclick="document.getElementById('text').focus();"/>
+        </div>
+    </form>
+</body>
+</html>
+
