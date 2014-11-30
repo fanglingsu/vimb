@@ -89,26 +89,29 @@ static struct {
     char *ch;
     int  chlen;
 } key_labels[] = {
-    {"<CR>",    4, "\x0d",       1},
-    {"<Tab>",   5, "\t",         1},
-    {"<S-Tab>", 7, CSI_STR "kB", 3},
-    {"<Esc>",   5, "\x1b",       1},
-    {"<Up>",    4, CSI_STR "ku", 3},
-    {"<Down>",  6, CSI_STR "kd", 3},
-    {"<Left>",  6, CSI_STR "kl", 3},
-    {"<Right>", 7, CSI_STR "kr", 3},
-    {"<F1>",    4, CSI_STR "k1", 3},
-    {"<F2>",    4, CSI_STR "k2", 3},
-    {"<F3>",    4, CSI_STR "k3", 3},
-    {"<F4>",    4, CSI_STR "k4", 3},
-    {"<F5>",    4, CSI_STR "k5", 3},
-    {"<F6>",    4, CSI_STR "k6", 3},
-    {"<F7>",    4, CSI_STR "k7", 3},
-    {"<F8>",    4, CSI_STR "k8", 3},
-    {"<F9>",    4, CSI_STR "k9", 3},
-    {"<F10>",   5, CSI_STR "k;", 3},
-    {"<F11>",   5, CSI_STR "F1", 3},
-    {"<F12>",   5, CSI_STR "F2", 3},
+    {"<CR>",          4,  "\x0d",       1},
+    {"<Tab>",         5,  "\t",         1},
+    {"<S-Tab>",       7,  CSI_STR "kB", 3},
+    {"<Esc>",         5,  "\x1b",       1},
+    {"<Up>",          4,  CSI_STR "ku", 3},
+    {"<Down>",        6,  CSI_STR "kd", 3},
+    {"<Left>",        6,  CSI_STR "kl", 3},
+    {"<Right>",       7,  CSI_STR "kr", 3},
+    {"<F1>",          4,  CSI_STR "k1", 3},
+    {"<F2>",          4,  CSI_STR "k2", 3},
+    {"<F3>",          4,  CSI_STR "k3", 3},
+    {"<F4>",          4,  CSI_STR "k4", 3},
+    {"<F5>",          4,  CSI_STR "k5", 3},
+    {"<F6>",          4,  CSI_STR "k6", 3},
+    {"<F7>",          4,  CSI_STR "k7", 3},
+    {"<F8>",          4,  CSI_STR "k8", 3},
+    {"<F9>",          4,  CSI_STR "k9", 3},
+    {"<F10>",         5,  CSI_STR "k;", 3},
+    {"<F11>",         5,  CSI_STR "F1", 3},
+    {"<F12>",         5,  CSI_STR "F2", 3},
+    {"<X1Mouse>",     9,  CSI_STR "X1", 3},
+    {"<X2Mouse>",     9,  CSI_STR "X2", 3},
+    {"<MiddleMouse>", 13, CSI_STR "M2", 3},
 };
 
 
@@ -117,6 +120,29 @@ void map_cleanup(void)
     if (map.list) {
         g_slist_free_full(map.list, (GDestroyNotify)free_map);
     }
+}
+
+gboolean map_buttonpress(GtkWidget *widget, GdkEventButton* event, gpointer data)
+{
+    char *string;
+
+    switch (event->button) {
+        case 8:
+            string = CSI_STR "X1";
+            break;
+        case 9:
+            string = CSI_STR "X2";
+            break;
+        case 2:
+            string = CSI_STR "M2";
+            break;
+        default:
+            return false;
+    }
+
+    vb.state.processed_key = true;
+    map_handle_keys((guchar*) string, 3, true);
+    return vb.state.processed_key;
 }
 
 /**
@@ -401,6 +427,7 @@ static void showcmd(int c)
 static char *transchar(int c)
 {
     static char trans[5];
+
     int i = 0;
     if (VB_IS_CTRL(c)) {
         trans[i++] = '^';
