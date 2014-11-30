@@ -1335,9 +1335,11 @@ Foreground of statusbar for untrusted https pages.
 Statusbar font for untrusted https pages.
 .TP
 .B strict-focus (bool)
-Indicates if vimb follows the instruction of the page to focus a form field
-without user interaction. If set the true, vimb will no switch to input mode
-if the pages say so and vimb will remove the focus from the form field.
+Vimb checks if an editable element is focused and switch to input mode. If
+strict-focus is enabled, this isn't done for focused element on page load
+(without user interaction), instead the focus is removed from the focused
+element. Focus changed that appear after the page was completely loaded are
+not affected by this setting.
 .TP
 .B strict-ssl (bool)
 If 'on', vimb will not load a untrusted https site.

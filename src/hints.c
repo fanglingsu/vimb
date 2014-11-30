@@ -302,7 +302,11 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
     /* following return values mark fired hints */
     if (!strncmp(value, "DONE:", 5)) {
         fire_timeout(false);
-        if (!hints.gmode) {
+        /* Change to normal mode only if we are crrently in command mode and
+         * we are not in g-mode hinting. This is required to not switch to
+         * normal mode when the hinting triggered a click that set focus on
+         * editable element that lead vimb to switch to input mode. */
+        if (!hints.gmode && vb.mode->id == 'c') {
             mode_enter('n');
         }
     } else if (!strncmp(value, "INSERT:", 7)) {

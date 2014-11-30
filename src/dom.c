@@ -32,24 +32,28 @@ static Element *get_active_element(Document *doc);
 
 void dom_check_auto_insert(WebKitWebView *view)
 {
-    Document *doc   = webkit_web_view_get_dom_document(view);
-    Element *active = get_active_element(doc);
+    Element *active;
+    HtmlElement *element;
+    Document *doc = webkit_web_view_get_dom_document(view);
 
-    if (vb.config.strict_focus || !auto_insert(active)) {
-        /* if the strict-focus is on also blur the possible active element */
-        if (vb.config.strict_focus) {
-            dom_clear_focus(view);
-        }
-        /* the focus was not set automatically - add event listener to track
-         * focus events on the document */
-        HtmlElement *element = webkit_dom_document_get_body(doc);
-        if (!element) {
-            element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
-        }
-        webkit_dom_event_target_add_event_listener(
-            WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), false, NULL
-        );
+    if (vb.config.strict_focus) {
+        /* if there is focus on an element right after page load - remove it
+         * if strict-focus is enabled */
+        dom_clear_focus(view);
+    } else {
+        /* if active element is editable - switch vimb to input mode */
+        active = get_active_element(doc);
+        auto_insert(active);
     }
+
+    /* add event listener to track focus events on the document */
+    element = webkit_dom_document_get_body(doc);
+    if (!element) {
+        element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
+    }
+    webkit_dom_event_target_add_event_listener(
+        WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), true, NULL
+    );
 }
 
 /**
@@ -209,9 +213,6 @@ static gboolean auto_insert(Element *element)
 
 static gboolean editable_focus_cb(Element *element, Event *event)
 {
-    webkit_dom_event_target_remove_event_listener(
-        WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), false
-    );
     if (vb.mode->id != 'i') {
         EventTarget *target = webkit_dom_event_get_target(event);
         auto_insert((void*)target);
