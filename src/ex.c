@@ -827,7 +827,7 @@ static VbCmdResult ex_normal(const ExArg *arg)
     /* if called with bang - don't apply mapping */
     map_handle_string(arg->rhs->str, !arg->bang);
 
-    return VB_CMD_SUCCESS;
+    return VB_CMD_SUCCESS | VB_CMD_KEEPINPUT;
 }
 
 static VbCmdResult ex_open(const ExArg *arg)
