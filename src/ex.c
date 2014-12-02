@@ -926,7 +926,10 @@ static VbCmdResult ex_set(const ExArg *arg)
     /* split the input string into parameter and value part */
     if ((param = strchr(arg->rhs->str, '='))) {
         *param++ = '\0';
-        return setting_run(arg->rhs->str, param ? param : NULL);
+        g_strstrip(arg->rhs->str);
+        g_strstrip(param);
+
+        return setting_run(arg->rhs->str, param);
     }
 
     return setting_run(arg->rhs->str, NULL);
