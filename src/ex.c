@@ -441,6 +441,7 @@ static void input_activate(void)
 {
     int count = -1;
     char *text, *cmd;
+    VbCmdResult res;
     text = vb_get_input_text();
 
     /* skip leading prompt char like ':' or '/' */
@@ -459,14 +460,18 @@ static void input_activate(void)
 
         case ':':
             mode_enter('n');
-            ex_run_string(cmd);
+            res = ex_run_string(cmd);
+            if (!(res & VB_CMD_KEEPINPUT)) {
+                /* clear input on success if this is not explicit ommited */
+                vb_set_input_text("");
+            }
             break;
 
     }
     g_free(text);
 }
 
-gboolean ex_run_string(const char *input)
+VbCmdResult ex_run_string(const char *input)
 {
     VbCmdResult res = VB_CMD_ERROR;
     ExArg *arg = g_slice_new0(ExArg);
@@ -479,17 +484,12 @@ gboolean ex_run_string(const char *input)
     while (input && *input) {
         if (!parse(&input, arg) || !(res = execute(arg))) {
             free_cmdarg(arg);
-            return false;
+            return VB_CMD_ERROR;
         }
-    }
-    /* check the result of the last executed command */
-    if (!(res & VB_CMD_KEEPINPUT)) {
-        /* clear input text on success if this is not explicit ommited */
-        vb_set_input_text("");
     }
     free_cmdarg(arg);
 
-    return true;
+    return res;
 }
 
 /**

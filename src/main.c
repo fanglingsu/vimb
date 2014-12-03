@@ -917,7 +917,7 @@ static void read_config(void)
             if (*line == '#') {
                 continue;
             }
-            if (!ex_run_string(line)) {
+            if (ex_run_string(line) & VB_CMD_ERROR ) {
                 g_warning("Invalid user config: '%s'", line);
             }
         }
