@@ -30,7 +30,6 @@
 #ifdef HAS_GTK3
 #include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
-#else
 #endif
 #include "config.h"
 #ifdef FEATURE_HSTS
