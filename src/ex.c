@@ -247,8 +247,10 @@ VbResult ex_keypress(int key)
     VbResult res;
     const char *text;
 
-    /* delegate call to the submode */
-    if (RESULT_COMPLETE == hints_keypress(key)) {
+    /* delegate call to hint mode if this is active */
+    if (vb.mode->flags & FLAG_HINTING
+        && RESULT_COMPLETE == hints_keypress(key)) {
+
         return RESULT_COMPLETE;
     }
 

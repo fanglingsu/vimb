@@ -70,12 +70,6 @@ VbResult hints_keypress(int key)
 {
     JSValueRef arguments[1];
 
-    /* if we are not already in hint mode we expect to get a ; to start
-     * hinting */
-    if (!(vb.mode->flags & FLAG_HINTING) && key != ';') {
-        return RESULT_ERROR;
-    }
-
     if (key == KEY_CR) {
         hints_fire();
 
