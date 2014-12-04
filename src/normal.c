@@ -310,6 +310,31 @@ VbResult normal_keypress(int key)
     return res;
 }
 
+/**
+ * Function called when vimb enters the passthrough mode.
+ */
+void pass_enter(void)
+{
+    vb_update_mode_label("-- PASS THROUGH --");
+}
+
+/**
+ * Called when passthrough mode is left.
+ */
+void pass_leave(void)
+{
+    vb_update_mode_label("");
+}
+
+VbResult pass_keypress(int key)
+{
+    if (key == CTRL('[')) { /* esc */
+        mode_enter('n');
+    }
+    vb.state.processed_key = false;
+    return RESULT_COMPLETE;
+}
+
 static VbResult normal_clear_input(const NormalCmdInfo *info)
 {
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));

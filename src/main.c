@@ -39,7 +39,6 @@
 #include "ex.h"
 #include "input.h"
 #include "map.h"
-#include "pass.h"
 #include "bookmark.h"
 #include "js.h"
 #include "autocmd.h"
