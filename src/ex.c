@@ -484,7 +484,7 @@ VbCmdResult ex_run_string(const char *input)
     while (input && *input) {
         if (!parse(&input, arg) || !(res = execute(arg))) {
             free_cmdarg(arg);
-            return VB_CMD_ERROR;
+            return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
         }
     }
     free_cmdarg(arg);
