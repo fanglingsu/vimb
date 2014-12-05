@@ -202,8 +202,11 @@ static gboolean element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* el
 
 static gboolean auto_insert(Element *element)
 {
-    /* don't change mode if we are in pass through mode */
-    if (vb.mode->id != 'p' && dom_is_editable(element)) {
+    /* Change only the mode if we are in normal mode - passthrough should not
+     * be disturbed by this and if the user iy typing into inputbox we don't
+     * want to remove the content and force a switch to input mode. And to
+     * switch to input mode when this is already active makes no sense. */
+    if (vb.mode->id == 'n' && dom_is_editable(element)) {
         mode_enter('i');
 
         return true;
