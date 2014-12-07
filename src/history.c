@@ -77,9 +77,9 @@ void history_add(HistoryType type, const char *value, const char *additional)
 {
     const char *file;
 
-    /* Don't write a history entry to the file if the commands where not typed
-     * by the user or the history max size is set to 0. */
-    if (!vb.config.history_max || !vb.state.typed) {
+    /* Don't write a history entry if the history max size is set to 0. Else
+     * skip command history in case the command was not typed by the user. */
+    if (!vb.config.history_max || (!vb.state.typed && type == HISTORY_COMMAND)) {
         return;
     }
 
