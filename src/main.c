@@ -1600,7 +1600,6 @@ int main(int argc, char *argv[])
 
     /* init some state variable */
     vb.state.enable_register = false;
-    vb.state.enable_history  = false;
     vb.state.uri             = g_strdup("");
 
     init_core();
@@ -1612,7 +1611,6 @@ int main(int argc, char *argv[])
 
     /* active the registers and writing of command history */
     vb.state.enable_register = true;
-    vb.state.enable_history  = true;
 
     /* open uri given as last argument */
     if (argc <= 1) {

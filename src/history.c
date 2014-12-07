@@ -77,9 +77,9 @@ void history_add(HistoryType type, const char *value, const char *additional)
 {
     const char *file;
 
-    /* don't write a history entry to the file if history is disabled or
-     * history max size is set to 0 */
-    if (!vb.state.enable_history || !vb.config.history_max) {
+    /* Don't write a history entry to the file if the commands where not typed
+     * by the user or the history max size is set to 0. */
+    if (!vb.config.history_max || !vb.state.typed) {
         return;
     }
 
@@ -204,7 +204,7 @@ static const char *get_file_by_type(HistoryType type)
 }
 
 /**
- * Loads history items form file but eliminate duplicates in FIFO order.
+ * Loads history items form file but eleminate duplicates in FIFO order.
  *
  * Returned list must be freed with (GDestroyNotify) free_history.
  */

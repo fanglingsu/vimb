@@ -256,9 +256,6 @@ gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
         return true;
     }
 
-    /* don't record commands in history runed by autocmd */
-    vb.state.enable_history = false;
-
     /* loop over the groups and find matching commands */
     for (lg = groups; lg; lg = lg->next) {
         grp = lg->data;
@@ -283,7 +280,6 @@ gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
             ex_run_string(cmd->excmd);
         }
     }
-    vb.state.enable_history = true;
 
     return true;
 }

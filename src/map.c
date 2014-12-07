@@ -159,8 +159,14 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
         return false;
     }
 
+    /* set flag to notify that the key was typed by the user */
+    vb.state.typed         = true;
     vb.state.processed_key = true;
+
     map_handle_keys(string, len, true);
+
+    /* reset the typed flag */
+    vb.state.typed = false;
 
     return vb.state.processed_key;
 }
@@ -319,6 +325,10 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
             ) {
                 map.resolved = match->inlen;
             }
+            /* Unset the typed flag - if there where keys replaced by a
+             * mapping the resulting key string is considered as not typed by
+             * the user. */
+            vb.state.typed = false;
         } else {
             /* first char is not mapped but resolved */
             map.resolved = 1;

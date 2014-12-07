@@ -101,14 +101,14 @@ static gboolean fifo_watch(GIOChannel *gio, GIOCondition condition)
         g_error_free(err);
     }
 
-    /* don't recore remote commands in history */
-    vb.state.enable_history = false;
+    /* simulate the typed flag to allow to record the commands in history */
+    vb.state.typed = true;
 
     map_handle_string(line, true);
     g_free(line);
 
-    /* reenable history recording */
-    vb.state.enable_history = true;
+    /* unset typed flag */
+    vb.state.typed = false;
 
     return true;
 }

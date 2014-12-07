@@ -308,7 +308,7 @@ typedef struct {
     char            *reg[VB_REG_SIZE];      /* holds the yank buffer */
     gboolean        enable_register;        /* indicates if registers are filled */
     char            current_register;       /* holds char for current register to be used */
-    gboolean        enable_history;         /* indicates if history entries are written */
+    gboolean        typed;                  /* indicates if th euser type the keys processed as command */
 #ifdef FEATURE_SEARCH_HIGHLIGHT
     int             search_matches;         /* number of matches search results */
 #endif
