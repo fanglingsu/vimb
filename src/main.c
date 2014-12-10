@@ -46,7 +46,7 @@
 #include "io.h"
 
 /* variables */
-static char **args;
+static char *argv0;
 VbCore      vb;
 
 /* callbacks */
@@ -218,14 +218,17 @@ gboolean vb_load_uri(const Arg *arg)
         guint i = 0;
 
         /* memory allocation */
-        char ** cmd = g_malloc_n(3
-                + (vb.embed ? 2 : 0)
-                + (vb.config.file ? 2 : 0)
-                + g_slist_length(vb.config.cmdargs) * 2
-                , sizeof(char *));
+        char **cmd = g_malloc_n(
+            3                       /* basename + uri + ending NULL */
+            + (vb.embed ? 2 : 0)
+            + (vb.config.file ? 2 : 0)
+            + (vb.config.kioskmode ? 1 : 0)
+            + g_slist_length(vb.config.cmdargs) * 2,
+            sizeof(char *)
+        );
 
         /* build commandline */
-        cmd[i++] = *args;
+        cmd[i++] = argv0;
         if (vb.embed) {
             char xid[64];
             snprintf(xid, LENGTH(xid), "%u", (int)vb.embed);
@@ -239,6 +242,9 @@ gboolean vb_load_uri(const Arg *arg)
         for (GSList *l = vb.config.cmdargs; l; l = l->next) {
             cmd[i++] = "-C";
             cmd[i++] = l->data;
+        }
+        if (vb.config.kioskmode) {
+            cmd[i++] = "-k";
         }
         cmd[i++] = uri;
         cmd[i++] = NULL;
@@ -1587,8 +1593,8 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
     }
 
-    /* save arguments */
-    args = argv;
+    /* save vimb basename */
+    argv0 = argv[0];
 
     if (winid) {
         vb.embed = strtol(winid, NULL, 0);
