@@ -1571,7 +1571,7 @@ int main(int argc, char *argv[])
 
     static GOptionEntry opts[] = {
         {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
-        {"config", 'c', 0, G_OPTION_ARG_STRING, &vb.config.file, "Custom configuration file", NULL},
+        {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.config.file, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
 #ifdef FEATURE_FIFO
