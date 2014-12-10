@@ -18,24 +18,26 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
-Hinting by Letters
-: Vimb allow now to set the chars used to built the hint labels. To have a
-  more vimium like behaviour you can `:set hintkeys=sdfghjkla`. This allows
-  fast filtering without moving you hands from the home row of the keyboard.
-
-Remote-Control
-: If vimb is started with `-n` or `--fifo-name` option, vimb creates a fifo
-  names 'vimb-fifo-{name}' in the `$XDG_CONFIG_HOME/vimb` directory. All
+Remote-Control (changed option `--fifo-name` to `--fifo`)
+: If vimb is started with `-f` or `--fifo` option, vimb creates a fifo
+  names `vimb-fifo-{pid}` in the `$XDG_CONFIG_HOME/vimb` directory. All
   commands written into the fifo are executed in the same way like the right
   hand side of the `map` commands. This allow to perform normal mode commands
   as well as ex commands.
 : Example:
 
-      vimb -n main &
-      echo ":o google.com<CR>" > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
-      echo ':o !<Tab>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
-      echo '<Tab><CR>'
-      echo '<C-Q>' > $XDG_CONFIG_HOME/vimb/vimb-fifo-main
+      $(vimb -df > ~/fifo)
+      # in another shell - get the path to the fifo
+      FIFO=$(< ~/fifo)
+      echo ':o http://fanglingsu.github.io/vimb/<CR>' > $FIFO
+      echo ':o !<Tab>' > $FIFO
+      echo '<Tab><CR>' > $FIFO
+      echo '<C-Q>' > $FIFO
+
+Hinting by Letters
+: Vimb allow now to set the chars used to built the hint labels. To have a
+  more vimium like behaviour you can `:set hintkeys=sdfghjkla`. This allows
+  fast filtering without moving you hands from the home row of the keyboard.
 
 Auto-Response-Header
 : Prepend HTTP-Header to responses received from server, based on pattern matching. The purpose of this setting is to enforce some security setting in the client. For example, you could set [Content-Security-Policy](http://www.w3.org/TR/CSP/) to implement a whitelist policy, or set Strict-Transport-Security for server that don't provide this header whereas they propose https website.
