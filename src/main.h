@@ -313,6 +313,7 @@ typedef struct {
     int             search_matches;         /* number of matches search results */
 #endif
     char            *fifo_path;             /* holds the path to the control fifo */
+    char            *pid_str;               /* holds the pid as string */
 } State;
 
 typedef struct {
@@ -338,6 +339,9 @@ typedef struct {
     float        default_zoom;    /* default zoomlevel that is applied on zz zoom reset */
     gboolean     kioskmode;
     gboolean     input_autohide;  /* indicates if the inputbox should be hidden if it's empty */
+#ifdef FEATURE_FIFO
+    gboolean     fifo;            /* indicates if the fifo is used */
+#endif
 #ifdef FEATURE_HSTS
     HSTSProvider *hsts_provider;  /* the hsts session feature that is added to soup session */
 #endif

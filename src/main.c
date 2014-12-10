@@ -223,6 +223,7 @@ gboolean vb_load_uri(const Arg *arg)
             + (vb.embed ? 2 : 0)
             + (vb.config.file ? 2 : 0)
             + (vb.config.kioskmode ? 1 : 0)
+            + (vb.config.fifo ? 1 : 0)
             + g_slist_length(vb.config.cmdargs) * 2,
             sizeof(char *)
         );
@@ -245,6 +246,9 @@ gboolean vb_load_uri(const Arg *arg)
         }
         if (vb.config.kioskmode) {
             cmd[i++] = "-k";
+        }
+        if (vb.config.fifo) {
+            cmd[i++] = "-f";
         }
         cmd[i++] = uri;
         cmd[i++] = NULL;
@@ -1544,6 +1548,8 @@ static void vb_cleanup(void)
 #ifdef FEATURE_FIFO
     io_cleanup();
 #endif
+    g_free(vb.state.pid_str);
+    g_free(vb.state.uri);
 
     g_slist_free_full(vb.config.cmdargs, g_free);
 
@@ -1561,22 +1567,20 @@ static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *valu
 
 int main(int argc, char *argv[])
 {
-    static char *winid = NULL;
-#ifdef FEATURE_FIFO
-    static char *fifo_name = NULL;
-#endif
-    static gboolean ver = false;
+    static char *winid   = NULL;
+    static gboolean ver  = false;
+    static gboolean dump = false;
     static GError *err;
-    char *pid;
 
     static GOptionEntry opts[] = {
         {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.config.file, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
-        {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
 #ifdef FEATURE_FIFO
-        {"fifo-name", 'n', 0, G_OPTION_ARG_STRING, &fifo_name, "Name used to create control fifo", NULL},
+        {"dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump the fifo path to stdout", NULL},
+        {"fifo", 'f', 0, G_OPTION_ARG_NONE, &vb.config.fifo, "Create control fifo", NULL},
 #endif
+        {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
@@ -1600,9 +1604,8 @@ int main(int argc, char *argv[])
         vb.embed = strtol(winid, NULL, 0);
     }
 
-    pid = g_strdup_printf("%d", (int)getpid());
-    g_setenv("VIMB_PID", pid, true);
-    g_free(pid);
+    vb.state.pid_str = g_strdup_printf("%d", (int)getpid());
+    g_setenv("VIMB_PID", vb.state.pid_str, true);
 
     /* init some state variable */
     vb.state.enable_register = false;
@@ -1631,8 +1634,14 @@ int main(int argc, char *argv[])
 
 #ifdef FEATURE_FIFO
     /* setup the control fifo - quit vimb if this failed */
-    if (fifo_name && *fifo_name && !io_init_fifo(fifo_name)) {
+    if (vb.config.fifo && !io_init_fifo(vb.state.pid_str)) {
+        /* cleanup memory */
+        vb_cleanup();
         return EXIT_FAILURE;
+    }
+    if (dump && vb.state.fifo_path) {
+        printf("%s\n", vb.state.fifo_path);
+        fflush(NULL);
     }
 #endif
 

@@ -45,16 +45,22 @@ on new spawned instances.
 .I WINID
 of an XEmbed-aware application, that vimb will use as its parent.
 .TP
+.B \-d, \-\-dump
+Dump the current used fifo path to stdout in case vimb is started with \-f
+option. If vimb is started with `$(vimb -df > ~/vimb.fifo)' the full fifo
+path can be picked up from somewhere by `echo ":o github.com<CR>" > $(<
+~/vimb.fifo)'
+.TP
+.B \-f, \-\-fifo
+If given vimb will create a control fifo in vimb's config directory
+named 'vimb-fifo-{pid}'.
+.TP
 .B "\-h, \-\-help"
 Show help options.
 .TP
 .B \-k, \-\-kiosk
 Run vimb in kiosk mode with nearly no keybindings, not inputbox and no context
 menu.
-.TP
-.B \-n, \-\-fifo-name
-If given vimb will create a control fifo in vimb's config directory
-named 'vimb-fifo-{name}'.
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
@@ -1433,7 +1439,7 @@ started with -e option.
 .TP
 .B VIMB_FILE
 Holds the full path to the control fifo, if vimb is compiled with FIFO feature
-and started with `--fifo-name' option.
+and started with `--fifo' option.
 .TP
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
