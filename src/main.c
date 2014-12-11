@@ -223,7 +223,9 @@ gboolean vb_load_uri(const Arg *arg)
             + (vb.embed ? 2 : 0)
             + (vb.config.file ? 2 : 0)
             + (vb.config.kioskmode ? 1 : 0)
+#ifdef FEATURE_FIFO
             + (vb.config.fifo ? 1 : 0)
+#endif
             + g_slist_length(vb.config.cmdargs) * 2,
             sizeof(char *)
         );
@@ -247,9 +249,11 @@ gboolean vb_load_uri(const Arg *arg)
         if (vb.config.kioskmode) {
             cmd[i++] = "-k";
         }
+#ifdef FEATURE_FIFO
         if (vb.config.fifo) {
             cmd[i++] = "-f";
         }
+#endif
         cmd[i++] = uri;
         cmd[i++] = NULL;
 
@@ -1569,7 +1573,9 @@ int main(int argc, char *argv[])
 {
     static char *winid   = NULL;
     static gboolean ver  = false;
+#ifdef FEATURE_FIFO
     static gboolean dump = false;
+#endif
     static GError *err;
 
     static GOptionEntry opts[] = {
