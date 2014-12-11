@@ -145,6 +145,8 @@ void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
 static void input_print(gboolean force, const MessageType type, gboolean hide,
     const char *message)
 {
+    static guint timer = 0;
+
     /* don't print message if the input is focussed */
     if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.input))) {
         return;
@@ -157,7 +159,14 @@ static void input_print(gboolean force, const MessageType type, gboolean hide,
     }
     vb_set_input_text(message);
     if (hide) {
-        g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)hide_message, NULL);
+        /* add timeout function */
+        timer = g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)hide_message, NULL);
+    } else if (timer > 0) {
+        /* If there is already a timeout function but the input box content is
+         * changed - remove the timeout. Seems the user started another
+         * command or typed into inputbox. */
+        g_source_remove(timer);
+        timer = 0;
     }
 }
 
