@@ -475,20 +475,23 @@ static void input_activate(void)
 
 VbCmdResult ex_run_string(const char *input)
 {
+    /* copy to have original command for history */
+    const char *in  = input;
     VbCmdResult res = VB_CMD_ERROR;
     ExArg *arg = g_slice_new0(ExArg);
     arg->lhs   = g_string_new("");
     arg->rhs   = g_string_new("");
 
-    vb_register_add(':', input);
-    history_add(HISTORY_COMMAND, input, NULL);
-
-    while (input && *input) {
-        if (!parse(&input, arg) || !(res = execute(arg))) {
-            free_cmdarg(arg);
-            return VB_CMD_ERROR | VB_CMD_KEEPINPUT;
+    while (in && *in) {
+        if (!parse(&in, arg) || !(res = execute(arg))) {
+            res = VB_CMD_ERROR | VB_CMD_KEEPINPUT;
+            break;
         }
     }
+
+    history_add(HISTORY_COMMAND, input, NULL);
+    vb_register_add(':', input);
+
     free_cmdarg(arg);
 
     return res;
