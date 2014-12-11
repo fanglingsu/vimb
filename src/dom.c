@@ -36,14 +36,15 @@ void dom_check_auto_insert(WebKitWebView *view)
     HtmlElement *element;
     Document *doc = webkit_web_view_get_dom_document(view);
 
-    if (vb.config.strict_focus) {
-        /* if there is focus on an element right after page load - remove it
-         * if strict-focus is enabled */
-        dom_clear_focus(view);
-    } else {
+    if (!vb.config.strict_focus) {
         /* if active element is editable - switch vimb to input mode */
         active = get_active_element(doc);
         auto_insert(active);
+    } else if (vb.mode->id != 'i') {
+        /* If there is focus on an element right after page load - remove it
+         * if strict-focus is enabled - but don't do this in case the user
+         * started typing explicitely. */
+        dom_clear_focus(view);
     }
 
     /* add event listener to track focus events on the document */
