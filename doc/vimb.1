@@ -379,6 +379,13 @@ Yank the URI or current page into register \fIx\fP and clipboard.
 .BI [ \[char34]x ]Y
 Yank the current selection into register \fIx\fP and clipboard.
 .SH COMMAND MODE
+Commands or ex-commands can be fired from vimb's inputbox, from config file or
+by autocmd. If commands are started from inputbox, they must be prefixed by
+`:'. In case of config file or autocmd the leading colon can be omitted.
+
+Commands that are typed interactive (from inputbox or from fifo) are normally
+recorded into command history and register. To avoid this, the commands can be
+prefixed by one or more additional `:' or whitespace.
 .SS Command Line Editing
 .TP
 .B <Esc>, CTRL\-[, CTRL-C

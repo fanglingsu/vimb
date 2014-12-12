@@ -119,7 +119,7 @@ static struct {
 } info = {'\0', PHASE_START};
 
 static void input_activate(void);
-static gboolean parse(const char **input, ExArg *arg);
+static gboolean parse(const char **input, ExArg *arg, gboolean *nohist);
 static gboolean parse_count(const char **input, ExArg *arg);
 static gboolean parse_command_name(const char **input, ExArg *arg);
 static gboolean parse_bang(const char **input, ExArg *arg);
@@ -477,19 +477,22 @@ VbCmdResult ex_run_string(const char *input)
 {
     /* copy to have original command for history */
     const char *in  = input;
+    gboolean nohist = false;
     VbCmdResult res = VB_CMD_ERROR;
     ExArg *arg = g_slice_new0(ExArg);
     arg->lhs   = g_string_new("");
     arg->rhs   = g_string_new("");
 
     while (in && *in) {
-        if (!parse(&in, arg) || !(res = execute(arg))) {
+        if (!parse(&in, arg, &nohist) || !(res = execute(arg))) {
             break;
         }
     }
 
-    history_add(HISTORY_COMMAND, input, NULL);
-    vb_register_add(':', input);
+    if (!nohist) {
+        history_add(HISTORY_COMMAND, input, NULL);
+        vb_register_add(':', input);
+    }
 
     free_cmdarg(arg);
 
@@ -499,7 +502,7 @@ VbCmdResult ex_run_string(const char *input)
 /**
  * Parses given input string into given ExArg pointer.
  */
-static gboolean parse(const char **input, ExArg *arg)
+static gboolean parse(const char **input, ExArg *arg, gboolean *nohist)
 {
     if (!*input || !**input) {
         return false;
@@ -512,6 +515,9 @@ static gboolean parse(const char **input, ExArg *arg)
     /* remove leading whitespace and : */
     while (**input && (**input == ':' || VB_IS_SPACE(**input))) {
         (*input)++;
+        /* Command started with additional ':' or whitespce - don't record it
+         * in history or registry. */
+        *nohist = true;
     }
     parse_count(input, arg);
 
