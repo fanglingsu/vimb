@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Formfiller that reads gpg encrypted credentials from file and let vimb fill
+# execute a JavaScript method to fill in the form data.
+# Call this from vimb by ':sh! formfiller %'
+#
+# The form data are stored gpg encrypted in $VIMB_KEY_DIR/{domain}.gpg or as
+# fallback $XDG_CONFIG_HOME/vimb/keys/{domain}.gpg. The files must contain a
+# valid JavaScript arra that can be used for the _vbform.fill() method.
+#
+# A unencrypted sample file could look like this:
+# ["input[name='user']:daniel", "input[name='password']:p45w0rD"]
+
+export POSIXLY_CORRECT=1
+
+VIMB_KEY_DIR=${VIMB_KEY_DIR:-"$XDG_CONFIG_HOME/vimb/keys"}
+uri=$1
+
+die() {
+    echo "$1" >&2
+    exit 1
+}
+
+fillform() {
+    # make sure we are in normal mode and fill in the form data
+    # use :: to not save the secrets into vimb command history or into the
+    # last ex command register ":
+    echo "<Esc>::e! _vbform.fill($1);<CR>" >> $VIMB_FIFO
+}
+
+# check if uri is given
+if [ -z "$uri" ]; then
+    die 'No URI given'
+fi
+# check if the script is run from vimb with fifo support enabled
+if [ -z "$VIMB_FIFO" ] || [ ! -p "$VIMB_FIFO" ]; then
+    die 'This script must be run from vimb with fifo support'
+fi
+
+# extract the domain part without ports from given uri
+domain=$(echo "$uri" | sed -r 's@https?://([^:/]+).*@\1@')
+
+# check if there exists a keyfile for the domain
+if [ -e "$VIMB_KEY_DIR/${domain}.gpg" ]; then
+    # this requires the gpg-agent to contains already the key
+    data=$(gpg --batch -qd "$VIMB_KEY_DIR/${domain}.gpg")
+    # abort here if the file could not be decrypted
+    if [ $? -gt 0 ]; then
+        exit 1
+    fi
+    fillform "$data"
+elif [ -e "$VIMB_KEY_DIR/$domain" ]; then # fallback to unencrypted files
+    fillform "$(cat "$VIMB_KEY_DIR/$domain")"
+fi
