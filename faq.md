@@ -7,6 +7,29 @@ active: faq
 
 # FAQ
 
+## Does vimb provide formfiller?
+
+No, vimb has no built in formfiller. But it's some kind of execise to set this
+up by youself, by using the features of vimb.
+Following snippets may help to get a working formfiller that fits into your
+setup and your way to use a vimb.
+
+1. Add a method that takes the form data and put it into the form element on
+   current page. A sample [scripts.js][ffjs] that provides this functionality
+   can be found in the sources of vimb.
+2. Add a shell script into your `PATH` that takes an URI as argument and
+   provides the formdata to be feed into the form fields. This needs vimb to
+   be compiled with `FEATURE_FIFO`. A sample [formfiller][ffsh] script, that
+   uses gpg encrypted or unencrypted files is also available in the sources of
+   vimb.
+3. Make sure the commands to fill the form are not written to command history
+   of vimb.
+4. Start formfill. There are two ways to start the formfill, by hand on
+   request via `:sh formfiller %` or by autocmd automatic on page load
+
+       au LoadFinished https://github.com/login* sh formfiller %
+
+
 ## Editor opens without the contents of textarea
 
 There are two known cases of the `editor-command` setting that do not work.
@@ -89,5 +112,7 @@ use the `!importen` flag on your style definition to take effect
     }
 
 
+[ffjs]:    https://raw.githubusercontent.com/fanglingsu/vimb/master/examples/formfiller/scripts.js
+[ffsh]:    https://raw.githubusercontent.com/fanglingsu/vimb/master/examples/formfiller/formfiller
 [tabbed]:  http://tools.suckless.org/tabbed/
 [xdotool]: http://www.semicomplete.com/projects/xdotool/
