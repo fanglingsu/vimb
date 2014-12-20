@@ -233,10 +233,13 @@ Object.freeze((function(){
             });
 
             /* recurse into any iframe or frame element */
-            for (var f in win.frames) {
-                var e = f.frameElement;
+            for (i = 0; i < win.frames.length; i++) {
+                var rect,
+                    f = win.frames[i],
+                    e = f.frameElement;
+
                 if (isVisible(e)) {
-                    var rect = e.getBoundingClientRect();
+                    rect = e.getBoundingClientRect();
                     helper(f, {
                         left:   Math.max(offsets.left - rect.left, 0),
                         right:  Math.max(rect.right   - offsets.right, 0),
