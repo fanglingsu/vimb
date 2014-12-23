@@ -27,7 +27,7 @@ setup and your way to use a vimb.
 4. Start formfill. There are two ways to start the formfill, by hand on
    request via `:sh formfiller %` or by autocmd automatic on page load
 
-       au LoadFinished https://github.com/login* sh formfiller %
+       au LoadFinished https://github.com/login* sh! formfiller %
 
 
 ## Editor opens without the contents of textarea
