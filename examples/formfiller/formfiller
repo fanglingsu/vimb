@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# Formfiller that reads gpg encrypted credentials from file and let vimb fill
-# execute a JavaScript method to fill in the form data.
-# Call this from vimb by ':sh! formfiller %'
+# Formfiller that reads credentials from file and let vimb fill execute a
+# JavaScript method to fill in the form data. Call this from vimb by ':sh!
+# formfiller %'
 #
-# The form data are stored gpg encrypted in $VIMB_KEY_DIR/{domain}.gpg or as
-# fallback $XDG_CONFIG_HOME/vimb/keys/{domain}.gpg. The files must contain a
-# valid JavaScript arra that can be used for the _vbform.fill() method.
+# The form data are stored in $VIMB_KEY_DIR or as fallback
+# $XDG_CONFIG_HOME/vimb/keys. The files must be names as
+# [prefix]{domain}.gpg or [prefix]{domain}. The files must contain a valid
+# JavaScript array that can be used for the _vbform.fill() method.
 #
 # A unencrypted sample file could look like this:
 # ["input[name='user']:daniel", "input[name='password']:p45w0rD"]
 
-export POSIXLY_CORRECT=1
+# dmenu command use in case multiple files are found for current domain
+DMENU="dmenu -l7"
 
 VIMB_KEY_DIR=${VIMB_KEY_DIR:-"$XDG_CONFIG_HOME/vimb/keys"}
 uri=$1
@@ -21,10 +23,25 @@ die() {
 }
 
 fillform() {
+    local path=$1
+    local data=""
+    case "$path" in
+        *.gpg )
+            # this requires the gpg-agent to contains already the key
+            data=$(gpg --batch -qd "$path")
+            # abort here if the file could not be decrypted
+            if [ $? -gt 0 ]; then
+                exit 1
+            fi
+            ;;
+        * )
+            data=$(cat "$path")
+            ;;
+    esac
     # make sure we are in normal mode and fill in the form data
     # use :: to not save the secrets into vimb command history or into the
     # last ex command register ":
-    echo "<Esc>::e! _vbform.fill($1);<CR>" >> $VIMB_FIFO
+    echo "<Esc>::e! _vbform.fill($data);<CR>" > $VIMB_FIFO
 }
 
 # check if uri is given
@@ -39,15 +56,19 @@ fi
 # extract the domain part without ports from given uri
 domain=$(echo "$uri" | sed -r 's@https?://([^:/]+).*@\1@')
 
-# check if there exists a keyfile for the domain
-if [ -e "$VIMB_KEY_DIR/${domain}.gpg" ]; then
-    # this requires the gpg-agent to contains already the key
-    data=$(gpg --batch -qd "$VIMB_KEY_DIR/${domain}.gpg")
-    # abort here if the file could not be decrypted
-    if [ $? -gt 0 ]; then
-        exit 1
+# find matching data files prefix${domain}{,.gpg}
+files=($(find "$VIMB_KEY_DIR" -name "*$domain" -o -name "*${domain}.gpg"))
+# strip of the key dir
+files=("${files[@]#"$VIMB_KEY_DIR"/}")
+
+# if only one matchin data file found - use this direct
+if [ ${#files[@]} -eq 1 ]; then
+    fillform "$VIMB_KEY_DIR/${files[0]}"
+    exit 1
+else
+    # else allow to select the right one via dmenu
+    match=$(printf '%s\n' "${files[@]}" | sort | $DMENU)
+    if [ -n $match ]; then
+        fillform "$VIMB_KEY_DIR/$match"
     fi
-    fillform "$data"
-elif [ -e "$VIMB_KEY_DIR/$domain" ]; then # fallback to unencrypted files
-    fillform "$(cat "$VIMB_KEY_DIR/$domain")"
 fi
