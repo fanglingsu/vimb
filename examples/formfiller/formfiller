@@ -41,16 +41,16 @@ fillform() {
     # make sure we are in normal mode and fill in the form data
     # use :: to not save the secrets into vimb command history or into the
     # last ex command register ":
-    echo "<Esc>::e! _vbform.fill($data);<CR>" > $VIMB_FIFO
+    echo "<Esc>::e! _vbform.fill($data);<CR>" | socat - UNIX-CONNECT:$VIMB_SOCKET
 }
 
 # check if uri is given
 if [ -z "$uri" ]; then
     die 'No URI given'
 fi
-# check if the script is run from vimb with fifo support enabled
-if [ -z "$VIMB_FIFO" ] || [ ! -p "$VIMB_FIFO" ]; then
-    die 'This script must be run from vimb with fifo support'
+# check if the script is run from vimb with socket support enabled
+if [ -z "$VIMB_SOCKET" ] || [ ! -S "$VIMB_SOCKET" ]; then
+    die 'This script must be run from vimb with socket support'
 fi
 
 # extract the domain part without ports from given uri

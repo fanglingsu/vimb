@@ -232,8 +232,8 @@ gboolean vb_load_uri(const Arg *arg)
             + (vb.embed ? 2 : 0)
             + (vb.config.file ? 2 : 0)
             + (vb.config.kioskmode ? 1 : 0)
-#ifdef FEATURE_FIFO
-            + (vb.config.fifo ? 1 : 0)
+#ifdef FEATURE_SOCKET
+            + (vb.config.socket ? 1 : 0)
 #endif
             + g_slist_length(vb.config.cmdargs) * 2,
             sizeof(char *)
@@ -258,9 +258,9 @@ gboolean vb_load_uri(const Arg *arg)
         if (vb.config.kioskmode) {
             cmd[i++] = "-k";
         }
-#ifdef FEATURE_FIFO
-        if (vb.config.fifo) {
-            cmd[i++] = "-f";
+#ifdef FEATURE_SOCKET
+        if (vb.config.socket) {
+            cmd[i++] = "-s";
         }
 #endif
         cmd[i++] = uri;
@@ -1558,7 +1558,7 @@ static void vb_cleanup(void)
 #ifdef FEATURE_ARH
     arh_free(vb.config.autoresponseheader);
 #endif
-#ifdef FEATURE_FIFO
+#ifdef FEATURE_SOCKET
     io_cleanup();
 #endif
     g_free(vb.state.pid_str);
@@ -1582,7 +1582,7 @@ int main(int argc, char *argv[])
 {
     static char *winid   = NULL;
     static gboolean ver  = false;
-#ifdef FEATURE_FIFO
+#ifdef FEATURE_SOCKET
     static gboolean dump = false;
 #endif
     static GError *err;
@@ -1591,9 +1591,9 @@ int main(int argc, char *argv[])
         {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.config.file, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
-#ifdef FEATURE_FIFO
-        {"dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump the fifo path to stdout", NULL},
-        {"fifo", 'f', 0, G_OPTION_ARG_NONE, &vb.config.fifo, "Create control fifo", NULL},
+#ifdef FEATURE_SOCKET
+        {"dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump the socket path to stdout", NULL},
+        {"socket", 's', 0, G_OPTION_ARG_NONE, &vb.config.socket, "Create control socket", NULL},
 #endif
         {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
@@ -1647,15 +1647,15 @@ int main(int argc, char *argv[])
         vb_load_uri(&(Arg){VB_TARGET_CURRENT, argv[argc - 1]});
     }
 
-#ifdef FEATURE_FIFO
-    /* setup the control fifo - quit vimb if this failed */
-    if (vb.config.fifo && !io_init_fifo(vb.state.pid_str)) {
+#ifdef FEATURE_SOCKET
+    /* setup the control socket - quit vimb if this failed */
+    if (vb.config.socket && !io_init_socket(vb.state.pid_str)) {
         /* cleanup memory */
         vb_cleanup();
         return EXIT_FAILURE;
     }
-    if (dump && vb.state.fifo_path) {
-        printf("%s\n", vb.state.fifo_path);
+    if (dump && vb.state.socket_path) {
+        printf("%s\n", vb.state.socket_path);
         fflush(NULL);
     }
 #endif

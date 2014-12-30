@@ -35,7 +35,10 @@ If the flag is used more than one time, the ordering is preserved when
 \fICMD\fP are executed. You could also pass several ex commands in one
 \fICMD\fP, if there are separated by "|".
 
-Example: vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"
+Example:
+.EX
+vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"
+.EE
 .TP
 .BI "\-c, \-\-config " "CONFIG-FILE"
 Use custom configuration given as \fICONFIG-FILE\fP. This will also be applied
@@ -46,14 +49,14 @@ on new spawned instances.
 of an XEmbed-aware application, that vimb will use as its parent.
 .TP
 .B \-d, \-\-dump
-Dump the current used fifo path to stdout in case vimb is started with \-f
-option. If vimb is started with `$(vimb -df > ~/vimb.fifo)' the full fifo
-path can be picked up from somewhere by `echo ":o github.com<CR>" > $(<
-~/vimb.fifo)'
-.TP
-.B \-f, \-\-fifo
-If given vimb will create a control fifo in vimb's config directory
-named 'vimb-fifo-{pid}'.
+Dump the current used socket path to stdout in case vimb is started with \-s
+option.
+
+Example:
+.EX
+sh -c "./vimb -s -d > ~/vimb.socket" &
+echo ":o github.com<CR>" | socat - unix-connect:$(< ~/vimb.socket)
+.EE
 .TP
 .B "\-h, \-\-help"
 Show help options.
@@ -61,6 +64,9 @@ Show help options.
 .B \-k, \-\-kiosk
 Run vimb in kiosk mode with nearly no keybindings, not inputbox and no context
 menu.
+.TP
+.B \-s, \-\-socket
+If given vimb will create a control socket.
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
@@ -390,7 +396,7 @@ the rhs (right hand side) if this is available depends on the command. At the
 moment the count parts [N] of commands is parsed, but actual there does not
 exists any command that uses the count.
 .br
-Commands that are typed interactive (from inputbox or from fifo) are normally
+Commands that are typed interactive (from inputbox or from socket) are normally
 recorded into command history and register. To avoid this, the commands can be
 prefixed by one or more additional `:' or whitespace.
 .SS Command Line Editing
@@ -1447,13 +1453,13 @@ Contains the title of the current opened page.
 .B VIMB_PID
 Contains the pid of the running vimb instance.
 .TP
+.B VIMB_SOCKET
+Holds the full path to the control socket, if vimb is compiled with SOCKET
+feature and started with `--socket' option.
+.TP
 .B VIMB_XID
 Holds the X-Window id of the vim window or of the embedding window if vimb is
 started with -e option.
-.TP
-.B VIMB_FILE
-Holds the full path to the control fifo, if vimb is compiled with FIFO feature
-and started with `--fifo' option.
 .TP
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option

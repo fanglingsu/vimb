@@ -18,14 +18,14 @@
  */
 
 #include "config.h"
-#ifdef FEATURE_FIFO
+#ifdef FEATURE_SOCKET
 
 #ifndef _IO_H
 #define _IO_H
 
 #include <glib.h>
 
-gboolean io_init_fifo(const char *dir);
+gboolean io_init_socket(const char *name);
 void io_cleanup(void);
 
 #endif /* end of include guard: _IO_H */
