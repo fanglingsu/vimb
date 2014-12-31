@@ -123,7 +123,7 @@ static gboolean socket_watch(GIOChannel *chan)
     if (ret == G_IO_STATUS_ERROR || ret == G_IO_STATUS_EOF) {
         if (ret == G_IO_STATUS_ERROR) {
             g_warning("Error reading: %s", error->message);
-            g_error_free(&error);
+            g_error_free(error);
         }
 
         /* shutdown and remove the client channel */
@@ -132,7 +132,7 @@ static gboolean socket_watch(GIOChannel *chan)
 
         if (ret == G_IO_STATUS_ERROR) {
             g_warning("Error closing: %s", error->message);
-            g_error_free(&error);
+            g_error_free(error);
         }
         return false;
     }
@@ -153,11 +153,11 @@ static gboolean socket_watch(GIOChannel *chan)
     ret       = g_io_channel_write_chars(chan, inputtext, -1, &len, &error);
     if (ret == G_IO_STATUS_ERROR) {
         g_warning("Error writing: %s", error->message);
-        g_error_free(&error);
+        g_error_free(error);
     }
     if (g_io_channel_flush(chan, &error) == G_IO_STATUS_ERROR) {
         g_warning("Error flushing: %s", error->message);
-        g_error_free(&error);
+        g_error_free(error);
     }
 
     g_free(inputtext);
