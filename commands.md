@@ -295,6 +295,15 @@ Example:
 : Runs given shell *cmd* syncronous and print the output into inputbox.
   Follwing pattern in *cmd* are expanded, `~username`, `~/`, `$VAR` and
   `${VAR}`. A '``\``' before these patterns disables the expansion.
+: Following environment variables are set for called shell commands.
+: - `VIMB_URI` This variable is set by vimb everytime a new page is opened to
+    the URI of the page.
+  - `VIMB_TITLE` Contains the title of the current opened page.
+  - `VIMB_PID` Contains the pid of the running vimb instance.
+  - `VIMB_SOCKET` Holds the full path to the control socket, if vimb is compiled
+    with  SOCKET  feature  and  started  with  `--socket` option.
+  - `VIMB_XID` Holds the X-Window id of the vim window or of the embedding
+    window if vimb is started with -e option.
 : Example: `:sh ls -la $HOME`
 
 :sh[ellcmd]! *cmd*
