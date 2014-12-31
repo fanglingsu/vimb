@@ -764,13 +764,43 @@ Example
 Runs given shell \fIcmd\fP syncron and print the output into inputbox.
 Following pattern in \fIcmd\fP are expanded, '~username', '~/', '$VAR'
 and '${VAR}'. A '\\' before these patterns disables the expansion.
-
-Example: :sh ls -l $HOME
+.RS
+.PP
+.PD 0
+Following environment variables are set for called shell commands.
+.TP
+.B VIMB_URI
+This variable is set by vimb everytime a new page is opened to the URI of the
+page.
+.TP
+.B VIMB_TITLE
+Contains the title of the current opened page.
+.TP
+.B VIMB_PID
+Contains the pid of the running vimb instance.
+.TP
+.B VIMB_SOCKET
+Holds the full path to the control socket, if vimb is compiled with SOCKET
+feature and started with `--socket' option.
+.TP
+.B VIMB_XID
+Holds the X-Window id of the vim window or of the embedding window if vimb is
+started with -e option.
+.PD
+.PP
+Example:
+.EX
+:sh ls -l $HOME
+.EE
+.RE
 .TP
 .BI ":sh[ellcmd]! " cmd
-Like :shellcmd, but asyncron.
+Like :sh[ellcmd], but asyncron.
 
-Example: :sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
+Example:
+.EX
+:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
+.EE
 .TP
 .BI ":s[ave] [" path "]"
 Download current opened page into configured download directory. If \fIpath\fP
@@ -1442,24 +1472,6 @@ File for userdefined css styles. These file is used if the config variable
 .I $XDG_CACHE_HOME/vimb/
 Default directory for cache data.
 .SH ENVIRONMENT
-.TP
-.B VIMB_URI
-This variable is set by vimb everytime a new page is opened to the URI of the
-page.
-.TP
-.B VIMB_TITLE
-Contains the title of the current opened page.
-.TP
-.B VIMB_PID
-Contains the pid of the running vimb instance.
-.TP
-.B VIMB_SOCKET
-Holds the full path to the control socket, if vimb is compiled with SOCKET
-feature and started with `--socket' option.
-.TP
-.B VIMB_XID
-Holds the X-Window id of the vim window or of the embedding window if vimb is
-started with -e option.
 .TP
 .B http_proxy
 If this variable is set to an none empty value, and the configuration option
