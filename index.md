@@ -18,21 +18,22 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
-Remote-Control (changed option `--fifo-name` to `--fifo`)
-: If vimb is started with `-f` or `--fifo` option, vimb creates a fifo
-  names `vimb-fifo-{pid}` in the `$XDG_CONFIG_HOME/vimb` directory. All
-  commands written into the fifo are executed in the same way like the right
-  hand side of the `map` commands. This allow to perform normal mode commands
-  as well as ex commands.
+Remote-Control via socket (previously a fifo)
+: If vimb is started with `-s` or `--socket` option, vimb creates a unix
+  domain socket named `vimb-socket-{pid}` in the `$XDG_CONFIG_HOME/vimb`
+  directory.
+: All commands written to the socket are executed in the same way like the
+  right hand side of the `map` commands. This allow to perform normal mode
+  commands as well as ex commands.
 : Example:
 
-      $(vimb -df > ~/fifo)
-      # in another shell - get the path to the fifo
-      FIFO=$(< ~/fifo)
-      echo ':o http://fanglingsu.github.io/vimb/<CR>' > $FIFO
-      echo ':o !<Tab>' > $FIFO
-      echo '<Tab><CR>' > $FIFO
-      echo '<C-Q>' > $FIFO
+      sh -c "vimb -s -d > ~/socket" &
+      SOCKET=$(< ~/socket)
+      echo ':o http://fanglingsu.github.io/vimb/<CR>' | socat - UNIX-CONNECT:$SOCKET
+      echo ':o !<Tab><Tab><CR>' | socat - UNIX-CONNECT:$SOCKET
+      echo '<C-Q>' | socat - UNIX-CONNECT:$SOCKET
+      # or start an interactive remote control session
+      socat READLINE UNIX-CONNECT:$(< ~/socket)
 
 Hinting by Letters
 : Vimb allow now to set the chars used to built the hint labels. To have a
