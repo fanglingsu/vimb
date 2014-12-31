@@ -19,7 +19,7 @@ setup and your way to use a vimb.
    can be found in the sources of vimb.
 2. Add a shell script into your `PATH` that takes an URI as argument and
    provides the formdata to be feed into the form fields. This needs vimb to
-   be compiled with `FEATURE_FIFO`. A sample [formfiller][ffsh] script, that
+   be compiled with `FEATURE_SOCKET`. A sample [formfiller][ffsh] script, that
    uses gpg encrypted or unencrypted files is also available in the sources of
    vimb.
 3. Make sure the commands to fill the form are not written to command history
