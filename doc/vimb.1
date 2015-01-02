@@ -764,7 +764,10 @@ Example
 Runs given shell \fIcmd\fP syncron and print the output into inputbox.
 Following pattern in \fIcmd\fP are expanded, '~username', '~/', '$VAR'
 and '${VAR}'. A '\\' before these patterns disables the expansion.
+
 .RS
+Note: The ":shellcmd" command cannot be followed by another command, since
+any '|' is considered part of the command.
 .PP
 .PD 0
 Following environment variables are set for called shell commands.

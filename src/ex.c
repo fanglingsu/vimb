@@ -195,7 +195,7 @@ static ExInfo commands[] = {
     {"register",         EX_REG,         ex_register,   EX_FLAG_NONE},
     {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS|EX_FLAG_EXP},
     {"set",              EX_SET,         ex_set,        EX_FLAG_RHS},
-    {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_RHS|EX_FLAG_EXP|EX_FLAG_BANG},
+    {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_CMD|EX_FLAG_EXP|EX_FLAG_BANG},
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
