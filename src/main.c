@@ -991,11 +991,6 @@ static void setup_signals()
         g_signal_connect(
             G_OBJECT(vb.gui.input), "focus-in-event", G_CALLBACK(mode_input_focusin), NULL
         );
-        g_object_connect(
-            G_OBJECT(vb.gui.buffer),
-            "signal::changed", G_CALLBACK(mode_input_changed), NULL,
-            NULL
-        );
 
         /* inspector */
         g_object_connect(
@@ -1007,6 +1002,14 @@ static void setup_signals()
             NULL
         );
     }
+    /* There is no inputbox in kioskmode - but the contents may be changed in
+     * case vimb is controlled via socket. To track inputbox changes is
+     * required for the hinting to work. */
+    g_object_connect(
+        G_OBJECT(vb.gui.buffer),
+        "signal::changed", G_CALLBACK(mode_input_changed), NULL,
+        NULL
+    );
 
     /* webview adjustment */
     g_object_connect(G_OBJECT(vb.gui.adjust_v),
