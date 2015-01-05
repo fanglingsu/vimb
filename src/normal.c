@@ -630,7 +630,9 @@ static VbResult normal_prevnext(const NormalCmdInfo *info)
 
 static VbResult normal_queue(const NormalCmdInfo *info)
 {
+#ifdef FEATURE_QUEUE
     command_queue(&((Arg){COMMAND_QUEUE_POP}));
+#endif
     return RESULT_COMPLETE;
 }
 
