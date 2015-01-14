@@ -939,7 +939,7 @@ static void read_config(void)
             if (*line == '#') {
                 continue;
             }
-            if (ex_run_string(line) & VB_CMD_ERROR ) {
+            if (ex_run_string(line, false) & VB_CMD_ERROR ) {
                 g_warning("Invalid user config: '%s'", line);
             }
         }
@@ -1626,7 +1626,7 @@ int main(int argc, char *argv[])
 
     /* process the --cmd if this was given */
     for (GSList *l = vb.config.cmdargs; l; l = l->next) {
-        ex_run_string(l->data);
+        ex_run_string(l->data, false);
     }
 
     /* active the registers and writing of command history */

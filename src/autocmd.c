@@ -277,7 +277,8 @@ gboolean autocmd_run(AuEvent event, const char *uri, const char *group)
             }
             /* run the command */
             /* TODO shoult the result be tested for RESULT_COMPLETE? */
-            ex_run_string(cmd->excmd);
+            /* run command and make sure it's not writte to command history */
+            ex_run_string(cmd->excmd, false);
         }
     }
 

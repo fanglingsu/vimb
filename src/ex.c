@@ -462,7 +462,7 @@ static void input_activate(void)
 
         case ':':
             mode_enter('n');
-            res = ex_run_string(cmd);
+            res = ex_run_string(cmd, true);
             if (!(res & VB_CMD_KEEPINPUT)) {
                 /* clear input on success if this is not explicit ommited */
                 vb_set_input_text("");
@@ -473,7 +473,7 @@ static void input_activate(void)
     g_free(text);
 }
 
-VbCmdResult ex_run_string(const char *input)
+VbCmdResult ex_run_string(const char *input, gboolean enable_history)
 {
     /* copy to have original command for history */
     const char *in  = input;
@@ -489,7 +489,7 @@ VbCmdResult ex_run_string(const char *input)
         }
     }
 
-    if (!nohist) {
+    if (enable_history && !nohist) {
         history_add(HISTORY_COMMAND, input, NULL);
         vb_register_add(':', input);
     }

@@ -28,6 +28,6 @@ void ex_leave(void);
 VbResult ex_keypress(int key);
 void ex_input_changed(const char *text);
 gboolean ex_fill_completion(GtkListStore *store, const char *input);
-VbCmdResult ex_run_string(const char *input);
+VbCmdResult ex_run_string(const char *input, gboolean enable_history);
 
 #endif /* end of include guard: _EX_H */
