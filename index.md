@@ -20,8 +20,7 @@ of vimb would be a breeze, if not we missed our target.
 
 Remote-Control via socket (previously a fifo)
 : If vimb is started with `-s` or `--socket` option, vimb creates a unix
-  domain socket named `vimb-socket-{pid}` in the `$XDG_CONFIG_HOME/vimb`
-  directory.
+  domain socket named `$XDG_CONFIG_HOME/vimb/socket/{pid}`.
 : All commands written to the socket are executed in the same way like the
   right hand side of the `map` commands. This allow to perform normal mode
   commands as well as ex commands.
