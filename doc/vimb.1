@@ -66,7 +66,7 @@ Run vimb in kiosk mode with nearly no keybindings, not inputbox and no context
 menu.
 .TP
 .B \-s, \-\-socket
-If given vimb will create a control socket.
+If given vimb will create a control socket in the user runtime directory.
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
@@ -1474,6 +1474,9 @@ File for userdefined css styles. These file is used if the config variable
 .TP
 .I $XDG_CACHE_HOME/vimb/
 Default directory for cache data.
+.TP
+.I $XDG_RUNTIME_DIR/vimb/socket/
+Directory where the control sockets are placed.
 .SH ENVIRONMENT
 .TP
 .B http_proxy

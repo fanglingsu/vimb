@@ -22,6 +22,7 @@
 #include "io.h"
 #include "main.h"
 #include "map.h"
+#include "util.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -37,14 +38,15 @@ static gboolean socket_watch(GIOChannel *chan);
 
 gboolean io_init_socket(const char *name)
 {
-    char *fname, *path;
+    char *dir, *path;
     int sock;
     struct sockaddr_un local;
 
-    /* create socket in directory as vimb-socket-$PID */
-    fname = g_strdup_printf(PROJECT "-socket-%s", name);
-    path  = g_build_filename(g_get_user_config_dir(), PROJECT, fname, NULL);
-    g_free(fname);
+    /* create socket in runtime directory */
+    dir = g_build_filename(g_get_user_runtime_dir(), PROJECT, "socket", NULL);
+    util_create_dir_if_not_exists(dir);
+    path = g_build_filename(dir, name, NULL);
+    g_free(dir);
 
     /* if the file already exists - remove this first */
     if (g_file_test(path, G_FILE_TEST_IS_REGULAR)) {
