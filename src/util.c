@@ -31,7 +31,10 @@ extern VbCore vb;
 static gboolean match(const char *pattern, int patlen, const char *subject);
 static gboolean match_list(const char *pattern, int patlen, const char *subject);
 
-
+/**
+ * Retrieves newly allocated string with vimb config directory.
+ * Retruned string must be freed.
+ */
 char *util_get_config_dir(void)
 {
     char *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
@@ -52,6 +55,9 @@ char *util_get_cache_dir(void)
     return path;
 }
 
+/**
+ * Retrieves the users home directory.
+ */
 const char *util_get_home_dir(void)
 {
     const char *dir = g_getenv("HOME");
