@@ -170,21 +170,21 @@ static ExInfo commands[] = {
 #endif
     {"bma",              EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
     {"bmr",              EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
-    {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
-    {"cnoremap",         EX_CNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
+    {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
+    {"cnoremap",         EX_CNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"cunmap",           EX_CUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
     {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
     {"eval",             EX_EVAL,        ex_eval,       EX_FLAG_CMD|EX_FLAG_BANG},
-    {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
-    {"inoremap",         EX_INOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
+    {"imap",             EX_IMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
+    {"inoremap",         EX_INOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"iunmap",           EX_IUNMAP,      ex_unmap,      EX_FLAG_LHS},
-    {"nmap",             EX_NMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
-    {"nnoremap",         EX_NNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_RHS},
+    {"nmap",             EX_NMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
+    {"nnoremap",         EX_NNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"normal",           EX_NORMAL,      ex_normal,     EX_FLAG_BANG|EX_FLAG_CMD},
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
-    {"open",             EX_OPEN,        ex_open,       EX_FLAG_RHS},
+    {"open",             EX_OPEN,        ex_open,       EX_FLAG_CMD},
     {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE|EX_FLAG_BANG},
 #ifdef FEATURE_QUEUE
     {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
@@ -199,7 +199,7 @@ static ExInfo commands[] = {
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
-    {"tabopen",          EX_TABOPEN,     ex_open,       EX_FLAG_RHS},
+    {"tabopen",          EX_TABOPEN,     ex_open,       EX_FLAG_CMD},
 };
 
 static struct {

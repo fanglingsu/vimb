@@ -399,6 +399,29 @@ exists any command that uses the count.
 Commands that are typed interactive (from inputbox or from socket) are normally
 recorded into command history and register. To avoid this, the commands can be
 prefixed by one or more additional `:' or whitespace.
+.PP
+Multiple commands, separated by a `|' can be given in a single command line
+and will be executed consecutively. The pipe can be included as an argument to
+a command by escaping it with a backslash.
+.br
+Following commands process the entire command-line string literally. These
+commands will include any `|' as part of their argument string and so cannot
+be followed by another command.
+.PP
+.PD 0
+.IP - 2
+autocmd
+.IP -
+cmap, cnoremap, imap, inoremap, nmap, nnoremap
+.IP -
+eval
+.IP -
+normal
+.IP -
+open, tabopen
+.IP -
+shellcmd
+.PD
 .SS Command Line Editing
 .TP
 .B <Esc>, CTRL\-[, CTRL-C
@@ -636,9 +659,6 @@ Removes all entries from queue.
 An autocommand is a command that is executed automatically in response to some
 event, such as a URI being opened. Autocommands are very powerful. Use them
 with care and they will help you avoid typing many commands.
-.PP
-Note: The ":autocmd" command cannot be followed by another command, since
-any '|' is considered part of the command.
 .RS 0
 .TP
 Autocommands are built with following properties.
@@ -764,10 +784,7 @@ Example
 Runs given shell \fIcmd\fP syncron and print the output into inputbox.
 Following pattern in \fIcmd\fP are expanded, '~username', '~/', '$VAR'
 and '${VAR}'. A '\\' before these patterns disables the expansion.
-
 .RS
-Note: The ":shellcmd" command cannot be followed by another command, since
-any '|' is considered part of the command.
 .PP
 .PD 0
 Following environment variables are set for called shell commands.
@@ -848,9 +865,6 @@ URL of the hint.
 Runs the given \fIjavascript\fP in the current page and display the evaluated
 value.
 
-This comman cannot be followed by antoher command, since any '|' is considered
-part of the command.
-
 Example: :eval document.cookie
 .TP
 .BI :e[val]! " javascript"
@@ -859,11 +873,9 @@ Like :eval, but there is nothing print to the input box.
 .BI ":no[rmal] [" cmds ]
 Execute normal mode commands \fIcmds\fP. This makes it possible to execute
 normal mode commands typed on the input box.
-
+.br
 \fIcmds\fP cannot start with a space. Put a count of 1 (one) before it, "1 "
 is one space.
-This comman cannot be followed by antoher command, since any '|' is considered
-part of the command.
 
 Example: :set scripts!|no! R
 .TP
