@@ -1,9 +1,9 @@
 include config.mk
 
-all:   $(TARGET)
-test:  $(LIBTARGET)
-	@$(MAKE) $(MFLAGS) -s -C tests
+SRCDIR=src
+DOCDIR=doc
 
+all: $(TARGET)
 options:
 	@echo "$(PROJECT) build options:"
 	@echo "LIBS    = $(LIBS)"
@@ -11,26 +11,25 @@ options:
 	@echo "LDFLAGS = $(LDFLAGS)"
 	@echo "CC      = $(CC)"
 
-install: $(TARGET) doc/$(MAN1)
+test: $(LIBTARGET)
+	@$(MAKE) $(MFLAGS) -s -C tests
+
+clean:
+	@$(MAKE) $(MFLAGS) -C src clean
+	@$(MAKE) $(MFLAGS) -C tests clean
+
+install: $(TARGET) $(DOCDIR)/$(MAN1)
 	install -d $(DESTDIR)$(BINDIR)
-	install -d $(DESTDIR)$(MANDIR1)
-	install -m 755 $(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
-	@echo "install -m 644 src/$(MAN1) $(DESTDIR)$(MANDIR1)/$(MAN1)"
+	install -d $(DESTDIR)$(MANDIR)/man1
+	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
+	@echo "install -m 644 $(SRCDIR)/$(MAN1) $(DESTDIR)$(MANDIR)/man1/$(MAN1)"
 	@sed -e "s/VERSION/$(VERSION)/g" \
-		-e "s/DATE/`date +'%m %Y'`/g" < doc/$(MAN1) > $(DESTDIR)$(MANDIR1)/$(MAN1)
-	@chmod 644 $(DESTDIR)$(MANDIR1)/$(MAN1)
+		-e "s/DATE/`date +'%m %Y'`/g" < $(DOCDIR)/$(MAN1) > $(DESTDIR)$(MANDIR)/man1/$(MAN1)
+	@chmod 644 $(DESTDIR)$(MANDIR)/man1/$(MAN1)
 
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
-	$(RM) $(DESTDIR)$(MANDIR1)/$(MAN1)
-
-clean: test-clean
-	$(RM) src/*.o src/*.lo src/hints.js.h
-	$(RM) $(TARGET)
-
-test-clean:
-	$(RM) $(LIBTARGET)
-	@$(MAKE) $(MFLAGS) -C tests clean
+	$(RM) $(DESTDIR)$(MANDIR)/man1/$(MAN1)
 
 dist: dist-clean
 	@echo "Creating tarball."
@@ -39,36 +38,10 @@ dist: dist-clean
 dist-clean:
 	$(RM) $(DIST_FILE)
 
-src/hints.o:  src/hints.js.h
-src/hints.lo: src/hints.js.h
+$(TARGET):
+	@$(MAKE) $(MFLAGS) -C src $(TARGET)
 
-src/hints.js.h: src/hints.js
-	@echo "minify $<"
-	@cat $< | src/js2h.sh > $@
+$(LIBTARGET):
+	@$(MAKE) $(MFLAGS) -C src $(LIBTARGET)
 
-$(OBJ):  src/config.h config.mk
-$(LOBJ): src/config.h config.mk
-
-$(TARGET): $(OBJ)
-	@echo "$(CC) $@"
-	@$(CC) $(OBJ) -o $@ $(LDFLAGS)
-
-$(LIBTARGET): $(LOBJ)
-	@echo "$(CC) $@"
-	@$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
-
-src/config.h:
-	@echo create $@ from src/config.def.h
-	@cp src/config.def.h $@
-
-%.o: %.c %.h
-	@echo "${CC} $@"
-	@$(CC) $(CFLAGS) -c -o $@ $<
-
-%.lo: %.c %.h
-	@echo "${CC} $@"
-	@$(CC) -DTESTLIB $(CFLAGS) -fPIC -c -o $@ $<
-
--include $(DEPS)
-
-.PHONY: clean debug all install uninstall options dist dist-clean test test-clean
+.PHONY: clean all install uninstall options dist dist-clean test

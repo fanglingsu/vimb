@@ -1,6 +1,8 @@
-include ../config.mk
+BASEDIR=..
+SRCDIR=$(BASEDIR)/src
+include $(BASEDIR)/config.mk
 
-CPPFLAGS += -I ../
+CPPFLAGS += -I $(BASEDIR)/
 CFLAGS   += -fPIC -Wpedantic
 
 TEST_PROGS = test-handlers \
@@ -11,7 +13,7 @@ TEST_PROGS = test-handlers \
 all: $(TEST_PROGS)
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):." gtester --verbose $(TEST_PROGS)
 
-${TEST_PROGS}: $(notdir $(LIBTARGET))
+${TEST_PROGS}: $(SRCDIR)/$(LIBTARGET)
 
 clean:
-	rm -f $(TEST_PROGS)
+	$(RM) -f $(TEST_PROGS)

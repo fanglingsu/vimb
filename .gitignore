@@ -1,10 +1,9 @@
 *.[oad]
-*.[ld]o
-vimb
-vimb_dbg
+*.lo
 *.tar.gz
 src/hints.js.h
 src/config.h
+src/vimb
 tests/*
 !tests/Makefile
 !tests/*.c

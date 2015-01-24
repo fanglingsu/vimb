@@ -50,14 +50,9 @@ CFLAGS  += -Wno-overlength-strings -Werror=format-security
 CFLAGS  += ${CPPFLAGS}
 LDFLAGS += ${LIBFLAGS}
 
-OBJ       = $(patsubst %.c, %.o, $(wildcard src/*.c))
-LOBJ      = $(patsubst %.c, %.lo, $(wildcard src/*.c))
-DEPS      = $(OBJ:%.o=%.d)
-
 TARGET    = $(PROJECT)
-LIBTARGET = tests/lib$(PROJECT).so
+LIBTARGET = lib$(PROJECT).so
 DIST_FILE = $(PROJECT)_$(VERSION).tar.gz
-MANDIR1   = $(MANDIR)/man1
 MAN1      = $(PROJECT).1
 
-MFLAGS    =
+MFLAGS    = --no-print-directory
