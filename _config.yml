@@ -1,12 +1,12 @@
-save: true
-lsi: false
-highlighter: true
-markdown: kramdown
+save:        true
+lsi:         false
+highlighter: pygments
+markdown:    kramdown
 
 kramdown:
-  auto_ids:      false
-  footnote_nr:   1
-  entity_output: as_char
-  toc_levels:    2..5
+  auto_ids:       false
+  footnote_nr:    1
+  entity_output:  as_char
+  toc_levels:     2..5
 
 exclude: [README.md]

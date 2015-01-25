@@ -51,15 +51,9 @@ Auto-Response-Header
       :set auto-response-header+="https://*.example.org/sub/* Content-security-policy,X-Test=ok"
 
 
-[Auto commands](commands.html#autocmd)
+[Auto commands](man.html#Automatic_commands)
 : Vimb provides another nice feature of vim to run command on various events and
   pattern matches URIs, `:autocmd` and `:augroup`.
-
-Read HTML from `stdin`
-: Vimb can be started with `-` as URI parameter to read HTML from stdin.
-  ```
-  markdown_py README.md | vimb -
-  ```
 
 ## screenshots
 
@@ -122,14 +116,14 @@ If you find a misbehaviour or have feature requests use the
 [arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [arch]:        https://aur.archlinux.org/packages/vimb/ "vimb - archlinux package"
 [bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
-[handlers]:    commands.html#handlers "vimb custom protocol handlers"
-[hints]:       keybindings.html#hinting "vimb hinting"
-[history]:     keybindings.html#history "vimb keybindings to access history"
-[keybindings]: keybindings.html "vimb keybindings"
+[handlers]:    man.html#Handlers "vimb custom protocol handlers"
+[hints]:       man.html#Hinting "vimb hinting"
+[history]:     man.html#Command_Line_History "vimb keybindings to access history"
+[keybindings]: man.html#Key_Mapping "vimb keybindings"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
-[queue]:       commands.html#queue "vimb read it later queue feature"
+[queue]:       man.html#Queue "vimb read it later queue feature"
 [releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
-[shortcuts]:   commands.html#shortcuts "vimb shortcuts"
+[shortcuts]:   man.html#Shortcuts "vimb shortcuts"
 [surf]:        http://surf.suckless.org/
 [tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
 [vimb]:        https://github.com/fanglingsu/vimb "vimb project sources"
