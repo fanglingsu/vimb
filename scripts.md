@@ -17,7 +17,7 @@ setup and your way to use a vimb.
    current page. A sample [scripts.js][ffjs] that provides this functionality
    can be found in the sources of vimb.
 2. Add a shell script into your `PATH` that takes an URI as argument and
-   provides the formdata to be feed into the form fields. This needs vimb to
+   provides the form data to be feed into the form fields. This needs vimb to
    be compiled with `FEATURE_SOCKET` and started with `--socket` option. A
    sample [formfiller][ffsh] script, that uses gpg encrypted or unencrypted
    files is also available in the sources of vimb.
@@ -37,7 +37,7 @@ setup and your way to use a vimb.
 
 ## dark theme
 
-This can be used as *style.css* file fir vimb.
+This can be used as *style.css* file for vimb.
 
 {% highlight css %}
 *,div,pre,textarea,body,input,td,tr,p {
