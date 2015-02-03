@@ -873,6 +873,7 @@ static void init_core(void)
 #ifdef FEATURE_AUTOCMD
     autocmd_init();
 #endif
+    map_init();
     read_config();
 
     /* initially apply input style */

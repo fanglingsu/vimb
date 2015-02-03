@@ -38,12 +38,12 @@ typedef struct {
 
 /* this is only to keep the variables together */
 static struct {
-    GSList *list;
-    char   queue[MAP_QUEUE_SIZE];       /* queue holding typed keys */
-    int    qlen;                        /* pointer to last char in queue */
-    int    resolved;                    /* number of resolved keys (no mapping required) */
-    guint  timout_id;                   /* source id of the timeout function */
-    char   showcmd[SHOWCMD_LEN + 1];    /* buffer to show ambiguous key sequence */
+    GSList  *list;
+    GString *queue;                     /* queue holding typed keys */
+    int     qlen;                       /* pointer to last char in queue */
+    int     resolved;                   /* number of resolved keys (no mapping required) */
+    guint   timout_id;                  /* source id of the timeout function */
+    char    showcmd[SHOWCMD_LEN + 1];   /* buffer to show ambiguous key sequence */
 } map;
 
 extern VbCore vb;
@@ -111,12 +111,17 @@ static struct {
     {"<F12>",   5, CSI_STR "F2", 3},
 };
 
+void map_init(void)
+{
+    map.queue = g_string_sized_new(50);
+}
 
 void map_cleanup(void)
 {
     if (map.list) {
         g_slist_free_full(map.list, (GDestroyNotify)free_map);
     }
+    g_string_free(map.queue, true);
 }
 
 /**
@@ -195,9 +200,12 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
     }
 
     /* copy the keys onto the end of queue */
-    while (map.qlen < LENGTH(map.queue) && keylen > 0) {
-        map.queue[map.qlen++] = *keys++;
-        keylen--;
+    if (keylen > 0) {
+        g_string_overwrite_len(map.queue, map.qlen, (char*)keys, keylen);
+        map.qlen += keylen;
+    } else {
+        /* Shrink the queue to free some memory. */
+        g_string_truncate(map.queue, map.qlen);
     }
 
     /* try to resolve keys against the map */
@@ -210,23 +218,23 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
              * isn't part of a mapped command we let gtk handle the key - this
              * is required allow to move cursor in inputbox with <Left> and
              * <Right> keys */
-            if ((map.queue[0] & 0xff) == CSI && map.qlen >= 3) {
+            if ((map.queue->str[0] & 0xff) == CSI && map.qlen >= 3) {
                 /* get next 2 chars to build the termcap key */
-                qk = TERMCAP2KEY(map.queue[1], map.queue[2]);
+                qk = TERMCAP2KEY(map.queue->str[1], map.queue->str[2]);
 
                 map.resolved -= 3;
                 map.qlen     -= 3;
                 /* move all other queue entries three steps to the left */
-                memmove(map.queue, map.queue + 3, map.qlen);
+                memmove(map.queue->str, map.queue->str + 3, map.qlen);
             } else {
                 /* get first char of queue */
-                qk = map.queue[0];
+                qk = map.queue->str[0];
 
                 map.resolved--;
                 map.qlen--;
 
                 /* move all other queue entries one step to the left */
-                memmove(map.queue, map.queue + 1, map.qlen);
+                memmove(map.queue->str, map.queue->str + 1, map.qlen);
             }
 
             /* remove the no-map flag */
@@ -261,14 +269,14 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
                 }
 
                 /* find ambiguous matches */
-                if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue, map.qlen)) {
+                if (!timeout && m->inlen > map.qlen && !strncmp(m->in, map.queue->str, map.qlen)) {
                     if (ambiguous == 0) {
                         /* show command chars for the ambiguous commands */
                         int i = map.qlen > SHOWCMD_LEN ? map.qlen - SHOWCMD_LEN : 0;
                         /* appen only those chars that are not already in showcmd */
                         i += showlen;
                         while (i < map.qlen) {
-                            showcmd(map.queue[i++]);
+                            showcmd(map.queue->str[i++]);
                             showlen++;
                         }
                     }
@@ -276,7 +284,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
                 }
                 /* complete match or better/longer match than previous found */
                 if (m->inlen <= map.qlen
-                    && !strncmp(m->in, map.queue, m->inlen)
+                    && !strncmp(m->in, map.queue->str, m->inlen)
                     && (!match || match->inlen < m->inlen)
                 ) {
                     /* backup this found possible match */
@@ -304,17 +312,17 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
             if (match->inlen < match->mappedlen) {
                 /* make some space within the queue */
                 for (i = map.qlen + match->mappedlen - match->inlen, j = map.qlen; j > match->inlen; ) {
-                    map.queue[--i] = map.queue[--j];
+                    map.queue->str[--i] = map.queue->str[--j];
                 }
             } else if (match->inlen > match->mappedlen) {
                 /* delete some keys */
                 for (i = match->mappedlen, j = match->inlen; i < map.qlen; ) {
-                    map.queue[i++] = map.queue[j++];
+                    map.queue->str[i++] = map.queue->str[j++];
                 }
             }
 
             /* copy the mapped string into the queue */
-            strncpy(map.queue, match->mapped, match->mappedlen);
+            g_string_overwrite_len(map.queue, 0, match->mapped, match->mappedlen);
             map.qlen += match->mappedlen - match->inlen;
 
             /* without remap the mapped chars are resolved now */
@@ -346,7 +354,6 @@ void map_handle_string(const char *str, gboolean use_map)
 {
     int len;
     char *keys = convert_keys(str, strlen(str), &len);
-
     map_handle_keys((guchar*)keys, len, use_map);
 }
 

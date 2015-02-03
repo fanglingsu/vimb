@@ -20,18 +20,13 @@
 #ifndef _MAP_H
 #define _MAP_H
 
-/* size of the typeahead buffer that will altered during mapping an can
- * therefor become larger than expected for examlpe by
- * ':nmap gh :open LONG_URI TO HOME PAGE' where two keys expand to a large
- * string */
-#define MAP_QUEUE_SIZE 500
-
 typedef enum {
     MAP_DONE,
     MAP_AMBIGUOUS,
     MAP_NOMATCH
 } MapState;
 
+void map_init(void);
 void map_cleanup(void);
 gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data);
 MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map);

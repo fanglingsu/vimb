@@ -143,6 +143,7 @@ int main(int argc, char *argv[])
     mode_init();
     mode_add('t', NULL, NULL, keypress, NULL);
     mode_enter('t');
+    map_init();
 
     g_test_add_func("/test-map/handle_string/simple", test_handle_string_simple);
     g_test_add_func("/test-map/handle_string/alias", test_handle_string_alias);
