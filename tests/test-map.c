@@ -31,6 +31,11 @@ static int  qpos = 0;   /* points to the queue entry for the next keypress */
     queue[qpos]   = '\0';    \
 }
 #define QUEUE_CLEAR() {queue[(qpos = 0)] = '\0';}
+#define ASSERT_MAPPING(s, e) {  \
+    QUEUE_CLEAR();                   \
+    map_handle_string(s, true);      \
+    g_assert_cmpstr(queue, ==, e);   \
+}
 
 typedef struct {
     guint state;
@@ -45,69 +50,62 @@ VbResult keypress(int key)
     return RESULT_COMPLETE;
 }
 
-static void check_handle_string(const char *str, const char *expected)
-{
-    QUEUE_CLEAR();
-    map_handle_string(str, true);
-    g_assert_cmpstr(queue, ==, expected);
-}
-
 static void test_handle_string_simple(void)
 {
     /* test simple mappings */
-    check_handle_string("a", "[a]");
-    check_handle_string("b", "[b]");
-    check_handle_string("<Tab>", "[tab]");
-    check_handle_string("<S-Tab>", "[shift-tab]");
-    check_handle_string("<C-F>", "[ctrl-f]");
-    check_handle_string("<C-f>", "[ctrl-f]");
-    check_handle_string("<CR>", "[cr]");
-    check_handle_string("foobar", "[baz]");
+    ASSERT_MAPPING("a", "[a]");
+    ASSERT_MAPPING("b", "[b]");
+    ASSERT_MAPPING("<Tab>", "[tab]");
+    ASSERT_MAPPING("<S-Tab>", "[shift-tab]");
+    ASSERT_MAPPING("<C-F>", "[ctrl-f]");
+    ASSERT_MAPPING("<C-f>", "[ctrl-f]");
+    ASSERT_MAPPING("<CR>", "[cr]");
+    ASSERT_MAPPING("foobar", "[baz]");
 }
 
 static void test_handle_string_alias(void)
 {
     /* CTRL-I is the same like <Tab> and CTRL-M like <CR> */
-    check_handle_string("<C-I>", "[tab]");
-    check_handle_string("<C-M>", "[cr]");
+    ASSERT_MAPPING("<C-I>", "[tab]");
+    ASSERT_MAPPING("<C-M>", "[cr]");
 }
 
 static void test_handle_string_multiple(void)
 {
     /* test multiple mappings together */
-    check_handle_string("ba", "[b][a]");
+    ASSERT_MAPPING("ba", "[b][a]");
 
     /* incomplete ambiguous sequences are not matched jet */
-    check_handle_string("foob", "");
-    check_handle_string("ar", "[baz]");
+    ASSERT_MAPPING("foob", "");
+    ASSERT_MAPPING("ar", "[baz]");
 }
 
 static void test_handle_string_remapped(void)
 {
     /* test multiple mappings together */
-    check_handle_string("ba", "[b][a]");
+    ASSERT_MAPPING("ba", "[b][a]");
 
     /* incomplete ambiguous sequences are not matched jet */
-    check_handle_string("foob", "");
-    check_handle_string("ar", "[baz]");
+    ASSERT_MAPPING("foob", "");
+    ASSERT_MAPPING("ar", "[baz]");
 
     /* test remapping */
     map_insert("c", "baza", 't', true);
-    check_handle_string("c", "[b][a]z[a]");
+    ASSERT_MAPPING("c", "[b][a]z[a]");
     map_insert("d", "cki", 't', true);
-    check_handle_string("d", "[b][a]z[a]ki");
+    ASSERT_MAPPING("d", "[b][a]z[a]ki");
 }
 
 static void test_remove(void)
 {
     map_insert("x", "[x]", 't', false);
     /* make sure that the mapping works */
-    check_handle_string("x", "[x]");
+    ASSERT_MAPPING("x", "[x]");
 
     map_delete("x", 't');
 
     /* make sure the mapping  removed */
-    check_handle_string("x", "x");
+    ASSERT_MAPPING("x", "x");
 }
 
 static void test_keypress_single(void)
