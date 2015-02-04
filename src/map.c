@@ -203,9 +203,6 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
     if (keylen > 0) {
         g_string_overwrite_len(map.queue, map.qlen, (char*)keys, keylen);
         map.qlen += keylen;
-    } else {
-        /* Shrink the queue to free some memory. */
-        g_string_truncate(map.queue, map.qlen);
     }
 
     /* try to resolve keys against the map */
@@ -299,30 +296,28 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
             }
         }
 
-        /* replace the matched chars from queue by the cooked string that
-         * is the result of the mapping */
+        /* Replace the matched chars from queue by the cooked string that
+         * is the result of the mapping. */
         if (match) {
-            int i, j;
-            /* flush the show command to make room for possible mapped command
-             * chars to show for example if :nmap foo 12g is use we want to
-             * display the incomplete 12g command */
+            /* Flush the show command to make room for possible mapped command
+             * chars to show. For example if :nmap foo 12g is use we want to
+             * display the incomplete 12g command. */
             showcmd(0);
             showlen = 0;
 
-            if (match->inlen < match->mappedlen) {
-                /* make some space within the queue */
-                for (i = map.qlen + match->mappedlen - match->inlen, j = map.qlen; j > match->inlen; ) {
-                    map.queue->str[--i] = map.queue->str[--j];
-                }
-            } else if (match->inlen > match->mappedlen) {
-                /* delete some keys */
-                for (i = match->mappedlen, j = match->inlen; i < map.qlen; ) {
-                    map.queue->str[i++] = map.queue->str[j++];
-                }
+            /* Replace the matching input chars by the mapped chars. */
+            if (match->inlen == match->mappedlen) {
+                /* If inlen and mappedlen are the same - replace the inlin
+                 * chars with the mapped chars. This case could also be
+                 * handled by the later string erase and prepend, but handling
+                 * it special avoids unneded function call. */
+                g_string_overwrite_len(map.queue, 0, match->mapped, match->mappedlen);
+            } else {
+                /* Remove all the chars that where matched and prepend the
+                 * mapped chars to the queue. */
+                g_string_erase(map.queue, 0, match->inlen);
+                g_string_prepend_len(map.queue, match->mapped, match->mappedlen);
             }
-
-            /* copy the mapped string into the queue */
-            g_string_overwrite_len(map.queue, 0, match->mapped, match->mappedlen);
             map.qlen += match->mappedlen - match->inlen;
 
             /* without remap the mapped chars are resolved now */

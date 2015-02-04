@@ -23,7 +23,7 @@
 #include <src/map.h>
 #include <src/mode.h>
 
-static char queue[10];  /* receives the keypresses */
+static char queue[20];  /* receives the keypresses */
 static int  qpos = 0;   /* points to the queue entry for the next keypress */
 
 #define QUEUE_APPEND(c) {    \
@@ -55,12 +55,16 @@ static void test_handle_string_simple(void)
     /* test simple mappings */
     ASSERT_MAPPING("a", "[a]");
     ASSERT_MAPPING("b", "[b]");
+    ASSERT_MAPPING("[c]", "c");
     ASSERT_MAPPING("<Tab>", "[tab]");
     ASSERT_MAPPING("<S-Tab>", "[shift-tab]");
     ASSERT_MAPPING("<C-F>", "[ctrl-f]");
     ASSERT_MAPPING("<C-f>", "[ctrl-f]");
     ASSERT_MAPPING("<CR>", "[cr]");
     ASSERT_MAPPING("foobar", "[baz]");
+
+    /* key sequences that are not changed by mappings */
+    ASSERT_MAPPING("fghi", "fghi");
 }
 
 static void test_handle_string_alias(void)
@@ -70,20 +74,11 @@ static void test_handle_string_alias(void)
     ASSERT_MAPPING("<C-M>", "[cr]");
 }
 
-static void test_handle_string_multiple(void)
-{
-    /* test multiple mappings together */
-    ASSERT_MAPPING("ba", "[b][a]");
-
-    /* incomplete ambiguous sequences are not matched jet */
-    ASSERT_MAPPING("foob", "");
-    ASSERT_MAPPING("ar", "[baz]");
-}
-
 static void test_handle_string_remapped(void)
 {
     /* test multiple mappings together */
     ASSERT_MAPPING("ba", "[b][a]");
+    ASSERT_MAPPING("ab12345[c]", "[a][b]12345c");
 
     /* incomplete ambiguous sequences are not matched jet */
     ASSERT_MAPPING("foob", "");
@@ -94,6 +89,17 @@ static void test_handle_string_remapped(void)
     ASSERT_MAPPING("c", "[b][a]z[a]");
     map_insert("d", "cki", 't', true);
     ASSERT_MAPPING("d", "[b][a]z[a]ki");
+
+    /* remove the no more needed mappings */
+    map_delete("c", 't');
+    map_delete("d", 't');
+}
+
+static void test_handle_string_overrule(void)
+{
+    /* add another map for 'a' and check if this overrules the previous set */
+    map_insert("a", "overruled", 't', false);
+    ASSERT_MAPPING("a", "overruled");
 }
 
 static void test_remove(void)
@@ -147,21 +153,21 @@ int main(int argc, char *argv[])
 
     g_test_add_func("/test-map/handle_string/simple", test_handle_string_simple);
     g_test_add_func("/test-map/handle_string/alias", test_handle_string_alias);
-    g_test_add_func("/test-map/handle_string/multi", test_handle_string_multiple);
     g_test_add_func("/test-map/handle_string/remapped", test_handle_string_remapped);
+    g_test_add_func("/test-map/handle_string/overrule", test_handle_string_overrule);
     g_test_add_func("/test-map/remove", test_remove);
     g_test_add_func("/test-map/keypress/single-char", test_keypress_single);
     g_test_add_func("/test-map/keypress/sequence", test_keypress_sequence);
 
     /* add some mappings to test */
-    map_insert("a", "[a]", 't', false);
+    map_insert("a", "[a]", 't', false);         /* inlen < mappedlen  */
     map_insert("b", "[b]", 't', false);
+    map_insert("[c]", "c", 't', false);         /* inlen > mappedlen  */
+    map_insert("foobar", "[baz]", 't', false);
     map_insert("<Tab>", "[tab]", 't', false);
     map_insert("<S-Tab>", "[shift-tab]", 't', false);
     map_insert("<C-F>", "[ctrl-f]", 't', false);
     map_insert("<CR>", "[cr]", 't', false);
-    /* map long sequence to shorter result */
-    map_insert("foobar", "[baz]", 't', false);
 
     result = g_test_run();
     map_cleanup();
