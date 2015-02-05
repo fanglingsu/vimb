@@ -36,7 +36,7 @@ Remote-Control via socket (previously a fifo)
 
 Hinting by Letters
 : Vimb allow now to set the chars used to built the hint labels. To have a
-  more vimium like behaviour you can `:set hintkeys=sdfghjkla`. This allows
+  more vimium like behaviour you can `:set hintkeys=lsdfghjk`. This allows
   fast filtering without moving you hands from the home row of the keyboard.
 
 Auto-Response-Header
