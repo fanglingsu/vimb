@@ -874,6 +874,10 @@ static void init_core(void)
     autocmd_init();
 #endif
     map_init();
+
+    /* make sure the main window and all its contents are visible */
+    gtk_widget_show_all(gui->window);
+
     read_config();
 
     /* initially apply input style */
@@ -881,8 +885,6 @@ static void init_core(void)
 
     setup_signals();
 
-    /* make sure the main window and all its contents are visible */
-    gtk_widget_show_all(gui->window);
     if (vb.config.kioskmode) {
         WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
 
