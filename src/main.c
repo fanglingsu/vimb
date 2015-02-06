@@ -875,6 +875,8 @@ static void init_core(void)
 #endif
     map_init();
 
+    setup_signals();
+
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
 
@@ -882,8 +884,6 @@ static void init_core(void)
 
     /* initially apply input style */
     vb_update_input_style();
-
-    setup_signals();
 
     if (vb.config.kioskmode) {
         WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
