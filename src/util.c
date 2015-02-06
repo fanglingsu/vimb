@@ -120,62 +120,79 @@ char **util_get_lines(const char *filename)
 }
 
 /**
- * Retrieves a list with unique items from file.
+ * Retrieves a list with unique items from file. The uniqueness is calculated
+ * based on the lines comparing all chars until the next <tab> char or end of
+ * line.
  *
  * @filename:    file to read items from
- * @func:        function to parse a single line to item
- * @unique_func: function to decide if two items are equal
- * @free_func:   function to free already converted item if this isn't unique
+ * @func:        Function to parse a single line to item. This is called by
+ *               two strings of the same allocated memory chunk which isn't
+ *               freed here. This allows to use the strings like they are. But
+ *               in case the memory should be freed, free only that of the
+ *               first string.
  * @max_items:   maximum number of items that are returned, use 0 for
  *               unlimited items
  */
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
-    GCompareFunc unique_func, GDestroyNotify free_func, unsigned int max_items)
+    guint max_items)
 {
-    GList *gl = NULL;
-    /* yes, the whole file is read and wen possible don not need all the
-     * lines, but this is easier to implement compared to reading the file
-     * line wise from end to beginning */
     char *line, **lines;
-    void *value;
-    int len, num_items = 0;
-
-    /* return empty list if max items is 0 */
-    if (!max_items) {
-        return gl;
-    }
+    int i, len;
+    GList *gl = NULL;
+    GHashTable *ht;
 
     lines = util_get_lines(filename);
-    len   = g_strv_length(lines);
-    if (!len) {
-        return gl;
+    if (!lines) {
+        return NULL;
     }
 
-    /* begin with the last line of the file to make unique check easier -
-     * every already existing item in the list is the latest, so we don't need
-     * to remove items from the list which takes some time */
-    for (int i = len - 1; i >= 0; i--) {
+    /* Use the hashtable to check for duplicates in a faster way than by
+     * iterating over the generated list itself. So it's enough to store the
+     * the keys only. */
+    ht = g_hash_table_new(g_str_hash, g_str_equal);
+
+    /* Begin with the last line of the file to make unique check easier -
+     * every already existing item in the table is the latest, so we don't need
+     * to do anything if an item already exists in the hash table. */
+    len = g_strv_length(lines);
+    for (i = len - 1; i >= 0; i--) {
+        char *key, *data;
+        void *item;
+
         line = lines[i];
         g_strstrip(line);
         if (!*line) {
             continue;
         }
 
-        if ((value = func(line))) {
-            /* if the value is already in list, free it and don't put it onto
-             * the list */
-            if (g_list_find_custom(gl, value, unique_func)) {
-                free_func(value);
-            } else {
-                gl = g_list_prepend(gl, value);
-                /* skip the loop if we precessed max_items unique items */
-                if (++num_items >= max_items) {
+        /* if line contains tab char - separate the line at this */
+        if ((data = strchr(line, '\t'))) {
+            *data = '\0';
+            key   = line;
+            data++;
+        } else {
+            key  = line;
+            data = NULL;
+        }
+
+        /* If the key part of file line is not in the hash table, insert it
+         * into the table and also in the list. */
+        if (!g_hash_table_lookup_extended(ht, key, NULL, NULL)) {
+            if ((item = func(key, data))) {
+                g_hash_table_insert(ht, key, NULL);
+                gl = g_list_prepend(gl, item);
+
+                /* Don't put more entries into the list than requested. */
+                if (max_items && g_hash_table_size(ht) >= max_items) {
                     break;
                 }
             }
         }
     }
-    g_strfreev(lines);
+
+    /* Free the memory for the string array but keep the strings untouched. */
+    g_free(lines);
+    g_hash_table_destroy(ht);
 
     return gl;
 }

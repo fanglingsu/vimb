@@ -28,8 +28,7 @@ enum {
     UTIL_EXP_SPECIAL = 0x04, /* expand % to current URI */
 };
 
-typedef gboolean (*Util_Comp_Func)(const char*, const char*);
-typedef void *(*Util_Content_Func)(const char*);
+typedef void *(*Util_Content_Func)(char*, char*);
 
 char* util_get_config_dir(void);
 char* util_get_cache_dir(void);
@@ -39,7 +38,7 @@ void util_create_file_if_not_exists(const char* filename);
 char* util_get_file_contents(const char* filename, gsize* length);
 char** util_get_lines(const char* filename);
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
-    GCompareFunc unique_func, GDestroyNotify free_func, unsigned int max_items);
+    guint max_items);
 gboolean util_file_append(const char *file, const char *format, ...);
 gboolean util_file_prepend(const char *file, const char *format, ...);
 char* util_strcasestr(const char* haystack, const char* needle);

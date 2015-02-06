@@ -34,8 +34,7 @@ typedef struct {
 static GList *load(const char *file);
 static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     unsigned int qlen);
-static Bookmark *line_to_bookmark(const char *line);
-static int bookmark_comp(Bookmark *a, Bookmark *b);
+static Bookmark *line_to_bookmark(char *uri, char *data);
 static void free_bookmark(Bookmark *bm);
 
 /**
@@ -257,10 +256,7 @@ gboolean bookmark_queue_clear(void)
 
 static GList *load(const char *file)
 {
-    return util_file_to_unique_list(
-        file, (Util_Content_Func)line_to_bookmark, (GCompareFunc)bookmark_comp,
-        (GDestroyNotify)free_bookmark, vb.config.history_max
-    );
+    return util_file_to_unique_list(file, (Util_Content_Func)line_to_bookmark, 0);
 }
 
 /**
@@ -316,45 +312,28 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     return true;
 }
 
-static Bookmark *line_to_bookmark(const char *line)
+static Bookmark *line_to_bookmark(char *uri, char *data)
 {
-    char **parts;
-    int len;
+    char *p;
     Bookmark *bm;
-    while (g_ascii_isspace(*line)) {
-        line++;
-    }
-    if (!*line) {
-        return NULL;
-    }
 
-    parts = g_strsplit(line, "\t", 3);
-    len   = g_strv_length(parts);
-
-    bm        = g_slice_new(Bookmark);
-    bm->uri   = g_strdup(parts[0]);
-    bm->tags  = NULL;
-    bm->title = NULL;
-    if (len == 3) {
-        bm->title = g_strdup(parts[1]);
-        bm->tags  = g_strdup(parts[2]);
-    } else if (len == 2) {
-        bm->title = g_strdup(parts[1]);
+    /* data part may consist of title or title<tab>tags*/
+    bm      = g_slice_new(Bookmark);
+    bm->uri = uri;
+    if ((p = strchr(data, '\t'))) {
+        *p        = '\0';
+        bm->title = data;
+        bm->tags  = p + 1;
+    } else {
+        bm->title = data;
+        bm->tags  = NULL;
     }
-    g_strfreev(parts);
 
     return bm;
-}
-
-static int bookmark_comp(Bookmark *a, Bookmark *b)
-{
-    return g_strcmp0(a->uri, b->uri);
 }
 
 static void free_bookmark(Bookmark *bm)
 {
     g_free(bm->uri);
-    g_free(bm->title);
-    g_free(bm->tags);
     g_slice_free(Bookmark, bm);
 }

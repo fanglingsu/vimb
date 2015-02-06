@@ -26,6 +26,7 @@
 
 extern VbCore vb;
 
+#define HIST_FILE(t) (vb.files[file_map[t]])
 /* map history types to files */
 static const VbFile file_map[HISTORY_LAST] = {
     FILES_COMMAND,
@@ -38,13 +39,11 @@ typedef struct {
     char *second;
 } History;
 
-static const char *get_file_by_type(HistoryType type);
 static GList *load(const char *file);
 static void write_to_file(GList *list, const char *file);
-static History *line_to_history(const char *line);
 static gboolean history_item_contains_all_tags(History *item, char **query,
     unsigned int qlen);
-static int history_comp(History *a, History *b);
+static History *line_to_history(char *uri, char *title);
 static void free_history(History *item);
 
 
@@ -63,7 +62,7 @@ void history_cleanup(void)
     }
 
     for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
-        file = get_file_by_type(i);
+        file = HIST_FILE(i);
         list = load(file);
         write_to_file(list, file);
         g_list_free_full(list, (GDestroyNotify)free_history);
@@ -83,7 +82,7 @@ void history_add(HistoryType type, const char *value, const char *additional)
         return;
     }
 
-    file = get_file_by_type(type);
+    file = HIST_FILE(type);
     if (additional) {
         util_file_append(file, "%s\t%s\n", value, additional);
     } else {
@@ -100,7 +99,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
     GtkTreeIter iter;
     History *item;
 
-    src = load(get_file_by_type(type));
+    src = load(HIST_FILE(type));
     src = g_list_reverse(src);
     if (!input || !*input) {
         /* without any tags return all items */
@@ -169,12 +168,12 @@ GList *history_get_list(VbInputType type, const char *query)
 
     switch (type) {
         case VB_INPUT_COMMAND:
-            src = load(get_file_by_type(HISTORY_COMMAND));
+            src = load(HIST_FILE(HISTORY_COMMAND));
             break;
 
         case VB_INPUT_SEARCH_FORWARD:
         case VB_INPUT_SEARCH_BACKWARD:
-            src = load(get_file_by_type(HISTORY_SEARCH));
+            src = load(HIST_FILE(HISTORY_SEARCH));
             break;
 
         default:
@@ -190,30 +189,23 @@ GList *history_get_list(VbInputType type, const char *query)
     }
     g_list_free_full(src, (GDestroyNotify)free_history);
 
-    /* prepend the original query as own item like done in vim to have the
+    /* Prepend the original query as own item like done in vim to have the
      * original input string in input box if we step before the first real
-     * item */
+     * item. */
     result = g_list_prepend(result, g_strdup(query));
 
     return result;
 }
 
-static const char *get_file_by_type(HistoryType type)
-{
-    return vb.files[file_map[type]];
-}
-
 /**
  * Loads history items form file but eleminate duplicates in FIFO order.
  *
- * Returned list must be freed with (GDestroyNotify) free_history.
+ * Returned list must be freed with (GDestroyNotify)free_history.
  */
 static GList *load(const char *file)
 {
-    /* read the history items from file */
     return util_file_to_unique_list(
-        file, (Util_Content_Func)line_to_history, (GCompareFunc)history_comp,
-        (GDestroyNotify)free_history, vb.config.history_max
+        file, (Util_Content_Func)line_to_history, vb.config.history_max
     );
 }
 
@@ -241,33 +233,6 @@ static void write_to_file(GList *list, const char *file)
     }
 }
 
-static History *line_to_history(const char *line)
-{
-    char **parts;
-    int len;
-
-    while (VB_IS_SPACE(*line)) {
-        line++;
-    }
-    if (!*line) {
-        return NULL;
-    }
-
-    History *item = g_slice_new0(History);
-
-    parts = g_strsplit(line, "\t", 2);
-    len   = g_strv_length(parts);
-    if (len == 2) {
-        item->first  = g_strdup(parts[0]);
-        item->second = g_strdup(parts[1]);
-    } else {
-        item->first  = g_strdup(parts[0]);
-    }
-    g_strfreev(parts);
-
-    return item;
-}
-
 /**
  * Checks if the given array of tags are all found in history item.
  */
@@ -291,15 +256,20 @@ static gboolean history_item_contains_all_tags(History *item, char **query,
     return true;
 }
 
-static int history_comp(History *a, History *b)
+static History *line_to_history(char *uri, char *title)
 {
-    /* compare only the first part */
-    return g_strcmp0(a->first, b->first);
+    History *item = g_slice_new0(History);
+
+    item->first  = uri;
+    item->second = title;
+
+    return item;
 }
 
 static void free_history(History *item)
 {
+    /* The first and second property are created from the same allocated
+     * string so we only need to free the first. */
     g_free(item->first);
-    g_free(item->second);
     g_slice_free(History, item);
 }
