@@ -43,7 +43,7 @@ static GList *load(const char *file);
 static void write_to_file(GList *list, const char *file);
 static gboolean history_item_contains_all_tags(History *item, char **query,
     unsigned int qlen);
-static History *line_to_history(char *uri, char *title);
+static History *line_to_history(const char *uri, const char *title);
 static void free_history(History *item);
 
 
@@ -256,20 +256,19 @@ static gboolean history_item_contains_all_tags(History *item, char **query,
     return true;
 }
 
-static History *line_to_history(char *uri, char *title)
+static History *line_to_history(const char *uri, const char *title)
 {
     History *item = g_slice_new0(History);
 
-    item->first  = uri;
-    item->second = title;
+    item->first  = g_strdup(uri);
+    item->second = g_strdup(title);
 
     return item;
 }
 
 static void free_history(History *item)
 {
-    /* The first and second property are created from the same allocated
-     * string so we only need to free the first. */
     g_free(item->first);
+    g_free(item->second);
     g_slice_free(History, item);
 }

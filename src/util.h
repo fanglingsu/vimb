@@ -28,7 +28,7 @@ enum {
     UTIL_EXP_SPECIAL = 0x04, /* expand % to current URI */
 };
 
-typedef void *(*Util_Content_Func)(char*, char*);
+typedef void *(*Util_Content_Func)(const char*, const char*);
 
 char* util_get_config_dir(void);
 char* util_get_cache_dir(void);

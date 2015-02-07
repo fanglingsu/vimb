@@ -34,7 +34,7 @@ typedef struct {
 static GList *load(const char *file);
 static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     unsigned int qlen);
-static Bookmark *line_to_bookmark(char *uri, char *data);
+static Bookmark *line_to_bookmark(const char *uri, const char *data);
 static void free_bookmark(Bookmark *bm);
 
 /**
@@ -312,20 +312,20 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     return true;
 }
 
-static Bookmark *line_to_bookmark(char *uri, char *data)
+static Bookmark *line_to_bookmark(const char *uri, const char *data)
 {
     char *p;
     Bookmark *bm;
 
     /* data part may consist of title or title<tab>tags*/
     bm      = g_slice_new(Bookmark);
-    bm->uri = uri;
+    bm->uri = g_strdup(uri);
     if ((p = strchr(data, '\t'))) {
         *p        = '\0';
-        bm->title = data;
-        bm->tags  = p + 1;
+        bm->title = g_strdup(data);
+        bm->tags  = g_strdup(p + 1);
     } else {
-        bm->title = data;
+        bm->title = g_strdup(data);
         bm->tags  = NULL;
     }
 
@@ -335,5 +335,7 @@ static Bookmark *line_to_bookmark(char *uri, char *data)
 static void free_bookmark(Bookmark *bm)
 {
     g_free(bm->uri);
+    g_free(bm->title);
+    g_free(bm->tags);
     g_slice_free(Bookmark, bm);
 }

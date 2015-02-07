@@ -125,11 +125,7 @@ char **util_get_lines(const char *filename)
  * line.
  *
  * @filename:    file to read items from
- * @func:        Function to parse a single line to item. This is called by
- *               two strings of the same allocated memory chunk which isn't
- *               freed here. This allows to use the strings like they are. But
- *               in case the memory should be freed, free only that of the
- *               first string.
+ * @func:        Function to parse a single line to item.
  * @max_items:   maximum number of items that are returned, use 0 for
  *               unlimited items
  */
@@ -162,7 +158,6 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         line = lines[i];
         g_strstrip(line);
         if (!*line) {
-            g_free(lines[i]);
             continue;
         }
 
@@ -179,7 +174,6 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         /* If the item is already in the has table we don't ned to put it in
          * the list, but we have to free the momory. */
         if (g_hash_table_lookup_extended(ht, key, NULL, NULL)) {
-            g_free(lines[i]);
             continue;
         }
 
@@ -191,17 +185,12 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
 
             /* Don't put more entries into the list than requested. */
             if (max_items && g_hash_table_size(ht) >= max_items) {
-                /* Free all following lines that are not put into the list. */
-                while(--i >= 0) {
-                    g_free(lines[i]);
-                }
                 break;
             }
         }
     }
 
-    /* Free the memory for the string array but keep the strings untouched. */
-    g_free(lines);
+    g_strfreev(lines);
     g_hash_table_destroy(ht);
 
     return gl;
