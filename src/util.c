@@ -171,8 +171,7 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
             data = NULL;
         }
 
-        /* If the item is already in the has table we don't ned to put it in
-         * the list, but we have to free the momory. */
+        /* Check if the entry is already in the result list. */
         if (g_hash_table_lookup_extended(ht, key, NULL, NULL)) {
             continue;
         }
