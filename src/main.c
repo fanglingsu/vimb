@@ -1185,9 +1185,9 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
              * used for WYSIWYG editors where the click runs into a div and
              * not the editable element itself. */
             mode_enter('i');
-        } else if (vb.mode->id == 'i') {
-            /* make sure we leave insert mode if the user click on a none
-             * editable element */
+        } else if (vb.mode->id == 'i' || vb.mode->id == 'c') {
+            /* make sure we leave insert mode or command/hint mode if the user
+             * click on a none editable element */
             mode_enter('n');
         }
     }
