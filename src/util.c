@@ -162,6 +162,7 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         line = lines[i];
         g_strstrip(line);
         if (!*line) {
+            g_free(lines[i]);
             continue;
         }
 
@@ -175,17 +176,26 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
             data = NULL;
         }
 
-        /* If the key part of file line is not in the hash table, insert it
-         * into the table and also in the list. */
-        if (!g_hash_table_lookup_extended(ht, key, NULL, NULL)) {
-            if ((item = func(key, data))) {
-                g_hash_table_insert(ht, key, NULL);
-                gl = g_list_prepend(gl, item);
+        /* If the item is already in the has table we don't ned to put it in
+         * the list, but we have to free the momory. */
+        if (g_hash_table_lookup_extended(ht, key, NULL, NULL)) {
+            g_free(lines[i]);
+            continue;
+        }
 
-                /* Don't put more entries into the list than requested. */
-                if (max_items && g_hash_table_size(ht) >= max_items) {
-                    break;
+        /* Item is new - prepend it to the list. Because the record are read
+         * in reverse order the prepend generates a list in the right order. */
+        if ((item = func(key, data))) {
+            g_hash_table_insert(ht, key, NULL);
+            gl = g_list_prepend(gl, item);
+
+            /* Don't put more entries into the list than requested. */
+            if (max_items && g_hash_table_size(ht) >= max_items) {
+                /* Free all following lines that are not put into the list. */
+                while(--i >= 0) {
+                    g_free(lines[i]);
                 }
+                break;
             }
         }
     }
