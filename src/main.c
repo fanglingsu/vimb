@@ -836,7 +836,7 @@ static void init_core(void)
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.mode), 0.0, 0.0);
     gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
 #endif
-    gtk_label_set_ellipsize(GTK_LABEL(gui->statusbar.left), PANGO_ELLIPSIZE_END);
+    gtk_label_set_ellipsize(GTK_LABEL(gui->statusbar.left), PANGO_ELLIPSIZE_MIDDLE);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.mode, false, true, 0);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, true, true, 2);
     gtk_box_pack_start(gui->statusbar.box, gui->statusbar.cmd, false, false, 0);
