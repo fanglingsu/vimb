@@ -478,7 +478,7 @@ VbCmdResult ex_run_string(const char *input, gboolean enable_history)
     /* copy to have original command for history */
     const char *in  = input;
     gboolean nohist = false;
-    VbCmdResult res = VB_CMD_ERROR;
+    VbCmdResult res = VB_CMD_ERROR | VB_CMD_KEEPINPUT;
     ExArg *arg = g_slice_new0(ExArg);
     arg->lhs   = g_string_new("");
     arg->rhs   = g_string_new("");
