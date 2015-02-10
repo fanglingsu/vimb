@@ -188,11 +188,13 @@ void completion_next(gboolean back)
 
 void completion_clean(void)
 {
+    TIMER_START
     vb.mode->flags &= ~FLAG_COMPLETION;
     if (comp.win) {
         gtk_widget_destroy(comp.win);
         comp.win = comp.tree = NULL;
     }
+    TIMER_END
 }
 
 static gboolean tree_selection_func(GtkTreeSelection *selection,

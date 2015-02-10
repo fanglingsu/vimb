@@ -109,7 +109,9 @@ GSList *arh_parse(const char *data, const char **error)
  */
 void arh_free(GSList *list)
 {
+    TIMER_START
     g_slist_free_full(list, (GDestroyNotify)marh_free);
+    TIMER_END
 }
 
 /**

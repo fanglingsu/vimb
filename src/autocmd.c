@@ -75,9 +75,11 @@ void autocmd_init(void)
 
 void autocmd_cleanup(void)
 {
+    TIMER_START
     if (groups) {
         g_slist_free_full(groups, (GDestroyNotify)free_group);
     }
+    TIMER_END
 }
 
 /**

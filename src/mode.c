@@ -36,10 +36,12 @@ void mode_init(void)
 
 void mode_cleanup(void)
 {
+    TIMER_START
     if (modes) {
         g_hash_table_destroy(modes);
         vb.mode = NULL;
     }
+    TIMER_END
 }
 
 /**
@@ -137,20 +139,7 @@ VbResult mode_handle_key(int key)
     }
 
     if (vb.mode && vb.mode->keypress) {
-#ifdef DEBUG
-        int flags = vb.mode->flags;
-        int id    = vb.mode->id;
         res = vb.mode->keypress(key);
-        if (vb.mode) {
-            PRINT_DEBUG(
-                "%c[%d]: %#.2x '%c' -> %c[%d]",
-                id - ' ', flags, key, (key >= 0x20 && key <= 0x7e) ? key : ' ',
-                vb.mode->id - ' ', vb.mode->flags
-            );
-        }
-#else
-        res = vb.mode->keypress(key);
-#endif
         return res;
     }
     return RESULT_ERROR;

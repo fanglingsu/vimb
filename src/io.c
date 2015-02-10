@@ -89,6 +89,7 @@ gboolean io_init_socket(const char *name)
 
 void io_cleanup(void)
 {
+    TIMER_START
     if (vb.state.socket_path) {
         if (unlink(vb.state.socket_path) == -1) {
             g_warning("Can't remove socket %s", vb.state.socket_path);
@@ -96,6 +97,7 @@ void io_cleanup(void)
         g_free(vb.state.socket_path);
         vb.state.socket_path = NULL;
     }
+    TIMER_END
 }
 
 static gboolean socket_accept(GIOChannel *chan)

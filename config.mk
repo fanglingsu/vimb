@@ -28,7 +28,7 @@ endif
 # generate a first char upper case project name
 PROJECT_UCFIRST = $(shell echo '${PROJECT}' | awk '{for(i=1;i<=NF;i++){$$i=toupper(substr($$i,1,1))substr($$i,2)}}1')
 
-CPPFLAGS  = -DVERSION=\"${VERSION}\"
+CPPFLAGS  = -DVERSION=\"${VERSION}\" -DDEBUG
 CPPFLAGS += -DPROJECT=\"${PROJECT}\" -DPROJECT_UCFIRST=\"${PROJECT_UCFIRST}\"
 CPPFLAGS += -D_XOPEN_SOURCE=500
 CPPFLAGS += -D_POSIX_SOURCE

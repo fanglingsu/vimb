@@ -450,14 +450,24 @@ void vb_quit(gboolean force)
         return;
     }
 
-    webkit_web_view_stop_loading(vb.gui.webview);
-
-    /* write last URL into file for recreation */
-    if (vb.state.uri) {
-        g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
+    {
+        TIMER_START
+        webkit_web_view_stop_loading(vb.gui.webview);
+        TIMER_END
     }
 
+    {
+        TIMER_START
+        /* write last URL into file for recreation */
+        if (vb.state.uri) {
+            g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
+        }
+        TIMER_END
+    }
+
+    TIMER_START
     gtk_main_quit();
+    TIMER_END
 }
 
 static gboolean hide_message()
@@ -1093,6 +1103,7 @@ static void session_init(void)
 
 static void session_cleanup(void)
 {
+    TIMER_START
 #ifdef FEATURE_HSTS
     /* remove feature from session and unref the feature to make sure the
      * feature is finalized */
@@ -1105,6 +1116,7 @@ static void session_cleanup(void)
     /* make sure that the cache will be kept on next browser start */
     soup_cache_dump(vb.config.soup_cache);
 #endif
+    TIMER_END
 }
 
 static void register_init(void)
@@ -1148,12 +1160,14 @@ const char *vb_register_get(char buf)
 
 static void register_cleanup(void)
 {
+    TIMER_START
     int i;
     for (i = 0; i < VB_REG_SIZE; i++) {
         if (vb.state.reg[i]) {
             g_free(vb.state.reg[i]);
         }
     }
+    TIMER_END
 }
 
 static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
@@ -1560,15 +1574,21 @@ static void vb_cleanup(void)
 #ifdef FEATURE_SOCKET
     io_cleanup();
 #endif
-    g_free(vb.state.pid_str);
-    g_free(vb.state.uri);
+    {
+        TIMER_START
+        g_free(vb.state.pid_str);
+        g_free(vb.state.uri);
 
-    g_slist_free_full(vb.config.cmdargs, g_free);
+        g_slist_free_full(vb.config.cmdargs, g_free);
+        TIMER_END
+    }
 
+    TIMER_START
     for (int i = 0; i < FILES_LAST; i++) {
         g_free(vb.files[i]);
         vb.files[i] = NULL;
     }
+    TIMER_END
 }
 
 static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
@@ -1663,7 +1683,9 @@ int main(int argc, char *argv[])
     gtk_main();
 
     /* cleanup memory */
+    TIMER_START
     vb_cleanup();
+    TIMER_END
 
     return EXIT_SUCCESS;
 }

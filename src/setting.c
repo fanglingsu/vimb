@@ -335,11 +335,13 @@ gboolean setting_fill_completion(GtkListStore *store, const char *input)
 
 void setting_cleanup(void)
 {
+    TIMER_START
     if (vb.config.settings) {
         g_hash_table_destroy(vb.config.settings);
     }
     shortcut_cleanup();
     handlers_cleanup();
+    TIMER_END
 }
 
 static int setting_set_value(Setting *prop, void *value, SettingType type)

@@ -118,10 +118,12 @@ void map_init(void)
 
 void map_cleanup(void)
 {
+    TIMER_START
     if (map.list) {
         g_slist_free_full(map.list, (GDestroyNotify)free_map);
     }
     g_string_free(map.queue, true);
+    TIMER_END
 }
 
 /**

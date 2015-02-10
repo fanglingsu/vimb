@@ -53,6 +53,7 @@ static void free_history(History *item);
  */
 void history_cleanup(void)
 {
+    TIMER_START
     const char *file;
     GList *list;
 
@@ -67,6 +68,7 @@ void history_cleanup(void)
         write_to_file(list, file);
         g_list_free_full(list, (GDestroyNotify)free_history);
     }
+    TIMER_END
 }
 
 /**

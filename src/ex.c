@@ -914,7 +914,9 @@ static VbCmdResult ex_register(const ExArg *arg)
 
 static VbCmdResult ex_quit(const ExArg *arg)
 {
+    TIMER_START
     vb_quit(arg->bang);
+    TIMER_END
     return VB_CMD_SUCCESS;
 }
 
