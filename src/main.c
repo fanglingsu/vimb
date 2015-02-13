@@ -1244,11 +1244,9 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
     char *uri;
     SoupMessage *msg = webkit_network_request_get_message(request);
 
-    /*
-     * manually reload the page for HSTS only when it occurs in
-     * the main-frame. the others cases are covered by requeueing.
-     */
-    if ( webkit_web_view_get_main_frame(view) == frame ) {
+    /* manually reload the page for HSTS only when it occurs in
+     * the main-frame. the others cases are covered by requeueing. */
+    if (webkit_web_view_get_main_frame(view) == frame) {
         uri = hsts_get_changed_uri(vb.session, msg);
         if (uri) {
             webkit_web_frame_load_uri(frame, uri);
