@@ -1244,15 +1244,20 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
     char *uri;
     SoupMessage *msg = webkit_network_request_get_message(request);
 
-    /* change uri for known and valid hsts hosts */
-    uri = hsts_get_changed_uri(vb.session, msg);
-    if (uri) {
-        webkit_web_frame_load_uri(frame, uri);
-        webkit_web_policy_decision_ignore(policy);
+    /*
+     * manually reload the page for HSTS only when it occurs in
+     * the main-frame. the others cases are covered by requeueing.
+     */
+    if ( webkit_web_view_get_main_frame(view) == frame ) {
+        uri = hsts_get_changed_uri(vb.session, msg);
+        if (uri) {
+            webkit_web_frame_load_uri(frame, uri);
+            webkit_web_policy_decision_ignore(policy);
 
-        g_free(uri);
-        /* mark the request as handled */
-        return true;
+            g_free(uri);
+            /* mark the request as handled */
+            return true;
+        }
     }
 #endif
 
