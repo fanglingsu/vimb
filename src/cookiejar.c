@@ -57,7 +57,7 @@ static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupC
     } else if (vb.config.cookie_expire_time > 0 && new_cookie->expires) {
         expire = soup_date_new_from_now(vb.config.cookie_expire_time);
         if (soup_date_to_time_t(expire) < soup_date_to_time_t(new_cookie->expires)) {
-        soup_cookie_set_expires(new_cookie, expire);
+            soup_cookie_set_expires(new_cookie, expire);
         }
         soup_date_free(expire);
     }
