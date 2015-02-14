@@ -501,9 +501,13 @@ commands allow the user to substitute one sequence of key presses by another.
 
 **Syntax:** `:{m}map {lhs} {rhs}`
 
-Note that the *lhs* ends with the first found space. If you want to use space
+Note that the {lhs} ends with the first found space. If you want to use space
 also in the {lhs} you have to escape this with a single ``\`` like shown in the
-examples. Standard key mapping commands are provided for these modes *m*:
+examples.
+The {rhs} starts with the first none space char. If you want a {rhs} that starts
+with a space, you have to use `<Space>`.
+
+Standard key mapping commands are provided for these modes *m*:
 
 - **n** Normal mode: When browsing normally.
 - **i** Insert mode: When interacting with text fields on a website.
@@ -514,9 +518,9 @@ on the screen when you type them. However, as a number of these characters have
 special meanings, and a number of keys have no visual representation, a special
 notation is required.
 
-As special key names have the format \<...\>. Following special keys can be
-used \<Left\>, \<Up\>, \<Right\>, \<Down\> for the cursor keys, \<Tab\>,
-\<Esc\>, \<CR\>, \<F1\>-\<F12\> and \<C-A\>-\<C-Z\>.
+As special key names have the format `<...>`. Following special keys can be
+used `<Left>`, `<Up>`, `<Right>`, `<Down>` for the cursor keys, `<Tab>`,
+`<Esc>`, `<CR>`, `<Space>`, `<F1>`-`<F12>` and `<C-A>`-`<C-Z>`.
 
 \:nm[ap] {*lhs*} {*rhs*}
 \:im[ap] {*lhs*} {*rhs*}
