@@ -56,6 +56,7 @@ static void test_handle_string_simple(void)
     ASSERT_MAPPING("a", "[a]");
     ASSERT_MAPPING("b", "[b]");
     ASSERT_MAPPING("[c]", "c");
+    ASSERT_MAPPING("d", " [d]");
     ASSERT_MAPPING("<Tab>", "[tab]");
     ASSERT_MAPPING("<S-Tab>", "[shift-tab]");
     ASSERT_MAPPING("<C-F>", "[ctrl-f]");
@@ -162,6 +163,7 @@ int main(int argc, char *argv[])
     /* add some mappings to test */
     map_insert("a", "[a]", 't', false);         /* inlen < mappedlen  */
     map_insert("b", "[b]", 't', false);
+    map_insert("d", "<Space>[d]", 't', false);
     map_insert("[c]", "c", 't', false);         /* inlen > mappedlen  */
     map_insert("foobar", "[baz]", 't', false);
     map_insert("<Tab>", "[tab]", 't', false);

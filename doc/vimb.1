@@ -476,11 +476,14 @@ configured 'home-page' is opened.
 Key mappings allow to alter actions of key presses. Each key mapping is
 associated with a mode and only has effect when the mode is active. Following
 commands allow the user to substitute one sequence of key presses by another.
-
+.TP
 .BI Syntax: " :{m}map {lhs} {rhs}"
 Note that the \fIlhs\fP ends with the first found space. If you want to use
 space also in the {lhs} you have to escape this with a single `\\' like shown
 in the examples.
+.br
+The \fIrhs\fP starts with the first none space char. If you want a \fIrhs\fP
+that starts with a space, you have to use "<Space>".
 .RS 0
 .TP
 .PD 0
@@ -501,7 +504,7 @@ special notation is required.
 
 As special key names have the format \fI<...>\fP. Following special keys can
 be used <Left>, <Up>, <Right>, <Down> for the cursor keys, <Tab>, <Esc>, <CR>,
-<F1>-<F12> and <C-A>-<C-Z>.
+<Space>, <F1>-<F12> and <C-A>-<C-Z>.
 .TP
 .BI ":nm[ap] {" lhs "} {" rhs }
 .TP
