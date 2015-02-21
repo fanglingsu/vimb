@@ -26,7 +26,6 @@
 #include "dom.h"
 #include "command.h"
 #include "hints.js.h"
-#include "mode.h"
 #include "input.h"
 #include "map.h"
 #include "js.h"
@@ -135,7 +134,7 @@ void hints_create(const char *input)
     if (!hints_parse_prompt(input, &hints.mode, &hints.gmode)) {
         /* if input is not valid, clear possible previous hint mode */
         if (vb.mode->flags & FLAG_HINTING) {
-            mode_enter('n');
+            vb_enter('n');
         }
         return;
     }
@@ -301,11 +300,11 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
          * normal mode when the hinting triggered a click that set focus on
          * editable element that lead vimb to switch to input mode. */
         if (!hints.gmode && vb.mode->id == 'c') {
-            mode_enter('n');
+            vb_enter('n');
         }
     } else if (!strncmp(value, "INSERT:", 7)) {
         fire_timeout(false);
-        mode_enter('i');
+        vb_enter('i');
         if (hints.mode == 'e') {
             input_open_editor();
         }
@@ -314,7 +313,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
         /* switch first to normal mode - else we would clear the inputbox
          * on switching mode also if we want to show yanked data */
         if (!hints.gmode) {
-            mode_enter('n');
+            vb_enter('n');
         }
 
         char *v = (value + 5);
@@ -334,7 +333,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
             case 'T':
                 vb_echo(VB_MSG_NORMAL, false, "%s %s", (hints.mode == 'T') ? ":tabopen" : ":open", v);
                 if (!hints.gmode) {
-                    mode_enter('c');
+                    vb_enter('c');
                 }
                 break;
 

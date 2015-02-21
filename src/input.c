@@ -19,7 +19,6 @@
 
 #include "config.h"
 #include <glib/gstdio.h>
-#include "mode.h"
 #include "main.h"
 #include "input.h"
 #include "dom.h"
@@ -81,7 +80,7 @@ VbResult input_keypress(int key)
 
     switch (key) {
         case CTRL('['): /* esc */
-            mode_enter('n');
+            vb_enter('n');
             return RESULT_COMPLETE;
 
         case CTRL('O'):
@@ -95,7 +94,7 @@ VbResult input_keypress(int key)
             return input_open_editor();
 
         case CTRL('Z'):
-            mode_enter('p');
+            vb_enter('p');
             return RESULT_COMPLETE;
     }
 

@@ -22,7 +22,6 @@
 #include "map.h"
 #include "normal.h"
 #include "ascii.h"
-#include "mode.h"
 
 /* convert the lower 4 bits of byte n to its hex character */
 #define NR2HEX(n)   (n & 0xf) <= 9 ? (n & 0xf) + '0' : (c & 0xf) - 10 + 'a'
@@ -239,7 +238,7 @@ MapState map_handle_keys(const guchar *keys, int keylen, gboolean use_map)
             vb.mode->flags &= ~FLAG_NOMAP;
 
             /* send the key to the parser */
-            if (RESULT_MORE != mode_handle_key((int)qk)) {
+            if (RESULT_MORE != vb_handle_key((int)qk)) {
                 showcmd(0);
                 showlen = 0;
             } else if (showlen > 0) {

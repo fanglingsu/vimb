@@ -20,7 +20,6 @@
 #include "config.h"
 #include "main.h"
 #include "dom.h"
-#include "mode.h"
 
 extern VbCore vb;
 
@@ -208,7 +207,7 @@ static gboolean auto_insert(Element *element)
      * want to remove the content and force a switch to input mode. And to
      * switch to input mode when this is already active makes no sense. */
     if (vb.mode->id == 'n' && dom_is_editable(element)) {
-        mode_enter('i');
+        vb_enter('i');
 
         return true;
     }

@@ -28,7 +28,6 @@
 #include "ascii.h"
 #include "completion.h"
 #include "hints.h"
-#include "mode.h"
 #include "command.h"
 #include "history.h"
 #include "dom.h"
@@ -279,7 +278,7 @@ VbResult ex_keypress(int key)
 
             case CTRL('['):
             case CTRL('C'):
-                mode_enter('n');
+                vb_enter('n');
                 vb_set_input_text("");
                 break;
 
@@ -361,7 +360,7 @@ VbResult ex_keypress(int key)
     if (check_empty) {
         gtk_text_buffer_get_bounds(buffer, &start, &end);
         if (gtk_text_iter_equal(&start, &end)) {
-            mode_enter('n');
+            vb_enter('n');
             vb_set_input_text("");
         }
     }
@@ -451,7 +450,7 @@ static void input_activate(void)
     switch (*text) {
         case '/': count = 1; /* fall through */
         case '?':
-            mode_enter('n');
+            vb_enter('n');
             command_search(&((Arg){count, cmd}));
             break;
 
@@ -461,7 +460,7 @@ static void input_activate(void)
             break;
 
         case ':':
-            mode_enter('n');
+            vb_enter('n');
             res = ex_run_string(cmd, true);
             if (!(res & VB_CMD_KEEPINPUT)) {
                 /* clear input on success if this is not explicit ommited */
@@ -832,7 +831,7 @@ static VbCmdResult ex_unmap(const ExArg *arg)
 
 static VbCmdResult ex_normal(const ExArg *arg)
 {
-    mode_enter('n');
+    vb_enter('n');
 
     /* if called with bang - don't apply mapping */
     map_handle_string(arg->rhs->str, !arg->bang);

@@ -380,14 +380,20 @@ typedef struct {
 #else
     GdkNativeWindow embed;
 #endif
+    GHashTable      *modes; /* all available browser main modes */
 } VbCore;
 
 /* main object */
 extern VbCore core;
 
 /* functions */
+void vb_add_mode(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
+    ModeKeyFunc keypress, ModeInputChangedFunc input_changed);
 void vb_echo_force(const MessageType type,gboolean hide, const char *error, ...);
 void vb_echo(const MessageType type, gboolean hide, const char *error, ...);
+void vb_enter(char id);
+void vb_enter_prompt(char id, const char *prompt, gboolean print_prompt);
+VbResult vb_handle_key(int key);
 void vb_set_input_text(const char *text);
 char *vb_get_input_text(void);
 void vb_input_activate(void);

@@ -21,7 +21,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include <src/map.h>
-#include <src/mode.h>
+#include <src/main.h>
 
 static char queue[20];  /* receives the keypresses */
 static int  qpos = 0;   /* points to the queue entry for the next keypress */
@@ -147,9 +147,8 @@ int main(int argc, char *argv[])
     g_test_init(&argc, &argv, NULL);
 
     /* add a test mode to handle the maped sequences */
-    mode_init();
-    mode_add('t', NULL, NULL, keypress, NULL);
-    mode_enter('t');
+    vb_add_mode('t', NULL, NULL, keypress, NULL);
+    vb_enter('t');
     map_init();
 
     g_test_add_func("/test-map/handle_string/simple", test_handle_string_simple);

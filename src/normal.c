@@ -19,7 +19,6 @@
 
 #include <gdk/gdkkeysyms.h>
 #include "config.h"
-#include "mode.h"
 #include "main.h"
 #include "normal.h"
 #include "ascii.h"
@@ -329,7 +328,7 @@ void pass_leave(void)
 VbResult pass_keypress(int key)
 {
     if (key == CTRL('[')) { /* esc */
-        mode_enter('n');
+        vb_enter('n');
     }
     vb.state.processed_key = false;
     return RESULT_COMPLETE;
@@ -401,12 +400,12 @@ static VbResult normal_descent(const NormalCmdInfo *info)
 static VbResult normal_ex(const NormalCmdInfo *info)
 {
     if (info->key == 'F') {
-        mode_enter_prompt('c', ";t", true);
+        vb_enter_prompt('c', ";t", true);
     } else if (info->key == 'f') {
-        mode_enter_prompt('c', ";o", true);
+        vb_enter_prompt('c', ";o", true);
     } else {
         char prompt[2] = {info->key, '\0'};
-        mode_enter_prompt('c', prompt, true);
+        vb_enter_prompt('c', prompt, true);
     }
 
     return RESULT_COMPLETE;
@@ -415,7 +414,7 @@ static VbResult normal_ex(const NormalCmdInfo *info)
 static VbResult normal_focus_input(const NormalCmdInfo *info)
 {
     if (dom_focus_input(vb.gui.webview)) {
-        mode_enter('i');
+        vb_enter('i');
 
         return RESULT_COMPLETE;
     }
@@ -479,7 +478,7 @@ static VbResult normal_do_hint(const char *prompt)
         return RESULT_ERROR;
     }
 
-    mode_enter_prompt('c', prompt, true);
+    vb_enter_prompt('c', prompt, true);
     return RESULT_COMPLETE;
 }
 
@@ -503,7 +502,7 @@ static VbResult normal_input_open(const NormalCmdInfo *info)
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */
-    mode_enter_prompt('c', ":", false);
+    vb_enter_prompt('c', ":", false);
 
     return RESULT_COMPLETE;
 }
@@ -611,7 +610,7 @@ static VbResult normal_open(const NormalCmdInfo *info)
 
 static VbResult normal_pass(const NormalCmdInfo *info)
 {
-    mode_enter('p');
+    vb_enter('p');
     return RESULT_COMPLETE;
 }
 
