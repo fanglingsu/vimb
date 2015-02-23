@@ -1,10 +1,11 @@
 #----------------user/install options----------------
 VERSION = 2.9
 
-PROJECT = vimb
-PREFIX ?= /usr/local
-BINDIR ?= $(PREFIX)/bin
-MANDIR ?= $(PREFIX)/share/man
+PROJECT     = vimb
+PREFIX     ?= /usr/local
+BINDIR     ?= $(PREFIX)/bin
+MANDIR     ?= $(PREFIX)/share/man
+EXAMPLEDIR ?= $(PREFIX)/share/$(PROJECT)/examples
 
 #----------------compile options---------------------
 

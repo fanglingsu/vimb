@@ -19,13 +19,13 @@ clean:
 	@$(MAKE) $(MFLAGS) -C tests clean
 
 install: $(TARGET) $(DOCDIR)/$(MAN1)
-	install -d $(DESTDIR)$(BINDIR)
+	install -D -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
+	install -d $(DESTDIR)$(EXAMPLEDIR)
+	cp -r examples/* $(DESTDIR)$(EXAMPLEDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
-	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
-	@echo "install -m 644 $(SRCDIR)/$(MAN1) $(DESTDIR)$(MANDIR)/man1/$(MAN1)"
-	@sed -e "s/VERSION/$(VERSION)/g" \
-		-e "s/DATE/`date +'%m %Y'`/g" < $(DOCDIR)/$(MAN1) > $(DESTDIR)$(MANDIR)/man1/$(MAN1)
-	@chmod 644 $(DESTDIR)$(MANDIR)/man1/$(MAN1)
+	@sed -e "s!VERSION!$(VERSION)!g" \
+		-e "s!PREFIX!$(PREFIX)!g" \
+		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/$(MAN1) > $(DESTDIR)$(MANDIR)/man1/$(MAN1)
 
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
