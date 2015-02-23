@@ -30,6 +30,7 @@ install: $(TARGET) $(DOCDIR)/$(MAN1)
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
 	$(RM) $(DESTDIR)$(MANDIR)/man1/$(MAN1)
+	$(RM) -r $(DESTDIR)$(EXAMPLEDIR)
 
 dist: dist-clean
 	@echo "Creating tarball."
