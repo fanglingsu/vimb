@@ -93,6 +93,7 @@ static struct {
     {"<S-Tab>", 7, CSI_STR "kB", 3},
     {"<Esc>",   5, "\x1b",       1},
     {"<Space>", 7, "\x20",       1},
+    {"<BS>",    4, "\x08",       1},
     {"<Up>",    4, CSI_STR "ku", 3},
     {"<Down>",  6, CSI_STR "kd", 3},
     {"<Left>",  6, CSI_STR "kl", 3},
