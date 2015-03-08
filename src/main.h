@@ -325,29 +325,29 @@ typedef struct {
     int          scrollstep;
     char         *download_dir;
     guint        history_max;
-    guint        timeoutlen;      /* timeout for ambiguous mappings */
+    guint        timeoutlen;       /* timeout for ambiguous mappings */
     gboolean     strict_focus;
-    GHashTable   *headers;        /* holds user defined header appended to requests */
+    GHashTable   *headers;         /* holds user defined header appended to requests */
 #ifdef FEATURE_ARH
     GSList       *autoresponseheader; /* holds user defined list of auto-response-header */
 #endif
-    char         *nextpattern;    /* regex patter nfor prev link matching */
-    char         *prevpattern;    /* regex patter nfor next link matching */
-    char         *file;           /* path to the custome config file */
-    GSList       *cmdargs;        /* list of commands given by --cmd option */
-    char         *cafile;         /* path to the ca file */
-    GTlsDatabase *tls_db;         /* tls database */
-    float        default_zoom;    /* default zoomlevel that is applied on zz zoom reset */
+    char         *nextpattern;     /* regex patter nfor prev link matching */
+    char         *prevpattern;     /* regex patter nfor next link matching */
+    char         *file;            /* path to the custome config file */
+    GSList       *cmdargs;         /* list of commands given by --cmd option */
+    char         *cafile;          /* path to the ca file */
+    GTlsDatabase *tls_db;          /* tls database */
+    float        default_zoom;     /* default zoomlevel that is applied on zz zoom reset */
     gboolean     kioskmode;
-    gboolean     input_autohide;  /* indicates if the inputbox should be hidden if it's empty */
+    gboolean     input_autohide;   /* indicates if the inputbox should be hidden if it's empty */
 #ifdef FEATURE_SOCKET
-    gboolean     socket;          /* indicates if the socket is used */
+    gboolean     socket;           /* indicates if the socket is used */
 #endif
 #ifdef FEATURE_HSTS
-    HSTSProvider *hsts_provider;  /* the hsts session feature that is added to soup session */
+    HSTSProvider *hsts_provider;   /* the hsts session feature that is added to soup session */
 #endif
 #ifdef FEATURE_SOUP_CACHE
-    SoupCache    *soup_cache;     /* soup caching feature model */
+    SoupCache    *soup_cache;      /* soup caching feature model */
 #endif
     GHashTable   *settings;
 } Config;

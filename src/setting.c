@@ -203,6 +203,7 @@ void setting_init()
     i = 1000;
     setting_add("hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
     setting_add("hintkeys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
+    setting_add("hint-follow-last", TYPE_BOOLEAN, &on, NULL, 0, NULL);
     setting_add("download-path", TYPE_CHAR, &"", internal, 0, &vb.config.download_dir);
     i = 2000;
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
