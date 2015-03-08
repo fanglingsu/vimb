@@ -39,6 +39,9 @@ the project page of [vimb][].
 - libgtk+-2.0
 - libsoup >=2.38
 
+On Ubuntu these dependencies can be installed by
+`sudo apt-get install libsoup2.4-dev libwebkit-dev libgtk-3-dev libwebkitgtk-3.0-dev`.
+
 ## install
 
 Edit config.mk to match your local setup.
