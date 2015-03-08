@@ -278,7 +278,7 @@ Object.freeze((function(){
                 }
             }
         }
-        if (config.followLast && fireLast && validHints.length <= 1) {
+        if (fireLast && config.followLast && validHints.length <= 1) {
             focusHint(0);
             return fire();
         }
