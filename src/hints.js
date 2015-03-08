@@ -561,7 +561,6 @@ Object.freeze((function(){
                     Y:          function(e) {return "DATA:" + (e.textContent || "");}
                 };
 
-            console.log("Follow last: ", followLast);
             config = {
                 maxHints:   maxHints,
                 keepOpen:   keepOpen,
@@ -605,7 +604,7 @@ Object.freeze((function(){
             }
             if ((pos = keys.indexOf(n)) >= 0) {
                 filterNum = filterNum * keys.length + pos;
-            return show(true);
+                return show(true);
             }
             return "ERROR:";
         },
