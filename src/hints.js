@@ -278,7 +278,7 @@ Object.freeze((function(){
                 }
             }
         }
-        if (fireLast && validHints.length <= 1) {
+        if (fireLast && config.followLast && validHints.length <= 1) {
             focusHint(0);
             return fire();
         }
@@ -544,7 +544,7 @@ Object.freeze((function(){
 
     /* the api */
     return {
-        init: function init(mode, keepOpen, maxHints, hintKeys) {
+        init: function init(mode, keepOpen, maxHints, hintKeys, followLast) {
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
@@ -568,7 +568,8 @@ Object.freeze((function(){
                 /* don't handle form for Y to allow to yank form filed content */
                 /* instead of switching to input mode */
                 handleForm: ("eot".indexOf(mode) >= 0),
-                hintKeys:   hintKeys
+                hintKeys:   hintKeys,
+                followLast: followLast,
             };
             for (prop in xpathmap) {
                 if (prop.indexOf(mode) >= 0) {
