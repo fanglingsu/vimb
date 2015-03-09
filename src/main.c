@@ -511,6 +511,7 @@ void vb_update_status_style(void)
     vb_set_widget_font(
         vb.gui.eventbox, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
     );
+#ifndef HAS_GTK3
     vb_set_widget_font(
         vb.gui.statusbar.mode, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
     );
@@ -523,6 +524,7 @@ void vb_update_status_style(void)
     vb_set_widget_font(
         vb.gui.statusbar.cmd, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
     );
+#endif
 }
 
 void vb_update_input_style(void)

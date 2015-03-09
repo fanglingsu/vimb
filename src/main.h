@@ -74,34 +74,34 @@
 
 #ifdef HAS_GTK3
 #define VbColor GdkRGBA
-#define VB_COLOR_PARSE(color, string)   (gdk_rgba_parse(color, string))
-#define VB_COLOR_TO_STRING(color)       (gdk_rgba_to_string(color))
-#define VB_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_override_background_color
-#define VB_WIDGET_OVERRIDE_BASE         gtk_widget_override_background_color
-#define VB_WIDGET_OVERRIDE_COLOR        gtk_widget_override_color
-#define VB_WIDGET_OVERRIDE_TEXT         gtk_widget_override_color
-#define VB_WIDGET_OVERRIDE_FONT         gtk_widget_override_font
+#define VB_COLOR_PARSE(color, string)           (gdk_rgba_parse(color, string))
+#define VB_COLOR_TO_STRING(color)               (gdk_rgba_to_string(color))
+#define VB_WIDGET_OVERRIDE_BACKGROUND(w, s, c)
+#define VB_WIDGET_OVERRIDE_BASE(w, s, c)        (gtk_widget_override_background_color(w, s, c))
+#define VB_WIDGET_OVERRIDE_COLOR(w, s, c)
+#define VB_WIDGET_OVERRIDE_TEXT(w, s, c)        (gtk_widget_override_color(w, s, c))
+#define VB_WIDGET_OVERRIDE_FONT(w, f)           (gtk_widget_override_font(w, f))
 
-#define VB_GTK_STATE_NORMAL             GTK_STATE_FLAG_NORMAL
-#define VB_GTK_STATE_ACTIVE             GTK_STATE_FLAG_ACTIVE
-#define VB_GTK_STATE_SELECTED           GTK_STATE_FLAG_SELECTED
-#define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state_flags(w, s, true))
+#define VB_GTK_STATE_NORMAL                     GTK_STATE_FLAG_NORMAL
+#define VB_GTK_STATE_ACTIVE                     GTK_STATE_FLAG_ACTIVE
+#define VB_GTK_STATE_SELECTED                   GTK_STATE_FLAG_SELECTED
+#define VB_WIDGET_SET_STATE(w, s)               (gtk_widget_set_state_flags(w, s, true))
 
 #else
 
 #define VbColor GdkColor
-#define VB_COLOR_PARSE(color, string)   (gdk_color_parse(string, color))
-#define VB_COLOR_TO_STRING(color)       (gdk_color_to_string(color))
-#define VB_WIDGET_OVERRIDE_BACKGROUND   gtk_widget_modify_bg
-#define VB_WIDGET_OVERRIDE_BASE         gtk_widget_modify_base
-#define VB_WIDGET_OVERRIDE_COLOR        gtk_widget_modify_fg
-#define VB_WIDGET_OVERRIDE_TEXT         gtk_widget_modify_text
-#define VB_WIDGET_OVERRIDE_FONT         gtk_widget_modify_font
+#define VB_COLOR_PARSE(color, string)           (gdk_color_parse(string, color))
+#define VB_COLOR_TO_STRING(color)               (gdk_color_to_string(color))
+#define VB_WIDGET_OVERRIDE_BACKGROUND(w, s, c)  (gtk_widget_modify_bg(w, s, c))
+#define VB_WIDGET_OVERRIDE_BASE(w, s, c)        (gtk_widget_modify_base(w, s, c))
+#define VB_WIDGET_OVERRIDE_COLOR(w, s, c)       (gtk_widget_modify_fg(w, s, c))
+#define VB_WIDGET_OVERRIDE_TEXT(w, s, c)        (gtk_widget_modify_text(w, s, c))
+#define VB_WIDGET_OVERRIDE_FONT(w, f)           (gtk_widget_modify_font(w, f))
 
-#define VB_GTK_STATE_NORMAL             GTK_STATE_NORMAL
-#define VB_GTK_STATE_ACTIVE             GTK_STATE_ACTIVE
-#define VB_GTK_STATE_SELECTED           GTK_STATE_SELECTED
-#define VB_WIDGET_SET_STATE(w, s)       (gtk_widget_set_state(w, s))
+#define VB_GTK_STATE_NORMAL                     GTK_STATE_NORMAL
+#define VB_GTK_STATE_ACTIVE                     GTK_STATE_ACTIVE
+#define VB_GTK_STATE_SELECTED                   GTK_STATE_SELECTED
+#define VB_WIDGET_SET_STATE(w, s)               (gtk_widget_set_state(w, s))
 #endif
 
 #ifndef SOUP_CHECK_VERSION
