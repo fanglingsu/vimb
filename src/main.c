@@ -1029,6 +1029,9 @@ static void init_core(void)
 #endif
     map_init();
 
+    /* enter normal mode */
+    vb_enter('n');
+
     setup_signals();
 
     /* make sure the main window and all its contents are visible */
@@ -1049,9 +1052,6 @@ static void init_core(void)
         /* disable context menu */
         g_object_set(G_OBJECT(setting), "enable-default-context-menu", false, NULL);
     }
-
-    /* enter normal mode */
-    vb_enter('n');
 
     vb.config.default_zoom = 1.0;
 
