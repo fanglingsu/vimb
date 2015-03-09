@@ -1222,6 +1222,10 @@ auto-response-header (list)
       :set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000
       :set auto-response-header+="https://*.example.org/sub/* Content-security-policy,X-Test=ok"
 
+hint-follow-last (bool)
+: If on, vimb automatically follows the last remaining hint on the page. If
+  off hints are fired only if enter is pressed.
+
 hint-timeout (int)
 : Timeout before automatically following a non-unique numerical hint. To disable
   auto fire of hints, set this value to 0.
