@@ -1102,6 +1102,29 @@ xssauditor (bool)
 ### Vimb-Settings
 {:#Vimb-Settings}
 
+auto-response-header (list)
+: Prepend HTTP-Header to responses received from server, based on pattern
+  matching. The purpose of this setting is to enforce some security setting in
+  the client. For example, you could set Content-Security-Policy (see
+  'http://www.w3.org/TR/CSP/') for implement a whitelist policy, or set
+  Strict- Transport-Security for server that don't provide this header whereas
+  they propose https website.
+
+: Note that this setting will not remplace existing headers, but add a new one.
+  If multiple patterns match a request uri, the last matched rule will be
+  applied. You could also specified differents headers for same pattern.
+
+: The format is a list of 'pattern header-list'. If 'header-list' has not than
+  one element, enclosing with QUOTE is mandatory: '"pattern header-list"'. The
+  header-list format is the same as 'header' setting.
+
+: Example:
+
+      :set auto-response-header=* Content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'
+      :set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/
+      :set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000
+      :set auto-response-header+="https://*.example.org/sub/* Content-security-policy,X-Test=ok"
+
 ca-bundle (string)
 : The path to the crt file for the certificate validation. The given path is
   expanded with standard file expansion.
@@ -1198,29 +1221,6 @@ header (list)
 : - `:set header=DNT=1,User-Agent,Cookie='name=value'` Send the 'Do Not Track'
     header with each request and remove the User-Agent Header completely from
     request.
-
-auto-response-header (list)
-: Prepend HTTP-Header to responses received from server, based on pattern
-  matching. The purpose of this setting is to enforce some security setting in
-  the client. For example, you could set Content-Security-Policy (see
-  'http://www.w3.org/TR/CSP/') for implement a whitelist policy, or set
-  Strict- Transport-Security for server that don't provide this header whereas
-  they propose https website.
-
-: Note that this setting will not remplace existing headers, but add a new one.
-  If multiple patterns match a request uri, the last matched rule will be
-  applied. You could also specified differents headers for same pattern.
-
-: The format is a list of 'pattern header-list'. If 'header-list' has not than
-  one element, enclosing with QUOTE is mandatory: '"pattern header-list"'. The
-  header-list format is the same as 'header' setting.
-
-: Example:
-      
-      :set auto-response-header=* Content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'
-      :set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/
-      :set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000
-      :set auto-response-header+="https://*.example.org/sub/* Content-security-policy,X-Test=ok"
 
 hint-follow-last (bool)
 : If on, vimb automatically follows the last remaining hint on the page. If
