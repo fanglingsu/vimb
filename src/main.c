@@ -1029,10 +1029,10 @@ static void init_core(void)
 #endif
     map_init();
 
+    setup_signals();
+
     /* enter normal mode */
     vb_enter('n');
-
-    setup_signals();
 
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
