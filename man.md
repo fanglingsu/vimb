@@ -1370,7 +1370,10 @@ x-hint-command (string)
   - *command* This file holds the history of commands and search queries
     performed via input box.
   - *search* This file holds the history of search queries.
-  - *bookmark* Holds the bookmarks saved with command 'bma'.
+  - *bookmark* Holds the bookmarks saved with command 'bma'. The records are
+    stored there as  
+    `URI<tab>title<tab>space separated tags` or as  
+    `URI<tab><tab>tags` if there is no title.
   - *queue* Holds the read it later queue filled by 'qpush' if vimb has been
     compiled with QUEUE feature.
   - *hsts* Holds the known hsts hosts if vimb is compiled with HTTP strict
