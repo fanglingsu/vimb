@@ -317,10 +317,10 @@ static Bookmark *line_to_bookmark(const char *uri, const char *data)
     char *p;
     Bookmark *bm;
 
-    /* data part may consist of title or title<tab>tags*/
+    /* data part may consist of title or title<tab>tags */
     bm      = g_slice_new(Bookmark);
     bm->uri = g_strdup(uri);
-    if ((p = strchr(data, '\t'))) {
+    if (data && (p = strchr(data, '\t'))) {
         *p        = '\0';
         bm->title = g_strdup(data);
         bm->tags  = g_strdup(p + 1);
