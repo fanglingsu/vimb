@@ -980,8 +980,9 @@ Example:
 .RS
 .PD 0
 .IP ":open \fB!\fPfoo ba"
-will match all bookmark that have the tags "foo" or "foot" and tags starting
-with "ba" like "ball".
+will match all bookmark that have tags starting with "foo" and "ba".
+If the bookmark does not have any tags set, the URL is split on `.' and `/'
+into tags.
 .PD
 .RE
 .TP

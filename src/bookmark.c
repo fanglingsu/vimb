@@ -260,7 +260,8 @@ static GList *load(const char *file)
 }
 
 /**
- * Checks if the given bookmark have all given query strings as prefix.
+ * Checks if the given bookmark matches all given query strings as prefix. If
+ * the bookmark has no tags, the matching is done on the '/' splited URL.
  *
  * @bm:    bookmark to test if it matches
  * @query: char array with tags to search for
@@ -271,22 +272,28 @@ static GList *load(const char *file)
 static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     unsigned int qlen)
 {
+    const char *separators;
+    char *cursor;
     unsigned int i;
     gboolean found;
 
     if (!qlen) {
         return true;
     }
-    /* don't use bookmarks without tags if tags are used to filter */
-    if (!bm->tags) {
-        return false;
+
+    if (bm->tags) {
+        /* If there are tags - use them for matching. */
+        separators = " ";
+        cursor     = bm->tags;
+    } else {
+        /* No tags available - matching is based on the path parts of the URL. */
+        separators = "./";
+        cursor     = bm->uri;
     }
 
     /* iterate over all query parts */
     for (i = 0; i < qlen; i++) {
-        /* put the cursor to the tags string of the bookmarks */
-        char *cursor = bm->tags;
-        found        = false;
+        found = false;
 
         /* we want to do a prefix match on all bookmark tags - so we check for
          * a match on string begin - if this fails we move the cursor to the
@@ -297,9 +304,9 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
                 found = true;
                 break;
             }
-            /* if match was not found at the cursor position - move cursor
-             * behind the next space */
-            if ((cursor = strchr(cursor, ' '))) {
+            /* If match was not found at the cursor position - move cursor
+             * behind the next separator char. */
+            if ((cursor = strpbrk(cursor, separators))) {
                 cursor++;
             }
         }
