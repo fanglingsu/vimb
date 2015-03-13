@@ -314,16 +314,11 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
   */
 gboolean bookmark_build_html_file()
 {
-    char *path = util_get_config_dir();
     char *input_path, *output_path;
     gboolean ret;
 
-    input_path = malloc((strlen(path) + 10) * sizeof(char));
-    output_path = malloc((strlen(path) + 15) * sizeof(char));
-    memcpy(input_path, path, strlen(path));
-    memcpy(input_path+strlen(path), "/bookmark\0", 10);
-    memcpy(output_path, path, strlen(path));
-    memcpy(output_path+strlen(path), "/bookmark.html\0", 15);
+    input_path = vb.files[FILES_BOOKMARK];
+    output_path = g_strconcat(input_path, ".html", NULL);
 
     ret = bookmark_to_html(input_path, output_path);
 

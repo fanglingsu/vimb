@@ -96,11 +96,7 @@ void setting_init()
 {
     int i;
     gboolean on = true, off = false;
-    char *path = util_get_config_dir();
-    char *homepage = malloc(sizeof(char) * (strlen(path) + 15));
-
-    memcpy(homepage, path, strlen(path));
-    memcpy(homepage+strlen(path), "/bookmark.html\0", 15);
+    char *homepage = g_strconcat(vb.files[FILES_BOOKMARK], ".html", NULL);
 
     vb.config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
 #if WEBKIT_CHECK_VERSION(1, 7, 5)
