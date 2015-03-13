@@ -54,7 +54,7 @@ gboolean bookmark_add(const char *uri, const char *title, const char *tags)
     {
         ret = util_file_append(file, "%s\n", uri);
     }
-    build_html_file();
+    bookmark_build_html_file();
     return ret;
 }
 
@@ -98,7 +98,7 @@ gboolean bookmark_remove(const char *uri)
         g_string_free(new, true);
     }
 
-    build_html_file();
+    bookmark_build_html_file();
     return removed;
 }
 
@@ -311,7 +311,7 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
 /**
   * Creates the relevant arguments for the upper function and caals it.
   */
-gboolean build_html_file()
+gboolean bookmark_build_html_file()
 {
     char *path = util_get_config_dir();
     char *input_path, *output_path;
