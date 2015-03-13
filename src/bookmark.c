@@ -204,116 +204,122 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
 gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
 {
   FILE* input = fopen(input_bookmark_path, "r");
-  FILE* output = fopen(output_html_path, "w");
+  FILE* output = NULL;
+
+  char header[] =
+    "<!doctype html>\n"
+    "<html lang='en'>\n"
+    "\t<head>\n"
+    "\t\t<meta charset='utf-8'>\n"
+    "\t\t<link rel='stylesheet' type='text/css' href='./bookmark.css'>\n"
+    "\t\t<title>Bookmarks</title>\n"
+    "\t</head>\n"
+    "\t<body>\n"
+    "\t\t<table>\n"
+    "\t\t\t<tr>\n"
+    "\t\t\t\t<th>\n"
+    "\t\t\t\t\tBookmark\n"
+    "\t\t\t\t</th>\n"
+    "\t\t\t\t<th>\n"
+    "\t\t\t\t\tTag(s)\n"
+    "\t\t\t\t</th>\n"
+    "\t\t\t</tr>\n";
+  char footer[] =
+    "\t\t</table>\n"
+    "\t</body>\n"
+    "</html>\n";
+  //Can be hardcoded to avoid string.h dependency.
+  int header_size = strlen(header), footer_size = strlen(footer);
+
+  char line[512];
+
 
   if(input == NULL)
   {
     return FALSE;
   }
-  else if (output == NULL)
+
+  output = fopen(output_html_path, "w");
+  if (output == NULL)
   {
+    fclose(input);
     return FALSE;
   }
-  else
+
+  fseek(input, 0, SEEK_END);
+  if (ftell(input) == 0)
   {
-    fseek(input, 0, SEEK_END);
-    if (ftell(input) == 0)
-    {
-      fprintf(output,
-        "<!DOCTYPE HTML>\n"
-        "<html lang='en-US'>\n"
-        "\t<head>\n"
-        "\t\t<meta http-equiv='refresh' content='0; url=%s' />\n"
-        "\t</head>\n"
-        "</html>\n",
-        SETTING_HOME_PAGE);
-
-      return TRUE;
-    }
-    fseek(input, 0, SEEK_SET);
-
-    char header[] =
-      "<!doctype html>\n"
-      "<html lang='en'>\n"
+    fprintf(output,
+      "<!DOCTYPE HTML>\n"
+      "<html lang='en-US'>\n"
       "\t<head>\n"
-      "\t\t<meta charset='utf-8'>\n"
-      "\t\t<link rel='stylesheet' type='text/css' href='./bookmark.css'>\n"
-      "\t\t<title>Bookmarks</title>\n"
+      "\t\t<meta http-equiv='refresh' content='0; url=http://fanglingsu.github.io/vimb/' />\n"
       "\t</head>\n"
-      "\t<body>\n"
-      "\t\t<table>\n"
-      "\t\t\t<tr>\n"
-      "\t\t\t\t<th>\n"
-      "\t\t\t\t\tBookmark\n"
-      "\t\t\t\t</th>\n"
-      "\t\t\t\t<th>\n"
-      "\t\t\t\t\tTag(s)\n"
-      "\t\t\t\t</th>\n"
-      "\t\t\t</tr>\n";
-    char footer[] =
-      "\t\t</table>\n"
-      "\t</body>\n"
-      "</html>\n";
-
-    //Can be hardcoded to avoid string.h dependency.
-    int header_size = strlen(header), footer_size = strlen(footer);
-
-    char line[512];
-
-    if (header_size != fwrite(header, sizeof(char), header_size, output))
-    {
-      return FALSE;
-    }
-
-    while (fgets(line, sizeof(line), input))
-    {
-      char* item1 = NULL;
-      char* item2 = NULL;
-      char* item3 = NULL;
-
-      //Tried this on ugly/malformed strings, seems OK
-      //NOT sure though ! Valgrind seems unhappy with it :/
-      item1 = strtok(line, "\t");
-      item2 = strtok(NULL, "\t");
-      item3 = strtok(NULL, "\t");
-
-      //Remove trailing \n if any
-      if (item3 == NULL && item2 != NULL)
-         item2[strlen(item2) - 1] = '\0';
-      if(item3 != NULL)
-        item3[strlen(item3) - 1] = '\0';
-
-      if(item1 != NULL && item2 != NULL)
-      {
-        fprintf(output,
-          "\t\t\t<tr>\n"
-          "\t\t\t\t<td>\n"
-          "\t\t\t\t\t<a href='%s' title='%s'>\n"
-          "\t\t\t\t\t\t%s\n"
-          "\t\t\t\t\t</a>\n"
-          "\t\t\t\t</td>\n"
-          "\t\t\t\t<td>\n"
-          "%s%s%s"
-          "\t\t\t\t</td>\n"
-          "\t\t\t</tr>\n",
-          item1,
-          item2,
-          item2,
-          (item3 != NULL) ? "\t\t\t\t\t" : "",
-          (item3 != NULL) ? item3 : "",
-          (item3 != NULL) ? "\n" : "");
-      }
-    }
-
-    if (footer_size != fwrite(footer, sizeof(char), footer_size, output))
-    {
-      return FALSE;
-    }
+      "</html>\n");
 
     fclose(input);
     fclose(output);
     return TRUE;
   }
+  fseek(input, 0, SEEK_SET);
+
+  if (header_size != fwrite(header, sizeof(char), header_size, output))
+  {
+    fclose(input);
+    fclose(output);
+    return FALSE;
+  }
+
+  while (fgets(line, sizeof(line), input))
+  {
+    char* item1 = NULL;
+    char* item2 = NULL;
+    char* item3 = NULL;
+
+    //Tried this on ugly/malformed strings, seems OK
+    //NOT sure though ! Valgrind seems unhappy with it :/
+    item1 = strtok(line, "\t");
+    item2 = strtok(NULL, "\t");
+    item3 = strtok(NULL, "\t");
+
+    //Remove trailing \n if any
+    if (item3 == NULL && item2 != NULL)
+       item2[strlen(item2) - 1] = '\0';
+    if(item3 != NULL)
+      item3[strlen(item3) - 1] = '\0';
+
+    if(item1 != NULL && item2 != NULL)
+    {
+      fprintf(output,
+        "\t\t\t<tr>\n"
+        "\t\t\t\t<td>\n"
+        "\t\t\t\t\t<a href='%s' title='%s'>\n"
+        "\t\t\t\t\t\t%s\n"
+        "\t\t\t\t\t</a>\n"
+        "\t\t\t\t</td>\n"
+        "\t\t\t\t<td>\n"
+        "%s%s%s"
+        "\t\t\t\t</td>\n"
+        "\t\t\t</tr>\n",
+        item1,
+        item2,
+        item2,
+        (item3 != NULL) ? "\t\t\t\t\t" : "",
+        (item3 != NULL) ? item3 : "",
+        (item3 != NULL) ? "\n" : "");
+    }
+  }
+
+  if (footer_size != fwrite(footer, sizeof(char), footer_size, output))
+  {
+    fclose(input);
+    fclose(output);
+    return FALSE;
+  }
+
+  fclose(input);
+  fclose(output);
+  return TRUE;
 }
 
 /**
