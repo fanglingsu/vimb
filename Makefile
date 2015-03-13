@@ -31,7 +31,7 @@ install: $(TARGET) $(DOCDIR)/$(MAN1)
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
 	$(RM) $(DESTDIR)$(MANDIR)/man1/$(MAN1)
-	$(RM) -r $(SHAREDIR)
+	$(RM) -r $(DESTDIR)$(SHAREDIR)
 
 dist: dist-clean
 	@echo "Creating tarball."
