@@ -206,33 +206,7 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
   FILE* input = fopen(input_bookmark_path, "r");
   FILE* output = NULL;
 
-  char header[] =
-    "<!doctype html>\n"
-    "<html lang='en'>\n"
-    "\t<head>\n"
-    "\t\t<meta charset='utf-8'>\n"
-    "\t\t<link rel='stylesheet' type='text/css' href='/usr/local/share/vimb/bookmark.css'>\n"
-    "\t\t<title>Bookmarks</title>\n"
-    "\t</head>\n"
-    "\t<body>\n"
-    "\t\t<table>\n"
-    "\t\t\t<tr>\n"
-    "\t\t\t\t<th>\n"
-    "\t\t\t\t\tBookmark\n"
-    "\t\t\t\t</th>\n"
-    "\t\t\t\t<th>\n"
-    "\t\t\t\t\tTag(s)\n"
-    "\t\t\t\t</th>\n"
-    "\t\t\t</tr>\n";
-  char footer[] =
-    "\t\t</table>\n"
-    "\t</body>\n"
-    "</html>\n";
-  //Can be hardcoded to avoid string.h dependency.
-  int header_size = strlen(header), footer_size = strlen(footer);
-
   char line[512];
-
 
   if(input == NULL)
   {
@@ -264,12 +238,25 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
   }
   fseek(input, 0, SEEK_SET);
 
-  if (header_size != fwrite(header, sizeof(char), header_size, output))
-  {
-    fclose(input);
-    fclose(output);
-    return FALSE;
-  }
+  fprintf(output,
+    "<!doctype html>\n"
+    "<html lang='en'>\n"
+    "\t<head>\n"
+    "\t\t<meta charset='utf-8'>\n"
+    "\t\t<link rel='stylesheet' type='text/css' href='%s/vimb/bookmark.css'>\n"
+    "\t\t<title>Bookmarks</title>\n"
+    "\t</head>\n"
+    "\t<body>\n"
+    "\t\t<table>\n"
+    "\t\t\t<tr>\n"
+    "\t\t\t\t<th>\n"
+    "\t\t\t\t\tBookmark\n"
+    "\t\t\t\t</th>\n"
+    "\t\t\t\t<th>\n"
+    "\t\t\t\t\tTag(s)\n"
+    "\t\t\t\t</th>\n"
+    "\t\t\t</tr>\n",
+    (g_get_system_data_dirs())[0]);
 
   while (fgets(line, sizeof(line), input))
   {
@@ -311,12 +298,10 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
     }
   }
 
-  if (footer_size != fwrite(footer, sizeof(char), footer_size, output))
-  {
-    fclose(input);
-    fclose(output);
-    return FALSE;
-  }
+  fprintf(output,
+    "\t\t</table>\n"
+    "\t</body>\n"
+    "</html>\n");
 
   fclose(input);
   fclose(output);
