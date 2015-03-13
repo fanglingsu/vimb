@@ -1,0 +1,33 @@
+body
+{
+	background: #e0ddda;
+}
+
+table
+{
+	margin: auto;
+	width: 600px;
+	border-collapse: collapse;
+	color: white;
+}
+
+th
+{
+	text-align: left;
+	background: #555;
+	color: white;
+	border-bottom: .3em solid #e0ddda;
+	padding: 14px 12px;
+}
+
+td
+{
+	padding: 8px 12px;
+	border-bottom: 1px solid #e0ddda;
+	color: #555;
+}
+
+tr
+{
+	background: white;
+}
