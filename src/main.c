@@ -1811,6 +1811,7 @@ int main(int argc, char *argv[])
     /* open uri given as last argument */
     if (argc <= 1) {
         /* open configured home page if no uri was given */
+	build_html_file();
         vb_load_uri(&(Arg){VB_TARGET_CURRENT, NULL});
     } else if (!strcmp(argv[argc - 1], "-")) {
         /* read from stdin if uri is - */

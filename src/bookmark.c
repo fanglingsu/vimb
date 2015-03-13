@@ -43,13 +43,19 @@ static void free_bookmark(Bookmark *bm);
 gboolean bookmark_add(const char *uri, const char *title, const char *tags)
 {
     const char *file = vb.files[FILES_BOOKMARK];
+    gboolean ret;
     if (tags) {
-        return util_file_append(file, "%s\t%s\t%s\n", uri, title ? title : "", tags);
+        ret = util_file_append(file, "%s\t%s\t%s\n", uri, title ? title : "", tags);
     }
-    if (title) {
-        return util_file_append(file, "%s\t%s\n", uri, title);
+    else if (title) {
+        ret = util_file_append(file, "%s\t%s\n", uri, title);
     }
-    return util_file_append(file, "%s\n", uri);
+    else
+    {
+        ret = util_file_append(file, "%s\n", uri);
+    }
+    build_html_file();
+    return ret;
 }
 
 gboolean bookmark_remove(const char *uri)
@@ -92,6 +98,7 @@ gboolean bookmark_remove(const char *uri)
         g_string_free(new, true);
     }
 
+    build_html_file();
     return removed;
 }
 
@@ -201,12 +208,10 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
 
   if(input == NULL)
   {
-    printf("Could not open bookmark file for reading.\n");
     return FALSE;
   }
   else if (output == NULL)
   {
-    printf("Could not open html file to write into.\n");
     return FALSE;
   }
   else
@@ -241,7 +246,6 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
 
     if (header_size != fwrite(header, sizeof(char), header_size, output))
     {
-      printf("Something went wrong while writing header.\n");
       return FALSE;
     }
 
@@ -287,7 +291,6 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
 
     if (footer_size != fwrite(footer, sizeof(char), footer_size, output))
     {
-      printf("Something went wrong while writing footer.\n");
       return FALSE;
     }
 
@@ -295,6 +298,30 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
     fclose(output);
     return TRUE;
   }
+}
+
+/**
+  * Creates the relevant arguments for the upper function and caals it.
+  */
+gboolean build_html_file()
+{
+    char *path = util_get_config_dir();
+    char *input_path, *output_path;
+    gboolean ret;
+
+    input_path = malloc((strlen(path) + 10) * sizeof(char));
+    output_path = malloc((strlen(path) + 15) * sizeof(char));
+    memcpy(input_path, path, strlen(path));
+    memcpy(input_path+strlen(path), "/bookmark\0", 10);
+    memcpy(output_path, path, strlen(path));
+    memcpy(output_path+strlen(path), "/bookmark.html\0", 15);
+
+    ret = bookmark_to_html(input_path, output_path);
+
+    free(input_path);
+    free(output_path);
+
+    return ret;
 }
 
 #ifdef FEATURE_QUEUE
