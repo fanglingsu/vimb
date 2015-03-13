@@ -5,7 +5,8 @@ PROJECT     = vimb
 PREFIX     ?= /usr/local
 BINDIR     ?= $(PREFIX)/bin
 MANDIR     ?= $(PREFIX)/share/man
-EXAMPLEDIR ?= $(PREFIX)/share/$(PROJECT)/examples
+SHAREDIR   ?= $(PREFIX)/share/$(PROJECT)
+EXAMPLEDIR ?= $(SHAREDIR)/examples
 
 #----------------compile options---------------------
 

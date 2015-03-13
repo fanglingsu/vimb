@@ -23,6 +23,7 @@ install: $(TARGET) $(DOCDIR)/$(MAN1)
 	install -d $(DESTDIR)$(EXAMPLEDIR)
 	cp -r examples/* $(DESTDIR)$(EXAMPLEDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
+	cp $(SRCDIR)/bookmark.css $(DESTDIR)$(SHAREDIR)
 	@sed -e "s!VERSION!$(VERSION)!g" \
 		-e "s!PREFIX!$(PREFIX)!g" \
 		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/$(MAN1) > $(DESTDIR)$(MANDIR)/man1/$(MAN1)
@@ -30,7 +31,7 @@ install: $(TARGET) $(DOCDIR)/$(MAN1)
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
 	$(RM) $(DESTDIR)$(MANDIR)/man1/$(MAN1)
-	$(RM) -r $(DESTDIR)$(EXAMPLEDIR)
+	$(RM) -r $(SHAREDIR)
 
 dist: dist-clean
 	@echo "Creating tarball."
