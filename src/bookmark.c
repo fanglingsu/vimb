@@ -186,6 +186,117 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
     return found;
 }
 
+/**
+  * Converts bookmark file to a simple HTML5 page
+  *
+  * @input_bookmark_path: the path to the input bookmark file
+  * @output_html_path: the path to the output html file
+  *
+  * Returns: A boolean to say weather there was an error or not
+  */
+int bookmark_to_html(char* input_bookmark_path, char* output_html_path)
+{
+  FILE* input = fopen(input_bookmark_path, "r");
+  FILE* output = fopen(output_html_path, "w");
+
+  if(input == NULL)
+  {
+    printf("Could not open bookmark file for reading.\n");
+    return 1;
+  }
+  else if (output == NULL)
+  {
+    printf("Could not open html file to write into.\n");
+    return 2;
+  }
+  else
+  {
+    char header[] =
+      "<!doctype html>\n"
+      "<html lang='en'>\n"
+      "\t<head>\n"
+      "\t\t<meta charset='utf-8'>\n"
+      "\t\t<link rel='stylesheet' type='text/css' href='./bookmark.css'>\n"
+      "\t\t<title>Bookmarks</title>\n"
+      "\t</head>\n"
+      "\t<body>\n"
+      "\t\t<table>\n"
+      "\t\t\t<tr>\n"
+      "\t\t\t\t<th>\n"
+      "\t\t\t\t\tBookmark\n"
+      "\t\t\t\t</th>\n"
+      "\t\t\t\t<th>\n"
+      "\t\t\t\t\tTag(s)\n"
+      "\t\t\t\t</th>\n"
+      "\t\t\t</tr>\n";
+    char footer[] =
+      "\t\t</table>\n"
+      "\t</body>\n"
+      "</html>\n";
+
+    //Can be hardcoded to avoid string.h dependency.
+    int header_size = strlen(header), footer_size = strlen(footer);
+
+    char line[512];
+
+    if (header_size != fwrite(header, sizeof(char), header_size, output))
+    {
+      printf("Something went wrong while writing header.\n");
+      return 3;
+    }
+
+    while (fgets(line, sizeof(line), input))
+    {
+      char* item1 = NULL;
+      char* item2 = NULL;
+      char* item3 = NULL;
+
+      //Tried this on ugly/malformed strings, seems OK
+      //NOT sure though ! Valgrind seems unhappy with it :/
+      item1 = strtok(line, "\t");
+      item2 = strtok(line, "\t");
+      item3 = strtok(line, "\t");
+
+      //Remove trailing \n if any
+      if (item3 == NULL && item2 != NULL)
+         item2[strlen(item2) - 1] = '\0';
+      if(item3 != NULL)
+        item3[strlen(item3) - 1] = '\0';
+
+      if(item1 != NULL && item2 != NULL)
+      {
+        fprintf(output,
+          "\t\t\t<tr>\n"
+          "\t\t\t\t<td>\n"
+          "\t\t\t\t\t<a href='%s' title='%s'>\n"
+          "\t\t\t\t\t\t%s\n"
+          "\t\t\t\t\t</a>\n"
+          "\t\t\t\t</td>\n"
+          "\t\t\t\t<td>\n"
+          "%s%s%s"
+          "\t\t\t\t</td>\n"
+          "\t\t\t</tr>\n",
+          item1,
+          item2,
+          item2,
+          (item3 != NULL) ? "\t\t\t\t\t" : "",
+          (item3 != NULL) ? item3 : "",
+          (item3 != NULL) ? "\n" : "");
+      }
+    }
+
+    if (footer_size != fwrite(footer, sizeof(char), footer_size, output))
+    {
+      printf("Something went wrong while writing footer.\n");
+      return 4;
+    }
+
+    fclose(input);
+    fclose(output);
+    return 0;
+  }
+}
+
 #ifdef FEATURE_QUEUE
 /**
  * Push a uri to the end of the queue.
