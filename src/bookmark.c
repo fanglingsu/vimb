@@ -216,6 +216,22 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
   }
   else
   {
+    fseek(input, 0, SEEK_END);
+    if (ftell(input) == 0)
+    {
+      fprintf(output,
+        "<!DOCTYPE HTML>\n"
+        "<html lang='en-US'>\n"
+        "\t<head>\n"
+        "\t\t<meta http-equiv='refresh' content='0; url=%s' />\n"
+        "\t</head>\n"
+        "</html>\n",
+        SETTING_HOME_PAGE);
+
+      return TRUE;
+    }
+    fseek(input, 0, SEEK_SET);
+
     char header[] =
       "<!doctype html>\n"
       "<html lang='en'>\n"
@@ -258,8 +274,8 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
       //Tried this on ugly/malformed strings, seems OK
       //NOT sure though ! Valgrind seems unhappy with it :/
       item1 = strtok(line, "\t");
-      item2 = strtok(line, "\t");
-      item3 = strtok(line, "\t");
+      item2 = strtok(NULL, "\t");
+      item3 = strtok(NULL, "\t");
 
       //Remove trailing \n if any
       if (item3 == NULL && item2 != NULL)
