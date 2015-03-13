@@ -211,7 +211,7 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
     "<html lang='en'>\n"
     "\t<head>\n"
     "\t\t<meta charset='utf-8'>\n"
-    "\t\t<link rel='stylesheet' type='text/css' href='./bookmark.css'>\n"
+    "\t\t<link rel='stylesheet' type='text/css' href='/usr/local/share/vimb/bookmark.css'>\n"
     "\t\t<title>Bookmarks</title>\n"
     "\t</head>\n"
     "\t<body>\n"
@@ -246,6 +246,7 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
     return FALSE;
   }
 
+  //If the bookmark file is empty we redirect the user to main vimb page
   fseek(input, 0, SEEK_END);
   if (ftell(input) == 0)
   {
