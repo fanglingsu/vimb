@@ -228,9 +228,10 @@ gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
       "<!DOCTYPE HTML>\n"
       "<html lang='en-US'>\n"
       "\t<head>\n"
-      "\t\t<meta http-equiv='refresh' content='0; url=http://fanglingsu.github.io/vimb/' />\n"
+      "\t\t<meta http-equiv='refresh' content='0; url=%s' />\n"
       "\t</head>\n"
-      "</html>\n");
+      "</html>\n",
+      SETTING_HOME_PAGE);
 
     fclose(input);
     fclose(output);

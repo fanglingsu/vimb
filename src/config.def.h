@@ -70,6 +70,7 @@
 #define SETTING_DEFAULT_FONT_SIZE   10
 #define SETTING_GUI_FONT_NORMAL     "monospace normal 10"
 #define SETTING_GUI_FONT_EMPH       "monospace bold 10"
+#define SETTING_HOME_PAGE           "http://fanglingsu.github.io/vimb/"
 
 #define MAXIMUM_HINTS              500
 
