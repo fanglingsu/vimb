@@ -194,7 +194,7 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
   *
   * Returns: A boolean to say weather there was an error or not
   */
-int bookmark_to_html(char* input_bookmark_path, char* output_html_path)
+gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
 {
   FILE* input = fopen(input_bookmark_path, "r");
   FILE* output = fopen(output_html_path, "w");
@@ -202,12 +202,12 @@ int bookmark_to_html(char* input_bookmark_path, char* output_html_path)
   if(input == NULL)
   {
     printf("Could not open bookmark file for reading.\n");
-    return 1;
+    return FALSE;
   }
   else if (output == NULL)
   {
     printf("Could not open html file to write into.\n");
-    return 2;
+    return FALSE;
   }
   else
   {
@@ -242,7 +242,7 @@ int bookmark_to_html(char* input_bookmark_path, char* output_html_path)
     if (header_size != fwrite(header, sizeof(char), header_size, output))
     {
       printf("Something went wrong while writing header.\n");
-      return 3;
+      return FALSE;
     }
 
     while (fgets(line, sizeof(line), input))
@@ -288,12 +288,12 @@ int bookmark_to_html(char* input_bookmark_path, char* output_html_path)
     if (footer_size != fwrite(footer, sizeof(char), footer_size, output))
     {
       printf("Something went wrong while writing footer.\n");
-      return 4;
+      return FALSE;
     }
 
     fclose(input);
     fclose(output);
-    return 0;
+    return TRUE;
   }
 }
 
