@@ -648,8 +648,9 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
             if (!*input) {
                 /* if input ends here - use only the backslash */
                 g_string_append_c(arg->lhs, quote);
-            } else if (**input == ' ') {
-                /* escaped whitespace becomes only whitespace */
+            } else if (**input == ' ' || **input == quote) {
+                /* Escaped whitespace becomes only whitespace and escaped '\'
+                 * becomes '\' */
                 g_string_append_c(arg->lhs, **input);
             } else {
                 /* put escape char and next char into the result string */
