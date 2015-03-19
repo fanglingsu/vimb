@@ -14,9 +14,8 @@
 # dmenu command use in case multiple files are found for current domain
 DMENU="dmenu -l 7"
 
-if [[ -z "$XDG_CONFIG_HOME" ]]
-then
-        XDG_CONFIG_HOME=$HOME/.config
+if [[ -z "$XDG_CONFIG_HOME" ]]; then
+    XDG_CONFIG_HOME=$HOME/.config
 fi
 
 VIMB_KEY_DIR=${VIMB_KEY_DIR:-"$XDG_CONFIG_HOME/vimb/keys"}
