@@ -94,9 +94,12 @@ gboolean dom_focus_input(WebKitWebView *view)
         return false;
     }
 
+    /* Use translate to match xpath expression case insensitive so that also
+     * intput filed of type="TEXT" are matched. */
     result = webkit_dom_document_evaluate(
-        doc, "//input[not(@type) or @type='text' or @type='password']|//textarea",
-        html, resolver, 0, NULL, NULL
+        doc, "//input[not(@type) or translate(@type,'ETX','etx')='text' "
+        "or translate(@type,'ADOPRSW','adoprsw')='password']|//textarea",
+        html, resolver, 5, NULL, NULL
     );
     if (!result) {
         return false;
