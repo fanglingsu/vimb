@@ -413,12 +413,8 @@ static VbResult normal_ex(const NormalCmdInfo *info)
 
 static VbResult normal_focus_input(const NormalCmdInfo *info)
 {
-    if (dom_focus_input(vb.gui.webview)) {
-        vb_enter('i');
-
-        return RESULT_COMPLETE;
-    }
-    return RESULT_ERROR;
+    dom_focus_input(vb.gui.webview);
+    return RESULT_COMPLETE;
 }
 
 static VbResult normal_g_cmd(const NormalCmdInfo *info)

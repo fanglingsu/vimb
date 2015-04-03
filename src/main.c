@@ -759,10 +759,6 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             uri = webkit_web_view_get_uri(view);
             autocmd_run(AU_LOAD_FIRST_LAYOUT, uri, NULL);
 #endif
-            /* if we load a page from a submitted form, leave the insert mode */
-            if (vb.mode->id == 'i') {
-                vb_enter('n');
-            }
             break;
 
         case WEBKIT_LOAD_FINISHED:

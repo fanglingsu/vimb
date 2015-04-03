@@ -25,32 +25,24 @@ extern VbCore vb;
 
 static gboolean element_is_visible(WebKitDOMDOMWindow* win, WebKitDOMElement* element);
 static gboolean auto_insert(Element *element);
+static gboolean editable_blur_cb(Element *element, Event *event);
 static gboolean editable_focus_cb(Element *element, Event *event);
 static Element *get_active_element(Document *doc);
 
 
 void dom_check_auto_insert(WebKitWebView *view)
 {
-    Element *active;
     HtmlElement *element;
     Document *doc = webkit_web_view_get_dom_document(view);
 
-    if (!vb.config.strict_focus) {
-        /* if active element is editable - switch vimb to input mode */
-        active = get_active_element(doc);
-        auto_insert(active);
-    } else if (vb.mode->id != 'i') {
-        /* If there is focus on an element right after page load - remove it
-         * if strict-focus is enabled - but don't do this in case the user
-         * started typing explicitely. */
-        dom_clear_focus(view);
-    }
-
-    /* add event listener to track focus events on the document */
     element = webkit_dom_document_get_body(doc);
     if (!element) {
         element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
     }
+    /* add event listener to track focus and blur events on the document */
+    webkit_dom_event_target_add_event_listener(
+        WEBKIT_DOM_EVENT_TARGET(element), "blur", G_CALLBACK(editable_blur_cb), true, NULL
+    );
     webkit_dom_event_target_add_event_listener(
         WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), true, NULL
     );
@@ -68,12 +60,11 @@ void dom_clear_focus(WebKitWebView *view)
 }
 
 /**
- * Set focus to the first found editable element and returns if a element was
- * found to focus.
+ * Find the first editable element and set the focus on it and enter input
+ * mode.
  */
-gboolean dom_focus_input(WebKitWebView *view)
+void dom_focus_input(WebKitWebView *view)
 {
-    gboolean found = false;
     WebKitDOMNode *html, *node;
     WebKitDOMDocument *doc;
     WebKitDOMDOMWindow *win;
@@ -85,13 +76,13 @@ gboolean dom_focus_input(WebKitWebView *view)
     win  = webkit_dom_document_get_default_view(doc);
     list = webkit_dom_document_get_elements_by_tag_name(doc, "html");
     if (!list) {
-        return false;
+        return;
     }
 
     html     = webkit_dom_node_list_item(list, 0);
     resolver = webkit_dom_document_create_ns_resolver(doc, html);
     if (!resolver) {
-        return false;
+        return;
     }
 
     /* Use translate to match xpath expression case insensitive so that also
@@ -102,18 +93,16 @@ gboolean dom_focus_input(WebKitWebView *view)
         html, resolver, 5, NULL, NULL
     );
     if (!result) {
-        return false;
+        return;
     }
     while ((node = webkit_dom_xpath_result_iterate_next(result, NULL))) {
         if (element_is_visible(win, WEBKIT_DOM_ELEMENT(node))) {
+            vb_enter('i');
             webkit_dom_element_focus(WEBKIT_DOM_ELEMENT(node));
-            found = true;
             break;
         }
     }
     g_object_unref(list);
-
-    return found;
 }
 
 /**
@@ -217,11 +206,26 @@ static gboolean auto_insert(Element *element)
     return false;
 }
 
+static gboolean editable_blur_cb(Element *element, Event *event)
+{
+    if (vb.mode->id == 'i') {
+        vb_enter('n');
+    }
+    return false;
+}
+
 static gboolean editable_focus_cb(Element *element, Event *event)
 {
-    if (vb.mode->id != 'i') {
-        EventTarget *target = webkit_dom_event_get_target(event);
-        auto_insert((void*)target);
+    EventTarget *target = webkit_dom_event_get_target(event);
+    if (!vb.config.strict_focus) {
+        auto_insert((Element*)target);
+    } else if (vb.mode->id != 'i') {
+        /* If strict-focus is enabled and the editable element becomes focus,
+         * we explicitely remove the focus. But only if vim isn't in input
+         * mode at the time. This prevents from leaving input mode that was
+         * started by user interaction like click to editable element, or the
+         * gi normal mode command. */
+        webkit_dom_element_blur((Element*)target);
     }
     return false;
 }
