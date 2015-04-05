@@ -763,7 +763,6 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             if (vb.mode->id == 'i') {
                 vb_enter('n');
             }
-            dom_check_auto_insert(view);
             break;
 
         case WEBKIT_LOAD_FINISHED:
@@ -777,6 +776,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             update_title();
 
             if (strncmp(uri, "about:", 6)) {
+                dom_check_auto_insert(view);
                 history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
             }
             break;

@@ -32,8 +32,23 @@ static Element *get_active_element(Document *doc);
 
 void dom_check_auto_insert(WebKitWebView *view)
 {
+    Element *active;
     HtmlElement *element;
     Document *doc = webkit_web_view_get_dom_document(view);
+
+    /* FIrst check for current active element that bocomes focused before we
+     * could add the evnet observers. */
+    active = get_active_element(doc);
+    if (!vb.config.strict_focus) {
+        auto_insert(active);
+    } else if (vb.mode->id != 'i') {
+        /* If strict-focus is enabled and the editable element becomes focus,
+         * we explicitely remove the focus. But only if vim isn't in input
+         * mode at the time. This prevents from leaving input mode that was
+         * started by user interaction like click to editable element, or the
+         * gi normal mode command. */
+        webkit_dom_element_blur(active);
+    }
 
     element = webkit_dom_document_get_body(doc);
     if (!element) {
@@ -216,17 +231,8 @@ static gboolean editable_blur_cb(Element *element, Event *event)
 
 static gboolean editable_focus_cb(Element *element, Event *event)
 {
-    EventTarget *target = webkit_dom_event_get_target(event);
-    if (!vb.config.strict_focus) {
-        auto_insert((Element*)target);
-    } else if (vb.mode->id != 'i') {
-        /* If strict-focus is enabled and the editable element becomes focus,
-         * we explicitely remove the focus. But only if vim isn't in input
-         * mode at the time. This prevents from leaving input mode that was
-         * started by user interaction like click to editable element, or the
-         * gi normal mode command. */
-        webkit_dom_element_blur((Element*)target);
-    }
+    auto_insert((Element*)webkit_dom_event_get_target(event));
+
     return false;
 }
 
