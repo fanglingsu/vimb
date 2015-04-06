@@ -1330,22 +1330,6 @@ static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
         vb_load_uri(&a);
 
         nopropagate = true;
-    } else if (vb.mode->id != 'p') {
-        /* don't switch back to input mode if we are currently in pass through
-         * mode when the user clicks into a form field */
-        if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_EDITABLE
-            || dom_is_editable(dom_get_active_element(vb.gui.webview))
-        ) {
-            /* If click to editable elemen or if the focus is on an editable
-             * element after a click - switch to insert mode. The later is
-             * used for WYSIWYG editors where the click runs into a div and
-             * not the editable element itself. */
-            vb_enter('i');
-        } else if (vb.mode->id == 'i' || vb.mode->id == 'c') {
-            /* make sure we leave insert mode or command/hint mode if the user
-             * click on a none editable element */
-            vb_enter('n');
-        }
     }
     g_object_unref(result);
 
