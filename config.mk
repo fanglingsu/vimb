@@ -48,6 +48,8 @@ LIBFLAGS = $(shell pkg-config --libs $(LIBS))
 CFLAGS  += $(shell pkg-config --cflags $(LIBS))
 CFLAGS  += -Wall -pipe -std=c99
 CFLAGS  += -Wno-overlength-strings -Werror=format-security
+# This is to avoid redifinition warnings caused by glib.
+CFLAGS  += -Wno-typedef-redefinition
 CFLAGS  += ${CPPFLAGS}
 LDFLAGS += ${LIBFLAGS}
 
