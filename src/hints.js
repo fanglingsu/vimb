@@ -14,32 +14,7 @@ Object.freeze((function(){
         lClass   = "_hintLabel",       /* class used on the hint labels with the hint numbers */
         hClass   = "_hintElem",        /* marks hinted elements */
         fClass   = "_hintFocus",       /* marks focused element and focussed hint */
-        config,
-        style    = "." + lClass + "{" +
-            "-webkit-transform:translate(-4px,-4px);" +
-            "position:absolute;" +
-            "z-index:100000;" +
-            "font:bold\x20.8em\x20monospace;" +
-            "color:#000;" +
-            "background-color:#fff;" +
-            "margin:0;" +
-            "padding:0px 1px;" +
-            "border:1px solid #444;" +
-            "opacity:0.7" +
-            "}" +
-            "." + hClass + "{" +
-            "background-color:#ff0 !important;" +
-            "color:#000 !important" +
-            "}" +
-            "." + hClass + "." + fClass + "{" +
-            "background-color:#8f0 !important" +
-            "}" +
-            "." + lClass + "." + fClass + "{" +
-            /* use higher z-index to show the active label if it's overlapped by other labels */
-            "z-index:100001;" +
-            "opacity:1" +
-            "}";
-
+        config;
     /* the hint class used to maintain hinted element and labels */
     function Hint() {
         /* hide hint label and remove coloring from hinted element */
@@ -330,7 +305,8 @@ Object.freeze((function(){
             return;
         }
         var e = doc.createElement("style");
-        e.innerHTML = style;
+        /* HINT_CSS is replaces by the contents of the HINT_CSS constant from config.h */
+        e.innerHTML = "HINT_CSS";
         doc.head.appendChild(e);
         /* prevent us from adding the style multiple times */
         doc.hasStyle = true;

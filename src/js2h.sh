@@ -10,5 +10,6 @@ cat $1 | \
     -e 's|\\x20| |g' \
     -e 's|\\|\\\\|g' \
     -e 's|"|\\"|g' \
+    -e 's|HINT_CSS|" HINT_CSS "|' \
     -e '$s/$/"/'
 echo ""
