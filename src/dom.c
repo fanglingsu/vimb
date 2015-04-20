@@ -104,7 +104,8 @@ void dom_focus_input(WebKitWebView *view)
      * intput filed of type="TEXT" are matched. */
     result = webkit_dom_document_evaluate(
         doc, "//input[not(@type) or translate(@type,'ETX','etx')='text' "
-        "or translate(@type,'ADOPRSW','adoprsw')='password']|//textarea",
+        "or translate(@type,'ADOPRSW','adoprsw')='password' "
+        "or translate(@type,'ACEHRS','acehrs')='search']|//textarea",
         html, resolver, 5, NULL, NULL
     );
     if (!result) {
