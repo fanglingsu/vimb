@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
 <head>
   <title>{{ page.title }}</title>
   <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
@@ -11,19 +10,19 @@
   <link rel="stylesheet" type="text/css" href="theme/main.css"/>
 </head>
 <body>
-<div id="content">
-<div id="nav">
+<div id="page">
+<nav>
   <ul>
     <li{% if page.active == "home" %} class="active"{% endif %}><a href="./">home</a></li>
     <li{% if page.active == "man" %} class="active"{% endif %}><a href="man.html">manual</a></li>
     <li{% if page.active == "faq" %} class="active"{% endif %}><a href="faq.html">faq</a></li>
     <li{% if page.active == "scripts" %} class="active"{% endif %}><a href="scripts.html">scripts</a></li>
   </ul>
-</div>
-<div class="main">
+</nav>
+<div id="content">
 {{ content }}
 </div>
-  <div id="footer"><a href="#content" title="to top">&#9650; top</a></div>
+<footer><a href="#page" title="to top">&#9650; top</a></footer>
 </div>
 </body>
 </html>
