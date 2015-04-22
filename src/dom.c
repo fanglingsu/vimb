@@ -141,8 +141,21 @@ gboolean dom_is_editable(Element *element)
     if (!g_ascii_strcasecmp(tagname, "textarea")) {
         result = true;
     } else if (!g_ascii_strcasecmp(tagname, "input")
-        && (!*type || !g_ascii_strcasecmp(type, "text") || !g_ascii_strcasecmp(type, "password")
-		|| !g_ascii_strcasecmp(type, "search"))
+        && (!*type
+            || !g_ascii_strcasecmp(type, "text") 
+            || !g_ascii_strcasecmp(type, "password")
+            || !g_ascii_strcasecmp(type, "color")
+            || !g_ascii_strcasecmp(type, "date")
+            || !g_ascii_strcasecmp(type, "datetime")
+            || !g_ascii_strcasecmp(type, "datetime-local")
+            || !g_ascii_strcasecmp(type, "email")
+            || !g_ascii_strcasecmp(type, "month")
+            || !g_ascii_strcasecmp(type, "number")
+            || !g_ascii_strcasecmp(type, "search")
+            || !g_ascii_strcasecmp(type, "tel")
+            || !g_ascii_strcasecmp(type, "time")
+            || !g_ascii_strcasecmp(type, "url")
+            || !g_ascii_strcasecmp(type, "week"))
     ) {
         result = true;
     } else {
