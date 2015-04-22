@@ -142,7 +142,7 @@ gboolean dom_is_editable(Element *element)
         result = true;
     } else if (!g_ascii_strcasecmp(tagname, "input")
         && (!*type
-            || !g_ascii_strcasecmp(type, "text") 
+            || !g_ascii_strcasecmp(type, "text")
             || !g_ascii_strcasecmp(type, "password")
             || !g_ascii_strcasecmp(type, "color")
             || !g_ascii_strcasecmp(type, "date")
