@@ -30,12 +30,12 @@ var _vbform = {
 
         if (n == "input") {
             t = e.type;
-            if (!t || t == "text" || t == "password") {
-                e.value = v;
-            } else if (t == "checkbox" || t == "radio") {
-                e.checked = ("1" == v) ? true : false;
+            if (t == "checkbox" || t == "radio") {
+                e.checked = ("1" == v);
             } else if (t == "submit") {
                 e.click();
+            } else {
+                e.value = v;
             }
         } else if (n == "textarea") {
             e.value = v;
