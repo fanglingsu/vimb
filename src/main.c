@@ -87,6 +87,8 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
     WebKitWebFrame *frame, WebKitNetworkRequest *request,
     WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
     gpointer data);
+static void window_object_cleared_cb(GtkWidget *widget, WebKitWebFrame *frame,
+    JSContextRef js, JSObjectRef win, gpointer user_data);
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link);
 static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title);
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
@@ -776,7 +778,6 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             update_title();
 
             if (strncmp(uri, "about:", 6)) {
-                dom_check_auto_insert(view);
                 history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
             }
             break;
@@ -1131,6 +1132,7 @@ static void setup_signals()
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
         "signal::resource-request-starting", G_CALLBACK(webview_request_starting_cb), NULL,
         "signal::navigation-policy-decision-requested", G_CALLBACK(navigation_decision_requested_cb), NULL,
+        "signal::window-object-cleared", G_CALLBACK(window_object_cleared_cb), NULL,
         NULL
     );
 
@@ -1406,6 +1408,13 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
         return true;
     }
     return false;
+}
+
+static void window_object_cleared_cb(GtkWidget *widget, WebKitWebFrame *frame,
+    JSContextRef js, JSObjectRef win, gpointer user_data)
+{
+    Document *doc = webkit_web_frame_get_dom_document(frame);
+    dom_check_auto_insert(doc);
 }
 
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)

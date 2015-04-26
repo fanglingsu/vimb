@@ -32,7 +32,7 @@
 #define HtmlInputElement    WebKitDOMHTMLInputElement
 #define HtmlTextareaElement WebKitDOMHTMLTextAreaElement
 
-void dom_check_auto_insert(WebKitWebView *view);
+void dom_check_auto_insert(Document *doc);
 void dom_clear_focus(WebKitWebView *view);
 void dom_focus_input(WebKitWebView *view);
 gboolean dom_is_editable(Element *element);
