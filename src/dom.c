@@ -103,9 +103,22 @@ void dom_focus_input(WebKitWebView *view)
     /* Use translate to match xpath expression case insensitive so that also
      * intput filed of type="TEXT" are matched. */
     result = webkit_dom_document_evaluate(
-        doc, "//input[not(@type) or translate(@type,'ETX','etx')='text' "
+        doc, "//input[not(@type) "
+        "or translate(@type,'ETX','etx')='text' "
         "or translate(@type,'ADOPRSW','adoprsw')='password' "
-        "or translate(@type,'ACEHRS','acehrs')='search']|//textarea",
+        "or translate(@type,'CLOR','clor')='color' "
+        "or translate(@type,'ADET','adet')='date' "
+        "or translate(@type,'ADEIMT','adeimt')='datetime' "
+        "or translate(@type,'ACDEILMOT','acdeilmot')='datetime-local' "
+        "or translate(@type,'AEILM','aeilm')='email' "
+        "or translate(@type,'HMNOT','hmnot')='month' "
+        "or translate(@type,'BEMNRU','bemnru')='number' "
+        "or translate(@type,'ACEHRS','acehrs')='search' "
+        "or translate(@type,'ELT','elt')='tel' "
+        "or translate(@type,'EIMT','eimt')='time' "
+        "or translate(@type,'LRU','lru')='url' "
+        "or translate(@type,'EKW','ekw')='week' "
+        "]|//textarea",
         html, resolver, 5, NULL, NULL
     );
     if (!result) {
