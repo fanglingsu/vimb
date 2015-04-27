@@ -254,7 +254,6 @@ static gboolean auto_insert(Element *element)
 
 static gboolean editable_blur_cb(Element *element, Event *event)
 {
-    g_message("blur");
     if (vb.mode->id == 'i') {
         vb_enter('n');
     }
@@ -263,7 +262,6 @@ static gboolean editable_blur_cb(Element *element, Event *event)
 
 static gboolean editable_focus_cb(Element *element, Event *event)
 {
-    g_message("focus");
     auto_insert((Element*)webkit_dom_event_get_target(event));
 
     return false;
