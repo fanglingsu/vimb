@@ -80,27 +80,30 @@ void dom_clear_focus(WebKitWebView *view)
 /**
  * Find the first editable element and set the focus on it and enter input
  * mode.
+ * Returns true if there was an editable element focused.
  */
-void dom_focus_input(WebKitWebView *view)
+gboolean dom_focus_input(Document *doc)
 {
     WebKitDOMNode *html, *node;
-    WebKitDOMDocument *doc;
     WebKitDOMDOMWindow *win;
     WebKitDOMNodeList *list;
     WebKitDOMXPathNSResolver *resolver;
     WebKitDOMXPathResult* result;
+    Document *frame_doc;
+    guint i, len;
 
-    doc  = webkit_web_view_get_dom_document(view);
     win  = webkit_dom_document_get_default_view(doc);
     list = webkit_dom_document_get_elements_by_tag_name(doc, "html");
     if (!list) {
-        return;
+        return false;
     }
 
-    html     = webkit_dom_node_list_item(list, 0);
+    html = webkit_dom_node_list_item(list, 0);
+    g_object_unref(list);
+
     resolver = webkit_dom_document_create_ns_resolver(doc, html);
     if (!resolver) {
-        return;
+        return false;
     }
 
     /* Use translate to match xpath expression case insensitive so that also
@@ -125,16 +128,32 @@ void dom_focus_input(WebKitWebView *view)
         html, resolver, 5, NULL, NULL
     );
     if (!result) {
-        return;
+        return false;
     }
     while ((node = webkit_dom_xpath_result_iterate_next(result, NULL))) {
         if (element_is_visible(win, WEBKIT_DOM_ELEMENT(node))) {
             vb_enter('i');
             webkit_dom_element_focus(WEBKIT_DOM_ELEMENT(node));
-            break;
+            return true;
+        }
+    }
+
+    /* Look for editable elements in frames too. */
+    list = webkit_dom_document_get_elements_by_tag_name(doc, "iframe");
+    len  = webkit_dom_node_list_get_length(list);
+
+    for (i = 0; i < len; i++) {
+        node      = webkit_dom_node_list_item(list, i);
+        frame_doc = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
+        /* Stop on first frame with focused element. */
+        if (dom_focus_input(frame_doc)) {
+            g_object_unref(list);
+            return true;
         }
     }
     g_object_unref(list);
+
+    return false;
 }
 
 /**

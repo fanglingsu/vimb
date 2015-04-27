@@ -413,7 +413,7 @@ static VbResult normal_ex(const NormalCmdInfo *info)
 
 static VbResult normal_focus_input(const NormalCmdInfo *info)
 {
-    dom_focus_input(vb.gui.webview);
+    dom_focus_input(webkit_web_view_get_dom_document(vb.gui.webview));
     return RESULT_COMPLETE;
 }
 
