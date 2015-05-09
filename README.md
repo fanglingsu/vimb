@@ -46,7 +46,7 @@ On Ubuntu these dependencies can be installed by
 
 Edit config.mk to match your local setup.
 
-Edit config.h to match your personal preferences.
+Edit src/config.h to match your personal preferences.
 
 The default Makefile will not overwrite your customised `config.h` with the
 contents of `config.def.h`, even if it was updated in the latest git pull.
