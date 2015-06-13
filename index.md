@@ -18,6 +18,10 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+New setting 'hint-follow-last'
+: If on, vimb automatically follows the last remaining hint on the page
+  (default behaviour). If off hints are fired only if enter is pressed.
+
 Remote-Control via socket (previously a fifo)
 : If vimb is started with `-s` or `--socket` option, vimb creates a unix
   domain socket named `$XDG_RUNTIME_DIR/vimb/socket/{pid}`.
@@ -49,11 +53,6 @@ Auto-Response-Header
       :set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/
       :set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000
       :set auto-response-header+="https://*.example.org/sub/* Content-security-policy,X-Test=ok"
-
-
-[Auto commands](man.html#Automatic_commands)
-: Vimb provides another nice feature of vim to run command on various events and
-  pattern matches URIs, `:autocmd` and `:augroup`.
 
 ## screenshots
 
