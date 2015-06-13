@@ -1,5 +1,5 @@
 #----------------user/install options----------------
-VERSION = 2.9
+VERSION = 2.10
 
 PROJECT     = vimb
 PREFIX     ?= /usr/local
