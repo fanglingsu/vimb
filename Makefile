@@ -19,7 +19,8 @@ clean:
 	@$(MAKE) $(MFLAGS) -C tests clean
 
 install: $(TARGET) $(DOCDIR)/$(MAN1)
-	install -D -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
 	install -d $(DESTDIR)$(EXAMPLEDIR)
 	cp -r examples/* $(DESTDIR)$(EXAMPLEDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
