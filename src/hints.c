@@ -162,9 +162,10 @@ void hints_create(const char *input)
             JSValueMakeBoolean(hints.ctx, hints.gmode),
             JSValueMakeNumber(hints.ctx, MAXIMUM_HINTS),
             js_string_to_ref(hints.ctx, GET_CHAR("hintkeys")),
-            JSValueMakeBoolean(hints.ctx, GET_BOOL("hint-follow-last"))
+            JSValueMakeBoolean(hints.ctx, GET_BOOL("hint-follow-last")),
+            JSValueMakeBoolean(hints.ctx, GET_BOOL("hint-number-same-length"))
         };
-        call_hints_function("init", 5, arguments);
+        call_hints_function("init", 6, arguments);
 
         /* if hinting is started there won't be any additional filter given and
          * we can go out of this function */
