@@ -32,10 +32,10 @@ endif
 
 $(LIBTARGET): $(LOBJ)
 ifeq ($(VERBOSE),0)
-	$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
-else
 	@echo "$(CC) $@"
 	@$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
+else
+	$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
 endif
 
 config.h:
