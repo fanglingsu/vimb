@@ -3,7 +3,7 @@ SRCDIR=$(BASEDIR)/src
 include $(BASEDIR)/config.mk
 
 CPPFLAGS += -I $(BASEDIR)/
-CFLAGS   += -fPIC -Wpedantic
+CFLAGS   += -fPIC -pedantic
 
 TEST_PROGS = test-handlers \
 			 test-map      \
