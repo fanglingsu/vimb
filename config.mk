@@ -9,6 +9,8 @@ EXAMPLEDIR ?= $(PREFIX)/share/$(PROJECT)/examples
 
 #----------------compile options---------------------
 
+VERBOSE ?= 0
+
 LIBS = libsoup-2.4
 
 GTK3LIBS=gtk+-3.0 webkitgtk-3.0
@@ -44,12 +46,12 @@ endif
 # prepare the lib flags used for the linker
 LIBFLAGS = $(shell pkg-config --libs $(LIBS))
 
+# some compiler flags in case CFLAGS is not set by user
+# -Wno-typedef-redefinition to avoid redifinition warnings caused by glib
+CFLAGS  ?= -Wall -pipe -Wno-overlength-strings -Werror=format-security -Wno-typedef-redefinition
 # normal compiler flags
 CFLAGS  += $(shell pkg-config --cflags $(LIBS))
-CFLAGS  += -Wall -pipe -std=c99
-CFLAGS  += -Wno-overlength-strings -Werror=format-security
-# This is to avoid redifinition warnings caused by glib.
-CFLAGS  += -Wno-typedef-redefinition
+CFLAGS  += -std=c99
 CFLAGS  += ${CPPFLAGS}
 LDFLAGS += ${LIBFLAGS}
 
@@ -58,4 +60,4 @@ LIBTARGET = lib$(PROJECT).so
 DIST_FILE = $(PROJECT)_$(VERSION).tar.gz
 MAN1      = $(PROJECT).1
 
-MFLAGS    = --no-print-directory
+MFLAGS   ?= --no-print-directory
