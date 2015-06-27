@@ -24,10 +24,10 @@ $(LOBJ): config.h $(BASEDIR)/config.mk
 
 $(TARGET): $(OBJ)
 ifeq ($(VERBOSE),0)
-	$(CC) $(OBJ) -o $@ $(LDFLAGS)
-else
 	@echo "$(CC) $@"
 	@$(CC) $(OBJ) -o $@ $(LDFLAGS)
+else
+	$(CC) $(OBJ) -o $@ $(LDFLAGS)
 endif
 
 $(LIBTARGET): $(LOBJ)
