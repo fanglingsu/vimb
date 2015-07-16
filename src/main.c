@@ -783,10 +783,19 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FAILED:
+            {
+                /* In case the requested uri could not be loaded the Current
+                 * uri of the Webview would still be the PRevious one. So We
+                 * use the provisional uri here. */
+                WebKitWebFrame *frame     = webkit_web_view_get_main_frame(view);
+                WebKitWebDataSource *src  = webkit_web_frame_get_provisional_data_source(frame);
+                WebKitNetworkRequest *req = webkit_web_data_source_get_initial_request(src);
+                uri = webkit_network_request_get_uri(req);
+                vb_update_urlbar(uri);
 #ifdef FEATURE_AUTOCMD
-            uri = webkit_web_view_get_uri(view);
-            autocmd_run(AU_LOAD_FAILED, uri, NULL);
+                autocmd_run(AU_LOAD_FAILED, uri, NULL);
 #endif
+            }
             break;
     }
 }
