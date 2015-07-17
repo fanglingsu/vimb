@@ -293,7 +293,7 @@ typedef struct {
 
 /* state */
 typedef struct {
-    char            *uri;
+    char            *uri;                   /* holds current  uri or the new to open uri */
     guint           progress;
     StatusType      status_type;
     MessageType     input_type;

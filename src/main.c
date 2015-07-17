@@ -108,6 +108,8 @@ static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gp
 static void wget_bar(int len, int progress, char *string);
 #endif
 static void update_title(void);
+static void set_uri(const char *uri);
+static void set_title(const char *title);
 static void init_core(void);
 static void marks_clear(void);
 static void read_config(void);
@@ -402,8 +404,7 @@ gboolean vb_load_uri(const Arg *arg)
         webkit_web_view_load_uri(vb.gui.webview, uri);
         /* show the url to be opened in the window title until we receive the
          * page title */
-        OVERWRITE_STRING(vb.state.title, uri);
-        update_title();
+        set_title(uri);
     }
     g_free(uri);
 
@@ -669,11 +670,7 @@ static void context_menu_activate_cb(GtkMenuItem *item, gpointer data)
 
 static void uri_change_cb(WebKitWebView *view, GParamSpec param_spec)
 {
-    g_free(vb.state.uri);
-    g_object_get(view, "uri", &vb.state.uri, NULL);
-    vb_update_urlbar(vb.state.uri);
-
-    g_setenv("VIMB_URI", vb.state.uri, true);
+    set_uri(webkit_web_view_get_uri(view));
 }
 
 static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
@@ -748,7 +745,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             }
 
             vb_update_statusbar();
-            vb_update_urlbar(uri);
+            set_uri(uri);
             /* save the current URI in register % */
             vb_register_add('%', uri);
 
@@ -795,7 +792,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 } else {
                     uri = webkit_web_view_get_uri(view);
                 }
-                vb_update_urlbar(uri);
+                set_uri(uri);
+                /* Show the failed uri as title. */
+                set_title(uri);
 #ifdef FEATURE_AUTOCMD
                 autocmd_run(AU_LOAD_FAILED, uri, NULL);
 #endif
@@ -1441,16 +1440,18 @@ static void hover_link_cb(WebKitWebView *webview, const char *title, const char 
         message = g_strconcat("Link: ", link, NULL);
         gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), message);
         g_free(message);
+    } else if (vb.state.uri) {
+        /* Use previous url in case of hover out of a link. */
+        vb_update_urlbar(vb.state.uri);
     } else {
-        vb_update_urlbar(webkit_web_view_get_uri(webview));
+        /* If there is no previous uri use the current uri from webview. */
+        set_uri(webkit_web_view_get_uri(webview));
     }
 }
 
 static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title)
 {
-    OVERWRITE_STRING(vb.state.title, title);
-    update_title();
-    g_setenv("VIMB_TITLE", title ? title : "", true);
+    set_title(title);
 }
 
 static void update_title(void)
@@ -1471,6 +1472,20 @@ static void update_title(void)
     if (vb.state.title) {
         gtk_window_set_title(GTK_WINDOW(vb.gui.window), vb.state.title);
     }
+}
+
+static void set_uri(const char *uri)
+{
+    OVERWRITE_STRING(vb.state.uri, uri);
+    g_setenv("VIMB_URI", uri, true);
+    vb_update_urlbar(uri);
+}
+
+static void set_title(const char *title)
+{
+    OVERWRITE_STRING(vb.state.title, title);
+    update_title();
+    g_setenv("VIMB_TITLE", title ? title : "", true);
 }
 
 static gboolean mimetype_decision_cb(WebKitWebView *webview,
