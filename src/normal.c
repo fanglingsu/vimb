@@ -337,6 +337,7 @@ VbResult pass_keypress(int key)
 static VbResult normal_clear_input(const NormalCmdInfo *info)
 {
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
+    gtk_clipboard_clear(PRIMARY_CLIPBOARD());
     vb_echo(VB_MSG_NORMAL, false, "");
     command_search(&((Arg){0}));
 
