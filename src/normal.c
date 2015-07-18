@@ -336,6 +336,14 @@ VbResult pass_keypress(int key)
 
 static VbResult normal_clear_input(const NormalCmdInfo *info)
 {
+    /* if there's a text selection, deselect it */
+    char *clipboard_text = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+    gtk_clipboard_clear(PRIMARY_CLIPBOARD());
+    if (clipboard_text) {
+        gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), clipboard_text, -1);
+    }
+    g_free(clipboard_text);
+
     gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
     vb_echo(VB_MSG_NORMAL, false, "");
     command_search(&((Arg){0}));
