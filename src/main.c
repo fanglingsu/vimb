@@ -763,10 +763,6 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             if (vb.mode->id == 'i') {
                 vb_enter('n');
             }
-
-            WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
-            dom_check_auto_insert(webkit_web_frame_get_dom_document(frame));
-
             break;
 
         case WEBKIT_LOAD_FINISHED:
@@ -1149,6 +1145,7 @@ static void setup_signals()
         "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
         "signal::resource-request-starting", G_CALLBACK(webview_request_starting_cb), NULL,
         "signal::navigation-policy-decision-requested", G_CALLBACK(navigation_decision_requested_cb), NULL,
+        "signal::onload-event", G_CALLBACK(onload_event_cb), NULL,
         NULL
     );
 
@@ -1424,6 +1421,13 @@ static gboolean navigation_decision_requested_cb(WebKitWebView *view,
         return true;
     }
     return false;
+}
+
+static void onload_event_cb(WebKitWebView *view, WebKitWebFrame *frame,
+    gpointer user_data)
+{
+    Document *doc = webkit_web_frame_get_dom_document(frame);
+    dom_check_auto_insert(doc);
 }
 
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
