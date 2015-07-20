@@ -1433,7 +1433,7 @@ static void onload_event_cb(WebKitWebView *view, WebKitWebFrame *frame,
     gpointer user_data)
 {
     Document *doc = webkit_web_frame_get_dom_document(frame);
-    dom_auto_insert_unless_strict_focus(doc);
+    dom_check_auto_insert(doc);
     vb.state.done_loading_page = true;
 }
 
