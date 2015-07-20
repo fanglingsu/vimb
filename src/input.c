@@ -155,6 +155,7 @@ VbResult input_open_editor(void)
 
     /* disable the active element */
     dom_editable_element_set_disable(active, true);
+    dom_clear_focus(vb.gui.webview);
 
     EditorData *data = g_slice_new0(EditorData);
     data->file    = file_path;
