@@ -78,6 +78,14 @@ void dom_clear_focus(WebKitWebView *view)
 }
 
 /**
+ * Give the focus to element.
+ */
+void dom_give_focus(Element *element)
+{
+    webkit_dom_element_focus(element);
+}
+
+/**
  * Find the first editable element and set the focus on it and enter input
  * mode.
  * Returns true if there was an editable element focused.
