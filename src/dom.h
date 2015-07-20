@@ -32,6 +32,8 @@
 #define HtmlInputElement    WebKitDOMHTMLInputElement
 #define HtmlTextareaElement WebKitDOMHTMLTextAreaElement
 
+void dom_install_focus_blur_callbacks(Document *doc);
+void dom_auto_insert_unless_strict_focus(Document *doc);
 void dom_check_auto_insert(Document *doc);
 void dom_clear_focus(WebKitWebView *view);
 gboolean dom_focus_input(Document *doc);

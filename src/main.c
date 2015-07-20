@@ -752,6 +752,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
 
             /* clear possible set marks */
             marks_clear();
+
             break;
 
         case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
@@ -763,6 +764,11 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             if (vb.mode->id == 'i') {
                 vb_enter('n');
             }
+
+            WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
+            dom_install_focus_blur_callbacks(webkit_web_frame_get_dom_document(frame));
+            vb.state.done_loading_page = false;
+
             break;
 
         case WEBKIT_LOAD_FINISHED:
@@ -1428,6 +1434,7 @@ static void onload_event_cb(WebKitWebView *view, WebKitWebFrame *frame,
 {
     Document *doc = webkit_web_frame_get_dom_document(frame);
     dom_check_auto_insert(doc);
+    vb.state.done_loading_page = true;
 }
 
 static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
