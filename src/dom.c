@@ -30,19 +30,6 @@ static gboolean editable_focus_cb(Element *element, Event *event);
 static Element *get_active_element(Document *doc);
 
 
-void dom_auto_insert_unless_strict_focus(Document *doc)
-{
-    Element *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
-
-    if (active) {
-        if (!vb.config.strict_focus) {
-            auto_insert(active);
-        } else if (vb.mode->id != 'i') {
-            webkit_dom_element_blur(active);
-        }
-    }
-}
-
 void dom_install_focus_blur_callbacks(Document *doc)
 {
     HtmlElement *element = webkit_dom_document_get_body(doc);
@@ -62,7 +49,20 @@ void dom_install_focus_blur_callbacks(Document *doc)
 
 void dom_check_auto_insert(Document *doc)
 {
-    dom_auto_insert_unless_strict_focus(doc);
+    Element *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
+
+    if (active) {
+        if (!vb.config.strict_focus) {
+            auto_insert(active);
+        } else if (vb.mode->id != 'i') {
+            /* If strict-focus is enabled and the editable element becomes
+             * focus, we explicitely remove the focus. But only if vimb isn't
+             * in input mode at the time. This prevents from leaving input
+             * mode that was started by user interaction like click to
+             * editable element, or the 'gi' normal mode command. */
+            webkit_dom_element_blur(active);
+        }
+    }
     dom_install_focus_blur_callbacks(doc);
 }
 
