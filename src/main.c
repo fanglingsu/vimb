@@ -765,7 +765,7 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 vb_enter('n');
             }
 
-            WebKitWebFrame *frame     = webkit_web_view_get_main_frame(view);
+            WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
             dom_install_focus_blur_callbacks(webkit_web_frame_get_dom_document(frame));
             vb.state.done_loading_page = false;
 
