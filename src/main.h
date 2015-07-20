@@ -315,6 +315,7 @@ typedef struct {
     char            *fifo_path;             /* holds the path to the control fifo */
     char            *socket_path;           /* holds the path to the control socket */
     char            *pid_str;               /* holds the pid as string */
+    gboolean        done_loading_page;
 } State;
 
 typedef struct {

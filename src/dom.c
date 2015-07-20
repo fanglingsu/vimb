@@ -30,33 +30,27 @@ static gboolean editable_focus_cb(Element *element, Event *event);
 static Element *get_active_element(Document *doc);
 
 
-void dom_check_auto_insert(Document *doc)
+void dom_auto_insert_unless_strict_focus(Document *doc)
 {
-    Element *active;
-    HtmlElement *element;
+    Element *active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
 
-    /* First check for current active element that becomes focused before we
-     * could add the evnet observers. */
-    active = webkit_dom_html_document_get_active_element(WEBKIT_DOM_HTML_DOCUMENT(doc));
     if (active) {
         if (!vb.config.strict_focus) {
             auto_insert(active);
         } else if (vb.mode->id != 'i') {
-            /* If strict-focus is enabled and the editable element becomes
-             * focus, we explicitely remove the focus. But only if vim isn't
-             * in input mode at the time. This prevents from leaving input
-             * mode that was started by user interaction like click to
-             * editable element, or the gi normal mode command. */
             webkit_dom_element_blur(active);
         }
     }
+}
 
-    element = webkit_dom_document_get_body(doc);
+void dom_install_focus_blur_callbacks(Document *doc)
+{
+    HtmlElement *element = webkit_dom_document_get_body(doc);
+
     if (!element) {
         element = WEBKIT_DOM_HTML_ELEMENT(webkit_dom_document_get_document_element(doc));
     }
     if (element) {
-        /* add event listener to track focus and blur events on the document */
         webkit_dom_event_target_add_event_listener(
             WEBKIT_DOM_EVENT_TARGET(element), "blur", G_CALLBACK(editable_blur_cb), true, NULL
         );
@@ -64,6 +58,12 @@ void dom_check_auto_insert(Document *doc)
             WEBKIT_DOM_EVENT_TARGET(element), "focus", G_CALLBACK(editable_focus_cb), true, NULL
         );
     }
+}
+
+void dom_check_auto_insert(Document *doc)
+{
+    dom_auto_insert_unless_strict_focus(doc);
+    dom_install_focus_blur_callbacks(doc);
 }
 
 /**
@@ -281,7 +281,9 @@ static gboolean editable_blur_cb(Element *element, Event *event)
 
 static gboolean editable_focus_cb(Element *element, Event *event)
 {
-    auto_insert((Element*)webkit_dom_event_get_target(event));
+    if (vb.state.done_loading_page || !vb.config.strict_focus) {
+        auto_insert((Element*)webkit_dom_event_get_target(event));
+    }
 
     return false;
 }
