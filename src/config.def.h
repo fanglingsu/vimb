@@ -85,7 +85,10 @@
 
 /* CSS style use on creating hints. This might also be averrules by css out of
  * $XDG_CONFIG_HOME/vimb/style.css file. */
-#define HINT_CSS "._hintLabel{\
+#define HINT_CSS "#_hintContainer{\
+position:static\
+}\
+._hintLabel{\
 -webkit-transform:translate(-4px,-4px);\
 position:absolute;\
 z-index:100000;\
