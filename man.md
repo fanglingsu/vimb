@@ -53,6 +53,11 @@ Mandatory arguments to long options are mandatory for short options too.
 : Use custom configuration given as *CONFIG-FILE*. This will also be applied
   on new spawned instances.
 
+−p, −−profile *PROFILE-NAME*
+: Create or open specified configuration profile. Configuration data for the
+  profile is stored in a directory named *PROFILE-NAME* under default
+  directory for configuration data.
+
 −e, −−embed *WINID*
 : *WINID* of an XEmbed-aware application, that vimb will use as its parent.
 
@@ -1383,11 +1388,23 @@ x-hint-command (string)
   - *style.css* File for userdefined css styles. These file is used if the
     config variable 'stylesheet' is enabled.
 
+*$XDG\_CONFIG\_HOME/vimb/PROFILE-NAME*
+: Directory for configuration data if executed with -p *PROFILE-NAME*
+  parameter. It has same structure as default directory for configuration
+  data.
+
 *$XDG\_CACHE\_HOME/vimb/*
 : Default directory for cache data.
 
+*$XDG\_CACHE\_HOME/vimb/PROFILE-NAME*
+: Directory for cache data if executed with -p *PROFILE-NAME* parameter.
+
 *$XDG\_RUNTIME\_DIR/vimb/socket/*
 : Directory where the control sockets are placed.
+
+*$XDG\_RUNTIME\_DIR/vimb/PROFILE-NAME/socket/*
+: Directory where the control sockets are placed if executed with -p
+  *PROFILE-NAME* parameter.
 
 ## ENVIRONMENT
 {:#ENVIRONMENT}
