@@ -44,6 +44,9 @@ vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"
 Use custom configuration given as \fICONFIG-FILE\fP.
 This will also be applied on new spawned instances.
 .TP
+.BI "\-p, \-\-profile " "PROFILE-NAME"
+Create or open specified configuration profile. Configuration data for the profile is stored in a directory named \fIPROFILE-NAME\fP under default directory for configuration data.
+.TP
 .BI "\-e, \-\-embed " "WINID"
 .I WINID
 of an XEmbed-aware application, that Vimb will use as its parent.
@@ -1568,11 +1571,20 @@ These file is used if the config variable `stylesheet' is enabled.
 .PD
 .RE
 .TP
+.I $XDG_CONFIG_HOME/vimb/PROFILE-NAME
+Directory for configuration data if executed with \fB-p \fIPROFILE-NAME\fR parameter. It has same structure as default directory for configuration data.
+.TP
 .I $XDG_CACHE_HOME/vimb/
 Default directory for cache data.
 .TP
+.I $XDG_CACHE_HOME/vimb/PROFILE-NAME
+Directory for cache data if executed with \fB-p \fIPROFILE-NAME\fR parameter.
+.TP
 .I $XDG_RUNTIME_DIR/vimb/socket/
 Directory where the control sockets are placed.
+.TP
+.I $XDG_RUNTIME_DIR/vimb/PROFILE-NAME/socket/
+Directory where the control sockets are placed if executed with \fB-p \fIPROFILE-NAME\fR parameter.
 .PP
 There are also some sample scripts installed together with Vimb under
 PREFIX/share/vimb/examples.

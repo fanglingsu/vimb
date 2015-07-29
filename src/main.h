@@ -335,6 +335,7 @@ typedef struct {
     char         *nextpattern;     /* regex patter nfor prev link matching */
     char         *prevpattern;     /* regex patter nfor next link matching */
     char         *file;            /* path to the custome config file */
+    char         *profile;         /* profile name */
     GSList       *cmdargs;         /* list of commands given by --cmd option */
     char         *cafile;          /* path to the ca file */
     GTlsDatabase *tls_db;          /* tls database */

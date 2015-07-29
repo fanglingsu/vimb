@@ -359,6 +359,7 @@ gboolean vb_load_uri(const Arg *arg)
             3                       /* basename + uri + ending NULL */
             + (vb.embed ? 2 : 0)
             + (vb.config.file ? 2 : 0)
+            + (vb.config.profile ? 2 : 0)
             + (vb.config.kioskmode ? 1 : 0)
 #ifdef FEATURE_SOCKET
             + (vb.config.socket ? 1 : 0)
@@ -378,6 +379,10 @@ gboolean vb_load_uri(const Arg *arg)
         if (vb.config.file) {
             cmd[i++] = "-c";
             cmd[i++] = vb.config.file;
+        }
+        if (vb.config.profile) {
+            cmd[i++] = "-p";
+            cmd[i++] = vb.config.profile;
         }
         for (GSList *l = vb.config.cmdargs; l; l = l->next) {
             cmd[i++] = "-C";
@@ -1193,7 +1198,7 @@ static void setup_signals()
 
 static void init_files(void)
 {
-    char *path = util_get_config_dir();
+    char *path = util_get_config_dir(vb.config.profile);
 
     if (vb.config.file) {
         char *rp = realpath(vb.config.file, NULL);
@@ -1260,7 +1265,7 @@ static void session_init(void)
 #endif
 #ifdef FEATURE_SOUP_CACHE
     /* setup the soup cache but without setting the cache size - this is done in setting.c */
-    char *cache_dir      = util_get_cache_dir();
+    char *cache_dir      = util_get_cache_dir(vb.config.profile);
     vb.config.soup_cache = soup_cache_new(cache_dir, SOUP_CACHE_SINGLE_USER);
     soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.soup_cache));
     soup_cache_load(vb.config.soup_cache);
@@ -1791,6 +1796,7 @@ int main(int argc, char *argv[])
     static GOptionEntry opts[] = {
         {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.config.file, "Custom configuration file", NULL},
+        {"profile", 'p', 0, G_OPTION_ARG_STRING, &vb.config.profile, "Profile name", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
 #ifdef FEATURE_SOCKET
         {"dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump the socket path to stdout", NULL},

@@ -32,24 +32,39 @@ static gboolean match(const char *pattern, int patlen, const char *subject);
 static gboolean match_list(const char *pattern, int patlen, const char *subject);
 
 /**
- * Retrieves newly allocated string with vimb config directory.
- * Retruned string must be freed.
+ * Retrieves newly allocated string with vimb config directory with profilename. 
+ * If profilename is NULL, path to default directory is returned.
+ * Returned string must be freed.
  */
-char *util_get_config_dir(void)
+char *util_get_config_dir(const char *profilename)
 {
-    char *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
+    char *path = g_build_filename(g_get_user_config_dir(), PROJECT, G_DIR_SEPARATOR_S, profilename, NULL);
     util_create_dir_if_not_exists(path);
 
     return path;
 }
 
 /**
- * Retrieves the path to the cach dir.
+ * Retrieves the path to the cache dir with profilename
+ * If profilename is NULL, path to default directory is returned.
  * Returned string must be freed.
  */
-char *util_get_cache_dir(void)
+char *util_get_cache_dir(const char *profilename)
 {
-    char *path = g_build_filename(g_get_user_cache_dir(), PROJECT, NULL);
+    char *path = g_build_filename(g_get_user_cache_dir(), PROJECT, G_DIR_SEPARATOR_S, profilename, NULL);
+    util_create_dir_if_not_exists(path);
+
+    return path;
+}
+
+/**
+ * Retrieves the path to the socket dir with profilename
+ * If profilename is NULL, path to default directory is returned.
+ * Returned string must be freed.
+ */
+char *util_get_runtime_dir(const char *profilename)
+{
+    char *path = g_build_filename(g_get_user_runtime_dir(), PROJECT, G_DIR_SEPARATOR_S, profilename, NULL);
     util_create_dir_if_not_exists(path);
 
     return path;
