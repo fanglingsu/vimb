@@ -66,6 +66,8 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
 static void webview_request_starting_cb(WebKitWebView *view,
     WebKitWebFrame *frame, WebKitWebResource *res, WebKitNetworkRequest *req,
     WebKitNetworkResponse *resp, gpointer data);
+static gboolean focus_out_event_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data);
+static gboolean focus_in_event_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 static void destroy_window_cb(GtkWidget *widget);
 static void scroll_cb(GtkAdjustment *adjustment);
 static gboolean input_focus_in_cb(GtkWidget *widget, GdkEventFocus *event,
@@ -851,6 +853,20 @@ static void webview_request_starting_cb(WebKitWebView *view,
     }
 }
 
+static gboolean focus_out_event_cb(GtkWidget *widget, GdkEvent *event,
+    gpointer user_data)
+{
+    vb.state.window_has_focus = false;
+    return false;
+}
+
+static gboolean focus_in_event_cb(GtkWidget *widget, GdkEvent *event,
+    gpointer user_data)
+{
+    vb.state.window_has_focus = true;
+    return false;
+}
+
 static void destroy_window_cb(GtkWidget *widget)
 {
     vb_quit(true);
@@ -1159,7 +1175,8 @@ static void setup_signals()
         "signal::onload-event", G_CALLBACK(onload_event_cb), NULL,
         NULL
     );
-
+    g_signal_connect(vb.gui.window, "focus-in-event", G_CALLBACK(focus_in_event_cb), NULL);
+    g_signal_connect(vb.gui.window, "focus-out-event", G_CALLBACK(focus_out_event_cb), NULL);
 #ifdef FEATURE_ARH
     g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
 #endif

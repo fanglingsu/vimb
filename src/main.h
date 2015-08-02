@@ -316,6 +316,7 @@ typedef struct {
     char            *socket_path;           /* holds the path to the control socket */
     char            *pid_str;               /* holds the pid as string */
     gboolean        done_loading_page;
+    gboolean        window_has_focus;
 } State;
 
 typedef struct {

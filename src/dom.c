@@ -281,9 +281,10 @@ static gboolean auto_insert(Element *element)
 
 static gboolean editable_blur_cb(Element *element, Event *event)
 {
-    if (vb.mode->id == 'i') {
+    if (vb.state.window_has_focus && vb.mode->id == 'i') {
         vb_enter('n');
     }
+
     return false;
 }
 
