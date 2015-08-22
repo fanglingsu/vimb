@@ -171,14 +171,15 @@ gboolean dom_focus_input(Document *doc)
 gboolean dom_is_editable(Element *element)
 {
     gboolean result = false;
-    char *tagname, *type;
+    char *tagname, *type, *editable;
 
     if (!element) {
         return result;
     }
 
-    tagname = webkit_dom_element_get_tag_name(element);
-    type    = webkit_dom_element_get_attribute(element, "type");
+    tagname  = webkit_dom_element_get_tag_name(element);
+    type     = webkit_dom_element_get_attribute(element, "type");
+    editable = webkit_dom_element_get_attribute(element, "contenteditable"); 
     /* element is editable if it's a text area or input with no type, text or
      * pasword */
     if (!g_ascii_strcasecmp(tagname, "textarea")) {
@@ -201,11 +202,14 @@ gboolean dom_is_editable(Element *element)
             || !g_ascii_strcasecmp(type, "week"))
     ) {
         result = true;
+    } else if (!g_ascii_strcasecmp(editable, "true")) {
+        result = true;
     } else {
         result = false;
     }
     g_free(tagname);
     g_free(type);
+    g_free(editable);
 
     return result;
 }
