@@ -297,7 +297,7 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
     /* following return values mark fired hints */
     if (!strncmp(value, "DONE:", 5)) {
         fire_timeout(false);
-        /* Change to normal mode only if we are crrently in command mode and
+        /* Change to normal mode only if we are currently in command mode and
          * we are not in g-mode hinting. This is required to not switch to
          * normal mode when the hinting triggered a click that set focus on
          * editable element that lead vimb to switch to input mode. */

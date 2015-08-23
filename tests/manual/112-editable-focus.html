@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>iFrame URI change by HSTS (#146)</title>
+<title>Input mode Switching (#112 #237)</title>
 <script type="text/javascript">
 //<![CDATA[
 function setFocus() {
@@ -26,6 +26,14 @@ function setFocus() {
             <input type="button" value="Focus Textarea" onclick="document.getElementById('text').focus();"/>
         </div>
     </form>
+    <p>
+    Also the following element using <code>contenteditable="true"</code>
+    should switch vimb into input mode on click.
+    </p>
+    <div contenteditable="true" style="width:50%;height:3em;border:1px solid #000">
+    Clicking this element using contenteditable="true" should
+    switch vimb into input mode too.
+    </div>
 </body>
 </html>
 
