@@ -171,7 +171,7 @@ static struct {
 /* [   0x5b */ {normal_prevnext},
 /* \   0x5c */ {NULL},
 /* ]   0x5d */ {normal_prevnext},
-/* ^   0x5e */ {NULL},
+/* ^   0x5e */ {normal_scroll},
 /* _   0x5f */ {NULL},
 /* `   0x60 */ {NULL},
 /* a   0x61 */ {NULL},
@@ -700,7 +700,8 @@ static VbResult normal_scroll(const NormalCmdInfo *info)
             /* save the position to mark ' */
             vb.state.marks[VB_MARK_TICK] = gtk_adjustment_get_value(adjust);
             break;
-        case '0':
+        case '0': /* fall through */
+        case '^':
             adjust = vb.gui.adjust_h;
             new    = gtk_adjustment_get_lower(adjust);
             break;
