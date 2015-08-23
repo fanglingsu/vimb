@@ -221,11 +221,12 @@ CTRL−C
 : Scroll to the bottom of the current page. Or if *N* is given to *N*% of the
   page.
 
-[*N*]0
-: Scroll *N* steps to the left of current page.
+0, ^
+: Scroll to the absolute left of the document. Unlike in Vim, 0 and ^ work
+  exactly the same way.
 
-[*N*]$
-: Scroll *N* steps to the right of current page.
+$
+: Scroll to the absolute right of the document.
 
 [*N*]h
 : Scroll *N* steps to the left of page.
