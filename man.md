@@ -1284,7 +1284,7 @@ nextpattern (list)
 : Patterns to use when guessing the next page in a document. Each pattern is
   successively tested against each link in the page beginning from the last
   link. Default
-  `/\bnext\b/i,/^(>|>>|Â»)$/,/^(>|>>|Â»)/,/(>|>>|Â»)$/,/\bmore\b/i`. Note that
+  `/\bnext\b/i,/^(>|>>|»)$/,/^(>|>>|»)/,/(>|>>|»)$/,/\bmore\b/i`. Note that
   you have to escape the `|` as `\|` else the `|` will terminate the :set
   command and start a new command.
 
@@ -1297,7 +1297,7 @@ previouspattern (list)
 : Patterns to use when guessing the previous page in a document. Each pattern is
   successively tested against each link in the page beginning from the last
   link. Default
-  `/\bnext\b/i,/^(>|>>|Â»)$/,/^(>|>>|Â»)/,/(>|>>|Â»)$/,/\bmore\b/i`
+  `/\bnext\b/i,/^(>|>>|»)$/,/^(>|>>|»)/,/(>|>>|»)$/,/\bmore\b/i`
 
 proxy (bool)
 : Indicates if the environment variable 'http_proxy' is evaluated.
