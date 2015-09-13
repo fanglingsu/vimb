@@ -78,6 +78,7 @@ typedef enum {
     EX_SCR,
     EX_SET,
     EX_SHELLCMD,
+    EX_SOURCE,
     EX_TABOPEN,
 } ExCode;
 
@@ -148,6 +149,7 @@ static VbCmdResult ex_save(const ExArg *arg);
 static VbCmdResult ex_set(const ExArg *arg);
 static VbCmdResult ex_shellcmd(const ExArg *arg);
 static VbCmdResult ex_shortcut(const ExArg *arg);
+static VbCmdResult ex_source(const ExArg *arg);
 static VbCmdResult ex_handlers(const ExArg *arg);
 
 static gboolean complete(short direction);
@@ -198,6 +200,7 @@ static ExInfo commands[] = {
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
+    {"source",           EX_SOURCE,      ex_source,     EX_FLAG_RHS|EX_FLAG_EXP},
     {"tabopen",          EX_TABOPEN,     ex_open,       EX_FLAG_CMD},
 };
 
@@ -496,6 +499,34 @@ VbCmdResult ex_run_string(const char *input, gboolean enable_history)
     free_cmdarg(arg);
 
     return res;
+}
+
+/**
+ * Run all ex commands in a file.
+ */
+gboolean ex_run_file(const char *filename)
+{
+    char *line, **lines;
+
+    lines = util_get_lines(filename);
+
+    if (!lines) {
+        return false;
+    }
+
+    int length = g_strv_length(lines) - 1;
+    for (int i = 0; i < length; i++) {
+        line = lines[i];
+        if (*line == '#') {
+            continue;
+        }
+        if (ex_run_string(line, false) & VB_CMD_ERROR) {
+            g_warning("Invalid command in %s: '%s'", filename, line);
+        }
+    }
+    g_strfreev(lines);
+
+    return true;
 }
 
 /**
@@ -985,6 +1016,11 @@ static VbCmdResult ex_shellcmd(const ExArg *arg)
     return res;
 }
 
+static VbCmdResult ex_source(const ExArg *arg)
+{
+    return ex_run_file(arg->rhs->str) ? VB_CMD_SUCCESS | VB_CMD_KEEPINPUT : VB_CMD_ERROR;
+}
+
 static VbCmdResult ex_handlers(const ExArg *arg)
 {
     char *p;
@@ -1160,6 +1196,11 @@ static gboolean complete(short direction)
                     found = autocmd_fill_group_completion(store, token);
                     break;
 #endif
+
+                case EX_SOURCE:
+                    sort  = true;
+                    found = util_filename_fill_completion(store, token);
+                    break;
 
                 default:
                     break;

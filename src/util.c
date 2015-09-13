@@ -774,3 +774,48 @@ gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src
 
     return found;
 }
+
+gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
+{
+    gboolean found = false;
+
+    const char *last_slash = strrchr(input, '/');
+    const char *input_basename = last_slash ? last_slash + 1 : input;
+    char *input_dirname = g_strndup(input, input_basename - input);
+    char *real_dirname = util_expand(
+        *input_dirname ? input_dirname : ".",
+        UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL
+    );
+
+    GError *error = NULL;
+    GDir *dir = g_dir_open(real_dirname, 0, &error);
+    if (error) {
+        /* Can't open directory, likely bad user input */
+        g_error_free(error);
+    } else {
+        const char *filename;
+        GtkTreeIter iter;
+        while ((filename = g_dir_read_name(dir))) {
+            if (g_str_has_prefix(filename, input_basename)) {
+                char *fullpath = g_build_filename(real_dirname, filename, NULL);
+                char *result;
+                if (g_file_test(fullpath, G_FILE_TEST_IS_DIR)) {
+                    result = g_strconcat(input_dirname, filename, "/", NULL);
+                } else {
+                    result = g_strconcat(input_dirname, filename, NULL);
+                }
+                g_free(fullpath);
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, result, -1);
+                g_free(result);
+                found = true;
+            }
+        }
+        g_dir_close(dir);
+    }
+
+    g_free(input_dirname);
+    g_free(real_dirname);
+
+    return found;
+}

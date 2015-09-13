@@ -1127,24 +1127,7 @@ static void marks_clear(void)
 
 static void read_config(void)
 {
-    char *line, **lines;
-
-    /* read config from config files */
-    lines = util_get_lines(vb.files[FILES_CONFIG]);
-
-    if (lines) {
-        int length = g_strv_length(lines) - 1;
-        for (int i = 0; i < length; i++) {
-            line = lines[i];
-            if (*line == '#') {
-                continue;
-            }
-            if (ex_run_string(line, false) & VB_CMD_ERROR ) {
-                g_warning("Invalid user config: '%s'", line);
-            }
-        }
-    }
-    g_strfreev(lines);
+    ex_run_file(vb.files[FILES_CONFIG]);
 }
 
 static void setup_signals()
