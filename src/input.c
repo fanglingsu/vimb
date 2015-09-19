@@ -17,62 +17,57 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
+#include <glib.h>
 #include <glib/gstdio.h>
-#include "main.h"
-#include "input.h"
-#include "dom.h"
-#include "util.h"
+
 #include "ascii.h"
+#include "config.h"
+#include "input.h"
+#include "main.h"
 #include "normal.h"
+#include "util.h"
+#include "ext-proxy.h"
 
-typedef struct {
-    char    *file;
-    Element *element;
-} EditorData;
-
-static void resume_editor(GPid pid, int status, EditorData *data);
-
-extern VbCore vb;
 
 /**
  * Function called when vimb enters the input mode.
  */
-void input_enter(void)
+void input_enter(Client *c)
 {
     /* switch focus first to make sure we can write to the inputbox without
      * disturbing the user */
-    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    vb_update_mode_label("-- INPUT --");
+    gtk_widget_grab_focus(GTK_WIDGET(c->webview));
+    vb_modelabel_update(c, "-- INPUT --");
 }
 
 /**
  * Called when the input mode is left.
  */
-void input_leave(void)
+void input_leave(Client *c)
 {
-    vb_update_mode_label("");
+    webkit_web_view_run_javascript(c->webview, "document.activeElement.blur();", NULL, NULL, NULL);
+    vb_modelabel_update(c, "");
 }
 
 /**
  * Handles the keypress events from webview and inputbox.
  */
-VbResult input_keypress(int key)
+VbResult input_keypress(Client *c, int key)
 {
-    static gboolean ctrlo = false;
+    static gboolean ctrlo = FALSE;
 
     if (ctrlo) {
         /* if we are in ctrl-O mode perform the next keys as normal mode
          * commands until the command is complete or error */
-        VbResult res = normal_keypress(key);
+        VbResult res = normal_keypress(c, key);
         if (res != RESULT_MORE) {
-            ctrlo = false;
+            ctrlo = FALSE;
             /* Don't overwrite the mode label in case we landed in another
              * mode. This might occurre by CTRL-0 CTRL-Z or after running ex
              * command, where we mainly end up in normal mode. */
-            if (vb.mode->id == 'i') {
+            if (c->mode->id == 'i') {
                 /* reenter the input mode */
-                input_enter();
+                input_enter(c);
             }
         }
         return res;
@@ -80,106 +75,31 @@ VbResult input_keypress(int key)
 
     switch (key) {
         case CTRL('['): /* esc */
-            vb_enter('n');
+            vb_enter(c, 'n');
             return RESULT_COMPLETE;
 
         case CTRL('O'):
             /* enter CTRL-0 mode to execute next command in normal mode */
-            ctrlo           = true;
-            vb.mode->flags |= FLAG_NOMAP;
-            vb_update_mode_label("-- (input) --");
+            ctrlo           = TRUE;
+            c->mode->flags |= FLAG_NOMAP;
+            vb_modelabel_update(c, "-- (input) --");
             return RESULT_MORE;
 
         case CTRL('T'):
-            return input_open_editor();
+            return input_open_editor(c);
 
         case CTRL('Z'):
-            vb_enter('p');
+            vb_enter(c, 'p');
             return RESULT_COMPLETE;
     }
 
-    vb.state.processed_key = false;
+    c->state.processed_key = FALSE;
     return RESULT_ERROR;
 }
 
-VbResult input_open_editor(void)
+VbResult input_open_editor(Client *c)
 {
-    char **argv, *file_path = NULL;
-    const char *text, *editor_command;
-    int argc;
-    GPid pid;
-    gboolean success;
-
-    editor_command = GET_CHAR("editor-command");
-    if (!editor_command || !*editor_command) {
-        vb_echo(VB_MSG_ERROR, true, "No editor-command configured");
-        return RESULT_ERROR;
-    }
-    Element* active = dom_get_active_element(vb.gui.webview);
-
-    /* check if element is suitable for editing */
-    if (!active || !dom_is_editable(active)) {
-        return RESULT_ERROR;
-    }
-
-    text = dom_editable_element_get_value(active);
-    if (!text) {
-        return RESULT_ERROR;
-    }
-
-    if (!util_create_tmp_file(text, &file_path)) {
-        return RESULT_ERROR;
-    }
-
-    /* spawn editor */
-    char* command = g_strdup_printf(editor_command, file_path);
-    if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
-        g_critical("Could not parse editor-command '%s'", command);
-        g_free(command);
-        return RESULT_ERROR;
-    }
-    g_free(command);
-
-    success = g_spawn_async(
-        NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
-        NULL, NULL, &pid, NULL
-    );
-    g_strfreev(argv);
-
-    if (!success) {
-        unlink(file_path);
-        g_free(file_path);
-        g_warning("Could not spawn editor-command");
-        return RESULT_ERROR;
-    }
-
-    /* disable the active element */
-    dom_editable_element_set_disable(active, true);
-
-    EditorData *data = g_slice_new0(EditorData);
-    data->file    = file_path;
-    data->element = active;
-
-    g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
-
+    /* TODO should the editor be opened by the webextension or by the
+     * application? */
     return RESULT_COMPLETE;
-}
-
-static void resume_editor(GPid pid, int status, EditorData *data)
-{
-    char *text;
-    if (status == 0) {
-        text = util_get_file_contents(data->file, NULL);
-        if (text) {
-            dom_editable_element_set_value(data->element, text);
-        }
-        g_free(text);
-    }
-    dom_editable_element_set_disable(data->element, false);
-    dom_give_focus(data->element);
-
-    g_unlink(data->file);
-    g_free(data->file);
-    g_slice_free(EditorData, data);
-    g_spawn_close_pid(pid);
 }

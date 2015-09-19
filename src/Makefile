@@ -1,63 +1,27 @@
 BASEDIR=..
 include $(BASEDIR)/config.mk
 
-OBJ  = $(patsubst %.c, %.o, $(wildcard *.c))
-LOBJ = $(patsubst %.c, %.lo, $(wildcard *.c))
+OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
 
-all: $(TARGET)
+all: vimb
 
-clean: clean-lib
-	$(RM) $(TARGET) *.o *.lo hints.js.h
+clean:
+	$(RM) vimb *.o
 
-clean-lib:
-	$(RM) $(LIBTARGET)
-
-hints.o:  hints.js.h
-hints.lo: hints.js.h
-
-hints.js.h: hints.js
-	@echo "minify $<"
-	@cat $< | ./js2h.sh > $@
-
-$(OBJ):  config.h $(BASEDIR)/config.mk
-$(LOBJ): config.h $(BASEDIR)/config.mk
-
-$(TARGET): $(OBJ)
-ifeq ($(VERBOSE),0)
+vimb: $(OBJ)
 	@echo "$(CC) $@"
-	@$(CC) $(OBJ) -o $@ $(LDFLAGS)
-else
-	$(CC) $(OBJ) -o $@ $(LDFLAGS)
-endif
+	@$(CC) $(LDFLAGS) $(OBJ) -o $@
 
-$(LIBTARGET): $(LOBJ)
-ifeq ($(VERBOSE),0)
-	@echo "$(CC) $@"
-	@$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
-else
-	$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
-endif
+$(OBJ): config.h $(BASEDIR)/config.mk
+
+-include $(OBJ:.o=.d)
 
 config.h:
 	@echo create $@ from config.def.h
 	@cp config.def.h $@
 
-%.o: %.c %.h
-ifeq ($(VERBOSE),0)
+%.o: %.c
 	@echo "${CC} $@"
 	@$(CC) $(CFLAGS) -c -o $@ $<
-else
-	$(CC) $(CFLAGS) -c -o $@ $<
-endif
 
-%.lo: %.c %.h
-ifeq ($(VERBOSE),0)
-	@echo "${CC} $@"
-	@$(CC) -DTESTLIB $(CFLAGS) -fPIC -c -o $@ $<
-else
-	$(CC) -DTESTLIB $(CFLAGS) -fPIC -c -o $@ $<
-endif
-
--include $(OBJ:.o=.d)
-
-.PHONY: all clean clean-lib
+.PHONY: all clean

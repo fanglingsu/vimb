@@ -20,6 +20,7 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#include <glib.h>
 #include "main.h"
 
 enum {
@@ -27,31 +28,21 @@ enum {
     UTIL_EXP_DOLLAR  = 0x02, /* $ENV and ${ENV} expansion */
     UTIL_EXP_SPECIAL = 0x04, /* expand % to current URI */
 };
-
 typedef void *(*Util_Content_Func)(const char*, const char*);
 
-char* util_get_config_dir(const char* profilename);
-char* util_get_cache_dir(const char* profilename);
-char* util_get_runtime_dir(const char* profilename);
-const char* util_get_home_dir(void);
-void util_create_dir_if_not_exists(const char* dirpath);
-void util_create_file_if_not_exists(const char* filename);
-char* util_get_file_contents(const char* filename, gsize* length);
-char** util_get_lines(const char* filename);
-GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
-    guint max_items);
+void util_cleanup(void);
+char *util_expand(Client *c, const char *src, int expflags);
 gboolean util_file_append(const char *file, const char *format, ...);
-gboolean util_file_prepend(const char *file, const char *format, ...);
-char *util_file_pop_line(const char *file, int *item_count);
-char* util_strcasestr(const char* haystack, const char* needle);
+char *util_get_config_dir(void);
+char *util_get_file_contents(const char *filename, gsize *length);
+char *util_get_filepath(const char *dir, const char *filename, gboolean create);
+char **util_get_lines(const char *filename);
+GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
+        guint max_items);
+gboolean util_filename_fill_completion(Client *c, GtkListStore *store, const char *input);
+gboolean util_parse_expansion(Client *c, const char **input, GString *str,
+        int flags, const char *quoteable);
 char *util_str_replace(const char* search, const char* replace, const char* string);
-gboolean util_create_tmp_file(const char *content, char **file);
-char *util_build_path(const char *path, const char *dir);
-char *util_expand(const char *src, int expflags);
-gboolean util_parse_expansion(const char **input, GString *str, int flags,
-    const char *quoteable);
-gboolean util_wildmatch(const char *pattern, const char *subject);
-gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src);
-gboolean util_filename_fill_completion(GtkListStore *store, const char *input);
+char *util_strcasestr(const char *haystack, const char *needle);
 
 #endif /* end of include guard: _UTIL_H */

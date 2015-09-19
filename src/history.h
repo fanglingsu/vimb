@@ -20,6 +20,10 @@
 #ifndef _HISTORY_H
 #define _HISTORY_H
 
+#include <glib.h>
+
+#include "main.h"
+
 typedef enum {
     HISTORY_FIRST   = 0,
     HISTORY_COMMAND = 0,
@@ -28,8 +32,8 @@ typedef enum {
     HISTORY_LAST
 } HistoryType;
 
+void history_add(Client *c, HistoryType type, const char *value, const char *additional);
 void history_cleanup(void);
-void history_add(HistoryType type, const char *value, const char *additional);
 gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input);
 GList *history_get_list(VbInputType type, const char *query);
 

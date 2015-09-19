@@ -1,5 +1,12 @@
 # Changes in vimb
 
+## [unreleased]
+
+### Removed
+
+* `FEATURE_COOKIE` precompiler flag was removed bcause compiling without cookie
+  support does not bring any real benefit
+
 ## [2.11] - 2015-12-17
 
 ### Added
@@ -37,4 +44,5 @@
   cookie file
 * Fixed none POSIX `echo -n` call
 
+[unreleased]: https://github.com/fanglingsu/vimb/compare/2.11...HEAD
 [2.11]: https://github.com/fanglingsu/vimb/compare/2.10...2.11

@@ -20,12 +20,13 @@
 #ifndef _SHORTCUT_H
 #define _SHORTCUT_H
 
-void shortcut_init(void);
-void shortcut_cleanup(void);
-gboolean shortcut_add(const char *key, const char *uri);
-gboolean shortcut_remove(const char *key);
-gboolean shortcut_set_default(const char *key);
-char *shortcut_get_uri(const char *key);
-gboolean shortcut_fill_completion(GtkListStore *store, const char *input);
+void shortcut_init(Client *c);
+void shortcut_cleanup(Client *c);
+gboolean shortcut_add(Client *c, const char *key, const char *uri);
+gboolean shortcut_remove(Client *c, const char *key);
+gboolean shortcut_set_default(Client *c, const char *key);
+char *shortcut_get_uri(Client *c, const char *key);
+/*gboolean shortcut_fill_completion(Client *c, GtkListStore *store, const char *input);*/
 
 #endif /* end of include guard: _SHORTCUT_H */
+

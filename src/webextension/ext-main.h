@@ -17,19 +17,11 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _HINTS_H
-#define _HINTS_H
+#ifndef _EXT_MAIN_H
+#define _EXT_MAIN_H
 
-#include "main.h"
+#define VB_WEBEXTENSION_SERVICE_NAME "org.vimb.browser.WebExtension"
+#define VB_WEBEXTENSION_OBJECT_PATH  "/org/vimb/browser/WebExtension"
+#define VB_WEBEXTENSION_INTERFACE    "org.vimb.browser.WebExtension"
 
-void hints_init(WebKitWebFrame *frame);
-VbResult hints_keypress(int key);
-void hints_create(const char *input);
-void hints_fire(void);
-void hints_follow_link(const gboolean back, int count);
-void hints_increment_uri(int count);
-gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode);
-void hints_clear(void);
-void hints_focus_next(const gboolean back);
-
-#endif /* end of include guard: _HINTS_H */
+#endif /* end of include guard: _EXT_MAIN_H */

@@ -23,12 +23,11 @@
 #include "config.h"
 #include "main.h"
 
-void ex_enter(void);
-void ex_leave(void);
-VbResult ex_keypress(int key);
-void ex_input_changed(const char *text);
+void ex_enter(Client *c);
+void ex_leave(Client *c);
+VbResult ex_keypress(Client *c, int key);
+void ex_input_changed(Client *c, const char *text);
 gboolean ex_fill_completion(GtkListStore *store, const char *input);
-VbCmdResult ex_run_string(const char *input, gboolean enable_history);
-VbCmdResult ex_run_file(const char *filename);
+VbCmdResult ex_run_string(Client *c, const char *input, gboolean enable_history);
 
 #endif /* end of include guard: _EX_H */

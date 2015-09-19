@@ -20,7 +20,11 @@
 #ifndef _COMPLETION_H
 #define _COMPLETION_H
 
+#include <glib.h>
+
 #include "main.h"
+
+typedef void (*CompletionSelectFunc) (Client *c, char *match);
 
 enum {
     COMPLETION_STORE_FIRST,
@@ -30,11 +34,13 @@ enum {
     COMPLETION_STORE_NUM
 };
 
-typedef void (*CompletionSelectFunc) (char *match);
 
-gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
-    gboolean back);
-void completion_clean(void);
-gboolean completion_next(gboolean back);
+void completion_clean(Client *c);
+void completion_cleanup(Client *c);
+gboolean completion_create(Client *c, GtkTreeModel *model,
+        CompletionSelectFunc selfunc, gboolean back);
+void completion_init(Client *c);
+gboolean completion_next(Client *c, gboolean back);
+gboolean completion_fill(GtkListStore *store, const char *input, GList *src);
 
 #endif /* end of include guard: _COMPLETION_H */

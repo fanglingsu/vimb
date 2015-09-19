@@ -1,89 +1,111 @@
-# Vimb - the Vim-like browser
+# vimb - the vim like browser
 
-Vimb is a Vim-like web browser that is inspired by Pentadactyl and Vimprobable.
-The goal of Vimb is to build a completely keyboard-driven, efficient and
-pleasurable browsing-experience with low memory and CPU usage that is
-intuitive to use for Vim users.
+This is the development branch for the new webkit2 port of vimb. This branch
+does not work and lags a lot of features of the webkit1 version of vimb. So
+this is only meant to be the playground for the developers at the moment.
 
-More information and some screenshots of Vimb browser in action can be found on
-the project page of [Vimb][].
+If you like to have a working vimb, please use the master branch.
 
-## Features
+## Patching and Coding style
 
-- it's modal like Vim
-- Vim like [keybindings][] - assignable for each browser mode
-- nearly every configuration can be changed at runtime with Vim like [set syntax][set]
-- [history][] for `ex` commands, search queries, URLs
-- completions for: commands, URLs, bookmarked URLs, variable names of settings, search-queries
-- [hinting][hints] - marks links, form fields and other clickable elements to
-  be clicked, opened or inspected
-- SSL validation against ca-certificate file
-- HTTP Strict Transport Security (HSTS)
-- open input or textarea with configurable external editor
-- user defined URL-shortcuts with placeholders
-- custom [protocol handlers][handlers]
-- read it later [queue][] to collect URIs for later use
-- multiple yank/paste [registers][]
-- Vim like [autocmd][]
+- the code is indented by 4 spaces - if you use vim to code you can set
+  `:set expandtab ts=4 sts=4 sw=4`
+- the functions are sorted alphabetically within the c files
+- it's a good advice to orientate on the already available code
+- if you are using `indent`, following options describe best the code style
+  - `--k-and-r-style`
+  - `--case-indentation4`
+  - `--dont-break-function-decl-args`
+  - `--dont-break-procedure-type`
+  - `--dont-line-up-parentheses`
+  - `--no-tabs`
 
-## Packages
+## directories
 
-- Arch Linux [vimb-git][arch-git], [vimb][arch]
-- [NetBSD][]
-- [FreeBSD][]
-- [Void Linux][]
+    ├── doc                 documentation like manual page
+    └── src                 all sources to build vimb
+        ├── scripts         JavaScripts that are compiled in to various purposes
+        └── webextension    Source files for the webextension
 
-## Dependencies
+## dependencies
 
-- libwebkit >=1.5.0
-- libgtk+-2.0
-- libsoup >=2.38
+- webkit2gtk-4.0 >= 2.3.5
 
-On Ubuntu these dependencies can be installed by
-`sudo apt-get install libsoup2.4-dev libwebkit-dev libgtk-3-dev libwebkitgtk-3.0-dev`.
+## compile and run
 
-## Install
+To inform vimb during compile time where the webextension should be loaded
+from, the `RUNPREFIX` option can be set to a full qualified path to the
+directory where the extension should be sotred in.
 
-Edit `config.mk` to match your local setup.
+To run vimb wihtout installation you could run as a sandbox like this
 
-Edit src/config.h to match your personal preferences.
-Edit `src/config.h` to match your personal preferences.
+    make runsandbox
 
-The default `Makefile` will not overwrite your customised `config.h` with the
-contents of `config.def.h`, even if it was updated in the latest git pull.
-Therefore, you should always compare your customised `config.h` with
-`config.def.h` and make sure you include any changes to the latter in your
-`config.h`.
+This will compile and install vimb into the local _sandbox_ folder in the
+project directory.
 
-Run the following commands to compile and install Vimb (if necessary, the last one as
-root).
+## Tasks
 
-    make clean
-    make // or make GTK=3 to compile against gtk3
-    make install
+1. general infrastructure and built
+  - [x] write make file
+    - [x] allow to built as sandbox for local testing
+    - [x] add a way to specify the target of the webextension shared objects
+          this is now available with the `RUNPREFIX` oprion for the make
+  - [x] establish communication channel between the vimb instance and the now
+        required webextension (dbus)
+2. migrate as many of the features of the webkit1 vimb
+  - [ ] starting with custom config file `--config,-c` option
+  - [ ] running multiple ex-commands during startup `--cmd,-C` options
+  - [ ] starting with a named profile `--profile,-p` option
+  - [ ] xembed `--embed,-e` option
+  - [ ] socket support `--socket,-s` and `--dump,-d` option to print the actual
+        used socket path to stdout
+  - [ ] kiosk-mode `--kiosk,-k`
+  - [ ] allow to start vimb reading html from `stdin` by `vimb -`
+  - [ ] browser modes normal, input, command, pass-through and hintmode
+  - [ ] download support
+  - [ ] editor command
+  - [ ] external downloader
+  - [ ] hinting
+  - [ ] searching and matching of search results
+  - [ ] navigation j, k, h, l, ...
+  - [ ] history and history lookup
+  - [ ] completion
+  - [ ] HSTS
+  - [ ] auto-response-header
+  - [ ] cookies support
+  - [ ] register support and `:register` command
+  - [ ] read it later queue
+  - [ ] show scroll indicator in statusbar as top, x%, bttom or all
+        how can we get this information from webview easily?
+  - [ ] find a way to disable the scrollbars on the main frame
+  - [ ] page marks - maybe we change make them global (shared between
+        instances and to work also if the page was reloaded or changed like
+        the marks in vim)
+  - [x] zooming
+  - [ ] yanking
+  - [x] keymapping
+  - [ ] URL handler
+  - [x] shortcuts
+  - [ ] autocommands and augroups
+3. documentation
+4. testing
+  - [ ] write automatic test to the essential main features
+  - [ ] adapt the manual test cases and add some more to avoid regressions
+        before a release
+  - [ ] write new test cases for essential things like mode switching of vimb
+        when clicking form fields or tabbing over them.
+5. new features and changed behaviour
+  - [ ] try to use the webkit2 feature of running multiple pages with related
+        view instance `webkit_web_view_new_with_related_view`
+  - [ ] allow setting of different scopes, global and instance (new feature)
+  - [ ] remove the settings related to the gui like `status-color-bg` this was
+        only a hack and is not recommended for new gtk3 applications. the
+        color and font settings should be setup by css instead.
+  - [ ] webkit2 does not provide the view mode `source` so maybe this is going
+        to be removed together with the `gf` keybinding or we find a simple
+        workaround for this
 
-To build Vimb against GTK3 you can use `make GTK=3`.
+# license
 
-# License
-
-Information about the license is found in the file: LICENSE.
-
-# Mailing list
-
-- feature requests, issues and patches can be discussed on the [mailing list][mail]
-
-[vimb]:        http://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
-[keybindings]: http://fanglingsu.github.io/vimb/keybindings.html "vimb keybindings"
-[hints]:       http://fanglingsu.github.io/vimb/keybindings.html#hinting "vimb hinting"
-[queue]:       http://fanglingsu.github.io/vimb/commands.html#queue "vimb read it later queue feature"
-[history]:     http://fanglingsu.github.io/vimb/keybindings.html#history "vimb keybindings to access history"
-[handlers]:    http://fanglingsu.github.io/vimb/commands.html#handlers "vimb custom protocol handlers"
-[registers]:   http://fanglingsu.github.io/vimb/keybindings.html#registers "vimb yank/paste registers"
-[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
-[NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
-[autocmd]:     http://fanglingsu.github.io/vimb/commands.html#autocmd "Vim like autocmd and augroup feature"
-[set]:         http://fanglingsu.github.io/vimb/commands.html#settings "Vim like set syntax"
-[Arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
-[Arch]:        https://aur.archlinux.org/packages/vimb/ "vimb - archlinux package"
-[FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
-[Void Linux]:  https://github.com/voidlinux/void-packages/blob/master/srcpkgs/vimb/template "vimb - Void Linux package"
+Information about the license are found in the file LICENSE.

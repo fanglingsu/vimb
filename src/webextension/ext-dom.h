@@ -17,16 +17,14 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
-#ifdef FEATURE_SOCKET
-
-#ifndef _IO_H
-#define _IO_H
+#ifndef _EXT_DOM_H
+#define _EXT_DOM_H
 
 #include <glib.h>
+#include <webkitdom/webkitdom.h>
 
-gboolean io_init_socket(const char *name);
-void io_cleanup(void);
+gboolean ext_dom_is_editable(WebKitDOMElement *element);
+gboolean ext_dom_focus_input(WebKitDOMDocument *doc);
+char *ext_dom_editable_get_value(WebKitDOMElement *element);
 
-#endif /* end of include guard: _IO_H */
-#endif
+#endif /* end of include guard: _EXT-DOM_H */

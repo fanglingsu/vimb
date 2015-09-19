@@ -73,11 +73,11 @@ static const unsigned char chartable[256] = {
 
 /* CSI (control sequence introducer) is the first byte of a control sequence
  * and is always followed by two bytes. */
-#define CSI         0x80
-#define CSI_STR     "\x80"
+#define CSI                 0x80
+#define CSI_STR             "\x80"
 
 /* get internal representation for conrol character ^C */
-#define CTRL(c)     ((c) ^ 0x40)
+#define CTRL(c)             ((c) ^ 0x40)
 
 #define IS_SPECIAL(c)       (c < 0)
 
@@ -95,7 +95,6 @@ static const unsigned char chartable[256] = {
 #define KEY_DOWN        TERMCAP2KEY('k', 'd')
 #define KEY_LEFT        TERMCAP2KEY('k', 'l')
 #define KEY_RIGHT       TERMCAP2KEY('k', 'r')
-
 #define KEY_F1          TERMCAP2KEY('k', '1')
 #define KEY_F2          TERMCAP2KEY('k', '2')
 #define KEY_F3          TERMCAP2KEY('k', '3')

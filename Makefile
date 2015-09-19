@@ -1,49 +1,39 @@
 include config.mk
 
-SRCDIR=src
-DOCDIR=doc
+all: vimb
 
-all: $(TARGET)
 options:
-	@echo "$(PROJECT) build options:"
+	@echo "vimb build options:"
 	@echo "LIBS    = $(LIBS)"
 	@echo "CFLAGS  = $(CFLAGS)"
 	@echo "LDFLAGS = $(LDFLAGS)"
 	@echo "CC      = $(CC)"
 
-test: $(LIBTARGET)
-	@$(MAKE) $(MFLAGS) -s -C tests
-
-clean:
-	@$(MAKE) $(MFLAGS) -C src clean
-	@$(MAKE) $(MFLAGS) -C tests clean
-
-install: $(TARGET) $(DOCDIR)/$(MAN1)
-	install -d $(DESTDIR)$(BINDIR)
-	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
-	install -d $(DESTDIR)$(EXAMPLEDIR)
-	cp -r examples/* $(DESTDIR)$(EXAMPLEDIR)
-	install -d $(DESTDIR)$(MANDIR)/man1
-	@sed -e "s!VERSION!$(VERSION)!g" \
-		-e "s!PREFIX!$(PREFIX)!g" \
-		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/$(MAN1) > $(DESTDIR)$(MANDIR)/man1/$(MAN1)
+install: vimb
+	@# binary
+	install -d $(BINPREFIX)
+	install -m 755 $(SRCDIR)/vimb $(BINPREFIX)/vimb
+	@# extension
+	install -d $(EXTPREFIX)
+	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(EXTPREFIX)/$(EXTTARGET)
 
 uninstall:
-	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
-	$(RM) $(DESTDIR)$(MANDIR)/man1/$(MAN1)
-	$(RM) -r $(DESTDIR)$(EXAMPLEDIR)
+	$(RM) $(BINPREFIX)/vimb $(EXTPREFIX)/$(EXTTARGET)
 
-dist: dist-clean
-	@echo "Creating tarball."
-	@git archive --format tar -o $(DIST_FILE) HEAD
+vimb: $(SUBDIRS:%=%.subdir-all)
 
-dist-clean:
-	$(RM) $(DIST_FILE)
+%.subdir-all:
+	$(MAKE) $(MFLAGS) -C $*
 
-$(TARGET):
-	@$(MAKE) $(MFLAGS) -C src $(TARGET)
+%.subdir-clean:
+	$(MAKE) $(MFLAGS) -C $* clean
 
-$(LIBTARGET):
-	@$(MAKE) $(MFLAGS) -C src $(LIBTARGET)
+clean: $(SUBDIRS:%=%.subdir-clean)
 
-.PHONY: clean all install uninstall options dist dist-clean test
+runsandbox: sandbox
+	sandbox/usr/bin/vimb
+
+sandbox:
+	make RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
+
+.PHONY: all options clean install uninstall sandbox

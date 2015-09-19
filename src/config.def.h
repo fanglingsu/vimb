@@ -17,101 +17,35 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
-
-
 /* features */
-/* enable cookie support */
-#define FEATURE_COOKIE
-/* highlight search results */
-#define FEATURE_SEARCH_HIGHLIGHT
-/* disable scrollbars */
-#define FEATURE_NO_SCROLLBARS
-/* show page title in url completions */
-#define FEATURE_TITLE_IN_COMPLETION
-/* enable the read it later queue */
-#define FEATURE_QUEUE
-/* show load progress in window title */
-#define FEATURE_TITLE_PROGRESS
 /* should the history indicator [+-] be shown in status bar after url */
 #define FEATURE_HISTORY_INDICATOR
-/* should the profile name be shown before url in url bar */
-#define FEATURE_PROFILE_INDICATOR
 /* show wget style progressbar in status bar */
 #define FEATURE_WGET_PROGRESS_BAR
-#ifdef HAS_GTK3
-/* enables workaround for hight dpi displays */
-/* eventually the environment variable GDK_DPI_SCALE=2.0 must be set */
-/* to get the hack working */
-/* #define FEATURE_HIGH_DPI */
+#ifdef FEATURE_WGET_PROGRESS_BAR
+/* chars to use for the progressbar */
+#define PROGRESS_BAR                "=> "
+#define PROGRESS_BAR_LEN            20
 #endif
-/* enable HTTP Strict-Transport-Security*/
-#define FEATURE_HSTS
-/* enable soup caching - size can be configure by maximum-cache-size setting */
-#define FEATURE_SOUP_CACHE
-/* enable the :autocmd feature */
-#define FEATURE_AUTOCMD
-/* enable the :auto-response-header feature */
-#define FEATURE_ARH
-/* allow to use socket to remote control vimb */
-#define FEATURE_SOCKET
+/* show page title in url completions */
+#define FEATURE_TITLE_IN_COMPLETION
 
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */
-#define MESSAGE_TIMEOUT              5
+#define MESSAGE_TIMEOUT             5
 
-/* number of chars to be shown for ambiguous commands */
+/* number of chars to be shown in statusbar for ambiguous commands */
 #define SHOWCMD_LEN                 10
+/* css applied to the gui elements of the borwser window */
+#define GUI_STYLE                   "GtkBox#statusbar{color:#fff;background-color:#000;font:monospace bold 10;} \
+GtkBox#statusbar.secure{background-color:#95e454;color:#000;} \
+GtkBox#statusbar.insecure{background-color:#f77;color:#000;} \
+GtkTextView{background-color:#fff;color:#000;font:monospace 10;} \
+GtkTextView.error{background-color:#f77;font-weight:bold;} \
+GtkTreeView{color:#fff;background-color:#656565;font:monospace;} \
+GtkTreeView:hover{background-color:#777;} \
+GtkTreeView:selected{color:#f6f3e8;background-color:#888;}"
 
-/* parh to crt file for the certificate validation */
-#define SETTING_CA_BUNDLE           "/etc/ssl/certs/ca-certificates.crt"
-#define SETTING_MAX_CONNS           25
-#define SETTING_MAX_CONNS_PER_HOST   5
 /* default font size for fonts in webview */
 #define SETTING_DEFAULT_FONT_SIZE   10
-#define SETTING_GUI_FONT_NORMAL     "monospace normal 10"
-#define SETTING_GUI_FONT_EMPH       "monospace bold 10"
-#define SETTING_HOME_PAGE           "http://fanglingsu.github.io/vimb/"
-
-#define MAXIMUM_HINTS              500
-
-#define WIN_WIDTH                  800
-#define WIN_HEIGHT                 600
-
-#ifdef FEATURE_WGET_PROGRESS_BAR
-/* chars to use for the progressbar */
-#define PROGRESS_BAR             "=> "
-#define PROGRESS_BAR_LEN            20
-#endif
-
-/* CSS style use on creating hints. This might also be averrules by css out of
- * $XDG_CONFIG_HOME/vimb/style.css file. */
-#define HINT_CSS "#_hintContainer{\
-position:static\
-}\
-._hintLabel{\
--webkit-transform:translate(-4px,-4px);\
-position:absolute;\
-z-index:100000;\
-font:bold .8em monospace;\
-color:#000;\
-background-color:#fff;\
-margin:0;\
-padding:0px 1px;\
-border:1px solid #444;\
-opacity:0.7\
-}\
-._hintElem{\
-background-color:#ff0 !important;\
-color:#000 !important\
-}\
-._hintElem._hintFocus{\
-background-color:#8f0 !important\
-}\
-._hintLabel._hintFocus{\
-z-index:100001;\
-opacity:1\
-}"
-
-#endif /* end of include guard: _CONFIG_H */
+#define SETTING_HOME_PAGE           "about:blank"

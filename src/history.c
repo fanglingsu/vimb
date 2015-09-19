@@ -17,37 +17,59 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
 #include <fcntl.h>
+#include <glib.h>
 #include <sys/file.h>
-#include "main.h"
-#include "history.h"
-#include "util.h"
-#include "completion.h"
-#include "ascii.h"
 
-extern VbCore vb;
+#include "ascii.h"
+#include "completion.h"
+#include "config.h"
+#include "history.h"
+#include "main.h"
+#include "util.h"
 
 #define HIST_FILE(t) (vb.files[file_map[t]])
-/* map history types to files */
-static const VbFile file_map[HISTORY_LAST] = {
-    FILES_COMMAND,
-    FILES_SEARCH,
-    FILES_HISTORY
-};
-
 typedef struct {
     char *first;
     char *second;
 } History;
 
+static gboolean history_item_contains_all_tags(History *item, char **query, guint qlen);
+static void free_history(History *item);
+static History *line_to_history(const char *uri, const char *title);
 static GList *load(const char *file);
 static void write_to_file(GList *list, const char *file);
-static gboolean history_item_contains_all_tags(History *item, char **query,
-    unsigned int qlen);
-static History *line_to_history(const char *uri, const char *title);
-static void free_history(History *item);
 
+/* map history types to files */
+static const int file_map[HISTORY_LAST] = {
+    FILES_COMMAND,
+    FILES_SEARCH,
+    FILES_HISTORY
+};
+extern struct Vimb vb;
+
+/**
+ * Write a new history entry to the end of history file.
+ */
+void history_add(Client *c, HistoryType type, const char *value, const char *additional)
+{
+    const char *file;
+
+#if 0
+    /* Don't write a history entry if the history max size is set to 0. Else
+     * skip command history in case the command was not typed by the user. */
+    if (!vb.config.history_max || (!vb.state.typed && type == HISTORY_COMMAND)) {
+        return;
+    }
+#endif
+
+    file = HIST_FILE(type);
+    if (additional) {
+        util_file_append(file, "%s\t%s\n", value, additional);
+    } else {
+        util_file_append(file, "%s\n", value);
+    }
+}
 
 /**
  * Makes all history items unique and force them to fit the maximum history
@@ -71,32 +93,11 @@ void history_cleanup(void)
     }
 }
 
-/**
- * Write a new history entry to the end of history file.
- */
-void history_add(HistoryType type, const char *value, const char *additional)
-{
-    const char *file;
-
-    /* Don't write a history entry if the history max size is set to 0. Else
-     * skip command history in case the command was not typed by the user. */
-    if (!vb.config.history_max || (!vb.state.typed && type == HISTORY_COMMAND)) {
-        return;
-    }
-
-    file = HIST_FILE(type);
-    if (additional) {
-        util_file_append(file, "%s\t%s\n", value, additional);
-    } else {
-        util_file_append(file, "%s\n", value);
-    }
-}
-
 gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input)
 {
     char **parts;
     unsigned int len;
-    gboolean found = false;
+    gboolean found = FALSE;
     GList *src = NULL;
     GtkTreeIter iter;
     History *item;
@@ -116,7 +117,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
 #endif
                 -1
             );
-            found = true;
+            found = TRUE;
         }
     } else if (HISTORY_URL == type) {
         parts = g_strsplit(input, " ", 0);
@@ -134,7 +135,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
 #endif
                     -1
                 );
-                found = true;
+                found = TRUE;
             }
         }
         g_strfreev(parts);
@@ -151,7 +152,7 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
 #endif
                     -1
                 );
-                found = true;
+                found = TRUE;
             }
         }
     }
@@ -169,12 +170,12 @@ GList *history_get_list(VbInputType type, const char *query)
     GList *result = NULL, *src = NULL;
 
     switch (type) {
-        case VB_INPUT_COMMAND:
+        case INPUT_COMMAND:
             src = load(HIST_FILE(HISTORY_COMMAND));
             break;
 
-        case VB_INPUT_SEARCH_FORWARD:
-        case VB_INPUT_SEARCH_BACKWARD:
+        case INPUT_SEARCH_FORWARD:
+        case INPUT_SEARCH_BACKWARD:
             src = load(HIST_FILE(HISTORY_SEARCH));
             break;
 
@@ -200,7 +201,46 @@ GList *history_get_list(VbInputType type, const char *query)
 }
 
 /**
- * Loads history items form file but eleminate duplicates in FIFO order.
+ * Checks if the given array of tags are all found in history item.
+ */
+static gboolean history_item_contains_all_tags(History *item, char **query, guint qlen)
+{
+    unsigned int i;
+    if (!qlen) {
+        return TRUE;
+    }
+
+    /* iterate over all query parts */
+    for (i = 0; i < qlen; i++) {
+        if (!(util_strcasestr(item->first, query[i])
+            || (item->second && util_strcasestr(item->second, query[i])))
+        ) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static void free_history(History *item)
+{
+    g_free(item->first);
+    g_free(item->second);
+    g_slice_free(History, item);
+}
+
+static History *line_to_history(const char *uri, const char *title)
+{
+    History *item = g_slice_new0(History);
+
+    item->first  = g_strdup(uri);
+    item->second = g_strdup(title);
+
+    return item;
+}
+
+/**
+ * Loads history items form file but eliminate duplicates in FIFO order.
  *
  * Returned list must be freed with (GDestroyNotify)free_history.
  */
@@ -233,44 +273,4 @@ static void write_to_file(GList *list, const char *file)
         flock(fileno(f), LOCK_UN);
         fclose(f);
     }
-}
-
-/**
- * Checks if the given array of tags are all found in history item.
- */
-static gboolean history_item_contains_all_tags(History *item, char **query,
-    unsigned int qlen)
-{
-    unsigned int i;
-    if (!qlen) {
-        return true;
-    }
-
-    /* iterate over all query parts */
-    for (i = 0; i < qlen; i++) {
-        if (!(util_strcasestr(item->first, query[i])
-            || (item->second && util_strcasestr(item->second, query[i])))
-        ) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-static History *line_to_history(const char *uri, const char *title)
-{
-    History *item = g_slice_new0(History);
-
-    item->first  = g_strdup(uri);
-    item->second = g_strdup(title);
-
-    return item;
-}
-
-static void free_history(History *item)
-{
-    g_free(item->first);
-    g_free(item->second);
-    g_slice_free(History, item);
 }
