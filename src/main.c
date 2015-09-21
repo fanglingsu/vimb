@@ -547,24 +547,34 @@ void vb_update_input_style(void)
 void vb_update_urlbar(const char *uri)
 {
     Gui *gui = &vb.gui;
+#if !defined(FEATURE_HISTORY_INDICATOR) && !defined(FEATURE_PROFILE_INDICATOR)
+    /* if only the uri is shown - write it like it is on the label */
+    gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
+#else
+    GString *str = g_string_new("");
+#ifdef FEATURE_PROFILE_INDICATOR
+    if (vb.config.profile) {
+        g_string_append_printf(str, "[%s] ", vb.config.profile);
+    }
+#endif /* FEATURE_PROFILE_INDICATOR */
+
+    g_string_append_printf(str, "%s", uri);
+
 #ifdef FEATURE_HISTORY_INDICATOR
     gboolean back, fwd;
-    char *str;
 
     back = webkit_web_view_can_go_back(gui->webview);
     fwd  = webkit_web_view_can_go_forward(gui->webview);
 
     /* show history indicator only if there is something to show */
     if (back || fwd) {
-        str = g_strdup_printf("%s [%s]", uri, back ? (fwd ? "-+" : "-") : "+");
-        gtk_label_set_text(GTK_LABEL(gui->statusbar.left), str);
-        g_free(str);
-    } else {
-        gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
+        g_string_append_printf(str, " [%s]", back ? (fwd ? "-+" : "-") : "+");
     }
-#else
-    gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
-#endif
+#endif /* FEATURE_HISTORY_INDICATOR */
+
+    gtk_label_set_text(GTK_LABEL(gui->statusbar.left), str->str);
+    g_string_free(str, true);
+#endif /* !defined(FEATURE_HISTORY_INDICATOR) && !defined(FEATURE_PROFILE_INDICATOR) */
 }
 
 void vb_update_mode_label(const char *label)
