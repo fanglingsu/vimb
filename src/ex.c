@@ -1197,6 +1197,7 @@ static gboolean complete(short direction)
                     break;
 #endif
 
+                case EX_SAVE:
                 case EX_SOURCE:
                     sort  = true;
                     found = util_filename_fill_completion(store, token);
