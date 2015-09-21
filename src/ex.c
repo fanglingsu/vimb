@@ -504,29 +504,32 @@ VbCmdResult ex_run_string(const char *input, gboolean enable_history)
 /**
  * Run all ex commands in a file.
  */
-gboolean ex_run_file(const char *filename)
+VbCmdResult ex_run_file(const char *filename)
 {
     char *line, **lines;
+    VbCmdResult res = VB_CMD_SUCCESS;
 
     lines = util_get_lines(filename);
 
     if (!lines) {
-        return false;
+        return res;
     }
 
     int length = g_strv_length(lines) - 1;
     for (int i = 0; i < length; i++) {
         line = lines[i];
-        if (*line == '#') {
+        /* skip commented or empty lines */
+        if (*line == '#' || !*line) {
             continue;
         }
-        if (ex_run_string(line, false) & VB_CMD_ERROR) {
+        if ((ex_run_string(line, false) & ~VB_CMD_KEEPINPUT) == VB_CMD_ERROR) {
+            res = VB_CMD_ERROR | VB_CMD_KEEPINPUT;
             g_warning("Invalid command in %s: '%s'", filename, line);
         }
     }
     g_strfreev(lines);
 
-    return true;
+    return res;
 }
 
 /**
@@ -1018,7 +1021,7 @@ static VbCmdResult ex_shellcmd(const ExArg *arg)
 
 static VbCmdResult ex_source(const ExArg *arg)
 {
-    return ex_run_file(arg->rhs->str) ? VB_CMD_SUCCESS | VB_CMD_KEEPINPUT : VB_CMD_ERROR;
+    return ex_run_file(arg->rhs->str);
 }
 
 static VbCmdResult ex_handlers(const ExArg *arg)

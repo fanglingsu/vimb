@@ -29,6 +29,6 @@ VbResult ex_keypress(int key);
 void ex_input_changed(const char *text);
 gboolean ex_fill_completion(GtkListStore *store, const char *input);
 VbCmdResult ex_run_string(const char *input, gboolean enable_history);
-gboolean ex_run_file(const char *filename);
+VbCmdResult ex_run_file(const char *filename);
 
 #endif /* end of include guard: _EX_H */

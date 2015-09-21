@@ -114,7 +114,6 @@ static void set_uri(const char *uri);
 static void set_title(const char *title);
 static void init_core(void);
 static void marks_clear(void);
-static void read_config(void);
 static void setup_signals();
 static void init_files(void);
 static void session_init(void);
@@ -1080,7 +1079,8 @@ static void init_core(void)
     /* make sure the main window and all its contents are visible */
     gtk_widget_show_all(gui->window);
 
-    read_config();
+    /* read the config file */
+    ex_run_file(vb.files[FILES_CONFIG]);
 
     /* initially apply input style */
     vb_update_input_style();
@@ -1123,11 +1123,6 @@ static void marks_clear(void)
     for (i = 0; i < VB_MARK_SIZE; i++) {
         vb.state.marks[i] = -1;
     }
-}
-
-static void read_config(void)
-{
-    ex_run_file(vb.files[FILES_CONFIG]);
 }
 
 static void setup_signals()
