@@ -784,6 +784,9 @@ Example:
   'page.html', 'subdir/img1.png', '~/download.html' or absolute paths
   '/tmp/file.html'.
 
+\:so[ource] [*file*]
+: Read ex commands from *file*.
+
 \:q[uit]
 : Close the browser. This will be refused if there are running downloads.
 
