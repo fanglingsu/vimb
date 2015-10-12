@@ -90,7 +90,7 @@ static void cookiejar_finalize(GObject *self)
 
 static void cookiejar_init(CookieJar *self)
 {
-    self->lock = open(vb.files[FILES_COOKIE], 0);
+    self->lock = open(vb.files[FILES_COOKIE], O_RDWR);
 }
 
 static void cookiejar_set_property(GObject *self, guint prop_id, const

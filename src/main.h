@@ -43,7 +43,7 @@
 
 #define FLOCK(fd, cmd) { \
     struct flock lock = {.l_type=cmd,.l_start=0,.l_whence=SEEK_SET,.l_len=0}; \
-    fcntl(fd, F_SETLK, lock); \
+    fcntl(fd, F_SETLKW, &lock); \
 }
 
 #ifdef DEBUG
