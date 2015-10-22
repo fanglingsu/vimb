@@ -788,6 +788,8 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             break;
 
         case WEBKIT_LOAD_FINISHED:
+            frame = webkit_web_view_get_main_frame(view);
+            dom_install_focus_blur_callbacks(webkit_web_frame_get_dom_document(frame));
             uri = webkit_web_view_get_uri(view);
 #ifdef FEATURE_AUTOCMD
             autocmd_run(AU_LOAD_FINISHED, uri, NULL);
