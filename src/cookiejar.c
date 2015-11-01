@@ -20,6 +20,8 @@
 #include "config.h"
 
 #ifdef FEATURE_COOKIE
+#include <fcntl.h>
+#include <sys/file.h>
 #include "main.h"
 #include "cookiejar.h"
 
@@ -47,7 +49,7 @@ SoupCookieJar *cookiejar_new(const char *file, gboolean ro)
 
 static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupCookie *new_cookie)
 {
-    FLOCK(COOKIEJAR(self)->lock, F_WRLCK);
+    flock(COOKIEJAR(self)->lock, LOCK_EX);
     SoupDate *expire;
     if (new_cookie) {
     /* session-expire-time handling */
@@ -70,7 +72,7 @@ static void cookiejar_changed(SoupCookieJar *self, SoupCookie *old_cookie, SoupC
     }
     }
     SOUP_COOKIE_JAR_CLASS(cookiejar_parent_class)->changed(self, old_cookie, new_cookie);
-    FLOCK(COOKIEJAR(self)->lock, F_UNLCK);
+    flock(COOKIEJAR(self)->lock, LOCK_UN);
 }
 
 static void cookiejar_class_init(CookieJarClass *klass)
@@ -96,8 +98,8 @@ static void cookiejar_init(CookieJar *self)
 static void cookiejar_set_property(GObject *self, guint prop_id, const
     GValue *value, GParamSpec *pspec)
 {
-    FLOCK(COOKIEJAR(self)->lock, F_RDLCK);
+    flock(COOKIEJAR(self)->lock, LOCK_SH);
     G_OBJECT_CLASS(cookiejar_parent_class)->set_property(self, prop_id, value, pspec);
-    FLOCK(COOKIEJAR(self)->lock, F_UNLCK);
+    flock(COOKIEJAR(self)->lock, LOCK_UN);
 }
 #endif

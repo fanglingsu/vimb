@@ -18,6 +18,8 @@
  */
 
 #include "config.h"
+#include <fcntl.h>
+#include <sys/file.h>
 #include <stdio.h>
 #include <pwd.h>
 #include <ctype.h>
@@ -222,13 +224,13 @@ gboolean util_file_append(const char *file, const char *format, ...)
     FILE *f;
 
     if ((f = fopen(file, "a+"))) {
-        FLOCK(fileno(f), F_WRLCK);
+        flock(fileno(f), LOCK_EX);
 
         va_start(args, format);
         vfprintf(f, format, args);
         va_end(args);
 
-        FLOCK(fileno(f), F_UNLCK);
+        flock(fileno(f), LOCK_UN);
         fclose(f);
 
         return true;
@@ -251,7 +253,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
 
     content = util_get_file_contents(file, NULL);
     if ((f = fopen(file, "w"))) {
-        FLOCK(fileno(f), F_WRLCK);
+        flock(fileno(f), LOCK_EX);
 
         va_start(args, format);
         /* write new content to the file */
@@ -261,7 +263,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
         /* append previous file content */
         fputs(content, f);
 
-        FLOCK(fileno(f), F_UNLCK);
+        flock(fileno(f), LOCK_UN);
         fclose(f);
 
         res = true;
