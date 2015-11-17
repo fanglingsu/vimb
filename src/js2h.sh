@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo -n '#define HINTS_JS "'
+echo '#define HINTS_JS "' | tr -d '\n'
 cat $1 | \
     tr '\n\r\t' ' ' | \
     sed -e 's:/\*[^*]*\*/::g' \
