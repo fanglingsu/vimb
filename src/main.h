@@ -367,7 +367,7 @@ typedef struct {
     VbColor              status_bg[VB_STATUS_LAST];
     VbColor              status_fg[VB_STATUS_LAST];
     PangoFontDescription *status_font[VB_STATUS_LAST];
-} Style;
+} VbStyle;
 
 typedef struct {
     Gui             gui;
@@ -376,7 +376,7 @@ typedef struct {
     char            *files[FILES_LAST];
     Mode            *mode;
     Config          config;
-    Style           style;
+    VbStyle           style;
     SoupSession     *session;
 #ifdef HAS_GTK3
     Window          embed;
