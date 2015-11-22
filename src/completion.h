@@ -35,6 +35,6 @@ typedef void (*CompletionSelectFunc) (char *match);
 gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
     gboolean back);
 void completion_clean(void);
-void completion_next(gboolean back);
+gboolean completion_next(gboolean back);
 
 #endif /* end of include guard: _COMPLETION_H */

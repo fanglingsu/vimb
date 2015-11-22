@@ -208,6 +208,7 @@ static struct {
     guint count;
     char  *prefix;  /* completion prefix like :, ? and / */
     char  *current; /* holds the current written input box content */
+    char  *token;   /* initial filter content */
 } excomp;
 
 static struct {
@@ -1102,8 +1103,11 @@ static gboolean complete(short direction)
     /* if completion was already started move to the next/prev item */
     if (vb.mode->flags & FLAG_COMPLETION) {
         if (excomp.current && !strcmp(input, excomp.current)) {
-            /* step through the next/prev completion item */
-            completion_next(direction < 0);
+            /* Step through the next/prev completion item. */
+            if (!completion_next(direction < 0)) {
+                /* If we stepped over the last/first item - put the initial content in */
+                completion_select(excomp.token);
+            }
             g_free(input);
 
             return true;
@@ -1135,7 +1139,6 @@ static gboolean complete(short direction)
          * there is a space after the command and the optional '!' bang. */
         if (parse_command_name(&in, arg) && parse_bang(&in, arg) && VB_IS_SPACE(*in)) {
             const char *token;
-
             /* Get only the last word of input string for the completion for
              * bookmark tag completion. */
             if (arg->code == EX_BMA) {
@@ -1155,6 +1158,7 @@ static gboolean complete(short direction)
              * the ':open ' if ':open something' is completed. This means that
              * the completion will only the none prefix part of the input */
             OVERWRITE_NSTRING(excomp.prefix, input, token - input + 1);
+            OVERWRITE_STRING(excomp.token, token + 1);
 
             /* the token points to a space, skip this */
             skip_whitespace(&token);
@@ -1212,6 +1216,7 @@ static gboolean complete(short direction)
         } else { /* complete command names */
             /* restore the 'in' pointer after try to parse command name */
             in = before_cmdname;
+            OVERWRITE_STRING(excomp.token, in);
 
             /* Backup the parsed data so we can access them in
              * completion_select function. */
@@ -1225,6 +1230,7 @@ static gboolean complete(short direction)
         free_cmdarg(arg);
     } else if (*in == '/' || *in == '?') {
         if (history_fill_completion(store, HISTORY_SEARCH, in + 1)) {
+            OVERWRITE_STRING(excomp.token, in + 1);
             OVERWRITE_NSTRING(excomp.prefix, in, 1);
             sort  = true;
             found = true;
