@@ -1089,7 +1089,7 @@ static gboolean complete(short direction)
     char *input;            /* input read from inputbox */
     const char *in;         /* pointer to input that we move */
     gboolean found = false;
-    gboolean sort  = false;
+    gboolean sort  = true;
     GtkListStore *store;
 
     /* if direction is 0 stop the completion */
@@ -1170,43 +1170,37 @@ static gboolean complete(short direction)
                     } else {
                         found = history_fill_completion(store, HISTORY_URL, token);
                     }
+                    sort = false;
                     break;
 
                 case EX_SET:
-                    sort  = true;
                     found = setting_fill_completion(store, token);
                     break;
 
                 case EX_BMA:
-                    sort  = true;
                     found = bookmark_fill_tag_completion(store, token);
                     break;
 
                 case EX_SCR:
-                    sort  = true;
                     found = shortcut_fill_completion(store, token);
                     break;
 
                 case EX_HANDREM:
-                    sort  = true;
                     found = handler_fill_completion(store, token);
                     break;
 
 #ifdef FEATURE_AUTOCMD
                 case EX_AUTOCMD:
-                    sort  = true;
                     found = autocmd_fill_event_completion(store, token);
                     break;
 
                 case EX_AUGROUP:
-                    sort  = true;
                     found = autocmd_fill_group_completion(store, token);
                     break;
 #endif
 
                 case EX_SAVE:
                 case EX_SOURCE:
-                    sort  = true;
                     found = util_filename_fill_completion(store, token);
                     break;
 
@@ -1225,6 +1219,7 @@ static gboolean complete(short direction)
             if (ex_fill_completion(store, in)) {
                 OVERWRITE_STRING(excomp.prefix, ":");
                 found = true;
+                sort  = false;
             }
         }
         free_cmdarg(arg);
@@ -1232,7 +1227,6 @@ static gboolean complete(short direction)
         if (history_fill_completion(store, HISTORY_SEARCH, in + 1)) {
             OVERWRITE_STRING(excomp.token, in + 1);
             OVERWRITE_NSTRING(excomp.prefix, in, 1);
-            sort  = true;
             found = true;
         }
     }

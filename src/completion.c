@@ -174,24 +174,26 @@ gboolean completion_next(gboolean back)
 
     rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(tree), NULL);
     if (back) {
-        /* step back */
-        if (--comp.active < 0) {
-            if (comp.active == -1) {
-                gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree)));
-                return false;
-            } else {
-                comp.active = rows - 1;
-            }
+        comp.active--;
+        /* Step back over the beginning. */
+        if (comp.active == -1) {
+            /* Unselect the current item to show the user that the shown
+             * content is the initial typed content. */
+            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree)));
+
+            return false;
+        } else if (comp.active < -1) {
+            comp.active = rows - 1;
         }
     } else {
-        /* step forward */
-        if (++comp.active >= rows) {
-            if (comp.active == rows) {
-                gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree)));
-                return false;
-            } else {
-                comp.active = 0;
-            }
+        comp.active++;
+        /* Step over the end. */
+        if (comp.active == rows) {
+            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree)));
+
+            return false;
+        } else if (comp.active >= rows) {
+            comp.active = 0;
         }
     }
 
