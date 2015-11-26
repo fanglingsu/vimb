@@ -42,6 +42,7 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     guint max_items);
 gboolean util_file_append(const char *file, const char *format, ...);
 gboolean util_file_prepend(const char *file, const char *format, ...);
+char *util_file_pop_line(const char *file, int *item_count);
 char* util_strcasestr(const char* haystack, const char* needle);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 gboolean util_create_tmp_file(const char *content, char **file);

@@ -598,8 +598,20 @@ void vb_quit(gboolean force)
     webkit_web_view_stop_loading(vb.gui.webview);
 
     /* write last URL into file for recreation */
-    if (vb.state.uri) {
-        g_file_set_contents(vb.files[FILES_CLOSED], vb.state.uri, -1, NULL);
+    if (vb.state.uri && vb.config.closed_max) {
+        char **lines = util_get_lines(vb.files[FILES_CLOSED]);
+        GString *new = g_string_new(vb.state.uri);
+        g_string_append(new, "\n");
+        if (lines) {
+            int len = g_strv_length(lines);
+            int i;
+            for (i = 0; i < len - 1 && i < vb.config.closed_max - 1; i++) {
+                g_string_append_printf(new, "%s\n", lines[i]);
+            }
+            g_strfreev(lines);
+        }
+        g_file_set_contents(vb.files[FILES_CLOSED], new->str, -1, NULL);
+        g_string_free(new, true);
     }
 
     gtk_main_quit();

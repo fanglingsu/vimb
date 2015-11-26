@@ -273,6 +273,40 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
     return res;
 }
 
+/**
+ * Retrieves the first line from file and delete it from file.
+ *
+ * @file:       file to read from
+ * @item_count: will be filled with the number of remaining lines in file if it
+ *              is not NULL.
+ *
+ * Returned string must be freed with g_free.
+ */
+char *util_file_pop_line(const char *file, int *item_count)
+{
+    char **lines = util_get_lines(file);
+    char *line = NULL;
+    int count = 0;
+
+    if (lines) {
+        int len = g_strv_length(lines);
+        if (len) {
+            line = g_strdup(lines[0]);
+            /* minus one for last empty item and one for popped item */
+            count = len - 2;
+            char *new = g_strjoinv("\n", lines + 1);
+            g_file_set_contents(file, new, -1, NULL);
+            g_free(new);
+        }
+        g_strfreev(lines);
+    }
+
+    if (item_count) {
+        *item_count = count;
+    }
+    return line;
+}
+
 char *util_strcasestr(const char *haystack, const char *needle)
 {
     guchar c1, c2;

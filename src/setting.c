@@ -208,6 +208,8 @@ void setting_init()
     setting_add("download-path", TYPE_CHAR, &"", internal, 0, &vb.config.download_dir);
     i = 2000;
     setting_add("history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
+    i = 10;
+    setting_add("closed-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.closed_max);
     setting_add("editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
     setting_add("header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, NULL);
 #ifdef FEATURE_ARH

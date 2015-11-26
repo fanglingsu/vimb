@@ -323,6 +323,7 @@ typedef struct {
     int          scrollstep;
     char         *download_dir;
     guint        history_max;
+    guint        closed_max;
     guint        timeoutlen;       /* timeout for ambiguous mappings */
     gboolean     strict_focus;
     GHashTable   *headers;         /* holds user defined header appended to requests */

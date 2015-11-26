@@ -602,12 +602,19 @@ static VbResult normal_open_clipboard(const NormalCmdInfo *info)
 
 static VbResult normal_open(const NormalCmdInfo *info)
 {
+    char *uri;
     Arg a;
+
+    uri = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
+    if (!uri) {
+        return RESULT_ERROR;
+    }
+
     /* open last closed */
     a.i = info->key == 'U' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
-    a.s = util_get_file_contents(vb.files[FILES_CLOSED], NULL);
+    a.s = uri;
     vb_load_uri(&a);
-    g_free(a.s);
+    g_free(uri);
 
     return RESULT_COMPLETE;
 }

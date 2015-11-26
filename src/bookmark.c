@@ -215,29 +215,7 @@ gboolean bookmark_queue_unshift(const char *uri)
  */
 char *bookmark_queue_pop(int *item_count)
 {
-    int len, i;
-    char **lines, *uri = NULL;
-
-    lines = util_get_lines(vb.files[FILES_QUEUE]);
-    if (lines && (len = g_strv_length(lines))) {
-        GString *new = g_string_new(NULL);
-
-        uri = g_strdup(lines[0]);
-        /* don't process last empty line */
-        len -= 1;
-        /* skip the first list that should be removed */
-        for (i = 1; i < len; i++) {
-            g_string_append_printf(new, "%s\n", lines[i]);
-        }
-        g_strfreev(lines);
-        g_file_set_contents(vb.files[FILES_QUEUE], new->str, -1, NULL);
-        g_string_free(new, true);
-
-        *item_count = len - 1;
-    } else {
-        *item_count = 0;
-    }
-    return uri;
+    return util_file_pop_line(vb.files[FILES_QUEUE], item_count);
 }
 
 /**
