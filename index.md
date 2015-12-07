@@ -18,6 +18,10 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+New setting 'closed-max-items'
+: Maximum number of stored last closed browser windows. If closed-max-items is
+  set to 0, closed browser windows will not be stored. By default this is 10.
+
 New option [-p, --profile](man.html#OPTIONS)
 : This allows to create and run vimb with a seperate named config directory,
   with own history and bookmarks.
@@ -41,11 +45,6 @@ Remote-Control via socket (previously a fifo)
       echo '<C-Q>' | socat - UNIX-CONNECT:$SOCKET
       # or start an interactive remote control session
       socat READLINE UNIX-CONNECT:$(< ~/socket)
-
-Hinting by Letters
-: Vimb allow now to set the chars used to built the hint labels. To have a
-  more vimium like behaviour you can `:set hintkeys=lsdfghjk`. This allows
-  fast filtering without moving you hands from the home row of the keyboard.
 
 
 ## screenshots

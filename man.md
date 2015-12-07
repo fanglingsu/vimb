@@ -918,6 +918,10 @@ auto-shrink-images (bool)
 caret (bool)
 : Whether to enable accessibility enhanced keyboard navigation.
 
+closed-max-items (int)
+: Maximum number of stored last closed browser windows. If closed-max-items is
+  set to 0, closed browser windows will not be stored.
+
 cursivfont (string)
 : The font family used as the default for content using cursive font.
 
