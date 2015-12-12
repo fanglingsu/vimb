@@ -36,6 +36,9 @@ nav li a{text-align:center;display:block;padding:.2em .5em;border:solid #ccc;bor
 nav li:last-child a{border-right-width:0}
 nav li.active a{background-color:#fff;color:#555;border-width:0}
 nav li.active+li a{border-left-width:1px}
+#markdown-toc{margin-left:0}
+#markdown-toc li{list-style-type:none;padding-left:0}
+
 @media screen and (max-width:38em){
 #page{margin:0}
 #content{padding:0em .5em}

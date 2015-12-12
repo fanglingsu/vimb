@@ -7,6 +7,9 @@ active: faq
 
 # FAQ
 
+* toc
+{:toc}
+
 ## Does vimb provide formfiller?
 
 No, vimb has no built in formfiller. But it's possible to put this into by

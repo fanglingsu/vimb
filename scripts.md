@@ -7,6 +7,9 @@ active: scripts
 
 # user scripts
 
+* toc
+{:toc}
+
 ## formfiller
 {:#formfiller}
 
