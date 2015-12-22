@@ -3,6 +3,8 @@ html{background-color:#e0ddda}
 body{color:#000;font-family:"Dejavu sans-serif",sans-serif;font-size:1em;line-height:1.5em}
 #page{background-color:#fff;margin:1em auto 2em;max-width:60em;border:1px solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
 #content{padding:1em 8% 2.5em}
+#page+a{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+#page+a:focus{position:static;width:auto;height:auto}
 footer{margin:0 .5em 1em;display:block;text-align:center}
 h1,h2,h3{font-weight:bolder;padding:.5em 0 .2em;margin-bottom:.3em;color:#555}
 h1{padding-top:.8em}
