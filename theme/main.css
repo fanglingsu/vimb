@@ -34,10 +34,10 @@ dd{margin:0 0 .4em 3em}
 nav{font-size:x-large;padding-bottom:1.5em}
 nav ul{margin:0;padding:0}
 nav li{list-style:none;float:left;width:25%;margin:0;padding:0}
-nav li a{text-align:center;display:block;padding:.2em .5em;border:solid #ccc;border-width:0 1px 1px 0;height:1.5em;top:.1em;background-color:#f4f4f4}
-nav li:last-child a{border-right-width:0}
-nav li.active a{background-color:#fff;color:#555;border-width:0}
-nav li.active+li a{border-left-width:1px}
+nav li *{text-align:center;display:block;padding:.2em .5em;border:solid #ccc;border-width:0 1px 1px 0;height:1.5em;top:.1em;background-color:#f4f4f4}
+nav li:last-child *{border-right-width:0}
+nav li.active *{background-color:#fff;color:#555;border-width:0}
+nav li.active+li *{border-left-width:1px}
 #markdown-toc{margin-left:0}
 #markdown-toc li{list-style-type:none;padding-left:0}
 
@@ -45,7 +45,7 @@ nav li.active+li a{border-left-width:1px}
 #page{margin:0}
 #content{padding:0em .5em}
 nav li{width:auto}
-nav li a{border:none;padding:0 .5em;font-size:smaller;background:none}
+nav li *{border:none;padding:0 .5em;font-size:smaller;background:none}
 }
 .c{color:#998;font-style:italic}
 .err{color:#a61717;background-color:#e3d2d2}
