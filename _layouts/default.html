@@ -10,8 +10,12 @@
 </head>
 <body>
 <div id="page">
-<a href="#content" class="skip">skip to content</a>
+<div id="content">
+<a href="#nav-main" class="nogui">skip to main navigation</a>
+{{ content }}
+</div>
 <nav>
+  <h3 id="nav-main" class="nogui">main navigation</h3>
   <ul>
     <li{% if page.active == "home" %} class="active"><span>home</span>{% else %}><a href="./">home</a>{% endif %}</li>
     <li{% if page.active == "man" %} class="active"><span>manual</span>{% else %}><a href="man.html">manual</a>{% endif %}</li>
@@ -19,9 +23,6 @@
     <li{% if page.active == "scripts" %} class="active"><span>scripts</span>{% else %}><a href="scripts.html">scripts</a>{% endif %}</li>
   </ul>
 </nav>
-<div id="content">
-{{ content }}
-</div>
 <footer><a href="#page" title="to top">&#9650; top</a></footer>
 </div>
 </body>

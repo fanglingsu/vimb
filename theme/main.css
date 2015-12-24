@@ -1,10 +1,8 @@
 *{margin:0;padding:0}
 html{background-color:#e0ddda}
 body{color:#000;font-family:"Dejavu sans-serif",sans-serif;font-size:1em;line-height:1.5em}
-#page{background-color:#fff;margin:1em auto 2em;max-width:60em;border:1px solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca}
-#content{padding:1em 8% 2.5em}
-a.skip{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
-a.skip:focus{position:static;width:auto;height:auto}
+#page{background-color:#fff;margin:1em auto 2em;max-width:60em;border:1px solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca;position:relative}
+#content{padding:3em 8% 2.5em}
 footer{margin:0 .5em 1em;display:block;text-align:center}
 h1,h2,h3{font-weight:bolder;padding:.5em 0 .2em;margin-bottom:.3em;color:#555}
 h1{padding-top:.8em}
@@ -31,19 +29,20 @@ th{background-color:#eee}
 hr{border-top:1px solid #ccc;width:100%}
 dl{width:100%}
 dd{margin:0 0 .4em 3em}
-nav{font-size:x-large;padding-bottom:1.5em}
+nav{font-size:x-large;padding-bottom:1.5em;position:absolute;top:0;width:100%}
 nav ul{margin:0;padding:0}
 nav li{list-style:none;float:left;width:25%;margin:0;padding:0}
 nav li *{text-align:center;display:block;padding:.2em .5em;border:solid #ccc;border-width:0 1px 1px 0;height:1.5em;top:.1em;background-color:#f4f4f4}
 nav li:last-child *{border-right-width:0}
 nav li.active *{background-color:#fff;color:#555;border-width:0}
 nav li.active+li *{border-left-width:1px}
+.nogui{position:absolute;left:-1000em;width:1px;height:1px;overflow:hidden}
 #markdown-toc{margin-left:0}
 #markdown-toc li{list-style-type:none;padding-left:0}
 
 @media screen and (max-width:38em){
 #page{margin:0}
-#content{padding:0em .5em}
+#content{padding:1.5em .5em}
 nav li{width:auto}
 nav li *{border:none;padding:0 .5em;font-size:smaller;background:none}
 }
