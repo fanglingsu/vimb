@@ -29,7 +29,7 @@ th{background-color:#eee}
 hr{border-top:1px solid #ccc;width:100%}
 dl{width:100%}
 dd{margin:0 0 .4em 3em}
-nav{font-size:x-large;padding-bottom:1.5em;position:absolute;top:0;width:100%}
+nav{font-size:x-large;position:absolute;top:0;width:100%}
 nav ul{margin:0;padding:0}
 nav li{list-style:none;float:left;width:25%;margin:0;padding:0}
 nav li *{text-align:center;display:block;padding:.2em .5em;border:solid #ccc;border-width:0 1px 1px 0;height:1.5em;top:.1em;background-color:#f4f4f4}
