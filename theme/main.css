@@ -1,6 +1,6 @@
 *{margin:0;padding:0}
 html{background-color:#e0ddda}
-body{color:#000;font-family:"Dejavu sans-serif",sans-serif;font-size:1em;line-height:1.5em}
+body{color:#000;font-family:"Dejavu sans-serif",Verdana,Geneva,sans-serif;font-size:1em;line-height:1.5em}
 #page{background-color:#fff;margin:1em auto 2em;max-width:60em;border:1px solid #ccc;box-shadow:.52em .52em 1.3em #d0cdca;position:relative}
 #content{padding:3em 8% 2.5em}
 footer{margin:0 .5em 1em;display:block;text-align:center}
@@ -18,7 +18,7 @@ ol li{list-style-type:decimal}
 li{line-height:1.5em;padding-left:.5em}
 img{border:1px solid #ddd;max-width:100%;padding:0 0 1em 0;height:auto}
 pre{font-size:.9em;background:#f8f8f8;border:1px solid #ddd;box-shadow:.26em .26em .65em #eee;padding:.2em .4em;overflow:auto}
-code{font-family:monospace;color:#444;white-space:pre}
+code{font-family:"Dejavu sans mono","Lucida Console",Monaco,monospace;color:#444;white-space:pre}
 a,a:link{color:#01579f;text-decoration:none;outline:none}
 a[href^="http://"]:after,a[href^="https://"]:after{content:"\2197"}
 a:visited{color:#751590}
