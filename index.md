@@ -52,7 +52,7 @@ Remote-Control via socket (previously a fifo)
 There isn't really much to see for a browser that is controlled via keyboard.
 But following images may give a impression of they way vimb works.
 
-[![vimb hinting marks ective element like links](media/vimb-hints.png "link hinting (688x472 32kB)"){:width="350"}](media/vimb-hints.png)
+[![vimb hinting marks active element like links](media/vimb-hints.png "link hinting (688x472 32kB)"){:width="350"}](media/vimb-hints.png)
 [![completion with scrallable completion menu](media/vimb-completion.png "completion of settings (690x472 10kB)"){:width="350"}](media/vimb-completion.png)
 
 ## features
