@@ -43,7 +43,7 @@ gboolean io_init_socket(const char *name)
     struct sockaddr_un local;
 
     /* create socket in runtime directory */
-    dir = g_build_filename(util_get_runtime_dir(vb.config.profile), PROJECT, "socket", NULL);
+    dir = g_build_filename(util_get_runtime_dir(vb.config.profile), "socket", NULL);
     util_create_dir_if_not_exists(dir);
     path = g_build_filename(dir, name, NULL);
     g_free(dir);
