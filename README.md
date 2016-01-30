@@ -80,7 +80,7 @@ Information about the license is found in the file: LICENSE.
 [handlers]:    http://fanglingsu.github.io/vimb/commands.html#handlers "vimb custom protocol handlers"
 [registers]:   http://fanglingsu.github.io/vimb/keybindings.html#registers "vimb yank/paste registers"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
-[NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
+[NetBSD]:      http://pkgsrc.se/www/vimb "vimb - NetBSD package"
 [autocmd]:     http://fanglingsu.github.io/vimb/commands.html#autocmd "Vim like autocmd and augroup feature"
 [set]:         http://fanglingsu.github.io/vimb/commands.html#settings "Vim like set syntax"
 [Arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
