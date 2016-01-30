@@ -104,7 +104,7 @@ If you find a misbehaviour or have feature requests use the
   configuration.
 
 [FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
-[NetBSD]:      http://pkgsrc.se/wip/vimb "vimb - NetBSD package"
+[NetBSD]:      http://pkgsrc.se/www/vimb  "vimb - NetBSD package"
 [arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [arch]:        https://aur.archlinux.org/packages/vimb/ "vimb - archlinux package"
 [bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
