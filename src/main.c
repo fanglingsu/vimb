@@ -1830,7 +1830,11 @@ int main(int argc, char *argv[])
     }
 
     if (ver) {
-        fprintf(stdout, "%s/%s\n", PROJECT, VERSION);
+        fprintf(stdout, "%s, version %s\n", PROJECT, VERSION);
+        fprintf(stdout, "Copyright © 2012 - 2016 Daniel Carl <danielcarl@gmx.de>\n");
+        fprintf(stdout, "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
+        fprintf(stdout, "This is free software; you are free to change and redistribute it.\n");
+        fprintf(stdout, "There is NO WARRANTY, to the extent permitted by law.\n");
         return EXIT_SUCCESS;
     }
 
