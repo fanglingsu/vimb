@@ -214,6 +214,7 @@ typedef enum {
     FILES_QUEUE,
 #endif
     FILES_USER_STYLE,
+    FILES_USER_STYLES,
 #ifdef FEATURE_HSTS
     FILES_HSTS,
 #endif

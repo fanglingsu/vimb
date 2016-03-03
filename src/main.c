@@ -771,6 +771,39 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 js_eval_file(ctx, vb.files[FILES_SCRIPT]);
             }
 
+            {
+                const char *no_protocol = NULL;
+                if (g_str_has_prefix(uri, "https://")) {
+                    no_protocol = uri + 8; /* length of 'https://' */
+                } else if (g_str_has_prefix(uri, "http://")) {
+                    no_protocol = uri + 7; /* length of 'http://' */
+                }
+                if (no_protocol) {
+                    /* we need to set a character null, so duplicate, must free later */
+                    no_protocol = strdup(no_protocol);
+
+                    /* search for a / char. If we find it, set it null (to terminate string) */
+                    char *first_slash = g_strstr_len(no_protocol, -1, "/");
+                    if (first_slash) {
+                        *first_slash = (char)0;
+                    }
+
+                    /* get the css file specifically for this site */
+                    char *css_file = g_strconcat(vb.files[FILES_USER_STYLES], no_protocol, ".css", NULL);
+                    free((char *)no_protocol); /* free protocol string (no longer in use) */
+                    if (g_file_test(css_file, G_FILE_TEST_IS_REGULAR)) {
+                        /* file exists, attempt to load it */
+                        char *css_file_uri = g_strconcat("file://", css_file, NULL);
+                        free(css_file); /* free css_file */
+                        WebKitWebSettings *web_setting = webkit_web_view_get_settings(view);
+                        g_object_set(web_setting, "user-stylesheet-uri", css_file_uri, NULL);
+                        g_free(css_file_uri);
+                    } else {
+                        free(css_file);
+                    }
+                }
+            }
+
             vb_update_statusbar();
             set_uri(uri);
             set_title(uri);
@@ -1256,6 +1289,7 @@ static void init_files(void)
     vb.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
 
     vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
+    vb.files[FILES_USER_STYLES] = g_build_filename(path, "styles/", NULL);
 
     g_free(path);
 }
