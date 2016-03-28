@@ -90,8 +90,8 @@ Object.freeze((function(){
                 }
                 var rect = e.getBoundingClientRect();
                 if (!rect ||
-                    rect.top > offsets.bottom || rect.bottom < offsets.top ||
-                    rect.left > offsets.right || rect.right < offsets.left
+                    rect.top >= offsets.bottom || rect.bottom <= offsets.top ||
+                    rect.left >= offsets.right || rect.right <= offsets.left
                 ) {
                     return false;
                 }
@@ -137,7 +137,7 @@ Object.freeze((function(){
                 count++;
 
                 /* create the hint label with number */
-                rect  = e.getBoundingClientRect();
+                rect  = e.getClientRects()[0];
                 label = labelTmpl.cloneNode(false);
                 label.setAttribute(
                     "style", [
