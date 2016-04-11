@@ -29,6 +29,7 @@ the project page of [Vimb][].
 ## Packages
 
 - Arch Linux [vimb-git][arch-git], [vimb][arch]
+- [OpenBSD][]
 - [NetBSD][]
 - [FreeBSD][]
 - [Void Linux][]
@@ -80,6 +81,7 @@ Information about the license is found in the file: LICENSE.
 [handlers]:    http://fanglingsu.github.io/vimb/commands.html#handlers "vimb custom protocol handlers"
 [registers]:   http://fanglingsu.github.io/vimb/keybindings.html#registers "vimb yank/paste registers"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[OpenBSD]:     http://openports.se/www/vimb "vimb - OpenBSD port"
 [NetBSD]:      http://pkgsrc.se/www/vimb "vimb - NetBSD package"
 [autocmd]:     http://fanglingsu.github.io/vimb/commands.html#autocmd "Vim like autocmd and augroup feature"
 [set]:         http://fanglingsu.github.io/vimb/commands.html#settings "Vim like set syntax"
