@@ -60,7 +60,9 @@ Following keybindings simulate a little bit the vim behaviour.
 The precedence of the user style is lower than that of the website so you have
 to mark your style definition to have higher priority.
 
-    a:link {color: #0f0 !important;}
+```css
+a:link {color: #0f0 !important;}
+```
 
 ## How to change the colors of the hints?
 
@@ -75,29 +77,31 @@ applied to the hints. To change already defined style it might be required to
 use the `!importen` flag on your style definition to take effect
 ([see User-Scripts](#user-scripts)).
 
-    ._hintLabel {
-        -webkit-transform:translate(-4px,-4px);
-        position: absolute;
-        z-index: 100000;
-        font:bold .8em monospace;
-        color: #000;
-        background-color: #fff;
-        margin: 0;
-        padding: 0px 1px;
-        border: 1px solid #444;
-        opacity: 0.7
-    }
-    ._hintElem {
-        background-color: #ff0 !important;
-        color: #000 !important
-    }
-    ._hintElem._hintFocus{
-        background-color: #8f0 !important
-    }
-    ._hintLabel._hintFocus{
-        z-index: 100001;
-        opacity: 1
-    }
+```css
+._hintLabel {
+    -webkit-transform:translate(-4px,-4px);
+    position: absolute;
+    z-index: 100000;
+    font:bold .8em monospace;
+    color: #000;
+    background-color: #fff;
+    margin: 0;
+    padding: 0px 1px;
+    border: 1px solid #444;
+    opacity: 0.7
+}
+._hintElem {
+    background-color: #ff0 !important;
+    color: #000 !important
+}
+._hintElem._hintFocus{
+    background-color: #8f0 !important
+}
+._hintLabel._hintFocus{
+    z-index: 100001;
+    opacity: 1
+}
+```
 
 
 [ff]:      scripts.html#formfiller "vimb formfiller sample script"

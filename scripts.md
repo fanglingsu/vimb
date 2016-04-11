@@ -42,7 +42,7 @@ setup and your way to use a vimb.
 
 This can be used as *style.css* file for vimb.
 
-{% highlight css %}
+```css
 *,div,pre,textarea,body,input,td,tr,p {
     background-color: #303030 !important;
     background-image: none !important;
@@ -80,7 +80,7 @@ img:hover {
 ._hintElem._hintFocus img {
     opacity: 1;
 }
-{% endhighlight %}
+```
 
 [ffjs]:     https://raw.githubusercontent.com/fanglingsu/vimb/master/examples/formfiller/scripts.js
 [ffsh]:     https://raw.githubusercontent.com/fanglingsu/vimb/master/examples/formfiller/formfiller

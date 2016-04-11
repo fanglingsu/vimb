@@ -57,8 +57,10 @@ Mandatory arguments to long options are mandatory for short options too.
   option.
 : Example:
 
-      sh -c "./vimb -s -d > ~/vimb.socket" &
-      echo ":o github.com<CR>" | socat - unix-connect:$(< ~/vimb.socket)
+  ```shell
+  sh -c "./vimb -s -d > ~/vimb.socket" &
+  echo ":o github.com<CR>" | socat - unix-connect:$(< ~/vimb.socket)
+  ```
 
 −h, −−help
 : Show help options.

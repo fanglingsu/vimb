@@ -38,13 +38,15 @@ Remote-Control via socket (previously a fifo)
   commands as well as ex commands.
 : Example:
 
-      sh -c "vimb -s -d > ~/socket" &
-      SOCKET=$(< ~/socket)
-      echo ':o http://fanglingsu.github.io/vimb/<CR>' | socat - UNIX-CONNECT:$SOCKET
-      echo ':o !<Tab><Tab><CR>' | socat - UNIX-CONNECT:$SOCKET
-      echo '<C-Q>' | socat - UNIX-CONNECT:$SOCKET
-      # or start an interactive remote control session
-      socat READLINE UNIX-CONNECT:$(< ~/socket)
+  ```shell
+  sh -c "vimb -s -d > ~/socket" &
+  SOCKET=$(< ~/socket)
+  echo ':o http://fanglingsu.github.io/vimb/<CR>' | socat - UNIX-CONNECT:$SOCKET
+  echo ':o !<Tab><Tab><CR>' | socat - UNIX-CONNECT:$SOCKET
+  echo '<C-Q>' | socat - UNIX-CONNECT:$SOCKET
+  # or start an interactive remote control session
+  socat READLINE UNIX-CONNECT:$(< ~/socket)
+  ```
 
 
 ## screenshots
