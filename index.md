@@ -79,6 +79,7 @@ But following images may give a impression of they way vimb works.
 ## packages
 
 - archlinux [vimb-git][arch-git], [vimb][arch]
+- [OpenBSD][]
 - [NetBSD][]
 - [FreeBSD][]
 - [Void Linux][]
@@ -104,6 +105,7 @@ If you find a misbehaviour or have feature requests use the
   configuration.
 
 [FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
+[OpenBSD]:     http://openports.se/www/vimb "vimb - OpenBSD port"
 [NetBSD]:      http://pkgsrc.se/www/vimb  "vimb - NetBSD package"
 [arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
 [arch]:        https://aur.archlinux.org/packages/vimb/ "vimb - archlinux package"
