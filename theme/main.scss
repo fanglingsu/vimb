@@ -1,0 +1,339 @@
+---
+# scss styles
+---
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: #e0ddda;
+}
+
+body {
+  color: #000;
+  font-family: "Dejavu sans-serif",Verdana,Geneva,sans-serif;
+  font-size: 1em;
+  line-height: 1.5em;
+}
+
+#page {
+  background-color: #fff;
+  margin: 1em auto 2em;
+  max-width: 60em;
+  border: 1px solid #ccc;
+  box-shadow: .52em .52em 1.3em #d0cdca;
+  position: relative;
+}
+
+#content {
+  padding: 3em 8% 2.5em;
+}
+
+footer {
+  margin: 0 .5em 1em;
+  display: block;
+  text-align: center;
+}
+
+h1, h2, h3 {
+  font-weight: bolder;
+  padding: .5em 0 .2em;
+  margin-bottom: .3em;
+  color: #555;
+}
+
+h1 {
+  padding-top: .8em;
+  font-size: xx-large;
+}
+
+h2 {
+  font-size: x-large;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: .8em;
+}
+
+h3 {
+  font-size: large;
+}
+
+em {
+  font-style: italic;
+}
+
+p, pre, ul, ol, dl {
+  margin-bottom: 1em;
+}
+
+ul, ol {
+  list-style-position: outside;
+  margin: 0 0 0 1.5em;
+}
+
+h1 + ul {
+  margin-top: 1.5em;
+}
+
+ol li {
+  list-style-type: decimal;
+}
+
+li {
+  line-height: 1.5em;
+  padding-left: .5em;
+}
+
+img {
+  border: 1px solid #ddd;
+  max-width: 100%;
+  padding: 0 0 1em 0;
+  height: auto;
+}
+
+pre {
+  font-size: .9em;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  box-shadow: .26em .26em .65em #eee;
+  padding: .2em .4em;
+  overflow: auto;
+}
+
+code {
+  font-family: "Dejavu sans mono","Lucida Console",Monaco,monospace;
+  color: #444;
+  white-space: pre;
+}
+
+a, a:link {
+  color: #01579f;
+  text-decoration: none;
+  outline: none;
+}
+
+a[href^="http://"]:after, a[href^="https://"]:after {
+  content: "\2197";
+}
+
+a:visited {
+  color: #751590;
+}
+
+a:focus, a:hover {
+  text-decoration: underline;
+  color: #0181eb;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: .3em;
+}
+
+th {
+  background-color: #eee;
+}
+
+hr {
+  border-top: 1px solid #ccc;
+  width: 100%;
+}
+
+dl {
+  width: 100%;
+}
+
+dd {
+  margin: 0 0 .4em 3em;
+}
+
+nav {
+  font-size: x-large;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  ul {
+	margin: 0;
+	padding: 0;
+	li {
+	  list-style: none;
+	  float: left;
+	  width: 25%;
+	  margin: 0;
+	  padding: 0;
+	}
+  }
+  li * {
+	text-align: center;
+	display: block;
+	padding: .2em .5em;
+	border: solid #ccc;
+	border-width: 0 1px 1px 0;
+	height: 1.5em;
+	top: .1em;
+	background-color: #f4f4f4;
+  }
+
+  li:last-child * {
+	border-right-width: 0;
+  }
+
+  li.active * {
+	background-color: #fff;
+	color: #555;
+	border-width: 0;
+  }
+
+  li.active + li * {
+	border-left-width: 1px;
+  }
+}
+
+.nogui {
+  position: absolute;
+  left: -1000em;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+#markdown-toc {
+  margin-left: 0;
+  li {
+	list-style-type: none;
+	padding-left: 0;
+  }
+}
+
+@media screen and (max-width: 38em) {
+  #page {
+    margin: 0;
+  }
+
+  #content {
+    padding: 1.5em .5em;
+  }
+
+  nav li {
+	width: auto;
+	* {
+	  border: none;
+	  padding: 0 .5em;
+	  font-size: smaller;
+	  background: none;
+	}
+  }
+}
+.c {
+  color: #998;
+  font-style: italic;
+}
+
+.err {
+  color: #a61717;
+  background-color: #e3d2d2;
+}
+
+.k, .o, .kc, .kd, .kn, .kp, .kr, .ow {
+  color: #000;
+  font-weight: bold;
+}
+
+.cm, .c1 {
+  color: #998;
+  font-style: italic;
+}
+
+.cp, .cs {
+  color: #999;
+  font-weight: bold;
+}
+
+.gd, .gi {
+  color: #000;
+  background-color: #dfd;
+}
+
+.ge {
+  color: #000;
+  font-style: italic;
+}
+
+.gr, .gt {
+  color: #a00;
+}
+
+.gh {
+  color: #999;
+}
+
+.go {
+  color: #888;
+}
+
+.gp, .nn {
+  color: #555;
+}
+
+.gs {
+  font-weight: bold;
+}
+
+.gu {
+  color: #aaa;
+}
+
+.kt, .nc {
+  color: #458;
+  font-weight: bold;
+}
+
+.nb {
+  color: #0086B3;
+}
+
+.nd {
+  color: #3c5d5d;
+  font-weight: bold;
+}
+
+.ni {
+  color: #800080;
+}
+
+.ne, .nf, .nl {
+  color: #900;
+  font-weight: bold;
+}
+
+.nt {
+  color: #000080;
+}
+
+.w {
+  color: #bbb;
+}
+
+.bp, .il, .m, .mf, .mh, .mi, .mo {
+  color: #099;
+}
+
+.s, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .s1 {
+  color: #d01040;
+}
+
+.sr {
+  color: #009926;
+}
+
+.ss {
+  color: #990073;
+}
+
+.na, .no, .nv, .vc, .vg, .vi {
+  color: #008080;
+}

@@ -1,12 +1,19 @@
-save:        true
-lsi:         false
-highlighter: rouge
-markdown:    kramdown
+save: true
+lsi: false
+markdown: kramdown
 
 kramdown:
-  auto_ids:       true
-  footnote_nr:    1
-  entity_output:  as_char
-  toc_levels:     "2"
-
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: "2"
+  syntax_highlighter: rouge
+  parse_block_html: true
+  syntax_highlighter_opts:
+    #inline_theme: github
+    css_class: 'hl'
+    span:
+      disable: true
+sass:
+  style: compressed
 exclude: [README.md]
