@@ -37,9 +37,9 @@
 /* number of chars to be shown in statusbar for ambiguous commands */
 #define SHOWCMD_LEN                 10
 /* css applied to the gui elements of the borwser window */
-#define GUI_STYLE                   "GtkBox#statusbar{color:#fff;background-color:#000;font:monospace bold 10;} \
-GtkBox#statusbar.secure{background-color:#95e454;color:#000;} \
-GtkBox#statusbar.insecure{background-color:#f77;color:#000;} \
+#define GUI_STYLE                   "#statusbar{color:#fff;background-color:#000;font:monospace bold 10;} \
+#statusbar.secure{background-color:#95e454;color:#000;} \
+#statusbar.insecure{background-color:#f77;color:#000;} \
 GtkTextView{background-color:#fff;color:#000;font:monospace 10;} \
 GtkTextView.error{background-color:#f77;font-weight:bold;} \
 GtkTreeView{color:#fff;background-color:#656565;font:monospace;} \
