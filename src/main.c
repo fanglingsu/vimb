@@ -811,6 +811,12 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             if (strncmp(uri, "about:", 6)) {
                 history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
             }
+#ifdef FEATURE_SOUP_CACHE
+            /* Make sure the caches are written to file to be picked up by new
+             * browser instance. */
+            soup_cache_flush(vb.config.soup_cache);
+            soup_cache_dump(vb.config.soup_cache);
+#endif
             break;
 
         case WEBKIT_LOAD_FAILED:
