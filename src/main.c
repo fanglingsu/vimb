@@ -828,6 +828,16 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
                 if (src) {
                     WebKitNetworkRequest *req = webkit_web_data_source_get_initial_request(src);
                     uri = webkit_network_request_get_uri(req);
+                    /* set the status */
+                    if (g_str_has_prefix(uri, "https://")) {
+                        SoupMessage *msg       = webkit_network_request_get_message(req);
+                        SoupMessageFlags flags = soup_message_get_flags(msg);
+                        set_status(
+                            (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VB_STATUS_SSL_VALID : VB_STATUS_SSL_INVALID
+                        );
+                    } else {
+                        set_status(VB_STATUS_NORMAL);
+                    }
                 } else {
                     uri = webkit_web_view_get_uri(view);
                 }
