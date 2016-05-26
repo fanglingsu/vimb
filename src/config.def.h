@@ -41,7 +41,7 @@
 /* show wget style progressbar in status bar */
 #define FEATURE_WGET_PROGRESS_BAR
 #ifdef HAS_GTK3
-/* enables workaround for hight dpi displays */
+/* enables workaround for high dpi displays */
 /* eventually the environment variable GDK_DPI_SCALE=2.0 must be set */
 /* to get the hack working */
 /* #define FEATURE_HIGH_DPI */
