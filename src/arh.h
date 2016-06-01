@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2015 Daniel Carl
+ * Copyright (C) 2012-2016 Daniel Carl
  * Copyright (C) 2014 Sébastien Marie
  *
  * This program is free software: you can redistribute it and/or modify
