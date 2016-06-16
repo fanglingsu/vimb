@@ -98,11 +98,10 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
     comp->win  = gtk_scrolled_window_new(NULL, NULL);
     comp->tree = gtk_tree_view_new();
 
-    GtkCssProvider* provider = gtk_css_provider_get_default();
-    gtk_css_provider_load_from_data(provider, GUI_STYLE, -1, NULL);
     gtk_style_context_add_provider(gtk_widget_get_style_context(comp->tree),
-            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER(vb.style_provider),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    gtk_widget_set_name(GTK_WIDGET(comp->tree), "completion");
 
     gtk_box_pack_end(GTK_BOX(gtk_widget_get_parent(GTK_WIDGET(c->statusbar.box))), comp->win, FALSE, FALSE, 0);
     gtk_container_add(GTK_CONTAINER(comp->win), comp->tree);

@@ -559,13 +559,11 @@ static Client *client_new(WebKitWebView *webview)
     gtk_box_pack_end(GTK_BOX(box), GTK_WIDGET(c->input), FALSE, FALSE, 0);
 
     /* Set the default style for statusbar and inputbox. */
-    GtkCssProvider* provider = gtk_css_provider_get_default();
-    gtk_css_provider_load_from_data(provider, GUI_STYLE, -1, NULL);
     gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(c->statusbar.box)),
-            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER(vb.style_provider),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     gtk_style_context_add_provider(gtk_widget_get_style_context(c->input),
-            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER(vb.style_provider),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
     /* set the x window id to env */
@@ -1075,6 +1073,7 @@ static void vimb_setup(void)
      * the documentation. */
     ctx = webkit_web_context_get_default();
     webkit_web_context_set_process_model(ctx, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
+    webkit_web_context_set_web_process_count_limit(ctx, 1);
     webkit_web_context_set_cache_model(ctx, WEBKIT_CACHE_MODEL_WEB_BROWSER);
 
     g_signal_connect(ctx, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL);
@@ -1096,6 +1095,10 @@ static void vimb_setup(void)
     vb_mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
     vb_mode_add('i', input_enter, input_leave, input_keypress, NULL);
     vb_mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
+
+    /* Prepare the style provider to be used for the clients and completion. */
+    vb.style_provider = gtk_css_provider_get_default();
+    gtk_css_provider_load_from_data(vb.style_provider, GUI_STYLE, -1, NULL);
 }
 
 /**

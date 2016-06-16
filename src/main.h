@@ -255,6 +255,7 @@ struct Vimb {
     struct {
         guint   history_max;
     } config;
+    GtkCssProvider *style_provider;
 };
 
 
