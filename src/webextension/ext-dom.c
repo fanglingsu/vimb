@@ -83,19 +83,19 @@ gboolean ext_dom_is_editable(WebKitDOMElement *element)
 gboolean ext_dom_focus_input(WebKitDOMDocument *doc)
 {
     WebKitDOMNode *html, *node;
-    WebKitDOMNodeList *list;
+    WebKitDOMHTMLCollection *collection;
     WebKitDOMXPathNSResolver *resolver;
     WebKitDOMXPathResult* result;
     WebKitDOMDocument *frame_doc;
     guint i, len;
 
-    list = webkit_dom_document_get_elements_by_tag_name(doc, "html");
-    if (!list) {
+    collection = webkit_dom_document_get_elements_by_tag_name_as_html_collection(doc, "html");
+    if (!collection) {
         return FALSE;
     }
 
-    html = webkit_dom_node_list_item(list, 0);
-    g_object_unref(list);
+    html = webkit_dom_html_collection_item(collection, 0);
+    g_object_unref(collection);
 
     resolver = webkit_dom_document_create_ns_resolver(doc, html);
     if (!resolver) {
@@ -134,19 +134,19 @@ gboolean ext_dom_focus_input(WebKitDOMDocument *doc)
     }
 
     /* Look for editable elements in frames too. */
-    list = webkit_dom_document_get_elements_by_tag_name(doc, "iframe");
-    len  = webkit_dom_node_list_get_length(list);
+    collection = webkit_dom_document_get_elements_by_tag_name_as_html_collection(doc, "iframe");
+    len        = webkit_dom_html_collection_get_length(collection);
 
     for (i = 0; i < len; i++) {
-        node      = webkit_dom_node_list_item(list, i);
+        node      = webkit_dom_html_collection_item(collection, i);
         frame_doc = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
         /* Stop on first frame with focused element. */
         if (ext_dom_focus_input(frame_doc)) {
-            g_object_unref(list);
+            g_object_unref(collection);
             return TRUE;
         }
     }
-    g_object_unref(list);
+    g_object_unref(collection);
 
     return FALSE;
 }
