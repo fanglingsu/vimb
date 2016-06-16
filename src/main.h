@@ -162,6 +162,7 @@ struct State {
     StatusType          status_type;
     glong               scroll_max;         /* Maxmimum scrollable height of the document. */
     guint               scroll_percent;     /* Current position of the viewport in document. */
+    char                *title;             /* Window title of the client. */
 
     char                *reg[REG_SIZE];     /* holds the yank buffers */
     /* TODO rename to reg_{enabled,current} */

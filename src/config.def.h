@@ -22,13 +22,16 @@
 #define FEATURE_HISTORY_INDICATOR
 /* show wget style progressbar in status bar */
 #define FEATURE_WGET_PROGRESS_BAR
-#ifdef FEATURE_WGET_PROGRESS_BAR
-/* chars to use for the progressbar */
-#define PROGRESS_BAR                "=> "
-#define PROGRESS_BAR_LEN            20
-#endif
+/* show load progress in window title */
+#define FEATURE_TITLE_PROGRESS
 /* show page title in url completions */
 #define FEATURE_TITLE_IN_COMPLETION
+
+#ifdef FEATURE_WGET_PROGRESS_BAR
+/* chars to use for the progressbar */
+#define PROGRESS_BAR             "=> "
+#define PROGRESS_BAR_LEN            20
+#endif
 
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */

@@ -70,6 +70,7 @@ static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c
 static void on_window_destroy(GtkWidget *window, Client *c);
 static gboolean quit(Client *c);
 static void register_cleanup(Client *c);
+static void update_title(Client *c);
 static void update_urlbar(Client *c);
 static void set_statusbar_style(Client *c, StatusType type);
 static void set_title(Client *c, const char *title);
@@ -683,7 +684,9 @@ static void set_statusbar_style(Client *c, StatusType type)
  */
 static void set_title(Client *c, const char *title)
 {
-    gtk_window_set_title(GTK_WINDOW(c->window), title);
+    OVERWRITE_STRING(c->state.title, title);
+    update_title(c);
+    g_setenv("VIMB_TITLE", title ? title : "", true);
 }
 
 /**
@@ -909,6 +912,7 @@ static void on_webview_notify_estimated_load_progress(WebKitWebView *webview,
 {
     c->state.progress = webkit_web_view_get_estimated_load_progress(webview) * 100;
     vb_statusbar_update(c);
+    update_title(c);
 }
 
 /**
@@ -980,6 +984,26 @@ static void register_cleanup(Client *c)
         if (c->state.reg[i]) {
             g_free(c->state.reg[i]);
         }
+    }
+}
+
+static void update_title(Client *c)
+{
+#ifdef FEATURE_TITLE_PROGRESS
+    /* Show load status of page or the downloads. */
+    if (c->state.progress != 100) {
+        char *title = g_strdup_printf(
+                "[%i%%] %s",
+                c->state.progress,
+                c->state.title ? c->state.title : "");
+        gtk_window_set_title(GTK_WINDOW(c->window), title);
+        g_free(title);
+
+        return;
+    }
+#endif
+    if (c->state.title) {
+        gtk_window_set_title(GTK_WINDOW(c->window), c->state.title);
     }
 }
 
