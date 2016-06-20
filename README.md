@@ -67,7 +67,7 @@ project directory.
   - [ ] editor command
   - [ ] external downloader
   - [ ] hinting
-  - [ ] searching and matching of search results
+  - [x] searching and matching of search results
   - [ ] navigation j, k, h, l, ...
   - [ ] history and history lookup
   - [ ] completion
