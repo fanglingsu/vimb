@@ -577,6 +577,8 @@ static Client *client_new(WebKitWebView *webview)
     /* start client in normal mode */
     vb_enter(c, 'n');
 
+    c->state.enable_register = TRUE;
+
     gtk_widget_show_all(c->window);
 
     /* Prepend the new client to the queue of clients. */

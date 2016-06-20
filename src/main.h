@@ -187,7 +187,6 @@ struct Map {
     int         mappedlen;          /* length of the mapped keys string */
     char        mode;               /* mode for which the map is available */
     gboolean    remap;              /* if FALSE do not remap the {rhs} of this map */
-    gboolean    enable_register;    /* indicates if registers are filled */
 };
 
 struct Mode {
