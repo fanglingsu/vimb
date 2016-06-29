@@ -581,6 +581,9 @@ static Client *client_new(WebKitWebView *webview)
 
     gtk_widget_show_all(c->window);
 
+    /* read the config file */
+    ex_run_file(c, vb.files[FILES_CONFIG]);
+
     /* Prepend the new client to the queue of clients. */
     c->next    = vb.clients;
     vb.clients = c;

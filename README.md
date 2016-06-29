@@ -54,7 +54,7 @@ project directory.
   - [x] establish communication channel between the vimb instance and the now
         required webextension (dbus)
 2. migrate as many of the features of the webkit1 vimb
-  - [ ] starting with custom config file `--config,-c` option
+  - [x] starting with custom config file `--config,-c` option
   - [ ] running multiple ex-commands during startup `--cmd,-C` options
   - [ ] starting with a named profile `--profile,-p` option
   - [ ] xembed `--embed,-e` option

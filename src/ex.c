@@ -409,6 +409,63 @@ gboolean ex_fill_completion(GtkListStore *store, const char *input)
 }
 
 /**
+ * Run all ex commands from a file.
+ */
+VbCmdResult ex_run_file(Client *c, const char *filename)
+{
+    int length, i;
+    char *line, **lines;
+    VbCmdResult res = CMD_SUCCESS;
+
+    lines = util_get_lines(filename);
+    if (!lines) {
+        return res;
+    }
+
+    length = g_strv_length(lines) - 1;
+    for (i = 0; i < length; i++) {
+        line = lines[i];
+        /* skip commented or empty lines */
+        if (*line == '#' || !*line) {
+            continue;
+        }
+        if ((ex_run_string(c, line, false) & ~CMD_KEEPINPUT) == CMD_ERROR) {
+            res = CMD_ERROR | CMD_KEEPINPUT;
+            g_warning("Invalid command in %s: '%s'", filename, line);
+        }
+    }
+    g_strfreev(lines);
+
+    return res;
+}
+
+VbCmdResult ex_run_string(Client *c, const char *input, gboolean enable_history)
+{
+    /* copy to have original command for history */
+    const char *in  = input;
+    gboolean nohist = FALSE;
+    VbCmdResult res = CMD_ERROR | CMD_KEEPINPUT;
+    ExArg *arg = g_slice_new0(ExArg);
+    arg->lhs   = g_string_new("");
+    arg->rhs   = g_string_new("");
+
+    while (in && *in) {
+        if (!parse(c, &in, arg, &nohist) || !(res = execute(c, arg))) {
+            break;
+        }
+    }
+
+    if (enable_history && !nohist) {
+        history_add(c, HISTORY_COMMAND, input, NULL);
+        vb_register_add(c, ':', input);
+    }
+
+    free_cmdarg(arg);
+
+    return res;
+}
+
+/**
  * This is called if the user typed <nl> or <cr> into the inputbox.
  */
 static void input_activate(Client *c)
@@ -444,32 +501,6 @@ static void input_activate(Client *c)
 
     }
     g_free(text);
-}
-
-VbCmdResult ex_run_string(Client *c, const char *input, gboolean enable_history)
-{
-    /* copy to have original command for history */
-    const char *in  = input;
-    gboolean nohist = FALSE;
-    VbCmdResult res = CMD_ERROR | CMD_KEEPINPUT;
-    ExArg *arg = g_slice_new0(ExArg);
-    arg->lhs   = g_string_new("");
-    arg->rhs   = g_string_new("");
-
-    while (in && *in) {
-        if (!parse(c, &in, arg, &nohist) || !(res = execute(c, arg))) {
-            break;
-        }
-    }
-
-    if (enable_history && !nohist) {
-        history_add(c, HISTORY_COMMAND, input, NULL);
-        vb_register_add(c, ':', input);
-    }
-
-    free_cmdarg(arg);
-
-    return res;
 }
 
 /**
