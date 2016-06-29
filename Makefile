@@ -12,10 +12,10 @@ options:
 vimb: $(SUBDIRS:%=%.subdir-all)
 
 %.subdir-all:
-	$(MAKE) $(MFLAGS) -C $*
+	@$(MAKE) $(MFLAGS) -C $*
 
 %.subdir-clean:
-	$(MAKE) $(MFLAGS) -C $* clean
+	@$(MAKE) $(MFLAGS) -C $* clean
 
 install: vimb
 	@# binary
@@ -35,7 +35,7 @@ uninstall:
 clean: $(SUBDIRS:%=%.subdir-clean)
 
 sandbox:
-	make RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
+	@make $(MFLAGS) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
 
 runsandbox: sandbox
 	sandbox/usr/bin/vimb
