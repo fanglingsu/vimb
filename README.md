@@ -78,7 +78,9 @@ project directory.
   - [ ] read it later queue
   - [ ] show scroll indicator in statusbar as top, x%, bttom or all
         how can we get this information from webview easily?
-  - [ ] find a way to disable the scrollbars on the main frame
+  - [x] find a way to disable the scrollbars on the main frame
+        Can be achieved by `document.documentElement.style.overflow =
+        'hidden';` in _scripts.js_
   - [ ] page marks - maybe we change make them global (shared between
         instances and to work also if the page was reloaded or changed like
         the marks in vim)
