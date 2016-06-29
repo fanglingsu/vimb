@@ -9,17 +9,6 @@ options:
 	@echo "LDFLAGS = $(LDFLAGS)"
 	@echo "CC      = $(CC)"
 
-install: vimb
-	@# binary
-	install -d $(BINPREFIX)
-	install -m 755 $(SRCDIR)/vimb $(BINPREFIX)/vimb
-	@# extension
-	install -d $(EXTPREFIX)
-	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(EXTPREFIX)/$(EXTTARGET)
-
-uninstall:
-	$(RM) $(BINPREFIX)/vimb $(EXTPREFIX)/$(EXTTARGET)
-
 vimb: $(SUBDIRS:%=%.subdir-all)
 
 %.subdir-all:
@@ -28,12 +17,27 @@ vimb: $(SUBDIRS:%=%.subdir-all)
 %.subdir-clean:
 	$(MAKE) $(MFLAGS) -C $* clean
 
-clean: $(SUBDIRS:%=%.subdir-clean)
+install: vimb
+	@# binary
+	install -d $(BINPREFIX)
+	install -m 755 $(SRCDIR)/vimb $(BINPREFIX)/vimb
+	@# extension
+	install -d $(EXTPREFIX)
+	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(EXTPREFIX)/$(EXTTARGET)
+	install -d $(DESTDIR)$(MANDIR)/man1
+	@sed -e "s!VERSION!$(VERSION)!g" \
+		-e "s!PREFIX!$(PREFIX)!g" \
+		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(DESTDIR)$(MANDIR)/man1/vimb.1
 
-runsandbox: sandbox
-	sandbox/usr/bin/vimb
+uninstall:
+	$(RM) $(BINPREFIX)/vimb $(DESTDIR)$(MANDIR)/man1/vimb.1 $(EXTPREFIX)/$(EXTTARGET)
+
+clean: $(SUBDIRS:%=%.subdir-clean)
 
 sandbox:
 	make RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
 
-.PHONY: all options clean install uninstall sandbox
+runsandbox: sandbox
+	sandbox/usr/bin/vimb
+
+.PHONY: all options clean install uninstall sandbox sandbox-clean
