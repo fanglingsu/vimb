@@ -104,7 +104,7 @@ pre {
 code {
   font-family: "Dejavu sans mono","Lucida Console",Monaco,monospace;
   color: #444;
-  white-space: pre;
+  overflow-wrap: break-word;
 }
 
 a, a:link {
@@ -166,17 +166,17 @@ nav {
 	  width: 25%;
 	  margin: 0;
 	  padding: 0;
+      * {
+        text-align: center;
+        display: block;
+        padding: .2em .5em;
+        border: solid #ccc;
+        border-width: 0 1px 1px 0;
+        height: 1.5em;
+        top: .1em;
+        background-color: #f4f4f4;
+      }
 	}
-  }
-  li * {
-	text-align: center;
-	display: block;
-	padding: .2em .5em;
-	border: solid #ccc;
-	border-width: 0 1px 1px 0;
-	height: 1.5em;
-	top: .1em;
-	background-color: #f4f4f4;
   }
 
   li:last-child * {
@@ -210,23 +210,35 @@ nav {
   }
 }
 
-@media screen and (max-width: 38em) {
+@media screen and (max-width: 480px),
+media screen and (max-device-width: 480px) {
+  html {
+    background-color: #fff;
+  }
   #page {
     margin: 0;
+    background-color: #fff;
+    border: none;
+    box-shadow: none;
   }
 
   #content {
     padding: 1.5em .5em;
   }
 
-  nav li {
-	width: auto;
-	* {
-	  border: none;
-	  padding: 0 .5em;
-	  font-size: smaller;
-	  background: none;
-	}
+  nav {
+    position: fixed;
+    background-color: #fff;
+    border-bottom: 1px solid #ccc; 
+    ul li {
+      width: auto;
+      * {
+        border: none;
+        padding: 0 .5em;
+        background: none;
+        text-align: left;
+      }
+    }
   }
 }
 .c {
