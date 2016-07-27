@@ -209,6 +209,11 @@ nav {
 	padding-left: 0;
   }
 }
+@media screen and (max-width: 60em) {
+  nav {
+    position: fixed;
+  }
+}
 
 @media screen and (max-width: 480px),
 media screen and (max-device-width: 480px) {
