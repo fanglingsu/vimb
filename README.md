@@ -68,7 +68,7 @@ project directory.
   - [ ] external downloader
   - [ ] hinting
   - [x] searching and matching of search results
-  - [ ] navigation j, k, h, l, ...
+  - [x] navigation j, k, h, l, ...
   - [ ] history and history lookup
   - [ ] completion
   - [ ] HSTS
