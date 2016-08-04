@@ -48,7 +48,6 @@ Remote-Control via socket (previously a fifo)
   socat READLINE UNIX-CONNECT:$(< ~/socket)
   ```
 
-
 ## screenshots
 
 There isn't really much to see for a browser that is controlled via keyboard.

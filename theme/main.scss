@@ -14,7 +14,6 @@ body {
   color: #000;
   font-family: "Dejavu sans-serif",Verdana,Geneva,sans-serif;
   font-size: 1em;
-  line-height: 1.5em;
   text-rendering: optimizeLegibility;
 }
 
@@ -22,6 +21,7 @@ body {
   background-color: #fff;
   margin: 1em auto 2em;
   max-width: 60em;
+  min-width: 20em;
   border: 1px solid #ccc;
   box-shadow: .52em .52em 1.3em #d0cdca;
   position: relative;
@@ -39,24 +39,23 @@ footer {
 
 h1, h2, h3 {
   font-weight: bolder;
-  padding: .5em 0 .2em;
-  margin-bottom: .3em;
   color: #555;
 }
 
 h1 {
-  padding-top: .8em;
+  margin: 1em 0 .8em;
   font-size: xx-large;
 }
 
 h2 {
   font-size: x-large;
   border-bottom: 1px solid #ccc;
-  margin-bottom: .8em;
+  margin: 1em 0 .8em;
 }
 
 h3 {
   font-size: large;
+  margin: .8em 0 .6em;
 }
 
 em {
@@ -64,7 +63,7 @@ em {
 }
 
 p, pre, ul, ol, dl {
-  margin-bottom: 1em;
+  margin: 1em 0;
 }
 
 ul, ol {
@@ -72,23 +71,18 @@ ul, ol {
   margin: 0 0 0 1.5em;
 }
 
-h1 + ul {
-  margin-top: 1.5em;
-}
-
 ol li {
   list-style-type: decimal;
 }
 
 li {
-  line-height: 1.5em;
   padding-left: .5em;
 }
 
 img {
   border: 1px solid #ddd;
   max-width: 100%;
-  padding: 0 0 1em 0;
+  margin: .5em 0;
   height: auto;
 }
 
@@ -122,7 +116,6 @@ a:visited {
 }
 
 a:focus, a:hover {
-  text-decoration: underline;
   color: #0181eb;
 }
 
@@ -157,19 +150,18 @@ nav {
   position: absolute;
   top: 0;
   width: 100%;
+  min-width: 20em;
   ul {
 	margin: 0;
-	padding: 0;
 	li {
 	  list-style: none;
 	  float: left;
 	  width: 25%;
-	  margin: 0;
 	  padding: 0;
       * {
         text-align: center;
         display: block;
-        padding: .2em .5em;
+        padding: .4em 0 .1em;
         border: solid #ccc;
         border-width: 0 1px 1px 0;
         height: 1.5em;
@@ -203,7 +195,7 @@ nav {
 }
 
 #markdown-toc {
-  margin-left: 0;
+  margin: 0 0 1em;
   li {
 	list-style-type: none;
 	padding-left: 0;
@@ -212,38 +204,14 @@ nav {
 @media screen and (max-width: 60em) {
   nav {
     position: fixed;
-  }
-}
-
-@media screen and (max-width: 480px),
-media screen and (max-device-width: 480px) {
-  html {
-    background-color: #fff;
-  }
-  #page {
-    margin: 0;
-    background-color: #fff;
-    border: none;
-    box-shadow: none;
+    font-size: large;
   }
 
-  #content {
-    padding: 1.5em .5em;
-  }
-
-  nav {
-    position: fixed;
-    background-color: #fff;
-    border-bottom: 1px solid #ccc; 
-    ul li {
-      width: auto;
-      * {
-        border: none;
-        padding: 0 .5em;
-        background: none;
-        text-align: left;
-      }
-    }
+  /* fix anchor offset in case of fixed menu */
+  h1, h2, h3 {
+    padding-top: 2.1em;
+    margin-top: -2.1em;
+    background-clip: content-box;
   }
 }
 .c {
