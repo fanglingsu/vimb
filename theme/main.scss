@@ -178,7 +178,7 @@ nav {
   li.active * {
 	background-color: #fff;
 	color: #555;
-	border-width: 0;
+	border-color: #fff;
   }
 
   li.active + li * {
@@ -205,6 +205,7 @@ nav {
   nav {
     position: fixed;
     font-size: large;
+    box-shadow: 0 0 1em 1em #fff;
   }
 
   /* fix anchor offset in case of fixed menu */
