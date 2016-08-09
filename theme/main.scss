@@ -93,7 +93,7 @@ pre {
   border: 1px solid #ddd;
   box-shadow: .26em .26em .65em #eee;
   padding: .2em .4em;
-  overflow: auto;
+  white-space: pre-wrap;
 }
 
 code {
