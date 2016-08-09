@@ -19,7 +19,7 @@ body {
 
 #page {
   background-color: #fff;
-  margin: 1em auto 2em;
+  margin: 0 auto 2em;
   max-width: 60em;
   min-width: 20em;
   border: 1px solid #ccc;
@@ -40,22 +40,23 @@ footer {
 h1, h2, h3 {
   font-weight: bolder;
   color: #555;
+  /* fix anchor offset in case of fixed menu */
+  padding-top: 2.6em;
+  margin: -1.8em 0 .8em;
+  background-clip: content-box;
 }
 
 h1 {
-  margin: 1em 0 .8em;
   font-size: xx-large;
 }
 
 h2 {
   font-size: x-large;
   border-bottom: 1px solid #ccc;
-  margin: 1em 0 .8em;
 }
 
 h3 {
   font-size: large;
-  margin: .8em 0 .6em;
 }
 
 em {
@@ -147,10 +148,15 @@ dd {
 
 nav {
   font-size: x-large;
-  position: absolute;
+  position: fixed;
   top: 0;
-  width: 100%;
+  left:0;
+  right:0;
+  margin: 0 auto;
   min-width: 20em;
+  max-width: 40em;
+  background-image: linear-gradient(#fff 65%, rgba(255,255,255,0) 100%);
+  padding-bottom: 1em;
   ul {
 	margin: 0;
 	li {
@@ -203,16 +209,8 @@ nav {
 }
 @media screen and (max-width: 60em) {
   nav {
-    position: fixed;
     font-size: large;
-    box-shadow: 0 0 1em 1em #fff;
-  }
-
-  /* fix anchor offset in case of fixed menu */
-  h1, h2, h3 {
-    padding-top: 2.1em;
-    margin-top: -2.1em;
-    background-clip: content-box;
+    max-width: none;
   }
 }
 .c {
