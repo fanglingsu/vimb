@@ -23,7 +23,7 @@ body {
   max-width: 60em;
   min-width: 20em;
   border: 1px solid #ccc;
-  box-shadow: .52em .52em 1.3em #d0cdca;
+  box-shadow: 0 0 2em #d0cdca;
   position: relative;
 }
 
@@ -147,17 +147,17 @@ dd {
 }
 
 nav {
-  font-size: x-large;
   position: fixed;
   top: 0;
   left:0;
   right:0;
   margin: 0 auto;
   min-width: 20em;
-  max-width: 40em;
+  max-width: 60em;
   background-image: linear-gradient(#fff 65%, rgba(255,255,255,0) 100%);
   padding-bottom: 1em;
   ul {
+    font-size: x-large;
 	margin: 0;
 	li {
 	  list-style: none;
@@ -208,6 +208,9 @@ nav {
   }
 }
 @media screen and (max-width: 60em) {
+  #page {
+    margin-bottom: 0;
+  }
   nav {
     font-size: large;
     max-width: none;
