@@ -206,6 +206,7 @@ nav {
 	padding-left: 0;
   }
 }
+
 @media screen and (max-width: 60em) {
   #page {
     margin-bottom: 0;
@@ -215,6 +216,7 @@ nav {
     max-width: none;
   }
 }
+
 .c {
   color: #998;
   font-style: italic;
@@ -323,4 +325,47 @@ nav {
 
 .na, .no, .nv, .vc, .vg, .vi {
   color: #008080;
+}
+
+@media print {
+  html {
+    background-color: #fff;
+  }
+
+  #page {
+    margin: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  #content {
+    padding: 1em;
+  }
+
+  nav, footer, #markdown-toc {
+    display: none;
+  }
+
+  a, a:link, a:visited {
+    color: #000;
+  }
+
+  #content {
+    a:link:after, a:visited:after {
+      content: " (" attr(href) ") ";
+      font-size: .9em;
+      color: #555;
+    }
+  }
+
+  ul, ol, img {
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    color: #555;
+    padding: 0;
+    margin: 0 0 1em;
+    page-break-after: avoid;
+  }
 }
