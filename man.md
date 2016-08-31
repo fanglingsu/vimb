@@ -376,6 +376,9 @@ the extended hint mode can only be combined with the following hint modes
 : Search for *N*th previous search result depending on current search
   direction.
 
+\<CR\>
+: Perform a click on element containing the current highlighted search result. 
+
 ### Zooming
 {:#Zooming}
 

@@ -18,6 +18,11 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+Link activation on search result by `<CR>`
+: If a search is performed by `?` or `/` the element containing the currently
+  highlighted search match can be clicked by hitting `<CR>`. This allows to
+  open links containing the search match into the current window.
+
 New setting 'closed-max-items'
 : Maximum number of stored last closed browser windows. If closed-max-items is
   set to 0, closed browser windows will not be stored. By default this is 10.
