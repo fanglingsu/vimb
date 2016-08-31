@@ -793,6 +793,9 @@ static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
             dom_install_focus_blur_callbacks(webkit_web_frame_get_dom_document(frame));
             vb.state.done_loading_page = false;
 
+            /* Unset possible last search. */
+            command_search(&((Arg){0}));
+
             break;
 
         case WEBKIT_LOAD_FINISHED:

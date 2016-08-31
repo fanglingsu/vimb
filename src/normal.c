@@ -24,6 +24,7 @@
 #include "ascii.h"
 #include "command.h"
 #include "hints.h"
+#include "js.h"
 #include "dom.h"
 #include "history.h"
 #include "util.h"
@@ -56,6 +57,7 @@ static VbResult normal_focus_input(const NormalCmdInfo *info);
 static VbResult normal_g_cmd(const NormalCmdInfo *info);
 static VbResult normal_hint(const NormalCmdInfo *info);
 static VbResult normal_do_hint(const char *prompt);
+static VbResult normal_fire(const NormalCmdInfo *info);
 static VbResult normal_increment_decrement(const NormalCmdInfo *info);
 static VbResult normal_input_open(const NormalCmdInfo *info);
 static VbResult normal_mark(const NormalCmdInfo *info);
@@ -90,7 +92,7 @@ static struct {
 /* ^J  0x0a */ {NULL},
 /* ^K  0x0b */ {NULL},
 /* ^L  0x0c */ {NULL},
-/* ^M  0x0d */ {NULL},
+/* ^M  0x0d */ {normal_fire},
 /* ^N  0x0e */ {NULL},
 /* ^O  0x0f */ {normal_navigate},
 /* ^P  0x10 */ {normal_queue},
@@ -484,6 +486,24 @@ static VbResult normal_do_hint(const char *prompt)
 
     vb_enter_prompt('c', prompt, true);
     return RESULT_COMPLETE;
+}
+
+static VbResult normal_fire(const NormalCmdInfo *info)
+{
+    char *value = NULL;
+    /* If searching is currently active - click link containing current search
+     * highlight. We use the search_matches as indicator that the searching is
+     * active. */
+    if (vb.state.search_matches) {
+        js_eval(
+            webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(vb.gui.webview)),
+            "getSelection().anchorNode.parentNode.click();", NULL, &value
+        );
+        g_free(value);
+
+        return RESULT_COMPLETE;
+    }
+    return RESULT_ERROR;
 }
 
 static VbResult normal_increment_decrement(const NormalCmdInfo *info)
