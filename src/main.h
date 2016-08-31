@@ -305,9 +305,7 @@ typedef struct {
     gboolean        enable_register;        /* indicates if registers are filled */
     char            current_register;       /* holds char for current register to be used */
     gboolean        typed;                  /* indicates if th euser type the keys processed as command */
-#ifdef FEATURE_SEARCH_HIGHLIGHT
     int             search_matches;         /* number of matches search results */
-#endif
     char            *fifo_path;             /* holds the path to the control fifo */
     char            *socket_path;           /* holds the path to the control socket */
     char            *pid_str;               /* holds the pid as string */
