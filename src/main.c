@@ -1133,8 +1133,6 @@ static void init_core(void)
         g_object_set(G_OBJECT(setting), "enable-default-context-menu", false, NULL);
     }
 
-    vb.config.default_zoom = 1.0;
-
 #ifdef FEATURE_HIGH_DPI
     /* fix for high dpi displays */
     GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(vb.gui.window));

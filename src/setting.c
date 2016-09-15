@@ -90,6 +90,9 @@ static int hsts(const char *name, int type, void *value, void *data);
 #ifdef FEATURE_SOUP_CACHE
 static int soup_cache(const char *name, int type, void *value, void *data);
 #endif
+#ifdef FEATURE_DEFAULT_ZOOM
+static int default_zoom(const char *name, int type, void *value, void *data);
+#endif
 static gboolean validate_js_regexp_list(const char *pattern);
 
 void setting_init()
@@ -228,6 +231,11 @@ void setting_init()
     setting_add("maximum-cache-size", TYPE_INTEGER, &i, soup_cache, 0, NULL);
 #endif
     setting_add("x-hint-command", TYPE_CHAR, &":o <C-R>;", NULL, 0, NULL);
+
+#ifdef FEATURE_DEFAULT_ZOOM
+    i = 100;
+    setting_add("default_zoom", TYPE_INTEGER, &i, default_zoom, 0, &vb.config.default_zoom);
+#endif
 
     /* initialize the shortcuts and set the default shortcuts */
     shortcut_init();
@@ -901,6 +909,18 @@ static int soup_cache(const char *name, int type, void *value, void *data)
     if (!kilobytes) {
         soup_cache_clear(vb.config.soup_cache);
     }
+    return VB_CMD_SUCCESS;
+}
+#endif
+
+#ifdef FEATURE_DEFAULT_ZOOM
+static int default_zoom(const char *name, int type, void *value, void *data)
+{
+    *(float*)data = (float)*(int*)value / 100.0;
+
+    webkit_web_view_set_full_content_zoom(vb.gui.webview, true);
+    webkit_web_view_set_zoom_level(vb.gui.webview, vb.config.default_zoom);
+
     return VB_CMD_SUCCESS;
 }
 #endif
