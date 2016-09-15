@@ -234,7 +234,7 @@ void setting_init()
 
 #ifdef FEATURE_DEFAULT_ZOOM
     i = 100;
-    setting_add("default_zoom", TYPE_INTEGER, &i, default_zoom, 0, &vb.config.default_zoom);
+    setting_add("default-zoom", TYPE_INTEGER, &i, default_zoom, 0, &vb.config.default_zoom);
 #endif
 
     /* initialize the shortcuts and set the default shortcuts */
