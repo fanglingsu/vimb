@@ -50,6 +50,8 @@
 #define FEATURE_HSTS
 /* enable soup caching - size can be configure by maximum-cache-size setting */
 #define FEATURE_SOUP_CACHE
+/* allow setting default_zoom via config */
+#define FEATURE_DEFAULT_ZOOM
 /* enable the :autocmd feature */
 #define FEATURE_AUTOCMD
 /* enable the :auto-response-header feature */
