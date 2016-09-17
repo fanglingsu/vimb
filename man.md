@@ -1167,6 +1167,9 @@ cookie-expire-time (int)
   Any other value enforce the expire-time (the expire-time value will be the
   lower between server-side request and time defined with 'cookie-expire-time').
 
+default-zoom (int)
+: Initial Full-Content Zoom in percent. Default is 100.
+
 download-command (string)
 : A command with placeholder `%s` that will be invoked to download a uri.
 

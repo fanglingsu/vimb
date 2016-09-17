@@ -18,6 +18,9 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+New setting 'default-zoom'
+: Initial Full-Content Zoom in percent.
+
 Link activation on search result by `<CR>`
 : If a search is performed by `?` or `/` the element containing the currently
   highlighted search match can be clicked by hitting `<CR>`. This allows to
@@ -34,24 +37,6 @@ New option [-p, --profile](man.html#OPTIONS)
 New setting 'hint-follow-last'
 : If on, vimb automatically follows the last remaining hint on the page
   (default behaviour). If off hints are fired only if enter is pressed.
-
-Remote-Control via socket (previously a fifo)
-: If vimb is started with `-s` or `--socket` option, vimb creates a unix
-  domain socket named `$XDG_RUNTIME_DIR/vimb/socket/{pid}`.
-: All commands written to the socket are executed in the same way like the
-  right hand side of the `map` commands. This allow to perform normal mode
-  commands as well as ex commands.
-: Example:
-
-  ```shell
-  sh -c "vimb -s -d > ~/socket" &
-  SOCKET=$(< ~/socket)
-  echo ':o http://fanglingsu.github.io/vimb/<CR>' | socat - UNIX-CONNECT:$SOCKET
-  echo ':o !<Tab><Tab><CR>' | socat - UNIX-CONNECT:$SOCKET
-  echo '<C-Q>' | socat - UNIX-CONNECT:$SOCKET
-  # or start an interactive remote control session
-  socat READLINE UNIX-CONNECT:$(< ~/socket)
-  ```
 
 ## screenshots
 
