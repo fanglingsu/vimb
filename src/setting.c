@@ -49,6 +49,7 @@ static void setting_print(Client *c, Setting *s);
 static void setting_free(Setting *s);
 
 static int cookie_accept(Client *c, const char *name, DataType type, void *value, void *data);
+static int default_zoom(Client *c, const char *name, DataType type, void *value, void *data);
 static int fullscreen(Client *c, const char *name, DataType type, void *value, void *data);
 static int input_autohide(Client *c, const char *name, DataType type, void *value, void *data);
 static int internal(Client *c, const char *name, DataType type, void *value, void *data);
@@ -137,6 +138,8 @@ void setting_init(Client *c)
     setting_add(c, "timeoutlen", TYPE_INTEGER, &i, internal, 0, &c->map.timeoutlen);
     setting_add(c, "input-autohide", TYPE_BOOLEAN, &off, input_autohide, 0, &c->config.input_autohide);
     setting_add(c, "fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
+    i = 100;
+    setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
 
     /* initialize the shortcuts and set the default shortcuts */
     shortcut_init(c);
@@ -460,6 +463,16 @@ static int cookie_accept(Client *c, const char *name, DataType type, void *value
 
         return CMD_ERROR | CMD_KEEPINPUT;
     }
+
+    return CMD_SUCCESS;
+}
+
+static int default_zoom(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    float zoom = (float)*(int*)value / 100.0;
+
+    webkit_settings_set_zoom_text_only(webkit_web_view_get_settings(c->webview), FALSE);
+    webkit_web_view_set_zoom_level(c->webview, zoom);
 
     return CMD_SUCCESS;
 }
