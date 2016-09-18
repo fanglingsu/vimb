@@ -85,6 +85,7 @@ project directory.
         instances and to work also if the page was reloaded or changed like
         the marks in vim)
   - [x] zooming
+  - [x] default zoom
   - [ ] yanking
   - [x] keymapping
   - [ ] URL handler
