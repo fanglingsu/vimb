@@ -25,9 +25,9 @@ install: vimb
 	install -d $(EXTPREFIX)
 	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(EXTPREFIX)/$(EXTTARGET)
 	install -d $(DESTDIR)$(MANDIR)/man1
-	@sed -e "s!VERSION!$(VERSION)!g" \
-		-e "s!PREFIX!$(PREFIX)!g" \
-		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(DESTDIR)$(MANDIR)/man1/vimb.1
+	# @sed -e "s!VERSION!$(VERSION)!g" \
+		# -e "s!PREFIX!$(PREFIX)!g" \
+		# -e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(DESTDIR)$(MANDIR)/man1/vimb.1
 
 uninstall:
 	$(RM) $(BINPREFIX)/vimb $(DESTDIR)$(MANDIR)/man1/vimb.1 $(EXTPREFIX)/$(EXTTARGET)
