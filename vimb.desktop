@@ -1,0 +1,11 @@
+# Based on Arch Linux' chromium.desktop
+[Desktop Entry]
+Name=vimb
+GenericName=Web Browser
+Comment=Access the Internet
+Exec=vimb %U
+Terminal=false
+Icon=
+Type=Application
+Categories=GTK;Network;WebBrowser;
+MimeType=text/html;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;

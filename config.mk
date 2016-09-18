@@ -1,11 +1,12 @@
 VERSION = dev-3.0
 
-PREFIX         ?= /usr/local
-BINPREFIX      := $(DESTDIR)$(PREFIX)/bin
-MANPREFIX      := $(DESTDIR)$(PREFIX)/share/man
-EXAMPLEPREFIX  := $(DESTDIR)$(PREFIX)/share/vimb/example
-RUNPREFIX      := $(PREFIX)
-EXTPREFIX      := $(RUNPREFIX)/lib/vimb
+PREFIX           ?= /usr/local
+BINPREFIX        := $(DESTDIR)$(PREFIX)/bin
+MANPREFIX        := $(DESTDIR)$(PREFIX)/share/man
+EXAMPLEPREFIX    := $(DESTDIR)$(PREFIX)/share/vimb/example
+DOTDESKTOPPREFIX := $(DESTDIR)$(PREFIX)/share/applications
+RUNPREFIX        := $(PREFIX)
+EXTPREFIX        := $(RUNPREFIX)/lib/vimb
 
 # define some directories
 SRCDIR  = src
