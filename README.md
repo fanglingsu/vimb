@@ -86,7 +86,7 @@ project directory.
         the marks in vim)
   - [x] zooming
   - [x] default zoom
-  - [ ] yanking
+  - [x] yanking
   - [x] keymapping
   - [ ] URL handler
   - [x] shortcuts

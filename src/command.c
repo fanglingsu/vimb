@@ -91,7 +91,49 @@ gboolean command_search(Client *c, const Arg *arg)
 
 gboolean command_yank(Client *c, const Arg *arg, char buf)
 {
-    /* TODO no implemented yet */
+    /**
+     * This implementation is quite 'brute force', same as in vimb2
+     *  - both X clipboards are always set, PRIMARY and CLIPBOARD
+     *  - the X clipboards are always set, even though a vimb register was given
+     */
+
+    const char *uri = NULL;
+    char *yanked = NULL;
+
+    g_assert(c);
+    g_assert(arg);
+    g_assert(c->webview);
+    g_assert(arg->i == COMMAND_YANK_URI || arg->i == COMMAND_YANK_SELECTION);
+
+    if (arg->i == COMMAND_YANK_URI) {
+        if ((uri = webkit_web_view_get_uri(c->webview))) {
+            yanked = g_strdup(uri);
+        }
+    } else if (arg->i == COMMAND_YANK_SELECTION) {
+        // copy web view selection to clipboard
+        webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
+        // read back copy from clipboard
+        yanked = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+    }
+
+    if(!yanked) {
+        return FALSE;
+    }
+
+    // store in vimb default register
+    vb_register_add(c, '"', yanked);
+    // store in vimb register buf if buf != 0
+    vb_register_add(c, buf, yanked);
+
+    // store in X clipboard primary (selected text copy, middle mouse paste)
+    gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY), yanked, -1);
+    // store in X "windows style" clipboard
+    gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), yanked, -1);
+
+    vb_echo(c, MSG_NORMAL, false, "Yanked: %s", yanked);
+
+    g_free(yanked);
+
     return TRUE;
 }
 
