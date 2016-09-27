@@ -622,6 +622,7 @@ static void input_print(Client *c, gboolean force, MessageType type,
     /* apply input style only if the message type was changed */
     if (type != c->state.input_type) {
         c->state.input_type = type;
+        vb_input_update_style(c);
     }
     vb_input_set_text(c, message);
     if (hide) {
