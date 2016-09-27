@@ -109,9 +109,9 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
             yanked = g_strdup(uri);
         }
     } else if (arg->i == COMMAND_YANK_SELECTION) {
-        // copy web view selection to clipboard
+        /* copy web view selection to clipboard */
         webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
-        // read back copy from clipboard
+        /* read back copy from clipboard */
         yanked = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
     }
 
@@ -119,14 +119,14 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
         return FALSE;
     }
 
-    // store in vimb default register
+    /* store in vimb default register */
     vb_register_add(c, '"', yanked);
-    // store in vimb register buf if buf != 0
+    /* store in vimb register buf if buf != 0 */
     vb_register_add(c, buf, yanked);
 
-    // store in X clipboard primary (selected text copy, middle mouse paste)
+    /* store in X clipboard primary (selected text copy, middle mouse paste) */
     gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY), yanked, -1);
-    // store in X "windows style" clipboard
+    /* store in X "windows style" clipboard */
     gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), yanked, -1);
 
     vb_echo(c, MSG_NORMAL, false, "Yanked: %s", yanked);
