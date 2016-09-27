@@ -68,6 +68,7 @@ gboolean command_search(Client *c, const Arg *arg)
                     WEBKIT_FIND_OPTIONS_WRAP_AROUND |
                     (forward ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
                     G_MAXUINT);
+            /* TODO get the number of matches */
             c->state.search.active = TRUE;
             /* Skip first search because the first match is already
              * highlighted on search start. */

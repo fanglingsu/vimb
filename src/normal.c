@@ -53,6 +53,7 @@ typedef VbResult (*NormalCommand)(Client *c, const NormalCmdInfo *info);
 static VbResult normal_clear_input(Client *c, const NormalCmdInfo *info);
 static VbResult normal_descent(Client *c, const NormalCmdInfo *info);
 static VbResult normal_ex(Client *c, const NormalCmdInfo *info);
+static VbResult normal_fire(Client *c, const NormalCmdInfo *info);
 static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info);
 static VbResult normal_hint(Client *c, const NormalCmdInfo *info);
 static VbResult normal_do_hint(Client *c, const char *prompt);
@@ -90,7 +91,7 @@ static struct {
 /* ^J  0x0a */ {NULL},
 /* ^K  0x0b */ {NULL},
 /* ^L  0x0c */ {NULL},
-/* ^M  0x0d */ {NULL},
+/* ^M  0x0d */ {normal_fire},
 /* ^N  0x0e */ {NULL},
 /* ^O  0x0f */ {normal_navigate},
 /* ^P  0x10 */ {normal_queue},
@@ -413,6 +414,22 @@ static VbResult normal_ex(Client *c, const NormalCmdInfo *info)
     }
 
     return RESULT_COMPLETE;
+}
+
+static VbResult normal_fire(Client *c, const NormalCmdInfo *info)
+{
+    /* If searching is currently active - click link containing current search
+     * highlight. We use the search_matches as indicator that the searching is
+     * active. */
+    if (c->state.search.active) {
+        webkit_web_view_run_javascript(c->webview,
+                "getSelection().anchorNode.parentNode.click();", NULL, NULL,
+                NULL);
+
+        return RESULT_COMPLETE;
+    }
+
+    return RESULT_ERROR;
 }
 
 static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info)
