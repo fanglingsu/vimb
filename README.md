@@ -74,7 +74,7 @@ project directory.
   - [ ] HSTS
   - [ ] auto-response-header
   - [x] cookies support
-  - [ ] register support and `:register` command
+  - [x] register support and `:register` command
   - [ ] read it later queue
   - [ ] show scroll indicator in statusbar as top, x%, bttom or all
         how can we get this information from webview easily?
