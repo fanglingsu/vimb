@@ -73,7 +73,7 @@ project directory.
   - [ ] completion
   - [ ] HSTS
   - [ ] auto-response-header
-  - [ ] cookies support
+  - [x] cookies support
   - [ ] register support and `:register` command
   - [ ] read it later queue
   - [ ] show scroll indicator in statusbar as top, x%, bttom or all
