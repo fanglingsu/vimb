@@ -49,7 +49,14 @@ static void input_print(Client *c, gboolean force, MessageType type,
         gboolean hide, const char *message);
 static void marks_clear(Client *c);
 static void mode_free(Mode *mode);
+static void on_webctx_download_started(WebKitWebContext *webctx,
+        WebKitDownload *download, Client *c);
 static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data);
+static gboolean on_webdownload_decide_destination(WebKitDownload *download,
+        gchar *suggested_filename, Client *c);
+static void on_webdownload_failed(WebKitDownload *download,
+               GError *error, Client *c);
+static void on_webdownload_finished(WebKitDownload *download, Client *c);
 static void on_webview_close(WebKitWebView *webview, Client *c);
 static WebKitWebView *on_webview_create(WebKitWebView *webview,
         WebKitNavigationAction *navact, Client *c);
@@ -348,13 +355,12 @@ void vb_modelabel_update(Client *c, const char *label)
  */
 void vb_quit(Client *c, gboolean force)
 {
-#if 0 /* TODO don't quit on running downloads */
     /* if not forced quit - don't quit if there are still running downloads */
     if (!force && c->state.downloads) {
-        vb_echo_force(c, VB_MSG_ERROR, TRUE, "Can't quit: there are running downloads");
+        vb_echo_force(c, MSG_ERROR, TRUE, "Can't quit: there are running downloads");
         return;
     }
-#endif
+
     /* Don't run the quit synchronously, because this could lead to access of
      * no more existing widget where some command response is written. */
     g_idle_add((GSourceFunc)quit, c);
@@ -723,6 +729,22 @@ static void spawn_new_instance(const char *uri, gboolean embed)
 }
 
 /**
+ * Callback for the web contexts download-started signal.
+ */
+static void on_webctx_download_started(WebKitWebContext *webctx,
+        WebKitDownload *download, Client *c)
+{
+    g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
+    g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
+    g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
+
+    c->state.downloads = g_list_append(c->state.downloads, download);
+
+    /* to reflect the correct download count */
+    vb_statusbar_update(c);
+}
+
+/**
  * Callback for the web contexts initialize-web-extensions signal.
  */
 static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data)
@@ -741,6 +763,168 @@ static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data
     webkit_web_context_set_web_extensions_initialization_user_data(webctx, vdata);
 
     g_free(name);
+}
+
+/**
+ * Callback for the webkit download decide destination signal.
+ * This signal is emitted after response is received to decide a destination
+ * URI for the download.
+ */
+static gboolean on_webdownload_decide_destination(WebKitDownload *download,
+        gchar *suggested_filename, Client *c)
+{
+    g_assert(download);
+    g_assert(suggested_filename);
+    g_assert(c);
+
+    char *path, *filename, *uri;
+    GString *expanded, *filepath;
+    const char *extension_dot;
+    int suffix;
+    gssize suffix_pos;
+
+    /* get the download path from settings */
+    path = GET_CHAR(c, "download-path");
+    g_assert(path);
+
+    /* expand any ~ or $VAR patterns in download path */
+    expanded = g_string_new(NULL);
+    util_parse_expansion(c, (const char**)&path, expanded, UTIL_EXP_TILDE|UTIL_EXP_DOLLAR, "");
+    g_string_append(expanded, path + 1);
+
+    /* for unnamed downloads set default filename */
+    filename = strlen(suggested_filename) ? suggested_filename : "vimb-download";
+
+    /* construct complete download filepath */
+    filepath = g_string_new(NULL);
+    g_string_printf(filepath, "%s%c%s", expanded->str, G_DIR_SEPARATOR, filename);
+
+    /* if the filepath exists already
+     * insert numerical suffix before file extension */
+    if (g_file_test(filepath->str, G_FILE_TEST_EXISTS)) {
+        suffix = 2;
+
+        /* position on .tar. (special case, extension with two dots),
+         * position on last dot (if any) otherwise */
+        if (!(extension_dot = strstr(filename, ".tar."))) {
+            extension_dot = strrchr(filename, '.');
+        }
+
+        /* the position to insert the suffix at */
+        if (extension_dot) {
+            suffix_pos = extension_dot - filename;
+        } else {
+            suffix_pos = strlen(filename);
+        }
+
+        /* construct a new complete download filepath and add the suffix before
+         * the filename extension, keep incrementing the suffix value as long
+         * as the filepath exists, stop on first unused filename. */
+        do {
+            g_string_printf(filepath, "%s%c%.*s_%i%s",
+                    expanded->str, G_DIR_SEPARATOR,
+                    (int)suffix_pos, filename,
+                    suffix++, filename + suffix_pos);
+        } while (g_file_test(filepath->str, G_FILE_TEST_EXISTS));
+    }
+
+    /* build URI from filepath */
+    uri = g_filename_to_uri(filepath->str, NULL, NULL);
+    g_assert(uri);
+
+    /* configure download */
+    webkit_download_set_allow_overwrite(download, FALSE);
+    webkit_download_set_destination(download, uri);
+
+    /* cleanup */
+    g_string_free(expanded, TRUE);
+    g_string_free(filepath, TRUE);
+    g_free(uri);
+
+    return TRUE;
+}
+
+/**
+ * Callback for the webkit download failed signal.
+ * This signal is emitted when an error occurs during the download operation.
+ */
+static void on_webdownload_failed(WebKitDownload *download,
+               GError *error, Client *c)
+{
+    gchar *destination = NULL, *filename = NULL, *basename = NULL;
+
+    g_assert(download);
+    g_assert(error);
+    g_assert(c);
+
+    /* get the failed download's destination uri */
+    g_object_get(download, "destination", &destination, NULL);
+    g_assert(destination);
+
+    /* filename from uri */
+    if (destination) {
+        filename = g_filename_from_uri(destination, NULL, NULL);
+        g_free(destination);
+    }
+
+    /* basename from filename */
+    if (filename) {
+        basename = g_path_get_basename(filename);
+        g_free(filename);
+    }
+
+    /* report the error to the user */
+    if (basename) {
+        vb_echo(c, MSG_ERROR, FALSE, "Download of %s failed (%s)", basename, error->message);
+        g_free(basename);
+    }
+}
+
+/**
+ * Callback for the webkit download finished signal.
+ * This signal is emitted when download finishes successfully or due to an
+ * error. In case of errors “failed” signal is emitted before this one.
+ */
+static void on_webdownload_finished(WebKitDownload *download, Client *c)
+{
+    gchar *destination = NULL, *filename = NULL, *basename = NULL;
+
+    g_assert(download);
+    g_assert(c);
+
+    c->state.downloads = g_list_remove(c->state.downloads, download);
+
+    /* to reflect the correct download count */
+    vb_statusbar_update(c);
+
+    /* get the finished downloads destination uri */
+    g_object_get(download, "destination", &destination, NULL);
+    g_assert(destination);
+
+    /* filename from uri */
+    if (destination) {
+        filename = g_filename_from_uri(destination, NULL, NULL);
+        g_free(destination);
+    }
+
+    if (filename) {
+        /* basename from filename */
+        basename = g_path_get_basename(filename);
+
+        if (basename) {
+            /* Only report to the user if the downloaded file exists, so the
+             * download was successful. Otherwise, this is a failed download
+             * finished signal and it was reported to the user in
+             * on_webdownload_failed() already. */
+            if (g_file_test(filename, G_FILE_TEST_EXISTS)) {
+                vb_echo(c, MSG_NORMAL, FALSE, "Download of %s finished", basename);
+            }
+
+            g_free(basename);
+        }
+
+        g_free(filename);
+    }
 }
 
 /**
@@ -1167,6 +1351,8 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
         NULL
     );
+
+    g_signal_connect(webkit_web_context_get_default(), "download-started", G_CALLBACK(on_webctx_download_started), c);
 
     /* Inject the user script file. */
     if (g_file_get_contents(vb.files[FILES_SCRIPT], &js, NULL, NULL)) {

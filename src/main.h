@@ -213,7 +213,7 @@ struct Client {
     struct Statusbar    statusbar;
     void                *comp;                  /* pointer to data used in completion.c */
     Mode                *mode;                  /* current active browser mode */
-    WebKitWebContext    *webctx;
+    /* WebKitWebContext    *webctx; */          /* not used atm, use webkit_web_context_get_default() instead */
     GtkWidget           *window, *input;
     WebKitWebView       *webview;
     guint64             page_id;                /* page id of the webview */

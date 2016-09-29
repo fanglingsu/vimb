@@ -63,7 +63,7 @@ project directory.
   - [ ] kiosk-mode `--kiosk,-k`
   - [ ] allow to start vimb reading html from `stdin` by `vimb -`
   - [ ] browser modes normal, input, command, pass-through and hintmode
-  - [ ] download support
+  - [x] download support
   - [ ] editor command
   - [ ] external downloader
   - [ ] hinting
