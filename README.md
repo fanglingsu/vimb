@@ -24,7 +24,7 @@ If you like to have a working vimb, please use the master branch.
 
     ├── doc                 documentation like manual page
     └── src                 all sources to build vimb
-        ├── scripts         JavaScripts that are compiled in to various purposes
+        ├── scripts         JavaScripts that are compiled in for various purposes
         └── webextension    Source files for the webextension
 
 ## dependencies
@@ -35,9 +35,9 @@ If you like to have a working vimb, please use the master branch.
 
 To inform vimb during compile time where the webextension should be loaded
 from, the `RUNPREFIX` option can be set to a full qualified path to the
-directory where the extension should be sotred in.
+directory where the extension should be stored in.
 
-To run vimb wihtout installation you could run as a sandbox like this
+To run vimb without installation you could run as a sandbox like this
 
     make runsandbox
 
@@ -50,7 +50,7 @@ project directory.
   - [x] write make file
     - [x] allow to built as sandbox for local testing
     - [x] add a way to specify the target of the webextension shared objects
-          this is now available with the `RUNPREFIX` oprion for the make
+          this is now available with the `RUNPREFIX` option for the make
   - [x] establish communication channel between the vimb instance and the now
         required webextension (dbus)
 2. migrate as many of the features of the webkit1 vimb
@@ -76,7 +76,7 @@ project directory.
   - [x] cookies support
   - [x] register support and `:register` command
   - [ ] read it later queue
-  - [ ] show scroll indicator in statusbar as top, x%, bttom or all
+  - [ ] show scroll indicator in statusbar as top, x%, bottom or all
         how can we get this information from webview easily?
   - [x] find a way to disable the scrollbars on the main frame
         Can be achieved by `document.documentElement.style.overflow =
