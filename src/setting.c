@@ -219,7 +219,7 @@ void setting_init()
     setting_add("auto-response-header", TYPE_CHAR, &"", autoresponseheader, FLAG_LIST|FLAG_NODUP, NULL);
 #endif
     setting_add("nextpattern", TYPE_CHAR, &"/\\bnext\\b/i,/^(>\\|>>\\|»)$/,/^(>\\|>>\\|»)/,/(>\\|>>\\|»)$/,/\\bmore\\b/i", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
-    setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
+    setting_add("previouspattern", TYPE_CHAR, &"/\\bprev\\b|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/", prevnext, FLAG_LIST|FLAG_NODUP, NULL);
     setting_add("fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
     setting_add("download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -A '$VIMB_USER_AGENT' -e '$VIMB_URI' -b '$VIMB_COOKIES' '%s'\"", NULL, 0, NULL);
     setting_add("download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
