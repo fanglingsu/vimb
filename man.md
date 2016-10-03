@@ -1303,7 +1303,7 @@ previouspattern (list)
 : Patterns to use when guessing the previous page in a document. Each pattern is
   successively tested against each link in the page beginning from the last
   link. Default
-  `/\\bprev\\b|previous\\b/i,/^(<\\|<<\\|«)$/,/^(<\\|<<\\|«)/,/(<\\|<<\\|«)$/`
+  `/\bprev\b|previous\b/i,/^(<|<<|«)$/,/^(<|<<|«)/,/(<|<<|«)$/`
 
 proxy (bool)
 : Indicates if the environment variable 'http_proxy' is evaluated.
