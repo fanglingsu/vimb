@@ -797,7 +797,7 @@ static void ex_eval_javascript_finished(GObject *object,
 
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg)
 {
-    /* TODO no implemented yet */
+    webkit_web_view_run_javascript(c->webview, "window.print();", NULL, NULL, NULL);
     return CMD_SUCCESS;
 }
 
