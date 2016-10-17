@@ -275,5 +275,6 @@ void vb_quit(Client *c, gboolean force);
 void vb_register_add(Client *c, char buf, const char *value);
 const char *vb_register_get(Client *c, char buf);
 void vb_statusbar_update(Client *c);
+void vb_gui_style_update(Client *c, const char *name, const char *value);
 
 #endif /* end of include guard: _MAIN_H */

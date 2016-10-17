@@ -26,6 +26,8 @@
 #define FEATURE_TITLE_PROGRESS
 /* show page title in url completions */
 #define FEATURE_TITLE_IN_COMPLETION
+/* support gui style settings compatible with vimb2 */
+#define FEATURE_GUI_STYLE_VIMB2_COMPAT
 
 #ifdef FEATURE_WGET_PROGRESS_BAR
 /* chars to use for the progressbar */
@@ -39,16 +41,8 @@
 
 /* number of chars to be shown in statusbar for ambiguous commands */
 #define SHOWCMD_LEN                 10
-/* css applied to the gui elements of the borwser window */
-#define GUI_STYLE                   "\
-#statusbar{color:#fff;background-color:#000;font:monospace bold 10;} \
-#statusbar.secure{background-color:#95e454;color:#000;} \
-#statusbar.insecure{background-color:#f77;color:#000;} \
-#input{background-color:#fff;color:#000;font:monospace 10;} \
-#input.error{background-color:#f77;font-weight:bold;} \
-#completion{color:#fff;background-color:#656565;font:monospace 10;} \
-#completion:hover{background-color:#777;} \
-#completion:selected{color:#f6f3e8;background-color:#888;}"
+/* css applied to the gui elements regardless of user's settings */
+#define GUI_STYLE_CSS_BASE          "#input text{background-color:inherit;color:inherit;caret-color:@color;font:inherit;}"
 
 /* default font size for fonts in webview */
 #define SETTING_DEFAULT_FONT_SIZE   10

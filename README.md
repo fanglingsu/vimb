@@ -102,7 +102,7 @@ project directory.
   - [ ] try to use the webkit2 feature of running multiple pages with related
         view instance `webkit_web_view_new_with_related_view`
   - [ ] allow setting of different scopes, global and instance (new feature)
-  - [ ] remove the settings related to the gui like `status-color-bg` this was
+  - [x] remove the settings related to the gui like `status-color-bg` this was
         only a hack and is not recommended for new gtk3 applications. the
         color and font settings should be setup by css instead.
   - [ ] webkit2 does not provide the view mode `source` so maybe this is going

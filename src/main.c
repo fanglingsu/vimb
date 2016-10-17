@@ -1312,7 +1312,96 @@ static void vimb_setup(void)
 
     /* Prepare the style provider to be used for the clients and completion. */
     vb.style_provider = gtk_css_provider_get_default();
-    gtk_css_provider_load_from_data(vb.style_provider, GUI_STYLE, -1, NULL);
+}
+
+/**
+ * Update the gui style settings for client c, given a style setting name and a
+ * style setting value to be updated. The complete style sheet document will be
+ * regenerated and re-fed into gtk css provider.
+ */
+void vb_gui_style_update(Client *c, const char *setting_name_new, const char *setting_value_new)
+{
+    g_assert(c);
+    g_assert(setting_name_new);
+    g_assert(setting_value_new);
+
+    /* The css style sheet document being composed in this function */
+    GString *style_sheet = g_string_new(GUI_STYLE_CSS_BASE);
+
+    /* Mapping from vimb config setting name to css style sheet string */
+    static const char *setting_style_map[][2] = {
+#ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
+        {"completion-bg-active",        " #completion:selected{background-color:%s;}"},
+        {"completion-bg-normal",        " #completion{background-color:%s;}"},
+        {"completion-fg-active",        " #completion:selected{color:%s;}"},
+        {"completion-fg-normal",        " #completion{color:%s;}"},
+        {"completion-font",             " #completion{font:%s;}"},
+        {"input-bg-error",              " #input.error{background-color:%s;}"},
+        {"input-bg-normal",             " #input{background-color:%s;}"},
+        {"input-fg-error",              " #input.error{color:%s;}"},
+        {"input-fg-normal",             " #input{color:%s;}"},
+        {"input-font-error",            " #input.error{font:%s;}"},
+        {"input-font-normal",           " #input{font:%s;}"},
+        {"status-color-bg",             " #statusbar{background-color:%s;}"},
+        {"status-color-fg",             " #statusbar{color:%s;}"},
+        {"status-font",                 " #statusbar{font:%s;}"},
+        {"status-ssl-color-bg",         " #statusbar.secure{background-color:%s;}"},
+        {"status-ssl-color-fg",         " #statusbar.secure{color:%s;}"},
+        {"status-ssl-font",             " #statusbar.secure{font:%s;}"},
+        {"status-sslinvalid-color-bg",  " #statusbar.unsecure{background-color:%s;}"},
+        {"status-sslinvalid-color-fg",  " #statusbar.unsecure{color:%s;}"},
+        {"status-sslinvalid-font",      " #statusbar.unsecure{font:%s;}"},
+#else /* vimb3 gui style settings */
+        {"completion-css",              " #completion{%s;}"},
+        {"completion-hover-css",        " #completion:hover{%s;}"},
+        {"completion-selected-css",     " #completion:selected{%s;}"},
+        {"input-css",                   " #input{%s;}"},
+        {"input-error-css",             " #input.error{%s;}"},
+        {"status-css",                  " #statusbar{%s;}"},
+        {"status-ssl-css",              " #statusbar.secure{%s;}"},
+        {"status-sslinvalid-css",       " #statusbar.unsecure{%s;}"},
+#endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
+
+        {0, 0},
+    };
+
+    /* For each supported style setting name */
+    for (size_t i = 0; setting_style_map[i][0]; i++) {
+        const char *setting_name = setting_style_map[i][0];
+        const char *style_string = setting_style_map[i][1];
+
+        /* If the current style setting name is the one to be updated,
+         * append the given value with appropriate css wrapping to the
+         * style sheet document. */
+        if (strcmp(setting_name, setting_name_new) == 0) {
+            if (strlen(setting_value_new)) {
+                g_string_append_printf(style_sheet, style_string, setting_value_new);
+            }
+        }
+        /* If the current style setting name is NOT the one being updated,
+         * append the css string based on the current config setting. */
+        else {
+            Setting* setting_value = (Setting*)g_hash_table_lookup(c->config.settings, setting_name);
+
+            /* If the current style setting name is not available via settings
+             * yet - this happens during setting_init() - cleanup and return.
+             * We are going to be called again. With the last setting_add(),
+             * all style setting names are available. */
+            if(!setting_value) {
+                goto cleanup;
+            }
+
+            if (strlen(setting_value->value.s)) {
+                g_string_append_printf(style_sheet, style_string, setting_value->value.s);
+            }
+        }
+    }
+
+    /* Feed style sheet document to gtk */
+    gtk_css_provider_load_from_data(vb.style_provider, style_sheet->str, -1, NULL);
+
+cleanup:
+    g_string_free(style_sheet, TRUE);
 }
 
 /**
