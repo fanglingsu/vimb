@@ -149,30 +149,30 @@ void setting_init(Client *c)
     setting_add(c, "completion-bg-normal", TYPE_CHAR, &"#656565", gui_style, 0, NULL);
     setting_add(c, "completion-fg-active", TYPE_CHAR, &"#f6f3e8", gui_style, 0, NULL);
     setting_add(c, "completion-fg-normal", TYPE_CHAR, &"#fff", gui_style, 0, NULL);
-    setting_add(c, "completion-font", TYPE_CHAR, &"monospace 10", gui_style, 0, NULL);
+    setting_add(c, "completion-font", TYPE_CHAR, &"" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
     setting_add(c, "input-bg-error", TYPE_CHAR, &"#f77", gui_style, 0, NULL);
     setting_add(c, "input-bg-normal", TYPE_CHAR, &"#fff", gui_style, 0, NULL);
     setting_add(c, "input-fg-error", TYPE_CHAR, &"#000", gui_style, 0, NULL);
     setting_add(c, "input-fg-normal", TYPE_CHAR, &"#000", gui_style, 0, NULL);
-    setting_add(c, "input-font-error", TYPE_CHAR, &"monospace bold 10", gui_style, 0, NULL);
-    setting_add(c, "input-font-normal", TYPE_CHAR, &"monospace 10", gui_style, 0, NULL);
+    setting_add(c, "input-font-error", TYPE_CHAR, &"" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
+    setting_add(c, "input-font-normal", TYPE_CHAR, &"" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
     setting_add(c, "status-color-bg", TYPE_CHAR, &"#000", gui_style, 0, NULL);
     setting_add(c, "status-color-fg", TYPE_CHAR, &"#fff", gui_style, 0, NULL);
-    setting_add(c, "status-font", TYPE_CHAR, &"monospace bold 10", gui_style, 0, NULL);
+    setting_add(c, "status-font", TYPE_CHAR, &"" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
     setting_add(c, "status-ssl-color-bg", TYPE_CHAR, &"#95e454", gui_style, 0, NULL);
     setting_add(c, "status-ssl-color-fg", TYPE_CHAR, &"#000", gui_style, 0, NULL);
     setting_add(c, "status-ssl-font", TYPE_CHAR, &"", gui_style, 0, NULL);
     setting_add(c, "status-sslinvalid-color-bg", TYPE_CHAR, &"#f77", gui_style, 0, NULL);
     setting_add(c, "status-sslinvalid-color-fg", TYPE_CHAR, &"#000", gui_style, 0, NULL);
-    setting_add(c, "status-sslinvalid-font", TYPE_CHAR, &"", gui_style, 0, NULL);
+    setting_add(c, "status-sslinvalid-font", TYPE_CHAR, &"" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
 #else
     /* gui style settings vimb3 */
-    setting_add(c, "completion-css", TYPE_CHAR, &"color:#fff;background-color:#656565;font:monospace 10;", gui_style, 0, NULL);
+    setting_add(c, "completion-css", TYPE_CHAR, &"color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
     setting_add(c, "completion-hover-css", TYPE_CHAR, &"background-color:#777;", gui_style, 0, NULL);
     setting_add(c, "completion-selected-css", TYPE_CHAR, &"color:#f6f3e8;background-color:#888;", gui_style, 0, NULL);
-    setting_add(c, "input-css", TYPE_CHAR, &"background-color:#fff;color:#000;font:monospace 10;", gui_style, 0, NULL);
-    setting_add(c, "input-error-css", TYPE_CHAR, &"background-color:#f77;font-weight:bold;", gui_style, 0, NULL);
-    setting_add(c, "status-css", TYPE_CHAR, &"color:#fff;background-color:#000;font:monospace bold 10;", gui_style, 0, NULL);
+    setting_add(c, "input-css", TYPE_CHAR, &"background-color:#fff;color:#000;font:" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
+    setting_add(c, "input-error-css", TYPE_CHAR, &"background-color:#f77;font:" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
+    setting_add(c, "status-css", TYPE_CHAR, &"color:#fff;background-color:#000;font:" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
     setting_add(c, "status-ssl-css", TYPE_CHAR, &"background-color:#95e454;color:#000;", gui_style, 0, NULL);
     setting_add(c, "status-sslinvalid-css", TYPE_CHAR, &"background-color:#f77;color:#000;", gui_style, 0, NULL);
 #endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
