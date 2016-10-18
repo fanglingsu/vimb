@@ -1327,6 +1327,7 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
 
     /* The css style sheet document being composed in this function */
     GString *style_sheet = g_string_new(GUI_STYLE_CSS_BASE);
+    size_t i;
 
     /* Mapping from vimb config setting name to css style sheet string */
     static const char *setting_style_map[][2] = {
@@ -1366,7 +1367,7 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
     };
 
     /* For each supported style setting name */
-    for (size_t i = 0; setting_style_map[i][0]; i++) {
+    for (i = 0; setting_style_map[i][0]; i++) {
         const char *setting_name = setting_style_map[i][0];
         const char *style_string = setting_style_map[i][1];
 
