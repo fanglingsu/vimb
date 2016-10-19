@@ -514,8 +514,13 @@ static Client *client_new(WebKitWebView *webview)
         c->window = gtk_plug_new(vb.embed);
         xid       = g_strdup_printf("%d", (int)vb.embed);
     } else {
+        GtkRequisition req;
         c->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
         gtk_window_set_role(GTK_WINDOW(c->window), PROJECT_UCFIRST);
+        /* We have to call gtk_widget_get_preferred_size before
+         * gtk_widget_size_allocate otherwise a warning is thrown when the
+         * widget is realized. */
+        gtk_widget_get_preferred_size(GTK_WIDGET(c->window), &req, NULL);
         gtk_widget_realize(GTK_WIDGET(c->window));
 
         xid = g_strdup_printf("%d",
