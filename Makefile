@@ -26,9 +26,9 @@ install: vimb
 	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(EXTPREFIX)/$(EXTTARGET)
 	@# man page
 	install -d $(MANPREFIX)/man1
-	# @sed -e "s!VERSION!$(VERSION)!g" \
-		# -e "s!PREFIX!$(PREFIX)!g" \
-		# -e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(MANPREFIX)/man1/vimb.1
+	@sed -e "s!VERSION!$(VERSION)!g" \
+		-e "s!PREFIX!$(PREFIX)!g" \
+		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(MANPREFIX)/man1/vimb.1
 	@# .desktop file
 	install -d $(DOTDESKTOPPREFIX)
 	install -m 644 vimb.desktop $(DOTDESKTOPPREFIX)/vimb.desktop
