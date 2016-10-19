@@ -1139,7 +1139,8 @@ static void on_webview_ready_to_show(WebKitWebView *webview, Client *c)
  */
 static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c)
 {
-    g_warning("Webview Crashed on %s", webkit_web_view_get_uri(webview));
+    vb_echo(c, MSG_ERROR, FALSE, "Webview Crashed on %s", webkit_web_view_get_uri(webview));
+
     return TRUE;
 }
 
