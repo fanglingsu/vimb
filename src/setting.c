@@ -74,7 +74,7 @@ void setting_init(Client *c)
      * Separate the setting definition from the data.
      * Don't set the webkit settings if they are the default on startup. */
     c->config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
-    setting_add(c, "useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux i686) AppleWebKit/538.15+ (KHTML, like Gecko) " PROJECT "/" VERSION " Version/8.0 Safari/538.15", webkit, 0, "user-agent");
+    setting_add(c, "useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/603.1 (KHTML, like Gecko) " PROJECT "/" VERSION " Version/10.0 Safari/603.1", webkit, 0, "user-agent");
     /* TODO use the real names for webkit settings */
     i = 14;
     setting_add(c, "fontsize", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
