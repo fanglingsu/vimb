@@ -22,8 +22,8 @@
 
 #include "main.h"
 
+const char *ext_proxy_init(void);
 void ext_proxy_focus_input(Client *c);
-void ext_proxy_init(const char *id);
 void ext_proxy_set_header(Client *c, const char *headers);
 
 #endif /* end of include guard: _EXT_PROXY_H */

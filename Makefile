@@ -4,10 +4,11 @@ all: vimb
 
 options:
 	@echo "vimb build options:"
-	@echo "LIBS    = $(LIBS)"
-	@echo "CFLAGS  = $(CFLAGS)"
-	@echo "LDFLAGS = $(LDFLAGS)"
-	@echo "CC      = $(CC)"
+	@echo "LIBS      = $(LIBS)"
+	@echo "CFLAGS    = $(CFLAGS)"
+	@echo "LDFLAGS   = $(LDFLAGS)"
+	@echo "EXTCFLAGS = $(EXTCFLAGS)"
+	@echo "CC        = $(CC)"
 
 vimb: $(SUBDIRS:%=%.subdir-all)
 

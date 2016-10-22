@@ -24,16 +24,18 @@
 #include "main.h"
 #include "webextension/ext-main.h"
 
+static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
+        GIOStream *stream, GCredentials *credentials, gpointer data);
+static gboolean on_new_connection(GDBusServer *server,
+        GDBusConnection *connection, gpointer data);
+static void on_proxy_created (GDBusProxy *proxy, GAsyncResult *result,
+        gpointer data);
 static void dbus_call(Client *c, const char *method, GVariant *param,
         GAsyncReadyCallback callback);
 static void on_editable_change_focus(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
         const char *interface_name, const char *signal_name,
         GVariant *parameters, gpointer data);
-static void on_name_appeared(GDBusConnection *connection, const char *name,
-        const char *owner, gpointer data);
-static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
-        gpointer data);
 static void on_web_extension_page_created(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
         const char *interface_name, const char *signal_name,
@@ -43,7 +45,117 @@ static void on_web_extension_page_created(GDBusConnection *connection,
  * vimb may hold multiple clients which may use more than one webprocess and
  * therefore multiple webextension instances. */
 extern struct Vimb vb;
+static GDBusServer *dbusserver;
 
+
+/**
+ * Initialize the dbus proxy by watching for appearing dbus name.
+ */
+const char *ext_proxy_init(void)
+{
+    char *address, *guid;
+    GDBusAuthObserver *observer;
+    GError *error = NULL;
+
+    address  = g_strdup_printf("unix:tmpdir=%s", g_get_tmp_dir());
+    guid     = g_dbus_generate_guid();
+    observer = g_dbus_auth_observer_new();
+
+    g_signal_connect(observer, "authorize-authenticated-peer",
+            G_CALLBACK(on_authorize_authenticated_peer), NULL);
+
+    /* Use sync call because server must be starte before the web extension
+     * attempt to connect */
+    dbusserver = g_dbus_server_new_sync(address, G_DBUS_SERVER_FLAGS_NONE,
+            guid, observer, NULL, &error);
+
+    if (error) {
+        g_warning("Failed to start web extension server on %s: %s", address, error->message);
+        g_error_free(error);
+        goto out;
+    }
+
+    g_signal_connect(dbusserver, "new-connection", G_CALLBACK(on_new_connection), NULL);
+    g_dbus_server_start(dbusserver);
+
+out:
+    g_free(address);
+    g_free(guid);
+    g_object_unref(observer);
+
+    return g_dbus_server_get_client_address(dbusserver);
+}
+
+/* TODO move this to a lib or somthing that can be used from ui and web
+ * process together */
+static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
+        GIOStream *stream, GCredentials *credentials, gpointer data)
+{
+    static GCredentials *own_credentials = NULL;
+    GError *error = NULL;
+
+    if (!own_credentials) {
+        own_credentials = g_credentials_new();
+    }
+
+    if (credentials && g_credentials_is_same_user(credentials, own_credentials, &error)) {
+        return TRUE;
+    }
+
+    if (error) {
+        g_warning("Failed to authorize web extension connection: %s", error->message);
+        g_error_free(error);
+    }
+
+    return FALSE;
+}
+
+static gboolean on_new_connection(GDBusServer *server,
+        GDBusConnection *connection, gpointer data)
+{
+    /* Create dbus proxy. */
+    g_return_val_if_fail(G_IS_DBUS_CONNECTION(connection), FALSE);
+
+    /*g_signal_connect(connection, "closed", G_CALLBACK(connection_closed_cb), NULL);*/
+
+    g_dbus_proxy_new(connection,
+            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES|G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
+            NULL,
+            NULL,
+            VB_WEBEXTENSION_OBJECT_PATH,
+            VB_WEBEXTENSION_INTERFACE,
+            NULL,
+            (GAsyncReadyCallback)on_proxy_created,
+            NULL);
+
+    return TRUE;
+}
+
+static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
+        gpointer data)
+{
+    GError *error = NULL;
+    GDBusProxy *proxy;
+    GDBusConnection *connection;
+
+    proxy = g_dbus_proxy_new_finish(result, &error);
+    if (!proxy) {
+        if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+            g_warning("Error creating web extension proxy: %s", error->message);
+        }
+        g_error_free(error);
+
+        /* TODO cancel the dbus connection - use cancelable */
+        return;
+    }
+
+    connection = g_dbus_proxy_get_connection(proxy);
+    g_dbus_connection_signal_subscribe(connection, NULL,
+            VB_WEBEXTENSION_INTERFACE, "PageCreated",
+            VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+            (GDBusSignalCallback)on_web_extension_page_created, proxy,
+            NULL);
+}
 
 /**
  * Request the web extension to focus first editable element.
@@ -52,25 +164,6 @@ extern struct Vimb vb;
 void ext_proxy_focus_input(Client *c)
 {
     dbus_call(c, "FocusInput", NULL, NULL);
-}
-
-/**
- * Initialize the dbus proxy by watching for appearing dbus name.
- */
-void ext_proxy_init(const char *id)
-{
-    char *service_name;
-
-    service_name = g_strdup_printf("%s-%s", VB_WEBEXTENSION_SERVICE_NAME, id);
-    g_bus_watch_name(
-            G_BUS_TYPE_SESSION,
-            service_name,
-            G_BUS_NAME_WATCHER_FLAGS_NONE,
-            (GBusNameAppearedCallback)on_name_appeared,
-            NULL,
-            NULL,
-            NULL);
-    g_free(service_name);
 }
 
 /**
@@ -90,6 +183,7 @@ static void dbus_call(Client *c, const char *method, GVariant *param,
     /* TODO add function to queue calls until the proxy connection is
      * established */
     if (!c->dbusproxy) {
+        g_message("dbus_call without proxy: %s", method);
         return;
     }
     g_dbus_proxy_call(c->dbusproxy, method, param, G_DBUS_CALL_FLAGS_NONE, -1, NULL, callback, c);
@@ -114,53 +208,6 @@ static void on_editable_change_focus(GDBusConnection *connection,
         vb_enter(c, 'n');
     }
     /* TODO allo strict-focus to ignore focus event for initial set focus */
-}
-
-/**
- * Called when the name of the webextension appeared on the dbus session bus.
- */
-static void on_name_appeared(GDBusConnection *connection, const char *name,
-        const char *owner, gpointer data)
-{
-    int flags = G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START
-        | G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES
-        | G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS;
-
-    /* Create the proxy to communicate over dbus. */
-    g_dbus_proxy_new(connection, flags, NULL, name,
-            VB_WEBEXTENSION_OBJECT_PATH, VB_WEBEXTENSION_INTERFACE, NULL,
-            (GAsyncReadyCallback)on_proxy_created, NULL);
-}
-
-/**
- * Callback called when the dbus proxy is created.
- */
-static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result, gpointer data)
-{
-    GDBusConnection *connection;
-    GDBusProxy *proxy;
-    GError *error = NULL;
-
-    proxy      = g_dbus_proxy_new_finish(result, &error);
-    connection = g_dbus_proxy_get_connection(proxy);
-
-    if (!proxy) {
-        g_warning("Error creating web extension proxy: %s", error->message);
-        g_error_free(error);
-        return;
-    }
-    g_dbus_proxy_set_default_timeout(proxy, 100);
-    g_dbus_connection_signal_subscribe(
-            connection,
-            NULL,
-            VB_WEBEXTENSION_INTERFACE,
-            "PageCreated",
-            VB_WEBEXTENSION_OBJECT_PATH,
-            NULL,
-            G_DBUS_SIGNAL_FLAGS_NONE,
-            (GDBusSignalCallback)on_web_extension_page_created,
-            proxy,
-            NULL);
 }
 
 /**
@@ -200,7 +247,7 @@ static void on_web_extension_page_created(GDBusConnection *connection,
 
     if (p) {
         /* Set the dbus proxy on the right client based on page id. */
-        p->dbusproxy = data;
+        p->dbusproxy = (GDBusProxy*)data;
 
         g_dbus_connection_signal_subscribe(connection, NULL,
                 VB_WEBEXTENSION_INTERFACE, "VerticalScroll",

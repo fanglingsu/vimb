@@ -219,6 +219,7 @@ struct Client {
     guint64             page_id;                /* page id of the webview */
     GtkTextBuffer       *buffer;
     GDBusProxy          *dbusproxy;
+    GDBusServer         *dbusserver;
     struct {
         /* TODO split in global setting definitions and set values on a per
          * client base. */

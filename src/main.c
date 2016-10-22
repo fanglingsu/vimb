@@ -754,20 +754,15 @@ static void on_webctx_download_started(WebKitWebContext *webctx,
  */
 static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data)
 {
-    char *name;
-    static guint ext_count = 0;
+    const char *name;
     GVariant *vdata;
 
     /* Setup the extension directory. */
     webkit_web_context_set_web_extensions_directory(webctx, EXTPREFIX);
 
-    name = g_strdup_printf("%u-%u", getpid(), ++ext_count);
-    ext_proxy_init(name);
-
-    vdata = g_variant_new("(s)", name);
+    name  = ext_proxy_init();
+    vdata = g_variant_new("(ms)", name);
     webkit_web_context_set_web_extensions_initialization_user_data(webctx, vdata);
-
-    g_free(name);
 }
 
 /**

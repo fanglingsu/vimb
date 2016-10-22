@@ -85,6 +85,7 @@ project directory.
           this is now available with the `RUNPREFIX` option for the make
   - [x] establish communication channel between the vimb instance and the now
         required webextension (dbus)
+    - [ ] use propper authorization for dbus peers
 2. migrate as many of the features of the webkit1 vimb
   - [x] starting with custom config file `--config,-c` option
   - [ ] running multiple ex-commands during startup `--cmd,-C` options
