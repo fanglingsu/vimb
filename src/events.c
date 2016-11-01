@@ -17,12 +17,25 @@ void queue_event(GdkEventKey* e)
         return;
     }
 
-    if (events.queue == NULL) {
-        events.queue = malloc(0);
+    GdkEventKey **newqueue = realloc(events.queue, (events.qlen + 1) * sizeof **newqueue);
+
+    if (newqueue == NULL) {
+        // error allocating memory
+        return;
     }
 
-    events.queue = realloc(events.queue, (events.qlen + 1) * sizeof *events.queue);
-    events.queue[events.qlen] = e;
+    events.queue = newqueue;
+
+    /* copy memory (otherwise event gets cleared by gdk) */
+    GdkEventKey* tmp = malloc(sizeof *tmp);
+    memcpy(tmp, e, sizeof *e);
+
+    if (tmp == NULL) {
+        // error allocating memory
+        return;
+    }
+
+    events.queue[events.qlen] = tmp;
     events.qlen ++;
 }
 
@@ -40,7 +53,9 @@ void process_events()
 
     for (int i = 0; i < events.qlen; ++i)
     {
-        // TODO send to gdk
+        GdkEventKey* event = events.queue[i];
+        gtk_main_do_event ((GdkEvent*) event);
+        gdk_event_free ((GdkEvent*) event);
     }
 
     events.qlen = 0;
@@ -62,5 +77,11 @@ bool is_processing_events()
  */
 void clear_events()
 {
+    for (int i = 0; i < events.qlen; ++i)
+    {
+        GdkEventKey* event = events.queue[events.qlen];
+        gdk_event_free ((GdkEvent*) event);
+    }
+
     events.qlen = 0;
 }
