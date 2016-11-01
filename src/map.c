@@ -18,6 +18,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include "config.h"
+#include "events.h"
 #include "main.h"
 #include "map.h"
 #include "normal.h"
@@ -131,6 +132,11 @@ void map_cleanup(void)
  */
 gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
 {
+    if (is_processing_events()) {
+        // events are processing, pass all keys unmodified
+        return false;
+    }
+
     guint state  = event->state;
     guint keyval = event->keyval;
     guchar string[32];
@@ -169,10 +175,21 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
     vb.state.typed         = true;
     vb.state.processed_key = true;
 
-    map_handle_keys(string, len, true);
+    MapState res = map_handle_keys(string, len, true);
 
     /* reset the typed flag */
     vb.state.typed = false;
+
+    if (res == MAP_NOMATCH) {
+        /* consume any unprocessed events */
+        process_events();
+    } else if (res == MAP_AMBIGUOUS) {
+        /* queue event for later processing */
+        queue_event(event);
+    } else if (res == MAP_DONE) {
+        /* we're done - clear events */
+        clear_events();
+    }
 
     return vb.state.processed_key;
 }
@@ -650,7 +667,15 @@ static char *convert_keylabel(const char *in, int inlen, int *len)
 static gboolean do_timeout(gpointer data)
 {
     /* signalize the timeout to the key handler */
-    map_handle_keys((guchar*)"", 0, true);
+    MapState res = map_handle_keys((guchar*)"", 0, true);
+
+    if (res == MAP_DONE) {
+        /* we're done - clear events */
+        clear_events();
+    } else {
+        /* consume any unprocessed events */
+        process_events();
+    }
 
     /* we return true to not automatically remove the resource - this is
      * required to prevent critical error when we remove the source in
