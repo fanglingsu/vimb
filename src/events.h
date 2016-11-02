@@ -7,8 +7,8 @@
 #include "map.h"
 
 void queue_event(GdkEventKey* e);
-void clear_events();
-void process_events();
+void free_events();
+void process_events(bool is_timeout);
 bool is_processing_events();
 
 extern VbCore vb;

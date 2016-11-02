@@ -14,7 +14,7 @@ void queue_event(GdkEventKey* e)
 {
     if (vb.mode->id != 'i') {
         /* events are only needed for input mode */
-        return;
+        return free_events();
     }
 
     GdkEventKey **newqueue = realloc(events.queue, (events.qlen + 1) * sizeof **newqueue);
@@ -40,13 +40,31 @@ void queue_event(GdkEventKey* e)
 }
 
 /**
+ * Free latest event & decrement qlen.
+ */
+void pop_event()
+{
+    if (events.qlen == 0) {
+        return;
+    }
+
+    free(events.queue[events.qlen - 1]);
+    events.qlen --;
+}
+
+/**
  * Process events in the queue, sending the key events to GDK.
  */
-void process_events()
+void process_events(bool is_timeout)
 {
     if (vb.mode->id != 'i') {
         /* events are only needed for input mode */
-        return;
+        return free_events();
+    }
+
+    if (!is_timeout || events.qlen > 1) {
+        /* pop last event to prevent duplicate input */
+        pop_event();
     }
 
     events.processing = true; /* signal not to map our events */
@@ -55,10 +73,9 @@ void process_events()
     {
         GdkEventKey* event = events.queue[i];
         gtk_main_do_event ((GdkEvent*) event);
-        gdk_event_free ((GdkEvent*) event);
     }
 
-    events.qlen = 0;
+    free_events();
     events.processing = false;
 }
 
@@ -75,12 +92,11 @@ bool is_processing_events()
  * Clear the event queue by resetting the length. Provided in order to
  * encapsulate the "events" global struct.
  */
-void clear_events()
+void free_events()
 {
     for (int i = 0; i < events.qlen; ++i)
     {
-        GdkEventKey* event = events.queue[events.qlen];
-        gdk_event_free ((GdkEvent*) event);
+        free(events.queue[i]);
     }
 
     events.qlen = 0;

@@ -175,20 +175,21 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
     vb.state.typed         = true;
     vb.state.processed_key = true;
 
+    queue_event(event);
+
     MapState res = map_handle_keys(string, len, true);
 
     /* reset the typed flag */
     vb.state.typed = false;
 
     if (res == MAP_NOMATCH) {
-        /* consume any unprocessed events */
-        process_events();
-    } else if (res == MAP_AMBIGUOUS) {
-        /* queue event for later processing */
-        queue_event(event);
-    } else if (res == MAP_DONE) {
-        /* we're done - clear events */
-        clear_events();
+        if (!vb.state.processed_key) {
+            /* consume any unprocessed events */
+            process_events(false);
+        } else {
+            /* we're done - clear events */
+            free_events();
+        }
     }
 
     return vb.state.processed_key;
@@ -669,13 +670,8 @@ static gboolean do_timeout(gpointer data)
     /* signalize the timeout to the key handler */
     MapState res = map_handle_keys((guchar*)"", 0, true);
 
-    if (res == MAP_DONE) {
-        /* we're done - clear events */
-        clear_events();
-    } else {
-        /* consume any unprocessed events */
-        process_events();
-    }
+    /* consume any unprocessed events */
+    process_events(true);
 
     /* we return true to not automatically remove the resource - this is
      * required to prevent critical error when we remove the source in
