@@ -6,11 +6,9 @@
 #include "main.h"
 #include "map.h"
 
-void queue_event(GdkEventKey* e);
+void queue_event(GdkEventKey *e);
 void free_events();
 void process_events(bool is_timeout);
 bool is_processing_events();
-
-extern VbCore vb;
 
 #endif /* end of include guard: _MAP_H */

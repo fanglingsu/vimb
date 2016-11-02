@@ -7,10 +7,12 @@ static struct {
     bool           processing;          /* whether or not events are processing */
 } events;
 
+extern VbCore vb;
+
 /**
  * Append an event into the queue.
  */
-void queue_event(GdkEventKey* e)
+void queue_event(GdkEventKey *e)
 {
     if (vb.mode->id != 'i') {
         /* events are only needed for input mode */
@@ -27,7 +29,7 @@ void queue_event(GdkEventKey* e)
     events.queue = newqueue;
 
     /* copy memory (otherwise event gets cleared by gdk) */
-    GdkEventKey* tmp = malloc(sizeof *tmp);
+    GdkEventKey *tmp = malloc(sizeof *tmp);
     memcpy(tmp, e, sizeof *e);
 
     if (tmp == NULL) {
@@ -71,8 +73,8 @@ void process_events(bool is_timeout)
 
     for (int i = 0; i < events.qlen; ++i)
     {
-        GdkEventKey* event = events.queue[i];
-        gtk_main_do_event ((GdkEvent*) event);
+        GdkEventKey *event = events.queue[i];
+        gtk_main_do_event ((GdkEvent *) event);
     }
 
     free_events();

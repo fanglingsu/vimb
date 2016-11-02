@@ -133,7 +133,7 @@ void map_cleanup(void)
 gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
 {
     if (is_processing_events()) {
-        // events are processing, pass all keys unmodified
+        /* events are processing, pass all keys unmodified */
         return false;
     }
 
