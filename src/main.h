@@ -27,9 +27,11 @@
 #include <JavaScriptCore/JavaScript.h>
 #include <fcntl.h>
 #include <stdio.h>
+#ifndef FEATURE_NO_XEMBED
 #ifdef HAS_GTK3
 #include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
+#endif
 #endif
 #include "config.h"
 #ifdef FEATURE_HSTS
@@ -373,10 +375,12 @@ typedef struct {
     Config          config;
     VbStyle           style;
     SoupSession     *session;
+#ifndef FEATURE_NO_XEMBED
 #ifdef HAS_GTK3
     Window          embed;
 #else
     GdkNativeWindow embed;
+#endif
 #endif
     GHashTable      *modes; /* all available browser main modes */
 } VbCore;

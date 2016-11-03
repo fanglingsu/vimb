@@ -28,6 +28,8 @@
 #define FEATURE_SEARCH_HIGHLIGHT
 /* disable scrollbars */
 #define FEATURE_NO_SCROLLBARS
+/* disable X window embedding */
+/* #define FEATURE_NO_XEMBED */
 /* show page title in url completions */
 #define FEATURE_TITLE_IN_COMPLETION
 /* enable the read it later queue */

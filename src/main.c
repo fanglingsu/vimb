@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <gdk/gdkx.h>
 #include "main.h"
 #include "util.h"
 #include "command.h"
@@ -358,7 +357,9 @@ gboolean vb_load_uri(const Arg *arg)
         /* memory allocation */
         char **cmd = g_malloc_n(
             3                       /* basename + uri + ending NULL */
+#ifndef FEATURE_NO_XEMBED
             + (vb.embed ? 2 : 0)
+#endif
             + (vb.config.file ? 2 : 0)
             + (vb.config.profile ? 2 : 0)
             + (vb.config.kioskmode ? 1 : 0)
@@ -371,12 +372,14 @@ gboolean vb_load_uri(const Arg *arg)
 
         /* build commandline */
         cmd[i++] = argv0;
+#ifndef FEATURE_NO_XEMBED
         if (vb.embed) {
             char xid[64];
             snprintf(xid, LENGTH(xid), "%u", (int)vb.embed);
             cmd[i++] = "-e";
             cmd[i++] = xid;
         }
+#endif
         if (vb.config.file) {
             cmd[i++] = "-c";
             cmd[i++] = vb.config.file;
@@ -983,6 +986,7 @@ static void set_status(const StatusType status)
 static void init_core(void)
 {
     Gui *gui = &vb.gui;
+#ifndef FEATURE_NO_XEMBED
     char *xid;
 
     if (vb.embed) {
@@ -1000,6 +1004,12 @@ static void init_core(void)
 
     g_setenv("VIMB_XID", xid, true);
     g_free(xid);
+#else
+    gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT_UCFIRST);
+
+    gtk_widget_realize(GTK_WIDGET(gui->window));
+#endif
 
     GdkGeometry hints = {10, 10};
     gtk_window_set_default_size(GTK_WINDOW(gui->window), WIN_WIDTH, WIN_HEIGHT);
@@ -1823,7 +1833,9 @@ static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *valu
 
 int main(int argc, char *argv[])
 {
+#ifndef FEATURE_NO_XEMBED
     static char *winid   = NULL;
+#endif
     static gboolean ver  = false;
 #ifdef FEATURE_SOCKET
     static gboolean dump = false;
@@ -1834,7 +1846,9 @@ int main(int argc, char *argv[])
         {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.config.file, "Custom configuration file", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_STRING, &vb.config.profile, "Profile name", NULL},
+#ifndef FEATURE_NO_XEMBED
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+#endif
 #ifdef FEATURE_SOCKET
         {"dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump the socket path to stdout", NULL},
         {"socket", 's', 0, G_OPTION_ARG_NONE, &vb.config.socket, "Create control socket", NULL},
@@ -1863,9 +1877,11 @@ int main(int argc, char *argv[])
     /* save vimb basename */
     argv0 = argv[0];
 
+#ifndef FEATURE_NO_XEMBED
     if (winid) {
         vb.embed = strtol(winid, NULL, 0);
     }
+#endif
 
     vb.state.pid_str = g_strdup_printf("%d", (int)getpid());
     g_setenv("VIMB_PID", vb.state.pid_str, true);
