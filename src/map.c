@@ -179,14 +179,10 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
 
     MapState res = map_handle_keys(string, len, true);
 
-    if (res == MAP_AMBIGUOUS) {
-        /* prevent typing key */
-        vb.state.processed_key = true;
-    } else {
+    if (res != MAP_AMBIGUOUS) {
         if (!vb.state.processed_key) {
             /* events ready to be consumed */
             process_events();
-            vb.state.processed_key = true;
         } else {
             /* no ambiguous - key processed elsewhere */
             free_events();
@@ -196,7 +192,8 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
     /* reset the typed flag */
     vb.state.typed = false;
 
-    return vb.state.processed_key;
+    /* prevent input from going to GDK - input is sent via process_events(); */
+    return true;
 }
 
 /**
@@ -672,7 +669,7 @@ static char *convert_keylabel(const char *in, int inlen, int *len)
 static gboolean do_timeout(gpointer data)
 {
     /* signalize the timeout to the key handler */
-    MapState res = map_handle_keys((guchar*)"", 0, true);
+    map_handle_keys((guchar*)"", 0, true);
 
     /* consume any unprocessed events */
     process_events();
