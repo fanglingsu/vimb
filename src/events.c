@@ -14,11 +14,6 @@ extern VbCore vb;
  */
 void queue_event(GdkEventKey *e)
 {
-    if (vb.mode->id != 'i') {
-        /* events are only needed for input mode */
-        return free_events();
-    }
-
     GdkEventKey **newqueue = realloc(events.queue, (events.qlen + 1) * sizeof **newqueue);
 
     if (newqueue == NULL) {
@@ -41,44 +36,30 @@ void queue_event(GdkEventKey *e)
     events.qlen ++;
 }
 
-/**
- * Free latest event & decrement qlen.
- */
-void pop_event()
+void process_event(GdkEventKey* event)
 {
-    if (events.qlen == 0) {
+    if (event == NULL) {
         return;
     }
 
-    free(events.queue[events.qlen - 1]);
-    events.qlen --;
+    events.processing = true; /* signal not to queue other events */
+    gtk_main_do_event ((GdkEvent *) event);
+    events.processing = false;
+    free(event);
 }
 
 /**
  * Process events in the queue, sending the key events to GDK.
  */
-void process_events(bool is_timeout)
+void process_events()
 {
-    if (vb.mode->id != 'i') {
-        /* events are only needed for input mode */
-        return free_events();
-    }
-
-    if (!is_timeout || events.qlen > 1) {
-        /* pop last event to prevent duplicate input */
-        pop_event();
-    }
-
-    events.processing = true; /* signal not to map our events */
-
     for (int i = 0; i < events.qlen; ++i)
     {
-        GdkEventKey *event = events.queue[i];
-        gtk_main_do_event ((GdkEvent *) event);
+        process_event(events.queue[i]); /* process & free the event */
+        /* TODO take into account qk mapped key? */
     }
 
-    free_events();
-    events.processing = false;
+    events.qlen = 0;
 }
 
 /**
