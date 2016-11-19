@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <gdk/gdkx.h>
 #include "main.h"
 #include "util.h"
 #include "command.h"
