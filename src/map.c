@@ -18,6 +18,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include "config.h"
+#include "events.h"
 #include "main.h"
 #include "map.h"
 #include "normal.h"
@@ -131,6 +132,11 @@ void map_cleanup(void)
  */
 gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
 {
+    if (is_processing_events()) {
+        /* events are processing, pass all keys unmodified */
+        return false;
+    }
+
     guint state  = event->state;
     guint keyval = event->keyval;
     guchar string[32];
@@ -169,12 +175,25 @@ gboolean map_keypress(GtkWidget *widget, GdkEventKey* event, gpointer data)
     vb.state.typed         = true;
     vb.state.processed_key = true;
 
-    map_handle_keys(string, len, true);
+    queue_event(event);
+
+    MapState res = map_handle_keys(string, len, true);
+
+    if (res != MAP_AMBIGUOUS) {
+        if (!vb.state.processed_key) {
+            /* events ready to be consumed */
+            process_events();
+        } else {
+            /* no ambiguous - key processed elsewhere */
+            free_events();
+        }
+    }
 
     /* reset the typed flag */
     vb.state.typed = false;
 
-    return vb.state.processed_key;
+    /* prevent input from going to GDK - input is sent via process_events(); */
+    return true;
 }
 
 /**
@@ -651,6 +670,9 @@ static gboolean do_timeout(gpointer data)
 {
     /* signalize the timeout to the key handler */
     map_handle_keys((guchar*)"", 0, true);
+
+    /* consume any unprocessed events */
+    process_events();
 
     /* we return true to not automatically remove the resource - this is
      * required to prevent critical error when we remove the source in
