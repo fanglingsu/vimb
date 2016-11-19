@@ -2,50 +2,25 @@
 
 /* this is only to queue GDK key events, in order to later send them if the map didn't match */
 static struct {
-    GdkEventKey **queue;                /* queue holding submitted events */
-    int            qlen;                /* pointer to last char in queue */
-    bool           processing;          /* whether or not events are processing */
+    GdkEventKey **queue;        /* queue holding submitted events */
+    int           qlen;         /* pointer to last char in queue */
+    bool          processing;   /* whether or not events are processing */
 } events;
 
 extern VbCore vb;
+
+static void process_event(GdkEventKey *event);
 
 /**
  * Append an event into the queue.
  */
 void queue_event(GdkEventKey *e)
 {
-    GdkEventKey **newqueue = realloc(events.queue, (events.qlen + 1) * sizeof **newqueue);
-
-    if (newqueue == NULL) {
-        // error allocating memory
-        return;
-    }
-
-    events.queue = newqueue;
+    events.queue = g_realloc(events.queue, (events.qlen + 1) * sizeof(GdkEventKey*));
 
     /* copy memory (otherwise event gets cleared by gdk) */
-    GdkEventKey *tmp = malloc(sizeof *tmp);
-    memcpy(tmp, e, sizeof *e);
-
-    if (tmp == NULL) {
-        // error allocating memory
-        return;
-    }
-
-    events.queue[events.qlen] = tmp;
+    events.queue[events.qlen] = g_memdup(e, sizeof(GdkEventKey));
     events.qlen ++;
-}
-
-void process_event(GdkEventKey* event)
-{
-    if (event == NULL) {
-        return;
-    }
-
-    events.processing = true; /* signal not to queue other events */
-    gtk_main_do_event ((GdkEvent *) event);
-    events.processing = false;
-    free(event);
 }
 
 /**
@@ -53,13 +28,24 @@ void process_event(GdkEventKey* event)
  */
 void process_events()
 {
-    for (int i = 0; i < events.qlen; ++i)
-    {
-        process_event(events.queue[i]); /* process & free the event */
+    for (int i = 0; i < events.qlen; ++i) {
+        process_event(events.queue[i]);
+        g_free(events.queue[i]);
         /* TODO take into account qk mapped key? */
     }
 
     events.qlen = 0;
+}
+
+static void process_event(GdkEventKey *event)
+{
+    if (!event) {
+        return;
+    }
+
+    events.processing = true; /* signal not to queue other events */
+    gtk_main_do_event((GdkEvent*)event);
+    events.processing = false;
 }
 
 /**
@@ -77,9 +63,8 @@ bool is_processing_events()
  */
 void free_events()
 {
-    for (int i = 0; i < events.qlen; ++i)
-    {
-        free(events.queue[i]);
+    for (int i = 0; i < events.qlen; ++i) {
+        g_free(events.queue[i]);
     }
 
     events.qlen = 0;
