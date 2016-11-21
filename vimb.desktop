@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Vimb
+Comment=The Vim-like browser
+Exec=vimb %f
+Terminal=false
+Categories=Network;WebBrowser;
+MimeType=text/html;

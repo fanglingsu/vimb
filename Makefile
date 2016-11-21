@@ -21,6 +21,8 @@ clean:
 install: $(TARGET) $(DOCDIR)/$(MAN1)
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
+	install -d $(DESTDIR)$(DATADIR)/applications
+	cp $(PROJECT).desktop $(DESTDIR)$(DATADIR)/applications
 	install -d $(DESTDIR)$(EXAMPLEDIR)
 	cp -r examples/* $(DESTDIR)$(EXAMPLEDIR)
 	install -d $(DESTDIR)$(MANDIR)/man1
@@ -30,6 +32,7 @@ install: $(TARGET) $(DOCDIR)/$(MAN1)
 
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
+	$(RM) $(DESTDIR)$(DATADIR)/applications/$(PROJECT).desktop
 	$(RM) $(DESTDIR)$(MANDIR)/man1/$(MAN1)
 	$(RM) -r $(DESTDIR)$(EXAMPLEDIR)
 
