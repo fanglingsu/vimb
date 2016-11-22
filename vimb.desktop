@@ -1,9 +1,11 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=Vimb
-Comment=The Vim-like browser
-Exec=vimb %f
 Terminal=false
-Categories=Network;WebBrowser;
-MimeType=text/html;
+Name=Vimb
+GenericName=Web Browser
+Comment=The Vim-like browser
+Exec=vimb %U
+Icon=
+Categories=Network;WebBrowser;GTK;
+MimeType=text/html;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
