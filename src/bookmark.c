@@ -43,13 +43,19 @@ static void free_bookmark(Bookmark *bm);
 gboolean bookmark_add(const char *uri, const char *title, const char *tags)
 {
     const char *file = vb.files[FILES_BOOKMARK];
+    gboolean ret;
     if (tags) {
-        return util_file_append(file, "%s\t%s\t%s\n", uri, title ? title : "", tags);
+        ret = util_file_append(file, "%s\t%s\t%s\n", uri, title ? title : "", tags);
     }
-    if (title) {
-        return util_file_append(file, "%s\t%s\n", uri, title);
+    else if (title) {
+        ret = util_file_append(file, "%s\t%s\n", uri, title);
     }
-    return util_file_append(file, "%s\n", uri);
+    else
+    {
+        ret = util_file_append(file, "%s\n", uri);
+    }
+    bookmark_build_html_file();
+    return ret;
 }
 
 gboolean bookmark_remove(const char *uri)
@@ -92,6 +98,7 @@ gboolean bookmark_remove(const char *uri)
         g_string_free(new, true);
     }
 
+    bookmark_build_html_file();
     return removed;
 }
 
@@ -184,6 +191,141 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
     g_list_free_full(taglist, (GDestroyNotify)g_free);
 
     return found;
+}
+
+/**
+  * Converts bookmark file to a simple HTML5 page
+  *
+  * @input_bookmark_path: the path to the input bookmark file
+  * @output_html_path: the path to the output html file
+  *
+  * Returns: A boolean to say weather there was an error or not
+  */
+gboolean bookmark_to_html(char* input_bookmark_path, char* output_html_path)
+{
+  FILE* input = fopen(input_bookmark_path, "r");
+  FILE* output = NULL;
+
+  char line[512];
+
+  if(input == NULL)
+  {
+    return FALSE;
+  }
+
+  output = fopen(output_html_path, "w");
+  if (output == NULL)
+  {
+    fclose(input);
+    return FALSE;
+  }
+
+  //If the bookmark file is empty we redirect the user to main vimb page
+  fseek(input, 0, SEEK_END);
+  if (ftell(input) == 0)
+  {
+    fprintf(output,
+      "<!DOCTYPE HTML>\n"
+      "<html lang='en-US'>\n"
+      "\t<head>\n"
+      "\t\t<meta http-equiv='refresh' content='0; url=%s' />\n"
+      "\t</head>\n"
+      "</html>\n",
+      SETTING_HOME_PAGE);
+
+    fclose(input);
+    fclose(output);
+    return TRUE;
+  }
+  fseek(input, 0, SEEK_SET);
+
+  fprintf(output,
+    "<!doctype html>\n"
+    "<html lang='en'>\n"
+    "\t<head>\n"
+    "\t\t<meta charset='utf-8'>\n"
+    "\t\t<link rel='stylesheet' type='text/css' href='%s/vimb/bookmark.css'>\n"
+    "\t\t<title>Bookmarks</title>\n"
+    "\t</head>\n"
+    "\t<body>\n"
+    "\t\t<table>\n"
+    "\t\t\t<tr>\n"
+    "\t\t\t\t<th>\n"
+    "\t\t\t\t\tBookmark\n"
+    "\t\t\t\t</th>\n"
+    "\t\t\t\t<th>\n"
+    "\t\t\t\t\tTag(s)\n"
+    "\t\t\t\t</th>\n"
+    "\t\t\t</tr>\n",
+    (g_get_system_data_dirs())[0]);
+
+  while (fgets(line, sizeof(line), input))
+  {
+    char* item1 = NULL;
+    char* item2 = NULL;
+    char* item3 = NULL;
+
+    //Tried this on ugly/malformed strings, seems OK
+    //NOT sure though ! Valgrind seems unhappy with it :/
+    item1 = strtok(line, "\t");
+    item2 = strtok(NULL, "\t");
+    item3 = strtok(NULL, "\t");
+
+    //Remove trailing \n if any
+    if (item3 == NULL && item2 != NULL)
+       item2[strlen(item2) - 1] = '\0';
+    if(item3 != NULL)
+      item3[strlen(item3) - 1] = '\0';
+
+    if(item1 != NULL && item2 != NULL)
+    {
+      fprintf(output,
+        "\t\t\t<tr>\n"
+        "\t\t\t\t<td>\n"
+        "\t\t\t\t\t<a href='%s' title='%s'>\n"
+        "\t\t\t\t\t\t%s\n"
+        "\t\t\t\t\t</a>\n"
+        "\t\t\t\t</td>\n"
+        "\t\t\t\t<td>\n"
+        "%s%s%s"
+        "\t\t\t\t</td>\n"
+        "\t\t\t</tr>\n",
+        item1,
+        item2,
+        item2,
+        (item3 != NULL) ? "\t\t\t\t\t" : "",
+        (item3 != NULL) ? item3 : "",
+        (item3 != NULL) ? "\n" : "");
+    }
+  }
+
+  fprintf(output,
+    "\t\t</table>\n"
+    "\t</body>\n"
+    "</html>\n");
+
+  fclose(input);
+  fclose(output);
+  return TRUE;
+}
+
+/**
+  * Creates the relevant arguments for the upper function and caals it.
+  */
+gboolean bookmark_build_html_file()
+{
+    char *input_path, *output_path;
+    gboolean ret;
+
+    input_path = vb.files[FILES_BOOKMARK];
+    output_path = g_strconcat(input_path, ".html", NULL);
+
+    ret = bookmark_to_html(input_path, output_path);
+
+    free(input_path);
+    free(output_path);
+
+    return ret;
 }
 
 #ifdef FEATURE_QUEUE

@@ -99,6 +99,7 @@ void setting_init()
 {
     int i;
     gboolean on = true, off = false;
+    char *homepage = g_strconcat(vb.files[FILES_BOOKMARK], ".html", NULL);
 
     vb.config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
 #if WEBKIT_CHECK_VERSION(1, 7, 5)
@@ -202,7 +203,7 @@ void setting_init()
     setting_add("completion-bg-normal", TYPE_COLOR, &"#656565", input_color, 0, &vb.style.comp_bg[VB_COMP_NORMAL]);
     setting_add("completion-bg-active", TYPE_COLOR, &"#777777", input_color, 0, &vb.style.comp_bg[VB_COMP_ACTIVE]);
     setting_add("ca-bundle", TYPE_CHAR, &SETTING_CA_BUNDLE, ca_bundle, 0, NULL);
-    setting_add("home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, 0, NULL);
+    setting_add("home-page", TYPE_CHAR, homepage, NULL, 0, NULL);
     i = 1000;
     setting_add("hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
     setting_add("hintkeys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
