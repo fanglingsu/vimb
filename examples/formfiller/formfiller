@@ -9,7 +9,7 @@
 # JavaScript array that can be used for the _vbform.fill() method.
 #
 # A unencrypted sample file could look like this:
-# ["input[name='user']:daniel", "input[name='password']:p45w0rD"]
+# ["input[name='login']:daniel", "input[name='password']:p45w0rD"]
 
 # dmenu command use in case multiple files are found for current domain
 DMENU="dmenu -l 7"
