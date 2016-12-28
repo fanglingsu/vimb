@@ -13,7 +13,7 @@ the project page of [Vimb][].
 - it's modal like Vim
 - Vim like [keybindings][] - assignable for each browser mode
 - nearly every configuration can be changed at runtime with Vim like [set syntax][set]
-- [history][] for `ex` commands, search queries, URLs
+- history for `ex` commands, search queries, URLs
 - completions for: commands, URLs, bookmarked URLs, variable names of settings, search-queries
 - [hinting][hints] - marks links, form fields and other clickable elements to
   be clicked, opened or inspected
@@ -23,7 +23,7 @@ the project page of [Vimb][].
 - user defined URL-shortcuts with placeholders
 - custom [protocol handlers][handlers]
 - read it later [queue][] to collect URIs for later use
-- multiple yank/paste [registers][]
+- multiple yank/paste registers
 - Vim like [autocmd][]
 
 ## Packages
@@ -76,9 +76,7 @@ Information about the license is found in the file: LICENSE.
 [keybindings]: https://fanglingsu.github.io/vimb/man.html#NORMAL_MODE "vimb keybindings"
 [hints]:       https://fanglingsu.github.io/vimb/man.html#Hinting "vimb hinting"
 [queue]:       http://fanglingsu.github.io/vimb/commands.html#queue "vimb read it later queue feature"
-[history]:     http://fanglingsu.github.io/vimb/keybindings.html#history "vimb keybindings to access history"
 [handlers]:    http://fanglingsu.github.io/vimb/commands.html#handlers "vimb custom protocol handlers"
-[registers]:   http://fanglingsu.github.io/vimb/keybindings.html#registers "vimb yank/paste registers"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
 [OpenBSD]:     http://openports.se/www/vimb "vimb - OpenBSD port"
 [NetBSD]:      http://pkgsrc.se/www/vimb "vimb - NetBSD package"
