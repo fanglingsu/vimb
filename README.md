@@ -73,8 +73,8 @@ Information about the license is found in the file: LICENSE.
 - feature requests, issues and patches can be discussed on the [mailing list][mail]
 
 [vimb]:        http://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
-[keybindings]: http://fanglingsu.github.io/vimb/keybindings.html "vimb keybindings"
-[hints]:       http://fanglingsu.github.io/vimb/keybindings.html#hinting "vimb hinting"
+[keybindings]: https://fanglingsu.github.io/vimb/man.html#NORMAL_MODE "vimb keybindings"
+[hints]:       https://fanglingsu.github.io/vimb/man.html#Hinting "vimb hinting"
 [queue]:       http://fanglingsu.github.io/vimb/commands.html#queue "vimb read it later queue feature"
 [history]:     http://fanglingsu.github.io/vimb/keybindings.html#history "vimb keybindings to access history"
 [handlers]:    http://fanglingsu.github.io/vimb/commands.html#handlers "vimb custom protocol handlers"
