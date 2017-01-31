@@ -14,7 +14,7 @@ DOCDIR  = doc
 SUBDIRS = $(SRCDIR)/scripts $(SRCDIR)/webextension $(SRCDIR)
 
 # used libs
-LIBS = gtk+-3.0 webkit2gtk-4.0
+LIBS = gtk+-3.0 'webkit2gtk-4.0 >= 2.3.5'
 
 # setup general used CFLAGS
 CFLAGS   += -std=c99 -pipe -Wall
