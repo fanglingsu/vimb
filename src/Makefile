@@ -9,8 +9,7 @@ clean:
 	$(RM) vimb *.o
 
 vimb: $(OBJ)
-	@echo "$(CC) $@"
-	$(CC) $(LDFLAGS) $(OBJ) -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 $(OBJ): config.h $(BASEDIR)/config.mk
 

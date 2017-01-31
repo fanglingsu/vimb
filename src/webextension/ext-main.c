@@ -115,8 +115,23 @@ void webkit_web_extension_initialize_with_user_data(WebKitWebExtension *extensio
 static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer extension)
 {
-    /* FIXME require authentication logic */
-    return TRUE;
+    static GCredentials *own_credentials = NULL;
+    GError *error = NULL;
+
+    if (!own_credentials) {
+        own_credentials = g_credentials_new();
+    }
+
+    if (credentials && g_credentials_is_same_user(credentials, own_credentials, &error)) {
+        return TRUE;
+    }
+
+    if (error) {
+        g_warning("Failed to authorize connection to ui: %s", error->message);
+        g_error_free(error);
+    }
+
+    return FALSE;
 }
 
 static void on_dbus_connection_created(GObject *source_object,
@@ -126,6 +141,7 @@ static void on_dbus_connection_created(GObject *source_object,
     GDBusConnection *connection;
     GError *error = NULL;
 
+    g_message("on_dbus_connection_created");
     if (!node_info) {
         node_info = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
     }
