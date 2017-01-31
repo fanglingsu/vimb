@@ -141,7 +141,6 @@ static void on_dbus_connection_created(GObject *source_object,
     GDBusConnection *connection;
     GError *error = NULL;
 
-    g_message("on_dbus_connection_created");
     if (!node_info) {
         node_info = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
     }
