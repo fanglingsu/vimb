@@ -10,7 +10,7 @@ clean:
 
 vimb: $(OBJ)
 	@echo "$(CC) $@"
-	@$(CC) $(LDFLAGS) $(OBJ) -o $@
+	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
 $(OBJ): config.h $(BASEDIR)/config.mk
 
