@@ -102,7 +102,7 @@ void setting_init(Client *c)
     i = 5;
     setting_add(c, "minimumfontsize", TYPE_INTEGER, &i, webkit, 0, "minimum-font-size");
     setting_add(c, "monofont", TYPE_CHAR, &"monospace", webkit, 0, "monospace-font-family");
-    i = SETTING_DEFAULT_FONT_SIZE;
+    i = SETTING_DEFAULT_MONOSPACE_FONT_SIZE;
     setting_add(c, "monofontsize", TYPE_INTEGER, &i, webkit, 0, "default-monospace-font-size");
     setting_add(c, "offlinecache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache");
     setting_add(c, "plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");

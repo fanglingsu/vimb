@@ -45,7 +45,8 @@
 #define GUI_STYLE_CSS_BASE          "#input text{background-color:inherit;color:inherit;caret-color:@color;font:inherit;}"
 
 /* default font size for fonts in webview */
-#define SETTING_DEFAULT_FONT_SIZE   10
+#define SETTING_DEFAULT_FONT_SIZE             16
+#define SETTING_DEFAULT_MONOSPACE_FONT_SIZE   13
 #define SETTING_GUI_FONT_NORMAL     "10px monospace"
 #define SETTING_GUI_FONT_EMPH       "bold 10px monospace"
 #define SETTING_HOME_PAGE           "about:blank"
