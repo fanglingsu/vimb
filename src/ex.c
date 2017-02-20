@@ -35,6 +35,7 @@
 #include "main.h"
 #include "map.h"
 #include "setting.h"
+#include "shortcut.h"
 #include "util.h"
 
 typedef enum {
@@ -966,8 +967,38 @@ static VbCmdResult ex_handlers(Client *c, const ExArg *arg)
 
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
 {
-    /* TODO no implemented yet */
-    return CMD_SUCCESS;
+    char *key, *uri;
+    gboolean res = CMD_ERROR;
+
+    if (!c) {
+        return CMD_ERROR;
+    }
+
+    if (!arg || !arg->name) {
+        return CMD_ERROR;
+    }
+
+    if (!arg->rhs || !arg->rhs->str || !*arg->rhs->str) {
+        return CMD_ERROR;
+    }
+
+    if (strstr(arg->name, "shortcut-add")) {
+        if ((uri = strchr(arg->rhs->str, '='))) {
+            key    = arg->rhs->str;
+            *uri++ = '\0'; /* devide key and uri */
+            g_strstrip(key);
+            g_strstrip(uri);
+            res = shortcut_add(c, key, uri);
+        }
+    } else if (strstr(arg->name, "shortcut-remove")) {
+        g_strstrip(arg->rhs->str);
+        res = shortcut_remove(c, arg->rhs->str);
+    } else if (strstr(arg->name, "shortcut-default")) {
+        g_strstrip(arg->rhs->str);
+        res = shortcut_set_default(c, arg->rhs->str);
+    }
+
+    return res;
 }
 
 /**
