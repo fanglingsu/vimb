@@ -967,14 +967,10 @@ static VbCmdResult ex_handlers(Client *c, const ExArg *arg)
 
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
 {
-    char *key, *uri;
-    gboolean res = CMD_ERROR;
+    gchar *uri;
+    gboolean success = false;
 
     if (!c) {
-        return CMD_ERROR;
-    }
-
-    if (!arg || !arg->name) {
         return CMD_ERROR;
     }
 
@@ -982,23 +978,31 @@ static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
         return CMD_ERROR;
     }
 
-    if (strstr(arg->name, "shortcut-add")) {
-        if ((uri = strchr(arg->rhs->str, '='))) {
-            key    = arg->rhs->str;
-            *uri++ = '\0'; /* devide key and uri */
-            g_strstrip(key);
-            g_strstrip(uri);
-            res = shortcut_add(c, key, uri);
-        }
-    } else if (strstr(arg->name, "shortcut-remove")) {
-        g_strstrip(arg->rhs->str);
-        res = shortcut_remove(c, arg->rhs->str);
-    } else if (strstr(arg->name, "shortcut-default")) {
-        g_strstrip(arg->rhs->str);
-        res = shortcut_set_default(c, arg->rhs->str);
+    switch(arg->code) {
+        case EX_SCA:
+            if ((uri = strchr(arg->rhs->str, '='))) {
+                *uri++ = '\0'; /* devide key and uri */
+                g_strstrip(arg->rhs->str);
+                g_strstrip(uri);
+                success = shortcut_add(c, arg->rhs->str, uri);
+            }
+            break;
+
+        case EX_SCR:
+            g_strstrip(arg->rhs->str);
+            success = shortcut_remove(c, arg->rhs->str);
+            break;
+
+        case EX_SCD:
+            g_strstrip(arg->rhs->str);
+            success = shortcut_set_default(c, arg->rhs->str);
+            break;
+
+        default:
+            break;
     }
 
-    return res;
+    return success ? CMD_SUCCESS : CMD_ERROR;
 }
 
 /**
