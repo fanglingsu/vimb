@@ -215,7 +215,6 @@ extern struct Vimb vb;
  */
 void normal_enter(Client *c)
 {
-    webkit_web_view_run_javascript(c->webview, "document.activeElement.blur();", NULL, NULL, NULL);
     /* Make sure that when the browser area becomes visible, it will get mouse
      * and keyboard events */
     gtk_widget_grab_focus(GTK_WIDGET(c->webview));
@@ -322,6 +321,7 @@ void pass_enter(Client *c)
  */
 void pass_leave(Client *c)
 {
+    webkit_web_view_run_javascript(c->webview, "document.activeElement.blur();", NULL, NULL, NULL);
     vb_modelabel_update(c, "");
 }
 
