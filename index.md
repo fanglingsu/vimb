@@ -125,4 +125,3 @@ If you find a misbehaviour or have feature requests use the
 [Void Linux]:  https://github.com/voidlinux/void-packages/blob/master/srcpkgs/vimb/template "vimb - Void Linux package"
 [wk2]:         https://github.com/fanglingsu/vimb/tree/webkit2 "vimb branch for webkit2"
 *[HSTS]:       HTTP Strict Transport Security
-*[vimb]:       vim browser - the vim like browser
