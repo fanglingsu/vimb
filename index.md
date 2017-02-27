@@ -8,6 +8,14 @@ active: home
 
 # vimb - the vim like browser
 
+<p class="warning" markdown="1">
+Vimb is built against WebKit which is today considered to be insecure and
+outdated. Don't use it anymore!
+<br>
+The WebKit2 port of [vimb][wk2] is far away from beeing productive. So please
+help to get vimb ported to webkit2 soon.
+</p>
+
 [Vimb][vimb] is a fast and lightweight vim like web browser based on the
 webkit web browser engine and the GTK toolkit. Vimb is modal like the great
 vim editor and also easily configurable during runtime. Vimb is mostly
@@ -115,5 +123,6 @@ If you find a misbehaviour or have feature requests use the
 [vimprobable]: http://sourceforge.net/apps/trac/vimprobable/
 [zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
 [Void Linux]:  https://github.com/voidlinux/void-packages/blob/master/srcpkgs/vimb/template "vimb - Void Linux package"
+[wk2]:         https://github.com/fanglingsu/vimb/tree/webkit2 "vimb brach for webkit2"
 *[HSTS]:       HTTP Strict Transport Security
 *[vimb]:       vim browser - the vim like browser
