@@ -1093,31 +1093,27 @@ static gboolean complete(Client *c, short direction)
                 case EX_OPEN:
                 case EX_TABOPEN:
                     /* TODO add bookmark completion if *token == '!' */
+                    sort  = FALSE;
                     found = history_fill_completion(store, HISTORY_URL, token);
                     break;
 
                 case EX_SET:
-                    sort  = TRUE;
                     found = setting_fill_completion(c, store, token);
                     break;
 
                 case EX_BMA:
-                    sort  = TRUE;
                     /* TODO fill bookmark completion */
                     break;
 
                 case EX_SCR:
-                    sort  = TRUE;
                     /* TODO fill shortcut completion */
                     break;
 
                 case EX_HANDREM:
-                    sort  = TRUE;
                     /* TODO fill handler completion */
                     break;
 
                 case EX_SAVE:
-                    sort  = TRUE;
                     found = util_filename_fill_completion(c, store, token);
                     break;
 
@@ -1136,7 +1132,6 @@ static gboolean complete(Client *c, short direction)
             if (ex_fill_completion(store, in)) {
                 OVERWRITE_STRING(excomp.prefix, ":");
                 found = TRUE;
-                sort  = FALSE;
             }
         }
         free_cmdarg(arg);
@@ -1145,6 +1140,7 @@ static gboolean complete(Client *c, short direction)
             OVERWRITE_STRING(excomp.token, in + 1);
             OVERWRITE_NSTRING(excomp.prefix, in, 1);
             found = TRUE;
+            sort  = FALSE;
         }
     }
 
