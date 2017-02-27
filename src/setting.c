@@ -116,7 +116,7 @@ void setting_init(Client *c)
     setting_add(c, "smooth-scrolling", TYPE_BOOLEAN, &off, webkit, 0, "enable-smooth-scrolling");
 #endif
     setting_add(c, "spacial-navigation", TYPE_BOOLEAN, &off, webkit, 0, "enable-spatial-navigation");
-    setting_add(c, "enable-tabs-to-links", TYPE_BOOLEAN, &on, webkit, 0, "enable-tabs-to-links");
+    setting_add(c, "tabs-to-links", TYPE_BOOLEAN, &on, webkit, 0, "enable-tabs-to-links");
     setting_add(c, "webaudio", TYPE_BOOLEAN, &off, webkit, 0, "enable-webaudio");
     setting_add(c, "webgl", TYPE_BOOLEAN, &off, webkit, 0, "enable-webgl");
     setting_add(c, "webinspector", TYPE_BOOLEAN, &on, webkit, 0, "enable-developer-extras");
