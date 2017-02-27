@@ -262,11 +262,13 @@ VbResult ex_keypress(Client *c, int key)
                 complete(c, -1);
                 break;
 
-            case KEY_UP:
+            case KEY_UP: /* fall through */
+            case CTRL('P'):
                 history(c, TRUE);
                 break;
 
-            case KEY_DOWN:
+            case KEY_DOWN: /* fall through */
+            case CTRL('N'):
                 history(c, FALSE);
                 break;
 
