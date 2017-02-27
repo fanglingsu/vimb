@@ -633,7 +633,9 @@ static VbResult normal_prevnext(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_queue(Client *c, const NormalCmdInfo *info)
 {
-    /* TODO run next uri from queu and remove it from */
+#ifdef FEATURE_QUEUE
+    command_queue(c, &((Arg){COMMAND_QUEUE_POP}));
+#endif
     return RESULT_COMPLETE;
 }
 

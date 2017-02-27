@@ -33,12 +33,15 @@ typedef void *(*Util_Content_Func)(const char*, const char*);
 void util_cleanup(void);
 char *util_expand(Client *c, const char *src, int expflags);
 gboolean util_file_append(const char *file, const char *format, ...);
+gboolean util_file_prepend(const char *file, const char *format, ...);
+char *util_file_pop_line(const char *file, int *item_count);
 char *util_get_config_dir(void);
 char *util_get_file_contents(const char *filename, gsize *length);
 char *util_get_filepath(const char *dir, const char *filename, gboolean create);
 char **util_get_lines(const char *filename);
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         guint max_items);
+gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src);
 gboolean util_filename_fill_completion(Client *c, GtkListStore *store, const char *input);
 gboolean util_parse_expansion(Client *c, const char **input, GString *str,
         int flags, const char *quoteable);

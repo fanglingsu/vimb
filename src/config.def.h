@@ -28,6 +28,8 @@
 #define FEATURE_TITLE_IN_COMPLETION
 /* support gui style settings compatible with vimb2 */
 #define FEATURE_GUI_STYLE_VIMB2_COMPAT
+/* enable the read it later queue */
+#define FEATURE_QUEUE
 
 #ifdef FEATURE_WGET_PROGRESS_BAR
 /* chars to use for the progressbar */

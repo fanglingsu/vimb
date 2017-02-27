@@ -105,6 +105,79 @@ gboolean util_file_append(const char *file, const char *format, ...)
 }
 
 /**
+ * Prepend new data to file.
+ *
+ * @file:   File to prepend the data
+ * @format: Format string used to process va_list
+ */
+gboolean util_file_prepend(const char *file, const char *format, ...)
+{
+    gboolean res = false;
+    va_list args;
+    char *content;
+    FILE *f;
+
+    content = util_get_file_contents(file, NULL);
+    if ((f = fopen(file, "w"))) {
+        flock(fileno(f), LOCK_EX);
+
+        va_start(args, format);
+        /* write new content to the file */
+        vfprintf(f, format, args);
+        va_end(args);
+
+        /* append previous file content */
+        fputs(content, f);
+
+        flock(fileno(f), LOCK_UN);
+        fclose(f);
+
+        res = true;
+    }
+    g_free(content);
+
+    return res;
+}
+
+
+/**
+ * Retrieves the first line from file and delete it from file.
+ *
+ * @file:       file to read from
+ * @item_count: will be filled with the number of remaining lines in file if it
+ *              is not NULL.
+ *
+ * Returned string must be freed with g_free.
+ */
+char *util_file_pop_line(const char *file, int *item_count)
+{
+    char **lines = util_get_lines(file);
+    char *new,
+         *line = NULL;
+    int len,
+        count = 0;
+
+    if (lines) {
+        len = g_strv_length(lines);
+        if (len) {
+            line = g_strdup(lines[0]);
+            /* minus one for last empty item and one for popped item */
+            count = len - 2;
+            new   = g_strjoinv("\n", lines + 1);
+            g_file_set_contents(file, new, -1, NULL);
+            g_free(new);
+        }
+        g_strfreev(lines);
+    }
+
+    if (item_count) {
+        *item_count = count;
+    }
+
+    return line;
+}
+
+/**
  * Retrieves the config directory path.
  * Returnes string must be freed.
  */
@@ -257,6 +330,34 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
     g_hash_table_destroy(ht);
 
     return gl;
+}
+
+/**
+ * Fills the given list store by matching data of also given src list.
+ */
+gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src)
+{
+    gboolean found = false;
+    GtkTreeIter iter;
+
+    if (!input || !*input) {
+        for (GList *l = src; l; l = l->next) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            found = true;
+        }
+    } else {
+        for (GList *l = src; l; l = l->next) {
+            char *value = (char*)l->data;
+            if (g_str_has_prefix(value, input)) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+                found = true;
+            }
+        }
+    }
+
+    return found;
 }
 
 /**

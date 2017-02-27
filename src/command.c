@@ -21,11 +21,15 @@
  * This file contains functions that are used by normal mode and command mode
  * together.
  */
-#include "command.h"
+#include <stdlib.h>
+
 #include "config.h"
+#ifdef FEATURE_QUEUE
+#include "bookmark.h"
+#endif
+#include "command.h"
 #include "history.h"
 #include "main.h"
-#include <stdlib.h>
 
 extern struct Vimb vb;
 
@@ -164,7 +168,40 @@ gboolean command_save(Client *c, const Arg *arg)
 #ifdef FEATURE_QUEUE
 gboolean command_queue(Client *c, const Arg *arg)
 {
-    /* TODO no implemented yet */
-    return TRUE;
+    gboolean res = FALSE;
+    int count    = 0;
+    char *uri;
+
+    switch (arg->i) {
+        case COMMAND_QUEUE_POP:
+            if ((uri = bookmark_queue_pop(&count))) {
+                res = vb_load_uri(c, &(Arg){TARGET_CURRENT, uri});
+                g_free(uri);
+            }
+            vb_echo(c, MSG_NORMAL, FALSE, "Queue length %d", count);
+            break;
+
+        case COMMAND_QUEUE_PUSH:
+            res = bookmark_queue_push(arg->s ? arg->s : c->state.uri);
+            if (res) {
+                vb_echo(c, MSG_NORMAL, FALSE, "Pushed to queue");
+            }
+            break;
+
+        case COMMAND_QUEUE_UNSHIFT:
+            res = bookmark_queue_unshift(arg->s ? arg->s : c->state.uri);
+            if (res) {
+                vb_echo(c, MSG_NORMAL, FALSE, "Pushed to queue");
+            }
+            break;
+
+        case COMMAND_QUEUE_CLEAR:
+            if (bookmark_queue_clear()) {
+                vb_echo(c, MSG_NORMAL, FALSE, "Queue cleared");
+            }
+            break;
+    }
+
+    return res;
 }
 #endif

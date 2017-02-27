@@ -27,6 +27,7 @@
 #include <sys/wait.h>
 
 #include "ascii.h"
+#include "bookmark.h"
 #include "command.h"
 #include "completion.h"
 #include "config.h"
@@ -745,8 +746,19 @@ static void free_cmdarg(ExArg *arg)
 
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg)
 {
-    /* TODO no implemented yet */
-    return CMD_SUCCESS;
+    if (arg->code == EX_BMR) {
+        if (bookmark_remove(*arg->rhs->str ? arg->rhs->str : c->state.uri)) {
+            vb_echo_force(c, MSG_NORMAL, TRUE, "  Bookmark removed");
+
+            return CMD_SUCCESS | CMD_KEEPINPUT;
+        }
+    } else if (bookmark_add(c->state.uri, c->state.title, arg->rhs->str)) {
+        vb_echo_force(c, MSG_NORMAL, TRUE, "  Bookmark added");
+
+        return CMD_SUCCESS | CMD_KEEPINPUT;
+    }
+
+    return CMD_ERROR;
 }
 
 static VbCmdResult ex_eval(Client *c, const ExArg *arg)
@@ -855,8 +867,38 @@ static VbCmdResult ex_open(Client *c, const ExArg *arg)
 #ifdef FEATURE_QUEUE
 static VbCmdResult ex_queue(Client *c, const ExArg *arg)
 {
-    /* TODO no implemented yet */
-    return CMD_SUCCESS;
+    Arg a = {0};
+
+    switch (arg->code) {
+        case EX_QPUSH:
+            a.i = COMMAND_QUEUE_PUSH;
+            break;
+
+        case EX_QUNSHIFT:
+            a.i = COMMAND_QUEUE_UNSHIFT;
+            break;
+
+        case EX_QPOP:
+            a.i = COMMAND_QUEUE_POP;
+            break;
+
+        case EX_QCLEAR:
+            a.i = COMMAND_QUEUE_CLEAR;
+            break;
+
+        default:
+            return CMD_ERROR;
+    }
+
+    /* if no argument is found in rhs, keep the uri in arg null to force
+     * command_queue() to use current URI */
+    if (arg->rhs->len) {
+        a.s = arg->rhs->str;
+    }
+
+    return command_queue(c, &a)
+        ? CMD_SUCCESS | CMD_KEEPINPUT
+        : CMD_ERROR | CMD_KEEPINPUT;
 }
 #endif
 
@@ -1092,9 +1134,12 @@ static gboolean complete(Client *c, short direction)
             switch (arg->code) {
                 case EX_OPEN:
                 case EX_TABOPEN:
-                    /* TODO add bookmark completion if *token == '!' */
                     sort  = FALSE;
-                    found = history_fill_completion(store, HISTORY_URL, token);
+                    if (*token == '!') {
+                        found = bookmark_fill_completion(store, token + 1);
+                    } else {
+                        found = history_fill_completion(store, HISTORY_URL, token);
+                    }
                     break;
 
                 case EX_SET:
@@ -1102,7 +1147,7 @@ static gboolean complete(Client *c, short direction)
                     break;
 
                 case EX_BMA:
-                    /* TODO fill bookmark completion */
+                    found = bookmark_fill_tag_completion(store, token);
                     break;
 
                 case EX_SCR:

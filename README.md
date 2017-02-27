@@ -104,13 +104,21 @@ project directory.
   - [ ] hinting
   - [x] searching and matching of search results
   - [x] navigation j, k, h, l, ...
-  - [ ] history and history lookup
+  - [x] history and history lookup
   - [ ] completion
+    - [ ] augroup
+    - [ ] autocmd
+    - [x] bookmarks
+    - [ ] file paths for :source and :save
+    - [x] search phrases
+    - [x] settings
+    - [ ] url handler
+    - [x] url history
   - [ ] HSTS
   - [ ] auto-response-header
   - [x] cookies support
   - [x] register support and `:register` command
-  - [ ] read it later queue
+  - [x] read it later queue
   - [ ] show scroll indicator in statusbar as top, x%, bottom or all
         how can we get this information from webview easily?
   - [x] find a way to disable the scrollbars on the main frame
