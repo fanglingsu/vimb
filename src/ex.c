@@ -72,6 +72,7 @@ typedef enum {
     EX_SCR,
     EX_SET,
     EX_SHELLCMD,
+    EX_SOURCE,
     EX_TABOPEN,
 } ExCode;
 
@@ -140,6 +141,7 @@ static VbCmdResult ex_save(Client *c, const ExArg *arg);
 static VbCmdResult ex_set(Client *c, const ExArg *arg);
 static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg);
+static VbCmdResult ex_source(Client *c, const ExArg *arg);
 static VbCmdResult ex_handlers(Client *c, const ExArg *arg);
 
 static gboolean complete(Client *c, short direction);
@@ -186,6 +188,7 @@ static ExInfo commands[] = {
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
+    {"source",           EX_SOURCE,      ex_source,     EX_FLAG_RHS|EX_FLAG_EXP},
     {"tabopen",          EX_TABOPEN,     ex_open,       EX_FLAG_CMD},
 };
 
@@ -1049,6 +1052,11 @@ static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
     return success ? CMD_SUCCESS : CMD_ERROR;
 }
 
+static VbCmdResult ex_source(Client *c, const ExArg *arg)
+{
+    return ex_run_file(c, arg->rhs->str);
+}
+
 /**
  * Manage the generation and stepping through completions.
  * This function prepared some prefix and suffix string that are required to
@@ -1160,7 +1168,8 @@ static gboolean complete(Client *c, short direction)
                     /* TODO fill handler completion */
                     break;
 
-                case EX_SAVE:
+                case EX_SAVE: /* Fallthrough */
+                case EX_SOURCE:
                     found = util_filename_fill_completion(c, store, token);
                     break;
 
