@@ -32,6 +32,7 @@
 #include "config.h"
 #include "ex.h"
 #include "ext-proxy.h"
+#include "handler.h"
 #include "input.h"
 #include "js.h"
 #include "main.h"
@@ -486,6 +487,7 @@ static void client_destroy(Client *c)
     map_cleanup(c);
     register_cleanup(c);
     setting_cleanup(c);
+    handler_cleanup(c);
 
     g_slice_free(Client, c);
 
@@ -585,6 +587,9 @@ static Client *client_new(WebKitWebView *webview)
 
     /* initialize the settings */
     setting_init(c);
+
+    /* initialize the url handlers */
+    handler_init(c);
 
     /* start client in normal mode */
     vb_enter(c, 'n');
@@ -956,24 +961,29 @@ static WebKitWebView *on_webview_create(WebKitWebView *webview,
 static gboolean on_webview_decide_policy(WebKitWebView *webview,
         WebKitPolicyDecision *dec, WebKitPolicyDecisionType type, Client *c)
 {
-    guint status;
+    guint status, button, mod;
     WebKitNavigationAction *a;
     WebKitURIRequest *req;
     WebKitURIResponse *res;
 
     switch (type) {
         case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
-            a   = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
-            req = webkit_navigation_action_get_request(a);
+            a      = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
+            req    = webkit_navigation_action_get_request(a);
+            button = webkit_navigation_action_get_mouse_button(a);
+            mod    = webkit_navigation_action_get_modifiers(a);
 
-            if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
-                if (webkit_navigation_action_get_mouse_button(a) == 2
-                        || (webkit_navigation_action_get_mouse_button(a) == 1
-                        && webkit_navigation_action_get_modifiers(a) & GDK_CONTROL_MASK)) {
-                    webkit_policy_decision_ignore(dec);
-                    spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
-                    return TRUE;
-                }
+            /* Try to handle with specific protocol handler. */
+            if (handler_handle_uri(c, webkit_uri_request_get_uri(req))) {
+                webkit_policy_decision_ignore(dec);
+                return TRUE;
+            }
+            if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
+                    && (button == 2 || (button == 1 && mod & GDK_CONTROL_MASK))) {
+
+                webkit_policy_decision_ignore(dec);
+                spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
+                return TRUE;
             }
             return FALSE;
 

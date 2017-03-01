@@ -32,6 +32,7 @@
 #include "completion.h"
 #include "config.h"
 #include "ex.h"
+#include "handler.h"
 #include "history.h"
 #include "main.h"
 #include "map.h"
@@ -1008,8 +1009,26 @@ static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg)
 
 static VbCmdResult ex_handlers(Client *c, const ExArg *arg)
 {
-    /* TODO no implemented yet */
-    return CMD_SUCCESS;
+    char *p;
+    gboolean res = FALSE;
+
+    switch (arg->code) {
+        case EX_HANDADD:
+            if (arg->rhs->len && (p = strchr(arg->rhs->str, '='))) {
+                *p++ = '\0';
+                res = handler_add(c, arg->rhs->str, p);
+            }
+            break;
+
+        case EX_HANDREM:
+            res = handler_remove(c, arg->rhs->str);
+            break;
+
+        default:
+            break;
+    }
+
+    return res ? CMD_SUCCESS : CMD_ERROR;
 }
 
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
@@ -1165,7 +1184,7 @@ static gboolean complete(Client *c, short direction)
                     break;
 
                 case EX_HANDREM:
-                    /* TODO fill handler completion */
+                    found = handler_fill_completion(c, store, token);
                     break;
 
                 case EX_SAVE: /* Fallthrough */

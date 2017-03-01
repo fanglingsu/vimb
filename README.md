@@ -112,7 +112,7 @@ project directory.
     - [x] file paths for :source and :save
     - [x] search phrases
     - [x] settings
-    - [ ] url handler
+    - [x] url handler
     - [x] url history
   - [ ] HSTS
   - [ ] auto-response-header
@@ -131,7 +131,7 @@ project directory.
   - [x] default zoom
   - [x] yanking
   - [x] keymapping
-  - [ ] URL handler
+  - [x] URL handler
   - [x] shortcuts
   - [ ] autocommands and augroups
 3. documentation

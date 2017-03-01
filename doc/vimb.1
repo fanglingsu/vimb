@@ -396,6 +396,28 @@ Save the current opened URI with \fItags\fP to the bookmark file.
 .BI ":bmr [" URI ]
 Removes all bookmarks for given \fIURI\fP or, if not given, the current opened
 page.
+.SS Handlers
+Handlers allow specifying external scripts to handle alternative URI methods.
+.TP
+.BI ":handler-add " "handler" "=" "cmd"
+Adds a handler to direct \fIhandler\fP links to the external \fIcmd\fP.
+The \fIcmd\fP can contain one placeholder `%s` that will be filled by the
+full URI given when the command is called.
+.RS
+.P
+Examples:
+.PD 0
+.IP ":handler-add mailto=urxvt -e mutt %s"
+to start email client for mailto links.
+.IP ":handler-add magnet=xdg-open %s"
+to open magnet links with xdg-open.
+.IP ":handler-add ftp=urxvt -e wget %s -P ~/ftp-downloads"
+to handle ftp downloads via wget.
+.PD
+.RE
+.TP
+.BI ":handler-remove " "handler"
+Remove the handler for the given URI \fIhandler\fP.
 .SS Shortcuts
 Shortcuts allow the opening of an URI built up from a named template with additional
 parameters.

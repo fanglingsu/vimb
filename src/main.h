@@ -244,6 +244,9 @@ struct Client {
         GHashTable  *table;
         char        *fallback;                  /* default shortcut to use if none given in request */
     } shortcut;
+    struct {
+        GHashTable *table;                      /* holds the protocol handlers */
+    } handlers;
 };
 
 struct Vimb {
