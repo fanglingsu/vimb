@@ -109,7 +109,7 @@ project directory.
     - [ ] augroup
     - [ ] autocmd
     - [x] bookmarks
-    - [ ] file paths for :source and :save
+    - [x] file paths for :source and :save
     - [x] search phrases
     - [x] settings
     - [ ] url handler
