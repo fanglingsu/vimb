@@ -485,6 +485,7 @@ static void client_destroy(Client *c)
     completion_cleanup(c);
     map_cleanup(c);
     register_cleanup(c);
+    setting_cleanup(c);
 
     g_slice_free(Client, c);
 
