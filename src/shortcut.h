@@ -26,7 +26,7 @@ gboolean shortcut_add(Client *c, const char *key, const char *uri);
 gboolean shortcut_remove(Client *c, const char *key);
 gboolean shortcut_set_default(Client *c, const char *key);
 char *shortcut_get_uri(Client *c, const char *key);
-/*gboolean shortcut_fill_completion(Client *c, GtkListStore *store, const char *input);*/
+gboolean shortcut_fill_completion(Client *c, GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _SHORTCUT_H */
 
