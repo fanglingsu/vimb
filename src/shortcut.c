@@ -202,6 +202,8 @@ static const char *shortcut_lookup(Client *c, const char *string, const char **q
             *query = p + 1;
         }
         g_free(key);
+    } else {
+        uri = g_hash_table_lookup(c->shortcut.table, string);
     }
 
     if (!uri && c->shortcut.fallback
