@@ -92,7 +92,7 @@ project directory.
   - [x] starting with custom config file `--config,-c` option
   - [ ] running multiple ex-commands during startup `--cmd,-C` options
   - [ ] starting with a named profile `--profile,-p` option
-  - [ ] xembed `--embed,-e` option
+  - [x] xembed `--embed,-e` option
   - [ ] socket support `--socket,-s` and `--dump,-d` option to print the actual
         used socket path to stdout
   - [ ] kiosk-mode `--kiosk,-k`
