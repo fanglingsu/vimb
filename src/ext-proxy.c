@@ -183,7 +183,6 @@ static void dbus_call(Client *c, const char *method, GVariant *param,
     /* TODO add function to queue calls until the proxy connection is
      * established */
     if (!c->dbusproxy) {
-        g_message("dbus_call without proxy: %s", method);
         return;
     }
     g_dbus_proxy_call(c->dbusproxy, method, param, G_DBUS_CALL_FLAGS_NONE, -1, NULL, callback, c);
