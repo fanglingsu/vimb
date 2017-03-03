@@ -201,6 +201,8 @@ static const char *shortcut_lookup(const char *string, const char **query)
             *query = p + 1;
         }
         g_free(key);
+    } else {
+        uri = g_hash_table_lookup(shortcuts, string);
     }
 
     if (!uri && default_key && (uri = g_hash_table_lookup(shortcuts, default_key))) {
