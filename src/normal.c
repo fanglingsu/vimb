@@ -506,7 +506,8 @@ static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info)
 static VbResult normal_input_open(Client *c, const NormalCmdInfo *info)
 {
     if (strchr("ot", info->key)) {
-        vb_input_set_text(c, info->key == 't' ? ":tabopen " : ":open ");
+        vb_echo(c, MSG_NORMAL, FALSE,
+                ":%s ", info->key == 't' ? "tabopen" : "open");
     } else {
         vb_echo(c, MSG_NORMAL, FALSE,
                 ":%s %s", info->key == 'T' ? "tabopen" : "open", c->state.uri);
