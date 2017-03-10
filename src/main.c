@@ -44,7 +44,7 @@
 #include "util.h"
 
 static void client_destroy(Client *c);
-static Client *client_new(WebKitWebView *webview);
+static Client *client_new(WebKitWebView *webview, gboolean);
 static gboolean input_clear(Client *c);
 static void input_print(Client *c, gboolean force, MessageType type,
         gboolean hide, const char *message);
@@ -268,7 +268,7 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
     } else if (arg->i == TARGET_NEW) {
         spawn_new_instance(uri, TRUE);
     } else { /* TARGET_RELATET */
-        Client *newclient = client_new(c->webview);
+        Client *newclient = client_new(c->webview, FALSE);
         /* Load the uri into the new client. */
         webkit_web_view_load_uri(newclient->webview, uri);
         set_title(c, uri);
@@ -503,7 +503,7 @@ static void client_destroy(Client *c)
  * @webview:    Related webview or NULL if a client with an independent
  *              webview shoudl be created.
  */
-static Client *client_new(WebKitWebView *webview)
+static Client *client_new(WebKitWebView *webview, gboolean show)
 {
     Client *c;
     char *xid;
@@ -596,7 +596,9 @@ static Client *client_new(WebKitWebView *webview)
 
     c->state.enable_register = TRUE;
 
-    gtk_widget_show_all(c->window);
+    if (show) {
+        gtk_widget_show_all(c->window);
+    }
 
     /* read the config file */
     ex_run_file(c, vb.files[FILES_CONFIG]);
@@ -948,7 +950,7 @@ static void on_webview_close(WebKitWebView *webview, Client *c)
 static WebKitWebView *on_webview_create(WebKitWebView *webview,
         WebKitNavigationAction *navact, Client *c)
 {
-    Client *new = client_new(webview);
+    Client *new = client_new(webview, FALSE);
 
     return new->webview;
 }
@@ -1142,7 +1144,7 @@ static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec, Cli
  */
 static void on_webview_ready_to_show(WebKitWebView *webview, Client *c)
 {
-    gtk_widget_show(GTK_WIDGET(webview));
+    gtk_widget_show_all(GTK_WIDGET(c->window));
 }
 
 /**
@@ -1513,7 +1515,7 @@ int main(int argc, char* argv[])
         vb.embed = strtol(winid, NULL, 0);
     }
 
-    c = client_new(NULL);
+    c = client_new(NULL, TRUE);
     if (argc <= 1) {
         vb_load_uri(c, &(Arg){TARGET_CURRENT, NULL});
     } else {
