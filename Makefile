@@ -10,7 +10,11 @@ options:
 	@echo "EXTCFLAGS = $(EXTCFLAGS)"
 	@echo "CC        = $(CC)"
 
-vimb: $(SUBDIRS:%=%.subdir-all)
+$(SRCDIR)/config.h: $(SRCDIR)/config.def.h
+	@cp $@ $@.`date +%Y%m%d%H%M%S`
+	@cp $< $@
+
+vimb: $(SRCDIR)/config.h $(SUBDIRS:%=%.subdir-all)
 
 %.subdir-all:
 	@$(MAKE) $(MFLAGS) -C $*
