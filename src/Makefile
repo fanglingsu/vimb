@@ -1,17 +1,18 @@
 BASEDIR=..
 include $(BASEDIR)/config.mk
 
-OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
+SUBDIRS = scripts webextension
+OBJ     = $(patsubst %.c, %.o, $(wildcard *.c))
 
 all: vimb
 
-clean:
+clean: $(SUBDIRS:%=%.subdir-clean)
 	$(RM) vimb *.o
 
-vimb: $(OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+vimb: $(OBJ) webextension.subdir-all
+	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
-$(OBJ): config.h $(BASEDIR)/config.mk
+$(OBJ): scripts.subdir-all config.h $(BASEDIR)/config.mk
 
 -include $(OBJ:.o=.d)
 
@@ -22,5 +23,11 @@ config.h:
 %.o: %.c
 	@echo "${CC} $@"
 	@$(CC) $(CFLAGS) -c -o $@ $<
+
+%.subdir-all: config.h
+	@$(MAKE) $(MFLAGS) -C $*
+
+%.subdir-clean:
+	@$(MAKE) $(MFLAGS) -C $* clean
 
 .PHONY: all clean

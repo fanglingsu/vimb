@@ -11,7 +11,6 @@ EXTPREFIX        := $(RUNPREFIX)/lib/vimb
 # define some directories
 SRCDIR  = src
 DOCDIR  = doc
-SUBDIRS = $(SRCDIR)/scripts $(SRCDIR)/webextension $(SRCDIR)
 
 # used libs
 LIBS = gtk+-3.0 'webkit2gtk-4.0 >= 2.3.5'
