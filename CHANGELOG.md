@@ -2,6 +2,13 @@
 
 ## [unreleased]
 
+### Changed
+
+* Syntax for the font related gui settings has be changed.
+  Fonts have to be given as `[ font-style | font-variant | font-weight | font-stretch ]? font-size font-family`
+  Example `set input-font-normal=bold 10pt "DejaVu Sans Mono"` instead of
+  previous `set input-fg-normal=DejaVu Sans Mono Bold 10` 
+
 ### Removed
 
 * `FEATURE_COOKIE` precompiler flag was removed bcause compiling without cookie
