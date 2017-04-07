@@ -5,12 +5,12 @@ SUBDIRS = webextension
 OBJ     = $(patsubst %.c, %.o, $(wildcard *.c))
 JSFILES = $(wildcard scripts/*.js)
 
-all: vimb
+all: vimb $(SUBDIRS:%=%.subdir-all)
 
 clean: $(SUBDIRS:%=%.subdir-clean)
 	$(RM) vimb *.o scripts/scripts.h
 
-vimb: $(OBJ) webextension.subdir-all
+vimb: $(OBJ)
 	$(CC) $(LDFLAGS) $(OBJ) -o $@
 
 $(OBJ): config.h $(BASEDIR)/config.mk scripts/scripts.h
