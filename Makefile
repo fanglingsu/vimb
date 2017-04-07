@@ -41,4 +41,4 @@ sandbox:
 runsandbox: sandbox
 	sandbox/usr/bin/vimb
 
-.PHONY: all vimb options clean install uninstall sandbox
+.PHONY: all options $(SRCDIR)/vimb install uninstall clean sandbox runsandbox
