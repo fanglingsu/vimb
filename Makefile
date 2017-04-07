@@ -1,6 +1,6 @@
 include config.mk
 
-all: $(SRCDIR)/vimb
+all: $(SRCDIR).subdir-all
 
 options:
 	@echo "vimb build options:"
@@ -10,10 +10,7 @@ options:
 	@echo "EXTCFLAGS = $(EXTCFLAGS)"
 	@echo "CC        = $(CC)"
 
-$(SRCDIR)/vimb:
-	@$(MAKE) $(MFLAGS) -C $(SRCDIR)
-
-install: $(SRCDIR)/vimb
+install: $(SRCDIR).subdir-all
 	@# binary
 	install -d $(BINPREFIX)
 	install -m 755 $(SRCDIR)/vimb $(BINPREFIX)/vimb
@@ -32,8 +29,7 @@ install: $(SRCDIR)/vimb
 uninstall:
 	$(RM) $(BINPREFIX)/vimb $(DESTDIR)$(MANDIR)/man1/vimb.1 $(EXTPREFIX)/$(EXTTARGET)
 
-clean:
-	@$(MAKE) $(MFLAGS) -C $(SRCDIR) clean
+clean: $(SRCDIR).subdir-clean
 
 sandbox:
 	@make $(MFLAGS) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
@@ -41,4 +37,10 @@ sandbox:
 runsandbox: sandbox
 	sandbox/usr/bin/vimb
 
-.PHONY: all vimb options clean install uninstall sandbox
+%.subdir-all:
+	@$(MAKE) $(MFLAGS) -C $*
+
+%.subdir-clean:
+	@$(MAKE) $(MFLAGS) -C $* clean
+
+.PHONY: all options install uninstall clean sandbox runsandbox
