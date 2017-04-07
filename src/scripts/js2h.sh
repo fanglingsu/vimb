@@ -13,9 +13,9 @@ if [ ! -r "$FILE" ]; then
     exit 1
 fi
 
-# Remove the .js file extension and turn all chars to upper case to get the
-# constant name.
-CONSTANT=$(echo "$FILE" | sed 's:.js$::g' | tr a-z A-Z)
+# Remove the path and .js file extension and turn all chars to upper case to
+# get the constant name.
+CONSTANT=$(echo "$FILE" | sed 's:.*/::g' | sed 's:.js$::g' | tr a-z A-Z)
 
 # minify the script
 cat $FILE | \
