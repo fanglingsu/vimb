@@ -22,6 +22,7 @@ config.h:
 	@cp config.def.h $@
 
 scripts/scripts.h: $(JSFILES)
+	$(RM) $@
 	@echo "create $@ from *.js"
 	@for file in $(JSFILES); do \
 		./scripts/js2h.sh $$file >> $@; \
