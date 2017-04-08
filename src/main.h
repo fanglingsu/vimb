@@ -226,6 +226,7 @@ struct Client {
         GHashTable              *settings;
         guint                   scrollstep;
         gboolean                input_autohide;
+        gboolean                incsearch;
         /* completion */
         GdkRGBA                 comp_fg[COMP_LAST];
         GdkRGBA                 comp_bg[COMP_LAST];
