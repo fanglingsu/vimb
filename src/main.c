@@ -1477,6 +1477,32 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
     /* Feed style sheet document to gtk */
     gtk_css_provider_load_from_data(vb.style_provider, style_sheet->str, -1, NULL);
 
+    /* WORKAROUND to always ensure correct size of input field
+     *
+     * The following line is required to apply the style defined font size on
+     * the GtkTextView c->input. Without the call, the font size is updated on
+     * first user input, leading to a sudden unpleasant widget size and layout
+     * change. According to the GTK+ docs, this call should not be required as
+     * style context invalidation is automatic.
+     *
+     * "gtk_style_context_invalidate has been deprecated since version 3.12
+     * and should not be used in newly-written code. Style contexts are
+     * invalidated automatically."
+     * https://developer.gnome.org/gtk3/stable/GtkStyleContext.html#gtk-style-context-invalidate
+     *
+     * Required settings in vimb config file:
+     * set input-autohide=true
+     * set input-font-normal=20pt monospace
+     *
+     * A bug has been filed at GTK+
+     * https://bugzilla.gnome.org/show_bug.cgi?id=781158
+     *
+     * Tested on ARCH linux with gtk3 3.22.10-1
+     */
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+    gtk_style_context_invalidate(gtk_widget_get_style_context(c->input));
+    G_GNUC_END_IGNORE_DEPRECATIONS;
+
 cleanup:
     g_string_free(style_sheet, TRUE);
 }
