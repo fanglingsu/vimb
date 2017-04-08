@@ -9,11 +9,11 @@ clean:
 	$(RM) $(EXTTARGET) *.lo
 
 $(EXTTARGET): $(OBJ)
-	@echo "$(CC) $@"
-	@$(CC) $(EXTLDFLAGS) ${OBJ} -o $@
+	$(Q)echo "$(CC) $@"
+	$(Q)$(CC) $(EXTLDFLAGS) ${OBJ} -o $@
 
 %.lo: %.c
-	@echo "${CC} $@"
-	@$(CC) $(EXTCFLAGS) -fPIC -c -o $@ $<
+	$(Q)echo "${CC} $@"
+	$(Q)$(CC) $(EXTCFLAGS) -fPIC -c -o $@ $<
 
 .PHONY: all clean

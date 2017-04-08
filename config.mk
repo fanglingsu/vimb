@@ -1,5 +1,9 @@
 VERSION = dev-3.0
 
+ifneq ($(V),1)
+Q := @
+endif
+
 PREFIX           ?= /usr/local
 BINPREFIX        := $(DESTDIR)$(PREFIX)/bin
 MANPREFIX        := $(DESTDIR)$(PREFIX)/share/man
