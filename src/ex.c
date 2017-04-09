@@ -348,6 +348,15 @@ VbResult ex_keypress(Client *c, int key)
         }
     }
 
+    if (c->config.incsearch && key != KEY_CR) {
+        gtk_text_buffer_get_bounds(buffer, &start, &end);
+        text = gtk_text_buffer_get_text(buffer, &start, &end, false);
+        if (text && (*text == '/' || *text == '?')) {
+            command_search(c, &((Arg){0, NULL})); /* stop last search */
+            command_search(c, &((Arg){*text == '/' ? 1 : -1, (char*)text + 1}));
+        }
+    }
+
     /* if the user deleted some content of the inputbox we check if the
      * inputbox is empty - if so we switch back to normal like vim does */
     if (check_empty) {
@@ -493,7 +502,11 @@ static void input_activate(Client *c)
         case '/': count = 1; /* fall through */
         case '?':
             vb_enter(c, 'n');
-            command_search(c, &((Arg){count, cmd}));
+
+            /* start search, if incsearch, it's done while typing */
+            if (!c->config.incsearch) {
+                command_search(c, &((Arg){count, cmd}));
+            }
             break;
 
         case ';': /* fall through */

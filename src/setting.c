@@ -140,6 +140,7 @@ void setting_init(Client *c)
     i = 100;
     setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
     setting_add(c, "download-path", TYPE_CHAR, &"~", NULL, 0, NULL);
+    setting_add(c, "incsearch", TYPE_BOOLEAN, &off, internal, 0, &c->config.incsearch);
 
 #ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
     /* gui style settings vimb2 compatibility */
