@@ -829,7 +829,15 @@ static void ex_eval_javascript_finished(GObject *object,
 
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg)
 {
-    webkit_web_view_run_javascript(c->webview, "window.print();", NULL, NULL, NULL);
+    WebKitPrintOperation *op   = webkit_print_operation_new(c->webview);
+    GtkPrintSettings *settings = gtk_print_settings_new();
+
+    gtk_print_settings_set(settings, GTK_PRINT_SETTINGS_OUTPUT_BASENAME, c->state.title);
+    webkit_print_operation_set_print_settings(op, settings);
+    webkit_print_operation_run_dialog(op, NULL);
+    g_object_unref(op);
+    g_object_unref(settings);
+
     return CMD_SUCCESS;
 }
 
