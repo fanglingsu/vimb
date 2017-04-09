@@ -58,6 +58,8 @@ static gboolean on_webdownload_decide_destination(WebKitDownload *download,
 static void on_webdownload_failed(WebKitDownload *download,
                GError *error, Client *c);
 static void on_webdownload_finished(WebKitDownload *download, Client *c);
+static void on_webdownload_received_data(WebKitDownload *download,
+       guint64 data_length, Client *c);
 static void on_webview_close(WebKitWebView *webview, Client *c);
 static WebKitWebView *on_webview_create(WebKitWebView *webview,
         WebKitNavigationAction *navact, Client *c);
@@ -407,9 +409,47 @@ const char *vb_register_get(Client *c, char buf)
     return NULL;
 }
 
+static void statusbar_update_downloads(Client *c, GString *status)
+{
+    GList *list;
+    guint list_length, remaining_max = 0;
+    gdouble progress, elapsed, total, remaining;
+    WebKitDownload *download;
+
+    g_assert(c);
+    g_assert(status);
+
+    if (c->state.downloads) {
+        list_length = g_list_length(c->state.downloads);
+        g_assert(list_length);
+
+        /* get highest ETA value of all downloads based on each download's
+         * current progress fraction and time elapsed */
+        for (list = c->state.downloads; list != NULL; list = list->next) {
+            download = (WebKitDownload *)list->data;
+            g_assert(download);
+
+            progress = webkit_download_get_estimated_progress(download);
+
+            /* avoid dividing by zero */
+            if (progress == 0.0) {
+                continue;
+            }
+
+            elapsed = webkit_download_get_elapsed_time(download);
+            total = (1.0 / progress) * elapsed;
+            remaining = total - elapsed;
+
+            remaining_max = MAX(remaining, remaining_max);
+        }
+
+        g_string_append_printf(status, " %d %s (ETA %us)",
+                list_length, list_length == 1? "dnld" : "dnlds", remaining_max);
+    }
+}
+
 void vb_statusbar_update(Client *c)
 {
-    int num;
     GString *status;
 
     if (!gtk_widget_get_visible(GTK_WIDGET(c->statusbar.box))) {
@@ -417,11 +457,6 @@ void vb_statusbar_update(Client *c)
     }
 
     status = g_string_new("");
-    /* show the active downloads */
-    if (c->state.downloads) {
-        num = g_list_length(c->state.downloads);
-        g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
-    }
 
     /* show the number of matches search results */
     if (c->state.search.matches) {
@@ -448,6 +483,8 @@ void vb_statusbar_update(Client *c)
         g_string_append_printf(status, " [%i%%]", c->state.progress);
 #endif
     }
+
+    statusbar_update_downloads(c, status);
 
     /* show the scroll status */
     if (c->state.scroll_max == 0) {
@@ -750,6 +787,7 @@ static void on_webctx_download_started(WebKitWebContext *webctx,
     g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
     g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
     g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
+    g_signal_connect(download, "received-data", G_CALLBACK(on_webdownload_received_data), c);
 
     c->state.downloads = g_list_append(c->state.downloads, download);
 
@@ -932,6 +970,25 @@ static void on_webdownload_finished(WebKitDownload *download, Client *c)
         }
 
         g_free(filename);
+    }
+}
+
+/**
+ * Callback for the webkit download received-data signal.
+ * This signal is emitted after response is received, every time new data has
+ * been written to the destination. It's useful to know the progress of the
+ * download operation.
+ */
+static void on_webdownload_received_data(WebKitDownload *download,
+        guint64 data_length, Client *c)
+{
+    /* rate limit statusbar updates */
+    static gint64 statusbar_update_next = 0;
+
+    if (g_get_monotonic_time() > statusbar_update_next) {
+        statusbar_update_next = g_get_monotonic_time() + 1000000; /* 1 second */
+
+        vb_statusbar_update(c);
     }
 }
 
