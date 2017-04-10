@@ -5,8 +5,9 @@ BINPREFIX        := $(DESTDIR)$(PREFIX)/bin
 MANPREFIX        := $(DESTDIR)$(PREFIX)/share/man
 EXAMPLEPREFIX    := $(DESTDIR)$(PREFIX)/share/vimb/example
 DOTDESKTOPPREFIX := $(DESTDIR)$(PREFIX)/share/applications
-RUNPREFIX        := $(DESTDIR)$(PREFIX)
-EXTPREFIX        := $(RUNPREFIX)/lib/vimb
+LIBDIR           := $(DESTDIR)$(PREFIX)/lib/vimb
+RUNPREFIX        := $(PREFIX)
+EXTENSIONDIR     := $(RUNPREFIX)/lib/vimb
 
 # define some directories
 SRCDIR  = src
@@ -18,7 +19,7 @@ LIBS = gtk+-3.0 'webkit2gtk-4.0 >= 2.3.5'
 # setup general used CFLAGS
 CFLAGS   += -std=c99 -pipe -Wall
 #CPPFLAGS += -pedantic
-CPPFLAGS += -DVERSION=\"${VERSION}\" -DEXTPREFIX=\"${EXTPREFIX}\"
+CPPFLAGS += -DVERSION=\"${VERSION}\" -DEXTENSIONDIR=\"${EXTENSIONDIR}\"
 CPPFLAGS += -DPROJECT=\"vimb\" -DPROJECT_UCFIRST=\"Vimb\"
 CPPFLAGS += -D_XOPEN_SOURCE=500
 CPPFLAGS += -DGSEAL_ENABLE

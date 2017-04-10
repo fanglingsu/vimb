@@ -15,8 +15,8 @@ install: $(SRCDIR).subdir-all
 	install -d $(BINPREFIX)
 	install -m 755 $(SRCDIR)/vimb $(BINPREFIX)/vimb
 	@# extension
-	install -d $(EXTPREFIX)
-	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(EXTPREFIX)/$(EXTTARGET)
+	install -d $(LIBDIR)
+	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(LIBDIR)/$(EXTTARGET)
 	@# man page
 	install -d $(MANPREFIX)/man1
 	@sed -e "s!VERSION!$(VERSION)!g" \
@@ -27,7 +27,7 @@ install: $(SRCDIR).subdir-all
 	install -m 644 vimb.desktop $(DOTDESKTOPPREFIX)/vimb.desktop
 
 uninstall:
-	$(RM) $(BINPREFIX)/vimb $(DESTDIR)$(MANDIR)/man1/vimb.1 $(EXTPREFIX)/$(EXTTARGET)
+	$(RM) $(BINPREFIX)/vimb $(DESTDIR)$(MANDIR)/man1/vimb.1 $(LIBDIR)/$(EXTTARGET)
 
 clean: $(SRCDIR).subdir-clean
 

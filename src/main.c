@@ -805,7 +805,7 @@ static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data
     GVariant *vdata;
 
     /* Setup the extension directory. */
-    webkit_web_context_set_web_extensions_directory(webctx, EXTPREFIX);
+    webkit_web_context_set_web_extensions_directory(webctx, EXTENSIONDIR);
 
     name  = ext_proxy_init();
     vdata = g_variant_new("(ms)", name);
