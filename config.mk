@@ -5,7 +5,7 @@ BINPREFIX        := $(DESTDIR)$(PREFIX)/bin
 MANPREFIX        := $(DESTDIR)$(PREFIX)/share/man
 EXAMPLEPREFIX    := $(DESTDIR)$(PREFIX)/share/vimb/example
 DOTDESKTOPPREFIX := $(DESTDIR)$(PREFIX)/share/applications
-RUNPREFIX        := $(PREFIX)
+RUNPREFIX        := $(DESTDIR)$(PREFIX)
 EXTPREFIX        := $(RUNPREFIX)/lib/vimb
 
 # define some directories
