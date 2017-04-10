@@ -33,6 +33,7 @@
 #include "ex.h"
 #include "ext-proxy.h"
 #include "handler.h"
+#include "history.h"
 #include "input.h"
 #include "js.h"
 #include "main.h"
@@ -1123,7 +1124,11 @@ static void on_webview_load_changed(WebKitWebView *webview,
             break;
 
         case WEBKIT_LOAD_FINISHED:
+            uri = webkit_web_view_get_uri(webview);
             c->state.progress = 100;
+            if (strncmp(uri, "about:", 6)) {
+                history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
+            }
             break;
     }
 }
