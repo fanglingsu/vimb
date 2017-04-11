@@ -767,7 +767,7 @@ static VbResult normal_view_inspector(Client *c, const NormalCmdInfo *info)
 
     /* Try to get the inspected uri to identify if the inspector is shown at
      * the time or not. */
-    if (webkit_web_inspector_get_inspected_uri(inspector)) {
+    if (webkit_web_inspector_is_attached(inspector)) {
         webkit_web_inspector_close(inspector);
     } else if (webkit_settings_get_enable_developer_extras(settings)) {
         webkit_web_inspector_show(inspector);
