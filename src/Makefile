@@ -11,7 +11,7 @@ clean: $(SUBDIRS:%=%.subdir-clean)
 	$(RM) vimb *.o scripts/scripts.h
 
 vimb: $(OBJ)
-	$(Q)echo "${CC} $@"
+	@echo "${CC} $@"
 	$(Q)$(CC) $(OBJ) $(LDFLAGS) -o $@
 
 $(OBJ): config.h $(BASEDIR)/config.mk scripts/scripts.h
@@ -19,18 +19,18 @@ $(OBJ): config.h $(BASEDIR)/config.mk scripts/scripts.h
 -include $(OBJ:.o=.d)
 
 config.h:
-	$(Q)echo create $@ from config.def.h
+	@echo create $@ from config.def.h
 	$(Q)cp config.def.h $@
 
 scripts/scripts.h: $(JSFILES)
 	$(Q)$(RM) $@
-	$(Q)echo "create $@ from *.js"
+	@echo "create $@ from *.js"
 	$(Q)for file in $(JSFILES); do \
 		./scripts/js2h.sh $$file >> $@; \
 	done
 
 %.o: %.c
-	$(Q)echo "${CC} $@"
+	@echo "${CC} $@"
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
 %.subdir-all: config.h
