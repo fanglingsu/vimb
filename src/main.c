@@ -1556,13 +1556,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         webkit_user_script_unref(script);
     }
 
-    /* Inject the global utility script. */
-    script = webkit_user_script_new(VIMB_UTIL,
-            WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
-            WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
-    webkit_user_content_manager_add_script(ucm, script);
-    webkit_user_script_unref(script);
-
     /* Setup script message handlers. */
     webkit_user_content_manager_register_script_message_handler(ucm, "focus");
     g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), c);
