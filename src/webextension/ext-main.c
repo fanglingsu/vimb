@@ -36,13 +36,13 @@ static void add_onload_event_observers(WebKitDOMDocument *doc,
 static void emit_page_created(GDBusConnection *connection, guint64 pageid);
 static void emit_page_created_pending(GDBusConnection *connection);
 static void queue_page_created_signal(guint64 pageid);
+#if 0
 static void dbus_emit_signal(const char *name, WebKitWebExtension* extension,
         GVariant *data);
+#endif
 static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         const char *object_path, const char *interface_name, const char *method,
         GVariant *parameters, GDBusMethodInvocation *invocation, gpointer data);
-static void on_editable_change_focus(WebKitDOMEventTarget *target,
-        WebKitDOMEvent *event, WebKitWebExtension *extension);
 static void on_page_created(WebKitWebExtension *ext, WebKitWebPage *webpage, gpointer data);
 static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extension);
 static gboolean on_web_page_send_request(WebKitWebPage *webpage, WebKitURIRequest *request,
@@ -57,9 +57,6 @@ static const GDBusInterfaceVTable interface_vtable = {
 static const char introspection_xml[] =
     "<node>"
     " <interface name='" VB_WEBEXTENSION_INTERFACE "'>"
-    "  <signal name='EditableChangeFocus'>"
-    "   <arg type='b' name='focused' direction='out'/>"
-    "  </signal>"
     "  <method name='FocusInput'>"
     "  </method>"
     "  <signal name='PageCreated'>"
@@ -180,6 +177,7 @@ static void on_dbus_connection_created(GObject *source_object,
 static void add_onload_event_observers(WebKitDOMDocument *doc,
         WebKitWebExtension *extension)
 {
+#if 0 /* might soon be use for some events */
     WebKitDOMEventTarget *target;
 
     /* Add the document to the table of known documents or if already exists
@@ -192,15 +190,7 @@ static void add_onload_event_observers(WebKitDOMDocument *doc,
      * function is called with content document of an iframe. Else the event
      * observing does not work. */
     target = WEBKIT_DOM_EVENT_TARGET(webkit_dom_document_get_default_view(doc));
-
-    webkit_dom_event_target_add_event_listener(target, "focus",
-            G_CALLBACK(on_editable_change_focus), TRUE, extension);
-    webkit_dom_event_target_add_event_listener(target, "blur",
-            G_CALLBACK(on_editable_change_focus), TRUE, extension);
-    /* Check for focused editable elements also if they where focused before
-     * the event observer where set up. */
-    /* TODO this is not needed for strict-focus=on */
-    on_editable_change_focus(target, NULL, extension);
+#endif
 }
 
 /**
@@ -255,6 +245,7 @@ static void queue_page_created_signal(guint64 pageid)
     ext.page_created_signals = g_array_append_val(ext.page_created_signals, pageid);
 }
 
+#if 0
 /**
  * Emits a signal over dbus.
  *
@@ -279,6 +270,7 @@ static void dbus_emit_signal(const char *name, WebKitWebExtension* extension,
         g_error_free(error);
     }
 }
+#endif
 
 /**
  * Handle dbus method calls.
@@ -301,52 +293,6 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         }
         ext.headers = soup_header_parse_param_list(value);
         g_dbus_method_invocation_return_value(invocation, NULL);
-    }
-}
-
-/**
- * Callback called if a editable element changes it focus state.
- * Event target may be a WebKitDOMDocument (in case of iframe) or a
- * WebKitDOMDOMWindow.
- */
-static void on_editable_change_focus(WebKitDOMEventTarget *target,
-        WebKitDOMEvent *event, WebKitWebExtension *extension)
-{
-    gboolean input_focus;
-    WebKitDOMDocument *doc;
-    WebKitDOMElement *active;
-
-    if (WEBKIT_DOM_IS_DOM_WINDOW(target)) {
-        g_object_get(target, "document", &doc, NULL);
-    } else {
-        /* target is a doc document */
-        doc = WEBKIT_DOM_DOCUMENT(target);
-    }
-    active = webkit_dom_document_get_active_element(doc);
-    /* Don't do anything if there is no active element or the active element
-     * is the same as before. */
-    if (!active || active == ext.active) {
-        return;
-    }
-    if (WEBKIT_DOM_IS_HTML_IFRAME_ELEMENT(active)) {
-        WebKitDOMHTMLIFrameElement *iframe;
-        WebKitDOMDocument *subdoc;
-
-        iframe = WEBKIT_DOM_HTML_IFRAME_ELEMENT(active);
-        subdoc = webkit_dom_html_iframe_element_get_content_document(iframe);
-        add_onload_event_observers(subdoc, extension);
-        return;
-    }
-
-    ext.active = active;
-
-    /* Check if the active element is an editable element. */
-    input_focus = ext_dom_is_editable(active);
-    if (input_focus != ext.input_focus) {
-        ext.input_focus = input_focus;
-
-        dbus_emit_signal("EditableChangeFocus", extension,
-                g_variant_new("(b)", input_focus));
     }
 }
 

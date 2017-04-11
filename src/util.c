@@ -20,6 +20,7 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <glib.h>
+#include <JavaScriptCore/JavaScript.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
@@ -412,6 +413,35 @@ gboolean util_filename_fill_completion(Client *c, GtkListStore *store, const cha
     g_free(real_dirname);
 
     return found;
+}
+
+char *util_js_result_as_string(WebKitJavascriptResult *result)
+{
+    JSValueRef value;
+    JSStringRef string;
+    size_t len;
+    char *retval = NULL;
+
+    value  = webkit_javascript_result_get_value(result);
+    string = JSValueToStringCopy(webkit_javascript_result_get_global_context(result),
+                value, NULL);
+
+    len = JSStringGetMaximumUTF8CStringSize(string);
+    if (len) {
+        retval = g_malloc(len);
+        JSStringGetUTF8CString(string, retval, len);
+    }
+    JSStringRelease(string);
+
+    return retval;
+}
+
+double util_js_result_as_number(WebKitJavascriptResult *result)
+{
+    JSValueRef value = webkit_javascript_result_get_value(result);
+
+    return JSValueToNumber(webkit_javascript_result_get_global_context(result), value,
+        NULL);
 }
 
 /**

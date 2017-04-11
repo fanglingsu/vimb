@@ -91,6 +91,8 @@ static void vimb_cleanup(void);
 #endif
 static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
+static void on_script_message_focus(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *message, Client *c);
 
 struct Vimb vb;
 
@@ -1554,7 +1556,32 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         webkit_user_script_unref(script);
     }
 
+    /* Inject the global utility script. */
+    script = webkit_user_script_new(VIMB_UTIL,
+            WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+            WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
+    webkit_user_content_manager_add_script(ucm, script);
+    webkit_user_script_unref(script);
+
+    /* Setup script message handlers. */
+    webkit_user_content_manager_register_script_message_handler(ucm, "focus");
+    g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), c);
+
     return new;
+}
+
+static void on_script_message_focus(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *message, Client *c)
+{
+    gboolean is_focused;
+
+    is_focused = (gboolean)util_js_result_as_number(message);
+    /* Don't change the mode if we are in pass through mode. */
+    if (c->mode->id == 'n' && is_focused) {
+        vb_enter(c, 'i');
+    } else if (c->mode->id == 'i' && !is_focused) {
+        vb_enter(c, 'n');
+    }
 }
 
 int main(int argc, char* argv[])
