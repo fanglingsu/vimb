@@ -351,7 +351,6 @@ void vb_modelabel_update(Client *c, const char *label)
     } else {
         vb_echo(c, MSG_NORMAL, FALSE, "%s", label);
     }
-    gtk_label_set_text(GTK_LABEL(c->statusbar.mode), label);
 }
 
 /**
