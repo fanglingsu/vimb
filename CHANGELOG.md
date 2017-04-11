@@ -1,5 +1,29 @@
 # Changes in vimb
 
+## [2.12] - 2017-04-11
+
+### Added
+
+* Queueing of key events - fixes swalled chars in case of some imap bindings
+  #258 (thanks to Michael Mackus)
+* Allow to disable xembed by `FEATURE_NO_XEMBED` to compile on wayland only
+  platforms (thanks to Patrick Steinhardt)
+* Custom default_zoom setting disables HIGH_DPI logic (thanks to Robert Timm)
+* Allow link activation from search result via `<CR>` #131
+
+### Changed
+
+* Allow shortcuts without parameters #329
+* Write soup cache to disk after each page load to allow other instances to
+  pick this up.
+* Use the beginning position of links for hinting (thanks to Yutao Yuan)
+
+### Fixed
+
+* Fix path expansion to accept only valid POSIX.1-2008 usernames (thanks to
+  Manzur Mukhitdinov)
+* Fix default previouspattern (thanks to Nicolas Porcel)
+
 ## [2.11] - 2015-12-17
 
 ### Added
@@ -37,4 +61,5 @@
   cookie file
 * Fixed none POSIX `echo -n` call
 
+[2.12]: https://github.com/fanglingsu/vimb/compare/2.11...2.12
 [2.11]: https://github.com/fanglingsu/vimb/compare/2.10...2.11
