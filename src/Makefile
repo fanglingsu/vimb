@@ -12,7 +12,7 @@ clean: $(SUBDIRS:%=%.subdir-clean)
 
 vimb: $(OBJ)
 	$(Q)echo "${CC} $@"
-	$(Q)$(CC) $(LDFLAGS) $(OBJ) -o $@
+	$(Q)$(CC) $(OBJ) $(LDFLAGS) -o $@
 
 $(OBJ): config.h $(BASEDIR)/config.mk scripts/scripts.h
 

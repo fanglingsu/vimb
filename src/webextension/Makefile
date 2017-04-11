@@ -10,7 +10,7 @@ clean:
 
 $(EXTTARGET): $(OBJ)
 	$(Q)echo "$(CC) $@"
-	$(Q)$(CC) $(EXTLDFLAGS) ${OBJ} -o $@
+	$(Q)$(CC) $(OBJ) $(EXTLDFLAGS) -o $@
 
 %.lo: %.c
 	$(Q)echo "${CC} $@"
