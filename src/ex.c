@@ -348,15 +348,6 @@ VbResult ex_keypress(Client *c, int key)
         }
     }
 
-    if (c->config.incsearch && key != KEY_CR) {
-        gtk_text_buffer_get_bounds(buffer, &start, &end);
-        text = gtk_text_buffer_get_text(buffer, &start, &end, false);
-        if (text && (*text == '/' || *text == '?')) {
-            command_search(c, &((Arg){0, NULL})); /* stop last search */
-            command_search(c, &((Arg){*text == '/' ? 1 : -1, (char*)text + 1}));
-        }
-    }
-
     /* if the user deleted some content of the inputbox we check if the
      * inputbox is empty - if so we switch back to normal like vim does */
     if (check_empty) {
@@ -397,6 +388,13 @@ void ex_input_changed(Client *c, const char *text)
         case ';': /* fall through - the modes are handled by hints_create */
         case 'g':
             /* TODO create hints */
+            break;
+        case '/': /* fall through */
+        case '?':
+            if (c->config.incsearch) {
+                command_search(c, &((Arg){0, NULL})); /* stop last search */
+                command_search(c, &((Arg){*text == '/' ? 1 : -1, (char*)text + 1}));
+            }
             break;
     }
 }
