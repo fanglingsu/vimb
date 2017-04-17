@@ -380,6 +380,16 @@ void ex_input_changed(Client *c, const char *text)
         gtk_text_buffer_get_iter_at_line(buffer, &start, 0);
         if (gtk_text_iter_forward_to_line_end(&start)) {
             gtk_text_buffer_get_end_iter(buffer, &end);
+
+            /* TODO the following line creates a GTK warning.
+             * ex_input_changed() is called from the "changed" event handler of
+             * GtkTextBuffer. Apparently it's not supported to change a text
+             * buffer in the changed handler!?
+             *
+             * Gtk-WARNING **: Invalid text buffer iterator: either the
+             * iterator is uninitialized, or the characters/pixbufs/widgets in
+             * the buffer have been modified since the iterator was created.
+             */
             gtk_text_buffer_delete(buffer, &start, &end);
         }
     }
