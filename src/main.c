@@ -80,6 +80,7 @@ static void on_webview_ready_to_show(WebKitWebView *webview, Client *c);
 static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c);
 static void on_window_destroy(GtkWidget *window, Client *c);
 static gboolean quit(Client *c);
+static void read_from_stdin(Client *c);
 static void register_cleanup(Client *c);
 static void update_title(Client *c);
 static void update_urlbar(Client *c);
@@ -1242,6 +1243,31 @@ static gboolean quit(Client *c)
 }
 
 /**
+ * Read string from stdin and pass it to webkit for html interpretation.
+ */
+static void read_from_stdin(Client *c)
+{
+    GIOChannel *ch;
+    gchar *buf = NULL;
+    GError *err = NULL;
+    gsize len = 0;
+
+    g_assert(c);
+
+    ch = g_io_channel_unix_new(fileno(stdin));
+    g_io_channel_read_to_end(ch, &buf, &len, &err);
+    g_io_channel_unref(ch);
+
+    if (err) {
+        g_warning("Error loading from stdin: %s", err->message);
+        g_error_free(err);
+    } else {
+        webkit_web_view_load_html(c->webview, buf, NULL);
+    }
+    g_free(buf);
+}
+
+/**
  * Free the register contents memory.
  */
 static void register_cleanup(Client *c)
@@ -1625,6 +1651,9 @@ int main(int argc, char* argv[])
     c = client_new(NULL, TRUE);
     if (argc <= 1) {
         vb_load_uri(c, &(Arg){TARGET_CURRENT, NULL});
+    } else if (!strcmp(argv[argc - 1], "-")) {
+        /* read from stdin if uri is - */
+        read_from_stdin(c);
     } else {
         vb_load_uri(c, &(Arg){TARGET_CURRENT, argv[argc - 1]});
     }
