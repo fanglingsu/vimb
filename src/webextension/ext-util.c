@@ -24,6 +24,27 @@
 #include "ext-util.h"
 
 /**
+ * Evaluates given string as script and return if this call succeed or not.
+ */
+gboolean ext_util_js_eval(JSContextRef ctx, const char *script, JSValueRef *result)
+{
+    JSStringRef js_str;
+    JSValueRef exc = NULL, res = NULL;
+
+    js_str = JSStringCreateWithUTF8CString(script);
+    res = JSEvaluateScript(ctx, js_str, JSContextGetGlobalObject(ctx), NULL, 0, &exc);
+    JSStringRelease(js_str);
+
+    if (exc) {
+        *result = exc;
+        return FALSE;
+    }
+
+    *result = res;
+    return TRUE;
+}
+
+/**
  * Creates a temporary file with given content.
  *
  * Upon success, and if file is non-NULL, the actual file path used is

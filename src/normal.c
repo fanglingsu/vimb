@@ -688,19 +688,19 @@ static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
                 js = g_strdup_printf(
                         "window.scroll(window.scrollX, %d * (1 + (document.height - window.innerHeight) / 100));",
                         info->count);
-                webkit_web_view_run_javascript(c->webview, js, NULL, NULL, NULL);
+                ext_proxy_eval_script(c, js);
                 g_free(js);
                 return RESULT_COMPLETE;
             }
 
             /* Without count scroll to the end of the page. */
-            webkit_web_view_run_javascript(c->webview, "window.scroll(window.scrollX, document.body.scrollHeight);", NULL, NULL, NULL);
+            ext_proxy_eval_script(c, "window.scroll(window.scrollX, document.body.scrollHeight);");
             return RESULT_COMPLETE;
         case '0':
-            webkit_web_view_run_javascript(c->webview, "window.scroll(0, window.scrollY);", NULL, NULL, NULL);
+            ext_proxy_eval_script(c, "window.scroll(0, window.scrollY);");
             return RESULT_COMPLETE;
         case '$':
-            webkit_web_view_run_javascript(c->webview, "window.scroll(document.body.scrollWidth, window.scrollY);", NULL, NULL, NULL);
+            ext_proxy_eval_script(c, "window.scroll(document.body.scrollWidth, window.scrollY);");
             return RESULT_COMPLETE;
         default:
             if (info->key2 == 'g') {
@@ -708,18 +708,18 @@ static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
                     js = g_strdup_printf(
                             "window.scroll(window.scrollX, %d * (1 + (document.height - window.innerHeight) / 100));",
                             info->count);
-                    webkit_web_view_run_javascript(c->webview, js, NULL, NULL, NULL);
+                    ext_proxy_eval_script(c, js);
                     g_free(js);
                     return RESULT_COMPLETE;
                 }
                 /* Without count gg scrolls to the top of the page. */
-                webkit_web_view_run_javascript(c->webview, "window.scroll(window.scrollX, 0);", NULL, NULL, NULL);
+                ext_proxy_eval_script(c, "window.scroll(window.scrollX, 0);");
                 return RESULT_COMPLETE;
             }
             return RESULT_ERROR;
     }
     js = g_strdup_printf("window.scrollBy(%d,%d);", x, y);
-    webkit_web_view_run_javascript(c->webview, js, NULL, NULL, NULL);
+    ext_proxy_eval_script(c, js);
     g_free(js);
 
     return RESULT_COMPLETE;

@@ -59,6 +59,9 @@ static const GDBusInterfaceVTable interface_vtable = {
 static const char introspection_xml[] =
     "<node>"
     " <interface name='" VB_WEBEXTENSION_INTERFACE "'>"
+    "  <method name='EvalJsNoResult'>"
+    "   <arg type='s' name='js' direction='in'/>"
+    "  </method>"
     "  <method name='FocusInput'>"
     "  </method>"
     "  <signal name='PageCreated'>"
@@ -290,7 +293,17 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
 {
     char *value;
 
-    if (!g_strcmp0(method, "FocusInput")) {
+    if (!g_strcmp0(method, "EvalJsNoResult")) {
+        g_variant_get(parameters, "(s)", &value);
+        JSGlobalContextRef jsContext;
+
+        jsContext = webkit_frame_get_javascript_context_for_script_world(
+			webkit_web_page_get_main_frame(ext.webpage),
+			webkit_script_world_get_default()
+		);
+		JSValueRef ref = NULL;
+		ext_util_js_eval(jsContext, value, &ref);
+    } else if (!g_strcmp0(method, "FocusInput")) {
         ext_dom_focus_input(webkit_web_page_get_dom_document(ext.webpage));
         g_dbus_method_invocation_return_value(invocation, NULL);
     } else if (!g_strcmp0(method, "SetHeaderSetting")) {

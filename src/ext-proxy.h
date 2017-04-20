@@ -23,6 +23,7 @@
 #include "main.h"
 
 const char *ext_proxy_init(void);
+void ext_proxy_eval_script(Client *c, char *js);
 void ext_proxy_focus_input(Client *c);
 void ext_proxy_set_header(Client *c, const char *headers);
 

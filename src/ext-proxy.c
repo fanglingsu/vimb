@@ -153,6 +153,11 @@ static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
             NULL);
 }
 
+void ext_proxy_eval_script(Client *c, char *js)
+{
+    dbus_call(c, "EvalJsNoResult", g_variant_new("(s)", js), NULL);
+}
+
 /**
  * Request the web extension to focus first editable element.
  * Returns whether an focusable element was found or not.
