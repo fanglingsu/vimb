@@ -15,13 +15,16 @@ great editor.
 .SH SYNOPSIS
 .B vimb
 .OP OPTIONS
-.RI [ URI "|" file ]
+.RI [ URI "|" file "|" - ]
 .SH DESCRIPTION
 Vimb is a WebKit based web browser that behaves like the Vimperator
 plugin for Firefox and has usage paradigms from the great editor, Vim.
 The goal of Vimb is to build a completely keyboard-driven, efficient
 and pleasurable browsing-experience.
 .SH OPTIONS
+If no \fIURI\fP or \fIfile\fP is given, Vimb will open the configured
+home-page.
+If \fIURI\fP is '-', Vimb reads the HTML to display from stdin.
 .PP
 Mandatory arguments to long options are mandatory for short options too.
 .TP
