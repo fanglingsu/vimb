@@ -263,7 +263,8 @@ struct Vimb {
     GtkCssProvider *style_provider;
 };
 
-
+gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
+    char *suggested_filename, const char *path);
 void vb_echo(Client *c, MessageType type, gboolean hide, const char *error, ...);
 void vb_echo_force(Client *c, MessageType type, gboolean hide, const char *error, ...);
 void vb_enter(Client *c, char id);

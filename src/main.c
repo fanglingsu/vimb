@@ -97,6 +97,86 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
 
 struct Vimb vb;
 
+/**
+ * Set the destination for a download according to suggested file name and
+ * possible given path.
+ */
+gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
+    char *suggested_filename, const char *path)
+{
+    char *download_path, *dir, *file, *uri;
+    download_path = GET_CHAR(c, "download-path");
+
+    /* For unnamed downloads set default filename. */
+    if (!suggested_filename || !*suggested_filename) {
+        suggested_filename = "vimb-download";
+    }
+
+    /* Prepare the path to save the download. */
+    if (path && *path) {
+        file = util_build_path(c, path, download_path);
+
+        /* if file is an directory append a file name */
+        if (g_file_test(file, (G_FILE_TEST_IS_DIR))) {
+            dir  = file;
+            file = g_build_filename(dir, suggested_filename, NULL);
+            g_free(dir);
+        }
+    } else {
+        file = util_build_path(c, suggested_filename, download_path);
+    }
+
+    /* If the filepath exists already insert numerical suffix before file
+     * extension. */
+    if (g_file_test(file, G_FILE_TEST_EXISTS)) {
+        const char *dot_pos;
+        char *num = NULL;
+        GString *tmp;
+        gssize suffix;
+        int i = 1;
+        suffix = 2;
+
+        /* position on .tar. (special case, extension with two dots),
+         * position on last dot (if any) otherwise */
+        if (!(dot_pos = strstr(file, ".tar."))) {
+            dot_pos = strrchr(file, '.');
+        }
+
+        /* the position to insert the suffix at */
+        if (dot_pos) {
+            suffix = dot_pos - file;
+        } else {
+            suffix = strlen(file);
+        }
+
+        tmp = g_string_new(NULL);
+        num = g_strdup_printf("%d", i++);
+
+        /* Construct a new complete odwnload filepath with suffic before the
+         * file extension. */
+        do {
+            num = g_strdup_printf("%d", i++);
+            g_string_assign(tmp, file);
+            g_string_insert(tmp, suffix, num);
+            g_free(num);
+        } while (g_file_test(tmp->str, G_FILE_TEST_EXISTS));
+
+        file = g_strdup(tmp->str);
+        g_string_free(tmp, TRUE);
+    }
+
+    /* Build URI from filepath. */
+    uri = g_filename_to_uri(file, NULL, NULL);
+    g_free(file);
+
+    /* configure download */
+    g_assert(uri);
+    webkit_download_set_allow_overwrite(download, FALSE);
+    webkit_download_set_destination(download, uri);
+    g_free(uri);
+
+    return TRUE;
+}
 
 /**
  * Write text to the inpubox if this isn't focused.
@@ -822,75 +902,11 @@ static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data
 static gboolean on_webdownload_decide_destination(WebKitDownload *download,
         gchar *suggested_filename, Client *c)
 {
-    g_assert(download);
-    g_assert(suggested_filename);
-    g_assert(c);
-
-    char *path, *filename, *uri;
-    GString *expanded, *filepath;
-    const char *extension_dot;
-    int suffix;
-    gssize suffix_pos;
-
-    /* get the download path from settings */
-    path = GET_CHAR(c, "download-path");
-    g_assert(path);
-
-    /* expand any ~ or $VAR patterns in download path */
-    expanded = g_string_new(NULL);
-    util_parse_expansion(c, (const char**)&path, expanded, UTIL_EXP_TILDE|UTIL_EXP_DOLLAR, "");
-    g_string_append(expanded, path + 1);
-
-    /* for unnamed downloads set default filename */
-    filename = strlen(suggested_filename) ? suggested_filename : "vimb-download";
-
-    /* construct complete download filepath */
-    filepath = g_string_new(NULL);
-    g_string_printf(filepath, "%s%c%s", expanded->str, G_DIR_SEPARATOR, filename);
-
-    /* if the filepath exists already
-     * insert numerical suffix before file extension */
-    if (g_file_test(filepath->str, G_FILE_TEST_EXISTS)) {
-        suffix = 2;
-
-        /* position on .tar. (special case, extension with two dots),
-         * position on last dot (if any) otherwise */
-        if (!(extension_dot = strstr(filename, ".tar."))) {
-            extension_dot = strrchr(filename, '.');
-        }
-
-        /* the position to insert the suffix at */
-        if (extension_dot) {
-            suffix_pos = extension_dot - filename;
-        } else {
-            suffix_pos = strlen(filename);
-        }
-
-        /* construct a new complete download filepath and add the suffix before
-         * the filename extension, keep incrementing the suffix value as long
-         * as the filepath exists, stop on first unused filename. */
-        do {
-            g_string_printf(filepath, "%s%c%.*s_%i%s",
-                    expanded->str, G_DIR_SEPARATOR,
-                    (int)suffix_pos, filename,
-                    suffix++, filename + suffix_pos);
-        } while (g_file_test(filepath->str, G_FILE_TEST_EXISTS));
+    if (webkit_download_get_destination(download)) {
+        return TRUE;
     }
 
-    /* build URI from filepath */
-    uri = g_filename_to_uri(filepath->str, NULL, NULL);
-    g_assert(uri);
-
-    /* configure download */
-    webkit_download_set_allow_overwrite(download, FALSE);
-    webkit_download_set_destination(download, uri);
-
-    /* cleanup */
-    g_string_free(expanded, TRUE);
-    g_string_free(filepath, TRUE);
-    g_free(uri);
-
-    return TRUE;
+    return vb_download_set_destination(c, download, suggested_filename, NULL);
 }
 
 /**

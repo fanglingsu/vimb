@@ -143,8 +143,8 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
 
 gboolean command_save(Client *c, const Arg *arg)
 {
-#if 0
     const char *uri, *path = NULL;
+    WebKitDownload *download;
 
     if (arg->i == COMMAND_SAVE_CURRENT) {
         uri = c->state.uri;
@@ -159,10 +159,11 @@ gboolean command_save(Client *c, const Arg *arg)
     if (!uri || !*uri) {
         return FALSE;
     }
-#endif
 
-    /* TODO start the download to given path here */
-    return TRUE;
+    /* Start the download to given path. */
+    download = webkit_web_view_download_uri(c->webview, uri);
+
+    return vb_download_set_destination(c, download, NULL, path);
 }
 
 #ifdef FEATURE_QUEUE

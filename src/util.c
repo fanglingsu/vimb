@@ -36,6 +36,48 @@ static struct {
 
 static void create_dir_if_not_exists(const char *dirpath);
 
+/**
+ * Build the absolute file path of given path and possible given directory.
+ *
+ * Returned path must be freed.
+ */
+char *util_build_path(Client *c, const char *path, const char *dir)
+{
+    char *fullPath = NULL, *fexp, *dexp, *p;
+    int expflags   = UTIL_EXP_TILDE|UTIL_EXP_DOLLAR;
+
+    /* if the path could be expanded */
+    if ((fexp = util_expand(c, path, expflags))) {
+        if (*fexp == '/') {
+            /* path is already absolute, no need to use given dir - there is
+             * no need to free fexp, bacuse this should be done by the caller
+             * on fullPath later */
+            fullPath = fexp;
+        } else if (dir && *dir) {
+            /* try to expand also the dir given - this may be ~/path */
+            if ((dexp = util_expand(c, dir, expflags))) {
+                /* use expanded dir and append expanded path */
+                fullPath = g_build_filename(dexp, fexp, NULL);
+                g_free(dexp);
+            }
+            g_free(fexp);
+        }
+    }
+
+    /* if full path not found use current dir */
+    if (!fullPath) {
+        fullPath = g_build_filename(g_get_current_dir(), path, NULL);
+    }
+
+    /* Create the directory part of the path if it does not exists. */
+    if ((p = strrchr(fullPath, '/'))) {
+        *p = '\0';
+        util_create_dir_if_not_exists(fullPath);
+        *p = '/';
+    }
+
+    return fullPath;
+}
 
 /**
  * Free memory for allocated path strings.
@@ -44,6 +86,13 @@ void util_cleanup(void)
 {
     if (util.config_dir) {
         g_free(util.config_dir);
+    }
+}
+
+void util_create_dir_if_not_exists(const char *dirpath)
+{
+    if (!g_file_test(dirpath, G_FILE_TEST_IS_DIR)) {
+        g_mkdir_with_parents(dirpath, 0755);
     }
 }
 
