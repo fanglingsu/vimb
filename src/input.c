@@ -38,7 +38,7 @@ void input_enter(Client *c)
      * disturbing the user */
     gtk_widget_grab_focus(GTK_WIDGET(c->webview));
     vb_modelabel_update(c, "-- INPUT --");
-    webkit_web_view_run_javascript(c->webview, "var vimb_input_mode_element = document.activeElement;", NULL, NULL, NULL);
+    ext_proxy_eval_script(c, "var vimb_input_mode_element = document.activeElement;", NULL);
 }
 
 /**
@@ -46,7 +46,7 @@ void input_enter(Client *c)
  */
 void input_leave(Client *c)
 {
-    webkit_web_view_run_javascript(c->webview, "vimb_input_mode_element.blur();", NULL, NULL, NULL);
+    ext_proxy_eval_script(c, "vimb_input_mode_element.blur();", NULL);
     vb_modelabel_update(c, "");
 }
 

@@ -39,6 +39,7 @@
 #include "setting.h"
 #include "shortcut.h"
 #include "util.h"
+#include "ext-proxy.h"
 
 typedef enum {
     /* TODO add feature autocmd */
@@ -126,8 +127,7 @@ static VbCmdResult execute(Client *c, const ExArg *arg);
 
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
-static void ex_eval_javascript_finished(GObject *object,
-        GAsyncResult *result, Client *c);
+static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg);
 static VbCmdResult ex_map(Client *c, const ExArg *arg);
 static VbCmdResult ex_unmap(Client *c, const ExArg *arg);
@@ -784,47 +784,30 @@ static VbCmdResult ex_eval(Client *c, const ExArg *arg)
 {
     /* Called as :eval! - don't print to inputbox. */
     if (arg->bang) {
-        webkit_web_view_run_javascript(c->webview, arg->rhs->str, NULL, NULL, NULL);
+        ext_proxy_eval_script(c, arg->rhs->str, NULL);
     } else {
-        webkit_web_view_run_javascript(c->webview, arg->rhs->str, NULL,
-                (GAsyncReadyCallback)ex_eval_javascript_finished, c);
+        ext_proxy_eval_script(c, arg->rhs->str, (GAsyncReadyCallback)on_eval_script_finished);
     }
 
     return CMD_SUCCESS;
 }
 
-static void ex_eval_javascript_finished(GObject *object,
-        GAsyncResult *result, Client *c)
+static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c)
 {
-    WebKitJavascriptResult *js_result;
-    JSValueRef value;
-    JSGlobalContextRef context;
-    GError *error = NULL;
+    gboolean success = FALSE;
+    char *string = NULL;
 
-    js_result = webkit_web_view_run_javascript_finish(WEBKIT_WEB_VIEW(object), result, &error);
-    if (!js_result) {
-        vb_echo(c, MSG_ERROR, TRUE, "%s", error->message);
-        g_error_free(error);
-
-        return;
+    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);   
+    if (return_value) {
+        g_variant_get(return_value, "(bs)", &success, &string);
+        if (success) {
+            vb_echo(c, MSG_NORMAL, FALSE, "%s", string);
+        } else {
+            vb_echo(c, MSG_ERROR, TRUE, "%s", string);
+        }
+    } else {
+        vb_echo(c, MSG_ERROR, TRUE, "");
     }
-
-    context = webkit_javascript_result_get_global_context(js_result);
-    value   = webkit_javascript_result_get_value(js_result);
-    if (JSValueIsString(context, value)) {
-        JSStringRef str_ref;
-        char *string;
-        size_t len;
-
-        str_ref = JSValueToStringCopy(context, value, NULL);
-        len     = JSStringGetMaximumUTF8CStringSize(str_ref);
-        string  = g_new(char, len);
-        JSStringGetUTF8CString(str_ref, string, len);
-        JSStringRelease(str_ref);
-        vb_echo(c, MSG_NORMAL, FALSE, "%s", string);
-        g_free(string);
-    }
-    webkit_javascript_result_unref(js_result);
 }
 
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg)

@@ -79,3 +79,25 @@ gboolean ext_util_create_tmp_file(const char *content, char **file)
 
     return TRUE;
 }
+
+/**
+ * Returns a new allocates string for given value reference.
+ * String must be freed if not used anymore.
+ */
+char* ext_util_js_ref_to_string(JSContextRef ctx, JSValueRef ref)
+{
+    char *string;
+    size_t len;
+    JSStringRef str_ref;
+
+    g_return_val_if_fail(ref != NULL, NULL);
+
+    str_ref = JSValueToStringCopy(ctx, ref, NULL);
+    len     = JSStringGetMaximumUTF8CStringSize(str_ref);
+
+    string = g_new0(char, len);
+    JSStringGetUTF8CString(str_ref, string, len);
+    JSStringRelease(str_ref);
+
+    return string;
+}

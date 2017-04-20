@@ -28,6 +28,7 @@
 #include "normal.h"
 #include "scripts/scripts.h"
 #include "util.h"
+#include "ext-proxy.h"
 
 typedef enum {
     PHASE_START,
@@ -321,7 +322,7 @@ void pass_enter(Client *c)
  */
 void pass_leave(Client *c)
 {
-    webkit_web_view_run_javascript(c->webview, "document.activeElement.blur();", NULL, NULL, NULL);
+    ext_proxy_eval_script(c, "document.activeElement.blur();", NULL);
     vb_modelabel_update(c, "");
 }
 
@@ -422,9 +423,7 @@ static VbResult normal_fire(Client *c, const NormalCmdInfo *info)
      * highlight. We use the search_matches as indicator that the searching is
      * active. */
     if (c->state.search.active) {
-        webkit_web_view_run_javascript(c->webview,
-                "getSelection().anchorNode.parentNode.click();", NULL, NULL,
-                NULL);
+        ext_proxy_eval_script(c, "getSelection().anchorNode.parentNode.click();", NULL);
 
         return RESULT_COMPLETE;
     }
@@ -497,7 +496,7 @@ static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info)
     int count = info->count ? info->count : 1;
 
     js = g_strdup_printf(INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
-    webkit_web_view_run_javascript(c->webview, js, NULL, NULL, NULL);
+    ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 
     return RESULT_COMPLETE;
@@ -688,19 +687,19 @@ static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
                 js = g_strdup_printf(
                         "window.scroll(window.scrollX, %d * (1 + (document.height - window.innerHeight) / 100));",
                         info->count);
-                ext_proxy_eval_script(c, js);
+                ext_proxy_eval_script(c, js, NULL);
                 g_free(js);
                 return RESULT_COMPLETE;
             }
 
             /* Without count scroll to the end of the page. */
-            ext_proxy_eval_script(c, "window.scroll(window.scrollX, document.body.scrollHeight);");
+            ext_proxy_eval_script(c, "window.scroll(window.scrollX, document.body.scrollHeight);", NULL);
             return RESULT_COMPLETE;
         case '0':
-            ext_proxy_eval_script(c, "window.scroll(0, window.scrollY);");
+            ext_proxy_eval_script(c, "window.scroll(0, window.scrollY);", NULL);
             return RESULT_COMPLETE;
         case '$':
-            ext_proxy_eval_script(c, "window.scroll(document.body.scrollWidth, window.scrollY);");
+            ext_proxy_eval_script(c, "window.scroll(document.body.scrollWidth, window.scrollY);", NULL);
             return RESULT_COMPLETE;
         default:
             if (info->key2 == 'g') {
@@ -708,18 +707,18 @@ static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
                     js = g_strdup_printf(
                             "window.scroll(window.scrollX, %d * (1 + (document.height - window.innerHeight) / 100));",
                             info->count);
-                    ext_proxy_eval_script(c, js);
+                    ext_proxy_eval_script(c, js, NULL);
                     g_free(js);
                     return RESULT_COMPLETE;
                 }
                 /* Without count gg scrolls to the top of the page. */
-                ext_proxy_eval_script(c, "window.scroll(window.scrollX, 0);");
+                ext_proxy_eval_script(c, "window.scroll(window.scrollX, 0);", NULL);
                 return RESULT_COMPLETE;
             }
             return RESULT_ERROR;
     }
     js = g_strdup_printf("window.scrollBy(%d,%d);", x, y);
-    ext_proxy_eval_script(c, js);
+    ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 
     return RESULT_COMPLETE;

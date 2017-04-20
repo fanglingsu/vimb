@@ -153,9 +153,13 @@ static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
             NULL);
 }
 
-void ext_proxy_eval_script(Client *c, char *js)
+void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
-    dbus_call(c, "EvalJsNoResult", g_variant_new("(s)", js), NULL);
+	if (callback) {
+        dbus_call(c, "EvalJs", g_variant_new("(s)", js), callback);
+	} else {
+        dbus_call(c, "EvalJsNoResult", g_variant_new("(s)", js), NULL);
+	}
 }
 
 /**
