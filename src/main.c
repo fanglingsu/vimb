@@ -126,6 +126,10 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
         file = util_build_path(c, suggested_filename, download_path);
     }
 
+    if (!file) {
+        return FALSE;
+    }
+
     /* If the filepath exists already insert numerical suffix before file
      * extension. */
     if (g_file_test(file, G_FILE_TEST_EXISTS)) {

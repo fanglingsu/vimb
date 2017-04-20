@@ -18,6 +18,7 @@
  */
 
 #include <ctype.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
 #include <JavaScriptCore/JavaScript.h>
@@ -71,9 +72,16 @@ char *util_build_path(Client *c, const char *path, const char *dir)
 
     /* Create the directory part of the path if it does not exists. */
     if ((p = strrchr(fullPath, '/'))) {
+        gboolean res;
         *p = '\0';
-        util_create_dir_if_not_exists(fullPath);
+        res = util_create_dir_if_not_exists(fullPath);
         *p = '/';
+
+        if (!res) {
+            g_free(fullPath);
+
+            return NULL;
+        }
     }
 
     return fullPath;
@@ -89,11 +97,15 @@ void util_cleanup(void)
     }
 }
 
-void util_create_dir_if_not_exists(const char *dirpath)
+gboolean util_create_dir_if_not_exists(const char *dirpath)
 {
-    if (!g_file_test(dirpath, G_FILE_TEST_IS_DIR)) {
-        g_mkdir_with_parents(dirpath, 0755);
+    if (!g_mkdir_with_parents(dirpath, 0755)) {
+        g_critical("Could not create directory '%s': %s", dirpath, strerror(errno));
+
+        return FALSE;
     }
+
+    return TRUE;
 }
 
 /**
