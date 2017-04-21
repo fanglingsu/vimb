@@ -45,6 +45,7 @@ gboolean command_search(Client *c, const Arg *arg)
         c->state.search.matches = 0;
         c->state.search.active  = FALSE;
         vb_statusbar_update(c);
+        vb_echo(c, MSG_NORMAL, FALSE, "");
         return TRUE;
     }
 

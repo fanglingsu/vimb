@@ -28,6 +28,7 @@
 #include <webkit2/webkit2.h>
 
 #include "ascii.h"
+#include "command.h"
 #include "completion.h"
 #include "config.h"
 #include "ex.h"
@@ -1142,6 +1143,9 @@ static void on_webview_load_changed(WebKitWebView *webview,
 
             /* clear possible set marks */
             marks_clear(c);
+
+            /* Unset possible last search. */
+            command_search(c, &((Arg){0}));
 
             break;
 
