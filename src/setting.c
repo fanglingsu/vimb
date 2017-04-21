@@ -593,7 +593,9 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
     ucm = webkit_web_view_get_user_content_manager(c->webview);
 
     if (enabled) {
-        if (g_file_get_contents(vb.files[FILES_SCRIPT], &source, NULL, NULL)) {
+        if (vb.files[FILES_SCRIPT]
+                && g_file_get_contents(vb.files[FILES_SCRIPT], &source, NULL, NULL)) {
+
             script = webkit_user_script_new(
                 source, WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
                 WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL
