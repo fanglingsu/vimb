@@ -41,11 +41,15 @@ gboolean command_search(Client *c, const Arg *arg)
 
     fc = webkit_web_view_get_find_controller(c->webview);
     if (arg->i == 0) {
+        /* Clear the input only if the search is active. */
+        if (c->state.search.active) {
+            vb_echo(c, MSG_NORMAL, FALSE, "");
+        }
         webkit_find_controller_search_finish(fc);
         c->state.search.matches = 0;
         c->state.search.active  = FALSE;
         vb_statusbar_update(c);
-        vb_echo(c, MSG_NORMAL, FALSE, "");
+
         return TRUE;
     }
 
