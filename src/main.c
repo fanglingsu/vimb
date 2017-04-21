@@ -52,6 +52,7 @@ static void input_print(Client *c, gboolean force, MessageType type,
         gboolean hide, const char *message);
 static void marks_clear(Client *c);
 static void mode_free(Mode *mode);
+static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data);
 static void on_webctx_download_started(WebKitWebContext *webctx,
         WebKitDownload *download, Client *c);
 static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data);
@@ -688,6 +689,7 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
     c->input  = gtk_text_view_new();
     gtk_widget_set_name(c->input, "input");
     c->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(c->input));
+    g_signal_connect(c->buffer, "changed", G_CALLBACK(on_textbuffer_changed), c);
     /* Make sure the user can see the typed text. */
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->input), GTK_WRAP_WORD_CHAR);
 
@@ -801,6 +803,37 @@ static void marks_clear(Client *c)
 static void mode_free(Mode *mode)
 {
     g_slice_free(Mode, mode);
+}
+
+/**
+ * The ::changed signal is emitted when the content of a GtkTextBuffer has
+ * changed. This call back function is connected to the input box' text buffer.
+ */
+static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data)
+{
+    gchar *text;
+    GtkTextIter start, end;
+    Client *c = (Client *)user_data;
+
+    g_assert(c);
+
+#if 0
+    /* don't observe changes in completion mode */
+    if (c->mode->flags & FLAG_COMPLETION) {
+        return;
+    }
+#endif
+
+    /* don't process changes not typed by the user */
+    if (gtk_widget_is_focus(c->input) && c->mode && c->mode->input_changed) {
+
+        gtk_text_buffer_get_bounds(textbuffer, &start, &end);
+        text = gtk_text_buffer_get_text(textbuffer, &start, &end, false);
+
+        c->mode->input_changed(c, text);
+
+        g_free(text);
+    }
 }
 
 /**

@@ -55,6 +55,9 @@ static struct {
     char one;
     char two;
 } special_keys[] = {
+    /* TODO: In GTK3, keysyms changed to have a KEY_ prefix.
+     * See gdkkeysyms.h and gdkkeysyms-compat.h
+     */
     {GDK_SHIFT_MASK,    GDK_Tab,       'k', 'B'},
     {0,                 GDK_Up,        'k', 'u'},
     {0,                 GDK_Down,      'k', 'd'},
