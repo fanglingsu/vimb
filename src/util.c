@@ -151,7 +151,7 @@ gboolean util_file_append(const char *file, const char *format, ...)
     va_list args;
     FILE *f;
 
-    if ((f = fopen(file, "a+"))) {
+    if (file && (f = fopen(file, "a+"))) {
         flock(fileno(f), LOCK_EX);
 
         va_start(args, format);
@@ -178,6 +178,9 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
     va_list args;
     char *content;
     FILE *f;
+    if (!file) {
+        return FALSE;
+    }
 
     content = util_get_file_contents(file, NULL);
     if ((f = fopen(file, "w"))) {
@@ -213,11 +216,16 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
  */
 char *util_file_pop_line(const char *file, int *item_count)
 {
-    char **lines = util_get_lines(file);
+    char **lines;
     char *new,
          *line = NULL;
     int len,
         count = 0;
+
+    if (!file) {
+        return NULL;
+    }
+    lines = util_get_lines(file);
 
     if (lines) {
         len = g_strv_length(lines);
@@ -261,7 +269,7 @@ char *util_get_file_contents(const char *filename, gsize *length)
     GError *error = NULL;
     char *content = NULL;
 
-    if (!g_file_get_contents(filename, &content, length, &error)) {
+    if (filename && !g_file_get_contents(filename, &content, length, &error)) {
         g_warning("Cannot open %s: %s", filename, error->message);
         g_error_free(error);
     }
@@ -308,9 +316,14 @@ char *util_get_filepath(const char *dir, const char *filename, gboolean create)
  */
 char **util_get_lines(const char *filename)
 {
-    char *content = util_get_file_contents(filename, NULL);
+    char *content;
     char **lines  = NULL;
-    if (content) {
+
+    if (!filename) {
+        return NULL;
+    }
+
+    if ((content = util_get_file_contents(filename, NULL))) {
         /* split the file content into lines */
         lines = g_strsplit(content, "\n", -1);
         g_free(content);
