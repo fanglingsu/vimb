@@ -1600,8 +1600,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
 {
     WebKitWebView *new;
     WebKitUserContentManager *ucm;
-    WebKitUserScript *script;
-    char *js = NULL;
 
     /* create a new webview */
     if (webview) {
@@ -1628,15 +1626,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     );
 
     g_signal_connect(webkit_web_context_get_default(), "download-started", G_CALLBACK(on_webctx_download_started), c);
-
-    /* Inject the user script file. */
-    if (g_file_get_contents(vb.files[FILES_SCRIPT], &js, NULL, NULL)) {
-        script = webkit_user_script_new(js,
-                WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
-                WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
-        webkit_user_content_manager_add_script(ucm, script);
-        webkit_user_script_unref(script);
-    }
 
     /* Setup script message handlers. */
     webkit_user_content_manager_register_script_message_handler(ucm, "focus");
