@@ -1436,7 +1436,6 @@ static void vimb_setup(void)
     vb.files[FILES_SCRIPT]     = util_get_filepath(path, "scripts.js", FALSE);
     vb.files[FILES_HISTORY]    = util_get_filepath(path, "history", FALSE);
     vb.files[FILES_COMMAND]    = util_get_filepath(path, "command", FALSE);
-    vb.files[FILES_HSTS]       = util_get_filepath(path, "hsts", FALSE);
     vb.files[FILES_BOOKMARK]   = util_get_filepath(path, "bookmark", FALSE);
     vb.files[FILES_QUEUE]      = util_get_filepath(path, "queue", FALSE);
     vb.files[FILES_SEARCH]     = util_get_filepath(path, "search", FALSE);
