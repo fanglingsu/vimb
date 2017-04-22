@@ -1363,13 +1363,7 @@ static void update_title(Client *c)
  */
 static void update_urlbar(Client *c)
 {
-#if !defined(FEATURE_HISTORY_INDICATOR)
-    /* if only the uri is shown - write it like it is on the label */
-    gtk_label_set_text(GTK_LABEL(c->statusbar.left), c->state.uri);
-#else
     GString *str = g_string_new(c->state.uri);
-
-#ifdef FEATURE_HISTORY_INDICATOR
     gboolean back, fwd;
 
     back = webkit_web_view_can_go_back(c->webview);
@@ -1379,11 +1373,9 @@ static void update_urlbar(Client *c)
     if (back || fwd) {
         g_string_append_printf(str, " [%s]", back ? (fwd ? "-+" : "-") : "+");
     }
-#endif /* FEATURE_HISTORY_INDICATOR */
 
     gtk_label_set_text(GTK_LABEL(c->statusbar.left), str->str);
     g_string_free(str, TRUE);
-#endif /* !defined(FEATURE_HISTORY_INDICATOR) */
 }
 
 #ifdef FREE_ON_QUIT
