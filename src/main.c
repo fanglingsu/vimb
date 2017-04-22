@@ -1202,7 +1202,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
             marks_clear(c);
 
             /* Unset possible last search. */
-            command_search(c, &((Arg){0}));
+            command_search(c, &(Arg){0, NULL}, FALSE);
 
             break;
 

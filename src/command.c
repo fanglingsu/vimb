@@ -31,67 +31,85 @@
 #include "history.h"
 #include "main.h"
 
-extern struct Vimb vb;
-
-gboolean command_search(Client *c, const Arg *arg)
+gboolean command_search(Client *c, const Arg *arg, bool commit)
 {
-    const char *query;
-    gboolean forward;
     WebKitFindController *fc;
+    const char *query;
+    guint count;
 
     fc = webkit_web_view_get_find_controller(c->webview);
+
+    g_assert(c);
+    g_assert(arg);
+    g_assert(fc);
+
     if (arg->i == 0) {
+        webkit_find_controller_search_finish(fc);
+
         /* Clear the input only if the search is active. */
         if (c->state.search.active) {
             vb_echo(c, MSG_NORMAL, FALSE, "");
         }
-        webkit_find_controller_search_finish(fc);
+
+        c->state.search.active = FALSE;
+        c->state.search.direction = 0;
         c->state.search.matches = 0;
-        c->state.search.active  = FALSE;
+
         vb_statusbar_update(c);
 
         return TRUE;
     }
 
-    /* copy search query for later use */
-    if (arg->s) {
-        /* set search direction only when the searching is started */
-        c->state.search.direction = arg->i > 0 ? 1 : -1;
-        query = arg->s;
-        /* add new search query to history and search register */
-        vb_register_add(c, '/', query);
-        history_add(c, HISTORY_SEARCH, query, NULL);
-    } else {
-        /* no search phrase given - continue a previous search */
-        query = vb_register_get(c, '/');
+    query = arg->s;
+    count = abs(arg->i);
+
+    /* Only committed search strings adjust registers and are recorded in
+     * history, intermediate strings (while using incsearch) don't. */
+    if (commit) {
+        if (query) {
+            history_add(c, HISTORY_SEARCH, query, NULL);
+            vb_register_add(c, '/', query);
+        } else {
+            /* Committed search without string re-searches last string. */
+            query = vb_register_get(c, '/');
+        }
     }
 
-    forward = (arg->i * c->state.search.direction) > 0;
-
+    /* Hand the query string to webkit's find controller. */
     if (query) {
-        guint count = abs(arg->i);
-
-        if (!c->state.search.active) {
-            webkit_find_controller_search(fc, query,
-                    WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
-                    WEBKIT_FIND_OPTIONS_WRAP_AROUND |
-                    (forward ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
-                    G_MAXUINT);
-            /* TODO get the number of matches */
-            c->state.search.active = TRUE;
-            /* Skip first search because the first match is already
-             * highlighted on search start. */
-            count -= 1;
+        /* Force a fresh start in order to have webkit select the first match
+         * on the page. Without this workaround the first selected match
+         * depends on the most recent selection or caret position (even when
+         * caret browsing is disabled). */
+        if(commit) {
+            webkit_find_controller_search(fc, "", WEBKIT_FIND_OPTIONS_NONE, G_MAXUINT);
         }
 
-        if (forward) {
+        webkit_find_controller_search(fc, query,
+                WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
+                WEBKIT_FIND_OPTIONS_WRAP_AROUND |
+                (arg->i > 0 ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
+                G_MAXUINT);
+
+        c->state.search.active = TRUE;
+        c->state.search.direction = arg->i > 0 ? 1 : -1;
+        /* TODO get the number of matches */
+
+        /* Skip first search because the first match is already
+         * highlighted on search start. */
+        count -= 1;
+    }
+
+    /* Step through searchs result focus according to arg->i. */
+    if (c->state.search.active) {
+        if (arg->i * c->state.search.direction > 0) {
             while (count--) {
                 webkit_find_controller_search_next(fc);
-            };
+            }
         } else {
             while (count--) {
                 webkit_find_controller_search_previous(fc);
-            };
+            }
         }
     }
 

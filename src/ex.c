@@ -402,8 +402,7 @@ void ex_input_changed(Client *c, const char *text)
         case '/': /* fall through */
         case '?':
             if (c->config.incsearch) {
-                command_search(c, &((Arg){0, NULL})); /* stop last search */
-                command_search(c, &((Arg){*text == '/' ? 1 : -1, (char*)text + 1}));
+                command_search(c, &((Arg){*text == '/' ? 1 : -1, (char*)text + 1}), FALSE);
             }
             break;
     }
@@ -511,10 +510,7 @@ static void input_activate(Client *c)
         case '?':
             vb_enter(c, 'n');
 
-            /* start search, if incsearch, it's done while typing */
-            if (!c->config.incsearch) {
-                command_search(c, &((Arg){count, cmd}));
-            }
+            command_search(c, &((Arg){count, strlen(cmd) ? cmd : NULL}), TRUE);
             break;
 
         case ';': /* fall through */
