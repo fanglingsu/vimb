@@ -887,6 +887,7 @@ static void spawn_new_instance(const char *uri, gboolean embed)
     /* memory allocation */
     char **cmd = g_malloc_n(
         3                       /* basename + uri + ending NULL */
+        + (vb.configfile ? 2 : 0)
 #ifndef FEATURE_NO_XEMBED
         + (vb.embed && embed ? 2 : 0)
 #endif
@@ -896,6 +897,10 @@ static void spawn_new_instance(const char *uri, gboolean embed)
 
     cmd[i++] = vb.argv0;
 
+    if (vb.configfile) {
+        cmd[i++] = "-c";
+        cmd[i++] = vb.configfile;
+    }
 #ifndef FEATURE_NO_XEMBED
     if (vb.embed && embed) {
         char xid[64];
