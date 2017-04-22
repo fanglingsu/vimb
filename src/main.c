@@ -1382,13 +1382,21 @@ static void update_title(Client *c)
  */
 static void update_urlbar(Client *c)
 {
-    GString *str = g_string_new(c->state.uri);
+    GString *str;
     gboolean back, fwd;
 
-    back = webkit_web_view_can_go_back(c->webview);
-    fwd  = webkit_web_view_can_go_forward(c->webview);
+    str = g_string_new("");
+    /* show profile name */
+    if (vb.profile) {
+        g_string_append_printf(str, "[%s] ", vb.profile);
+    }
+
+    /* show current url */
+    g_string_append_printf(str, "%s", c->state.uri);
 
     /* show history indicator only if there is something to show */
+    back = webkit_web_view_can_go_back(c->webview);
+    fwd  = webkit_web_view_can_go_forward(c->webview);
     if (back || fwd) {
         g_string_append_printf(str, " [%s]", back ? (fwd ? "-+" : "-") : "+");
     }
