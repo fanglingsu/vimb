@@ -35,6 +35,8 @@ static struct {
     char    *config_dir;
 } util;
 
+extern struct Vimb vb;
+
 static void create_dir_if_not_exists(const char *dirpath);
 
 /**
@@ -248,12 +250,12 @@ char *util_file_pop_line(const char *file, int *item_count)
 }
 
 /**
- * Retrieves the config directory path.
- * Returnes string must be freed.
+ * Retrieves the config directory path according to current used profile.
+ * Returned string must be freed.
  */
 char *util_get_config_dir(void)
 {
-    char *path = g_build_filename(g_get_user_config_dir(), PROJECT, NULL);
+    char *path = g_build_filename(g_get_user_config_dir(), PROJECT, vb.profile, NULL);
     create_dir_if_not_exists(path);
 
     return path;
@@ -643,6 +645,16 @@ gboolean util_parse_expansion(Client *c, const char **input, GString *str,
     }
 
     return expanded;
+}
+
+/**
+ * Sanituze filename by removeing directory separator by underscore.
+ *
+ * The string is modified in place.
+ */
+char *util_sanitize_filename(char *filename)
+{
+    return g_strdelimit(filename, G_DIR_SEPARATOR_S, '_');
 }
 
 char *util_strcasestr(const char *haystack, const char *needle)

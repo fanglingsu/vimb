@@ -256,6 +256,7 @@ struct Vimb {
     GHashTable  *modes;             /* all available browser main modes */
     char        *configfile;        /* config file given as option on startup */
     char        *files[FILES_LAST];
+    char        *profile;           /* profile name */
     struct {
         guint   history_max;
     } config;

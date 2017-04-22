@@ -49,7 +49,8 @@ char *util_js_result_as_string(WebKitJavascriptResult *result);
 double util_js_result_as_number(WebKitJavascriptResult *result);
 gboolean util_parse_expansion(Client *c, const char **input, GString *str,
         int flags, const char *quoteable);
-char *util_str_replace(const char* search, const char* replace, const char* string);
+char *util_sanitize_filename(char *filename);
 char *util_strcasestr(const char *haystack, const char *needle);
+char *util_str_replace(const char* search, const char* replace, const char* string);
 
 #endif /* end of include guard: _UTIL_H */

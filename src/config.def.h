@@ -18,8 +18,6 @@
  */
 
 /* features */
-/* should the history indicator [+-] be shown in status bar after url */
-#define FEATURE_HISTORY_INDICATOR
 /* show wget style progressbar in status bar */
 #define FEATURE_WGET_PROGRESS_BAR
 /* show load progress in window title */

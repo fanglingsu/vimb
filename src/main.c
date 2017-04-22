@@ -96,6 +96,8 @@ static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *message, Client *c);
+static gboolean profileOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error);
 
 struct Vimb vb;
 
@@ -882,21 +884,38 @@ static void set_title(Client *c, const char *title)
 static void spawn_new_instance(const char *uri, gboolean embed)
 {
     guint i = 0;
-    char xid[64];
-    char *cmd[5];
+    /* memory allocation */
+    char **cmd = g_malloc_n(
+        3                       /* basename + uri + ending NULL */
+#ifndef FEATURE_NO_XEMBED
+        + (vb.embed && embed ? 2 : 0)
+#endif
+        + (vb.profile ? 2 : 0),
+        sizeof(char *)
+    );
 
     cmd[i++] = vb.argv0;
 
+#ifndef FEATURE_NO_XEMBED
     if (vb.embed && embed) {
+        char xid[64];
         cmd[i++] = "-e";
         snprintf(xid, LENGTH(xid), "%d", (int)vb.embed);
         cmd[i++] = xid;
+    }
+#endif
+    if (vb.profile) {
+        cmd[i++] = "-p";
+        cmd[i++] = vb.profile;
     }
     cmd[i++] = (char*)uri;
     cmd[i++] = NULL;
 
     /* spawn a new browser instance */
     g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+
+    /* free commandline */
+    g_free(cmd);
 }
 
 /**
@@ -1398,6 +1417,7 @@ static void vimb_cleanup(void)
             g_free(vb.files[i]);
         }
     }
+    g_free(vb.profile);
 }
 #endif
 
@@ -1640,6 +1660,14 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
     }
 }
 
+static gboolean profileOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error)
+{
+    vb.profile = util_sanitize_filename(g_strdup(value));
+
+    return TRUE;
+}
+
 int main(int argc, char* argv[])
 {
     Client *c;
@@ -1650,6 +1678,7 @@ int main(int argc, char* argv[])
     GOptionEntry opts[] = {
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid,  "Reparents to window specified by xid", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
+        {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
