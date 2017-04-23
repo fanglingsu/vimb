@@ -80,6 +80,7 @@ static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec,
         Client *c);
 static void on_webview_ready_to_show(WebKitWebView *webview, Client *c);
 static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c);
+static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c);
 static void on_window_destroy(GtkWidget *window, Client *c);
 static gboolean quit(Client *c);
 static void read_from_stdin(Client *c);
@@ -447,17 +448,19 @@ void vb_modelabel_update(Client *c, const char *label)
 /**
  * Close the given client instances window.
  */
-void vb_quit(Client *c, gboolean force)
+gboolean vb_quit(Client *c, gboolean force)
 {
     /* if not forced quit - don't quit if there are still running downloads */
     if (!force && c->state.downloads) {
-        vb_echo_force(c, MSG_ERROR, TRUE, "Can't quit: there are running downloads");
-        return;
+        vb_echo_force(c, MSG_ERROR, TRUE, "Can't quit: there are running downloads. Use :q! to force quit");
+        return FALSE;
     }
 
     /* Don't run the quit synchronously, because this could lead to access of
      * no more existing widget where some command response is written. */
     g_idle_add((GSourceFunc)quit, c);
+
+    return TRUE;
 }
 
 /**
@@ -673,6 +676,7 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
     g_object_connect(
             G_OBJECT(c->window),
             "signal::destroy", G_CALLBACK(on_window_destroy), c,
+            "signal::delete-event", G_CALLBACK(on_window_delete_event), c,
             "signal::key-press-event", G_CALLBACK(on_map_keypress), c,
             NULL);
 
@@ -1307,6 +1311,18 @@ static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c
     vb_echo(c, MSG_ERROR, FALSE, "Webview Crashed on %s", webkit_web_view_get_uri(webview));
 
     return TRUE;
+}
+
+/**
+ * Callback for window ::delete-event signal which is emitted if a user
+ * requests that a toplevel window is closed. The default handler for this
+ * signal destroys the window. Returns TRUE to stop other handlers from being
+ * invoked for the event. FALSE to propagate the event further.
+ */
+static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c)
+{
+    /* if vb_quit fails, do not propagate event further, keep window open */
+    return !vb_quit(c, FALSE);
 }
 
 /**
