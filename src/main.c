@@ -819,12 +819,10 @@ static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data)
 
     g_assert(c);
 
-#if 0
     /* don't observe changes in completion mode */
     if (c->mode->flags & FLAG_COMPLETION) {
         return;
     }
-#endif
 
     /* don't process changes not typed by the user */
     if (gtk_widget_is_focus(c->input) && c->mode && c->mode->input_changed) {
