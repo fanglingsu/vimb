@@ -408,7 +408,9 @@ static VbResult normal_ex(Client *c, const NormalCmdInfo *info)
     if (info->key == 'F') {
         vb_enter_prompt(c, 'c', ";t", TRUE);
     } else if (info->key == 'f') {
-        vb_enter_prompt(c, 'c', ";o", TRUE);
+        g_print("firing!");
+        ext_proxy_eval_script(c, "testHint();", NULL);
+        /* vb_enter_prompt(c, 'c', ";o", TRUE); */
     } else {
         char prompt[2] = {info->key, '\0'};
         vb_enter_prompt(c, 'c', prompt, TRUE);
