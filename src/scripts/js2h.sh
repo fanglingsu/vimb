@@ -32,7 +32,8 @@ sed -e 's:/\*[^*]*\*/::g' \
 # ecaspe
 sed -e 's|\\x20| |g' \
     -e 's|\\|\\\\|g' \
-    -e 's|"|\\"|g' | \
+    -e 's|"|\\"|g' \
+    -e 's|HINT_CSS|" HINT_CSS "|' | \
 # write opener with the starting and ending quote char
 sed -e "1s/^/#define $CONSTANT \"/" \
     -e '$s/$/"\n/'

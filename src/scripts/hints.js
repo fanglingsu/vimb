@@ -541,5 +541,5 @@ var hints = Object.freeze((function(){
 
 function testHint() {
     console.log("harmless testing!");
-    /* hints.init('t', false, 500, '', false, false); */
+    hints.init('t', false, 500, '0123456789', false, false);
 }
