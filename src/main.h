@@ -259,6 +259,7 @@ struct Vimb {
     char        *profile;           /* profile name */
     struct {
         guint   history_max;
+        guint   closed_max;
     } config;
     GtkCssProvider *style_provider;
 };

@@ -597,12 +597,15 @@ static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info)
 static VbResult normal_open(Client *c, const NormalCmdInfo *info)
 {
     Arg a;
-    char *file;
+    if (!vb.files[FILES_CLOSED]) {
+        return RESULT_ERROR;
+    }
 
-    file = g_build_filename(util_get_config_dir(), FILE_CLOSED, NULL);
     a.i = info->key == 'U' ? TARGET_NEW : TARGET_CURRENT;
-    a.s = util_get_file_contents(file, NULL);
-    g_free(file);
+    a.s = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
+    if (!a.s) {
+        return RESULT_ERROR;
+    }
 
     vb_load_uri(c, &a);
     g_free(a.s);

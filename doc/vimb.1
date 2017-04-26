@@ -644,6 +644,10 @@ This completion starts by `/` or `?` in inputbox and performs a prefix
 comparison for further typed chars.
 .SH SETTINGS
 All settings listed below can be set with the `:set' command.
+.TP
+.B closed-max-items (int)
+Maximum number of stored last closed URLs.
+If closed-max-items is set to 0, closed URLs will not be stored.
 .SH FILES
 .TP
 .IR $XDG_CONFIG_HOME/vimb[/PROFILE]
@@ -660,7 +664,7 @@ Configuration file to set WebKit setting, some GUI styles and keybindings.
 Cookie store file.
 .TP
 .I closed
-Holds the URI of last closed browser windows.
+Holds the URIs of last closed browser windows.
 .TP
 .I history
 This file holds the history of unique opened URIs.
