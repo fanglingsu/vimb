@@ -206,6 +206,40 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
     return res;
 }
 
+/**
+ * Prepend a new line to the file and make sure there are not more than
+ * max_lines in the file.
+ *
+ * @file:       File to prepend the data
+ * @line:       Line to be written as new first line into the file.
+ *              The line ending is inserted automatic.
+ * @max_lines   Maximum number of lines in file after the operation.
+ */
+void util_file_prepend_line(const char *file, const char *line,
+        unsigned int max_lines)
+{
+    char **lines;
+    GString *new_content;
+
+    g_assert(file);
+    g_assert(line);
+
+    lines = util_get_lines(file);
+    /* Write first the new line into the string and append the new line. */
+    new_content = g_string_new(line);
+    g_string_append(new_content, "\n");
+    if (lines) {
+        int len, i;
+
+        len = g_strv_length(lines);
+        for (i = 0; i < len - 1 && i < max_lines - 1; i++) {
+            g_string_append_printf(new_content, "%s\n", lines[i]);
+        }
+        g_strfreev(lines);
+    }
+    g_file_set_contents(file, new_content->str, -1, NULL);
+    g_string_free(new_content, TRUE);
+}
 
 /**
  * Retrieves the first line from file and delete it from file.

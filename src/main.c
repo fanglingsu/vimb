@@ -605,25 +605,8 @@ static void client_destroy(Client *c)
      * The URL is only stored if the closed-max-items is not 0 and the file
      * exists. */
     if (c->state.uri && vb.config.closed_max && vb.files[FILES_CLOSED]) {
-        char **lines;
-        GString *new;
-
-        /* The latest closed URL is written first and the surplus items are
-         * removed. */
-        lines = util_get_lines(vb.files[FILES_CLOSED]);
-        new   = g_string_new(c->state.uri);
-        g_string_append(new, "\n");
-        if (lines) {
-            int len, i;
-
-            len = g_strv_length(lines);
-            for (i = 0; i < len - 1 && i < vb.config.closed_max - 1; i++) {
-                g_string_append_printf(new, "%s\n", lines[i]);
-            }
-            g_strfreev(lines);
-        }
-        g_file_set_contents(vb.files[FILES_CLOSED], new->str, -1, NULL);
-        g_string_free(new, TRUE);
+        util_file_prepend_line(vb.files[FILES_CLOSED], c->state.uri,
+                vb.config.closed_max);
     }
 
     gtk_widget_destroy(c->window);
