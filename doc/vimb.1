@@ -627,6 +627,19 @@ Like :normal, but no mapping is applied to \fIcmds\fP.
 Print current document.
 Open a GUI dialog where you can select the printer,
 number of copies, orientation, etc.
+.SH INPUT MODE
+.TP
+.B <Esc>, CTRL\-[
+Switch back to normal mode.
+.TP
+.B CTRL\-O
+Executes the next command as normal mode command and return to input mode.
+.TP
+.B CTRL\-V
+Pass the next key press directly to WebKit.
+.TP
+.B CTRL\-Z
+Enter the pass-through mode.
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<S-Tab>` in the
 activated inputbox.
