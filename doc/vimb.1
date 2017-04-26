@@ -114,6 +114,10 @@ Open the last closed page.
 .B U
 Open the last closed page in a new window.
 .TP
+.B CTRL\-P
+Open the oldest entry from the read it later queue in the current browser
+window.
+.TP
 .BI [ \(dqx ]p
 Open the URI out of the register \fIx\fP or, if not given, from the clipboard.
 .TP
@@ -499,6 +503,22 @@ Show the current set value of variable.
 .TP
 .BI ":se[t] " var !
 Toggle the value of boolean variable \fIvar\fP and display the new set value.
+.SS Queue
+The queue allows the marking of URIs for later reading.
+This list is shared between the single instances of Vimb.
+.TP
+.BI ":qpu[sh] [" URI ]
+Push \fIURI\fP or, if not given, the current URI to the end of the queue.
+.TP
+.BI ":qun[shift] [" URI ]
+Push \fIURI\fP or, if not given, the current URI to the beginning of the queue.
+.TP
+.B :qp[op]
+Open the oldest queue entry in the current browser window and remove it from the
+queue.
+.TP
+.B :qc[lear]
+Removes all entries from queue.
 .SS Misc
 .TP
 .BI ":sh[ellcmd] " cmd
