@@ -101,7 +101,7 @@ void util_cleanup(void)
 
 gboolean util_create_dir_if_not_exists(const char *dirpath)
 {
-    if (!g_mkdir_with_parents(dirpath, 0755)) {
+    if (g_mkdir_with_parents(dirpath, 0755) == -1) {
         g_critical("Could not create directory '%s': %s", dirpath, strerror(errno));
 
         return FALSE;
