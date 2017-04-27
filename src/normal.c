@@ -227,7 +227,7 @@ void normal_enter(Client *c)
  */
 void normal_leave(Client *c)
 {
-    command_search(c, &((Arg){0}));
+    command_search(c, &((Arg){0, NULL}), FALSE);
 }
 
 /**
@@ -344,7 +344,7 @@ static VbResult normal_clear_input(Client *c, const NormalCmdInfo *info)
     vb_echo(c, MSG_NORMAL, FALSE, "");
 
     /* Unset search highlightning. */
-    command_search(c, &((Arg){0}));
+    command_search(c, &((Arg){0, NULL}), FALSE);
 
     return RESULT_COMPLETE;
 }
@@ -599,12 +599,15 @@ static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info)
 static VbResult normal_open(Client *c, const NormalCmdInfo *info)
 {
     Arg a;
-    char *file;
+    if (!vb.files[FILES_CLOSED]) {
+        return RESULT_ERROR;
+    }
 
-    file = g_build_filename(util_get_config_dir(), FILE_CLOSED, NULL);
     a.i = info->key == 'U' ? TARGET_NEW : TARGET_CURRENT;
-    a.s = util_get_file_contents(file, NULL);
-    g_free(file);
+    a.s = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
+    if (!a.s) {
+        return RESULT_ERROR;
+    }
 
     vb_load_uri(c, &a);
     g_free(a.s);
@@ -730,7 +733,7 @@ static VbResult normal_search(Client *c, const NormalCmdInfo *info)
 {
     int count = (info->count > 0) ? info->count : 1;
 
-    command_search(c, &((Arg){info->key == 'n' ? count : -count}));
+    command_search(c, &((Arg){info->key == 'n' ? count : -count, NULL}), FALSE);
 
     return RESULT_COMPLETE;
 }
@@ -749,10 +752,7 @@ static VbResult normal_search_selection(Client *c, const NormalCmdInfo *info)
     }
     count = (info->count > 0) ? info->count : 1;
 
-    /* stopp possible existing search and the search highlights before
-     * starting the new search query */
-    command_search(c, &((Arg){0}));
-    command_search(c, &((Arg){info->key == '*' ? count : -count, query}));
+    command_search(c, &((Arg){info->key == '*' ? count : -count, query}), TRUE);
     g_free(query);
 
     return RESULT_COMPLETE;

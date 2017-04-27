@@ -173,9 +173,9 @@ struct State {
     WebKitHitTestResult *hit_test_result;
 
     struct {
-        gboolean    active;         /* indicate if there is a acitve search */
+        gboolean    active;         /* indicate if there is a active search */
         short       direction;      /* last direction 1 forward, -1 backward */
-        int         matches;        /* number of matches search results */
+        int         matches;        /* number of matching search results */
     } search;
 };
 
@@ -259,6 +259,7 @@ struct Vimb {
     char        *profile;           /* profile name */
     struct {
         guint   history_max;
+        guint   closed_max;
     } config;
     GtkCssProvider *style_provider;
 };

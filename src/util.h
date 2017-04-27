@@ -36,6 +36,8 @@ gboolean util_create_dir_if_not_exists(const char *dirpath);
 char *util_expand(Client *c, const char *src, int expflags);
 gboolean util_file_append(const char *file, const char *format, ...);
 gboolean util_file_prepend(const char *file, const char *format, ...);
+void util_file_prepend_line(const char *file, const char *line,
+        unsigned int max_lines);
 char *util_file_pop_line(const char *file, int *item_count);
 char *util_get_config_dir(void);
 char *util_get_file_contents(const char *filename, gsize *length);

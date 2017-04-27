@@ -141,6 +141,9 @@ void setting_init(Client *c)
     setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
     setting_add(c, "download-path", TYPE_CHAR, &"~/", NULL, 0, NULL);
     setting_add(c, "incsearch", TYPE_BOOLEAN, &off, internal, 0, &c->config.incsearch);
+    i = 10;
+    /* TODO should be global and not overwritten by a new client */
+    setting_add(c, "closed-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.closed_max);
 
 #ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
     /* gui style settings vimb2 compatibility */

@@ -114,6 +114,10 @@ Open the last closed page.
 .B U
 Open the last closed page in a new window.
 .TP
+.B CTRL\-P
+Open the oldest entry from the read it later queue in the current browser
+window.
+.TP
 .BI [ \(dqx ]p
 Open the URI out of the register \fIx\fP or, if not given, from the clipboard.
 .TP
@@ -499,6 +503,22 @@ Show the current set value of variable.
 .TP
 .BI ":se[t] " var !
 Toggle the value of boolean variable \fIvar\fP and display the new set value.
+.SS Queue
+The queue allows the marking of URIs for later reading.
+This list is shared between the single instances of Vimb.
+.TP
+.BI ":qpu[sh] [" URI ]
+Push \fIURI\fP or, if not given, the current URI to the end of the queue.
+.TP
+.BI ":qun[shift] [" URI ]
+Push \fIURI\fP or, if not given, the current URI to the beginning of the queue.
+.TP
+.B :qp[op]
+Open the oldest queue entry in the current browser window and remove it from the
+queue.
+.TP
+.B :qc[lear]
+Removes all entries from queue.
 .SS Misc
 .TP
 .BI ":sh[ellcmd] " cmd
@@ -607,6 +627,19 @@ Like :normal, but no mapping is applied to \fIcmds\fP.
 Print current document.
 Open a GUI dialog where you can select the printer,
 number of copies, orientation, etc.
+.SH INPUT MODE
+.TP
+.B <Esc>, CTRL\-[
+Switch back to normal mode.
+.TP
+.B CTRL\-O
+Executes the next command as normal mode command and return to input mode.
+.TP
+.B CTRL\-V
+Pass the next key press directly to WebKit.
+.TP
+.B CTRL\-Z
+Enter the pass-through mode.
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<S-Tab>` in the
 activated inputbox.
@@ -644,6 +677,10 @@ This completion starts by `/` or `?` in inputbox and performs a prefix
 comparison for further typed chars.
 .SH SETTINGS
 All settings listed below can be set with the `:set' command.
+.TP
+.B closed-max-items (int)
+Maximum number of stored last closed URLs.
+If closed-max-items is set to 0, closed URLs will not be stored.
 .SH FILES
 .TP
 .IR $XDG_CONFIG_HOME/vimb[/PROFILE]
@@ -660,7 +697,7 @@ Configuration file to set WebKit setting, some GUI styles and keybindings.
 Cookie store file.
 .TP
 .I closed
-Holds the URI of last closed browser windows.
+Holds the URIs of last closed browser windows.
 .TP
 .I history
 This file holds the history of unique opened URIs.
@@ -668,6 +705,9 @@ This file holds the history of unique opened URIs.
 .I command
 This file holds the history of commands and search queries performed via input
 box.
+.TP
+.I queue
+Holds the read it later queue filled by `qpush'.
 .TP
 .I search
 This file holds the history of search queries.

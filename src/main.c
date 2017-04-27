@@ -600,6 +600,15 @@ static void client_destroy(Client *c)
 {
     Client *p;
     webkit_web_view_stop_loading(c->webview);
+
+    /* Write last URL into file for recreation.
+     * The URL is only stored if the closed-max-items is not 0 and the file
+     * exists. */
+    if (c->state.uri && vb.config.closed_max && vb.files[FILES_CLOSED]) {
+        util_file_prepend_line(vb.files[FILES_CLOSED], c->state.uri,
+                vb.config.closed_max);
+    }
+
     gtk_widget_destroy(c->window);
 
     /* Look for the client in the list, if we searched through the list and
@@ -819,12 +828,10 @@ static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data)
 
     g_assert(c);
 
-#if 0
     /* don't observe changes in completion mode */
     if (c->mode->flags & FLAG_COMPLETION) {
         return;
     }
-#endif
 
     /* don't process changes not typed by the user */
     if (gtk_widget_is_focus(c->input) && c->mode && c->mode->input_changed) {
@@ -1202,7 +1209,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
             marks_clear(c);
 
             /* Unset possible last search. */
-            command_search(c, &((Arg){0}));
+            command_search(c, &(Arg){0, NULL}, FALSE);
 
             break;
 

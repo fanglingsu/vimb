@@ -43,7 +43,7 @@ enum {
 };
 #endif
 
-gboolean command_search(Client *c, const Arg *arg);
+gboolean command_search(Client *c, const Arg *arg, bool commit);
 gboolean command_yank(Client *c, const Arg *arg, char buf);
 gboolean command_save(Client *c, const Arg *arg);
 #ifdef FEATURE_QUEUE
