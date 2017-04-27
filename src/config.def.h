@@ -51,6 +51,8 @@
 #define SETTING_GUI_FONT_EMPH                 "bold 10pt monospace"
 #define SETTING_HOME_PAGE                     "about:blank"
 
+#define MAXIMUM_HINTS              500
+
 /* CSS style use on creating hints. This might also be averrules by css out of
  * $XDG_CONFIG_HOME/vimb/style.css file. */
 #define HINT_CSS "#_hintContainer{\

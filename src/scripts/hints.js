@@ -538,8 +538,3 @@ var hints = Object.freeze((function(){
         focus:        focus,
     };
 })());
-
-function testHint() {
-    console.log("harmless testing!");
-    hints.init('t', false, 500, '0123456789', false, false);
-}

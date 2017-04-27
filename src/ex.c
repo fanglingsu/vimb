@@ -33,6 +33,7 @@
 #include "config.h"
 #include "ex.h"
 #include "handler.h"
+#include "hints.h"
 #include "history.h"
 #include "main.h"
 #include "map.h"
@@ -225,9 +226,7 @@ void ex_enter(Client *c)
 void ex_leave(Client *c)
 {
     completion_clean(c);
-#if 0
-    hints_clear();
-#endif
+    hints_clear(c);
 }
 
 /**
@@ -397,7 +396,7 @@ void ex_input_changed(Client *c, const char *text)
     switch (*text) {
         case ';': /* fall through - the modes are handled by hints_create */
         case 'g':
-            /* TODO create hints */
+            hints_create(c, text);
             break;
         case '/': /* fall through */
         case '?':
