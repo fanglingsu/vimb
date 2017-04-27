@@ -205,8 +205,8 @@ gboolean completion_next(Client *c, gboolean back)
         comp->active--;
         /* Step back over the beginning. */
         if (comp->active == -1) {
-            /* Unselect the current item to show the user that the shown
-             * content is the initial typed content. */
+            /* Deselect the current item to show the user the initial typed
+             * content. */
             gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp->tree)));
 
             return FALSE;

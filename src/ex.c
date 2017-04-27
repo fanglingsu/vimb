@@ -1087,7 +1087,7 @@ static VbCmdResult ex_source(Client *c, const ExArg *arg)
 /**
  * Manage the generation and stepping through completions.
  * This function prepared some prefix and suffix string that are required to
- * put hte matched data back to inputbox, and prepares the tree list store
+ * put the matched data back to inputbox, and prepares the tree list store
  * model containing matched values.
  */
 static gboolean complete(Client *c, short direction)
@@ -1142,7 +1142,7 @@ static gboolean complete(Client *c, short direction)
          * if the command name parsing fails. */
         before_cmdname = in;
 
-        /* Do ex command specific completion if the comman is recognized and
+        /* Do ex command specific completion if the command is recognized and
          * there is a space after the command and the optional '!' bang. */
         if (parse_command_name(c, &in, arg) && parse_bang(&in, arg) && VB_IS_SPACE(*in)) {
             const char *token;
