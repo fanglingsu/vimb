@@ -1129,12 +1129,13 @@ static gboolean complete(Client *c, short direction)
     in = (const char*)input;
     if (*in == ':') {
         const char *before_cmdname;
-        /* skipt the first : */
-        in++;
+        /* skip leading ':' and whitespace */
+        while (*in && (*in == ':' || VB_IS_SPACE(*in))) {
+            in++;
+        }
 
         ExArg *arg = g_slice_new0(ExArg);
 
-        skip_whitespace(&in);
         parse_count(&in, arg);
 
         /* Backup the current pointer so that we can restore the input pointer
