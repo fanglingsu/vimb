@@ -15,7 +15,7 @@ fi
 
 # Put file extension and _ before file name, turn all to upper case to get the
 # constant name.
-CONSTANT=$(echo "$FILE" | sed 's:.*/::g' | sed 's:^\(.*\).\(css\|js\):\2_\1:g' | tr a-z A-Z)
+CONSTANT=$(echo "$FILE" | sed -e 's:.*/::g' -e's/.*\.css$/CSS_&/g' -e's/.*\.js$/JS_&/g' -e's/\.css$//' -e's/\.js$//' | tr a-z A-Z)
 
 # minify the script
 cat $FILE | \
@@ -35,4 +35,5 @@ sed -e 's|\\x20| |g' \
     -e 's|"|\\"|g' | \
 # write opener with the starting and ending quote char
 sed -e "1s/^/#define $CONSTANT \"/" \
-    -e '$s/$/"\n/'
+    -e '$s/$/"/'
+echo ""
