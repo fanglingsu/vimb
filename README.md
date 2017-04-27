@@ -61,7 +61,7 @@ If you like to have a working vimb, please use the master branch.
 
 ## dependencies
 
-- webkit2gtk-4.0 >= 2.3.5
+- webkit2gtk-4.0 >= 2.10
 
 ## compile and run
 

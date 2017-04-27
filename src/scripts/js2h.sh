@@ -35,4 +35,5 @@ sed -e 's|\\x20| |g' \
     -e 's|"|\\"|g' | \
 # write opener with the starting and ending quote char
 sed -e "1s/^/#define $CONSTANT \"/" \
-    -e '$s/$/"\n/'
+    -e '$s/$/"/'
+echo ""
