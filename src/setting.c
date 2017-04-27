@@ -507,10 +507,12 @@ static int cookie_accept(Client *c, const char *name, DataType type, void *value
 
 static int default_zoom(Client *c, const char *name, DataType type, void *value, void *data)
 {
-    float zoom = (float)*(int*)value / 100.0;
+    /* Store the percent value in the client config. */
+    c->config.default_zoom = *(int*)value;
 
+    /* Apply the default zoom to the webview. */
     webkit_settings_set_zoom_text_only(webkit_web_view_get_settings(c->webview), FALSE);
-    webkit_web_view_set_zoom_level(c->webview, zoom);
+    webkit_web_view_set_zoom_level(c->webview, c->config.default_zoom / 100.0);
 
     return CMD_SUCCESS;
 }
