@@ -801,7 +801,7 @@ static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Cli
     gboolean success = FALSE;
     char *string = NULL;
 
-    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);   
+    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
     if (return_value) {
         g_variant_get(return_value, "(bs)", &success, &string);
         if (success) {
@@ -1139,7 +1139,7 @@ static gboolean complete(Client *c, short direction)
         parse_count(&in, arg);
 
         /* Backup the current pointer so that we can restore the input pointer
-         * if tha command name parsing fails. */
+         * if the command name parsing fails. */
         before_cmdname = in;
 
         /* Do ex command specific completion if the comman is recognized and
@@ -1215,7 +1215,8 @@ static gboolean complete(Client *c, short direction)
             excomp.count = arg->count;
 
             if (ex_fill_completion(store, in)) {
-                OVERWRITE_STRING(excomp.prefix, ":");
+                /* Use all the input before the command as prefix. */
+                OVERWRITE_NSTRING(excomp.prefix, input, in - input);
                 found = TRUE;
             }
         }
