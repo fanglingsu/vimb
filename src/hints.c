@@ -45,7 +45,7 @@ static struct {
 
 extern struct Vimb vb;
 
-static gboolean call_hints_function(Client *c, const char *func, char* args);
+static void call_hints_function(Client *c, const char *func, char* args);
 static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
 
@@ -89,7 +89,7 @@ void hints_clear(Client *c)
 
         call_hints_function(c, "clear", "");
 
-        g_signal_emit_by_name(c->webview, "hovering-over-link", NULL, NULL);
+        /* g_signal_emit_by_name(c->webview, "hovering-over-link", NULL, NULL); */
 
         /* if open window was not allowed for JavaScript, restore this */
         /* if (!hints.allow_open_win) {                                                                                  */
@@ -244,30 +244,32 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static gboolean call_hints_function(Client *c, const char *func, char* args)
+static void hints_function_callback(GDBusProxy *proxy, GAsyncResult *result, Client *c)
 {
-    char *jscode;
+    gboolean success = FALSE;
+    char *value = NULL;
 
-    jscode = g_strdup_printf("hints.%s(%s);", func, args);
-    ext_proxy_eval_script(c, jscode, NULL);
-    g_free(jscode);
-    char *value = "";
-    return true;
+    g_print("callback!\n");
+    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);   
+    if (!return_value) {
+        return;
+    }
 
-    g_return_val_if_fail(value != NULL, false);
+    g_variant_get(return_value, "(bs)", &success, &value);
+    if (!success) {
+        return;
+    }
+    g_print("foo! %s\n", value);
 
     if (!strncmp(value, "ERROR:", 6)) {
-        g_free(value);
-        return false;
+        return;
     }
 
     if (!strncmp(value, "OVER:", 5)) {
-        g_signal_emit_by_name(
-            c->webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
-        );
-        g_free(value);
-
-        return true;
+        /* g_signal_emit_by_name(                                                                */
+        /*     c->webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5) */
+        /* );                                                                                    */
+        return;
     }
 
     /* following return values mark fired hints */
@@ -342,8 +344,16 @@ static gboolean call_hints_function(Client *c, const char *func, char* args)
 #endif
         }
     }
-    g_free(value);
-    return true;
+}
+
+static void call_hints_function(Client *c, const char *func, char* args)
+{
+    char *jscode;
+
+    jscode = g_strdup_printf("hints.%s(%s);", func, args);
+    ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)hints_function_callback);
+    g_free(jscode);
+
 }
 
 static void fire_timeout(Client *c, gboolean on)
@@ -357,6 +367,7 @@ static void fire_timeout(Client *c, gboolean on)
 
     if (on) {
         millis = GET_INT(c, "hint-timeout");
+        g_print("millis %d", millis);
         if (millis) {
             hints.timeout_id = g_timeout_add(millis, (GSourceFunc)fire_cb, c);
         }
