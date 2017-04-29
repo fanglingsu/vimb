@@ -241,7 +241,12 @@ VbResult ex_keypress(Client *c, int key)
     VbResult res;
     const char *text;
 
-    /* TODO delegate call to hint mode if this is active */
+    /* delegate call to hint mode if this is active */
+    if (c->mode->flags & FLAG_HINTING
+        && RESULT_COMPLETE == hints_keypress(c, key)) {
+
+        return RESULT_COMPLETE;
+    }
 
     /* process the register */
     if (info.phase == PHASE_REG) {
