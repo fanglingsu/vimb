@@ -45,25 +45,21 @@ static struct {
 
 extern struct Vimb vb;
 
-static gboolean call_hints_function(Client *c, const char *func, int count, JSValueRef params[]);
+static gboolean call_hints_function(Client *c, const char *func, char* args);
 static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
 
 
 VbResult hints_keypress(Client *c, int key)
 {
-    JSValueRef arguments[1];
-
     if (key == KEY_CR) {
         hints_fire(c);
 
         return RESULT_COMPLETE;
     } else if (key == CTRL('H')) {
         fire_timeout(c, false);
-        arguments[0] = JSValueMakeNull(hints.ctx);
-        if (call_hints_function(c, "update", 1, arguments)) {
-            return RESULT_COMPLETE;
-        }
+        call_hints_function(c, "update", "null");
+        return RESULT_MORE; // continue handling the backspace
     } else if (key == KEY_TAB) {
         fire_timeout(c, false);
         hints_focus_next(c, false);
@@ -77,10 +73,8 @@ VbResult hints_keypress(Client *c, int key)
     } else {
         fire_timeout(c, true);
         /* try to handle the key by the javascript */
-        /* arguments[0] = js_string_to_ref(hints.ctx, (char[]){key, '\0'}); */
-        /* if (call_hints_function(c, "update", 1, arguments)) {            */
-        /*     return RESULT_COMPLETE;                                      */
-        /* }                                                                */
+        call_hints_function(c, "update", (char[]){key, '\0'});
+        return RESULT_COMPLETE;
     }
 
     fire_timeout(c, false);
@@ -93,7 +87,7 @@ void hints_clear(Client *c)
         c->mode->flags &= ~FLAG_HINTING;
         vb_input_set_text(c, "");
 
-        call_hints_function(c, "clear", 0, NULL);
+        call_hints_function(c, "clear", "");
 
         g_signal_emit_by_name(c->webview, "hovering-over-link", NULL, NULL);
 
@@ -105,9 +99,9 @@ void hints_clear(Client *c)
     }
 }
 
-void hints_create(Client *c, const char *input)
+void hints_create(Client *c, char *input)
 {
-    char *jscode;
+    char *jsargs;
 
     /* check if the input contains a valid hinting prompt */
     if (!hints_parse_prompt(input, &hints.mode, &hints.gmode)) {
@@ -134,7 +128,7 @@ void hints_create(Client *c, const char *input)
 
         hints.promptlen = hints.gmode ? 3 : 2;
 
-        jscode = g_strdup_printf("hints.init('%s', %s, %d, '%s', %s, %s);",
+        jsargs = g_strdup_printf("'%s', %s, %d, '%s', %s, %s",
             (char[]){hints.mode, '\0'},
             hints.gmode ? "true" : "false",
             MAXIMUM_HINTS,
@@ -143,29 +137,26 @@ void hints_create(Client *c, const char *input)
             GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
         );
 
-        ext_proxy_eval_script(c, jscode, NULL);
-        g_free(jscode);
+        call_hints_function(c, "init", jsargs);
+        g_free(jsargs);
 
         /* if hinting is started there won't be any additional filter given and
          * we can go out of this function */
         return;
     }
 
-    /* JSValueRef arguments[] = {js_string_to_ref(hints.ctx, *(input + hints.promptlen) ? input + hints.promptlen : "")}; */
-    /* call_hints_function(c, "filter", 1, arguments);                                                                    */
+    jsargs = *(input + hints.promptlen) ? input + hints.promptlen : "";
+    call_hints_function(c, "filter", jsargs);
 }
 
 void hints_focus_next(Client *c, const gboolean back)
 {
-    JSValueRef arguments[] = {
-        JSValueMakeNumber(hints.ctx, back)
-    };
-    call_hints_function(c, "focus", 1, arguments);
+    call_hints_function(c, "focus", back ? "true" : "false");
 }
 
 void hints_fire(Client *c)
 {
-    call_hints_function(c, "fire", 0, NULL);
+    call_hints_function(c, "fire", "");
 }
 
 void hints_follow_link(Client *c, const gboolean back, int count)
@@ -187,11 +178,11 @@ void hints_follow_link(Client *c, const gboolean back, int count)
 
 void hints_increment_uri(Client *c, int count)
 {
-    JSValueRef arguments[] = {
-        JSValueMakeNumber(hints.ctx, count)
-    };
+    char *jsargs;
 
-    call_hints_function(c, "incrementUri", 1, arguments);
+    jsargs = g_strdup_printf("%d", count);
+    call_hints_function(c, "incrementUri", jsargs);
+    g_free(jsargs);
 }
 
 /**
@@ -253,9 +244,13 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static gboolean call_hints_function(Client *c, const char *func, int count, JSValueRef params[])
+static gboolean call_hints_function(Client *c, const char *func, char* args)
 {
-    /* char *value = js_object_call_function(hints.ctx, hints.obj, func, count, params); */
+    char *jscode;
+
+    jscode = g_strdup_printf("hints.%s(%s);", func, args);
+    ext_proxy_eval_script(c, jscode, NULL);
+    g_free(jscode);
     char *value = "";
     return true;
 
