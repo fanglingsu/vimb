@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <webkit2/webkit2.h>
 #include <JavaScriptCore/JavaScript.h>
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
@@ -32,11 +33,9 @@
 #include "ext-proxy.h"
 
 static struct {
-    JSObjectRef    obj;       /* the js object */
     char           mode;      /* mode identifying char - that last char of the hint prompt */
     int            promptlen; /* length of the hint prompt chars 2 or 3 */
     gboolean       gmode;     /* indicate if the hints 'g' mode is used */
-    JSContextRef   ctx;
     /* holds the setting if JavaScript can open windows automatically that we
      * have to change to open windows via hinting */
     gboolean       allow_open_win;
@@ -45,7 +44,7 @@ static struct {
 
 extern struct Vimb vb;
 
-static void call_hints_function(Client *c, const char *func, char* args);
+static void call_hints_function(Client *c, const char *func, const char* args);
 static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
 
@@ -89,17 +88,15 @@ void hints_clear(Client *c)
 
         call_hints_function(c, "clear", "");
 
-        /* g_signal_emit_by_name(c->webview, "hovering-over-link", NULL, NULL); */
-
         /* if open window was not allowed for JavaScript, restore this */
-        /* if (!hints.allow_open_win) {                                                                                  */
-        /*     WebKitWebSettings *setting = webkit_web_view_get_settings(c->webview);                                    */
-        /*     g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", hints.allow_open_win, NULL); */
-        /* }                                                                                                             */
+        if (!hints.allow_open_win) {
+            WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
+            g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", hints.allow_open_win, NULL);
+        }
     }
 }
 
-void hints_create(Client *c, char *input)
+void hints_create(Client *c, const char *input)
 {
     char *jsargs;
 
@@ -115,16 +112,16 @@ void hints_create(Client *c, char *input)
     if (!(c->mode->flags & FLAG_HINTING)) {
         c->mode->flags |= FLAG_HINTING;
 
-        /* WebKitWebSettings *setting = webkit_web_view_get_settings(c->webview); */
+        WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
 
         /* before we enable JavaScript to open new windows, we save the actual
          * value to be able restore it after hints where fired */
-        /* g_object_get(G_OBJECT(setting), "javascript-can-open-windows-automatically", &(hints.allow_open_win), NULL); */
+        g_object_get(G_OBJECT(setting), "javascript-can-open-windows-automatically", &(hints.allow_open_win), NULL);
 
         /* if window open is already allowed there's no need to allow it again */
-        /* if (!hints.allow_open_win) {                                                                  */
-        /*     g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", true, NULL); */
-        /* }                                                                                             */
+        if (!hints.allow_open_win) {
+            g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", true, NULL);
+        }
 
         hints.promptlen = hints.gmode ? 3 : 2;
 
@@ -133,7 +130,7 @@ void hints_create(Client *c, char *input)
             hints.gmode ? "true" : "false",
             MAXIMUM_HINTS,
             GET_CHAR(c, "hintkeys"),
-            GET_BOOL(c, "hint-follow-last") ? "true" : "false",      
+            GET_BOOL(c, "hint-follow-last") ? "true" : "false",
             GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
         );
 
@@ -145,8 +142,10 @@ void hints_create(Client *c, char *input)
         return;
     }
 
-    jsargs = *(input + hints.promptlen) ? input + hints.promptlen : "";
-    call_hints_function(c, "filter", jsargs);
+    call_hints_function(
+        c, "filter",
+        *(input + hints.promptlen) ? input + hints.promptlen : ""
+    );
 }
 
 void hints_focus_next(Client *c, const gboolean back)
@@ -161,6 +160,11 @@ void hints_fire(Client *c)
 
 void hints_follow_link(Client *c, const gboolean back, int count)
 {
+    /* TODO implement outside of hints.c */
+    /* We would previously "piggyback" on hints.js for the "js" part of this feature
+     * but this would actually be more elegant in its own JS file. This has nothing
+     * to do with hints.
+     */
     /* char *json = g_strdup_printf(                            */
     /*     "[%s]",                                              */
     /*     back ? vb.config.prevpattern : vb.config.nextpattern */
@@ -249,8 +253,7 @@ static void hints_function_callback(GDBusProxy *proxy, GAsyncResult *result, Cli
     gboolean success = FALSE;
     char *value = NULL;
 
-    g_print("callback!\n");
-    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);   
+    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
     if (!return_value) {
         return;
     }
@@ -259,16 +262,8 @@ static void hints_function_callback(GDBusProxy *proxy, GAsyncResult *result, Cli
     if (!success) {
         return;
     }
-    g_print("foo! %s\n", value);
 
     if (!strncmp(value, "ERROR:", 6)) {
-        return;
-    }
-
-    if (!strncmp(value, "OVER:", 5)) {
-        /* g_signal_emit_by_name(                                                                */
-        /*     c->webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5) */
-        /* );                                                                                    */
         return;
     }
 
@@ -346,7 +341,7 @@ static void hints_function_callback(GDBusProxy *proxy, GAsyncResult *result, Cli
     }
 }
 
-static void call_hints_function(Client *c, const char *func, char* args)
+static void call_hints_function(Client *c, const char *func, const char* args)
 {
     char *jscode;
 
@@ -367,7 +362,6 @@ static void fire_timeout(Client *c, gboolean on)
 
     if (on) {
         millis = GET_INT(c, "hint-timeout");
-        g_print("millis %d", millis);
         if (millis) {
             hints.timeout_id = g_timeout_add(millis, (GSourceFunc)fire_cb, c);
         }

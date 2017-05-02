@@ -397,18 +397,15 @@ var hints = Object.freeze((function(){
 
     /* internal used methods */
     function open(e, newWin) {
-        var oldTarget = e.target;
-        if (newWin) {
-            /* set target to open in new window */
-            e.target = "_blank";
-        } else if (e.target === "_blank") {
-            e.removeAttribute("target");
+        if (newWin && e.hasAttribute('href')) {
+            /* Since the "noopener" vulnerability thing, it's not possible to set an anchor's
+             * target to _blank. Therefore, we can't simulate ctrl-click through _blank like we
+             * used to. Therefore, we limit ourselves to "window.open()" in cases we're firing a
+             * simple <a> link. In other cases, we fire the even normally.
+             */
+             window.open(e.getAttribute('href'), '_blank');
         }
-        /* to open links in new window the mouse events are fired with ctrl */
-        /* key - otherwise some ugly pages will ignore this attribute in their */
-        /* mouse event observers like duckduckgo */
-        click(e, newWin);
-        e.target = oldTarget;
+        click(e);
     }
 
     /* set focus on hint with given index valid hints array */
@@ -424,24 +421,22 @@ var hints = Object.freeze((function(){
             activeHint.e.classList.add(fClass);
             activeHint.label.classList.add(fClass);
             mouseEvent(activeHint.e, "mouseover");
-
-            return "OVER:" + getSrc(activeHint.e);;
         }
     }
 
-    function click(e, ctrl) {
-        mouseEvent(e, "mouseover", ctrl);
-        mouseEvent(e, "mousedown", ctrl);
-        mouseEvent(e, "mouseup", ctrl);
-        mouseEvent(e, "click", ctrl);
+    function click(e) {
+        mouseEvent(e, "mouseover");
+        mouseEvent(e, "mousedown");
+        mouseEvent(e, "mouseup");
+        mouseEvent(e, "click");
     }
 
-    function mouseEvent(e, name, ctrl) {
+    function mouseEvent(e, name) {
         var evObj = e.ownerDocument.createEvent("MouseEvents");
         evObj.initMouseEvent(
             name, true, true, e.ownerDocument.defaultView,
             0, 0, 0, 0, 0,
-            (typeof ctrl != "undefined") ? ctrl : false, false, false, false, 0, null
+            false, false, false, false, 0, null
         );
         e.dispatchEvent(evObj);
     }
