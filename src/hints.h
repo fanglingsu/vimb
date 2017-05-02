@@ -23,7 +23,7 @@
 #include "main.h"
 
 VbResult hints_keypress(Client *c, int key);
-void hints_create(Client *c, char *input);
+void hints_create(Client *c, const char *input);
 void hints_fire(Client *c);
 void hints_follow_link(Client *c, gboolean back, int count);
 void hints_increment_uri(Client *c, int count);

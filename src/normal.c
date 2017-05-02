@@ -621,7 +621,7 @@ static VbResult normal_pass(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_prevnext(Client *c, const NormalCmdInfo *info)
 {
-#if 0 /* TODO need hinting to be available */
+#if 0 /* TODO implement outside of hints.js */
     int count = info->count ? info->count : 1;
     if (info->key2 == ']') {
         hints_follow_link(FALSE, count);
