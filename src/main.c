@@ -160,7 +160,7 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
         tmp = g_string_new(NULL);
         num = g_strdup_printf("%d", i++);
 
-        /* Construct a new complete odwnload filepath with suffic before the
+        /* Construct a new complete download filepath with suffix before the
          * file extension. */
         do {
             num = g_strdup_printf("%d", i++);

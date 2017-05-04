@@ -53,7 +53,7 @@ char *util_build_path(Client *c, const char *path, const char *dir)
     if ((fexp = util_expand(c, path, expflags))) {
         if (*fexp == '/') {
             /* path is already absolute, no need to use given dir - there is
-             * no need to free fexp, bacuse this should be done by the caller
+             * no need to free fexp, because this should be done by the caller
              * on fullPath later */
             fullPath = fexp;
         } else if (dir && *dir) {
