@@ -241,6 +241,11 @@ VbResult ex_keypress(Client *c, int key)
     VbResult res;
     const char *text;
 
+    if (key == CTRL('C')) {
+        vb_enter(c, 'n');
+        return RESULT_COMPLETE;
+    }
+
     /* delegate call to hint mode if this is active */
     if (c->mode->flags & FLAG_HINTING
         && RESULT_COMPLETE == hints_keypress(c, key)) {
@@ -286,7 +291,6 @@ VbResult ex_keypress(Client *c, int key)
                 break;
 
             case CTRL('['):
-            case CTRL('C'):
                 vb_enter(c, 'n');
                 vb_input_set_text(c, "");
                 break;
