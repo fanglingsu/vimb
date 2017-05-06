@@ -209,9 +209,11 @@ var hints = Object.freeze((function(){
 
             /* recurse into any iframe or frame element */
             for (i = 0; i < win.frames.length; i++) {
-                var rect,
-                    f = win.frames[i],
-                    e = f.frameElement;
+                try {
+                    var rect, f = win.frames[i], e = f.frameElement;
+                } catch (ex) {
+                    continue;
+                }
 
                 if (isVisible(e)) {
                     rect = e.getBoundingClientRect();
