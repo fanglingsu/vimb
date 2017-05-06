@@ -130,7 +130,10 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
     g_assert(c);
     g_assert(arg);
     g_assert(c->webview);
-    g_assert(arg->i == COMMAND_YANK_URI || arg->i == COMMAND_YANK_SELECTION);
+    g_assert(
+        arg->i == COMMAND_YANK_URI ||
+        arg->i == COMMAND_YANK_SELECTION ||
+        arg->i == COMMAND_YANK_ARG);
 
     if (arg->i == COMMAND_YANK_URI) {
         if ((uri = webkit_web_view_get_uri(c->webview))) {
@@ -141,6 +144,9 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
         webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
         /* read back copy from clipboard */
         yanked = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+    } else {
+        /* use current arg.s as new clipboard content */
+        yanked = g_strdup(arg->s);
     }
 
     if(!yanked) {
