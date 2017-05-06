@@ -671,6 +671,27 @@ will complete only URIs that contain the words foo and bar.
 .PD
 .RE
 .TP
+.B bookmarks
+The bookmark completion is similar to the history completion, but does match
+only the tags of the bookmarks.
+The bookmark completion is started by `:open \fB!\fP`
+or `:tabopen \fB!\fP` and does a prefix search for all given words in
+the bookmark tags.
+.sp
+Example:
+.RS
+.PD 0
+.IP ":open \fB!\fPfoo ba"
+will match all bookmarks that have tags starting with "foo" and "ba".
+If the bookmark does not have any tags set, the URL is split on `.' and `/'
+into tags.
+.PD
+.RE
+.TP
+.B boomark tags
+The boomark tag completion allows the insertion of already used bookmarks for the
+`:bma ` commands.
+.TP
 .B search
 The search completion allows a filtered list of already done searches.
 This completion starts by `/` or `?` in inputbox and performs a prefix
@@ -681,6 +702,9 @@ All settings listed below can be set with the `:set' command.
 .B closed-max-items (int)
 Maximum number of stored last closed URLs.
 If closed-max-items is set to 0, closed URLs will not be stored.
+.TP
+.B default-zoom (int)
+Default Full-Content zoom level in percent. Default is 100.
 .SH FILES
 .TP
 .IR $XDG_CONFIG_HOME/vimb[/PROFILE]

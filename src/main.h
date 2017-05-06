@@ -230,6 +230,7 @@ struct Client {
         GdkRGBA                 comp_fg[COMP_LAST];
         GdkRGBA                 comp_bg[COMP_LAST];
         PangoFontDescription    *comp_font;
+        guint                   default_zoom;   /* default zoom level in percent */
     } config;
     struct {
         GSList      *list;

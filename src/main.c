@@ -1276,7 +1276,11 @@ static void on_webview_notify_estimated_load_progress(WebKitWebView *webview,
  */
 static void on_webview_notify_title(WebKitWebView *webview, GParamSpec *pspec, Client *c)
 {
-    set_title(c, webkit_web_view_get_title(webview));
+    const char *title = webkit_web_view_get_title(webview);
+
+    if (*title) {
+        set_title(c, title);
+    }
 }
 
 /**

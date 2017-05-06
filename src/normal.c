@@ -805,8 +805,10 @@ static VbResult normal_zoom(Client *c, const NormalCmdInfo *info)
 
     count = info->count ? (float)info->count : 1.0;
 
-    if (info->key2 == 'z') { /* zz reset zoom */
-        webkit_web_view_set_zoom_level(view, 1.0);
+    /* zz reset zoom to it's default zoom level */
+    if (info->key2 == 'z') {
+        webkit_settings_set_zoom_text_only(webkit_web_view_get_settings(view), FALSE);
+        webkit_web_view_set_zoom_level(view, c->config.default_zoom / 100.0);
 
         return RESULT_COMPLETE;
     }
