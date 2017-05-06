@@ -72,8 +72,8 @@ VbResult hints_keypress(Client *c, int key)
     } else {
         fire_timeout(c, true);
         /* try to handle the key by the javascript */
-        call_hints_function(c, "update", (char[]){key, '\0'});
-        return RESULT_COMPLETE;
+        call_hints_function(c, "update", (char[]){'"', key, '"', '\0'});
+        return RESULT_ERROR;
     }
 
     fire_timeout(c, false);
@@ -142,10 +142,9 @@ void hints_create(Client *c, const char *input)
         return;
     }
 
-    call_hints_function(
-        c, "filter",
-        *(input + hints.promptlen) ? input + hints.promptlen : ""
-    );
+    jsargs = g_strdup_printf("'%s'", *(input + hints.promptlen) ? input + hints.promptlen : "");
+    call_hints_function(c, "filter", jsargs);
+    g_free(jsargs);
 }
 
 void hints_focus_next(Client *c, const gboolean back)
@@ -348,7 +347,6 @@ static void call_hints_function(Client *c, const char *func, const char* args)
     jscode = g_strdup_printf("hints.%s(%s);", func, args);
     ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)hints_function_callback);
     g_free(jscode);
-
 }
 
 static void fire_timeout(Client *c, gboolean on)
