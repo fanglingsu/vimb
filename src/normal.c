@@ -23,6 +23,7 @@
 #include "ascii.h"
 #include "command.h"
 #include "config.h"
+#include "hints.h"
 #include "ext-proxy.h"
 #include "main.h"
 #include "normal.h"
@@ -219,7 +220,7 @@ void normal_enter(Client *c)
     /* Make sure that when the browser area becomes visible, it will get mouse
      * and keyboard events */
     gtk_widget_grab_focus(GTK_WIDGET(c->webview));
-    /* TODO clear possible active hints */
+    hints_clear(c);
 }
 
 /**
@@ -495,7 +496,7 @@ static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info)
     char *js;
     int count = info->count ? info->count : 1;
 
-    js = g_strdup_printf(INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
+    js = g_strdup_printf(JS_INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
     ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 
@@ -621,7 +622,7 @@ static VbResult normal_pass(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_prevnext(Client *c, const NormalCmdInfo *info)
 {
-#if 0 /* TODO need hinting to be available */
+#if 0 /* TODO implement outside of hints.js */
     int count = info->count ? info->count : 1;
     if (info->key2 == ']') {
         hints_follow_link(FALSE, count);

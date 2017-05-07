@@ -1,9 +1,10 @@
 BASEDIR=..
 include $(BASEDIR)/config.mk
 
-SUBDIRS = webextension
-OBJ     = $(patsubst %.c, %.o, $(wildcard *.c))
-JSFILES = $(wildcard scripts/*.js)
+SUBDIRS  = webextension
+OBJ      = $(patsubst %.c, %.o, $(wildcard *.c))
+JSFILES  = $(wildcard scripts/*.js)
+CSSFILES = $(wildcard scripts/*.css)
 
 all: vimb $(SUBDIRS:%=%.subdir-all)
 
@@ -22,10 +23,10 @@ config.h:
 	@echo create $@ from config.def.h
 	$(Q)cp config.def.h $@
 
-scripts/scripts.h: $(JSFILES)
+scripts/scripts.h: $(JSFILES) $(CSSFILES)
 	$(Q)$(RM) $@
-	@echo "create $@ from *.js"
-	$(Q)for file in $(JSFILES); do \
+	@echo "create $@ from *.{css,js}"
+	$(Q)for file in $(JSFILES) $(CSSFILES); do \
 		./scripts/js2h.sh $$file >> $@; \
 	done
 

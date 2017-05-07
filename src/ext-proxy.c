@@ -36,6 +36,8 @@ static void on_vertical_scroll(GDBusConnection *connection,
         GVariant *parameters, Client *c);
 static void dbus_call(Client *c, const char *method, GVariant *param,
         GAsyncReadyCallback callback);
+static GVariant *dbus_call_sync(Client *c, const char *method, GVariant
+        *param);
 static void on_web_extension_page_created(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
         const char *interface_name, const char *signal_name,
@@ -180,6 +182,11 @@ void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 	}
 }
 
+GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
+{
+    return dbus_call_sync(c, "EvalJs", g_variant_new("(s)", js));
+}
+
 /**
  * Request the web extension to focus first editable element.
  * Returns whether an focusable element was found or not.
@@ -209,6 +216,29 @@ static void dbus_call(Client *c, const char *method, GVariant *param,
         return;
     }
     g_dbus_proxy_call(c->dbusproxy, method, param, G_DBUS_CALL_FLAGS_NONE, -1, NULL, callback, c);
+}
+
+/**
+ * Call a dbus method syncron.
+ */
+static GVariant *dbus_call_sync(Client *c, const char *method, GVariant *param)
+{
+	GVariant *result = NULL;
+    GError *error = NULL;
+
+    if (!c->dbusproxy) {
+        return NULL;
+    }
+
+    result = g_dbus_proxy_call_sync(c->dbusproxy, method, param,
+        G_DBUS_CALL_FLAGS_NONE, 500, NULL, &error);
+
+    if (error) {
+        g_warning("Failed dbus method %s: %s", method, error->message);
+        g_error_free(error);
+    }
+
+	return result;
 }
 
 /**

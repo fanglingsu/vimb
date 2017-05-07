@@ -33,6 +33,7 @@
 #include "config.h"
 #include "ex.h"
 #include "handler.h"
+#include "hints.h"
 #include "history.h"
 #include "main.h"
 #include "map.h"
@@ -225,9 +226,7 @@ void ex_enter(Client *c)
 void ex_leave(Client *c)
 {
     completion_clean(c);
-#if 0
-    hints_clear();
-#endif
+    hints_clear(c);
 }
 
 /**
@@ -242,7 +241,17 @@ VbResult ex_keypress(Client *c, int key)
     VbResult res;
     const char *text;
 
-    /* TODO delegate call to hint mode if this is active */
+    if (key == CTRL('C')) {
+        vb_enter(c, 'n');
+        return RESULT_COMPLETE;
+    }
+
+    /* delegate call to hint mode if this is active */
+    if (c->mode->flags & FLAG_HINTING
+        && RESULT_COMPLETE == hints_keypress(c, key)) {
+
+        return RESULT_COMPLETE;
+    }
 
     /* process the register */
     if (info.phase == PHASE_REG) {
@@ -282,7 +291,6 @@ VbResult ex_keypress(Client *c, int key)
                 break;
 
             case CTRL('['):
-            case CTRL('C'):
                 vb_enter(c, 'n');
                 vb_input_set_text(c, "");
                 break;
@@ -397,7 +405,7 @@ void ex_input_changed(Client *c, const char *text)
     switch (*text) {
         case ';': /* fall through - the modes are handled by hints_create */
         case 'g':
-            /* TODO create hints */
+            hints_create(c, text);
             break;
         case '/': /* fall through */
         case '?':

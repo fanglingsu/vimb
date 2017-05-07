@@ -17,15 +17,18 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _EXT_PROXY_H
-#define _EXT_PROXY_H
+#ifndef _HINTS_H
+#define _HINTS_H
 
 #include "main.h"
 
-const char *ext_proxy_init(void);
-void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback);
-GVariant *ext_proxy_eval_script_sync(Client *c, char *js);
-void ext_proxy_focus_input(Client *c);
-void ext_proxy_set_header(Client *c, const char *headers);
+VbResult hints_keypress(Client *c, int key);
+void hints_create(Client *c, const char *input);
+void hints_fire(Client *c);
+void hints_follow_link(Client *c, gboolean back, int count);
+void hints_increment_uri(Client *c, int count);
+gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode);
+void hints_clear(Client *c);
+void hints_focus_next(Client *c, const gboolean back);
 
-#endif /* end of include guard: _EXT_PROXY_H */
+#endif /* end of include guard: _HINTS_H */

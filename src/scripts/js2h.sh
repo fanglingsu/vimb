@@ -13,13 +13,13 @@ if [ ! -r "$FILE" ]; then
     exit 1
 fi
 
-# Remove the path and .js file extension and turn all chars to upper case to
-# get the constant name.
-CONSTANT=$(echo "$FILE" | sed 's:.*/::g' | sed 's:.js$::g' | tr a-z A-Z)
+# Put file extension and _ before file name, turn all to upper case to get the
+# constant name.
+CONSTANT=$(echo "$FILE" | sed 's:.*/::g' | sed 's:^\(.*\).\(css\|js\):\2_\1:g' | tr a-z A-Z)
 
 # minify the script
 cat $FILE | \
-# removove single line comments
+# remove single line comments
 sed -e 's|^//.*$||g' | \
 # remove linebreaks
 tr '\n\r' ' ' | \

@@ -40,7 +40,6 @@
 #include "main.h"
 #include "map.h"
 #include "normal.h"
-#include "scripts/scripts.h"
 #include "setting.h"
 #include "shortcut.h"
 #include "util.h"
