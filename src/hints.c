@@ -44,7 +44,7 @@ static struct {
 
 extern struct Vimb vb;
 
-static void call_hints_function(Client *c, const char *func, const char* args);
+static gboolean call_hints_function(Client *c, const char *func, const char* args);
 static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
 
@@ -55,10 +55,11 @@ VbResult hints_keypress(Client *c, int key)
         hints_fire(c);
 
         return RESULT_COMPLETE;
-    } else if (key == CTRL('H')) {
+    } else if (key == CTRL('H')) { /* backspace */
         fire_timeout(c, false);
-        call_hints_function(c, "update", "null");
-        return RESULT_MORE; // continue handling the backspace
+        if (call_hints_function(c, "update", "null")) {
+            return RESULT_COMPLETE;
+        }
     } else if (key == KEY_TAB) {
         fire_timeout(c, false);
         hints_focus_next(c, false);
@@ -72,8 +73,9 @@ VbResult hints_keypress(Client *c, int key)
     } else {
         fire_timeout(c, true);
         /* try to handle the key by the javascript */
-        call_hints_function(c, "update", (char[]){'"', key, '"', '\0'});
-        return RESULT_ERROR;
+        if (call_hints_function(c, "update", (char[]){'"', key, '"', '\0'})) {
+            return RESULT_COMPLETE;
+        }
     }
 
     fire_timeout(c, false);
@@ -247,23 +249,23 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static void hints_function_callback(GDBusProxy *proxy, GAsyncResult *result, Client *c)
+static gboolean call_hints_function(Client *c, const char *func, const char* args)
 {
+    GVariant *return_value;
+    char *jscode, *value = NULL;
     gboolean success = FALSE;
-    char *value = NULL;
 
-    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
+    jscode = g_strdup_printf("hints.%s(%s);", func, args);
+    return_value = ext_proxy_eval_script_sync(c, jscode);
+    g_free(jscode);
+
     if (!return_value) {
-        return;
+        return FALSE;
     }
 
     g_variant_get(return_value, "(bs)", &success, &value);
-    if (!success) {
-        return;
-    }
-
-    if (!strncmp(value, "ERROR:", 6)) {
-        return;
+    if (!success || !strncmp(value, "ERROR:", 6)) {
+        return FALSE;
     }
 
     /* following return values mark fired hints */
@@ -338,15 +340,8 @@ static void hints_function_callback(GDBusProxy *proxy, GAsyncResult *result, Cli
 #endif
         }
     }
-}
 
-static void call_hints_function(Client *c, const char *func, const char* args)
-{
-    char *jscode;
-
-    jscode = g_strdup_printf("hints.%s(%s);", func, args);
-    ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)hints_function_callback);
-    g_free(jscode);
+    return TRUE;
 }
 
 static void fire_timeout(Client *c, gboolean on)
