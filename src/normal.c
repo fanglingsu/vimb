@@ -688,7 +688,7 @@ static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
         case 'G':
             if (info->count) {
                 js = g_strdup_printf(
-                        "window.scroll(window.scrollX, %d * (1 + (document.height - window.innerHeight) / 100));",
+                        "window.scroll(window.scrollX, %d * ((document.documentElement.scrollHeight - window.innerHeight) / 100));",
                         info->count);
                 ext_proxy_eval_script(c, js, NULL);
                 g_free(js);
