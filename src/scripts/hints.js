@@ -197,9 +197,6 @@ var hints = Object.freeze((function(){
             if (doc.body) {
                 doc.body.appendChild(hDiv);
             }
-            /* create the default style sheet */
-            createStyle(doc);
-
             docs.push({
                 doc:   doc,
                 start: start,
@@ -316,18 +313,6 @@ var hints = Object.freeze((function(){
             return [-rect.left, -rect.top];
         }
         return [doc.defaultView.scrollX, doc.defaultView.scrollY];
-    }
-
-    function createStyle(doc) {
-        if (doc.hasStyle) {
-            return;
-        }
-        var e = doc.createElement("style");
-        /* HINT_CSS is replaces by the contents of the HINT_CSS constant from config.h */
-        e.innerHTML = "HINT_CSS";
-        doc.head.appendChild(e);
-        /* prevent us from adding the style multiple times */
-        doc.hasStyle = true;
     }
 
     function focus(back) {

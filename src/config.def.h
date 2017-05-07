@@ -52,35 +52,3 @@
 #define SETTING_HOME_PAGE                     "about:blank"
 
 #define MAXIMUM_HINTS              500
-
-/* CSS style use on creating hints. This might also be averrules by css out of
- * $XDG_CONFIG_HOME/vimb/style.css file. */
-#define HINT_CSS "#_hintContainer{\
-position:static\
-}\
-._hintLabel{\
--webkit-transform:translate(-4px,-4px);\
-position:absolute;\
-z-index:100000;\
-font:bold .8em monospace;\
-color:#000;\
-background-color:#fff;\
-margin:0;\
-padding:0px 1px;\
-border:1px solid #444;\
-opacity:0.7\
-}\
-._hintElem{\
-background-color:#ff0 !important;\
-color:#000 !important;\
-transition:all 0 !important;\
-transition-delay:all 0 !important\
-}\
-._hintElem._hintFocus{\
-background-color:#8f0 !important\
-}\
-._hintLabel._hintFocus{\
-z-index:100001;\
-opacity:1\
-}"
-

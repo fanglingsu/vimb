@@ -657,6 +657,14 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
         webkit_user_content_manager_remove_all_style_sheets(ucm);
     }
 
+    /* Inject the global styles with author level to allow restyling by user
+     * style sheets. */
+    style = webkit_user_style_sheet_new(CSS_HINTS,
+            WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+            WEBKIT_USER_STYLE_LEVEL_AUTHOR, NULL, NULL);
+    webkit_user_content_manager_add_style_sheet(ucm, style);
+    webkit_user_style_sheet_unref(style);
+
     return CMD_SUCCESS;
 }
 
