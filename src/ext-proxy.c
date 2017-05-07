@@ -213,7 +213,7 @@ static GVariant *dbus_call_sync(Client *c, const char *method, GVariant *param)
     }
 
     result = g_dbus_proxy_call_sync(c->dbusproxy, method, param,
-        G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error);
+        G_DBUS_CALL_FLAGS_NONE, 500, NULL, &error);
 
     if (error) {
         g_warning("Failed dbus method %s: %s", method, error->message);
