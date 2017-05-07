@@ -30,6 +30,10 @@ static gboolean on_new_connection(GDBusServer *server,
         GDBusConnection *connection, gpointer data);
 static void on_proxy_created (GDBusProxy *proxy, GAsyncResult *result,
         gpointer data);
+static void on_vertical_scroll(GDBusConnection *connection,
+        const char *sender_name, const char *object_path,
+        const char *interface_name, const char *signal_name,
+        GVariant *parameters, Client *c);
 static void dbus_call(Client *c, const char *method, GVariant *param,
         GAsyncReadyCallback callback);
 static void on_web_extension_page_created(GDBusConnection *connection,
@@ -153,6 +157,20 @@ static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
             NULL);
 }
 
+/**
+ * Listen to the VerticalScroll signal of the webextension and set the scroll
+ * percent value on the client to update the statusbar.
+ */
+static void on_vertical_scroll(GDBusConnection *connection,
+        const char *sender_name, const char *object_path,
+        const char *interface_name, const char *signal_name,
+        GVariant *parameters, Client *c)
+{
+    g_variant_get(parameters, "(tt)", &c->state.scroll_max, &c->state.scroll_percent);
+
+    vb_statusbar_update(c);
+}
+
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
 	if (callback) {
@@ -217,6 +235,10 @@ static void on_web_extension_page_created(GDBusConnection *connection,
         /* Set the dbus proxy on the right client based on page id. */
         p->dbusproxy = (GDBusProxy*)data;
 
-        /* TODO Subscribe to debus signals here. */
+        /* Subscribe to dbus signals here. */
+        g_dbus_connection_signal_subscribe(connection, NULL,
+                VB_WEBEXTENSION_INTERFACE, "VerticalScroll",
+                VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+                (GDBusSignalCallback)on_vertical_scroll, p, NULL);
     }
 }

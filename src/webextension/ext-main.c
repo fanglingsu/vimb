@@ -33,13 +33,12 @@ static void on_dbus_connection_created(GObject *source_object,
         GAsyncResult *result, gpointer data);
 static void add_onload_event_observers(WebKitDOMDocument *doc,
         WebKitWebExtension *extension);
+static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *event,
+        gpointer data);
 static void emit_page_created(GDBusConnection *connection, guint64 pageid);
 static void emit_page_created_pending(GDBusConnection *connection);
 static void queue_page_created_signal(guint64 pageid);
-#if 0
-static void dbus_emit_signal(const char *name, WebKitWebExtension* extension,
-        GVariant *data);
-#endif
+static void dbus_emit_signal(const char *name, GVariant *data);
 static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         const char *object_path, const char *interface_name, const char *method,
         GVariant *parameters, GDBusMethodInvocation *invocation, gpointer data);
@@ -71,6 +70,10 @@ static const char introspection_xml[] =
     "  </method>"
     "  <signal name='PageCreated'>"
     "   <arg type='t' name='page_id' direction='out'/>"
+    "  </signal>"
+    "  <signal name='VerticalScroll'>"
+    "   <arg type='t' name='max' direction='out'/>"
+    "   <arg type='t' name='percent' direction='out'/>"
     "  </signal>"
     "  <method name='SetHeaderSetting'>"
     "   <arg type='s' name='headers' direction='in'/>"
@@ -208,10 +211,65 @@ static void add_onload_event_observers(WebKitDOMDocument *doc,
      * the event observer where set up. */
     /* TODO this is not needed for strict-focus=on */
     on_editable_change_focus(target, NULL, extension);
+
+    /* Observe scroll events to get current position in the document. */
+    webkit_dom_event_target_add_event_listener(target, "scroll",
+            G_CALLBACK(on_document_scroll), false, NULL);
+    /* Call the callback explicitly to make sure we have the right position
+     * shown in statusbar also in cases the user does not scroll. */
+    on_document_scroll(target, NULL, NULL);
 }
 
 /**
- * Emit the page created signal that is used in the ui process to finish the
+ * Callback called when the document is scrolled.
+ */
+static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *event,
+        gpointer data)
+{
+    WebKitDOMDocument *doc;
+
+    if (WEBKIT_DOM_IS_DOM_WINDOW(target)) {
+        g_object_get(target, "document", &doc, NULL);
+    } else {
+        /* target is a doc document */
+        doc = WEBKIT_DOM_DOCUMENT(target);
+    }
+
+    if (doc) {
+        WebKitDOMElement *b, *de;
+        glong max, scrollTop, scrollHeight, clientHeight;
+        guint percent = 0;
+
+        de = webkit_dom_document_get_document_element(doc);
+        if (!de) {
+            return;
+        }
+        /* Get the clientHeight. */
+        clientHeight = webkit_dom_element_get_client_height(WEBKIT_DOM_ELEMENT(de));
+
+        b = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body(doc));
+        /* Get the scrollTop of the document or the body. */
+        if (!(scrollTop = webkit_dom_element_get_scroll_top(de)) && b) {
+            scrollTop = webkit_dom_element_get_scroll_top(b);
+        }
+        /* Get the scrollHeight of the document or the body. */
+        if (!(scrollHeight = webkit_dom_element_get_scroll_height(de)) && b) {
+            scrollHeight = webkit_dom_element_get_scroll_height(b);
+        }
+
+        /* Get the maximum scrollable page size. This is the size of the whole
+         * document - height of the viewport. */
+        max = scrollHeight - clientHeight ;
+
+        if (scrollTop && max) {
+            percent = (guint)(0.5 + (scrollTop * 100 / max));
+        }
+        dbus_emit_signal("VerticalScroll", g_variant_new("(tt)", max, percent));
+    }
+}
+
+/**
+ * Emit the page created signal that is used in the UI process to finish the
  * dbus proxy connection.
  */
 static void emit_page_created(GDBusConnection *connection, guint64 pageid)
@@ -262,15 +320,13 @@ static void queue_page_created_signal(guint64 pageid)
     ext.page_created_signals = g_array_append_val(ext.page_created_signals, pageid);
 }
 
-#if 0
 /**
  * Emits a signal over dbus.
  *
  * @name:   Signal name to emit.
  * @data:   GVariant value used as value for the signal or NULL.
  */
-static void dbus_emit_signal(const char *name, WebKitWebExtension* extension,
-        GVariant *data)
+static void dbus_emit_signal(const char *name, GVariant *data)
 {
     GError *error = NULL;
 
@@ -287,7 +343,6 @@ static void dbus_emit_signal(const char *name, WebKitWebExtension* extension,
         g_error_free(error);
     }
 }
-#endif
 
 /**
  * Handle dbus method calls.
