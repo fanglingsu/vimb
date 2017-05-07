@@ -366,11 +366,11 @@ var hints = Object.freeze((function(){
         if (tag === "input" || tag === "textarea" || tag === "select") {
             if (type === "radio" || type === "checkbox") {
                 e.focus();
-                click(e);
+                e.click();
                 return "DONE:";
             }
             if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
-                click(e);
+                e.click();
                 return "DONE:";
             }
             e.focus();
@@ -392,7 +392,7 @@ var hints = Object.freeze((function(){
              */
              window.open(e.getAttribute('href'), '_blank');
         }
-        click(e);
+        e.click();
     }
 
     /* set focus on hint with given index valid hints array */
@@ -409,13 +409,6 @@ var hints = Object.freeze((function(){
             activeHint.label.classList.add(fClass);
             mouseEvent(activeHint.e, "mouseover");
         }
-    }
-
-    function click(e) {
-        mouseEvent(e, "mouseover");
-        mouseEvent(e, "mousedown");
-        mouseEvent(e, "mouseup");
-        mouseEvent(e, "click");
     }
 
     function mouseEvent(e, name) {
