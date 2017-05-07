@@ -40,7 +40,6 @@
 #include "main.h"
 #include "map.h"
 #include "normal.h"
-#include "scripts/scripts.h"
 #include "setting.h"
 #include "shortcut.h"
 #include "util.h"
@@ -1652,7 +1651,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
 {
     WebKitWebView *new;
     WebKitUserContentManager *ucm;
-    WebKitUserScript *script;
 
     /* create a new webview */
     if (webview) {
@@ -1679,13 +1677,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     );
 
     g_signal_connect(webkit_web_context_get_default(), "download-started", G_CALLBACK(on_webctx_download_started), c);
-
-    /* Inject the global hints script. */
-    script = webkit_user_script_new(HINTS,
-            WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
-            WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
-    webkit_user_content_manager_add_script(ucm, script);
-    webkit_user_script_unref(script);
 
     /* Setup script message handlers. */
     webkit_user_content_manager_register_script_message_handler(ucm, "focus");
