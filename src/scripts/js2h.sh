@@ -15,7 +15,7 @@ fi
 
 # Remove the path and .js file extension and turn all chars to upper case to
 # get the constant name.
-CONSTANT=$(echo "$FILE" | sed 's:.*/::g' | sed 's:.js$::g' | tr a-z A-Z)
+CONSTANT=$(echo "$FILE" | sed 's:.*/::g' | sed 's:^\(.*\).\(js\):\2_\1:g' | tr a-z A-Z)
 
 # minify the script
 cat $FILE | \

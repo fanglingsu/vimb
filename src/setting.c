@@ -621,7 +621,7 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
     }
 
     /* Inject the global hints script. */
-    script = webkit_user_script_new(HINTS,
+    script = webkit_user_script_new(JS_HINTS,
             WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
             WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
     webkit_user_content_manager_add_script(ucm, script);

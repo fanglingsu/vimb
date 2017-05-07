@@ -495,7 +495,7 @@ static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info)
     char *js;
     int count = info->count ? info->count : 1;
 
-    js = g_strdup_printf(INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
+    js = g_strdup_printf(JS_INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
     ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 

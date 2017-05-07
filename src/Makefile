@@ -1,9 +1,9 @@
 BASEDIR=..
 include $(BASEDIR)/config.mk
 
-SUBDIRS = webextension
-OBJ     = $(patsubst %.c, %.o, $(wildcard *.c))
-JSFILES = $(wildcard scripts/*.js)
+SUBDIRS  = webextension
+OBJ      = $(patsubst %.c, %.o, $(wildcard *.c))
+JSFILES  = $(wildcard scripts/*.js)
 
 all: vimb $(SUBDIRS:%=%.subdir-all)
 
