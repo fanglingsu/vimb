@@ -23,6 +23,7 @@
 #include "ascii.h"
 #include "command.h"
 #include "config.h"
+#include "hints.h"
 #include "ext-proxy.h"
 #include "main.h"
 #include "normal.h"
@@ -219,7 +220,7 @@ void normal_enter(Client *c)
     /* Make sure that when the browser area becomes visible, it will get mouse
      * and keyboard events */
     gtk_widget_grab_focus(GTK_WIDGET(c->webview));
-    /* TODO clear possible active hints */
+    hints_clear(c);
 }
 
 /**
