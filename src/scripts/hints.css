@@ -17,7 +17,8 @@
     background-color:#ff0 !important;
     color:#000 !important;
     transition-delay:all 0 !important;
-    transition:all 0 !important
+    transition:all 0 !important;
+    opacity:1 !important
 }
 ._hintElem._hintFocus{
     background-color:#8f0 !important
