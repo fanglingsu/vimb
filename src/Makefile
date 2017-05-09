@@ -35,9 +35,9 @@ scripts/scripts.h: $(JSFILES) $(CSSFILES)
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
 %.subdir-all: config.h
-	$(Q)$(MAKE) $(MFLAGS) -C $*
+	$(Q)$(MAKE) -C $*
 
 %.subdir-clean:
-	$(Q)$(MAKE) $(MFLAGS) -C $* clean
+	$(Q)$(MAKE) -C $* clean
 
 .PHONY: all clean
