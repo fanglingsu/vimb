@@ -250,6 +250,12 @@ Generate an `:open' prompt with hint's URI.
 .B ;T
 Generate an `:tabopen' prompt with hint's URI.
 .TP
+.B ;e
+Open the configured editor (`editor-command') with the hinted form element's
+content.
+If the file in editor is saved and the editor is closed, the file
+content will be put back in the form field.
+.TP
 .B ;i
 Open hinted image in the current window.
 .TP
@@ -743,6 +749,9 @@ Switch back to normal mode.
 .B CTRL\-O
 Executes the next command as normal mode command and return to input mode.
 .TP
+.B CTRL\-T
+Open configured editor with content of current form field.
+.TP
 .B CTRL\-V
 Pass the next key press directly to WebKit.
 .TP
@@ -813,6 +822,12 @@ If closed-max-items is set to 0, closed URLs will not be stored.
 .TP
 .B default-zoom (int)
 Default Full-Content zoom level in percent. Default is 100.
+.TP
+.B editor-command (string)
+Command with placeholder '%s' called if form filler is opened with $EDITOR to
+spawn the editor-like `x-terminal-emulator -e vim %s'.
+To use Gvim as the editor, it's necessary to call it with `-f' to run it
+in the foreground.
 .TP
 .B hint-follow-last (bool)
 If on, vimb automatically follows the last remaining hint on the page.
