@@ -1158,7 +1158,6 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
             return FALSE;
 
         case WEBKIT_POLICY_DECISION_TYPE_RESPONSE:
-            req    = webkit_response_policy_decision_get_request(WEBKIT_RESPONSE_POLICY_DECISION(dec));
             res    = webkit_response_policy_decision_get_response(WEBKIT_RESPONSE_POLICY_DECISION(dec));
             status = webkit_uri_response_get_status_code(res);
 
