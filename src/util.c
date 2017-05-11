@@ -111,6 +111,42 @@ gboolean util_create_dir_if_not_exists(const char *dirpath)
 }
 
 /**
+ * Creates a temporary file with given content.
+ *
+ * Upon success, and if file is non-NULL, the actual file path used is
+ * returned in file. This string should be freed with g_free() when not
+ * needed any longer.
+ */
+gboolean util_create_tmp_file(const char *content, char **file)
+{
+    int fp;
+    ssize_t bytes, len;
+
+    fp = g_file_open_tmp(PROJECT "-XXXXXX", file, NULL);
+    if (fp == -1) {
+        g_critical("Could not create temp file %s", *file);
+        g_free(*file);
+        return false;
+    }
+
+    len = strlen(content);
+
+    /* write content into temporary file */
+    bytes = write(fp, content, len);
+    if (bytes < len) {
+        close(fp);
+        unlink(*file);
+        g_critical("Could not write temp file %s", *file);
+        g_free(*file);
+
+        return false;
+    }
+    close(fp);
+
+    return true;
+}
+
+/**
  * Expand ~user, ~/, $ENV and ${ENV} for given string into new allocated
  * string.
  *
@@ -717,7 +753,7 @@ next:
  * Replaces appearances of search in string by given replace.
  * Returns a new allocated string if search was found.
  */
-char *util_str_replace(const char* search, const char* replace, const char* string)
+char *util_str_replace(const char *search, const char *replace, const char *string)
 {
     if (!string) {
         return NULL;
