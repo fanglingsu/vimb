@@ -561,6 +561,10 @@ gboolean util_filename_fill_completion(Client *c, GtkListStore *store, const cha
     return found;
 }
 
+/**
+ * Returns the script result as string.
+ * Returned string must be freed by g_free.
+ */
 char *util_js_result_as_string(WebKitJavascriptResult *result)
 {
     JSValueRef value;

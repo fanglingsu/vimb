@@ -271,6 +271,7 @@ void vb_echo(Client *c, MessageType type, gboolean hide, const char *error, ...)
 void vb_echo_force(Client *c, MessageType type, gboolean hide, const char *error, ...);
 void vb_enter(Client *c, char id);
 void vb_enter_prompt(Client *c, char id, const char *prompt, gboolean print_prompt);
+Client *vb_get_client_for_page_id(guint64 pageid);
 char *vb_input_get_text(Client *c);
 void vb_input_set_text(Client *c, const char *text);
 void vb_input_update_style(Client *c);

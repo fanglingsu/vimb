@@ -95,7 +95,7 @@ static void vimb_cleanup(void);
 static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_script_message_focus(WebKitUserContentManager *manager,
-        WebKitJavascriptResult *message, Client *c);
+        WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
 
@@ -276,6 +276,21 @@ void vb_enter_prompt(Client *c, char id, const char *prompt, gboolean print_prom
          * event listener could grep the new prompt */
         vb_echo_force(c, MSG_NORMAL, FALSE, c->state.prompt);
     }
+}
+
+/**
+ * Returns the client for given page id.
+ */
+Client *vb_get_client_for_page_id(guint64 pageid)
+{
+    Client *c;
+    /* Search for the client with the same page id. */
+    for (c = vb.clients; c && c->page_id != pageid; c = c->next);
+
+    if (c) {
+        return c;
+    }
+    return NULL;
 }
 
 /**
@@ -1679,17 +1694,32 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
 
     /* Setup script message handlers. */
     webkit_user_content_manager_register_script_message_handler(ucm, "focus");
-    g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), c);
+    g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), NULL);
 
     return new;
 }
 
 static void on_script_message_focus(WebKitUserContentManager *manager,
-        WebKitJavascriptResult *message, Client *c)
+        WebKitJavascriptResult *res, gpointer data)
 {
+    char *message;
+    GVariant *variant;
+    guint64 pageid;
     gboolean is_focused;
+    Client *c;
 
-    is_focused = (gboolean)util_js_result_as_number(message);
+    message = util_js_result_as_string(res);
+    variant = g_variant_parse(G_VARIANT_TYPE("(tb)"), message, NULL, NULL, NULL);
+    g_free(message);
+
+    g_variant_get(variant, "(tb)", &pageid, &is_focused);
+    g_variant_unref(variant);
+
+    c = vb_get_client_for_page_id(pageid);
+    if (!c) {
+        return;
+    }
+
     /* Don't change the mode if we are in pass through mode. */
     if (c->mode->id == 'n' && is_focused) {
         vb_enter(c, 'i');

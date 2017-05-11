@@ -28,12 +28,14 @@ static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer data);
 static gboolean on_new_connection(GDBusServer *server,
         GDBusConnection *connection, gpointer data);
+static void on_connection_close(GDBusConnection *connection, gboolean
+        remote_peer_vanished, GError *error, gpointer data);
 static void on_proxy_created (GDBusProxy *proxy, GAsyncResult *result,
         gpointer data);
 static void on_vertical_scroll(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
         const char *interface_name, const char *signal_name,
-        GVariant *parameters, Client *c);
+        GVariant *parameters, gpointer data);
 static void dbus_call(Client *c, const char *method, GVariant *param,
         GAsyncReadyCallback callback);
 static GVariant *dbus_call_sync(Client *c, const char *method, GVariant
@@ -118,7 +120,7 @@ static gboolean on_new_connection(GDBusServer *server,
     /* Create dbus proxy. */
     g_return_val_if_fail(G_IS_DBUS_CONNECTION(connection), FALSE);
 
-    /*g_signal_connect(connection, "closed", G_CALLBACK(connection_closed_cb), NULL);*/
+    g_signal_connect(connection, "closed", G_CALLBACK(on_connection_close), NULL);
 
     g_dbus_proxy_new(connection,
             G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES|G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
@@ -131,6 +133,14 @@ static gboolean on_new_connection(GDBusServer *server,
             NULL);
 
     return TRUE;
+}
+
+static void on_connection_close(GDBusConnection *connection, gboolean
+        remote_peer_vanished, GError *error, gpointer data)
+{
+    if (error && !remote_peer_vanished) {
+        g_warning("Unexpected lost connection to web extension: %s", error->message);
+    }
 }
 
 static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
@@ -166,9 +176,19 @@ static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
 static void on_vertical_scroll(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
         const char *interface_name, const char *signal_name,
-        GVariant *parameters, Client *c)
+        GVariant *parameters, gpointer data)
 {
-    g_variant_get(parameters, "(tt)", &c->state.scroll_max, &c->state.scroll_percent);
+    glong max;
+    guint percent;
+    guint64 pageid;
+    Client *c;
+
+    g_variant_get(parameters, "(ttq)", &pageid, &max, &percent);
+    c = vb_get_client_for_page_id(pageid);
+    if (c) {
+        c->state.scroll_max     = max;
+        c->state.scroll_percent = percent;
+    }
 
     vb_statusbar_update(c);
 }
@@ -176,15 +196,15 @@ static void on_vertical_scroll(GDBusConnection *connection,
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
 	if (callback) {
-        dbus_call(c, "EvalJs", g_variant_new("(s)", js), callback);
+        dbus_call(c, "EvalJs", g_variant_new("(ts)", js, c->page_id), callback);
 	} else {
-        dbus_call(c, "EvalJsNoResult", g_variant_new("(s)", js), NULL);
+        dbus_call(c, "EvalJsNoResult", g_variant_new("(ts)", c->page_id, js), NULL);
 	}
 }
 
 GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
 {
-    return dbus_call_sync(c, "EvalJs", g_variant_new("(s)", js));
+    return dbus_call_sync(c, "EvalJs", g_variant_new("(ts)", c->page_id, js));
 }
 
 /**
@@ -193,7 +213,7 @@ GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
  */
 void ext_proxy_focus_input(Client *c)
 {
-    dbus_call(c, "FocusInput", NULL, NULL);
+    dbus_call(c, "FocusInput", g_variant_new("(t)", c->page_id), NULL);
 }
 
 /**
@@ -252,23 +272,22 @@ static void on_web_extension_page_created(GDBusConnection *connection,
         const char *interface_name, const char *signal_name,
         GVariant *parameters, gpointer data)
 {
-    Client *p;
-    guint64 page_id;
+    Client *c;
+    guint64 pageid;
 
-    g_variant_get(parameters, "(t)", &page_id);
+    g_variant_get(parameters, "(t)", &pageid);
 
     /* Search for the client with the same page id as returned by the
      * webextension. */
-    for (p = vb.clients; p && p->page_id != page_id; p = p->next);
-
-    if (p) {
+    c = vb_get_client_for_page_id(pageid);
+    if (c) {
         /* Set the dbus proxy on the right client based on page id. */
-        p->dbusproxy = (GDBusProxy*)data;
+        c->dbusproxy = (GDBusProxy*)data;
 
         /* Subscribe to dbus signals here. */
         g_dbus_connection_signal_subscribe(connection, NULL,
                 VB_WEBEXTENSION_INTERFACE, "VerticalScroll",
                 VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
-                (GDBusSignalCallback)on_vertical_scroll, p, NULL);
+                (GDBusSignalCallback)on_vertical_scroll, NULL, NULL);
     }
 }
