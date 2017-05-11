@@ -24,7 +24,7 @@ the project page of [Vimb][].
 
 ## Packages
 
-- Arch Linux [vimb-git][]
+- Arch Linux [arch-git][]
 - Gentoo [gentoo-git][], [gentoo][]
 
 ## dependencies
