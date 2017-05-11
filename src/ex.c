@@ -1324,6 +1324,10 @@ static gboolean history(Client *c, gboolean prev)
         exhist.active = new;
     }
 
+    if (!exhist.active) {
+        goto failed;
+    }
+
     vb_echo_force(c, MSG_NORMAL, FALSE, "%s%s", exhist.prefix, (char*)exhist.active->data);
 
     g_free(input);
