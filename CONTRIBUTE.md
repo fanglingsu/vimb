@@ -3,6 +3,13 @@
 This document contains guidelines for contributing to vimb, as well as useful
 hints when doing so.
 
+## Communication
+
+If you wan't to discuss some feature or provide some suggestion that can't be
+done very well with the github issues. You should use the [mailing list][mail]
+for this purpose. Else it's a good decision to use the features provided by
+github for that.
+
 ## Patching and Coding style
 
 ### File Layout
@@ -69,3 +76,4 @@ To run vimb without installation you could run as a sandbox like this
 This will compile and install vimb into the local _sandbox_ folder in the
 project directory.
 
+[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
