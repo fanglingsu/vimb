@@ -196,7 +196,7 @@ static void on_vertical_scroll(GDBusConnection *connection,
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
 	if (callback) {
-        dbus_call(c, "EvalJs", g_variant_new("(ts)", js, c->page_id), callback);
+        dbus_call(c, "EvalJs", g_variant_new("(ts)", c->page_id, js), callback);
 	} else {
         dbus_call(c, "EvalJsNoResult", g_variant_new("(ts)", c->page_id, js), NULL);
 	}
