@@ -33,6 +33,7 @@ typedef void *(*Util_Content_Func)(const char*, const char*);
 char *util_build_path(Client *c, const char *path, const char *dir);
 void util_cleanup(void);
 gboolean util_create_dir_if_not_exists(const char *dirpath);
+gboolean util_create_tmp_file(const char *content, char **file);
 char *util_expand(Client *c, const char *src, int expflags);
 gboolean util_file_append(const char *file, const char *format, ...);
 gboolean util_file_prepend(const char *file, const char *format, ...);

@@ -271,6 +271,7 @@ void vb_echo(Client *c, MessageType type, gboolean hide, const char *error, ...)
 void vb_echo_force(Client *c, MessageType type, gboolean hide, const char *error, ...);
 void vb_enter(Client *c, char id);
 void vb_enter_prompt(Client *c, char id, const char *prompt, gboolean print_prompt);
+Client *vb_get_client_for_page_id(guint64 pageid);
 char *vb_input_get_text(Client *c);
 void vb_input_set_text(Client *c, const char *text);
 void vb_input_update_style(Client *c);
@@ -279,7 +280,7 @@ void vb_mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
     ModeKeyFunc keypress, ModeInputChangedFunc input_changed);
 VbResult vb_mode_handle_key(Client *c, int key);
 void vb_modelabel_update(Client *c, const char *label);
-void vb_quit(Client *c, gboolean force);
+gboolean vb_quit(Client *c, gboolean force);
 void vb_register_add(Client *c, char buf, const char *value);
 const char *vb_register_get(Client *c, char buf);
 void vb_statusbar_update(Client *c);

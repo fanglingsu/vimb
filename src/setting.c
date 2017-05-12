@@ -25,6 +25,7 @@
 #include "ext-proxy.h"
 #include "main.h"
 #include "setting.h"
+#include "scripts/scripts.h"
 #include "shortcut.h"
 
 typedef enum {
@@ -87,6 +88,11 @@ void setting_init(Client *c)
     setting_add(c, "fontsize", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
     setting_add(c, "frame-flattening", TYPE_BOOLEAN, &off, webkit, 0, "enable-frame-flattening");
     setting_add(c, "header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, "header");
+    i = 1000;
+    setting_add(c, "hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
+    setting_add(c, "hintkeys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
+    setting_add(c, "hint-follow-last", TYPE_BOOLEAN, &on, NULL, 0, NULL);
+    setting_add(c, "hint-number-same-length", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "html5-database", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-database");
     setting_add(c, "html5-local-storage", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-local-storage");
     setting_add(c, "hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing");
@@ -614,6 +620,13 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
         webkit_user_content_manager_remove_all_scripts(ucm);
     }
 
+    /* Inject the global scripts. */
+    script = webkit_user_script_new(JS_HINTS " " JS_SCROLL,
+            WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+            WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
+    webkit_user_content_manager_add_script(ucm, script);
+    webkit_user_script_unref(script);
+
     return CMD_SUCCESS;
 }
 
@@ -643,6 +656,14 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
     } else {
         webkit_user_content_manager_remove_all_style_sheets(ucm);
     }
+
+    /* Inject the global styles with author level to allow restyling by user
+     * style sheets. */
+    style = webkit_user_style_sheet_new(CSS_HINTS,
+            WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+            WEBKIT_USER_STYLE_LEVEL_AUTHOR, NULL, NULL);
+    webkit_user_content_manager_add_style_sheet(ucm, style);
+    webkit_user_style_sheet_unref(style);
 
     return CMD_SUCCESS;
 }

@@ -53,7 +53,7 @@ char *util_build_path(Client *c, const char *path, const char *dir)
     if ((fexp = util_expand(c, path, expflags))) {
         if (*fexp == '/') {
             /* path is already absolute, no need to use given dir - there is
-             * no need to free fexp, bacuse this should be done by the caller
+             * no need to free fexp, because this should be done by the caller
              * on fullPath later */
             fullPath = fexp;
         } else if (dir && *dir) {
@@ -108,6 +108,42 @@ gboolean util_create_dir_if_not_exists(const char *dirpath)
     }
 
     return TRUE;
+}
+
+/**
+ * Creates a temporary file with given content.
+ *
+ * Upon success, and if file is non-NULL, the actual file path used is
+ * returned in file. This string should be freed with g_free() when not
+ * needed any longer.
+ */
+gboolean util_create_tmp_file(const char *content, char **file)
+{
+    int fp;
+    ssize_t bytes, len;
+
+    fp = g_file_open_tmp(PROJECT "-XXXXXX", file, NULL);
+    if (fp == -1) {
+        g_critical("Could not create temp file %s", *file);
+        g_free(*file);
+        return false;
+    }
+
+    len = strlen(content);
+
+    /* write content into temporary file */
+    bytes = write(fp, content, len);
+    if (bytes < len) {
+        close(fp);
+        unlink(*file);
+        g_critical("Could not write temp file %s", *file);
+        g_free(*file);
+
+        return false;
+    }
+    close(fp);
+
+    return true;
 }
 
 /**
@@ -525,6 +561,10 @@ gboolean util_filename_fill_completion(Client *c, GtkListStore *store, const cha
     return found;
 }
 
+/**
+ * Returns the script result as string.
+ * Returned string must be freed by g_free.
+ */
 char *util_js_result_as_string(WebKitJavascriptResult *result)
 {
     JSValueRef value;
@@ -717,7 +757,7 @@ next:
  * Replaces appearances of search in string by given replace.
  * Returns a new allocated string if search was found.
  */
-char *util_str_replace(const char* search, const char* replace, const char* string)
+char *util_str_replace(const char *search, const char *replace, const char *string)
 {
     if (!string) {
         return NULL;

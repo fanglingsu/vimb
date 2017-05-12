@@ -1,0 +1,29 @@
+#_hintContainer{
+    position:static
+}
+._hintLabel{
+    -webkit-transform:translate(-4px,-4px);
+    background-color:#fff;
+    border:1px solid #444;
+    color:#000;
+    font:bold .8em monospace;
+    margin:0;
+    opacity:0.7;
+    padding:0px 1px;
+    position:absolute;
+    z-index:100000
+}
+._hintElem{
+    background-color:#ff0 !important;
+    color:#000 !important;
+    transition-delay:all 0 !important;
+    transition:all 0 !important;
+    opacity:1 !important
+}
+._hintElem._hintFocus{
+    background-color:#8f0 !important
+}
+._hintLabel._hintFocus{
+    opacity:1;
+    z-index:10000
+}

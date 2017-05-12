@@ -32,15 +32,15 @@ uninstall:
 clean: $(SRCDIR).subdir-clean
 
 sandbox:
-	$(Q)$(MAKE) $(MFLAGS) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
+	$(Q)$(MAKE) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
 
 runsandbox: sandbox
 	sandbox/usr/bin/vimb
 
 %.subdir-all:
-	$(Q)$(MAKE) $(MFLAGS) -C $*
+	$(Q)$(MAKE) -C $*
 
 %.subdir-clean:
-	$(Q)$(MAKE) $(MFLAGS) -C $* clean
+	$(Q)$(MAKE) -C $* clean
 
 .PHONY: all options install uninstall clean sandbox runsandbox

@@ -23,6 +23,7 @@
 #include "ascii.h"
 #include "command.h"
 #include "config.h"
+#include "hints.h"
 #include "ext-proxy.h"
 #include "main.h"
 #include "normal.h"
@@ -219,7 +220,7 @@ void normal_enter(Client *c)
     /* Make sure that when the browser area becomes visible, it will get mouse
      * and keyboard events */
     gtk_widget_grab_focus(GTK_WIDGET(c->webview));
-    /* TODO clear possible active hints */
+    hints_clear(c);
 }
 
 /**
@@ -495,7 +496,7 @@ static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info)
     char *js;
     int count = info->count ? info->count : 1;
 
-    js = g_strdup_printf(INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
+    js = g_strdup_printf(JS_INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
     ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 
@@ -621,7 +622,7 @@ static VbResult normal_pass(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_prevnext(Client *c, const NormalCmdInfo *info)
 {
-#if 0 /* TODO need hinting to be available */
+#if 0 /* TODO implement outside of hints.js */
     int count = info->count ? info->count : 1;
     if (info->key2 == ']') {
         hints_follow_link(FALSE, count);
@@ -650,77 +651,9 @@ static VbResult normal_quit(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
 {
-    int x = 0, y = 0, page_height = 0, count = info->count ? info->count : 1;
     char *js;
-    GtkAllocation alloc;
 
-    /* The overall page height is only required for the <C-*> commands. */
-    if (VB_IS_CTRL(info->key)) {
-        gtk_widget_get_allocation(GTK_WIDGET(c->webview), &alloc);
-        page_height = (int)alloc.height;
-    }
-
-    switch (info->key) {
-        case 'j':
-            y = count * c->config.scrollstep;
-            break;
-        case 'h':
-            x = -count * c->config.scrollstep;
-            break;
-        case 'k':
-            y = -count * c->config.scrollstep;
-            break;
-        case 'l':
-            x = count * c->config.scrollstep;
-            break;
-        case CTRL('D'):
-            y = count * page_height / 2;
-            break;
-        case CTRL('U'):
-            y = -count * page_height / 2;
-            break;
-        case CTRL('F'):
-            y = count * page_height;
-            break;
-        case CTRL('B'):
-            y = -count * page_height;
-            break;
-        case 'G':
-            if (info->count) {
-                js = g_strdup_printf(
-                        "window.scroll(window.scrollX, %d * (1 + (document.height - window.innerHeight) / 100));",
-                        info->count);
-                ext_proxy_eval_script(c, js, NULL);
-                g_free(js);
-                return RESULT_COMPLETE;
-            }
-
-            /* Without count scroll to the end of the page. */
-            ext_proxy_eval_script(c, "window.scroll(window.scrollX, document.body.scrollHeight);", NULL);
-            return RESULT_COMPLETE;
-        case '0':
-            ext_proxy_eval_script(c, "window.scroll(0, window.scrollY);", NULL);
-            return RESULT_COMPLETE;
-        case '$':
-            ext_proxy_eval_script(c, "window.scroll(document.body.scrollWidth, window.scrollY);", NULL);
-            return RESULT_COMPLETE;
-        default:
-            if (info->key2 == 'g') {
-                if (info->count) {
-                    js = g_strdup_printf(
-                            "window.scroll(window.scrollX, %d * (1 + (document.height - window.innerHeight) / 100));",
-                            info->count);
-                    ext_proxy_eval_script(c, js, NULL);
-                    g_free(js);
-                    return RESULT_COMPLETE;
-                }
-                /* Without count gg scrolls to the top of the page. */
-                ext_proxy_eval_script(c, "window.scroll(window.scrollX, 0);", NULL);
-                return RESULT_COMPLETE;
-            }
-            return RESULT_ERROR;
-    }
-    js = g_strdup_printf("window.scrollBy(%d,%d);", x, y);
+    js = g_strdup_printf("vbscroll('%c',%d,%d);", info->key, c->config.scrollstep, info->count);
     ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 

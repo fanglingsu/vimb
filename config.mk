@@ -40,4 +40,3 @@ EXTLDFLAGS  = $(shell pkg-config --libs webkit2gtk-4.0) -shared
 CFLAGS     += $(shell pkg-config --cflags $(LIBS))
 CFLAGS     += ${CPPFLAGS}
 LDFLAGS    += $(shell pkg-config --libs $(LIBS))
-MFLAGS      = --no-print-directory
