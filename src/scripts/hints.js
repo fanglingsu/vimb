@@ -291,7 +291,7 @@ var hints = Object.freeze((function(){
         };
     }
 
-    /* Retrun the hint string for a given number based on configured hintkeys */
+    /* Return the hint string for a given number based on configured hintkeys */
     function getHintString(n) {
         var res = [],
             len = config.hintKeys.length;
@@ -384,17 +384,14 @@ var hints = Object.freeze((function(){
 
     /* internal used methods */
     function open(e, newWin) {
-        /* We call open() and click() in async mode to avoid return as fast as possible.
-         * If we don't return immediately, the EvalJS dbus call will probably timeout and cause
-         * errors.
-         */
+        /* We call open() and click() in async mode to avoid return as fast as possible. */
+        /* If we don't return immediately, the EvalJS dbus call will probably timeout and cause */
+        /* errors. */
         if (newWin && e.hasAttribute('href')) {
-            /* Since the "noopener" vulnerability thing, it's not possible to set an anchor's
-             * target to _blank. Therefore, we can't simulate ctrl-click through _blank like we
-             * used to. Therefore, we limit ourselves to "window.open()" in cases we're firing a
-             * simple <a> link. In other cases, we fire the even normally.
-             */
-
+            /* Since the "noopener" vulnerability thing, it's not possible to set an anchor's */
+            /* target to _blank. Therefore, we can't simulate ctrl-click through _blank like we */
+            /* used to. Therefore, we limit ourselves to "window.open()" in cases we're firing a */
+            /* simple <a> link. In other cases, we fire the even normally. */
             window.setTimeout(function() {
                 window.open(e.getAttribute('href'), '_blank');
                 }, 0
