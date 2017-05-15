@@ -15,7 +15,7 @@ fi
 
 # Put file extension and _ before file name, turn all to upper case to get the
 # constant name.
-CONSTANT=$(echo "$FILE" | sed -e 's:.*/::g' -e's/.*\.css$/CSS_&/g' -e's/.*\.js$/JS_&/g' -e's/\.css$//' -e's/\.js$//' | tr a-z A-Z)
+CONSTANT=$(echo "$FILE" | sed -e 's:.*/::g' -e 's/.*\.css$/CSS_&/g' -e 's/.*\.js$/JS_&/g' -e 's/\.css$//' -e 's/\.js$//' | tr a-z A-Z)
 
 # minify the script
 cat $FILE | \
