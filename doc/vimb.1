@@ -272,6 +272,10 @@ Push the hint's URI to the beginning of the Read It Later queue like the
 `:qunshift' command.
 This is only available if Vimb was compiled with the QUEUE feature.
 .TP
+.B ;x
+Hints like ;o, but instead of opening the hinted URI, the
+`x-hint-command' is run in Vimb.
+.TP
 .BI [ \(dqx ];y
 Yank hint's destination location into primary and secondary clipboard and into
 the register \fIx\fP.
