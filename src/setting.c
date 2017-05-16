@@ -150,6 +150,7 @@ void setting_init(Client *c)
     i = 10;
     /* TODO should be global and not overwritten by a new client */
     setting_add(c, "closed-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.closed_max);
+    setting_add(c, "x-hint-command", TYPE_CHAR, &":o <C-R>;", NULL, 0, NULL);
 
 #ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
     /* gui style settings vimb2 compatibility */

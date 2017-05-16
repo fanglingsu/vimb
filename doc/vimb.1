@@ -856,6 +856,20 @@ To have upper case hint labels, it's possible to add following css to the
 `style.css' file in vimb's configuration directory.
 .IP "._hintLabel {text-transform: uppercase !important;}"
 .RE
+.TP
+.B x-hint-command (string)
+Command used if hint mode ;x is fired.
+The command can be any vimb command string.
+Note that the command is run through the mapping mechanism of vimb so
+it might change the behaviour by adding or changing mappings.
+.RS
+.P
+.PD 0
+.IP ":set x-hint-command=:sh! curl -e <C-R>% <C-R>;"
+This fills the inputbox with the prefilled download command and replaces
+`<C-R>%' with the current URI and `<C-R>;' with the URI of the hinted element.
+.PD
+.RE
 .SH FILES
 .TP
 .IR $XDG_CONFIG_HOME/vimb[/PROFILE]
