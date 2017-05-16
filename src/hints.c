@@ -131,7 +131,7 @@ void hints_create(Client *c, const char *input)
             (char[]){hints.mode, '\0'},
             hints.gmode ? "true" : "false",
             MAXIMUM_HINTS,
-            GET_CHAR(c, "hintkeys"),
+            GET_CHAR(c, "hint-keys"),
             GET_BOOL(c, "hint-follow-last") ? "true" : "false",
             GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
         );

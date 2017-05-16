@@ -189,7 +189,7 @@ Scroll page \fIN\fP steps up.
 Hinting in Vimb is how you accomplish the tasks that you would do with the
 mouse in common mouse-driven browsers: open a URI, yank a URI, save a page and
 so on. When hinting is started, the relevant elements on the page will
-be marked by labels generated from configured `hintkeys'.
+be marked by labels generated from configured `hint-keys'.
 Hints can be selected by using <Tab>, <C-I> or <C-Tab>, <C-O>,
 by typing the chars of the label, or filtering the elements by some text
 that is part of the hinted element (like URI, link text, button label)
@@ -826,14 +826,14 @@ hovered by the mouse.
 CSS style applied to the inputbox completion list item that is currently
 selected.
 .TP
-.B cursivfont (string)
+.B cursiv-font (string)
 The font family used as the default for content using cursive font.
 .TP
 .B default-charset (string)
 The default text charset used when interpreting content with an unspecified
 charset.
 .TP
-.B defaultfont (string)
+.B default-font (string)
 The font family to use as the default for content that does not specify a
 font.
 .TP
@@ -856,7 +856,7 @@ spawn the editor-like `x-terminal-emulator -e vim %s'.
 To use Gvim as the editor, it's necessary to call it with `-f' to run it in
 the foreground.
 .TP
-.B fontsize (int)
+.B font-size (int)
 The default font size used to display text.
 .TP
 .B frame-flattening (bool)
@@ -901,14 +901,14 @@ ambiguous.
 Timeout before automatically following a non-unique numerical hint.
 To disable auto fire of hints, set this value to 0.
 .TP
-.B hintkeys (string)
+.B hint-keys (string)
 The keys used to label and select hints.
 With its default value, each hint has a unique number which can be typed
 to select it, while all other characters are used to filter hints based
 on their text.
 With a value such as asdfg;lkjh,
 each hint is `numbered' based on the characters of the home row.
-Note that the hint matching by label built of hintkeys is case sensitive.
+Note that the hint matching by label built of hint-keys is case sensitive.
 In this vimb differs from some other browsers that show hint labels in upper
 case, but match them lowercase.
 .RS
@@ -976,16 +976,16 @@ Enable or disable support for MediaSource on pages.
 MediaSource is an experimental proposal which extends HTMLMediaElement
 to allow JavaScript to generate media streams for playback.
 .TP
-.B minimumfontsize (int)
+.B minimum-font-size (int)
 The minimum font size used to display text.
 .TP
-.B monofont (string)
+.B monospace-font (string)
 The font family used as the default for content using monospace font.
 .TP
-.B monofontsize (int)
+.B monospace-font-size (int)
 Default font size for the monospace font.
 .TP
-.B offlinecache (bool)
+.B offline-cache (bool)
 Whether to enable HTML5 offline web application cache support.
 Offline web application cache allows web applications to run even
 when the user is not connected to the network.
@@ -1002,16 +1002,16 @@ not allow a page to store data in the windows sessionStorage.
 .B plugins (bool)
 Determines whether or not plugins on the page are enabled.
 .TP
-.B sansfont (string)
+.B sans-serif-font (string)
 The font family used as the default for content using sans-serif font.
 .TP
 .B scripts (bool)
 Determines whether or not JavaScript executes within a page.
 .TP
-.B scrollstep (int)
+.B scroll-step (int)
 Number of pixel vimb scrolls if 'j' or 'k' is used.
 .TP
-.B seriffont (string)
+.B serif-font (string)
 The font family used as the default for content using serif font.
 .TP
 .B site-specific-quirks (bool)
@@ -1029,8 +1029,8 @@ For example, if a user presses the Right key, heuristics determine whether
 there is an element they might be trying to reach towards the right, and if
 there are multiple elements, which element they probably want.
 .TP
-.B statusbar (bool)
-Indicates if the statusbar should be shown.
+.B status-bar (bool)
+Indicates if the status bar should be shown.
 .TP
 .B status-css (string)
 CSS style applied to the status bar on none https pages.
@@ -1038,7 +1038,7 @@ CSS style applied to the status bar on none https pages.
 .B status-ssl-css (string)
 CSS style applied to the status bar on https pages with trusted certificate.
 .TP
-.B status-sslinvalid-css (string)
+.B status-ssl-invalid-css (string)
 CSS style applied to the status bar on https pages with untrusted certificate.
 .TP
 .B strict-ssl (bool)
@@ -1061,6 +1061,9 @@ to complete.
 .TP
 .B useragent (string)
 The user-agent string used by WebKit.
+.TP
+.B user-scripts (bool)
+Indicates if user style sheet file $XDG_CONFIG_HOME/vimb/style.css is sourced.
 .TP
 .B webaudio (bool)
 Enable or disable support for WebAudio on pages.
@@ -1088,7 +1091,7 @@ This fills the inputbox with the prefilled download command and replaces
 .PD
 .RE
 .TP
-.B xssauditor (bool)
+.B xss-auditor (bool)
 Whether to enable the XSS auditor.
 This feature filters some kinds of reflective XSS attacks on vulnerable web
 sites.

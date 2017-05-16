@@ -78,19 +78,18 @@ void setting_init(Client *c)
     setting_add(c, "useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/603.1 (KHTML, like Gecko) " PROJECT "/" VERSION " Version/10.0 Safari/603.1", webkit, 0, "user-agent");
     /* TODO use the real names for webkit settings */
     i = 14;
-    setting_add(c, "fontsize", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
     setting_add(c, "caret", TYPE_BOOLEAN, &off, webkit, 0, "enable-caret-browsing");
-    setting_add(c, "cursivfont", TYPE_CHAR, &"serif", webkit, 0, "cursive-font-family");
+    setting_add(c, "cursiv-font", TYPE_CHAR, &"serif", webkit, 0, "cursive-font-family");
     setting_add(c, "default-charset", TYPE_CHAR, &"utf-8", webkit, 0, "default-charset");
-    setting_add(c, "defaultfont", TYPE_CHAR, &"sans-serif", webkit, 0, "default-font-family");
+    setting_add(c, "default-font", TYPE_CHAR, &"sans-serif", webkit, 0, "default-font-family");
     setting_add(c, "dns-prefetching", TYPE_BOOLEAN, &on, webkit, 0, "enable-dns-prefetching");
     i = SETTING_DEFAULT_FONT_SIZE;
-    setting_add(c, "fontsize", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
+    setting_add(c, "font-size", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
     setting_add(c, "frame-flattening", TYPE_BOOLEAN, &off, webkit, 0, "enable-frame-flattening");
     setting_add(c, "header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, "header");
     i = 1000;
     setting_add(c, "hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
-    setting_add(c, "hintkeys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
+    setting_add(c, "hint-keys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
     setting_add(c, "hint-follow-last", TYPE_BOOLEAN, &on, NULL, 0, NULL);
     setting_add(c, "hint-number-same-length", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "html5-database", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-database");
@@ -106,15 +105,15 @@ void setting_init(Client *c)
     setting_add(c, "mediasource", TYPE_BOOLEAN, &off, webkit, 0, "enable-mediasource");
 #endif
     i = 5;
-    setting_add(c, "minimumfontsize", TYPE_INTEGER, &i, webkit, 0, "minimum-font-size");
-    setting_add(c, "monofont", TYPE_CHAR, &"monospace", webkit, 0, "monospace-font-family");
+    setting_add(c, "minimum-font-size", TYPE_INTEGER, &i, webkit, 0, "minimum-font-size");
+    setting_add(c, "monospace-font", TYPE_CHAR, &"monospace", webkit, 0, "monospace-font-family");
     i = SETTING_DEFAULT_MONOSPACE_FONT_SIZE;
-    setting_add(c, "monofontsize", TYPE_INTEGER, &i, webkit, 0, "default-monospace-font-size");
-    setting_add(c, "offlinecache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache");
+    setting_add(c, "monospace-font-size", TYPE_INTEGER, &i, webkit, 0, "default-monospace-font-size");
+    setting_add(c, "offline-cache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache");
     setting_add(c, "plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");
     setting_add(c, "print-backgrounds", TYPE_BOOLEAN, &on, webkit, 0, "print-backgrounds");
     setting_add(c, "private-browsing", TYPE_BOOLEAN, &off, webkit, 0, "enable-private-browsing");
-    setting_add(c, "sansfont", TYPE_CHAR, &"sans-serif", webkit, 0, "sans-serif-font-family");
+    setting_add(c, "sans-serif-font", TYPE_CHAR, &"sans-serif", webkit, 0, "sans-serif-font-family");
     setting_add(c, "scripts", TYPE_BOOLEAN, &on, webkit, 0, "enable-javascript");
     setting_add(c, "seriffont", TYPE_CHAR, &"serif", webkit, 0, "serif-font-family");
     setting_add(c, "site-specific-quirks", TYPE_BOOLEAN, &off, webkit, 0, "enable-site-specific-quirks");
@@ -124,21 +123,21 @@ void setting_init(Client *c)
     setting_add(c, "webaudio", TYPE_BOOLEAN, &off, webkit, 0, "enable-webaudio");
     setting_add(c, "webgl", TYPE_BOOLEAN, &off, webkit, 0, "enable-webgl");
     setting_add(c, "webinspector", TYPE_BOOLEAN, &on, webkit, 0, "enable-developer-extras");
-    setting_add(c, "xssauditor", TYPE_BOOLEAN, &on, webkit, 0, "enable-xss-auditor");
+    setting_add(c, "xss-auditor", TYPE_BOOLEAN, &on, webkit, 0, "enable-xss-auditor");
 
     /* internal variables */
     setting_add(c, "stylesheet", TYPE_BOOLEAN, &on, user_style, 0, NULL);
-    setting_add(c, "userscripts", TYPE_BOOLEAN, &on, user_scripts, 0, NULL);
+    setting_add(c, "user-scripts", TYPE_BOOLEAN, &on, user_scripts, 0, NULL);
     setting_add(c, "cookie-accept", TYPE_CHAR, &"always", cookie_accept, 0, NULL);
     i = 40;
-    setting_add(c, "scrollstep", TYPE_INTEGER, &i, internal, 0, &c->config.scrollstep);
+    setting_add(c, "scroll-step", TYPE_INTEGER, &i, internal, 0, &c->config.scrollstep);
     setting_add(c, "home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, 0, NULL);
     i = 2000;
     /* TODO should be global and not overwritten by a new client */
     setting_add(c, "history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
     setting_add(c, "editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
     setting_add(c, "strict-ssl", TYPE_BOOLEAN, &on, tls_policy, 0, NULL);
-    setting_add(c, "statusbar", TYPE_BOOLEAN, &on, statusbar, 0, NULL);
+    setting_add(c, "status-bar", TYPE_BOOLEAN, &on, statusbar, 0, NULL);
     i = 1000;
     setting_add(c, "timeoutlen", TYPE_INTEGER, &i, internal, 0, &c->map.timeoutlen);
     setting_add(c, "input-autohide", TYPE_BOOLEAN, &off, input_autohide, 0, &c->config.input_autohide);
@@ -183,7 +182,7 @@ void setting_init(Client *c)
     setting_add(c, "input-error-css", TYPE_CHAR, &"background-color:#f77;font:" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
     setting_add(c, "status-css", TYPE_CHAR, &"color:#fff;background-color:#000;font:" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
     setting_add(c, "status-ssl-css", TYPE_CHAR, &"background-color:#95e454;color:#000;", gui_style, 0, NULL);
-    setting_add(c, "status-sslinvalid-css", TYPE_CHAR, &"background-color:#f77;color:#000;", gui_style, 0, NULL);
+    setting_add(c, "status-ssl-invalid-css", TYPE_CHAR, &"background-color:#f77;color:#000;", gui_style, 0, NULL);
 #endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
 
     /* initialize the shortcuts and set the default shortcuts */

@@ -1584,7 +1584,7 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
         {"input-error-css",             " #input.error{%s}"},
         {"status-css",                  " #statusbar{%s}"},
         {"status-ssl-css",              " #statusbar.secure{%s}"},
-        {"status-sslinvalid-css",       " #statusbar.unsecure{%s}"},
+        {"status-ssl-invalid-css",      " #statusbar.unsecure{%s}"},
 #endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
 
         {0, 0},
