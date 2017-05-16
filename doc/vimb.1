@@ -649,18 +649,6 @@ Contains the pid of the running Vimb instance.
 .B VIMB_XID
 Holds the X-Window id of the Vimb window or of the embedding window if Vimb is
 started with the -e option.
-.TP
-.B VIMB_MIME_TYPE
-The mime-type of the download.
-This variable is only available when the server sent the mime-type header
-with the response and only if the download was not start by the `:save'
-command or the `;s' hinting.
-.TP
-.PD
-.PP
-Example:
-.EX
-:sh ls -l $HOME
 .EE
 .RE
 .TP
@@ -816,18 +804,90 @@ comparison for further typed chars.
 .SH SETTINGS
 All settings listed below can be set with the `:set' command.
 .TP
+.B caret (bool)
+Whether to enable accessibility enhanced keyboard navigation.
+.TP
+.B cookie-accept (string)
+Cookie accept policy {`always', `never', `origin' (accept all non-third-party
+cookies)}.
+.TP
 .B closed-max-items (int)
 Maximum number of stored last closed URLs.
 If closed-max-items is set to 0, closed URLs will not be stored.
 .TP
+.B completion-css (string)
+CSS style applied to the inputbox completion list items.
+.TP
+.B completion-hover-css (string)
+CSS style applied to the inputbox completion list item that is currently
+hovered by the mouse.
+.TP
+.B completion-selected-css (string)
+CSS style applied to the inputbox completion list item that is currently
+selected.
+.TP
+.B cursivfont (string)
+The font family used as the default for content using cursive font.
+.TP
+.B default-charset (string)
+The default text charset used when interpreting content with an unspecified
+charset.
+.TP
+.B defaultfont (string)
+The font family to use as the default for content that does not specify a
+font.
+.TP
 .B default-zoom (int)
 Default Full-Content zoom level in percent. Default is 100.
 .TP
+.B dns-prefetching (bool)
+Indicates if Vimb prefetches domain names.
+.TP
+.B download-path (string)
+Path to the default download directory.
+If no download directory is set, download will be written into current
+directory.
+The following pattern will be expanded if the download is
+started '~/', '~user', '$VAR' and '${VAR}'.
+.TP
 .B editor-command (string)
-Command with placeholder '%s' called if form filler is opened with $EDITOR to
+Command with placeholder '%s' called if form field is opened with $EDITOR to
 spawn the editor-like `x-terminal-emulator -e vim %s'.
-To use Gvim as the editor, it's necessary to call it with `-f' to run it
-in the foreground.
+To use Gvim as the editor, it's necessary to call it with `-f' to run it in
+the foreground.
+.TP
+.B fontsize (int)
+The default font size used to display text.
+.TP
+.B frame-flattening (bool)
+Whether to enable the Frame Flattening.
+With this setting each subframe is expanded to its contents,
+which will flatten all the frames to become one scrollable page.
+.TP
+.B fullscreen (bool)
+Show the current window full-screen.
+.TP
+.B header (list)
+Comma separated list of headers that replaces default header sent by WebKit or
+new headers.
+The format for the header list elements is `name[=[value]]'.
+.sp
+Note that these headers will replace already existing headers.
+If there is no '=' after the header name, then the complete header
+will be removed from the request, if the '=' is present means that
+the header value is set to empty value.
+.sp
+To use '=' within a header value the value must be quoted like shown in
+Example for the Cookie header.
+.RS
+.PP
+Example:
+.PD 0
+.IP ":set header=DNT=1,User-Agent,Cookie='name=value'"
+Send the 'Do Not Track' header with each request and remove the User-Agent
+Header completely from request.
+.PD
+.RE
 .TP
 .B hint-follow-last (bool)
 If on, vimb automatically follows the last remaining hint on the page.
@@ -857,6 +917,163 @@ To have upper case hint labels, it's possible to add following css to the
 .IP "._hintLabel {text-transform: uppercase !important;}"
 .RE
 .TP
+.B history-max-items (int)
+Maximum number of unique items stored in search-, command or URI history.
+If history-max-items is set to 0, the history file will not be changed.
+.TP
+.B home-page (string)
+Homepage that vimb opens if started without a URI.
+.TP
+.B html5-database (bool)
+Whether to enable HTML5 client-side SQL database support.
+Client-side SQL database allows web pages to store structured data
+and be able to use SQL to manipulate that data asynchronously.
+.TP
+.B html5-local-storage (bool)
+Whether to enable HTML5 localStorage support.
+localStorage provides simple synchronous storage access.
+.TP
+.B hyperlink-auditing (bool)
+Enable or disable support for <a ping>.
+.TP
+.B images (bool)
+Determines whether images should be automatically loaded or not.
+.TP
+.B input-autohide (bool)
+If enabled the inputbox will be hidden whenever it contains no text.
+.TP
+.B input-css (string)
+CSS style applied to the inputbox in normal state.
+.TP
+.B input-error-css (string)
+CSS style applied to the inputbox in case of displayed error.
+.TP
+.B javascript-can-access-clipboard (bool)
+Whether JavaScript can access the clipboard.
+.TP
+.B javascript-can-open-windows-automatically (bool)
+Whether JavaScript can open popup windows automatically without user
+intervention.
+.TP
+.B media-playback-allows-inline (bool)
+Whether media playback is full-screen only or inline playback is allowed.
+Setting it to false allows specifying that media playback should be always
+fullscreen.
+.TP
+.B media-playback-requires-user-gesture (bool)
+Whether a user gesture (such as clicking the play button) would be required to
+start media playback or load media.
+Setting it on requires a gesture by the
+user to start playback, or to load the media.
+.TP
+.B media-stream (bool)
+Enable or disable support for MediaSource on pages.
+MediaSource is an experimental proposal which extends HTMLMediaElement
+to allow JavaScript to generate media streams for playback.
+.TP
+.B mediasource (bool)
+Enable or disable support for MediaSource on pages.
+MediaSource is an experimental proposal which extends HTMLMediaElement
+to allow JavaScript to generate media streams for playback.
+.TP
+.B minimumfontsize (int)
+The minimum font size used to display text.
+.TP
+.B monofont (string)
+The font family used as the default for content using monospace font.
+.TP
+.B monofontsize (int)
+Default font size for the monospace font.
+.TP
+.B offlinecache (bool)
+Whether to enable HTML5 offline web application cache support.
+Offline web application cache allows web applications to run even
+when the user is not connected to the network.
+.TP
+.B print-backgrounds (bool)
+Whether background images should be drawn during printing.
+.TP
+.B private-browsing (bool)
+Whether to enable private browsing mode.
+This suppresses  printing of messages into JavaScript Console.
+At the time this is the only way to force WebKit to
+not allow a page to store data in the windows sessionStorage.
+.TP
+.B plugins (bool)
+Determines whether or not plugins on the page are enabled.
+.TP
+.B sansfont (string)
+The font family used as the default for content using sans-serif font.
+.TP
+.B scripts (bool)
+Determines whether or not JavaScript executes within a page.
+.TP
+.B scrollstep (int)
+Number of pixel vimb scrolls if 'j' or 'k' is used.
+.TP
+.B seriffont (string)
+The font family used as the default for content using serif font.
+.TP
+.B site-specific-quirks (bool)
+Enables the site-specific compatibility workarounds.
+.TP
+.B smooth-scrolling (bool)
+Enable or disable support for smooth scrolling.
+.TP
+.B spacial-navigation (bool)
+Whether to enable the Spatial Navigation.
+This feature consists in the ability to navigate between focusable
+elements in a Web page, such as hyperlinks and form controls, by using
+Left, Right, Up and Down arrow keys.
+For example, if a user presses the Right key, heuristics determine whether
+there is an element they might be trying to reach towards the right, and if
+there are multiple elements, which element they probably want.
+.TP
+.B statusbar (bool)
+Indicates if the statusbar should be shown.
+.TP
+.B status-css (string)
+CSS style applied to the status bar on none https pages.
+.TP
+.B status-ssl-css (string)
+CSS style applied to the status bar on https pages with trusted certificate.
+.TP
+.B status-sslinvalid-css (string)
+CSS style applied to the status bar on https pages with untrusted certificate.
+.TP
+.B strict-ssl (bool)
+If 'on', vimb will not load a untrusted https site.
+.TP
+.B stylesheet (bool)
+If 'on' the user defined styles-sheet is used.
+.TP
+.B tabs-to-links (bool)
+Whether the Tab key cycles through elements on the page.
+.sp
+If true, pressing the Tab key will focus the next element in the web view.
+Otherwise, the web view will interpret Tab key presses as normal key presses.
+If the selected element is editable, the Tab key will cause the insertion
+of a Tab character.
+.TP
+.B timeoutlen (int)
+The time in milliseconds that is waited for a key code or mapped key sequence
+to complete.
+.TP
+.B useragent (string)
+The user-agent string used by WebKit.
+.TP
+.B webaudio (bool)
+Enable or disable support for WebAudio on pages.
+WebAudio is an experimental proposal for allowing web pages
+to generate Audio WAVE data from JavaScript.
+.TP
+.B webgl (bool)
+Enable or disable support for WebGL on pages.
+.TP
+.B webinspector (bool)
+Determines whether or not developer tools, such as the Web Inspector, are
+enabled.
+.TP
 .B x-hint-command (string)
 Command used if hint mode ;x is fired.
 The command can be any vimb command string.
@@ -870,6 +1087,11 @@ This fills the inputbox with the prefilled download command and replaces
 `<C-R>%' with the current URI and `<C-R>;' with the URI of the hinted element.
 .PD
 .RE
+.TP
+.B xssauditor (bool)
+Whether to enable the XSS auditor.
+This feature filters some kinds of reflective XSS attacks on vulnerable web
+sites.
 .SH FILES
 .TP
 .IR $XDG_CONFIG_HOME/vimb[/PROFILE]
