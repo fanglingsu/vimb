@@ -49,6 +49,11 @@ root).
     make
     make install
 
+To run vimb without installation for testing it out use the 'runsandbox' make
+target.
+
+    make runsandbox
+
 ## Mailing list
 
 - feature requests, issues and patches can be discussed on the [mailing list][mail]
