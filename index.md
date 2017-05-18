@@ -12,8 +12,9 @@ active: home
 Vimb is built against WebKit1 which is today considered to be insecure and
 outdated. Don't use it anymore!
 <br>
-The WebKit2 port of [vimb][wk2] is far away from being productive. So please
-help to get vimb ported to webkit2 soon.
+A first alpha release of [vimb][wk2] ported on WebKit2 will be released with reduces
+feature set soon. If you like to help getting all the nice features ported to
+new WebKit2 API, please feel free to help us.
 </p>
 
 [Vimb][vimb] is a fast and lightweight vim like web browser based on the
