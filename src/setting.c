@@ -115,7 +115,7 @@ void setting_init(Client *c)
     setting_add(c, "private-browsing", TYPE_BOOLEAN, &off, webkit, 0, "enable-private-browsing");
     setting_add(c, "sans-serif-font", TYPE_CHAR, &"sans-serif", webkit, 0, "sans-serif-font-family");
     setting_add(c, "scripts", TYPE_BOOLEAN, &on, webkit, 0, "enable-javascript");
-    setting_add(c, "seriffont", TYPE_CHAR, &"serif", webkit, 0, "serif-font-family");
+    setting_add(c, "serif-font", TYPE_CHAR, &"serif", webkit, 0, "serif-font-family");
     setting_add(c, "site-specific-quirks", TYPE_BOOLEAN, &off, webkit, 0, "enable-site-specific-quirks");
     setting_add(c, "smooth-scrolling", TYPE_BOOLEAN, &off, webkit, 0, "enable-smooth-scrolling");
     setting_add(c, "spacial-navigation", TYPE_BOOLEAN, &off, webkit, 0, "enable-spatial-navigation");
