@@ -61,6 +61,8 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
 static int statusbar(Client *c, const char *name, DataType type, void *value, void *data);
 static int tls_policy(Client *c, const char *name, DataType type, void *value, void *data);
 static int webkit(Client *c, const char *name, DataType type, void *value, void *data);
+static int webkit_spell_checking(Client *c, const char *name, DataType type, void *value, void *data);
+static int webkit_spell_checking_language(Client *c, const char *name, DataType type, void *value, void *data);
 
 extern struct Vimb vb;
 
@@ -150,6 +152,9 @@ void setting_init(Client *c)
     /* TODO should be global and not overwritten by a new client */
     setting_add(c, "closed-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.closed_max);
     setting_add(c, "x-hint-command", TYPE_CHAR, &":o <C-R>;", NULL, 0, NULL);
+    setting_add(c, "spell-checking", TYPE_BOOLEAN, &off, webkit_spell_checking, 0, NULL);
+    setting_add(c, "spell-checking-languages", TYPE_CHAR, &"en_US", webkit_spell_checking_language, FLAG_LIST|FLAG_NODUP, NULL);
+
 
 #ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
     /* gui style settings vimb2 compatibility */
@@ -711,5 +716,28 @@ static int webkit(Client *c, const char *name, DataType type, void *value, void 
             g_object_set(G_OBJECT(web_setting), property, (char*)value, NULL);
             break;
     }
+    return CMD_SUCCESS;
+}
+
+static int webkit_spell_checking(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    gboolean enabled = *((gboolean*)value);
+
+    webkit_web_context_set_spell_checking_enabled(
+            webkit_web_context_get_default(),
+            enabled);
+
+    return CMD_SUCCESS;
+}
+
+static int webkit_spell_checking_language(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    char **languages = g_strsplit((char*)value, ",", -1);
+
+    webkit_web_context_set_spell_checking_languages(
+            webkit_web_context_get_default(),
+            (const char * const *)languages);
+    g_strfreev(languages);
+
     return CMD_SUCCESS;
 }

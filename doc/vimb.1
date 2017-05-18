@@ -1033,6 +1033,18 @@ For example, if a user presses the Right key, heuristics determine whether
 there is an element they might be trying to reach towards the right, and if
 there are multiple elements, which element they probably want.
 .TP
+.B spell-checking (bool)
+Enable or disable the spell checking feature.
+.TP
+.B spell-checking-languages (string)
+Set comma separated list of spell checking languages to be used for spell
+checking.
+.br
+The locale string typically is in the form lang_COUNTRY, where lang is an
+ISO-639 language code, and COUNTRY is an ISO-3166 country code. For instance,
+sv_FI for Swedish as written in Finland or pt_BR for Portuguese as written in
+Brazil.
+.TP
 .B status-bar (bool)
 Indicates if the status bar should be shown.
 .TP
