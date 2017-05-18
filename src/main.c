@@ -142,7 +142,6 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
         GString *tmp;
         gssize suffix;
         int i = 1;
-        suffix = 2;
 
         /* position on .tar. (special case, extension with two dots),
          * position on last dot (if any) otherwise */
@@ -158,7 +157,6 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
         }
 
         tmp = g_string_new(NULL);
-        num = g_strdup_printf("%d", i++);
 
         /* Construct a new complete download filepath with suffix before the
          * file extension. */
@@ -1154,7 +1152,6 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
 
         case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
             a   = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
-            req = webkit_navigation_action_get_request(a);
 
             /* Ignore opening new window if this was started without user gesture. */
             if (!webkit_navigation_action_is_user_gesture(a)) {
@@ -1167,6 +1164,7 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
                 /* This is triggered on link click for links with *
                  * target="_blank". Maybe it should be configurable if the
                  * page is opened as tabe or a new instance. */
+                req = webkit_navigation_action_get_request(a);
                 spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
                 return TRUE;
             }
