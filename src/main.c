@@ -1744,7 +1744,7 @@ int main(int argc, char* argv[])
     GOptionEntry opts[] = {
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid,  "Reparents to window specified by xid", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
-        {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, profileOptionArgFunc, "Profile name", NULL},
+        {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
