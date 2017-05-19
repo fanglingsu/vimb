@@ -23,6 +23,7 @@
 #include "completion.h"
 #include "config.h"
 #include "ext-proxy.h"
+#include "hints.js.h"
 #include "main.h"
 #include "setting.h"
 #include "scripts/scripts.h"
