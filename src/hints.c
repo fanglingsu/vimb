@@ -27,7 +27,6 @@
 #include "main.h"
 #include "ascii.h"
 #include "command.h"
-#include "hints.js.h"
 #include "input.h"
 #include "map.h"
 #include "ext-proxy.h"
