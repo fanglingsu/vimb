@@ -1206,6 +1206,13 @@ static void on_webview_load_changed(WebKitWebView *webview,
             c->state.progress = 0;
             vb_statusbar_update(c);
             set_title(c, webkit_web_view_get_uri(webview));
+            /* Make sure hinting is cleared before the new page is loaded.
+             * Without that vimb would still be in hinting mode after hinting
+             * was started and some links was clicked my mouse. Even if there
+             * could not hints be shown. */
+            if (c->mode->flags & FLAG_HINTING) {
+                vb_enter(c, 'n');
+            }
             break;
 
         case WEBKIT_LOAD_REDIRECTED:
