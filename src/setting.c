@@ -607,6 +607,7 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
     gboolean enabled = *(gboolean*)value;
 
     ucm = webkit_web_view_get_user_content_manager(c->webview);
+    webkit_user_content_manager_remove_all_scripts(ucm);
 
     if (enabled) {
         if (vb.files[FILES_SCRIPT]
@@ -621,8 +622,6 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
             webkit_user_script_unref(script);
             g_free(source);
         }
-    } else {
-        webkit_user_content_manager_remove_all_scripts(ucm);
     }
 
     /* Inject the global scripts. */
