@@ -2,7 +2,7 @@ function vbscroll(mode, scrollStep, count) {
     var w = window,
         d = document,
         x = y = 0,
-        ph = d.documentElement.clientHeight,
+        ph = w.innerHeight,
         c = count||1,
         rel = true;
     switch (mode) {
