@@ -400,8 +400,9 @@ var hints = Object.freeze((function(){
             } else {
                 window.location.href = e.getAttribute('href');
             }
+        } else {
+            window.setTimeout(function() {e.click();}, 0);
         }
-        window.setTimeout(function() {e.click();}, 0);
     }
 
     /* set focus on hint with given index valid hints array */
