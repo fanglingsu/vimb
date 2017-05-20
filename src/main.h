@@ -198,6 +198,7 @@ struct Mode {
 #define FLAG_HINTING     0x0002  /* marks active hinting submode */
 #define FLAG_COMPLETION  0x0004  /* marks active completion submode */
 #define FLAG_PASSTHROUGH 0x0008  /* don't handle any other keybind than <esc> */
+#define FLAG_NEW_WIN     0x0010  /* enforce opening of pages into new window */
     unsigned int         flags;
 };
 

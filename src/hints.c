@@ -277,6 +277,13 @@ static gboolean call_hints_function(Client *c, const char *func, const char* arg
         if (!hints.gmode && c->mode->id == 'c') {
             vb_enter(c, 'n');
         }
+        /* If open in new window hinting is use, set a flag on the mode after
+         * changing to normal mode. This is used in on_webview_decide_policy
+         * to enforce opening into new instance for the next navigation
+         * action. */
+        if (hints.mode == 't') {
+            c->mode->flags |= FLAG_NEW_WIN;
+        }
     } else if (!strncmp(value, "INSERT:", 7)) {
         fire_timeout(c, false);
         vb_enter(c, 'i');

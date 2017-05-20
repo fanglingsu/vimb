@@ -1141,8 +1141,14 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
                 webkit_policy_decision_ignore(dec);
                 return TRUE;
             }
-            if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
-                    && (button == 2 || (button == 1 && mod & GDK_CONTROL_MASK))) {
+            /* Spawn new instance if the new win flag is set on the mode, or
+             * the navigation was triggered by CTRL-LeftMouse or MiddleMouse. */
+            if ((c->mode->flags & FLAG_NEW_WIN)
+                || (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
+                    && (button == 2 || (button == 1 && mod & GDK_CONTROL_MASK)))) {
+
+                /* Remove the FLAG_NEW_WIN after the first use. */
+                c->mode->flags &= ~FLAG_NEW_WIN;
 
                 webkit_policy_decision_ignore(dec);
                 spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
