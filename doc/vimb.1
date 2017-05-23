@@ -809,6 +809,11 @@ comparison for further typed chars.
 .SH SETTINGS
 All settings listed below can be set with the `:set' command.
 .TP
+.B accelerated-2d-canvas (bool)
+Enable or disable accelerated 2D canvas.
+When accelerated 2D canvas is enabled, WebKit may render some 2D canvas
+content using hardware accelerated drawing operations.
+.TP
 .B caret (bool)
 Whether to enable accessibility enhanced keyboard navigation.
 .TP
@@ -871,6 +876,22 @@ which will flatten all the frames to become one scrollable page.
 .TP
 .B fullscreen (bool)
 Show the current window full-screen.
+.TP
+.B hardware-acceleration-policy (string)
+This setting decides how to enable and disable hardware acceleration.
+.PD 0
+.RS
+.IP - 2
+`ondemand' enables the hardware acceleration when the web contents request it, disabling it again when no
+longer needed.
+.IP - 2
+`always' enforce hardware acceleration to be enabled.
+.IP - 2
+`never' disables it completely.
+Note that disabling hardware acceleration might cause some websites to not
+render correctly or consume more CPU.
+.RE
+.PD
 .TP
 .B header (list)
 Comma separated list of headers that replaces default header sent by WebKit or
