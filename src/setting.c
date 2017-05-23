@@ -78,7 +78,7 @@ void setting_init(Client *c)
      * Separate the setting definition from the data.
      * Don't set the webkit settings if they are the default on startup. */
     c->config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
-    setting_add(c, "useragent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/604.1 (KHTML, like Gecko) Version/11.0 Safari/604.1 " PROJECT "/" VERSION, webkit, 0, "user-agent");
+    setting_add(c, "user-agent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/604.1 (KHTML, like Gecko) Version/11.0 Safari/604.1 " PROJECT "/" VERSION, webkit, 0, "user-agent");
     /* TODO use the real names for webkit settings */
     i = 14;
     setting_add(c, "accelerated-2d-canvas", TYPE_BOOLEAN, &off, webkit, 0, "enable-accelerated-2d-canvas");
