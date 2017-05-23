@@ -14,20 +14,21 @@
   ```
   previous setting - new setting name
   --------------------------------------
-  hintkeys         - hint-keys
   cursivfont       - cursiv-font
   defaultfont      - default-font
   fontsize         - font-size
+  hintkeys         - hint-keys
   minimumfontsize  - minimum-font-size
   monofont         - monospace-font
   monofontsize     - monospace-font-size
   offlinecache     - offline-cache
+  useragent        - user-agent
   sansfont         - sans-serif-font
-  seriffont        - serif-font
-  xssauditor       - xss-auditor
-  userscripts      - user-scripts
   scrollstep       - scroll-step
+  seriffont        - serif-font
   statusbar        - status-bar
+  userscripts      - user-scripts
+  xssauditor       - xss-auditor
   ```
 
 ### Removed
