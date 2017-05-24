@@ -1536,9 +1536,6 @@ static void vimb_setup(void)
                 WEBKIT_COOKIE_PERSISTENT_STORAGE_TEXT);
     }
 
-    /* TODO move to settings.c */
-    webkit_web_context_set_tls_errors_policy(ctx, TRUE ? WEBKIT_TLS_ERRORS_POLICY_FAIL : WEBKIT_TLS_ERRORS_POLICY_IGNORE);
-
     /* initialize the modes */
     vb_mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
     vb_mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
