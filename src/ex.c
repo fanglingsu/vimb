@@ -48,6 +48,7 @@ typedef enum {
     EX_BMR,
     EX_EVAL,
     EX_HARDCOPY,
+    EX_CLEARCACHE,
     EX_CMAP,
     EX_CNOREMAP,
     EX_HANDADD,
@@ -129,6 +130,7 @@ static VbCmdResult execute(Client *c, const ExArg *arg);
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
 static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
+static VbCmdResult ex_clearcache(Client *c, const ExArg *arg);
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg);
 static VbCmdResult ex_map(Client *c, const ExArg *arg);
 static VbCmdResult ex_unmap(Client *c, const ExArg *arg);
@@ -164,6 +166,7 @@ static ExInfo commands[] = {
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"cnoremap",         EX_CNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"cunmap",           EX_CUNMAP,      ex_unmap,      EX_FLAG_LHS},
+    {"clearcache",       EX_CLEARCACHE,  ex_clearcache, EX_FLAG_NONE},
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
     {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
@@ -820,6 +823,12 @@ static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Cli
     } else {
         vb_echo(c, MSG_ERROR, TRUE, "");
     }
+}
+
+static VbCmdResult ex_clearcache(Client *c, const ExArg *arg)
+{
+    webkit_web_context_clear_cache(webkit_web_context_get_default());
+    return CMD_SUCCESS;
 }
 
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg)

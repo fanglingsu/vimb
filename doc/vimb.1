@@ -630,6 +630,10 @@ queue.
 Removes all entries from queue.
 .SS Misc
 .TP
+.B :cl[earcache]
+Clears all resources currently cached by webkit.
+Note that this effects all running instances of vimb.
+.TP
 .BI ":sh[ellcmd] " cmd
 Runs the given shell \fIcmd\fP syncron and print the output into inputbox.
 The following patterns in \fIcmd\fP are expanded: '~username', '~/', '$VAR'
