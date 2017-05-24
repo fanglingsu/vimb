@@ -52,3 +52,6 @@
 #define SETTING_HOME_PAGE                     "about:blank"
 
 #define MAXIMUM_HINTS              500
+/* default window dimensions */
+#define WIN_WIDTH                  800
+#define WIN_HEIGHT                 600

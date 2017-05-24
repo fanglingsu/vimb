@@ -682,6 +682,8 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
                 (int)GDK_WINDOW_XID(gtk_widget_get_window(GTK_WIDGET(c->window))));
     }
 
+    gtk_window_set_default_size(GTK_WINDOW(c->window), WIN_WIDTH, WIN_HEIGHT);
+
     completion_init(c);
     map_init(c);
 
