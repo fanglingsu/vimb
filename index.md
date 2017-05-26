@@ -57,6 +57,40 @@ But following images may give a impression of they way vimb works.
 - Or you can download actual source as [tar.gz][tgz] or as [zip][] or get
   one of the [releases][].
 
+## dependencies
+
+- webkit2gtk-4.0 >= 2.16.x
+
+## Install
+
+Edit `config.mk` to match your local setup.
+
+Edit `src/config.h` to match your personal preferences.
+
+The default `Makefile` will not overwrite your customised `config.h` with the
+contents of `config.def.h`, even if it was updated in the latest git pull.
+Therefore, you should always compare your customised `config.h` with
+`config.def.h` and make sure you include any changes to the latter in your
+`config.h`.
+
+Run the following commands to compile and install Vimb (if necessary, the last
+one as root). `V=1` enables verbose output for those that are interested to
+see full compiler option lines.
+
+    make V=1
+    make install
+
+If you wish to install with other PREFIX or DESTDIR note that these options
+must be given for both steps the compile step as well as the install step.
+
+    make DESTDIR="/home/user" PREFIX="/usr"
+    make DESTDIR="/home/user" PREFIX="/usr" install
+
+To run vimb without installation for testing it out use the 'runsandbox' make
+target.
+
+    make runsandbox
+
 ## contribute
 
 If you find a misbehaviour or have feature requests use the
@@ -70,3 +104,4 @@ If you find a misbehaviour or have feature requests use the
 [bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
 [zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
 [tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
+[releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
