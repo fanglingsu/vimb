@@ -18,10 +18,10 @@ active: man
 ## DESCRIPTION
 {:#DESCRIPTION}
 
-vimb is a webkit based web browser that behaves like the vimperator plugin for
-the firefox and usage paradigms from the great editor vim. The goal of vimb is
-to build a completely keyboard-driven, efficient and pleasurable browsing
-experience.
+Vimb is a WebKit based web browser that behaves like the Vimperator plugin for
+Firefox and has usage paradigms from the great editor, Vim. The goal of Vimb
+is to build a completely keyboard-driven, efficient and pleasurable
+browsing-experience.
 
 ## OPTIONS
 {:#OPTIONS}
@@ -29,48 +29,22 @@ experience.
 If no *URI* or *file* is given vimb will open the configured home-page. If
 *URI* is `-`, vimb reads the html to display from stdin.
 
-Mandatory arguments to long options are mandatory for short options too. 
+Mandatory arguments to long options are mandatory for short options too.
 
-−C, −−cmd *CMD*
-: Run *CMD* as ex command line right before the first page is loaded. If the
-  flag is used more than one time, the ordering is preserved when *CMD* are
-  executed. You could also pass several ex commands in one *CMD*, if there are
-  separated by `|`.
-: Example:
-
-      vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"
-
-−c, −−config *CONFIG-FILE*
+−c, −−config *FILE*
 : Use custom configuration given as *CONFIG-FILE*. This will also be applied
   on new spawned instances.
+
+−e, −−embed *WINID*
+: *WINID* of an XEmbed-aware application, that vimb will use as its parent.
+
+−h, −−help
+: Show help options.
 
 −p, −−profile *PROFILE-NAME*
 : Create or open specified configuration profile. Configuration data for the
   profile is stored in a directory named *PROFILE-NAME* under default
   directory for configuration data.
-
-−e, −−embed *WINID*
-: *WINID* of an XEmbed-aware application, that vimb will use as its parent.
-
-−d, −−dump
-: Dump the current used socket path to stdout in case vimb is started with −s
-  option.
-: Example:
-
-  ```shell
-  sh -c "./vimb -s -d > ~/vimb.socket" &
-  echo ":o github.com<CR>" | socat - unix-connect:$(< ~/vimb.socket)
-  ```
-
-−h, −−help
-: Show help options.
-
-−k, −−kiosk
-: Run vimb in kiosk mode with nearly no keybindings, not inputbox and no
-  context menu.
-
-−s, −−socket
-: If given vimb will create a control socket in the user runtime directory.
 
 −v, −−version
 : Print build and version information.
@@ -114,14 +88,11 @@ gi
 CTRL−Z
 : Switch vimb into Pass-Through Mode.
 
-gf
-: Toggle show html source of current page.
-
 gF
 : Open the Web Inspector for current page.
 
 CTRL−V
-: Pass the next key press directly to gtk.
+: Pass the next key press directly to webkit or gtk.
 
 CTRL−Q
 : Quit the browser if there are no running downloads.
@@ -176,13 +147,6 @@ CTRL−P
 gU
 : Go to the domain of the current opened page.
 
-[*N*]CTRL−A
-: Increments the last number in URL by 1, or by *N* if given.
-
-[*N*]CTRL−X
-: Decrements the last number in URL by 1, or by *N* if given. Negative numbers
-  are not supported as trailing numbers in URLs are often preceded by hyphens.
-
 r
 : Reload the website.
 
@@ -232,23 +196,6 @@ $
 
 [*N*]k
 : Scroll page *N* steps up.
-
-[*N*]]]
-: Follow the last *N*th link matching 'nextpattern'.
-
-[*N*][[
-: Follow the last *N*th link matching 'previouspattern'.
-
-m{*a-z*}
-: Set a page mark {*a-z*} at current possition on page. Such set marks are only
-  available on the current page, if the page is left, all marks will be removed.
-
-'{*a-z*}
-: Jump to the mark {*a-z*} on current page.
-
-''
-: Jumps to the position before the latest jump, or where the last "m'" command
-  was given.
 
 ### Hinting
 {:#Hinting}
@@ -377,7 +324,7 @@ the extended hint mode can only be combined with the following hint modes
   direction.
 
 \<CR\>
-: Perform a click on element containing the current highlighted search result. 
+: Perform a click on element containing the current highlighted search result.
 
 ### Zooming
 {:#Zooming}
@@ -553,32 +500,39 @@ used `<Left>`, `<Up>`, `<Right>`, `<Down>` for the cursor keys, `<Tab>`,
 \:cu[nmap] {*lhs*}
 : Remove the mapping of *lhs* for the applicable mode.
 
+### Bookmarks
+{:#Bookmarks}
+\:bma [*tags*]
+: Save the current opened URI with *tags* to the bookmark file.
+
+\:bmr [*URI*]
+: Removes all bookmarks for given *URI* or, if not given, the current opened
+  page.
+
 ### Handlers
 {:#Handlers}
 
-Handlers allow specifying external scripts to handle alternative URI methods.
-
-:handler-add *handler*=*cmd*
+\:handler-add *handler*=*cmd*
 : Adds a handler to direct *handler* links to the external *cmd*. The *cmd* can
   contain one placeholder %s that will be filled by the full URI given when the
   command is called.
 : Examples:
 
-: - `:handler-add magnet=xdg-open %s`
+: - `:handler-add mailto=urxvt -e mutt %s`
+    to start email client for mailto links.
+  - `:handler-add magnet=xdg-open %s`
     to open magnet links with xdg-open.
-  - `:handler-add magnet=transmission-gtk %s`
-    to open magnet links directly with Transmission.
-  - `:handler-add irc=irc-handler.sh %s`
-    to direct `irc://<host>:<port>/<channel>` links to a wrapper for your irc client.
+  - `:handler-add ftp=urxvt -e wget %s -P ~/ftp-downloads`
+    to handle ftp downloads via wget.
 
-:handler-remove *handler*
+\:handler-remove *handler*
 : Remove the handler for the given URI *handler*.
 
 ### Shortcuts
 {:#Shortcuts}
 
 Shortcuts allows to open URL build up from a named template with additional
-parameters. If a shortcut named 'dd' is defined, you can use it with 
+parameters. If a shortcut named 'dd' is defined, you can use it with
 `:open dd list of parameters` to open the generated URL.
 
 Shortcuts are a good to use with search engines where the URL is nearly the
@@ -594,13 +548,17 @@ same but a single parameter is user defined.
     to setup a search engine. Can be called by `:open dl my search phrase`.
   - `:shortcut-add gh=https://github.com/$0/$1`
     to build url from given parameters. Can be called `:open gh fanglingsu vimb`.
+  - `:shortcut-add map=https://maps.google.com/maps?saddr=$0&daddr=$1`
+	to search for a route, all but the last parameter must be quoted if they
+	contain spaces like `:open map "city hall, London" railway station, London`
 
 \:shortcut-remove *shortcut*
 : Remove the search engine to the given *shortcut*.
 
 \:shortcut-default *shortcut*
-: Set the shortcut for given *shortcut* as the default. It doesn't matter if the
-  *shortcut* is already in use or not to be able to set it.
+: Set the shortcut for given shortcut as the default, that is the *shortcut* to
+  be used if no shortcut is given and the string to open is not an URI. It
+  doesn't matter if the shortcut is already in use or not to be able to set it.
 
 ### Settings
 {:#Settings}
@@ -651,106 +609,12 @@ if vimb has been compiled with QUEUE feature.
 \:qc[lear]
 : Removes all entries from queue.
 
-### Automatic commands
-{:#Automatic_commands}
-
-An autocommand is a command that is executed automatically in response to some
-event, such as a URI being opened. Autocommands are very powerful. Use them
-with care and they will help you avoid typing many commands.
-
-Note: The `:autocmd` command cannot be followed by another command, since any
-`|` is considered part of the command.
-
-Autocommands are built with following properties.
-
-*group*
-: When the [group] argument is not given, Vimb uses the current group as
-  defined with `:augroup`, otherwise, vimb uses the group defined with [group].
-  Groups are useful to remove multiple grouped autocommands.
-
-*event*
-: You can specify a comma separated list of event names. No white space can be
-  used in this list.
-: Events:
-: - `LoadProvisional` Fired if a new page is going to opened. No data has been received yet,
-  the load may still fail for transport issues. Out of this reason this
-  event has no associated URL to match.
-  - `LoadCommited` Fired if first data chunk has arrived, meaning that the
-    necessary transport requirements are established, and the load is being
-    performed. This is the right event to toggle content related setting like
-    'scripts', 'plugins' and such things.
-  - `LoadFirstLayout` fired if the first layout with actual visible content is shown.
-  - `LoadFinished` Fires when everything that was required to display on the
-    page has been loaded.
-  - `LoadFailed` Fired when some error occurred during the page load that
-    prevented it from being completed.
-  - `DownloadStart` Fired right before a download is started. This is fired
-    for vimb downloads as well as external downloads if
-    'down‐load-use-external' is enabled.
-  - `DownloadFinished` Fired if a vimb managed download is finished. For
-    external download this event is not available.
-  - `DownloadFailed` Fired if a vimb managed download failed. For external
-    download this event is not available.
-
-*pat*
-: Comma separated list of patterns, matches in order to check if a autocommand
-  applies to the URI associated to an event. To use '`,`' within the single
-  patterns this must be escaped as '`\,`'.
-: Patterns:
-: - `\*` Matches any sequence of characters. This includes also `/` in contrast to shell patterns.
-  - `?` Matches any single character except of `/`.
-  - `{one,two}` Matches 'one' or 'two'. Any `{`, `,` and `}` within this
-    pattern must be escaped by a '`\`'. `*` and `?` have no special meaning
-    within the curly braces.
-  - `\` Use backslash to escape the special meaning of '`?*{},`' in the pattern or pattern list.
-
-*cmd*
-: Any ex command vimb understands. The leading `:` is not required. Multiple
-  commands can be separated by `|`.
-
-\:au[tocmd] [*group*] {*event*} {*pat*} {*cmd*}
-: Add cmd to the list of commands that vimb will execute automatically on event
-  for a URI matching pat autocmd-patterns. Vimb always adds the cmd after
-  existing autocommands, so that the autocommands are executed in the order in
-  which they were given.
-
-\:au[tocmd]! [*group*] {*event*} {*pat*} {*cmd*}
-: Remove all autocommands associated with *event* and which pattern match
-  *pat*, and add the command *cmd*. Note that the pattern is not matches
-  literally to find autocommands to remove, like vim does. Vimb matches
-  the autocommand pattern with *pat*.
-
-\:au[tocmd]! [*group*] {*event*} {*pat*}
-: Remove all autocommands associated with *event* and which pattern matches
-  *pat*.
-
-\:au[tocmd]! [*group*] * {*pat*}
-: Remove all autocommands with patterns matching *pat* for all events.
-
-\:au[tocmd]! [*group*] {*event*}
-: Remove all autocommands for *event*.
-
-\:au[tocmd]! [*group*]
-: Remove all autocommands.
-
-\:aug[roup] {*name*}
-: Define the autocmd group *name* for the following `:autocmd` commands. The
-  name "end" selects the default group.
-
-\:aug[roup]! {*name*}
-: Delete the autocmd group *name*.
-
-Example:
-
-    :aug mygroup
-    :  au LoadCommited * set scripts=off|set cookie-accept=never
-    :  au LoadCommited http{s,}://github.com/*.https://maps.google.de/* set scripts=on
-    :  au LoadFinished https://maps.google.de/* set useragent=foo
-    :aug end
-
-
 ### Misc
 {:#Misc}
+
+\:cl[earcache]
+: Clears all resources currently cached by webkit. Note that this effects all
+  running instances of vimb.
 
 \:sh[ellcmd] *cmd*
 : Runs given shell *cmd* synchronous and print the output into inputbox. The
@@ -764,8 +628,6 @@ Example:
     the URI of the page.
   - `VIMB_TITLE` Contains the title of the current opened page.
   - `VIMB_PID` Contains the pid of the running vimb instance.
-  - `VIMB_SOCKET` Holds the full path to the control socket, if vimb is compiled
-    with  SOCKET  feature  and  started  with  `--socket` option.
   - `VIMB_XID` Holds the X-Window id of the vim window or of the embedding
     window if vimb is started with -e option.
 : Example: `:sh ls -la $HOME`
@@ -776,9 +638,8 @@ Example:
 
 \:s[ave] [*path*]
 : Download current opened page into configured download directory. If *path* is
-  given, download under this file name or path. Possible value for PATH are
-  'page.html', 'subdir/img1.png', '~/download.html' or absolute paths
-  '/tmp/file.html'.
+  given, download under this file name or path. *Path* is expanded and can
+  therefore contain `~/`, `${ENV}` and `~user` pattern.
 
 \:so[ource] [*file*]
 : Read ex commands from *file*.
@@ -794,9 +655,9 @@ Example:
 : Register:
 : - `"a` -- `"z` 26 named registers. Vimb fills these registers only when you
     say so.
+  - `":` Last executed ex command.
   - `""` Last yanked content.
   - `"%` Curent opened URI.
-  - `":` Last executed ex command.
   - `"/` Last search phrase.
   - `";` Last hinted URL. This can be used in `x-hint-command` to get the URL
     of the hint.
@@ -817,7 +678,7 @@ Example:
 : *cmds* cannot start with a space. Put a count of 1 (one) before it, "1 " is one space.
   This comman cannot be followed by antoher command, since any `|` is
   considered part of the command.
-: Example: `:set scripts!|no! R`
+: Example: `:set scripts!|no! R` toggle scripts and reload the page.
 
 \:no[rmal]! [*cmds*]
 : Like `:no[rmal]`, but no mapping is applied to *cmds*.
@@ -893,54 +754,61 @@ search
 
 All settings listed below can be set with the `:set` command.
 
-### Webkit-Settings
-{:#Webkit-Settings}
-
-accelerated-compositing (bool)
-: Enable or disable support for accelerated compositing on pages. Accelerated
-  compositing uses the GPU to render animations on pages smoothly and also
-  allows proper rendering of 3D CSS transforms.
-
-auto-load-images (bool)
-: Load images automatically.
-
-auto-resize-window (bool)
-: Indicates if vimb will honor size and position changes of the window by
-  various DOM methods.
-
-auto-shrink-images (bool)
-: Automatically shrink standalone images to fit.
+accelerated-2d-canvas (bool)
+: Enable or disable accelerated 2D canvas. When accelerated 2D canvas is
+  enabled, WebKit may render some 2D canvas content using hardware accelerated
+  drawing operations.
 
 caret (bool)
 : Whether to enable accessibility enhanced keyboard navigation.
 
-closed-max-items (int)
-: Maximum number of stored last closed browser windows. If closed-max-items is
-  set to 0, closed browser windows will not be stored.
+cookie-accept (string)
+: Cookie accept policy {'always', 'never', 'origin' (accept all non-third-party
+  cookies)}.
 
-cursivfont (string)
+closed-max-items (int)
+: Maximum number of stored last closed URLs. If closed-max-items is set to 0,
+  closed URLs will not be stored.
+
+completion-css (string)
+: CSS style applied to the inputbox completion list items.
+
+completion-hover-css (string)
+: CSS style applied to the inputbox completion list item that is currently
+  hovered by the mouse.
+
+completion-selected-css (string)
+: CSS style applied to the inputbox completion list item that is currently
+  selected.
+
+cursiv-font (string)
 : The font family used as the default for content using cursive font.
 
-defaultencoding (string)
+default-charset (string)
 : The default text charset used when interpreting content with an unspecified
   charset.
 
-defaultfont (string)
+default-font (string)
 : The font family to use as the default for content that does not specify a
   font.
 
+default-zoom (int)
+: Default Full-Content zoom level in percent. Default is 100.
+
 dns-prefetching (bool)
-: Indicates if vimb prefetches domain names.
+: Indicates if Vimb prefetches domain names.
 
-dom-paste (bool)
-: Whether to enable DOM paste. If set to TRUE, document.execCommand("Paste")
-  will correctly execute and paste content of the clipboard.
+download-path (string)
+: Path to the default download directory. If no download directory is set,
+  download will be written into current directory. The following pattern will
+  be expanded if the download is started `~/`, `~user`, `$VAR` and `${VAR}`.
 
-file-access-from-file-uris (bool)
-: Boolean property to control file access for file:// URIs. If this option is
-  enabled every file:// will have its own security unique domain.
+editor-command (string)
+: Command with placeholder '%s' called if form field is opened with $EDITOR to
+  spawn the editor-like `x-terminal-emulator -e vim %s`. To use Gvim as the
+  editor, it's necessary to call it with `-f' to run it in the foreground.
 
-fontsize (int)
+font-size (int)
 : The default font size used to display text.
 
 frame-flattening (bool)
@@ -948,40 +816,99 @@ frame-flattening (bool)
   expanded to its contents, which will flatten all the frames to become one
   scrollable page.
 
+fullscreen (bool)
+: Show the current window full-screen.
+
+hardware-acceleration-policy (string)
+: This setting decides how to enable and disable hardware acceleration.
+: - 'ondemand' enables the hardware acceleration when the web contents request
+    it, disabling it again when no longer needed.
+  - 'always' enforce hardware acceleration to be enabled.
+  - 'never' disables it completely. Note that disabling hardware acceleration
+    might cause some websites to not render correctly or consume more CPU.
+
+header (list)
+: Comma separated list of headers that replaces default header sent by WebKit
+  or new headers. The format for the header list elements is `name[=[value]]`.
+
+: Note that these headers will replace already existing headers. If there is no
+  `=` after the header name, then the complete header will be removed from the
+  request, if the `=` is present means that the header value is set to empty
+  value.
+
+: To use `=` within a header value the value must be quoted like shown in
+  Example for the Cookie header.
+
+: Example:
+  `:set header=DNT=1,User-Agent,Cookie='name=value'` Send the 'Do Not Track'
+  header with each request and remove the User-Agent Header completely from
+  request.
+
+hint-follow-last (bool)
+: If on, vimb automatically follows the last remaining hint on the page. If off
+  hints are fired only if enter is pressed.
+
+hint-number-same-length (bool)
+: If on, all hint numbers will have the same length, so no hints will be
+  ambiguous.
+
+hint-timeout (int)
+: Timeout before automatically following a non-unique numerical hint. To
+  disable auto fire of hints, set this value to 0.
+
+hint-keys (string)
+: The keys used to label and select hints. With its default value, each hint
+  has a unique number which can be typed to select it, while all other
+  characters are used to filter hints based on their text. With a value such
+  as `asdfg;lkjh`, each hint is 'numbered' based on the characters of the home
+  row. Note that the hint matching by label built of hint-keys is case sen‐
+  sitive. In this vimb differs from some other browsers that show hint labels
+  in upper case, but match them lowercase. To have upper case hint labels,
+  it's possible to add following css to the 'style.css' file in vimb's
+  configuration directory.
+
+: `._hintLabel {text-transform: uppercase !important;}`
+
+history-max-items (int)
+: Maximum number of unique items stored in search-, command or URI history. If
+  history-max-items is set to 0, the history file will not be changed.
+
+home-page (string)
+: Homepage that vimb opens if started without a URI.
+
 html5-database (bool)
 : Whether to enable HTML5 client-side SQL database support. Client-side SQL
   database allows web pages to store structured data and be able to use SQL to
   manipulate that data asynchronously.
 
 html5-local-storage (bool)
-: Whether to enable HTML5 localStorage support. localStorage provides simple
+: Whether to enable HTML5 localStorage support. LocalStorage provides simple
   synchronous storage access.
 
 hyperlink-auditing (bool)
-: Enable or disable support for <a ping>.
+: Enable or disable support for \<a ping\>.
 
 images (bool)
 : Determines whether images should be automatically loaded or not.
 
-insecure-content-show (bool)
-: Whether pages loaded via HTTPS should load subresources such as images and
-  frames from non-HTTPS URIs. Only for webkit>=2.0.
+incsearch (bool)
+: While typing a search command, show where the pattern typed so far matches.
 
-insecure-content-run (bool)
-: Whether pages loaded via HTTPS should run subresources such as CSS, scripts,
-  and plugins from non-HTTPS URIs. Only for webkit>=2.0.
+input-autohide (bool)
+: If enabled the inputbox will be hidden whenever it contains no text.
 
-java-applet (bool)
-: Enable or disable support for the Java \<applet\> tag. Keep in mind that Java
-  content can be still shown in the page through \<object\> or \<embed\>, which are
-  the preferred tags for this task.
+input-css (string)
+: CSS style applied to the inputbox in normal state.
+
+input-error-css (string)
+: CSS style applied to the inputbox in case of displayed error.
 
 javascript-can-access-clipboard (bool)
-: Whether JavaScript can access Clipboard.
+: Whether JavaScript can access the clipboard.
 
 javascript-can-open-windows-automatically (bool)
 : Whether JavaScript can open popup windows automatically without user
-  intervention.
+  interaction.
 
 media-playback-allows-inline (bool)
 : Whether media playback is full-screen only or inline playback is allowed.
@@ -989,9 +916,9 @@ media-playback-allows-inline (bool)
   fullscreen.
 
 media-playback-requires-user-gesture (bool)
-: Whether a user gesture (such as clicking the play button) would be required to
-  start media playback or load media. Setting it on requires a gesture by the
-  user to start playback, or to load the media.
+: Whether a user gesture (such as clicking the play button) would be required
+  to start media playback or load media. Setting it on requires a gesture by
+  the user to start playback, or to load the media.
 
 media-stream (bool)
 : Enable or disable support for MediaSource on pages. MediaSource is an
@@ -1003,52 +930,41 @@ mediasource (bool)
   experimental proposal which extends HTMLMediaElement to allow JavaScript to
   generate media streams for playback.
 
-minimumfontsize (int)
+minimum-font-size (int)
 : The minimum font size used to display text.
 
-monofont (string)
+monospace-font (string)
 : The font family used as the default for content using monospace font.
 
-monofontsize (int)
+monospace-font-size (int)
 : Default font size for the monospace font.
 
-offlinecache (bool)
+offline-cache (bool)
 : Whether to enable HTML5 offline web application cache support. Offline web
   application cache allows web applications to run even when the user is not
   connected to the network.
 
-pagecache (bool)
-: Enable or disable the page cache. Disabling the page cache is generally only
-  useful for special circumstances like low-memory scenarios or special purpose
-  applications like static HTML viewers.
-
 print-backgrounds (bool)
-: Whether background images should be printed.
+: Whether background images should be drawn during printing.
 
 private-browsing (bool)
-: Whether to enable private browsing mode. This suppresses printing of messages
-  into JavaScript Console. At the time this is the only way to force webkit to
-  not allow a page to store data in the windows sessionStorage.
+: Whether to enable private browsing mode. This suppresses printing of
+  messages into JavaScript Console. At the time this is the only way to force
+  WebKit to not allow a page to store data in the windows sessionStorage.
 
 plugins (bool)
 : Determines whether or not plugins on the page are enabled.
 
-print-backgrounds (bool)
-: Whether background images should be drawn during printing.
-
-resizable-text-areas (bool)
-: Whether text areas are resizable.
-
-respect-image-orientation (bool)
-: Whether vimb should respect image orientation.
-
-sansfont (string)
+sans-serif-font (string)
 : The font family used as the default for content using sans-serif font.
 
 scripts (bool)
 : Determines whether or not JavaScript executes within a page.
 
-seriffont (string)
+scroll-step (int)
+: Number of pixel vimb scrolls if 'j' or 'k' is used.
+
+serif-font (string)
 : The font family used as the default for content using serif font.
 
 site-specific-quirks (bool)
@@ -1058,40 +974,60 @@ smooth-scrolling (bool)
 : Enable or disable support for smooth scrolling.
 
 spacial-navigation (bool)
-: Whether to enable the Spatial Navigation. This feature consists in the ability
-  to navigate between focusable elements in a Web page, such as hyperlinks and
-  form controls, by using Left, Right, Up and Down arrow keys. For example, if
-  an user presses the Right key, heuristics determine whether there is an
-  element he might be trying to reach towards the right, and if there are
-  multiple elements, which element he probably wants.
+: Whether to enable the Spatial Navigation. This feature consists in the
+  ability to navigate between focusable elements in a Web page, such as
+  hyperlinks and form controls, by using Left, Right, Up and Down arrow keys.
+  For example, if a user presses the Right key, heuristics determine whether
+  there is an element they might be trying to reach towards the right, and if
+  there are multiple elements, which element they probably want.
 
 spell-checking (bool)
-: Whether to enable spell checking while typing.
+: Enable or disable the spell checking feature.
 
 spell-checking-languages (string)
-: The languages to be used for spell checking, separated by commas.
+: Set comma separated list of spell checking languages to be used for spell
+  checking. The locale string typically is in the form lang_COUNTRY, where
+  lang is an ISO-639 language code, and COUNTRY is an ISO-3166 country code.
+  For instance, sv_FI for Swedish as written in Finland or pt_BR for
+  Portuguese as written in Brazil.
 
-: The locale string typically is in the form lang_COUNTRY, where lang is an
-  ISO-639 language code, and COUNTRY is an ISO-3166 country code. For instance,
-  sv\_FI for Swedish as written in Finland or pt\_BR for Portuguese as written in
-  Brazil.
+status-bar (bool)
+: Indicates if the status bar should be shown.
 
-: If no value is specified the default value for gtk is used.
+status-css (string)
+: CSS style applied to the status bar on none https pages.
 
-tab-key-cycles-through-elements (bool)
-: Whether the tab key cycles through elements on the page.
+status-ssl-css (string)
+: CSS style applied to the status bar on https pages with trusted certificate.
 
-: If true, pressing the tab key will focus the next element in the web view.
-  Else the wen view will interpret tab key presses as normal key presses. If the
-  selected element is editable, the tab key will cause the insertion of a tab
-  character.
+status-ssl-invalid-css (string)
+: CSS style applied to the status bar on https pages with untrusted
+  certificate.
 
-universal-access-from-file-uris (bool)
-: Whether to allow files loaded through file:// URIs universal access to all
-  pages.
+strict-ssl (bool)
+: If 'on', vimb will not load a untrusted https site.
 
-useragent (string)
+stylesheet (bool)
+: If 'on' the user defined styles-sheet is used.
+
+tabs-to-links (bool)
+: Whether the Tab key cycles through elements on the page.
+
+: If true, pressing the Tab key will focus the next element in the web view.
+  Otherwise, the web view will interpret Tab key presses as normal key
+  presses.  If the selected element is editable, the Tab key will cause the
+  insertion of a Tab character.
+
+timeoutlen (int)
+: The time in milliseconds that is waited for a key code or mapped key
+  sequence to complete.
+
+user-agent (string)
 : The user-agent string used by WebKit.
+
+user-scripts (bool)
+: Indicates if user style sheet file $XDG_CONFIG_HOME/vimb/style.css is
+  sourced.
 
 webaudio (bool)
 : Enable or disable support for WebAudio on pages. WebAudio is an experimental
@@ -1104,314 +1040,41 @@ webinspector (bool)
 : Determines whether or not developer tools, such as the Web Inspector, are
   enabled.
 
-xssauditor (bool)
-: Whether to enable the XSS auditor. This feature filters some kinds of
-  reflective XSS attacks on vulnerable web sites.
-
-### Vimb-Settings
-{:#Vimb-Settings}
-
-auto-response-header (list)
-: Prepend HTTP-Header to responses received from server, based on pattern
-  matching. The purpose of this setting is to enforce some security setting in
-  the client. For example, you could set Content-Security-Policy (see
-  'http://www.w3.org/TR/CSP/') for implement a whitelist policy, or set
-  Strict- Transport-Security for server that don't provide this header whereas
-  they propose https website.
-
-: Note that this setting will not remplace existing headers, but add a new one.
-  If multiple patterns match a request uri, the last matched rule will be
-  applied. You could also specified differents headers for same pattern.
-
-: The format is a list of 'pattern header-list'. If 'header-list' has not than
-  one element, enclosing with QUOTE is mandatory: '"pattern header-list"'. The
-  header-list format is the same as 'header' setting.
-
-: Example:
-
-      :set auto-response-header=* Content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'
-      :set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/
-      :set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000
-      :set auto-response-header+="https://*.example.org/sub/* Content-security-policy,X-Test=ok"
-
-ca-bundle (string)
-: The path to the crt file for the certificate validation. The given path is
-  expanded with standard file expansion.
-
-completion-bg-active (color)
-: Background color for selected completion item.
-
-completion-bg-normal (color)
-: Background color for none selected completion items.
-
-completion-fg-active (color)
-: Foreground color for the selected completion item.
-
-completion-fg-normal (color)
-: Foreground color for the none selected completion items.
-
-completion-font (string)
-: Font used for the completion items.
-
-cookie-accept (string)
-: Cookie accept policy {'always', 'never', 'origin' (accept all non-third-party
-  cookies)}.
-
-cookie-timeout (int)
-: Cookie timeout in seconds.
-
-cookie-expire-time (int)
-: Enforce expire-time on cookies. The default value '-1' keep expire-time as
-  defined by server side. The value '0' convert all cookies as session-only
-  cookies ('cookie-timeout' setting is used as for any other session-cookie).
-  Any other value enforce the expire-time (the expire-time value will be the
-  lower between server-side request and time defined with 'cookie-expire-time').
-
-default-zoom (int)
-: Initial Full-Content Zoom in percent. Default is 100.
-
-download-command (string)
-: A command with placeholder `%s` that will be invoked to download a uri.
-
-: Following additional environment variable are available:
-
-: - `$VIMB_URI` The URI of the current opened page, normally the page where
-    the download was started from, also known as referer.
-
-: - `$VIMB_FILE` The target file that is calculated by vimb according to the
-    'download-path'. Note that this file might already exists, so it's strongly
-    recommended to check the path in this variable before usage.
-
-: - `$VIMB_COOKIES` Path to the cookie file vimb uses. This is only available
-    if vimb is compiled with COOKIE feature.
-
-: - `$VIMB_USER_AGENT` Holds the user agent string that vimb uses.
-
-: - `$VIMB_MIME_TYPE` The mime-type of the download. This variable is only
-    available when der server sent the mime-type header with the response and
-    only if the download was not start by the `:save` command or the `;s`
-    hinting.
-
-: - `$VIMB_USE_PROXY` Indicates if the proxy is enabled in vimb. If enable
-    this variable is '1', otherwise '0'. Note that this variable gives no hint
-    if the proxy settings apply to the URL to be downloaded, only if proxy is
-    enabled in general.
-
-:   Example
-
-        :set download-command=/bin/sh -c "wget -c %s -O $VIMB_FILE --load-cookies $VIMB_COOKIES"
-
-download-path (string)
-: Path to the default download directory. If the directory is not set download
-  will be written into current directory. Following pattern will be expanded
-  if the download is started `~/`, `~user`, `$VAR` and `${VAR}`.
-
-download-use-external (bool)
-: Indicates if the external download tool set as 'download-command' should be
-  used to handle downloads. If this is disabled vimb will handle the download.
-
-editor-command (string)
-: Command with placeholder '%s' called if form filed is opened with editor to
-  spawn the editor like 'x-terminal-emulator -e vi %s'. To use gvim as editor,
-  it's necessary to call it with '-f' to run it in foreground.
-
-fullscreen (bool)
-: Show the current window full-screen.
-
-header (list)
-: Comma separated list of headers that replaces default header sent by webkit or
-  new headers. The format for the header list elements is `name[=[value]]`.
-
-: Note that these headers will replace already existing headers. If there is no
-  `=` after the header name, then the complete header will be removed from the
-  request, if the `=` is present means that the header value is set to empty
-  value.
-
-: To use `=` within a header value the value must be quoted like shown in
-  Example for the Cookie header.
-
-: - `:set header=DNT=1,User-Agent,Cookie='name=value'` Send the 'Do Not Track'
-    header with each request and remove the User-Agent Header completely from
-    request.
-
-hint-follow-last (bool)
-: If on, vimb automatically follows the last remaining hint on the page. If
-  off hints are fired only if enter is pressed.
-
-hint-timeout (int)
-: Timeout before automatically following a non-unique numerical hint. To disable
-  auto fire of hints, set this value to 0.
-
-hintkeys (string)
-: The keys used to label and select hints. With its default value, each hint has
-  a unique number which can be typed to select it, while all other characters
-  are used to filter hints based on their text. With a value such as
-  asdfg;lkjh, each hint is 'numbered' based on the characters of the home row.
-  Note that the hint matching by label built of hintkeys is case sensitive. In
-  this vimb differs from some other browsers that show hint labels in upper
-  case, but match them lowercase.  To have upper case hint labels, it's
-  possible to add following css to the 'style.css' file in vimb's
-  configuration directory.
-
-: `._hintLabel {text-transform: uppercase !important;}`
-
-history-max-items (int)
-: Maximum number of unique items stored in search-, command or URI history. If
-  history-max-items is set to 0, the history file will not be changed.
-
-home-page (string)
-: Homepage that vimb opens if started without a URI.
-
-hsts (bool)
-: Enable or disables the HSTS (HTTP Strict Transport Security) feature.
-
-input-autohide (bool)
-: If enabled the inputbox will be hidden whenever it contains no text.
-
-input-bg-error (color)
-: Background color for the inputbox if error is shown.
-
-input-bg-normal (color)
-: Background color of the inputbox.
-
-input-fg-error (color)
-: Foreground color of inputbox if error is shown.
-
-input-fg-normal (color)
-: Foreground color of inputbox.
-
-input-font-error (string)
-: Font user in inputbox if error is shown.
-
-input-font-normal (string)
-: Font used for inputbox.
-
-nextpattern (list)
-: Patterns to use when guessing the next page in a document. Each pattern is
-  successively tested against each link in the page beginning from the last
-  link. Default
-  `/\bnext\b/i,/^(>|>>|»)$/,/^(>|>>|»)/,/(>|>>|»)$/,/\bmore\b/i`. Note that
-  you have to escape the `|` as `\|` else the `|` will terminate the :set
-  command and start a new command.
-
-maximum-cache-size (int)
-: Size in kB used to cache various page data. This caching is independent from
-  'pagecache' or 'offlinecache'. To disable caching, the size could be set to
-  '0'.
-
-previouspattern (list)
-: Patterns to use when guessing the previous page in a document. Each pattern is
-  successively tested against each link in the page beginning from the last
-  link. Default
-  `/\bprev\b|previous\b/i,/^(<|<<|«)$/,/^(<|<<|«)/,/(<|<<|«)$/`
-
-proxy (bool)
-: Indicates if the environment variable 'http_proxy' is evaluated.
-
-scrollstep (int)
-: Number of pixel vimb scrolls if `j` or `k` is used.
-
-statusbar (bool)
-: Indicates if the statusbar should be shown.
-
-status-color-bg (color)
-: Background color of the statusbar.
-
-status-color-fg (color)
-: Foreground color of the statusbar.
-
-status-font (string)
-: Font used in statusbar.
-
-status-ssl-color-bg (color)
-: Background color of statusbar if current page uses trusted https certificate.
-
-status-ssl-color-fg (color)
-: Foreground color for statusbar for https pages.
-
-status-ssl-font (string)
-: Statusbar font for https pages.
-
-status-sslinvalid-color-bg (color)
-: Background color of the statusbar if the certificate if the https page isn't
-  trusted.
-
-status-sslinvalid-color-fg (color)
-: Foreground of statusbar for untrusted https pages.
-
-status-sslinvalid-font (string)
-: Statusbar font for untrusted https pages.
-
-strict-focus (bool)
-: Vimb checks if an editable element is focused and switch to input mode. If
-  strict-focus is enabled, this isn't done for focused element on page load
-  (without user interaction), instead the focus is removed from the focused
-  element. Focus changed that appear after the page was completely loaded are
-  not affected by this setting.
-
-strict-ssl (bool)
-: If 'on', vimb will not load a untrusted https site.
-
-stylesheet (bool)
-: If 'on' the user defined styles-sheet is used.
-
-timeoutlen (int)
-: The time in milliseconds that is waited for a key code or mapped key sequence
-  to complete.
-
 x-hint-command (string)
-: Command used if hint mode ;x is fired. The command can be any vimb command
+: Command used if hint mode `;x` is fired. The command can be any vimb command
   string. Note that the command is run through the mapping mechanism of vimb
   so it might change the behaviour by adding or changing mappings.
 
-: - `:set x-hint-command=50G` Not really useful. If the hint is fired, scroll to the middle of the page.
-  - `:set x-hint-command=:sh! curl -e <C-R>% <C-R>;` This fills the inputbox
-     with the prefilled download command and replaces \<C-R\>% with the
-     current URI and \<C-R\>; with the URI of the hinted element.
+: `:set x-hint-command=:sh! curl -e <C-R>% <C-R>;`
+: This fills the inputbox with the prefilled download command and replaces
+  `<C-R>%' with the current URI and `<C-R>;' with the URI of the hinted
+  element.
+
+xss-auditor (bool)
+: Whether to enable the XSS auditor. This feature filters some kinds of
+  reflective XSS attacks on vulnerable web sites.
 
 ## FILES
 {:#FILES}
 
-*$XDG\_CONFIG\_HOME/vimb/*
-: Default directory for configuration data.
+*$XDG\_CONFIG\_HOME/vimb[/PROFILE]*
+: Directory for configuration data. If executed with -p PROFILE parameter,
+  configuration is read from this subdirectory. config Configuration file to
+  set WebKit setting, some GUI styles and keybindings.
+: **cookies** Cookie store file.
+: **closed** Holds the URIs of last closed browser windows.
+: **history** This file holds the history of unique opened URIs.
+: **command** This file holds the history of commands and search queries
+  performed via input box.
+: **queue** Holds the read it later queue filled by `qpush'.
+: **search** This file holds the history of search queries.
+: **scripts.js** This file can be used to run user scripts, that are injected
+  into every paged that is opened.
+: **style.css** File for userdefined CSS styles. These file is used if the
+  config variable `stylesheet' is enabled.
 
-: - *config* Configuration file to set webkit setting, some GUI styles and keybindings.
-  - *cookies* Cookie store file.
-  - *closed* Holds the URI of the last closed browser window.
-  - *history* This file holds the history of unique opened URIs.
-  - *command* This file holds the history of commands and search queries
-    performed via input box.
-  - *search* This file holds the history of search queries.
-  - *bookmark* Holds the bookmarks saved with command 'bma'. The records are
-    stored there as  
-    `URI<tab>title<tab>space separated tags` or as  
-    `URI<tab><tab>tags` if there is no title.
-  - *queue* Holds the read it later queue filled by 'qpush' if vimb has been
-    compiled with QUEUE feature.
-  - *hsts* Holds the known hsts hosts if vimb is compiled with HTTP strict
-    transport security feature.
-  - *scripts.js* This file can be used to run user scripts, that are injected
-    into every paged that is opened.
-  - *style.css* File for userdefined css styles. These file is used if the
-    config variable 'stylesheet' is enabled.
-
-*$XDG\_CONFIG\_HOME/vimb/PROFILE-NAME*
-: Directory for configuration data if executed with -p *PROFILE-NAME*
-  parameter. It has same structure as default directory for configuration
-  data.
-
-*$XDG\_CACHE\_HOME/vimb/*
-: Default directory for cache data.
-
-*$XDG\_CACHE\_HOME/vimb/PROFILE-NAME*
-: Directory for cache data if executed with -p *PROFILE-NAME* parameter.
-
-*$XDG\_RUNTIME\_DIR/vimb/socket/*
-: Directory where the control sockets are placed.
-
-*$XDG\_RUNTIME\_DIR/vimb/PROFILE-NAME/socket/*
-: Directory where the control sockets are placed if executed with -p
-  *PROFILE-NAME* parameter.
+There are also some sample scripts installed together with Vimb under
+_PREFIX/share/vimb/examples_.
 
 ## ENVIRONMENT
 {:#ENVIRONMENT}
@@ -1420,9 +1083,3 @@ http_proxy
 : If this variable is set to an none empty value, and the configuration option
   'proxy' is enabled, this will be used as http proxy. If the proxy URL has no
   scheme set, http is assumed.
-
-no_proxy
-: A comma separated list of domains and/or ips which should not be proxied. Note
-  that an IPv6 address must appear in brackets if used with a port "[::1]:443".
-
-: Example: `localhost,127.0.0.1,::1,fc00::/7,example.com:8080`

@@ -164,10 +164,11 @@ nav {
   ul {
     font-size: x-large;
 	margin: 0;
+    overflow: hidden;
 	li {
 	  list-style: none;
 	  float: left;
-	  width: 25%;
+	  width: 33.33333%;
 	  padding: 0;
       * {
         text-align: center;
