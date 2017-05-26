@@ -1,4 +1,5 @@
 .\" vim: ft=groff
+.ss 12 0
 .ad l
 .TH VIMB 1 "DATE" "vimb/VERSION" "Vimb Manual"
 .de EX
@@ -986,7 +987,7 @@ Whether JavaScript can access the clipboard.
 .TP
 .B javascript-can-open-windows-automatically (bool)
 Whether JavaScript can open popup windows automatically without user
-intervention.
+interaction.
 .TP
 .B media-playback-allows-inline (bool)
 Whether media playback is full-screen only or inline playback is allowed.
@@ -1189,13 +1190,6 @@ PREFIX/share/vimb/examples.
 If this variable is set to an non-empty value, and the configuration option
 `proxy' is enabled, this will be used as HTTP proxy.
 If the proxy URL has no scheme set, HTTP is assumed.
-.TP
-.B no_proxy
-A comma separated list of domains and/or IPs which should not be proxied.
-Note that an IPv6 address must appear in brackets if used with a port,
-for example "[::1]:443".
-.IP
-Example: "localhost,127.0.0.1,::1,fc00::/7,example.com:8080"
 .SH "REPORTING BUGS"
 Report bugs to the main project page on https://github.com/fanglingsu/vimb/issues
 .br
