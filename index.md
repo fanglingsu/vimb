@@ -61,7 +61,7 @@ But following images may give a impression of they way vimb works.
 
 - webkit2gtk-4.0 >= 2.16.x
 
-## Install
+## install
 
 Edit `config.mk` to match your local setup.
 
