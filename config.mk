@@ -1,4 +1,4 @@
-VERSION = dev-3.0
+VERSION = 3.0-alpha
 
 ifneq ($(V),1)
 Q := @

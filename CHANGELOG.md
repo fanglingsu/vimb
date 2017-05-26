@@ -1,6 +1,6 @@
 # Changes in vimb
 
-## [unreleased]
+## [3.0-alpha] - 2017-05-27
 
 ### Changed
 
@@ -33,8 +33,19 @@
 
 ### Removed
 
-* There where many features removed during the webkit2 migration.
-  TODO list removed features and if they will be added again
+* There where many features removed during the webkit2 migration. That will
+  hopefully be added again soon.
+  * auto-response-headers
+  * autocommands and augroups
+  * external downloader
+  * HSTS
+  * kiosk mode
+  * multiple ex commands on startup via `--cmd, -C`
+  * page marks
+  * prevnext
+  * showing page source via `gF` this viewtype is not supported by webkit
+    anymore.
+  * socket support
 
 ---
 
@@ -99,6 +110,6 @@
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[unreleased]: https://github.com/fanglingsu/vimb/compare/2.12...webkit2
+[3.0-alpha]: https://github.com/fanglingsu/vimb/compare/2.12...3.0-alpha
 [2.12]: https://github.com/fanglingsu/vimb/compare/2.11...2.12
 [2.11]: https://github.com/fanglingsu/vimb/compare/2.10...2.11
