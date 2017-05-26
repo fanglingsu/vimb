@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,10 @@
 #ifndef _HISTORY_H
 #define _HISTORY_H
 
+#include <glib.h>
+
+#include "main.h"
+
 typedef enum {
     HISTORY_FIRST   = 0,
     HISTORY_COMMAND = 0,
@@ -28,8 +32,8 @@ typedef enum {
     HISTORY_LAST
 } HistoryType;
 
+void history_add(Client *c, HistoryType type, const char *value, const char *additional);
 void history_cleanup(void);
-void history_add(HistoryType type, const char *value, const char *additional);
 gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input);
 GList *history_get_list(VbInputType type, const char *query);
 

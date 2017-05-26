@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,13 @@
 #ifndef _SETTING_H
 #define _SETTING_H
 
+#include <gtk/gtk.h>
+
 #include "main.h"
 
-void setting_init(void);
-void setting_cleanup(void);
-VbCmdResult setting_run(char* name, const char* param);
-gboolean setting_fill_completion(GtkListStore *store, const char *input);
+void setting_init(Client *c);
+void setting_cleanup(Client *c);
+VbCmdResult setting_run(Client *c, char *name, const char *param);
+gboolean setting_fill_completion(Client *c, GtkListStore *store, const char *input);
 
 #endif /* end of include guard: _SETTING_H */

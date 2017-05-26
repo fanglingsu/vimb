@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,71 +17,17 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
-
-
 /* features */
-/* enable cookie support */
-#define FEATURE_COOKIE
-/* highlight search results */
-#define FEATURE_SEARCH_HIGHLIGHT
-/* disable scrollbars */
-#define FEATURE_NO_SCROLLBARS
-/* disable X window embedding */
-/* #define FEATURE_NO_XEMBED */
-/* show page title in url completions */
-#define FEATURE_TITLE_IN_COMPLETION
-/* enable the read it later queue */
-#define FEATURE_QUEUE
-/* show load progress in window title */
-#define FEATURE_TITLE_PROGRESS
-/* should the history indicator [+-] be shown in status bar after url */
-#define FEATURE_HISTORY_INDICATOR
-/* should the profile name be shown before url in url bar */
-#define FEATURE_PROFILE_INDICATOR
 /* show wget style progressbar in status bar */
 #define FEATURE_WGET_PROGRESS_BAR
-#ifdef HAS_GTK3
-/* enables workaround for high dpi displays */
-/* eventually the environment variable GDK_DPI_SCALE=2.0 must be set */
-/* to get the hack working */
-/* #define FEATURE_HIGH_DPI */
-#endif
-/* enable HTTP Strict-Transport-Security*/
-#define FEATURE_HSTS
-/* enable soup caching - size can be configure by maximum-cache-size setting */
-#define FEATURE_SOUP_CACHE
-/* allow setting default_zoom via config */
-#define FEATURE_DEFAULT_ZOOM
-/* enable the :autocmd feature */
-#define FEATURE_AUTOCMD
-/* enable the :auto-response-header feature */
-#define FEATURE_ARH
-/* allow to use socket to remote control vimb */
-#define FEATURE_SOCKET
-
-/* time in seconds after that message will be removed from inputbox if the
- * message where only temporary */
-#define MESSAGE_TIMEOUT              5
-
-/* number of chars to be shown for ambiguous commands */
-#define SHOWCMD_LEN                 10
-
-/* parh to crt file for the certificate validation */
-#define SETTING_CA_BUNDLE           "/etc/ssl/certs/ca-certificates.crt"
-#define SETTING_MAX_CONNS           25
-#define SETTING_MAX_CONNS_PER_HOST   5
-/* default font size for fonts in webview */
-#define SETTING_DEFAULT_FONT_SIZE   10
-#define SETTING_GUI_FONT_NORMAL     "monospace normal 10"
-#define SETTING_GUI_FONT_EMPH       "monospace bold 10"
-#define SETTING_HOME_PAGE           "http://fanglingsu.github.io/vimb/"
-
-#define MAXIMUM_HINTS              500
-
-#define WIN_WIDTH                  800
-#define WIN_HEIGHT                 600
+/* show load progress in window title */
+#define FEATURE_TITLE_PROGRESS
+/* show page title in url completions */
+#define FEATURE_TITLE_IN_COMPLETION
+/* support gui style settings compatible with vimb2 */
+/* #define FEATURE_GUI_STYLE_VIMB2_COMPAT */
+/* enable the read it later queue */
+#define FEATURE_QUEUE
 
 #ifdef FEATURE_WGET_PROGRESS_BAR
 /* chars to use for the progressbar */
@@ -89,35 +35,23 @@
 #define PROGRESS_BAR_LEN            20
 #endif
 
-/* CSS style use on creating hints. This might also be averrules by css out of
- * $XDG_CONFIG_HOME/vimb/style.css file. */
-#define HINT_CSS "#_hintContainer{\
-position:static\
-}\
-._hintLabel{\
--webkit-transform:translate(-4px,-4px);\
-position:absolute;\
-z-index:100000;\
-font:bold .8em monospace;\
-color:#000;\
-background-color:#fff;\
-margin:0;\
-padding:0px 1px;\
-border:1px solid #444;\
-opacity:0.7\
-}\
-._hintElem{\
-background-color:#ff0 !important;\
-color:#000 !important;\
-transition:all 0 !important;\
-transition-delay:all 0 !important\
-}\
-._hintElem._hintFocus{\
-background-color:#8f0 !important\
-}\
-._hintLabel._hintFocus{\
-z-index:100001;\
-opacity:1\
-}"
+/* time in seconds after that message will be removed from inputbox if the
+ * message where only temporary */
+#define MESSAGE_TIMEOUT             5
 
-#endif /* end of include guard: _CONFIG_H */
+/* number of chars to be shown in statusbar for ambiguous commands */
+#define SHOWCMD_LEN                 10
+/* css applied to the gui elements regardless of user's settings */
+#define GUI_STYLE_CSS_BASE          "#input text{background-color:inherit;color:inherit;caret-color:@color;font:inherit;}"
+
+/* default font size for fonts in webview */
+#define SETTING_DEFAULT_FONT_SIZE             16
+#define SETTING_DEFAULT_MONOSPACE_FONT_SIZE   13
+#define SETTING_GUI_FONT_NORMAL               "10pt monospace"
+#define SETTING_GUI_FONT_EMPH                 "bold 10pt monospace"
+#define SETTING_HOME_PAGE                     "about:blank"
+
+#define MAXIMUM_HINTS              500
+/* default window dimensions */
+#define WIN_WIDTH                  800
+#define WIN_HEIGHT                 600

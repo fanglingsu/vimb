@@ -1,4 +1,5 @@
 .\" vim: ft=groff
+.ss 12 0
 .ad l
 .TH VIMB 1 "DATE" "vimb/VERSION" "Vimb Manual"
 .de EX
@@ -28,48 +29,21 @@ If \fIURI\fP is '-', Vimb reads the HTML to display from stdin.
 .PP
 Mandatory arguments to long options are mandatory for short options too.
 .TP
-.BI "\-C, \-\-cmd " "CMD"
-Run \fICMD\fP as ex command line right before the first page is loaded.
-If the flag is used more than one time, the ordering is preserved when
-\fICMD\fP are executed.
-You could also pass several ex commands in one \fICMD\fP,
-if they are separated by "|".
-.sp
-Example:
-.EX
-vimb --cmd "set cookie-accept=origin|set header=Referer,DNT=1"
-.EE
-.TP
-.BI "\-c, \-\-config " "CONFIG-FILE"
-Use custom configuration given as \fICONFIG-FILE\fP.
+.BI "\-c, \-\-config " "FILE"
+Use custom configuration given as \fIFILE\fP.
 This will also be applied on new spawned instances.
-.TP
-.BI "\-p, \-\-profile " "PROFILE-NAME"
-Create or open specified configuration profile. Configuration data for the profile is stored in a directory named \fIPROFILE-NAME\fP under default directory for configuration data.
 .TP
 .BI "\-e, \-\-embed " "WINID"
 .I WINID
 of an XEmbed-aware application, that Vimb will use as its parent.
 .TP
-.B \-d, \-\-dump
-Dump the current used socket path to stdout in case Vimb is started with \-s
-option.
-.sp
-Example:
-.EX
-sh -c "./vimb -s -d > ~/vimb.socket" &
-echo ":o github.com<CR>" | socat - unix-connect:$(< ~/vimb.socket)
-.EE
-.TP
 .B "\-h, \-\-help"
 Show help options.
 .TP
-.B \-k, \-\-kiosk
-Run Vimb in kiosk mode with nearly no keybindings, not inputbox and no context
-menu.
-.TP
-.B \-s, \-\-socket
-If given Vimb will create a control socket in the user runtime directory.
+.BI "\-p, \-\-profile " "PROFILE-NAME"
+Create or open specified configuration profile.
+Configuration data for the profile is stored in a directory named
+\fIPROFILE-NAME\fP under default directory for configuration data.
 .TP
 .B "\-v, \-\-version"
 Print build and version information.
@@ -107,9 +81,6 @@ Mode.
 .B CTRL\-Z
 Switch Vimb into Pass-Through Mode.
 .TP
-.B gf
-Toggle show HTML source of the current page.
-.TP
 .B gF
 Open the Web Inspector for the current page.
 .TP
@@ -145,8 +116,8 @@ Open the last closed page.
 Open the last closed page in a new window.
 .TP
 .B CTRL\-P
-Open the oldest entry from the Read It Later queue in the current browser window (only if
-Vimb has been compiled with QUEUE feature).
+Open the oldest entry from the read it later queue in the current browser
+window.
 .TP
 .BI [ \(dqx ]p
 Open the URI out of the register \fIx\fP or, if not given, from the clipboard.
@@ -166,14 +137,6 @@ Go to the \fIN\fPth descendent directory of the current opened URI.
 .TP
 .B gU
 Go to the domain of the current opened page.
-.TP
-.BI [ N ]CTRL\-A
-Increments the last number in URL by 1, or by \fIN\fP if given.
-.TP
-.BI [ N ]CTRL\-X
-Decrements the last number in URL by 1, or by \fIN\fP if given.
-Negative numbers are not supported as trailing numbers in URLs
-are often preceded by hyphens.
 .TP
 .B r
 Reload the website.
@@ -223,29 +186,11 @@ Scroll page \fIN\fP steps down.
 .TP
 .BI [ N ]k
 Scroll page \fIN\fP steps up.
-.TP
-.BI [ N ]]]
-Follow the last \fIN\fPth link matching `nextpattern'.
-.TP
-.BI [ N ][[
-Follow the last \fIN\fPth link matching `previouspattern'.
-.TP
-.BI m{ a-z }
-Set a page mark {\fIa-z\fP} at the current position on the page.
-Such set marks are only available on the current page;
-if the page is left, all marks will be removed.
-.TP
-.BI '{ a-z }
-Jump to the mark {\fIa-z\fP} on the current page.
-.TP
-.B ''
-Jumps to the position before the latest jump, or where the last "m'" command
-was given.
 .SS Hinting
 Hinting in Vimb is how you accomplish the tasks that you would do with the
 mouse in common mouse-driven browsers: open a URI, yank a URI, save a page and
 so on. When hinting is started, the relevant elements on the page will
-be marked by labels generated from configured `hintkeys'.
+be marked by labels generated from configured `hint-keys'.
 Hints can be selected by using <Tab>, <C-I> or <C-Tab>, <C-O>,
 by typing the chars of the label, or filtering the elements by some text
 that is part of the hinted element (like URI, link text, button label)
@@ -307,9 +252,9 @@ Generate an `:open' prompt with hint's URI.
 Generate an `:tabopen' prompt with hint's URI.
 .TP
 .B ;e
-Open the configured $EDITOR (`editor-command') with the hinted form element's
+Open the configured editor (`editor-command') with the hinted form element's
 content.
-If the file in $EDITOR is saved and the $EDITOR is closed, the file
+If the file in editor is saved and the editor is closed, the file
 content will be put back in the form field.
 .TP
 .B ;i
@@ -370,10 +315,10 @@ direction.
 .TP
 .BI [ N ]N
 Search for \fIN\fPnth previous search result depending on current search
-direction.
 .TP
 .B <CR>
 Perform a click on element containing the current highlighted search result.
+direction.
 .SS Zooming
 .TP
 .BI [ N ]zi
@@ -396,7 +341,6 @@ Reset Zoom.
 Yank the URI or current page into register \fIx\fP and clipboard.
 .TP
 .BI [ \(dqx ]Y
-Yank the current selection into register \fIx\fP and clipboard.
 .SH COMMAND MODE
 Commands that are listed below are ex-commands like in Vim, that are typed
 into the inputbox (the command line of vimb).
@@ -411,8 +355,8 @@ command.
 At the moment the count parts [N] of commands is parsed, but currently there is
 no command that uses the count.
 .sp
-Commands that are typed interactivly (from the inputbox or from socket) are
-normally recorded into command history and register.
+Commands that are typed interactivly are normally recorded into command
+history and register.
 To avoid this, the commands can be prefixed by one or more additional `:' or
 whitespace.
 .PP
@@ -427,8 +371,6 @@ cannot be followed by another command.
 .PP
 .PD 0
 .IP - 2
-autocmd
-.IP -
 cmap, cnoremap, imap, inoremap, nmap, nnoremap
 .IP -
 eval
@@ -460,7 +402,7 @@ Remove everything between cursor and prompt.
 Moves the cursor directly behind the prompt `:'.
 .TP
 .B CTRL\-E
-Moves the cursor after the char in inputbox.
+Moves the cursor after the prompt in inputbox.
 .TP
 .B CTRL\-V
 Pass the next key press directly to GTK.
@@ -481,6 +423,7 @@ Step backward in the command history.
 .TP
 .B <Down>
 Step forward in the command history.
+Yank the current selection into register \fIx\fP and clipboard.
 .SS Open
 .TP
 .BI ":o[pen] [" URI ]
@@ -545,8 +488,8 @@ that could be used as ":save ^Gh".
 .IP ":nmap <F1> :set scripts=on<CR>:open !glib<Tab><CR>"
 This will enable scripts and lookup the first bookmarked URI with the tag
 `glib' and open it immediately if F1 key is pressed.
-.IP ":nmap \\\\\ \\\\\  50G;o"
-Example which maps two spaces to go to 50% of the page, and start hinting mode.
+.IP ":nmap \\\\\ \\\\\  50G"
+Example which maps two spaces to go to 50% of the page.
 .PD
 .RE
 .TP
@@ -585,12 +528,12 @@ full URI given when the command is called.
 .P
 Examples:
 .PD 0
+.IP ":handler-add mailto=urxvt -e mutt %s"
+to start email client for mailto links.
 .IP ":handler-add magnet=xdg-open %s"
 to open magnet links with xdg-open.
-.IP ":handler-add magnet=transmission-gtk %s"
-to open magnet links directly with Transmission.
-.IP ":handler-add irc=irc-handler.sh %s"
-to direct irc://<host>:<port>/<channel> links to a wrapper for your IRC client.
+.IP ":handler-add ftp=urxvt -e wget %s -P ~/ftp-downloads"
+to handle ftp downloads via wget.
 .PD
 .RE
 .TP
@@ -635,9 +578,10 @@ contain spaces like `:open map "city hall, London" railway station, London'
 Remove the search engine to the given \fIshortcut\fP.
 .TP
 .BI ":shortcut-default " "shortcut"
-Set the shortcut for given \fIshortcut\fP as the default.
-It doesn't matter if the \fIshortcut\fP is already in use or not
-to be able to set it.
+Set the shortcut for given \fIshortcut\fP as the default, that is the shortcut
+to be used if no shortcut is given and the string to open is not an URI. It
+doesn't matter if the \fIshortcut\fP is already in use or not to be able to set
+it.
 .SS Settings
 .TP
 .BI ":se[t] " var = value
@@ -670,10 +614,8 @@ Show the current set value of variable.
 .BI ":se[t] " var !
 Toggle the value of boolean variable \fIvar\fP and display the new set value.
 .SS Queue
-The queue allows the marking of URIs for later reading (something like a Read It Later
-list).
+The queue allows the marking of URIs for later reading.
 This list is shared between the single instances of Vimb.
-Only available if Vimb has been compiled with the QUEUE feature.
 .TP
 .BI ":qpu[sh] [" URI ]
 Push \fIURI\fP or, if not given, the current URI to the end of the queue.
@@ -687,136 +629,11 @@ queue.
 .TP
 .B :qc[lear]
 Removes all entries from queue.
-.SS Automatic commands
-An autocommand is a command that is executed automatically in response to some
-event, such as a URI being opened.
-Autocommands are very powerful.
-Use them with care and they will help you avoid typing many commands.
-.PP
-Autocommands are built with following properties.
-.TP
-.I group
-When the [\fIgroup\fP] argument is not given, Vimb uses the current group as
-defined with ':augroup', otherwise, Vimb uses the group defined with
-[\fIgroup\fP].
-Groups are useful to remove multiple grouped autocommands.
-.TP
-.I event
-You can specify a comma separated list of event names.
-No white space can be used in this list.
-.RS
-.PP
-.PD 0
-Events:
-.TP
-.B LoadProvisional
-Fired if a new page is going to be opened.
-No data has been received yet, the load may still fail for transport issues.
-.TP
-.B LoadCommited
-Fired if first data chunk has arrived, meaning that the necessary transport
-requirements are established, and the load is being performed.
-This is the right event to toggle content related setting
-like 'scripts', 'plugins' and such things.
-.TP
-.B LoadFirstLayout
-fired if the first layout with actual visible content is shown.
-.TP
-.B LoadFinished
-Fires when everything that was required to display on the page has been loaded.
-.TP
-.B LoadFailed
-Fired when some error occurred during the page load that prevented it from
-being completed.
-.TP
-.B DownloadStart
-Fired right before a download is started.
-This is fired for Vimb downloads as well as external downloads
-if 'download-use-external' is enabled.
-.TP
-.B DownloadFinished
-Fired if a Vimb managed download is finished.
-For external download this event is not available.
-.TP
-.B DownloadFailed
-Fired if a Vimb managed download failed.
-For external download this event is not available.
-.PD
-.RE
-.TP
-.I pat
-Comma separated list of patterns, matches in order to check if a autocommand
-applies to the URI associated to an event.
-To use ',' within the single patterns this must be escaped as '\e,'.
-.RS
-.PP
-.PD 0
-Patterns:
-.IP "\fB*\fP"
-Matches any sequence of characters.
-This includes also '/' in contrast to shell patterns.
-.IP "\fB?\fP"
-Matches any single character except of '/'.
-.IP "\fB{one,two}\fP"
-Matches 'one' or 'two'.
-Any '{', ',' and '}' within this pattern must be escaped by a '\\'.
-\&'*' and '?' have no special meaning within the curly braces.
-.IP "\fB\e\fP"
-Use backslash to escape the special meaning of '?*{},' in the pattern or
-pattern list.
-.PD
-.RE
-.TP
-.I cmd
-Any `ex` command vimb understands.
-The leading ':' is not required.
-Multiple commands can be separated by '|'.
-.TP
-.BI ":au[tocmd] [" group "] {" event "} {" pat "} {" cmd "}"
-Add \fIcmd\fP to the list of commands that Vimb will execute automatically on
-\fIevent\fP for a URI matching \fIpat\fP autocmd-patterns.
-Vimb always adds the \fIcmd\fP after existing autocommands, so that the
-autocommands are executed in the order in which they were given.
-.TP
-.BI ":au[tocmd]! [" group "] {" event "} {" pat "} {" cmd "}"
-Remove all autocommands associated with \fIevent\fP and which pattern match
-\fIpat\fP, and add the command \fIcmd\fP.
-Note that the pattern is not matches literally to find autocommands
-to remove, like Vim does.
-Vimb matches the autocommand pattern with \fIpat\fP.
-If [\fIgroup\fP] is not given, deletes autocommands in current group,
-as noted above.
-.TP
-.BI ":au[tocmd]! [" group "] {" event "} {" pat "}"
-Remove all autocommands associated with \fIevent\fP and which pattern matches
-\fIpat\fP in given group (current group by default).
-.TP
-.BI ":au[tocmd]! [" group "] * {" pat "}"
-Remove all autocommands with patterns matching \fIpat\fP for all events
-in given group (current group by default).
-.TP
-.BI ":au[tocmd]! [" group "] {" event "}"
-Remove all autocommands for \fIevent\fP in given group (current group
-by default).
-.TP
-.BI ":au[tocmd]! [" group "]"
-Remove all autocommands in given group (current group by default).
-.TP
-.BI ":aug[roup] {" name "}"
-Define the autocmd group \fIname\fP for the following ":autocmd" commands.
-The name "end" selects the default group.
-.TP
-.BI ":aug[roup]! {" name "}"
-Delete the autocmd group \fIname\fP.
-.PP
-Example:
-.EX
-:aug github
-:  au LoadCommited * set scripts=off|set cookie-accept=never
-:  au LoadCommited http{s,}://github.com/* set scripts=on
-:aug end
-.EE
 .SS Misc
+.TP
+.B :cl[earcache]
+Clears all resources currently cached by webkit.
+Note that this effects all running instances of vimb.
 .TP
 .BI ":sh[ellcmd] " cmd
 Runs the given shell \fIcmd\fP syncron and print the output into inputbox.
@@ -839,18 +656,9 @@ Contains the title of the current opened page.
 .B VIMB_PID
 Contains the pid of the running Vimb instance.
 .TP
-.B VIMB_SOCKET
-Holds the full path to the control socket, if Vimb is compiled with SOCKET
-feature and started with `--socket' option.
-.TP
 .B VIMB_XID
 Holds the X-Window id of the Vimb window or of the embedding window if Vimb is
-compiled with XEMBED and started with the -e option.
-.PD
-.PP
-Example:
-.EX
-:sh ls -l $HOME
+started with the -e option.
 .EE
 .RE
 .TP
@@ -903,7 +711,6 @@ Last search phrase.
 .TP
 .B \(dq;
 Contains the last hinted URL.
-This can be used in `x-hint-command' to get the URL of the hint.
 .PD
 .RE
 .TP
@@ -941,10 +748,10 @@ Switch back to normal mode.
 Executes the next command as normal mode command and return to input mode.
 .TP
 .B CTRL\-T
-Open configured $EDITOR with content of current form field.
+Open configured editor with content of current form field.
 .TP
 .B CTRL\-V
-Pass the next key press directly to GTK.
+Pass the next key press directly to WebKit.
 .TP
 .B CTRL\-Z
 Enter the pass-through mode.
@@ -1006,55 +813,65 @@ This completion starts by `/` or `?` in inputbox and performs a prefix
 comparison for further typed chars.
 .SH SETTINGS
 All settings listed below can be set with the `:set' command.
-.SS WebKit-Settings
 .TP
-.B accelerated-compositing (bool)
-Enable or disable support for accelerated compositing on pages.
-Accelerated compositing uses the GPU to render animations on pages
-smoothly and also allows proper rendering of 3D CSS transforms.
-.TP
-.B auto-load-images (bool)
-Load images automatically.
-.TP
-.B auto-resize-window (bool)
-Indicates if Vimb will honor size and position changes of the window by various
-DOM methods.
-.TP
-.B auto-shrink-images (bool)
-Automatically shrink standalone images to fit.
+.B accelerated-2d-canvas (bool)
+Enable or disable accelerated 2D canvas.
+When accelerated 2D canvas is enabled, WebKit may render some 2D canvas
+content using hardware accelerated drawing operations.
 .TP
 .B caret (bool)
 Whether to enable accessibility enhanced keyboard navigation.
 .TP
-.B closed-max-items (int)
-Maximum number of stored last closed browser windows. If closed-max-items is
-set to 0, closed browser windows will not be stored.
+.B cookie-accept (string)
+Cookie accept policy {`always', `never', `origin' (accept all non-third-party
+cookies)}.
 .TP
-.B cursivfont (string)
+.B closed-max-items (int)
+Maximum number of stored last closed URLs.
+If closed-max-items is set to 0, closed URLs will not be stored.
+.TP
+.B completion-css (string)
+CSS style applied to the inputbox completion list items.
+.TP
+.B completion-hover-css (string)
+CSS style applied to the inputbox completion list item that is currently
+hovered by the mouse.
+.TP
+.B completion-selected-css (string)
+CSS style applied to the inputbox completion list item that is currently
+selected.
+.TP
+.B cursiv-font (string)
 The font family used as the default for content using cursive font.
 .TP
-.B defaultencoding (string)
+.B default-charset (string)
 The default text charset used when interpreting content with an unspecified
 charset.
 .TP
-.B defaultfont (string)
+.B default-font (string)
 The font family to use as the default for content that does not specify a
 font.
+.TP
+.B default-zoom (int)
+Default Full-Content zoom level in percent. Default is 100.
 .TP
 .B dns-prefetching (bool)
 Indicates if Vimb prefetches domain names.
 .TP
-.B dom-paste (bool)
-Whether to enable DOM paste.
-If set to TRUE, document.execCommand("Paste")
-will correctly execute and paste content of the clipboard.
+.B download-path (string)
+Path to the default download directory.
+If no download directory is set, download will be written into current
+directory.
+The following pattern will be expanded if the download is
+started '~/', '~user', '$VAR' and '${VAR}'.
 .TP
-.B file-access-from-file-uris (bool)
-Boolean property to control file access for file:// URIs.
-If this option is enabled every file:// will have its own security
-unique domain.
+.B editor-command (string)
+Command with placeholder '%s' called if form field is opened with $EDITOR to
+spawn the editor-like `x-terminal-emulator -e vim %s'.
+To use Gvim as the editor, it's necessary to call it with `-f' to run it in
+the foreground.
 .TP
-.B fontsize (int)
+.B font-size (int)
 The default font size used to display text.
 .TP
 .B frame-flattening (bool)
@@ -1062,304 +879,24 @@ Whether to enable the Frame Flattening.
 With this setting each subframe is expanded to its contents,
 which will flatten all the frames to become one scrollable page.
 .TP
-.B html5-database (bool)
-Whether to enable HTML5 client-side SQL database support.
-Client-side SQL database allows web pages to store structured data
-and be able to use SQL to manipulate that data asynchronously.
-.TP
-.B html5-local-storage (bool)
-Whether to enable HTML5 localStorage support.
-localStorage provides simple synchronous storage access.
-.TP
-.B hyperlink-auditing (bool)
-Enable or disable support for <a ping>.
-.TP
-.B images (bool)
-Determines whether images should be automatically loaded or not.
-.TP
-.B insecure-content-show (bool)
-Whether pages loaded via HTTPS should load subresources such as images and
-frames from non-HTTPS URIs.
-Only for webkit>=2.0.
-.TP
-.B insecure-content-run (bool)
-Whether pages loaded via HTTPS should run subresources such as CSS, scripts,
-and plugins from non-HTTPS URIs.
-Only for webkit>=2.0.
-.TP
-.B java-applet (bool)
-Enable or disable support for the Java <applet> tag.
-Keep in mind that Java content can be still shown in the page
-through <object> or <embed>, which are the preferred tags for this task.
-.TP
-.B javascript-can-access-clipboard (bool)
-Whether JavaScript can access the clipboard.
-.TP
-.B javascript-can-open-windows-automatically (bool)
-Whether JavaScript can open popup windows automatically without user
-intervention.
-.TP
-.B media-playback-allows-inline (bool)
-Whether media playback is full-screen only or inline playback is allowed.
-Setting it to false allows specifying that media playback should be always
-fullscreen.
-.TP
-.B media-playback-requires-user-gesture (bool)
-Whether a user gesture (such as clicking the play button) would be required to
-start media playback or load media.
-Setting it on requires a gesture by the
-user to start playback, or to load the media.
-.TP
-.B media-stream (bool)
-Enable or disable support for MediaSource on pages.
-MediaSource is an experimental proposal which extends HTMLMediaElement
-to allow JavaScript to generate media streams for playback.
-.TP
-.B mediasource (bool)
-Enable or disable support for MediaSource on pages.
-MediaSource is an experimental proposal which extends HTMLMediaElement
-to allow JavaScript to generate media streams for playback.
-.TP
-.B minimumfontsize (int)
-The minimum font size used to display text.
-.TP
-.B monofont (string)
-The font family used as the default for content using monospace font.
-.TP
-.B monofontsize (int)
-Default font size for the monospace font.
-.TP
-.B offlinecache (bool)
-Whether to enable HTML5 offline web application cache support.
-Offline web application cache allows web applications to run even
-when the user is not connected to the network.
-.TP
-.B pagecache (bool)
-Enable or disable the page cache.
-Disabling the page cache is generally only useful for special
-circumstances like low-memory scenarios or special purpose
-applications like static HTML viewers.
-.TP
-.B print-backgrounds (bool)
-Whether background images should be printed.
-.TP
-.B private-browsing (bool)
-Whether to enable private browsing mode.
-This suppresses  printing of messages into JavaScript Console.
-At the time this is the only way to force WebKit to
-not allow a page to store data in the windows sessionStorage.
-.TP
-.B plugins (bool)
-Determines whether or not plugins on the page are enabled.
-.TP
-.B print-backgrounds (bool)
-Whether background images should be drawn during printing.
-.TP
-.B resizable-text-areas (bool)
-Whether text areas are resizable.
-.TP
-.B respect-image-orientation (bool)
-Whether Vimb should respect image orientation.
-.TP
-.B sansfont (string)
-The font family used as the default for content using sans-serif font.
-.TP
-.B scripts (bool)
-Determines whether or not JavaScript executes within a page.
-.TP
-.B seriffont (string)
-The font family used as the default for content using serif font.
-.TP
-.B site-specific-quirks (bool)
-Enables the site-specific compatibility workarounds.
-.TP
-.B smooth-scrolling (bool)
-Enable or disable support for smooth scrolling.
-.TP
-.B spacial-navigation (bool)
-Whether to enable the Spatial Navigation.
-This feature consists in the ability to navigate between focusable
-elements in a Web page, such as hyperlinks and form controls, by using
-Left, Right, Up and Down arrow keys.
-For example, if
-a user presses the Right key, heuristics determine whether there is an
-element they might be trying to reach towards the right, and if there are
-multiple elements, which element they probably want.
-.TP
-.B spell-checking (bool)
-Whether to enable spell checking while typing.
-.TP
-.B spell-checking-languages (string)
-The languages to be used for spell checking, separated by commas.
-.sp
-The locale string typically is in the form lang_COUNTRY, where lang is an
-ISO-639 language code, and COUNTRY is an ISO-3166 country code.
-For instance, sv_FI for Swedish as written in Finland or pt_BR
-for Portuguese as written in Brazil.
-.sp
-If no value is specified the default value for GTK is used.
-.TP
-.B tab-key-cycles-through-elements (bool)
-Whether the Tab key cycles through elements on the page.
-.sp
-If true, pressing the Tab key will focus the next element in the web view.
-Otherwise, the web view will interpret Tab key presses as normal key presses.
-If the selected element is editable, the Tab key will cause the insertion
-of a Tab character.
-.TP
-.B universal-access-from-file-uris (bool)
-Whether to allow files loaded through file:// URIs universal access to all
-pages.
-.TP
-.B useragent (string)
-The user-agent string used by WebKit.
-.TP
-.B webaudio (bool)
-Enable or disable support for WebAudio on pages.
-WebAudio is an experimental proposal for allowing web pages
-to generate Audio WAVE data from JavaScript.
-.TP
-.B webgl (bool)
-Enable or disable support for WebGL on pages.
-.TP
-.B webinspector (bool)
-Determines whether or not developer tools, such as the Web Inspector, are
-enabled.
-.TP
-.B xssauditor (bool)
-Whether to enable the XSS auditor.
-This feature filters some kinds of reflective XSS attacks
-on vulnerable web sites.
-.SS Vimb-Settings
-.TP
-.B auto-response-header (list)
-Prepend HTTP-Header to responses received from server, based on pattern
-matching.
-The purpose of this setting is to enforce some security setting in the client.
-For example, you could set Content-Security-Policy (see
-`http://www.w3.org/TR/CSP/') for implement a whitelist policy, or set
-Strict-Transport-Security for server that don't provide this header whereas
-they propose https website.
-.sp
-Note that this setting will not replace existing headers, but add a new one.
-If multiple patterns match a requested URI, the last matched rule will be
-applied.
-You could also specified differents headers for the same pattern.
-.sp
-The format is a list of `pattern header-list`.
-If `header-list` has not than one element, enclosing with QUOTE
-is mandatory: `"pattern header-list"`.
-The header-list format is the same as `header` setting.
-.RS
-.PP
-Example:
-.PD 0
-.IP ":set auto-response-header=* Content-security-policy=default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'none'"
-.IP ":set auto-response-header+=https://example.com/* Content-security-policy=default-src 'self' https://*.example.com/"
-.IP ":set auto-response-header+=https://example.com/* Strict-Transport-Security=max-age=31536000"
-.IP ":set auto-response-header+=""https://*.example.org/sub/* Content-security-policy,X-Test=ok"""
-.PD
-.RE
-.TP
-.B ca-bundle (string)
-The path to the .crt file for the certificate validation.
-The given path is expanded with standard file expansion.
-.TP
-.B completion-bg-active (color)
-Background color for selected completion item.
-.TP
-.B completion-bg-normal (color)
-Background color for non-selected completion items.
-.TP
-.B completion-fg-active (color)
-Foreground color for the selected completion item.
-.TP
-.B completion-fg-normal (color)
-Foreground color for the non-selected completion items.
-.TP
-.B completion-font (string)
-Font used for the completion items.
-.TP
-.B cookie-accept (string)
-Cookie accept policy {`always', `never', `origin' (accept all non-third-party
-cookies)}.
-.TP
-.B cookie-timeout (int)
-Cookie timeout in seconds.
-.TP
-.B cookie-expire-time (int)
-Enforce expire-time on cookies.
-The default value `-1' keep expire-time as defined by server side.
-The value `0' convert all cookies as session-only cookies
-(`cookie-timeout' setting is used as for any other session-cookie).
-Any other value enforce the expire-time (the expire-time value will be the
-lower between server-side request and time defined with `cookie-expire-time').
-.TP
-.B default-zoom (int)
-Initial Full-Content Zoom in percent. Default is 100.
-.TP
-.B download-command (string)
-A command with placeholder '%s' that will be invoked to download a URI.
-.RS
-.TP
-The following additional environment variable are available:
-.PD 0
-.TP
-.B $VIMB_URI
-The URI of the current opened page, normally the page where the download was
-started from, also known as referer.
-.TP
-.B $VIMB_FILE
-The target file that is calculated by Vimb according to the `download-path'.
-Note that this file might already exists, so it's strongly recommended to
-check the path in this variable before usage.
-.TP
-.B $VIMB_COOKIES
-Path to the cookie file Vimb uses.
-This is only available if Vimb is compiled with the COOKIE feature.
-.TP
-.B $VIMB_USER_AGENT
-Holds the user agent string that Vimb uses.
-.TP
-.B $VIMB_MIME_TYPE
-The mime-type of the download.
-This variable is only available when the server sent the mime-type header
-with the response and only if the download was not start by the `:save'
-command or the `;s' hinting.
-.TP
-.B $VIMB_USE_PROXY
-Indicates if the proxy is enabled in Vimb.
-If enable this variable is `1', otherwise `0'.
-Note that this variable gives no hint if the proxy settings
-apply to the URL to be downloaded, only if proxy is enabled in general.
-.PD
-.PP
-Example:
-.PD 0
-.IP ":set download-command=/bin/sh -c\
- ""wget -c %s -O $VIMB_FILE --load-cookies $VIMB_COOKIES"""
-.PD
-.RE
-.TP
-.B download-path (string)
-Path to the default download directory.
-If the directory is not set download will be written into current directory.
-The following pattern will be expanded if the download
-is started '~/', '~user', '$VAR' and '${VAR}'.
-.TP
-.B download-use-external (bool)
-Indicates if the external download tool set as `download-command' should be
-used to handle downloads.
-If this is disabled Vimb will handle the download.
-.TP
-.B editor-command (string)
-Command with placeholder '%s' called if form filler is opened with $EDITOR to
-spawn the editor-like `x-terminal-emulator -e vi %s'.
-To use Gvim as the editor, it's necessary to call it with `-f' to run it
-in the foreground.
-.TP
 .B fullscreen (bool)
 Show the current window full-screen.
+.TP
+.B hardware-acceleration-policy (string)
+This setting decides how to enable and disable hardware acceleration.
+.PD 0
+.RS
+.IP - 2
+`ondemand' enables the hardware acceleration when the web contents request it, disabling it again when no
+longer needed.
+.IP - 2
+`always' enforce hardware acceleration to be enabled.
+.IP - 2
+`never' disables it completely.
+Note that disabling hardware acceleration might cause some websites to not
+render correctly or consume more CPU.
+.RE
+.PD
 .TP
 .B header (list)
 Comma separated list of headers that replaces default header sent by WebKit or
@@ -1395,14 +932,14 @@ ambiguous.
 Timeout before automatically following a non-unique numerical hint.
 To disable auto fire of hints, set this value to 0.
 .TP
-.B hintkeys (string)
+.B hint-keys (string)
 The keys used to label and select hints.
 With its default value, each hint has a unique number which can be typed
 to select it, while all other characters are used to filter hints based
 on their text.
 With a value such as asdfg;lkjh,
 each hint is `numbered' based on the characters of the home row.
-Note that the hint matching by label built of hintkeys is case sensitive.
+Note that the hint matching by label built of hint-keys is case sensitive.
 In this vimb differs from some other browsers that show hint labels in upper
 case, but match them lowercase.
 .RS
@@ -1418,94 +955,137 @@ If history-max-items is set to 0, the history file will not be changed.
 .B home-page (string)
 Homepage that vimb opens if started without a URI.
 .TP
-.B hsts (bool)
-Enable or disables the HSTS (HTTP Strict Transport Security) feature.
+.B html5-database (bool)
+Whether to enable HTML5 client-side SQL database support.
+Client-side SQL database allows web pages to store structured data
+and be able to use SQL to manipulate that data asynchronously.
+.TP
+.B html5-local-storage (bool)
+Whether to enable HTML5 localStorage support.
+localStorage provides simple synchronous storage access.
+.TP
+.B hyperlink-auditing (bool)
+Enable or disable support for <a ping>.
+.TP
+.B images (bool)
+Determines whether images should be automatically loaded or not.
+.TP
+.B incsearch (bool)
+While typing a search command, show where the pattern typed so far matches.
 .TP
 .B input-autohide (bool)
 If enabled the inputbox will be hidden whenever it contains no text.
 .TP
-.B input-bg-error (color)
-Background color for the inputbox if error is shown.
+.B input-css (string)
+CSS style applied to the inputbox in normal state.
 .TP
-.B input-bg-normal (color)
-Background color of the inputbox.
+.B input-error-css (string)
+CSS style applied to the inputbox in case of displayed error.
 .TP
-.B input-fg-error (color)
-Foreground color of inputbox if error is shown.
+.B javascript-can-access-clipboard (bool)
+Whether JavaScript can access the clipboard.
 .TP
-.B input-fg-normal (color)
-Foreground color of inputbox.
+.B javascript-can-open-windows-automatically (bool)
+Whether JavaScript can open popup windows automatically without user
+interaction.
 .TP
-.B input-font-error (string)
-Font user in inputbox if error is shown.
+.B media-playback-allows-inline (bool)
+Whether media playback is full-screen only or inline playback is allowed.
+Setting it to false allows specifying that media playback should be always
+fullscreen.
 .TP
-.B input-font-normal (string)
-Font used for inputbox.
+.B media-playback-requires-user-gesture (bool)
+Whether a user gesture (such as clicking the play button) would be required to
+start media playback or load media.
+Setting it on requires a gesture by the
+user to start playback, or to load the media.
 .TP
-.B nextpattern (list)
-Patterns to use when guessing the next page in a document.
-Each pattern is successively tested against each link in the page
-beginning from the last link.
-Default
-"/\\bnext\\b/i,/^(>|>>|»)$/,/^(>|>>|»)/,/(>|>>|»)$/,/\\bmore\\b/i".
-Note that you have to escape the '|' as '\\|' else the '|' will terminate
-the :set command and start a new command.
+.B media-stream (bool)
+Enable or disable support for MediaSource on pages.
+MediaSource is an experimental proposal which extends HTMLMediaElement
+to allow JavaScript to generate media streams for playback.
 .TP
-.B maximum-cache-size (int)
-Size in kB used to cache various page data.
-This caching is independent from `pagecache' or `offlinecache'.
-To disable caching, the size could be set to '0'.
+.B mediasource (bool)
+Enable or disable support for MediaSource on pages.
+MediaSource is an experimental proposal which extends HTMLMediaElement
+to allow JavaScript to generate media streams for playback.
 .TP
-.B previouspattern (list)
-Patterns to use when guessing the previous page in a document.
-Each pattern is successively tested against each link in the page
-beginning from the last link.
-Default "/\\bnext\\b/i,/^(>|>>|»)$/,/^(>|>>|»)/,/(>|>>|»)$/,/\\bmore\\b/i"
+.B minimum-font-size (int)
+The minimum font size used to display text.
 .TP
-.B proxy (bool)
-Indicates if the environment variable `http_proxy' is evaluated.
+.B monospace-font (string)
+The font family used as the default for content using monospace font.
 .TP
-.B scrollstep (int)
+.B monospace-font-size (int)
+Default font size for the monospace font.
+.TP
+.B offline-cache (bool)
+Whether to enable HTML5 offline web application cache support.
+Offline web application cache allows web applications to run even
+when the user is not connected to the network.
+.TP
+.B print-backgrounds (bool)
+Whether background images should be drawn during printing.
+.TP
+.B private-browsing (bool)
+Whether to enable private browsing mode.
+This suppresses  printing of messages into JavaScript Console.
+At the time this is the only way to force WebKit to
+not allow a page to store data in the windows sessionStorage.
+.TP
+.B plugins (bool)
+Determines whether or not plugins on the page are enabled.
+.TP
+.B sans-serif-font (string)
+The font family used as the default for content using sans-serif font.
+.TP
+.B scripts (bool)
+Determines whether or not JavaScript executes within a page.
+.TP
+.B scroll-step (int)
 Number of pixel vimb scrolls if 'j' or 'k' is used.
 .TP
-.B statusbar (bool)
-Indicates if the statusbar should be shown.
+.B serif-font (string)
+The font family used as the default for content using serif font.
 .TP
-.B status-color-bg (color)
-Background color of the statusbar.
+.B site-specific-quirks (bool)
+Enables the site-specific compatibility workarounds.
 .TP
-.B status-color-fg (color)
-Foreground color of the statusbar.
+.B smooth-scrolling (bool)
+Enable or disable support for smooth scrolling.
 .TP
-.B status-font (string)
-Font used in statusbar.
+.B spacial-navigation (bool)
+Whether to enable the Spatial Navigation.
+This feature consists in the ability to navigate between focusable
+elements in a Web page, such as hyperlinks and form controls, by using
+Left, Right, Up and Down arrow keys.
+For example, if a user presses the Right key, heuristics determine whether
+there is an element they might be trying to reach towards the right, and if
+there are multiple elements, which element they probably want.
 .TP
-.B status-ssl-color-bg (color)
-Background color of statusbar if current page uses trusted https certificate.
+.B spell-checking (bool)
+Enable or disable the spell checking feature.
 .TP
-.B status-ssl-color-fg (color)
-Foreground color for statusbar for https pages.
+.B spell-checking-languages (string)
+Set comma separated list of spell checking languages to be used for spell
+checking.
+.br
+The locale string typically is in the form lang_COUNTRY, where lang is an
+ISO-639 language code, and COUNTRY is an ISO-3166 country code. For instance,
+sv_FI for Swedish as written in Finland or pt_BR for Portuguese as written in
+Brazil.
 .TP
-.B status-ssl-font (string)
-Statusbar font for https pages.
+.B status-bar (bool)
+Indicates if the status bar should be shown.
 .TP
-.B status-sslinvalid-color-bg (color)
-Background color of the statusbar if the certificate if the https page isn't
-trusted.
+.B status-css (string)
+CSS style applied to the status bar on none https pages.
 .TP
-.B status-sslinvalid-color-fg (color)
-Foreground of statusbar for untrusted https pages.
+.B status-ssl-css (string)
+CSS style applied to the status bar on https pages with trusted certificate.
 .TP
-.B status-sslinvalid-font (string)
-Statusbar font for untrusted https pages.
-.TP
-.B strict-focus (bool)
-Vimb checks if an editable element is focused and switch to input mode.
-If strict-focus is enabled, this isn't done for focused element on page load
-(without user interaction), instead the focus is removed from the focused
-element.
-Focus changed that appear after the page was completely loaded are
-not affected by this setting.
+.B status-ssl-invalid-css (string)
+CSS style applied to the status bar on https pages with untrusted certificate.
 .TP
 .B strict-ssl (bool)
 If 'on', vimb will not load a untrusted https site.
@@ -1513,9 +1093,35 @@ If 'on', vimb will not load a untrusted https site.
 .B stylesheet (bool)
 If 'on' the user defined styles-sheet is used.
 .TP
+.B tabs-to-links (bool)
+Whether the Tab key cycles through elements on the page.
+.sp
+If true, pressing the Tab key will focus the next element in the web view.
+Otherwise, the web view will interpret Tab key presses as normal key presses.
+If the selected element is editable, the Tab key will cause the insertion
+of a Tab character.
+.TP
 .B timeoutlen (int)
 The time in milliseconds that is waited for a key code or mapped key sequence
 to complete.
+.TP
+.B user-agent (string)
+The user-agent string used by WebKit.
+.TP
+.B user-scripts (bool)
+Indicates if user style sheet file $XDG_CONFIG_HOME/vimb/style.css is sourced.
+.TP
+.B webaudio (bool)
+Enable or disable support for WebAudio on pages.
+WebAudio is an experimental proposal for allowing web pages
+to generate Audio WAVE data from JavaScript.
+.TP
+.B webgl (bool)
+Enable or disable support for WebGL on pages.
+.TP
+.B webinspector (bool)
+Determines whether or not developer tools, such as the Web Inspector, are
+enabled.
 .TP
 .B x-hint-command (string)
 Command used if hint mode ;x is fired.
@@ -1525,18 +1131,22 @@ it might change the behaviour by adding or changing mappings.
 .RS
 .P
 .PD 0
-.IP ":set x-hint-command=50G"
-Not really useful.
-If the hint is fired, scroll to the middle of the page.
 .IP ":set x-hint-command=:sh! curl -e <C-R>% <C-R>;"
 This fills the inputbox with the prefilled download command and replaces
 `<C-R>%' with the current URI and `<C-R>;' with the URI of the hinted element.
 .PD
 .RE
+.TP
+.B xss-auditor (bool)
+Whether to enable the XSS auditor.
+This feature filters some kinds of reflective XSS attacks on vulnerable web
+sites.
 .SH FILES
 .TP
-.I $XDG_CONFIG_HOME/vimb/
-Default directory for configuration data.
+.IR $XDG_CONFIG_HOME/vimb[/PROFILE]
+Directory for configuration data.
+If executed with \fB-p \fIPROFILE\fR parameter, configuration is read from
+this subdirectory.
 .RS
 .PD 0
 .TP
@@ -1547,7 +1157,7 @@ Configuration file to set WebKit setting, some GUI styles and keybindings.
 Cookie store file.
 .TP
 .I closed
-Holds the URI of last closed browser windows.
+Holds the URIs of last closed browser windows.
 .TP
 .I history
 This file holds the history of unique opened URIs.
@@ -1556,24 +1166,11 @@ This file holds the history of unique opened URIs.
 This file holds the history of commands and search queries performed via input
 box.
 .TP
+.I queue
+Holds the read it later queue filled by `qpush'.
+.TP
 .I search
 This file holds the history of search queries.
-.TP
-.I bookmark
-Holds the bookmarks saved with command `bma'.
-The records are stored there as
-.br
-`URI<tab>title<tab>space separated tags' or as
-.br
-`URI<tab><tab>tags` if there is no title.
-.TP
-.I queue
-Holds the Read It Later queue filled by `qpush' if
-Vimb has been compiled with QUEUE feature.
-.TP
-.I hsts
-Holds the known hosts hosts if Vimb is compiled with HTTP strict transport
-security feature.
 .TP
 .I scripts.js
 This file can be used to run user scripts, that are injected into every paged
@@ -1585,21 +1182,6 @@ These file is used if the config variable `stylesheet' is enabled.
 .PD
 .RE
 .TP
-.I $XDG_CONFIG_HOME/vimb/PROFILE-NAME
-Directory for configuration data if executed with \fB-p \fIPROFILE-NAME\fR parameter. It has same structure as default directory for configuration data.
-.TP
-.I $XDG_CACHE_HOME/vimb/
-Default directory for cache data.
-.TP
-.I $XDG_CACHE_HOME/vimb/PROFILE-NAME
-Directory for cache data if executed with \fB-p \fIPROFILE-NAME\fR parameter.
-.TP
-.I $XDG_RUNTIME_DIR/vimb/socket/
-Directory where the control sockets are placed.
-.TP
-.I $XDG_RUNTIME_DIR/vimb/PROFILE-NAME/socket/
-Directory where the control sockets are placed if executed with \fB-p \fIPROFILE-NAME\fR parameter.
-.PP
 There are also some sample scripts installed together with Vimb under
 PREFIX/share/vimb/examples.
 .SH ENVIRONMENT
@@ -1608,13 +1190,6 @@ PREFIX/share/vimb/examples.
 If this variable is set to an non-empty value, and the configuration option
 `proxy' is enabled, this will be used as HTTP proxy.
 If the proxy URL has no scheme set, HTTP is assumed.
-.TP
-.B no_proxy
-A comma separated list of domains and/or IPs which should not be proxied.
-Note that an IPv6 address must appear in brackets if used with a port,
-for example "[::1]:443".
-.IP
-Example: "localhost,127.0.0.1,::1,fc00::/7,example.com:8080"
 .SH "REPORTING BUGS"
 Report bugs to the main project page on https://github.com/fanglingsu/vimb/issues
 .br

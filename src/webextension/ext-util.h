@@ -17,16 +17,14 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _SHORTCUT_H
-#define _SHORTCUT_H
+#ifndef _EXT_UTIL_H
+#define _EXT_UTIL_H
 
-void shortcut_init(Client *c);
-void shortcut_cleanup(Client *c);
-gboolean shortcut_add(Client *c, const char *key, const char *uri);
-gboolean shortcut_remove(Client *c, const char *key);
-gboolean shortcut_set_default(Client *c, const char *key);
-char *shortcut_get_uri(Client *c, const char *key);
-gboolean shortcut_fill_completion(Client *c, GtkListStore *store, const char *input);
+#include <glib.h>
+#include <JavaScriptCore/JavaScript.h>
 
-#endif /* end of include guard: _SHORTCUT_H */
+gboolean ext_util_create_tmp_file(const char *content, char **file);
+gboolean ext_util_js_eval(JSContextRef ctx, const char *script, JSValueRef *result);
+char* ext_util_js_ref_to_string(JSContextRef ctx, JSValueRef ref);
 
+#endif /* end of include guard: _EXT_UTIL_H */

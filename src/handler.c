@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,80 +17,83 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <string.h>
+
 #include "main.h"
-#include "handlers.h"
+#include "handler.h"
 #include "util.h"
 
-static GHashTable *handlers = NULL;
+extern struct Vimb vb;
 
-static char *handler_lookup(const char *uri);
+static char *handler_lookup(Client *c, const char *uri);
 
-
-void handlers_init(void)
+void handler_init(Client *c)
 {
-    handlers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    c->handlers.table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
-void handlers_cleanup(void)
+void handler_cleanup(Client *c)
 {
-    if (handlers) {
-        g_hash_table_destroy(handlers);
+    if (c->handlers.table) {
+        g_hash_table_destroy(c->handlers.table);
+        c->handlers.table = NULL;
     }
 }
 
-gboolean handler_add(const char *key, const char *cmd)
+gboolean handler_add(Client *c, const char *key, const char *cmd)
 {
-    g_hash_table_insert(handlers, g_strdup(key), g_strdup(cmd));
+    g_hash_table_insert(c->handlers.table, g_strdup(key), g_strdup(cmd));
 
     return true;
 }
 
-gboolean handler_remove(const char *key)
+gboolean handler_remove(Client *c, const char *key)
 {
-    return g_hash_table_remove(handlers, key);
+    return g_hash_table_remove(c->handlers.table, key);
 }
 
-gboolean handle_uri(const char *uri)
+gboolean handler_handle_uri(Client *c, const char *uri)
 {
     char *handler, *cmd;
     GError *error = NULL;
-    gboolean result;
+    gboolean res;
 
-    if (!(handler = handler_lookup(uri))) {
-        return false;
+    if (!(handler = handler_lookup(c, uri))) {
+        return FALSE;
     }
 
     cmd = g_strdup_printf(handler, uri);
     if (!g_spawn_command_line_async(cmd, &error)) {
         g_warning("Can't run '%s': %s", cmd, error->message);
         g_clear_error(&error);
-        result = false;
+        res = FALSE;
     } else {
-        result = true;
+        res = TRUE;
     }
 
     g_free(cmd);
-    return result;
+    return res;
 }
 
-gboolean handler_fill_completion(GtkListStore *store, const char *input)
+gboolean handler_fill_completion(Client *c, GtkListStore *store, const char *input)
 {
-    GList *src = g_hash_table_get_keys(handlers);
+    GList *src = g_hash_table_get_keys(c->handlers.table);
     gboolean found = util_fill_completion(store, input, src);
     g_list_free(src);
 
     return found;
 }
 
-static char *handler_lookup(const char *uri)
+static char *handler_lookup(Client *c, const char *uri)
 {
     char *p, *schema, *handler = NULL;
 
     if ((p = strchr(uri, ':'))) {
         schema  = g_strndup(uri, p - uri);
-        handler = g_hash_table_lookup(handlers, schema);
+        handler = g_hash_table_lookup(c->handlers.table, schema);
         g_free(schema);
     }
 
     return handler;
 }
+

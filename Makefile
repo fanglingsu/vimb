@@ -1,52 +1,46 @@
 include config.mk
 
-SRCDIR=src
-DOCDIR=doc
+all: $(SRCDIR).subdir-all
 
-all: $(TARGET)
 options:
-	@echo "$(PROJECT) build options:"
-	@echo "LIBS    = $(LIBS)"
-	@echo "CFLAGS  = $(CFLAGS)"
-	@echo "LDFLAGS = $(LDFLAGS)"
-	@echo "CC      = $(CC)"
+	@echo "vimb build options:"
+	@echo "LIBS      = $(LIBS)"
+	@echo "CFLAGS    = $(CFLAGS)"
+	@echo "LDFLAGS   = $(LDFLAGS)"
+	@echo "EXTCFLAGS = $(EXTCFLAGS)"
+	@echo "CC        = $(CC)"
 
-test: $(LIBTARGET)
-	@$(MAKE) $(MFLAGS) -s -C tests
-
-clean:
-	@$(MAKE) $(MFLAGS) -C src clean
-	@$(MAKE) $(MFLAGS) -C tests clean
-
-install: $(TARGET) $(DOCDIR)/$(MAN1)
-	install -d $(DESTDIR)$(BINDIR)
-	install -m 755 $(SRCDIR)/$(TARGET) $(DESTDIR)$(BINDIR)/$(TARGET)
-	install -d $(DESTDIR)$(DATADIR)/applications
-	cp $(PROJECT).desktop $(DESTDIR)$(DATADIR)/applications
-	install -d $(DESTDIR)$(EXAMPLEDIR)
-	cp -r examples/* $(DESTDIR)$(EXAMPLEDIR)
-	install -d $(DESTDIR)$(MANDIR)/man1
+install: $(SRCDIR).subdir-all
+	@# binary
+	install -d $(BINPREFIX)
+	install -m 755 $(SRCDIR)/vimb $(BINPREFIX)/vimb
+	@# extension
+	install -d $(LIBDIR)
+	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(LIBDIR)/$(EXTTARGET)
+	@# man page
+	install -d $(MANPREFIX)/man1
 	@sed -e "s!VERSION!$(VERSION)!g" \
 		-e "s!PREFIX!$(PREFIX)!g" \
-		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/$(MAN1) > $(DESTDIR)$(MANDIR)/man1/$(MAN1)
+		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(MANPREFIX)/man1/vimb.1
+	@# .desktop file
+	install -d $(DOTDESKTOPPREFIX)
+	install -m 644 vimb.desktop $(DOTDESKTOPPREFIX)/vimb.desktop
 
 uninstall:
-	$(RM) $(DESTDIR)$(BINDIR)/$(TARGET)
-	$(RM) $(DESTDIR)$(DATADIR)/applications/$(PROJECT).desktop
-	$(RM) $(DESTDIR)$(MANDIR)/man1/$(MAN1)
-	$(RM) -r $(DESTDIR)$(EXAMPLEDIR)
+	$(RM) $(BINPREFIX)/vimb $(DESTDIR)$(MANDIR)/man1/vimb.1 $(LIBDIR)/$(EXTTARGET)
 
-dist: dist-clean
-	@echo "Creating tarball."
-	@git archive --format tar -o $(DIST_FILE) HEAD
+clean: $(SRCDIR).subdir-clean
 
-dist-clean:
-	$(RM) $(DIST_FILE)
+sandbox:
+	$(Q)$(MAKE) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
 
-$(TARGET):
-	@$(MAKE) $(MFLAGS) -C src $(TARGET)
+runsandbox: sandbox
+	sandbox/usr/bin/vimb
 
-$(LIBTARGET):
-	@$(MAKE) $(MFLAGS) -C src $(LIBTARGET)
+%.subdir-all:
+	$(Q)$(MAKE) -C $*
 
-.PHONY: clean all install uninstall options dist dist-clean test
+%.subdir-clean:
+	$(Q)$(MAKE) -C $* clean
+
+.PHONY: all options install uninstall clean sandbox runsandbox

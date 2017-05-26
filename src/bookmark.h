@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 #ifndef _BOOKMARK_H
 #define _BOOKMARK_H
 
+#include "main.h"
+
 gboolean bookmark_add(const char *uri, const char *title, const char *tags);
 gboolean bookmark_remove(const char *uri);
 gboolean bookmark_fill_completion(GtkListStore *store, const char *input);
@@ -32,3 +34,4 @@ gboolean bookmark_queue_clear(void);
 #endif
 
 #endif /* end of include guard: _BOOKMARK_H */
+

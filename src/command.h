@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@
 
 #ifndef _COMMAND_H
 #define _COMMAND_H
+
+#include <gtk/gtk.h>
+#include "main.h"
 
 enum {
     COMMAND_YANK_ARG,
@@ -40,11 +43,11 @@ enum {
 };
 #endif
 
-gboolean command_search(const Arg *arg);
-gboolean command_yank(const Arg *arg, char buf);
-gboolean command_save(const Arg *arg);
+gboolean command_search(Client *c, const Arg *arg, bool commit);
+gboolean command_yank(Client *c, const Arg *arg, char buf);
+gboolean command_save(Client *c, const Arg *arg);
 #ifdef FEATURE_QUEUE
-gboolean command_queue(const Arg *arg);
+gboolean command_queue(Client *c, const Arg *arg);
 #endif
 
 #endif /* end of include guard: _COMMAND_H */

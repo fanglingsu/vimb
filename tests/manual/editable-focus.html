@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Input mode Switching (#112 #237)</title>
+<title>Input mode Switching</title>
 <script type="text/javascript">
 //<![CDATA[
 function setFocus() {
@@ -23,7 +23,9 @@ function setFocus() {
     <form action="#">
         <div>
             <textarea name="text" id="text" rows="11" cols="50"></textarea><br/>
-            <input type="button" value="Focus Textarea" onclick="document.getElementById('text').focus();"/>
+            <input type="text" name="field1"/><br/>
+            <input type="button" value="Focus Textarea" onclick="setFocus();"/><br/>
+            <input type="text" name="field2"/>
         </div>
     </form>
     <p>

@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,8 @@
 #ifndef _JS_H
 #define _JS_H
 
-#include "main.h"
+#include <webkit2/webkit2.h>
 
-gboolean js_eval_file(JSContextRef ctx, const char *file);
-gboolean js_eval(JSContextRef ctx, const char *script, const char *file,
-    char **value);
-JSObjectRef js_create_object(JSContextRef ctx, const char *script);
-char* js_object_call_function(JSContextRef ctx, JSObjectRef obj,
-    const char *func, int count, JSValueRef params[]);
-char *js_ref_to_string(JSContextRef ctx, JSValueRef ref);
-JSValueRef js_string_to_ref(JSContextRef ctx, const char *string);
-JSValueRef js_object_to_ref(JSContextRef ctx, const char *json);
+char *js_result_as_string(WebKitJavascriptResult *res);
 
-#endif /* end of include guard: _JS_H */
+#endif

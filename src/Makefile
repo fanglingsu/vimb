@@ -1,63 +1,43 @@
 BASEDIR=..
 include $(BASEDIR)/config.mk
 
-OBJ  = $(patsubst %.c, %.o, $(wildcard *.c))
-LOBJ = $(patsubst %.c, %.lo, $(wildcard *.c))
+SUBDIRS  = webextension
+OBJ      = $(patsubst %.c, %.o, $(wildcard *.c))
+JSFILES  = $(wildcard scripts/*.js)
+CSSFILES = $(wildcard scripts/*.css)
 
-all: $(TARGET)
+all: vimb $(SUBDIRS:%=%.subdir-all)
 
-clean: clean-lib
-	$(RM) $(TARGET) *.o *.lo hints.js.h
+clean: $(SUBDIRS:%=%.subdir-clean)
+	$(RM) vimb *.o scripts/scripts.h
 
-clean-lib:
-	$(RM) $(LIBTARGET)
-
-hints.o:  hints.js.h
-hints.lo: hints.js.h
-
-hints.js.h: hints.js
-	@echo "minify $<"
-	@cat $< | ./js2h.sh > $@
-
-$(OBJ):  config.h $(BASEDIR)/config.mk
-$(LOBJ): config.h $(BASEDIR)/config.mk
-
-$(TARGET): $(OBJ)
-ifeq ($(VERBOSE),0)
-	@echo "$(CC) $@"
-	@$(CC) $(OBJ) -o $@ $(LDFLAGS)
-else
-	$(CC) $(OBJ) -o $@ $(LDFLAGS)
-endif
-
-$(LIBTARGET): $(LOBJ)
-ifeq ($(VERBOSE),0)
-	@echo "$(CC) $@"
-	@$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
-else
-	$(CC) -shared ${LOBJ} -o $@ $(LDFLAGS)
-endif
-
-config.h:
-	@echo create $@ from config.def.h
-	@cp config.def.h $@
-
-%.o: %.c %.h
-ifeq ($(VERBOSE),0)
+vimb: $(OBJ)
 	@echo "${CC} $@"
-	@$(CC) $(CFLAGS) -c -o $@ $<
-else
-	$(CC) $(CFLAGS) -c -o $@ $<
-endif
+	$(Q)$(CC) $(OBJ) $(LDFLAGS) -o $@
 
-%.lo: %.c %.h
-ifeq ($(VERBOSE),0)
-	@echo "${CC} $@"
-	@$(CC) -DTESTLIB $(CFLAGS) -fPIC -c -o $@ $<
-else
-	$(CC) -DTESTLIB $(CFLAGS) -fPIC -c -o $@ $<
-endif
+$(OBJ): config.h $(BASEDIR)/config.mk scripts/scripts.h
 
 -include $(OBJ:.o=.d)
 
-.PHONY: all clean clean-lib
+config.h:
+	@echo create $@ from config.def.h
+	$(Q)cp config.def.h $@
+
+scripts/scripts.h: $(JSFILES) $(CSSFILES)
+	$(Q)$(RM) $@
+	@echo "create $@ from *.{css,js}"
+	$(Q)for file in $(JSFILES) $(CSSFILES); do \
+		./scripts/js2h.sh $$file >> $@; \
+	done
+
+%.o: %.c
+	@echo "${CC} $@"
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+
+%.subdir-all: config.h
+	$(Q)$(MAKE) -C $*
+
+%.subdir-clean:
+	$(Q)$(MAKE) -C $* clean
+
+.PHONY: all clean

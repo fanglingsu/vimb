@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,25 +60,24 @@ static const unsigned char chartable[256] = {
 #undef C
 #undef SC
 
-#define VB_IS_UPPER(c)      ((chartable[(unsigned char)c] & VB_UPPER) != 0)
-#define VB_IS_LOWER(c)      ((chartable[(unsigned char)c] & VB_LOWER) != 0)
-#define VB_IS_DIGIT(c)      ((chartable[(unsigned char)c] & VB_DIGIT) != 0)
-#define VB_IS_PUNKT(c)      ((chartable[(unsigned char)c] & VB_PUNKT) != 0)
-#define VB_IS_SPACE(c)      ((chartable[(unsigned char)c] & VB_SPACE) != 0)
-#define VB_IS_CTRL(c)       ((chartable[(unsigned char)c] & VB_CTRL) != 0)
-#define VB_IS_SEPARATOR(c)  (VB_IS_SPACE(c) || c == '"' || c == '\'')
-#define VB_IS_ALPHA(c)      (VB_IS_LOWER(c) || VB_IS_UPPER(c))
-#define VB_IS_ALNUM(c)      (VB_IS_ALPHA(c) || VB_IS_DIGIT(c))
-#define VB_IS_IDENT(c)      (VB_IS_ALNUM(c) || c == '_')
-#define VB_IS_USER_IDENT(c) (VB_IS_IDENT(c) || c == '-' || c == '.')
+#define VB_IS_UPPER(c)     ((chartable[(unsigned char)c] & VB_UPPER) != 0)
+#define VB_IS_LOWER(c)     ((chartable[(unsigned char)c] & VB_LOWER) != 0)
+#define VB_IS_DIGIT(c)     ((chartable[(unsigned char)c] & VB_DIGIT) != 0)
+#define VB_IS_PUNKT(c)     ((chartable[(unsigned char)c] & VB_PUNKT) != 0)
+#define VB_IS_SPACE(c)     ((chartable[(unsigned char)c] & VB_SPACE) != 0)
+#define VB_IS_CTRL(c)      ((chartable[(unsigned char)c] & VB_CTRL) != 0)
+#define VB_IS_SEPARATOR(c) (VB_IS_SPACE(c) || c == '"' || c == '\'')
+#define VB_IS_ALPHA(c)     (VB_IS_LOWER(c) || VB_IS_UPPER(c))
+#define VB_IS_ALNUM(c)     (VB_IS_ALPHA(c) || VB_IS_DIGIT(c))
+#define VB_IS_IDENT(c)     (VB_IS_ALNUM(c) || c == '_')
 
 /* CSI (control sequence introducer) is the first byte of a control sequence
  * and is always followed by two bytes. */
-#define CSI         0x80
-#define CSI_STR     "\x80"
+#define CSI                 0x80
+#define CSI_STR             "\x80"
 
 /* get internal representation for conrol character ^C */
-#define CTRL(c)     ((c) ^ 0x40)
+#define CTRL(c)             ((c) ^ 0x40)
 
 #define IS_SPECIAL(c)       (c < 0)
 
@@ -96,7 +95,6 @@ static const unsigned char chartable[256] = {
 #define KEY_DOWN        TERMCAP2KEY('k', 'd')
 #define KEY_LEFT        TERMCAP2KEY('k', 'l')
 #define KEY_RIGHT       TERMCAP2KEY('k', 'r')
-
 #define KEY_F1          TERMCAP2KEY('k', '1')
 #define KEY_F2          TERMCAP2KEY('k', '2')
 #define KEY_F3          TERMCAP2KEY('k', '3')

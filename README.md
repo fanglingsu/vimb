@@ -11,37 +11,25 @@ the project page of [Vimb][].
 ## Features
 
 - it's modal like Vim
-- Vim like [keybindings][] - assignable for each browser mode
-- nearly every configuration can be changed at runtime with Vim like [set syntax][set]
+- Vim like keybindings - assignable for each browser mode
+- nearly every configuration can be changed at runtime with Vim like set syntax
 - history for `ex` commands, search queries, URLs
 - completions for: commands, URLs, bookmarked URLs, variable names of settings, search-queries
-- [hinting][hints] - marks links, form fields and other clickable elements to
+- hinting - marks links, form fields and other clickable elements to
   be clicked, opened or inspected
 - SSL validation against ca-certificate file
-- HTTP Strict Transport Security (HSTS)
-- open input or textarea with configurable external editor
 - user defined URL-shortcuts with placeholders
-- custom [protocol handlers][handlers]
-- read it later [queue][] to collect URIs for later use
+- read it later queue to collect URIs for later use
 - multiple yank/paste registers
-- Vim like [autocmd][]
 
 ## Packages
 
-- Arch Linux [vimb-git][arch-git], [vimb][arch]
-- [OpenBSD][]
-- [NetBSD][]
-- [FreeBSD][]
-- [Void Linux][]
+- Arch Linux [arch-git][]
+- Gentoo [gentoo-git][], [gentoo][]
 
-## Dependencies
+## dependencies
 
-- libwebkit >=1.5.0
-- libgtk+-2.0
-- libsoup >=2.38
-
-On Ubuntu these dependencies can be installed by
-`sudo apt-get install libsoup2.4-dev libwebkit-dev libgtk-3-dev libwebkitgtk-3.0-dev`.
+- webkit2gtk-4.0 >= 2.16.x
 
 ## Install
 
@@ -58,31 +46,24 @@ Therefore, you should always compare your customised `config.h` with
 Run the following commands to compile and install Vimb (if necessary, the last one as
 root).
 
-    make clean
-    make // or make GTK=3 to compile against gtk3
+    make
     make install
 
-To build Vimb against GTK3 you can use `make GTK=3`.
+To run vimb without installation for testing it out use the 'runsandbox' make
+target.
 
-# License
+    make runsandbox
 
-Information about the license is found in the file: LICENSE.
-
-# Mailing list
+## Mailing list
 
 - feature requests, issues and patches can be discussed on the [mailing list][mail]
 
-[vimb]:        http://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
-[keybindings]: https://fanglingsu.github.io/vimb/man.html#NORMAL_MODE "vimb keybindings"
-[hints]:       https://fanglingsu.github.io/vimb/man.html#Hinting "vimb hinting"
-[queue]:       http://fanglingsu.github.io/vimb/commands.html#queue "vimb read it later queue feature"
-[handlers]:    http://fanglingsu.github.io/vimb/commands.html#handlers "vimb custom protocol handlers"
+## license
+
+Information about the license are found in the file LICENSE.
+
+[arch-git]:    https://github.com/fanglingsu/dotfiles/tree/master/build/vimb-git
+[gentoo-git]:  https://github.com/tharvik/overlay/tree/master/www-client/vimb
+[gentoo]:      https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
+[vimb]:        https://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
-[OpenBSD]:     http://openports.se/www/vimb "vimb - OpenBSD port"
-[NetBSD]:      http://pkgsrc.se/www/vimb "vimb - NetBSD package"
-[autocmd]:     http://fanglingsu.github.io/vimb/commands.html#autocmd "Vim like autocmd and augroup feature"
-[set]:         http://fanglingsu.github.io/vimb/commands.html#settings "Vim like set syntax"
-[Arch-git]:    https://aur.archlinux.org/packages/vimb-git/ "vimb - archlinux package"
-[Arch]:        https://aur.archlinux.org/packages/vimb/ "vimb - archlinux package"
-[FreeBSD]:     http://www.freshports.org/www/vimb/ "vimb - FreeBSD port"
-[Void Linux]:  https://github.com/voidlinux/void-packages/blob/master/srcpkgs/vimb/template "vimb - Void Linux package"

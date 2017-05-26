@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,18 @@
  */
 
 #include <gdk/gdkkeysyms.h>
-#include "config.h"
-#include "main.h"
-#include "normal.h"
+#include <string.h>
+
 #include "ascii.h"
 #include "command.h"
+#include "config.h"
 #include "hints.h"
-#include "js.h"
-#include "dom.h"
-#include "history.h"
+#include "ext-proxy.h"
+#include "main.h"
+#include "normal.h"
+#include "scripts/scripts.h"
 #include "util.h"
+#include "ext-proxy.h"
 
 typedef enum {
     PHASE_START,
@@ -48,33 +50,32 @@ typedef struct NormalCmdInfo_s {
 
 static NormalCmdInfo info = {0, '\0', '\0', PHASE_START};
 
-typedef VbResult (*NormalCommand)(const NormalCmdInfo *info);
+typedef VbResult (*NormalCommand)(Client *c, const NormalCmdInfo *info);
 
-static VbResult normal_clear_input(const NormalCmdInfo *info);
-static VbResult normal_descent(const NormalCmdInfo *info);
-static VbResult normal_ex(const NormalCmdInfo *info);
-static VbResult normal_focus_input(const NormalCmdInfo *info);
-static VbResult normal_g_cmd(const NormalCmdInfo *info);
-static VbResult normal_hint(const NormalCmdInfo *info);
-static VbResult normal_do_hint(const char *prompt);
-static VbResult normal_fire(const NormalCmdInfo *info);
-static VbResult normal_increment_decrement(const NormalCmdInfo *info);
-static VbResult normal_input_open(const NormalCmdInfo *info);
-static VbResult normal_mark(const NormalCmdInfo *info);
-static VbResult normal_navigate(const NormalCmdInfo *info);
-static VbResult normal_open_clipboard(const NormalCmdInfo *info);
-static VbResult normal_open(const NormalCmdInfo *info);
-static VbResult normal_pass(const NormalCmdInfo *info);
-static VbResult normal_prevnext(const NormalCmdInfo *info);
-static VbResult normal_queue(const NormalCmdInfo *info);
-static VbResult normal_quit(const NormalCmdInfo *info);
-static VbResult normal_scroll(const NormalCmdInfo *info);
-static VbResult normal_search(const NormalCmdInfo *info);
-static VbResult normal_search_selection(const NormalCmdInfo *info);
-static VbResult normal_view_inspector(const NormalCmdInfo *info);
-static VbResult normal_view_source(const NormalCmdInfo *info);
-static VbResult normal_yank(const NormalCmdInfo *info);
-static VbResult normal_zoom(const NormalCmdInfo *info);
+static VbResult normal_clear_input(Client *c, const NormalCmdInfo *info);
+static VbResult normal_descent(Client *c, const NormalCmdInfo *info);
+static VbResult normal_ex(Client *c, const NormalCmdInfo *info);
+static VbResult normal_fire(Client *c, const NormalCmdInfo *info);
+static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info);
+static VbResult normal_hint(Client *c, const NormalCmdInfo *info);
+static VbResult normal_do_hint(Client *c, const char *prompt);
+static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info);
+static VbResult normal_input_open(Client *c, const NormalCmdInfo *info);
+static VbResult normal_mark(Client *c, const NormalCmdInfo *info);
+static VbResult normal_navigate(Client *c, const NormalCmdInfo *info);
+static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info);
+static VbResult normal_open(Client *c, const NormalCmdInfo *info);
+static VbResult normal_pass(Client *c, const NormalCmdInfo *info);
+static VbResult normal_prevnext(Client *c, const NormalCmdInfo *info);
+static VbResult normal_queue(Client *c, const NormalCmdInfo *info);
+static VbResult normal_quit(Client *c, const NormalCmdInfo *info);
+static VbResult normal_scroll(Client *c, const NormalCmdInfo *info);
+static VbResult normal_search(Client *c, const NormalCmdInfo *info);
+static VbResult normal_search_selection(Client *c, const NormalCmdInfo *info);
+static VbResult normal_view_inspector(Client *c, const NormalCmdInfo *info);
+static VbResult normal_view_source(Client *c, const NormalCmdInfo *info);
+static VbResult normal_yank(Client *c, const NormalCmdInfo *info);
+static VbResult normal_zoom(Client *c, const NormalCmdInfo *info);
 
 static struct {
     NormalCommand func;
@@ -173,7 +174,7 @@ static struct {
 /* [   0x5b */ {normal_prevnext},
 /* \   0x5c */ {NULL},
 /* ]   0x5d */ {normal_prevnext},
-/* ^   0x5e */ {normal_scroll},
+/* ^   0x5e */ {NULL},
 /* _   0x5f */ {NULL},
 /* `   0x60 */ {NULL},
 /* a   0x61 */ {NULL},
@@ -209,34 +210,32 @@ static struct {
 /* DEL 0x7f */ {NULL},
 };
 
-extern VbCore vb;
+extern struct Vimb vb;
 
 /**
  * Function called when vimb enters the normal mode.
  */
-void normal_enter(void)
+void normal_enter(Client *c)
 {
-    dom_clear_focus(vb.gui.webview);
     /* Make sure that when the browser area becomes visible, it will get mouse
      * and keyboard events */
-    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    hints_clear();
+    gtk_widget_grab_focus(GTK_WIDGET(c->webview));
+    hints_clear(c);
 }
 
 /**
  * Called when the normal mode is left.
  */
-void normal_leave(void)
+void normal_leave(Client *c)
 {
-    command_search(&((Arg){0}));
+    command_search(c, &((Arg){0, NULL}), FALSE);
 }
 
 /**
  * Handles the keypress events from webview and inputbox.
  */
-VbResult normal_keypress(int key)
+VbResult normal_keypress(Client *c, int key)
 {
-    State *s = &vb.state;
     VbResult res;
 
     switch (info.phase) {
@@ -250,10 +249,10 @@ VbResult normal_keypress(int key)
                 /* handle commands that needs additional char */
                 info.phase      = PHASE_KEY2;
                 info.key        = key;
-                vb.mode->flags |= FLAG_NOMAP;
+                c->mode->flags |= FLAG_NOMAP;
             } else if (key == '"') {
                 info.phase      = PHASE_REG;
-                vb.mode->flags |= FLAG_NOMAP;
+                c->mode->flags |= FLAG_NOMAP;
             } else {
                 info.key   = key;
                 info.phase = PHASE_COMPLETE;
@@ -266,7 +265,7 @@ VbResult normal_keypress(int key)
             /* hinting g; mode requires a third key */
             if (info.key == 'g' && info.key2 == ';') {
                 info.phase      = PHASE_KEY3;
-                vb.mode->flags |= FLAG_NOMAP;
+                c->mode->flags |= FLAG_NOMAP;
             } else {
                 info.phase = PHASE_COMPLETE;
             }
@@ -278,7 +277,7 @@ VbResult normal_keypress(int key)
             break;
 
         case PHASE_REG:
-            if (strchr(VB_REG_CHARS, key)) {
+            if (strchr(REG_CHARS, key)) {
                 info.reg   = key;
                 info.phase = PHASE_START;
             } else {
@@ -294,10 +293,10 @@ VbResult normal_keypress(int key)
         /* TODO allow more commands - some that are looked up via command key
          * direct and those that are searched via binary search */
         if ((guchar)info.key <= LENGTH(commands) && commands[(guchar)info.key].func) {
-            res = commands[(guchar)info.key].func(&info);
+            res = commands[(guchar)info.key].func(c, &info);
         } else {
             /* let gtk handle the keyevent if we have no command attached to it */
-            s->processed_key = false;
+            c->state.processed_key = FALSE;
             res = RESULT_COMPLETE;
         }
 
@@ -314,51 +313,49 @@ VbResult normal_keypress(int key)
 /**
  * Function called when vimb enters the passthrough mode.
  */
-void pass_enter(void)
+void pass_enter(Client *c)
 {
-    vb_update_mode_label("-- PASS THROUGH --");
+    vb_modelabel_update(c, "-- PASS THROUGH --");
 }
 
 /**
  * Called when passthrough mode is left.
  */
-void pass_leave(void)
+void pass_leave(Client *c)
 {
-    vb_update_mode_label("");
+    ext_proxy_eval_script(c, "document.activeElement.blur();", NULL);
+    vb_modelabel_update(c, "");
 }
 
-VbResult pass_keypress(int key)
+VbResult pass_keypress(Client *c, int key)
 {
     if (key == CTRL('[')) { /* esc */
-        vb_enter('n');
+        vb_enter(c, 'n');
     }
-    vb.state.processed_key = false;
+    c->state.processed_key = FALSE;
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_clear_input(const NormalCmdInfo *info)
+static VbResult normal_clear_input(Client *c, const NormalCmdInfo *info)
 {
-    /* if there's a text selection, deselect it */
-    char *clipboard_text = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
-    gtk_clipboard_clear(PRIMARY_CLIPBOARD());
-    if (clipboard_text) {
-        gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), clipboard_text, -1);
-    }
-    g_free(clipboard_text);
+    gtk_widget_grab_focus(GTK_WIDGET(c->webview));
 
-    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    vb_echo(VB_MSG_NORMAL, false, "");
-    command_search(&((Arg){0}));
+    /* Clear the inputbox and change the style to normal to reset also the
+     * possible colored error background. */
+    vb_echo(c, MSG_NORMAL, FALSE, "");
+
+    /* Unset search highlightning. */
+    command_search(c, &((Arg){0, NULL}), FALSE);
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_descent(const NormalCmdInfo *info)
+static VbResult normal_descent(Client *c, const NormalCmdInfo *info)
 {
     int count = info->count ? info->count : 1;
     const char *uri, *p = NULL, *domain = NULL;
 
-    uri = vb.state.uri;
+    uri = c->state.uri;
 
     /* get domain part */
     if (!uri || !*uri
@@ -398,73 +395,82 @@ static VbResult normal_descent(const NormalCmdInfo *info)
         p = domain;
     }
 
-    Arg a = {VB_TARGET_CURRENT};
+    Arg a = {TARGET_CURRENT};
     a.s   = g_strndup(uri, p - uri + 1);
 
-    vb_load_uri(&a);
+    vb_load_uri(c, &a);
     g_free(a.s);
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_ex(const NormalCmdInfo *info)
+static VbResult normal_ex(Client *c, const NormalCmdInfo *info)
 {
     if (info->key == 'F') {
-        vb_enter_prompt('c', ";t", true);
+        vb_enter_prompt(c, 'c', ";t", TRUE);
     } else if (info->key == 'f') {
-        vb_enter_prompt('c', ";o", true);
+        vb_enter_prompt(c, 'c', ";o", TRUE);
     } else {
         char prompt[2] = {info->key, '\0'};
-        vb_enter_prompt('c', prompt, true);
+        vb_enter_prompt(c, 'c', prompt, TRUE);
     }
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_focus_input(const NormalCmdInfo *info)
+static VbResult normal_fire(Client *c, const NormalCmdInfo *info)
 {
-    dom_focus_input(webkit_web_view_get_dom_document(vb.gui.webview));
-    return RESULT_COMPLETE;
+    /* If searching is currently active - click link containing current search
+     * highlight. We use the search_matches as indicator that the searching is
+     * active. */
+    if (c->state.search.active) {
+        ext_proxy_eval_script(c, "getSelection().anchorNode.parentNode.click();", NULL);
+
+        return RESULT_COMPLETE;
+    }
+
+    return RESULT_ERROR;
 }
 
-static VbResult normal_g_cmd(const NormalCmdInfo *info)
+static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info)
 {
     Arg a;
     switch (info->key2) {
         case ';': {
             const char prompt[4] = {'g', ';', info->key3, 0};
 
-            return normal_do_hint(prompt);
+            return normal_do_hint(c, prompt);
         }
 
         case 'F':
-            return normal_view_inspector(info);
+            return normal_view_inspector(c, info);
 
         case 'f':
-            normal_view_source(info);
+            normal_view_source(c, info);
 
         case 'g':
-            return normal_scroll(info);
+            return normal_scroll(c, info);
 
         case 'H':
         case 'h':
-            a.i = info->key2 == 'H' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
+            a.i = info->key2 == 'H' ? TARGET_NEW : TARGET_CURRENT;
             a.s = NULL;
-            vb_load_uri(&a);
+            vb_load_uri(c, &a);
             return RESULT_COMPLETE;
 
         case 'i':
-            return normal_focus_input(info);
+            ext_proxy_focus_input(c);
+            return RESULT_COMPLETE;
 
         case 'U':
         case 'u':
-            return normal_descent(info);
+            return normal_descent(c, info);
     }
 
     return RESULT_ERROR;
 }
 
-static VbResult normal_hint(const NormalCmdInfo *info)
+static VbResult normal_hint(Client *c, const NormalCmdInfo *info)
 {
     const char prompt[3] = {info->key, info->key2, 0};
 
@@ -473,110 +479,76 @@ static VbResult normal_hint(const NormalCmdInfo *info)
      * somewhere else - it's only use is for hinting. It might be better to
      * allow to set various data to the mode itself to avoid toggling
      * variables in global skope. */
-    vb.state.current_register = info->reg;
-    return normal_do_hint(prompt);
+    c->state.current_register = info->reg;
+    return normal_do_hint(c, prompt);
 }
 
-static VbResult normal_do_hint(const char *prompt)
+static VbResult normal_do_hint(Client *c, const char *prompt)
 {
-    /* check if this is a valid hint mode */
-    if (!hints_parse_prompt(prompt, NULL, NULL)) {
-        return RESULT_ERROR;
-    }
+    /* TODO check if the prompt is of a valid hint mode */
 
-    vb_enter_prompt('c', prompt, true);
+    vb_enter_prompt(c, 'c', prompt, TRUE);
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_fire(const NormalCmdInfo *info)
+static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info)
 {
-    char *value = NULL;
-    /* If searching is currently active - click link containing current search
-     * highlight. We use the search_matches as indicator that the searching is
-     * active. */
-    if (vb.state.search_matches) {
-        js_eval(
-            webkit_web_frame_get_global_context(webkit_web_view_get_main_frame(vb.gui.webview)),
-            "getSelection().anchorNode.parentNode.click();", NULL, &value
-        );
-        g_free(value);
-
-        return RESULT_COMPLETE;
-    }
-    return RESULT_ERROR;
-}
-
-static VbResult normal_increment_decrement(const NormalCmdInfo *info)
-{
+    char *js;
     int count = info->count ? info->count : 1;
-    hints_increment_uri(info->key == CTRL('A') ? count : -count);
+
+    js = g_strdup_printf(JS_INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
+    ext_proxy_eval_script(c, js, NULL);
+    g_free(js);
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_input_open(const NormalCmdInfo *info)
+static VbResult normal_input_open(Client *c, const NormalCmdInfo *info)
 {
     if (strchr("ot", info->key)) {
-        vb_set_input_text(info->key == 't' ? ":tabopen " : ":open ");
+        vb_echo(c, MSG_NORMAL, FALSE,
+                ":%s ", info->key == 't' ? "tabopen" : "open");
     } else {
-        vb_echo(
-            VB_MSG_NORMAL, false,
-            ":%s %s", info->key == 'T' ? "tabopen" : "open", vb.state.uri
-        );
+        vb_echo(c, MSG_NORMAL, FALSE,
+                ":%s %s", info->key == 'T' ? "tabopen" : "open", c->state.uri);
     }
     /* switch mode after setting the input text to not trigger the
      * commands modes input change handler */
-    vb_enter_prompt('c', ":", false);
+    vb_enter_prompt(c, 'c', ":", FALSE);
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_mark(const NormalCmdInfo *info)
+static VbResult normal_mark(Client *c, const NormalCmdInfo *info)
 {
-    gdouble current;
-    char *mark;
-    int  idx;
-
-    /* check if the second char is a valid mark char */
-    if (!(mark = strchr(VB_MARK_CHARS, info->key2))) {
-        return RESULT_ERROR;
-    }
-
-    /* get the index of the mark char */
-    idx = mark - VB_MARK_CHARS;
-
-    if ('m' == info->key) {
-        vb.state.marks[idx] = gtk_adjustment_get_value(vb.gui.adjust_v);
-    } else {
-        /* check if the mark was set */
-        if ((int)(vb.state.marks[idx] - .5) < 0) {
-            return RESULT_ERROR;
-        }
-
-        current = gtk_adjustment_get_value(vb.gui.adjust_v);
-
-        /* jump to the location */
-        gtk_adjustment_set_value(vb.gui.adjust_v, vb.state.marks[idx]);
-
-        /* save previous adjust as last position */
-        vb.state.marks[VB_MARK_TICK] = current;
-    }
+    /* TODO implement setting of marks - we need to get the position in the pagee from the Webextension */
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_navigate(const NormalCmdInfo *info)
+static VbResult normal_navigate(Client *c, const NormalCmdInfo *info)
 {
     int count;
+    WebKitBackForwardList *list;
+    WebKitBackForwardListItem *item;
 
-    WebKitWebView *view = vb.gui.webview;
+    WebKitWebView *view = c->webview;
     switch (info->key) {
         case CTRL('I'): /* fall through */
         case CTRL('O'):
             count = info->count ? info->count : 1;
             if (info->key == CTRL('O')) {
-                count *= -1;
+                if (webkit_web_view_can_go_back(view)) {
+                    list = webkit_web_view_get_back_forward_list(view);
+                    item = webkit_back_forward_list_get_nth_item(list, -1 * count);
+                    webkit_web_view_go_to_back_forward_list_item(view, item);
+                }
+            } else {
+                if (webkit_web_view_can_go_forward(view)) {
+                    list = webkit_web_view_get_back_forward_list(view);
+                    item = webkit_back_forward_list_get_nth_item(list, count);
+                    webkit_web_view_go_to_back_forward_list_item(view, item);
+                }
             }
-            webkit_web_view_go_back_or_forward(view, count);
             break;
 
         case 'r':
@@ -595,23 +567,23 @@ static VbResult normal_navigate(const NormalCmdInfo *info)
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_open_clipboard(const NormalCmdInfo *info)
+static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info)
 {
-    Arg a = {info->key == 'P' ? VB_TARGET_NEW : VB_TARGET_CURRENT};
+    Arg a = {info->key == 'P' ? TARGET_NEW : TARGET_CURRENT};
 
     /* if register is not the default - read out of the internal register */
     if (info->reg) {
-        a.s = g_strdup(vb_register_get(info->reg));
+        a.s = g_strdup(vb_register_get(c, info->reg));
     } else {
         /* if no register is given use the system clipboard */
-        a.s = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+        a.s = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
         if (!a.s) {
-            a.s = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
+            a.s = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_NONE));
         }
     }
 
     if (a.s) {
-        vb_load_uri(&a);
+        vb_load_uri(c, &a);
         g_free(a.s);
 
         return RESULT_COMPLETE;
@@ -620,208 +592,144 @@ static VbResult normal_open_clipboard(const NormalCmdInfo *info)
     return RESULT_ERROR;
 }
 
-static VbResult normal_open(const NormalCmdInfo *info)
+/**
+ * Open the last closed page.
+ */
+static VbResult normal_open(Client *c, const NormalCmdInfo *info)
 {
-    char *uri;
     Arg a;
-
-    uri = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
-    if (!uri) {
+    if (!vb.files[FILES_CLOSED]) {
         return RESULT_ERROR;
     }
 
-    /* open last closed */
-    a.i = info->key == 'U' ? VB_TARGET_NEW : VB_TARGET_CURRENT;
-    a.s = uri;
-    vb_load_uri(&a);
-    g_free(uri);
+    a.i = info->key == 'U' ? TARGET_NEW : TARGET_CURRENT;
+    a.s = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
+    if (!a.s) {
+        return RESULT_ERROR;
+    }
+
+    vb_load_uri(c, &a);
+    g_free(a.s);
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_pass(const NormalCmdInfo *info)
+static VbResult normal_pass(Client *c, const NormalCmdInfo *info)
 {
-    vb_enter('p');
+    vb_enter(c, 'p');
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_prevnext(const NormalCmdInfo *info)
+static VbResult normal_prevnext(Client *c, const NormalCmdInfo *info)
 {
+#if 0 /* TODO implement outside of hints.js */
     int count = info->count ? info->count : 1;
     if (info->key2 == ']') {
-        hints_follow_link(false, count);
+        hints_follow_link(FALSE, count);
     } else if (info->key2 == '[') {
-        hints_follow_link(true, count);
+        hints_follow_link(TRUE, count);
     } else {
         return RESULT_ERROR;
     }
-    return RESULT_COMPLETE;
-}
-
-static VbResult normal_queue(const NormalCmdInfo *info)
-{
-#ifdef FEATURE_QUEUE
-    command_queue(&((Arg){COMMAND_QUEUE_POP}));
 #endif
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_quit(const NormalCmdInfo *info)
+static VbResult normal_queue(Client *c, const NormalCmdInfo *info)
 {
-    vb_quit(false);
+#ifdef FEATURE_QUEUE
+    command_queue(c, &((Arg){COMMAND_QUEUE_POP}));
+#endif
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_scroll(const NormalCmdInfo *info)
+static VbResult normal_quit(Client *c, const NormalCmdInfo *info)
 {
-    GtkAdjustment *adjust;
-    gdouble value, max, new;
-    int count = info->count ? info->count : 1;
+    vb_quit(c, FALSE);
+    return RESULT_COMPLETE;
+}
 
-    /* TODO split this into more functions - reduce similar code */
-    switch (info->key) {
-        case 'h':
-            adjust = vb.gui.adjust_h;
-            value  = vb.config.scrollstep;
-            new    = gtk_adjustment_get_value(adjust) - value * count;
-            break;
-        case 'j':
-            adjust = vb.gui.adjust_v;
-            value  = vb.config.scrollstep;
-            new    = gtk_adjustment_get_value(adjust) + value * count;
-            break;
-        case 'k':
-            adjust = vb.gui.adjust_v;
-            value  = vb.config.scrollstep;
-            new    = gtk_adjustment_get_value(adjust) - value * count;
-            break;
-        case 'l':
-            adjust = vb.gui.adjust_h;
-            value  = vb.config.scrollstep;
-            new    = gtk_adjustment_get_value(adjust) + value * count;
-            break;
-        case CTRL('D'):
-            adjust = vb.gui.adjust_v;
-            value  = gtk_adjustment_get_page_size(adjust) / 2;
-            new    = gtk_adjustment_get_value(adjust) + value * count;
-            break;
-        case CTRL('U'):
-            adjust = vb.gui.adjust_v;
-            value  = gtk_adjustment_get_page_size(adjust) / 2;
-            new    = gtk_adjustment_get_value(adjust) - value * count;
-            break;
-        case CTRL('F'):
-            adjust = vb.gui.adjust_v;
-            value  = gtk_adjustment_get_page_size(adjust);
-            new    = gtk_adjustment_get_value(adjust) + value * count;
-            break;
-        case CTRL('B'):
-            adjust = vb.gui.adjust_v;
-            value  = gtk_adjustment_get_page_size(adjust);
-            new    = gtk_adjustment_get_value(adjust) - value * count;
-            break;
-        case 'G':
-            adjust = vb.gui.adjust_v;
-            max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-            new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_upper(adjust);
-            /* save the position to mark ' */
-            vb.state.marks[VB_MARK_TICK] = gtk_adjustment_get_value(adjust);
-            break;
-        case '0': /* fall through */
-        case '^':
-            adjust = vb.gui.adjust_h;
-            new    = gtk_adjustment_get_lower(adjust);
-            break;
-        case '$':
-            adjust = vb.gui.adjust_h;
-            new    = gtk_adjustment_get_upper(adjust);
-            break;
+static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
+{
+    char *js;
 
-        default:
-            if (info->key2 == 'g') {
-                adjust = vb.gui.adjust_v;
-                max    = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-                new    = info->count ? (max * info->count / 100) : gtk_adjustment_get_lower(adjust);
-                break;
-            }
-            return RESULT_ERROR;
-    }
-    max = gtk_adjustment_get_upper(adjust) - gtk_adjustment_get_page_size(adjust);
-    gtk_adjustment_set_value(adjust, new > max ? max : new);
+    js = g_strdup_printf("vbscroll('%c',%d,%d);", info->key, c->config.scrollstep, info->count);
+    ext_proxy_eval_script(c, js, NULL);
+    g_free(js);
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_search(const NormalCmdInfo *info)
+static VbResult normal_search(Client *c, const NormalCmdInfo *info)
 {
     int count = (info->count > 0) ? info->count : 1;
 
-    command_search(&((Arg){info->key == 'n' ? count : -count}));
+    command_search(c, &((Arg){info->key == 'n' ? count : -count, NULL}), FALSE);
+
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_search_selection(const NormalCmdInfo *info)
+static VbResult normal_search_selection(Client *c, const NormalCmdInfo *info)
 {
     int count;
     char *query;
 
     /* there is no function to get the selected text so we copy current
      * selection to clipboard */
-    webkit_web_view_copy_clipboard(vb.gui.webview);
-    query = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
+    webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
+    query = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
     if (!query) {
         return RESULT_ERROR;
     }
     count = (info->count > 0) ? info->count : 1;
 
-    /* stopp possible existing search and the search highlights before
-     * starting the new search query */
-    command_search(&((Arg){0}));
-    command_search(&((Arg){info->key == '*' ? count : -count, query}));
+    command_search(c, &((Arg){info->key == '*' ? count : -count, query}), TRUE);
     g_free(query);
 
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_view_inspector(const NormalCmdInfo *info)
+static VbResult normal_view_inspector(Client *c, const NormalCmdInfo *info)
 {
-    gboolean enabled;
-    WebKitWebSettings *settings = webkit_web_view_get_settings(vb.gui.webview);
+    WebKitWebInspector *inspector;
+    WebKitSettings *settings;
 
-    g_object_get(G_OBJECT(settings), "enable-developer-extras", &enabled, NULL);
-    if (enabled) {
-        if (vb.state.is_inspecting) {
-            webkit_web_inspector_close(vb.gui.inspector);
-        } else {
-            webkit_web_inspector_show(vb.gui.inspector);
-        }
-        return RESULT_COMPLETE;
+    settings  = webkit_web_view_get_settings(c->webview);
+    inspector = webkit_web_view_get_inspector(c->webview);
+
+    /* Try to get the inspected uri to identify if the inspector is shown at
+     * the time or not. */
+    if (webkit_web_inspector_is_attached(inspector)) {
+        webkit_web_inspector_close(inspector);
+    } else if (webkit_settings_get_enable_developer_extras(settings)) {
+        webkit_web_inspector_show(inspector);
+    } else {
+        /* Inform the user on attempt to enable webinspector when the
+         * developer extra are not enabled. */
+        vb_echo(c, MSG_ERROR, TRUE, "webinspector is not enabled");
+
+        return RESULT_ERROR;
     }
-
-    vb_echo(VB_MSG_ERROR, true, "webinspector is not enabled");
-    return RESULT_ERROR;
-}
-
-static VbResult normal_view_source(const NormalCmdInfo *info)
-{
-    gboolean mode = webkit_web_view_get_view_source_mode(vb.gui.webview);
-    webkit_web_view_set_view_source_mode(vb.gui.webview, !mode);
-    webkit_web_view_reload(vb.gui.webview);
     return RESULT_COMPLETE;
 }
 
-static VbResult normal_yank(const NormalCmdInfo *info)
+static VbResult normal_view_source(Client *c, const NormalCmdInfo *info)
+{
+    /* TODO the source mode isn't supported anymore use external editor for this */
+    return RESULT_COMPLETE;
+}
+
+static VbResult normal_yank(Client *c, const NormalCmdInfo *info)
 {
     Arg a = {info->key == 'Y' ? COMMAND_YANK_SELECTION : COMMAND_YANK_URI};
 
-    return command_yank(&a, info->reg) ? RESULT_COMPLETE : RESULT_ERROR;
+    return command_yank(c, &a, info->reg) ? RESULT_COMPLETE : RESULT_ERROR;
 }
 
-static VbResult normal_zoom(const NormalCmdInfo *info)
+static VbResult normal_zoom(Client *c, const NormalCmdInfo *info)
 {
-    float step, level, count;
-    WebKitWebSettings *setting;
-    WebKitWebView *view = vb.gui.webview;
+    float step = 0.1, level, count;
+    WebKitWebView *view = c->webview;
 
     /* check if the second key is allowed */
     if (!strchr("iIoOz", info->key2)) {
@@ -830,21 +738,15 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
 
     count = info->count ? (float)info->count : 1.0;
 
-    if (info->key2 == 'z') { /* zz reset zoom */
-#ifdef FEATURE_HIGH_DPI
-        /* to set the zoom for high dpi displays we need full content zoom */
-        webkit_web_view_set_full_content_zoom(view, true);
-#endif
-        webkit_web_view_set_zoom_level(view, vb.config.default_zoom);
+    /* zz reset zoom to it's default zoom level */
+    if (info->key2 == 'z') {
+        webkit_settings_set_zoom_text_only(webkit_web_view_get_settings(view), FALSE);
+        webkit_web_view_set_zoom_level(view, c->config.default_zoom / 100.0);
 
         return RESULT_COMPLETE;
     }
 
-    level   = webkit_web_view_get_zoom_level(view);
-    setting = webkit_web_view_get_settings(view);
-    g_object_get(G_OBJECT(setting), "zoom-step", &step, NULL);
-
-    webkit_web_view_set_full_content_zoom(view, VB_IS_UPPER(info->key2));
+    level= webkit_web_view_get_zoom_level(view);
 
     /* calculate the new zoom level */
     if (info->key2 == 'i' || info->key2 == 'I') {
@@ -854,6 +756,7 @@ static VbResult normal_zoom(const NormalCmdInfo *info)
     }
 
     /* apply the new zoom level */
+    webkit_settings_set_zoom_text_only(webkit_web_view_get_settings(view), VB_IS_LOWER(info->key2));
     webkit_web_view_set_zoom_level(view, level);
 
     return RESULT_COMPLETE;

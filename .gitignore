@@ -1,11 +1,5 @@
 *.[oad]
 *.lo
+*.so
 *.tar.gz
-src/hints.js.h
-src/config.h
-src/vimb
-src/libvimb.so
-tests/*
-!tests/Makefile
-!tests/*.c
-!tests/manual/
+sandbox

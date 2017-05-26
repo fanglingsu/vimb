@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,9 @@
 #include "config.h"
 #include "main.h"
 
-void input_enter(void);
-void input_leave(void);
-VbResult input_keypress(int key);
-VbResult input_open_editor(void);
+void input_enter(Client *c);
+void input_leave(Client *c);
+VbResult input_keypress(Client *c, int key);
+VbResult input_open_editor(Client *c);
 
 #endif /* end of include guard: _INPUT_H */

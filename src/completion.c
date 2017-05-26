@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,25 +17,54 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "completion.h"
 #include "config.h"
 #include "main.h"
-#include "completion.h"
 
-extern VbCore vb;
-
-static struct {
-    GtkWidget *win;
-    GtkWidget *tree;
-    int       active;  /* number of the current active tree item */
-    CompletionSelectFunc selfunc;
-} comp;
+typedef struct {
+    GtkWidget               *win, *tree;
+    int                     active;  /* number of the current active tree item */
+    CompletionSelectFunc    selfunc;
+} Completion;
 
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
 
+extern struct Vimb vb;
 
-gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
-    gboolean back)
+
+/**
+ * Stop the completion and reset temporary used data.
+ */
+void completion_clean(Client *c)
+{
+    Completion *comp = (Completion*)c->comp;
+    c->mode->flags  &= ~FLAG_COMPLETION;
+
+    if (comp->win) {
+        gtk_widget_destroy(comp->win);
+        comp->win  = NULL;
+        comp->tree = NULL;
+    }
+}
+
+/**
+ * Free the memory of the completion set on the client.
+ */
+void completion_cleanup(Client *c)
+{
+    if (c->comp) {
+        g_slice_free(Completion, c->comp);
+        c->comp = NULL;
+    }
+}
+
+/**
+ * Start the completion by creating the required widgets and setting a select
+ * function.
+ */
+gboolean completion_create(Client *c, GtkTreeModel *model,
+        CompletionSelectFunc selfunc, gboolean back)
 {
     GtkCellRenderer *renderer;
     GtkTreeSelection *selection;
@@ -44,6 +73,7 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
     GtkTreePath *path;
     GtkTreeIter iter;
     int height, width;
+    Completion *comp = (Completion*)c->comp;
 
     /* if there is only one match - don't build the tree view */
     if (gtk_tree_model_iter_n_children(model, NULL) == 1) {
@@ -53,59 +83,55 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
             gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
 
             /* call the select function */
-            selfunc(value);
+            selfunc(c, value);
 
             g_free(value);
             g_object_unref(model);
 
-            return false;
+            return FALSE;
         }
     }
 
-    comp.selfunc = selfunc;
+    comp->selfunc = selfunc;
 
     /* prepare the tree view */
-    comp.win  = gtk_scrolled_window_new(NULL, NULL);
-    comp.tree = gtk_tree_view_new();
-#ifndef HAS_GTK3
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(comp.win), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
-#endif
-    gtk_box_pack_end(GTK_BOX(vb.gui.box), comp.win, false, false, 0);
-    gtk_container_add(GTK_CONTAINER(comp.win), comp.tree);
+    comp->win  = gtk_scrolled_window_new(NULL, NULL);
+    comp->tree = gtk_tree_view_new();
 
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp.tree), false);
+    gtk_style_context_add_provider(gtk_widget_get_style_context(comp->tree),
+            GTK_STYLE_PROVIDER(vb.style_provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    gtk_widget_set_name(GTK_WIDGET(comp->tree), "completion");
+
+    gtk_box_pack_end(GTK_BOX(gtk_widget_get_parent(GTK_WIDGET(c->statusbar.box))), comp->win, FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(comp->win), comp->tree);
+
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp->tree), FALSE);
     /* we have only on line per item so we can use the faster fixed heigh mode */
-    gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(comp.tree), true);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(comp.tree), model);
+    gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(comp->tree), TRUE);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(comp->tree), model);
     g_object_unref(model);
 
-    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_fg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_NORMAL, &vb.style.comp_bg[VB_COMP_NORMAL]);
-    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_SELECTED, &vb.style.comp_bg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_TEXT(comp.tree, VB_GTK_STATE_ACTIVE, &vb.style.comp_fg[VB_COMP_ACTIVE]);
-    VB_WIDGET_OVERRIDE_BASE(comp.tree, VB_GTK_STATE_ACTIVE, &vb.style.comp_bg[VB_COMP_ACTIVE]);
-
     /* prepare the selection */
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree));
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(comp->tree));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
-    gtk_tree_selection_set_select_function(selection, tree_selection_func, NULL, NULL);
+    gtk_tree_selection_set_select_function(selection, tree_selection_func, c, NULL);
 
     /* get window dimension */
-    gtk_window_get_size(GTK_WINDOW(vb.gui.window), &width, &height);
+    gtk_window_get_size(GTK_WINDOW(c->window), &width, &height);
 
     /* prepare first column */
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(comp.tree), column);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(comp->tree), column);
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
-        "font-desc", vb.style.comp_font,
+        "font-desc", c->config.comp_font,
         "ellipsize", PANGO_ELLIPSIZE_MIDDLE,
         NULL
     );
-    gtk_tree_view_column_pack_start(column, renderer, true);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_FIRST);
     gtk_tree_view_column_set_min_width(column, 2 * width/3);
 
@@ -113,20 +139,20 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
 #ifdef FEATURE_TITLE_IN_COMPLETION
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(comp.tree), column);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(comp->tree), column);
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
-        "font-desc", vb.style.comp_font,
+        "font-desc", c->config.comp_font,
         "ellipsize", PANGO_ELLIPSIZE_END,
         NULL
     );
-    gtk_tree_view_column_pack_start(column, renderer, true);
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_SECOND);
 #endif
 
     /* to set the height for the treeview the tree must be realized first */
-    gtk_widget_show(comp.tree);
+    gtk_widget_show(comp->tree);
 
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
@@ -135,30 +161,31 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
     }
 
     /* use max 1/3 of window height for the completion */
-#ifdef HAS_GTK3
-    gtk_widget_get_preferred_size(comp.tree, NULL, &size);
+    gtk_widget_get_preferred_size(comp->tree, NULL, &size);
     height /= 3;
     gtk_scrolled_window_set_min_content_height(
-        GTK_SCROLLED_WINDOW(comp.win),
+        GTK_SCROLLED_WINDOW(comp->win),
         size.height > height ? height : size.height
     );
-#else
-    gtk_widget_size_request(comp.tree, &size);
-    height /= 3;
-    if (size.height > height) {
-        gtk_widget_set_size_request(comp.win, -1, height);
-    }
-#endif
 
-    vb.mode->flags |= FLAG_COMPLETION;
+    c->mode->flags |= FLAG_COMPLETION;
 
     /* set to -1 to have the cursor on first or last item set in move_cursor */
-    comp.active = -1;
-    completion_next(back);
+    comp->active = -1;
+    completion_next(c, back);
 
-    gtk_widget_show(comp.win);
+    gtk_widget_show(comp->win);
 
-    return true;
+    return TRUE;
+}
+
+/**
+ * Initialize the completion system for given client.
+ */
+void completion_init(Client *c)
+{
+    /* Allocate memory for the completion struct and save it on the client. */
+    c->comp = g_slice_new0(Completion);
 }
 
 /**
@@ -166,52 +193,78 @@ gboolean completion_create(GtkTreeModel *model, CompletionSelectFunc selfunc,
  * If the end/beginning is reached return false and start on the opposite end
  * on the next call.
  */
-gboolean completion_next(gboolean back)
+gboolean completion_next(Client *c, gboolean back)
 {
     int rows;
     GtkTreePath *path;
-    GtkTreeView *tree = GTK_TREE_VIEW(comp.tree);
+    GtkTreeView *tree = GTK_TREE_VIEW(((Completion*)c->comp)->tree);
+    Completion *comp  = (Completion*)c->comp;
 
     rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(tree), NULL);
     if (back) {
-        comp.active--;
+        comp->active--;
         /* Step back over the beginning. */
-        if (comp.active == -1) {
-            /* Unselect the current item to show the user that the shown
-             * content is the initial typed content. */
-            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree)));
+        if (comp->active == -1) {
+            /* Deselect the current item to show the user the initial typed
+             * content. */
+            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp->tree)));
 
-            return false;
-        } else if (comp.active < -1) {
-            comp.active = rows - 1;
+            return FALSE;
+        }
+        if (comp->active < -1) {
+            comp->active = rows - 1;
         }
     } else {
-        comp.active++;
+        comp->active++;
         /* Step over the end. */
-        if (comp.active == rows) {
-            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp.tree)));
+        if (comp->active == rows) {
+            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp->tree)));
 
-            return false;
-        } else if (comp.active >= rows) {
-            comp.active = 0;
+            return FALSE;
+        }
+        if (comp->active >= rows) {
+            comp->active = 0;
         }
     }
 
     /* get new path and move cursor to it */
-    path = gtk_tree_path_new_from_indices(comp.active, -1);
-    gtk_tree_view_set_cursor(tree, path, NULL, false);
+    path = gtk_tree_path_new_from_indices(comp->active, -1);
+    gtk_tree_view_set_cursor(tree, path, NULL, FALSE);
     gtk_tree_path_free(path);
 
-    return true;
+    return TRUE;
 }
 
-void completion_clean(void)
+/**
+ * Fills the given list store by matching data of also given src list.
+ */
+gboolean completion_fill(GtkListStore *store, const char *input, GList *src)
 {
-    vb.mode->flags &= ~FLAG_COMPLETION;
-    if (comp.win) {
-        gtk_widget_destroy(comp.win);
-        comp.win = comp.tree = NULL;
+    gboolean found = FALSE;
+    GtkTreeIter iter;
+
+    /* If no filter input given - copy all entries into the data store. */
+    if (!input || !*input) {
+        for (GList *l = src; l; l = l->next) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            found = TRUE;
+        }
+        return found;
     }
+
+    /* If filter input is given - copy matching list entires into data store.
+     * Strings are compared by prefix matching. */
+    for (GList *l = src; l; l = l->next) {
+        char *value = (char*)l->data;
+        if (g_str_has_prefix(value, input)) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            found = TRUE;
+        }
+    }
+
+    return found;
 }
 
 static gboolean tree_selection_func(GtkTreeSelection *selection,
@@ -219,16 +272,19 @@ static gboolean tree_selection_func(GtkTreeSelection *selection,
 {
     char *value;
     GtkTreeIter iter;
+    Completion *comp = (Completion*)((Client*)data)->comp;
 
     /* if not selected means the item is going to be selected which we are
      * interested in */
     if (!selected && gtk_tree_model_get_iter(model, &iter, path)) {
         gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
 
-        comp.selfunc(value);
+        comp->selfunc((Client*)data, value);
 
         g_free(value);
+        /* TODO update comp->active on select by mouse to continue with <Tab>
+         * or <S-Tab> from selected item on. */
     }
 
-    return true;
+    return TRUE;
 }

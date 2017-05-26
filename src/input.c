@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,62 +17,64 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
+#include <glib.h>
 #include <glib/gstdio.h>
-#include "main.h"
-#include "input.h"
-#include "dom.h"
-#include "util.h"
+
 #include "ascii.h"
+#include "config.h"
+#include "input.h"
+#include "main.h"
 #include "normal.h"
+#include "util.h"
+#include "ext-proxy.h"
 
 typedef struct {
-    char    *file;
-    Element *element;
+    Client *c;
+    char   *file;
 } EditorData;
 
 static void resume_editor(GPid pid, int status, EditorData *data);
 
-extern VbCore vb;
-
 /**
  * Function called when vimb enters the input mode.
  */
-void input_enter(void)
+void input_enter(Client *c)
 {
     /* switch focus first to make sure we can write to the inputbox without
      * disturbing the user */
-    gtk_widget_grab_focus(GTK_WIDGET(vb.gui.webview));
-    vb_update_mode_label("-- INPUT --");
+    gtk_widget_grab_focus(GTK_WIDGET(c->webview));
+    vb_modelabel_update(c, "-- INPUT --");
+    ext_proxy_eval_script(c, "var vimb_input_mode_element = document.activeElement;", NULL);
 }
 
 /**
  * Called when the input mode is left.
  */
-void input_leave(void)
+void input_leave(Client *c)
 {
-    vb_update_mode_label("");
+    ext_proxy_eval_script(c, "vimb_input_mode_element.blur();", NULL);
+    vb_modelabel_update(c, "");
 }
 
 /**
  * Handles the keypress events from webview and inputbox.
  */
-VbResult input_keypress(int key)
+VbResult input_keypress(Client *c, int key)
 {
-    static gboolean ctrlo = false;
+    static gboolean ctrlo = FALSE;
 
     if (ctrlo) {
         /* if we are in ctrl-O mode perform the next keys as normal mode
          * commands until the command is complete or error */
-        VbResult res = normal_keypress(key);
+        VbResult res = normal_keypress(c, key);
         if (res != RESULT_MORE) {
-            ctrlo = false;
+            ctrlo = FALSE;
             /* Don't overwrite the mode label in case we landed in another
              * mode. This might occurre by CTRL-0 CTRL-Z or after running ex
              * command, where we mainly end up in normal mode. */
-            if (vb.mode->id == 'i') {
+            if (c->mode->id == 'i') {
                 /* reenter the input mode */
-                input_enter();
+                input_enter(c);
             }
         }
         return res;
@@ -80,53 +82,55 @@ VbResult input_keypress(int key)
 
     switch (key) {
         case CTRL('['): /* esc */
-            vb_enter('n');
+            vb_enter(c, 'n');
             return RESULT_COMPLETE;
 
         case CTRL('O'):
             /* enter CTRL-0 mode to execute next command in normal mode */
-            ctrlo           = true;
-            vb.mode->flags |= FLAG_NOMAP;
-            vb_update_mode_label("-- (input) --");
+            ctrlo           = TRUE;
+            c->mode->flags |= FLAG_NOMAP;
+            vb_modelabel_update(c, "-- (input) --");
             return RESULT_MORE;
 
         case CTRL('T'):
-            return input_open_editor();
+            return input_open_editor(c);
 
         case CTRL('Z'):
-            vb_enter('p');
+            vb_enter(c, 'p');
             return RESULT_COMPLETE;
     }
 
-    vb.state.processed_key = false;
+    c->state.processed_key = FALSE;
     return RESULT_ERROR;
 }
 
-VbResult input_open_editor(void)
+VbResult input_open_editor(Client *c)
 {
     char **argv, *file_path = NULL;
-    const char *text, *editor_command;
+    const char *text = NULL, *editor_command;
     int argc;
     GPid pid;
     gboolean success;
+    GVariant *jsreturn;
 
-    editor_command = GET_CHAR("editor-command");
+    g_assert(c);
+
+    /* get the editor command */
+    editor_command = GET_CHAR(c, "editor-command");
     if (!editor_command || !*editor_command) {
-        vb_echo(VB_MSG_ERROR, true, "No editor-command configured");
-        return RESULT_ERROR;
-    }
-    Element* active = dom_get_active_element(vb.gui.webview);
-
-    /* check if element is suitable for editing */
-    if (!active || !dom_is_editable(active)) {
+        vb_echo(c, MSG_ERROR, true, "No editor-command configured");
         return RESULT_ERROR;
     }
 
-    text = dom_editable_element_get_value(active);
-    if (!text) {
+    /* get the selected input element */
+    jsreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.value");
+    g_variant_get(jsreturn, "(bs)", &success, &text);
+
+    if (!success || !text) {
         return RESULT_ERROR;
     }
 
+    /* create a temp file to pass text to and from editor */
     if (!util_create_tmp_file(text, &file_path)) {
         return RESULT_ERROR;
     }
@@ -154,12 +158,12 @@ VbResult input_open_editor(void)
     }
 
     /* disable the active element */
-    dom_editable_element_set_disable(active, true);
+    ext_proxy_eval_script(c, "vimb_input_mode_element.disabled=true", NULL);
 
+    /* watch the editor process */
     EditorData *data = g_slice_new0(EditorData);
-    data->file    = file_path;
-    data->element = active;
-
+    data->file = file_path;
+    data->c    = c;
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
 
     return RESULT_COMPLETE;
@@ -167,16 +171,79 @@ VbResult input_open_editor(void)
 
 static void resume_editor(GPid pid, int status, EditorData *data)
 {
-    char *text;
+    char *text, *tmp;
+    char *jscode;
+
+    g_assert(pid);
+    g_assert(data);
+    g_assert(data->c);
+    g_assert(data->file);
+
     if (status == 0) {
+        /* get the text the editor stored */
         text = util_get_file_contents(data->file, NULL);
+
         if (text) {
-            dom_editable_element_set_value(data->element, text);
+            /* escape the text to form a valid JS string */
+            /* TODO: could go into util.c maybe */
+            struct search_replace {
+                const char* search;
+                const char* replace;
+            } escapes[] = {
+                {"\x01", ""},
+                {"\x02", ""},
+                {"\x03", ""},
+                {"\x04", ""},
+                {"\x05", ""},
+                {"\x06", ""},
+                {"\a", ""},
+                {"\b", ""},
+                {"\t", "\\t"},
+                {"\n", "\\n"},
+                {"\v", ""},
+                {"\f", ""},
+                {"\r", ""},
+                {"\x0E", ""},
+                {"\x0F", ""},
+                {"\x10", ""},
+                {"\x11", ""},
+                {"\x12", ""},
+                {"\x13", ""},
+                {"\x14", ""},
+                {"\x15", ""},
+                {"\x16", ""},
+                {"\x17", ""},
+                {"\x18", ""},
+                {"\x19", ""},
+                {"\x1A", ""},
+                {"\x1B", ""},
+                {"\x1C", ""},
+                {"\x1D", ""},
+                {"\x1E", ""},
+                {"\x1F", ""},
+                {"\"", "\\\""},
+                {"\x7F", ""},
+                {NULL, NULL},
+            };
+
+            for(struct search_replace *i = escapes; i->search; i++) {
+                tmp = util_str_replace(i->search, i->replace, text);
+                g_free(text);
+                text = tmp;
+            }
+
+            /* put the text back into the element */
+            jscode = g_strdup_printf("vimb_input_mode_element.value=\"%s\"", text);
+            ext_proxy_eval_script(data->c, jscode, NULL);
+
+            g_free(jscode);
+            g_free(text);
         }
-        g_free(text);
     }
-    dom_editable_element_set_disable(data->element, false);
-    dom_give_focus(data->element);
+
+    ext_proxy_eval_script(data->c,
+            "vimb_input_mode_element.disabled=false;"
+            "vimb_input_mode_element.focus()", NULL);
 
     g_unlink(data->file);
     g_free(data->file);

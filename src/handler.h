@@ -1,8 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
- * Copyright (C) 2014 Sébastien Marie
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +17,15 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
-#ifdef FEATURE_ARH
+#ifndef _HANDLERS_H
+#define _HANDLERS_H
 
-#ifndef _ARH_H
-#define _ARH_H
+void handler_init(Client *c);
+void handler_cleanup(Client *c);
+gboolean handler_add(Client *c, const char *key, const char *cmd);
+gboolean handler_remove(Client *c, const char *key);
+gboolean handler_handle_uri(Client *c, const char *uri);
+gboolean handler_fill_completion(Client *c, GtkListStore *store, const char *input);
 
-#include "main.h"
+#endif /* end of include guard: _HANDLERS_H */
 
-GSList *arh_parse(const char *, const char **);
-void    arh_free(GSList *);
-void    arh_run(GSList *, const char *, SoupMessage *);
-
-#endif /* end of include guard: _ARH_H */
-#endif

@@ -1,4 +1,4 @@
-Object.freeze((function(){
+var hints = Object.freeze((function(){
     'use strict';
 
     var hints      = [],               /* holds all hint data (hinted element, label, number) in view port */
@@ -197,9 +197,6 @@ Object.freeze((function(){
             if (doc.body) {
                 doc.body.appendChild(hDiv);
             }
-            /* create the default style sheet */
-            createStyle(doc);
-
             docs.push({
                 doc:   doc,
                 start: start,
@@ -209,9 +206,11 @@ Object.freeze((function(){
 
             /* recurse into any iframe or frame element */
             for (i = 0; i < win.frames.length; i++) {
-                var rect,
-                    f = win.frames[i],
-                    e = f.frameElement;
+                try {
+                    var rect, f = win.frames[i], e = f.frameElement;
+                } catch (ex) {
+                    continue;
+                }
 
                 if (isVisible(e)) {
                     rect = e.getBoundingClientRect();
@@ -292,7 +291,7 @@ Object.freeze((function(){
         };
     }
 
-    /* Retrun the hint string for a given number based on configured hintkeys */
+    /* Return the hint string for a given number based on configured hintkeys */
     function getHintString(n) {
         var res = [],
             len = config.hintKeys.length;
@@ -314,18 +313,6 @@ Object.freeze((function(){
             return [-rect.left, -rect.top];
         }
         return [doc.defaultView.scrollX, doc.defaultView.scrollY];
-    }
-
-    function createStyle(doc) {
-        if (doc.hasStyle) {
-            return;
-        }
-        var e = doc.createElement("style");
-        /* HINT_CSS is replaces by the contents of the HINT_CSS constant from config.h */
-        e.innerHTML = "HINT_CSS";
-        doc.head.appendChild(e);
-        /* prevent us from adding the style multiple times */
-        doc.hasStyle = true;
     }
 
     function focus(back) {
@@ -379,11 +366,11 @@ Object.freeze((function(){
         if (tag === "input" || tag === "textarea" || tag === "select") {
             if (type === "radio" || type === "checkbox") {
                 e.focus();
-                click(e);
+                e.click();
                 return "DONE:";
             }
             if (type === "submit" || type === "reset" || type  === "button" || type === "image") {
-                click(e);
+                e.click();
                 return "DONE:";
             }
             e.focus();
@@ -396,19 +383,16 @@ Object.freeze((function(){
     }
 
     /* internal used methods */
-    function open(e, newWin) {
-        var oldTarget = e.target;
-        if (newWin) {
-            /* set target to open in new window */
-            e.target = "_blank";
-        } else if (e.target === "_blank") {
-            e.removeAttribute("target");
+    function open(e) {
+        var href;
+        if ((href = e.getAttribute('href')) && href != '#') {
+            window.location.href = href;
+        } else {
+            /* We call click() in async mode to return as fast as possible. If
+             * we don't return immediately, the EvalJS dbus call will probably
+             * timeout and cause errors. */
+            window.setTimeout(function() {e.click();}, 0);
         }
-        /* to open links in new window the mouse events are fired with ctrl */
-        /* key - otherwise some ugly pages will ignore this attribute in their */
-        /* mouse event observers like duckduckgo */
-        click(e, newWin);
-        e.target = oldTarget;
     }
 
     /* set focus on hint with given index valid hints array */
@@ -424,24 +408,15 @@ Object.freeze((function(){
             activeHint.e.classList.add(fClass);
             activeHint.label.classList.add(fClass);
             mouseEvent(activeHint.e, "mouseover");
-
-            return "OVER:" + getSrc(activeHint.e);;
         }
     }
 
-    function click(e, ctrl) {
-        mouseEvent(e, "mouseover", ctrl);
-        mouseEvent(e, "mousedown", ctrl);
-        mouseEvent(e, "mouseup", ctrl);
-        mouseEvent(e, "click", ctrl);
-    }
-
-    function mouseEvent(e, name, ctrl) {
+    function mouseEvent(e, name) {
         var evObj = e.ownerDocument.createEvent("MouseEvents");
         evObj.initMouseEvent(
             name, true, true, e.ownerDocument.defaultView,
             0, 0, 0, 0, 0,
-            (typeof ctrl != "undefined") ? ctrl : false, false, false, false, 0, null
+            false, false, false, false, 0, null
         );
         e.dispatchEvent(evObj);
     }
@@ -456,74 +431,6 @@ Object.freeze((function(){
             expr, doc, function (p) {return "http://www.w3.org/1999/xhtml";},
             XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null
         );
-    }
-
-    /* follow the count last link on pagematching the given regex list */
-    function followLink(rel, patterns, count) {
-        /* returns array of matching elements */
-        function followFrame(frame) {
-            var i, p, reg, res = [],
-                doc = frame.document,
-                elems = [],
-                all = doc.getElementsByTagName("a");
-
-            /* first match links by rel attribute */
-            for (i = all.length - 1; i >= 0; i--) {
-                /* collect visible elements */
-                var s = doc.defaultView.getComputedStyle(all[i], null);
-                if (s.display !== "none" && s.visibility === "visible") {
-                    /* if there are rel attributes elements, put them in the result */
-                    if (all[i].rel.toLowerCase() === rel) {
-                        res.push(all[i]);
-                    } else {
-                        /* save to match them later */
-                        elems.push(all[i]);
-                    }
-                }
-            }
-            /* match each pattern successively against each link in the page */
-            for (p = 0; p < patterns.length; p++) {
-                reg = patterns[p];
-                /* begin with the last link on page */
-                for (i = elems.length - 1; i >= 0; i--) {
-                    if (elems[i].innerText.match(reg)) {
-                        res.push(elems[i]);
-                    }
-                }
-            }
-            return res;
-        }
-        var i, j, elems, frames = allFrames(window);
-        for (i = 0; i < frames.length; i++) {
-            elems = followFrame(frames[i]);
-            for (j = 0; j < elems.length; j++) {
-                if (--count == 0) {
-                    open(elems[j], false);
-                    return "DONE:";
-                }
-            }
-        }
-        return "ERROR:";
-    }
-
-    function incrementUri(count) {
-        var oldnum, newnum, matches = location.href.match(/(.*?)(\d+)(\D*)$/);
-        if (matches) {
-            oldnum = matches[2];
-            newnum = String(Math.max(parseInt(oldnum) + count, 0));
-            /* keep prepending zeros */
-            if (/^0/.test(oldnum)) {
-                while (newnum.length < oldnum.length) {
-                    newnum = "0" + newnum;
-                }
-            }
-            matches[2] = newnum;
-
-            location.href = matches.slice(1).join("");
-
-            return "DONE:";
-        }
-        return "ERROR:";
     }
 
     function allFrames(win) {
@@ -547,8 +454,7 @@ Object.freeze((function(){
                 },
                 /* holds the actions to perform on hint fire */
                 actionmap = {
-                    o:          function(e) {open(e, false); return "DONE:";},
-                    t:          function(e) {open(e, true); return "DONE:";},
+                    ot:         function(e) {open(e); return "DONE:";},
                     eiIOpPsTxy: function(e) {return "DATA:" + getSrc(e);},
                     Y:          function(e) {return "DATA:" + (e.textContent || "");}
                 };
@@ -604,8 +510,5 @@ Object.freeze((function(){
         clear:        clear,
         fire:         fire,
         focus:        focus,
-        /* not really hintings but uses similar logic */
-        followLink:   followLink,
-        incrementUri: incrementUri,
     };
 })());

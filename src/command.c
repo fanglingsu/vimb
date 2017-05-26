@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,129 +21,162 @@
  * This file contains functions that are used by normal mode and command mode
  * together.
  */
+#include <stdlib.h>
+
 #include "config.h"
-#include "main.h"
+#ifdef FEATURE_QUEUE
+#include "bookmark.h"
+#endif
 #include "command.h"
 #include "history.h"
-#include "bookmark.h"
+#include "main.h"
 
-extern VbCore vb;
-
-gboolean command_search(const Arg *arg)
+gboolean command_search(Client *c, const Arg *arg, bool commit)
 {
-    static short dir;   /* last direction 1 forward, -1 backward*/
+    WebKitFindController *fc;
     const char *query;
-    static gboolean newsearch = true;
-    gboolean forward;
+    guint count;
+
+    fc = webkit_web_view_get_find_controller(c->webview);
+
+    g_assert(c);
+    g_assert(arg);
+    g_assert(fc);
 
     if (arg->i == 0) {
-        vb.state.search_matches = 0;
-        vb_update_statusbar();
-#ifdef FEATURE_SEARCH_HIGHLIGHT
-        webkit_web_view_unmark_text_matches(vb.gui.webview);
-#endif
-        newsearch = true;
-        return true;
-    }
+        webkit_find_controller_search_finish(fc);
 
-    /* copy search query for later use */
-    if (arg->s) {
-        /* set search direction only when the searching is started */
-        dir   = arg->i > 0 ? 1 : -1;
-        query = arg->s;
-        /* add new search query to history and search register */
-        vb_register_add('/', query);
-        history_add(HISTORY_SEARCH, query, NULL);
-    } else {
-        /* no search phrase given - continue a previous search */
-        query = vb_register_get('/');
-    }
-
-    forward = (arg->i * dir) > 0;
-
-    if (query) {
-        unsigned int count = abs(arg->i);
-        if (newsearch) {
-            vb.state.search_matches = webkit_web_view_mark_text_matches(vb.gui.webview, query, false, 0);
-            vb_update_statusbar();
-            newsearch = false;
-
-            /* highlight matches if the search is started new or continued
-             * after switch to normal mode which calls this function with
-             * COMMAND_SEARCH_OFF */
-#ifdef FEATURE_SEARCH_HIGHLIGHT
-            webkit_web_view_set_highlight_text_matches(vb.gui.webview, true);
-#endif
-            /* skip first search because this is done during typing in ex
-             * mode, else the search will mark the next match as active */
-            if (count) {
-                count -= 1;
-            }
+        /* Clear the input only if the search is active. */
+        if (c->state.search.active) {
+            vb_echo(c, MSG_NORMAL, FALSE, "");
         }
 
-        while (count--) {
-            if (!webkit_web_view_search_text(vb.gui.webview, query, false, forward, true)) {
-                break;
-            }
-        };
+        c->state.search.active = FALSE;
+        c->state.search.direction = 0;
+        c->state.search.matches = 0;
+
+        vb_statusbar_update(c);
+
+        return TRUE;
     }
 
-    return true;
+    query = arg->s;
+    count = abs(arg->i);
+
+    /* Only committed search strings adjust registers and are recorded in
+     * history, intermediate strings (while using incsearch) don't. */
+    if (commit) {
+        if (query) {
+            history_add(c, HISTORY_SEARCH, query, NULL);
+            vb_register_add(c, '/', query);
+        } else {
+            /* Committed search without string re-searches last string. */
+            query = vb_register_get(c, '/');
+        }
+    }
+
+    /* Hand the query string to webkit's find controller. */
+    if (query) {
+        /* Force a fresh start in order to have webkit select the first match
+         * on the page. Without this workaround the first selected match
+         * depends on the most recent selection or caret position (even when
+         * caret browsing is disabled). */
+        if(commit) {
+            webkit_find_controller_search(fc, "", WEBKIT_FIND_OPTIONS_NONE, G_MAXUINT);
+        }
+
+        webkit_find_controller_search(fc, query,
+                WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
+                WEBKIT_FIND_OPTIONS_WRAP_AROUND |
+                (arg->i > 0 ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
+                G_MAXUINT);
+
+        c->state.search.active = TRUE;
+        c->state.search.direction = arg->i > 0 ? 1 : -1;
+        /* TODO get the number of matches */
+
+        /* Skip first search because the first match is already
+         * highlighted on search start. */
+        count -= 1;
+    }
+
+    /* Step through searchs result focus according to arg->i. */
+    if (c->state.search.active) {
+        if (arg->i * c->state.search.direction > 0) {
+            while (count--) {
+                webkit_find_controller_search_next(fc);
+            }
+        } else {
+            while (count--) {
+                webkit_find_controller_search_previous(fc);
+            }
+        }
+    }
+
+    return TRUE;
 }
 
-gboolean command_yank(const Arg *arg, char buf)
+gboolean command_yank(Client *c, const Arg *arg, char buf)
 {
-    static char *tmpl = "Yanked: %s";
+    /**
+     * This implementation is quite 'brute force', same as in vimb2
+     *  - both X clipboards are always set, PRIMARY and CLIPBOARD
+     *  - the X clipboards are always set, even though a vimb register was given
+     */
 
-    if (arg->i == COMMAND_YANK_SELECTION) {
-        char *text = NULL;
-        /* copy current selection to clipboard */
-        webkit_web_view_copy_clipboard(vb.gui.webview);
-        text = gtk_clipboard_wait_for_text(PRIMARY_CLIPBOARD());
-        if (!text) {
-            text = gtk_clipboard_wait_for_text(SECONDARY_CLIPBOARD());
-        }
-        if (text) {
-            /* save in given register and default "" register */
-            vb_register_add(buf, text);
-            vb_register_add('"', text);
-            vb_echo(VB_MSG_NORMAL, false, tmpl, text);
-            g_free(text);
+    const char *uri = NULL;
+    char *yanked = NULL;
 
-            return true;
-        }
+    g_assert(c);
+    g_assert(arg);
+    g_assert(c->webview);
+    g_assert(
+        arg->i == COMMAND_YANK_URI ||
+        arg->i == COMMAND_YANK_SELECTION ||
+        arg->i == COMMAND_YANK_ARG);
 
-        return false;
-    }
-
-    Arg a = {VB_CLIPBOARD_PRIMARY|VB_CLIPBOARD_SECONDARY};
     if (arg->i == COMMAND_YANK_URI) {
-        /* yank current uri */
-        a.s = vb.state.uri;
+        if ((uri = webkit_web_view_get_uri(c->webview))) {
+            yanked = g_strdup(uri);
+        }
+    } else if (arg->i == COMMAND_YANK_SELECTION) {
+        /* copy web view selection to clipboard */
+        webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
+        /* read back copy from clipboard */
+        yanked = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
     } else {
         /* use current arg.s as new clipboard content */
-        a.s = arg->s;
-    }
-    if (a.s) {
-        vb_set_clipboard(&a);
-        /* save in given register and default "" register */
-        vb_register_add(buf, a.s);
-        vb_register_add('"', a.s);
-        vb_echo(VB_MSG_NORMAL, false, tmpl, a.s);
-
-        return true;
+        yanked = g_strdup(arg->s);
     }
 
-    return false;
+    if(!yanked) {
+        return FALSE;
+    }
+
+    /* store in vimb default register */
+    vb_register_add(c, '"', yanked);
+    /* store in vimb register buf if buf != 0 */
+    vb_register_add(c, buf, yanked);
+
+    /* store in X clipboard primary (selected text copy, middle mouse paste) */
+    gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY), yanked, -1);
+    /* store in X "windows style" clipboard */
+    gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), yanked, -1);
+
+    vb_echo(c, MSG_NORMAL, false, "Yanked: %s", yanked);
+
+    g_free(yanked);
+
+    return TRUE;
 }
 
-gboolean command_save(const Arg *arg)
+gboolean command_save(Client *c, const Arg *arg)
 {
-    WebKitDownload *download;
     const char *uri, *path = NULL;
+    WebKitDownload *download;
 
     if (arg->i == COMMAND_SAVE_CURRENT) {
-        uri = vb.state.uri;
+        uri = c->state.uri;
         /* given string is the path to save the download to */
         if (arg->s && *(arg->s) != '\0') {
             path = arg->s;
@@ -153,48 +186,48 @@ gboolean command_save(const Arg *arg)
     }
 
     if (!uri || !*uri) {
-        return false;
+        return FALSE;
     }
 
-    download = webkit_download_new(webkit_network_request_new(uri));
-    vb_download(vb.gui.webview, download, path);
+    /* Start the download to given path. */
+    download = webkit_web_view_download_uri(c->webview, uri);
 
-    return true;
+    return vb_download_set_destination(c, download, NULL, path);
 }
 
 #ifdef FEATURE_QUEUE
-gboolean command_queue(const Arg *arg)
+gboolean command_queue(Client *c, const Arg *arg)
 {
-    gboolean res = false;
-    int count = 0;
+    gboolean res = FALSE;
+    int count    = 0;
     char *uri;
 
     switch (arg->i) {
         case COMMAND_QUEUE_POP:
             if ((uri = bookmark_queue_pop(&count))) {
-                res = vb_load_uri(&(Arg){VB_TARGET_CURRENT, uri});
+                res = vb_load_uri(c, &(Arg){TARGET_CURRENT, uri});
                 g_free(uri);
             }
-            vb_echo(VB_MSG_NORMAL, false, "Queue length %d", count);
+            vb_echo(c, MSG_NORMAL, FALSE, "Queue length %d", count);
             break;
 
         case COMMAND_QUEUE_PUSH:
-            res = bookmark_queue_push(arg->s ? arg->s : vb.state.uri);
+            res = bookmark_queue_push(arg->s ? arg->s : c->state.uri);
             if (res) {
-                vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
+                vb_echo(c, MSG_NORMAL, FALSE, "Pushed to queue");
             }
             break;
 
         case COMMAND_QUEUE_UNSHIFT:
-            res = bookmark_queue_unshift(arg->s ? arg->s : vb.state.uri);
+            res = bookmark_queue_unshift(arg->s ? arg->s : c->state.uri);
             if (res) {
-                vb_echo(VB_MSG_NORMAL, false, "Pushed to queue");
+                vb_echo(c, MSG_NORMAL, FALSE, "Pushed to queue");
             }
             break;
 
         case COMMAND_QUEUE_CLEAR:
             if (bookmark_queue_clear()) {
-                vb_echo(VB_MSG_NORMAL, false, "Queue cleared");
+                vb_echo(c, MSG_NORMAL, FALSE, "Queue cleared");
             }
             break;
     }

@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,65 +17,66 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <glib.h>
+#include <string.h>
+
+#include "ascii.h"
 #include "main.h"
 #include "shortcut.h"
 #include "util.h"
-#include "ascii.h"
 
-extern VbCore vb;
-
-static GHashTable *shortcuts = NULL;
-static char *default_key = NULL;
+extern struct Vimb vb;
 
 static int get_max_placeholder(const char *str);
-static const char *shortcut_lookup(const char *string, const char **query);
+static const char *shortcut_lookup(Client *c, const char *string, const char **query);
 
 
-void shortcut_init(void)
+void shortcut_init(Client *c)
 {
-    shortcuts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    c->shortcut.table    = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    c->shortcut.fallback = NULL;
 }
 
-void shortcut_cleanup(void)
+void shortcut_cleanup(Client *c)
 {
-    if (shortcuts) {
-        g_hash_table_destroy(shortcuts);
+    if (c->shortcut.table) {
+        g_hash_table_destroy(c->shortcut.table);
     }
 }
 
-gboolean shortcut_add(const char *key, const char *uri)
+gboolean shortcut_add(Client *c, const char *key, const char *uri)
 {
-    g_hash_table_insert(shortcuts, g_strdup(key), g_strdup(uri));
+    g_hash_table_insert(c->shortcut.table, g_strdup(key), g_strdup(uri));
 
-    return true;
+    return TRUE;
 }
 
-gboolean shortcut_remove(const char *key)
+gboolean shortcut_remove(Client *c, const char *key)
 {
-    return g_hash_table_remove(shortcuts, key);
+    return g_hash_table_remove(c->shortcut.table, key);
 }
 
-gboolean shortcut_set_default(const char *key)
+gboolean shortcut_set_default(Client *c, const char *key)
 {
     /* do not check if the shortcut exists to be able to set the default
      * before defining the shortcut */
-    OVERWRITE_STRING(default_key, key);
+    OVERWRITE_STRING(c->shortcut.fallback, key);
 
-    return true;
+    return TRUE;
 }
 
 /**
  * Retrieves the uri for given query string. Not that the memory of the
  * returned uri must be freed.
  */
-char *shortcut_get_uri(const char *string)
+char *shortcut_get_uri(Client *c, const char *string)
 {
     const char *tmpl, *query = NULL;
     char *uri, *quoted_param;
     int max_num, current_num;
     GString *token;
 
-    tmpl = shortcut_lookup(string, &query);
+    tmpl = shortcut_lookup(c, string, &query);
     if (!tmpl) {
         return NULL;
     }
@@ -151,14 +152,14 @@ char *shortcut_get_uri(const char *string)
         }
         current_num++;
     }
-    g_string_free(token, true);
+    g_string_free(token, TRUE);
 
     return uri;
 }
 
-gboolean shortcut_fill_completion(GtkListStore *store, const char *input)
+gboolean shortcut_fill_completion(Client *c, GtkListStore *store, const char *input)
 {
-    GList *src = g_hash_table_get_keys(shortcuts);
+    GList *src = g_hash_table_get_keys(c->shortcut.table);
     gboolean found = util_fill_completion(store, input, src);
     g_list_free(src);
 
@@ -190,22 +191,23 @@ static int get_max_placeholder(const char *str)
  * pointer with the query part of the given string (everything except of the
  * shortcut identifier).
  */
-static const char *shortcut_lookup(const char *string, const char **query)
+static const char *shortcut_lookup(Client *c, const char *string, const char **query)
 {
     char *p, *uri = NULL;
 
     if ((p = strchr(string, ' '))) {
         char *key  = g_strndup(string, p - string);
         /* is the first word might be a shortcut */
-        if ((uri = g_hash_table_lookup(shortcuts, key))) {
+        if ((uri = g_hash_table_lookup(c->shortcut.table, key))) {
             *query = p + 1;
         }
         g_free(key);
     } else {
-        uri = g_hash_table_lookup(shortcuts, string);
+        uri = g_hash_table_lookup(c->shortcut.table, string);
     }
 
-    if (!uri && default_key && (uri = g_hash_table_lookup(shortcuts, default_key))) {
+    if (!uri && c->shortcut.fallback
+            && (uri = g_hash_table_lookup(c->shortcut.table, c->shortcut.fallback))) {
         *query = string;
     }
 

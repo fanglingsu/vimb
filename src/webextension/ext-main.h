@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,27 +17,11 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
-#ifdef FEATURE_COOKIE
+#ifndef _EXT_MAIN_H
+#define _EXT_MAIN_H
 
-#ifndef _COOKIEJAR_H
-#define _COOKIEJAR_H
+#define VB_WEBEXTENSION_SERVICE_NAME "org.vimb.browser.WebExtension"
+#define VB_WEBEXTENSION_OBJECT_PATH  "/org/vimb/browser/WebExtension"
+#define VB_WEBEXTENSION_INTERFACE    "org.vimb.browser.WebExtension"
 
-#define COOKIEJAR_TYPE (cookiejar_get_type())
-#define COOKIEJAR(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), COOKIEJAR_TYPE, CookieJar))
-
-
-typedef struct {
-    SoupCookieJarText parent_instance;
-    int lock;
-} CookieJar;
-
-typedef struct {
-    SoupCookieJarTextClass parent_class;
-} CookieJarClass;
-
-GType cookiejar_get_type(void);
-SoupCookieJar *cookiejar_new(const char *file, gboolean ro);
-
-#endif /* end of include guard: _COOKIEJAR_H */
-#endif
+#endif /* end of include guard: _EXT_MAIN_H */

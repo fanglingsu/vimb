@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,138 +17,177 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "config.h"
-#include <stdio.h>
+#include <gdk/gdkx.h>
+#include <gtk/gtk.h>
+#include <gtk/gtkx.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <gdk/gdkx.h>
-#include "main.h"
-#include "util.h"
-#include "command.h"
-#include "setting.h"
-#include "completion.h"
-#include "dom.h"
-#include "hints.h"
-#include "shortcut.h"
-#include "handlers.h"
-#include "history.h"
-#include "cookiejar.h"
-#include "hsts.h"
-#include "normal.h"
-#include "ex.h"
-#include "input.h"
-#include "map.h"
-#include "bookmark.h"
-#include "js.h"
-#include "autocmd.h"
-#include "arh.h"
-#include "io.h"
+#include <webkit2/webkit2.h>
+
 #include "ascii.h"
+#include "command.h"
+#include "completion.h"
+#include "config.h"
+#include "ex.h"
+#include "ext-proxy.h"
+#include "handler.h"
+#include "history.h"
+#include "input.h"
+#include "js.h"
+#include "main.h"
+#include "map.h"
+#include "normal.h"
+#include "setting.h"
+#include "shortcut.h"
+#include "util.h"
 
-/* variables */
-static char *argv0;
-VbCore      vb;
-
-/* callbacks */
-
-static void buffer_changed_cb(GtkTextBuffer* buffer, gpointer data);
-#if WEBKIT_CHECK_VERSION(1, 10, 0)
-static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
-    WebKitHitTestResult *hitTestResult, gboolean keyboard, gpointer data);
-#else
-static void context_menu_cb(WebKitWebView *view, GtkMenu *menu, gpointer data);
+static void client_destroy(Client *c);
+static Client *client_new(WebKitWebView *webview, gboolean);
+static gboolean input_clear(Client *c);
+static void input_print(Client *c, gboolean force, MessageType type,
+        gboolean hide, const char *message);
+static void marks_clear(Client *c);
+static void mode_free(Mode *mode);
+static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data);
+static void on_webctx_download_started(WebKitWebContext *webctx,
+        WebKitDownload *download, Client *c);
+static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data);
+static gboolean on_webdownload_decide_destination(WebKitDownload *download,
+        gchar *suggested_filename, Client *c);
+static void on_webdownload_failed(WebKitDownload *download,
+               GError *error, Client *c);
+static void on_webdownload_finished(WebKitDownload *download, Client *c);
+static void on_webdownload_received_data(WebKitDownload *download,
+       guint64 data_length, Client *c);
+static void on_webview_close(WebKitWebView *webview, Client *c);
+static WebKitWebView *on_webview_create(WebKitWebView *webview,
+        WebKitNavigationAction *navact, Client *c);
+static gboolean on_webview_decide_policy(WebKitWebView *webview,
+        WebKitPolicyDecision *dec, WebKitPolicyDecisionType type, Client *c);
+static void on_webview_load_changed(WebKitWebView *webview,
+        WebKitLoadEvent event, Client *c);
+static void on_webview_mouse_target_changed(WebKitWebView *webview,
+        WebKitHitTestResult *result, guint modifiers, Client *c);
+static void on_webview_notify_estimated_load_progress(WebKitWebView *webview,
+        GParamSpec *spec, Client *c);
+static void on_webview_notify_title(WebKitWebView *webview, GParamSpec *pspec,
+        Client *c);
+static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec,
+        Client *c);
+static void on_webview_ready_to_show(WebKitWebView *webview, Client *c);
+static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c);
+static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c);
+static void on_window_destroy(GtkWidget *window, Client *c);
+static gboolean quit(Client *c);
+static void read_from_stdin(Client *c);
+static void register_cleanup(Client *c);
+static void update_title(Client *c);
+static void update_urlbar(Client *c);
+static void set_statusbar_style(Client *c, StatusType type);
+static void set_title(Client *c, const char *title);
+static void spawn_new_instance(const char *uri, gboolean embed);
+#ifdef FREE_ON_QUIT
+static void vimb_cleanup(void);
 #endif
-static void context_menu_activate_cb(GtkMenuItem *item, gpointer data);
-static void uri_change_cb(WebKitWebView *view, GParamSpec param_spec);
-static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec);
-static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec);
-static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec);
-static void webview_request_starting_cb(WebKitWebView *view,
-    WebKitWebFrame *frame, WebKitWebResource *res, WebKitNetworkRequest *req,
-    WebKitNetworkResponse *resp, gpointer data);
-static gboolean focus_out_event_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data);
-static gboolean focus_in_event_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data);
-static void destroy_window_cb(GtkWidget *widget);
-static void scroll_cb(GtkAdjustment *adjustment);
-static gboolean input_focus_in_cb(GtkWidget *widget, GdkEventFocus *event,
-    gpointer data);
-static WebKitWebView *inspector_new(WebKitWebInspector *inspector, WebKitWebView *webview);
-static gboolean inspector_show(WebKitWebInspector *inspector);
-static gboolean inspector_close(WebKitWebInspector *inspector);
-static void inspector_finished(WebKitWebInspector *inspector);
-static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event);
-static gboolean new_window_policy_cb(
-    WebKitWebView *view, WebKitWebFrame *frame, WebKitNetworkRequest *request,
-    WebKitWebNavigationAction *navig, WebKitWebPolicyDecision *policy);
-static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *frame);
-static gboolean create_web_view_received_uri_cb(WebKitWebView *view,
-    WebKitWebFrame *frame, WebKitNetworkRequest *request,
-    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
-    gpointer data);
-static gboolean navigation_decision_requested_cb(WebKitWebView *view,
-    WebKitWebFrame *frame, WebKitNetworkRequest *request,
-    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
-    gpointer data);
-static void onload_event_cb(WebKitWebView *view, WebKitWebFrame *frame,
-    gpointer user_data);
-static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link);
-static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title);
-static gboolean mimetype_decision_cb(WebKitWebView *webview,
-    WebKitWebFrame *frame, WebKitNetworkRequest *request, char*
-    mime_type, WebKitWebPolicyDecision *decision);
-gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path);
-void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const char *file);
-void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file);
-static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec);
-static void read_from_stdin(void);
-#ifdef FEATURE_ARH
-static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data);
-#endif
+static void vimb_setup(void);
+static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
+static void on_script_message_focus(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *res, gpointer data);
+static gboolean profileOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error);
 
-/* functions */
-#ifdef FEATURE_WGET_PROGRESS_BAR
-static void wget_bar(int len, int progress, char *string);
-#endif
-static void update_title(void);
-static void set_uri(const char *uri);
-static void set_title(const char *title);
-static void init_core(void);
-static void marks_clear(void);
-static void setup_signals();
-static void init_files(void);
-static void session_init(void);
-static void session_cleanup(void);
-static void register_init(void);
-static void register_cleanup(void);
-static gboolean hide_message();
-static void set_status(const StatusType status);
-static void input_print(gboolean force, const MessageType type, gboolean hide, const char *message);
-static void vb_cleanup(void);
-static void cleanup_modes(void);
-static void free_mode(Mode *mode);
+struct Vimb vb;
 
 /**
- * Creates a new mode with given callback functions.
+ * Set the destination for a download according to suggested file name and
+ * possible given path.
  */
-void vb_add_mode(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
-    ModeKeyFunc keypress, ModeInputChangedFunc input_changed)
+gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
+    char *suggested_filename, const char *path)
 {
-    Mode *new = g_slice_new(Mode);
-    new->id            = id;
-    new->enter         = enter;
-    new->leave         = leave;
-    new->keypress      = keypress;
-    new->input_changed = input_changed;
-    new->flags         = 0;
+    char *download_path, *dir, *file, *uri;
+    download_path = GET_CHAR(c, "download-path");
 
-    /* Initialize the hashmap if this was not done before */
-    if (!vb.modes) {
-        vb.modes = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify)free_mode);
+    /* For unnamed downloads set default filename. */
+    if (!suggested_filename || !*suggested_filename) {
+        suggested_filename = "vimb-download";
     }
-    g_hash_table_insert(vb.modes, GINT_TO_POINTER(id), new);
+
+    /* Prepare the path to save the download. */
+    if (path && *path) {
+        file = util_build_path(c, path, download_path);
+
+        /* if file is an directory append a file name */
+        if (g_file_test(file, (G_FILE_TEST_IS_DIR))) {
+            dir  = file;
+            file = g_build_filename(dir, suggested_filename, NULL);
+            g_free(dir);
+        }
+    } else {
+        file = util_build_path(c, suggested_filename, download_path);
+    }
+
+    if (!file) {
+        return FALSE;
+    }
+
+    /* If the filepath exists already insert numerical suffix before file
+     * extension. */
+    if (g_file_test(file, G_FILE_TEST_EXISTS)) {
+        const char *dot_pos;
+        char *num = NULL;
+        GString *tmp;
+        gssize suffix;
+        int i = 1;
+
+        /* position on .tar. (special case, extension with two dots),
+         * position on last dot (if any) otherwise */
+        if (!(dot_pos = strstr(file, ".tar."))) {
+            dot_pos = strrchr(file, '.');
+        }
+
+        /* the position to insert the suffix at */
+        if (dot_pos) {
+            suffix = dot_pos - file;
+        } else {
+            suffix = strlen(file);
+        }
+
+        tmp = g_string_new(NULL);
+
+        /* Construct a new complete download filepath with suffix before the
+         * file extension. */
+        do {
+            num = g_strdup_printf("_%d", i++);
+            g_string_assign(tmp, file);
+            g_string_insert(tmp, suffix, num);
+            g_free(num);
+        } while (g_file_test(tmp->str, G_FILE_TEST_EXISTS));
+
+        file = g_strdup(tmp->str);
+        g_string_free(tmp, TRUE);
+    }
+
+    /* Build URI from filepath. */
+    uri = g_filename_to_uri(file, NULL, NULL);
+    g_free(file);
+
+    /* configure download */
+    g_assert(uri);
+    webkit_download_set_allow_overwrite(download, FALSE);
+    webkit_download_set_destination(download, uri);
+    g_free(uri);
+
+    return TRUE;
 }
 
-void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...)
+/**
+ * Write text to the inpubox if this isn't focused.
+ */
+void vb_echo(Client *c, MessageType type, gboolean hide, const char *error, ...)
 {
     char *buffer;
     va_list args;
@@ -157,11 +196,15 @@ void vb_echo_force(const MessageType type, gboolean hide, const char *error, ...
     buffer = g_strdup_vprintf(error, args);
     va_end(args);
 
-    input_print(true, type, hide, buffer);
+    input_print(c, FALSE, type, hide, buffer);
     g_free(buffer);
 }
 
-void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
+/**
+ * Write text to the inpubox independent if this is focused or not.
+ * Note that this could disturb the user during typing into inputbox.
+ */
+void vb_echo_force(Client *c, MessageType type, gboolean hide, const char *error, ...)
 {
     char *buffer;
     va_list args;
@@ -170,28 +213,28 @@ void vb_echo(const MessageType type, gboolean hide, const char *error, ...)
     buffer = g_strdup_vprintf(error, args);
     va_end(args);
 
-    input_print(false, type, hide, buffer);
+    input_print(c, TRUE, type, hide, buffer);
     g_free(buffer);
 }
 
 /**
  * Enter into the new given mode and leave possible active current mode.
  */
-void vb_enter(char id)
+void vb_enter(Client *c, char id)
 {
     Mode *new = g_hash_table_lookup(vb.modes, GINT_TO_POINTER(id));
 
     g_return_if_fail(new != NULL);
 
-    if (vb.mode) {
+    if (c->mode) {
         /* don't do anything if the mode isn't a new one */
-        if (vb.mode == new) {
+        if (c->mode == new) {
             return;
         }
 
         /* if there is a active mode, leave this first */
-        if (vb.mode->leave) {
-            vb.mode->leave();
+        if (c->mode->leave) {
+            c->mode->leave(c);
         }
     }
 
@@ -199,14 +242,14 @@ void vb_enter(char id)
     new->flags = 0;
 
     /* set the new mode so that it is available also in enter function */
-    vb.mode = new;
+    c->mode = new;
     /* call enter only if the new mode isn't the current mode */
     if (new->enter) {
-        new->enter();
+        new->enter(c);
     }
 
 #ifndef TESTLIB
-    vb_update_statusbar();
+    vb_statusbar_update(c);
 #endif
 }
 
@@ -218,111 +261,84 @@ void vb_enter(char id)
  * @print_prompt: Indicates if the new set prompt should be put into inputbox
  *                after switching the mode.
  */
-void vb_enter_prompt(char id, const char *prompt, gboolean print_prompt)
+void vb_enter_prompt(Client *c, char id, const char *prompt, gboolean print_prompt)
 {
     /* set the prompt to be accessible in vb_enter */
-    strncpy(vb.state.prompt, prompt, PROMPT_SIZE - 1);
-    vb.state.prompt[PROMPT_SIZE - 1] = '\0';
+    strncpy(c->state.prompt, prompt, PROMPT_SIZE - 1);
+    c->state.prompt[PROMPT_SIZE - 1] = '\0';
 
-    vb_enter(id);
+    vb_enter(c, id);
 
     if (print_prompt) {
         /* set it after the mode was entered so that the modes input change
          * event listener could grep the new prompt */
-        vb_echo_force(VB_MSG_NORMAL, false, vb.state.prompt);
-    }
-}
-
-VbResult vb_handle_key(int key)
-{
-    VbResult res;
-    static gboolean ctrl_v = false;
-
-    if (ctrl_v) {
-        vb.state.processed_key = false;
-        ctrl_v = false;
-
-        return RESULT_COMPLETE;
-    }
-    if (vb.mode->id != 'p' && key == CTRL('V')) {
-        vb.mode->flags |= FLAG_NOMAP;
-        ctrl_v = true;
-
-        return RESULT_MORE;
-    }
-
-    if (vb.mode && vb.mode->keypress) {
-#ifdef DEBUG
-        int flags = vb.mode->flags;
-        int id    = vb.mode->id;
-        res = vb.mode->keypress(key);
-        if (vb.mode) {
-            PRINT_DEBUG(
-                "%c[%d]: %#.2x '%c' -> %c[%d]",
-                id - ' ', flags, key, (key >= 0x20 && key <= 0x7e) ? key : ' ',
-                vb.mode->id - ' ', vb.mode->flags
-            );
-        }
-#else
-        res = vb.mode->keypress(key);
-#endif
-        return res;
-    }
-    return RESULT_ERROR;
-}
-
-static void input_print(gboolean force, const MessageType type, gboolean hide,
-    const char *message)
-{
-    static guint timer = 0;
-
-    /* don't print message if the input is focussed */
-    if (!force && gtk_widget_is_focus(GTK_WIDGET(vb.gui.input))) {
-        return;
-    }
-
-    /* apply input style only if the message type was changed */
-    if (type != vb.state.input_type) {
-        vb.state.input_type = type;
-        vb_update_input_style();
-    }
-    vb_set_input_text(message);
-    if (hide) {
-        /* add timeout function */
-        timer = g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)hide_message, NULL);
-    } else if (timer > 0) {
-        /* If there is already a timeout function but the input box content is
-         * changed - remove the timeout. Seems the user started another
-         * command or typed into inputbox. */
-        g_source_remove(timer);
-        timer = 0;
+        vb_echo_force(c, MSG_NORMAL, FALSE, c->state.prompt);
     }
 }
 
 /**
- * Writes given text into the command line.
+ * Returns the client for given page id.
  */
-void vb_set_input_text(const char *text)
+Client *vb_get_client_for_page_id(guint64 pageid)
 {
-    gtk_text_buffer_set_text(vb.gui.buffer, text, -1);
-    if (vb.config.input_autohide) {
-        gtk_widget_set_visible(GTK_WIDGET(vb.gui.input), *text != '\0');
+    Client *c;
+    /* Search for the client with the same page id. */
+    for (c = vb.clients; c && c->page_id != pageid; c = c->next);
+
+    if (c) {
+        return c;
     }
+    return NULL;
 }
 
 /**
  * Retrieves the content of the command line.
  * Returned string must be freed with g_free.
  */
-char *vb_get_input_text(void)
+char *vb_input_get_text(Client *c)
 {
     GtkTextIter start, end;
 
-    gtk_text_buffer_get_bounds(vb.gui.buffer, &start, &end);
-    return gtk_text_buffer_get_text(vb.gui.buffer, &start, &end, false);
+    gtk_text_buffer_get_bounds(c->buffer, &start, &end);
+    return gtk_text_buffer_get_text(c->buffer, &start, &end, FALSE);
 }
 
-gboolean vb_load_uri(const Arg *arg)
+/**
+ * Writes given text into the command line.
+ */
+void vb_input_set_text(Client *c, const char *text)
+{
+    gtk_text_buffer_set_text(c->buffer, text, -1);
+    if (c->config.input_autohide) {
+        gtk_widget_set_visible(GTK_WIDGET(c->input), *text != '\0');
+    }
+}
+
+/**
+ * Set the style of the inputbox according to current input type (normal or
+ * error).
+ */
+void vb_input_update_style(Client *c)
+{
+    MessageType type = c->state.input_type;
+
+    if (type == MSG_ERROR) {
+        gtk_style_context_add_class(gtk_widget_get_style_context(c->input), "error");
+    } else {
+        gtk_style_context_remove_class(gtk_widget_get_style_context(c->input), "error");
+    }
+}
+
+/**
+ * Load the a uri given in Arg. This function handles also shortcuts and local
+ * file paths.
+ *
+ * If arg.i = TARGET_CURRENT, the url is opened into the current webview.
+ * TARGET_RELATED causes the generation of a new window within the current
+ * instance of vimb with a own, but related webview. And TARGET_NEW spawns a
+ * new instance of vimb with the given uri.
+ */
+gboolean vb_load_uri(Client *c, const Arg *arg)
 {
     char *uri = NULL, *rp, *path = NULL;
     struct stat st;
@@ -331,7 +347,7 @@ gboolean vb_load_uri(const Arg *arg)
         path = g_strstrip(arg->s);
     }
     if (!path || !*path) {
-        path = GET_CHAR("home-page");
+        path = GET_CHAR(c, "home-page");
     }
 
     /* If path contains :// but no space we open it direct. This is required
@@ -345,1591 +361,1451 @@ gboolean vb_load_uri(const Arg *arg)
         free(rp);
     } else if (strchr(path, ' ') || !strchr(path, '.')) {
         /* use a shortcut if path contains spaces or no dot */
-        uri = shortcut_get_uri(path);
+        uri = shortcut_get_uri(c, path);
     }
 
     if (!uri) {
         uri = g_strconcat("http://", path, NULL);
     }
 
-    if (arg->i == VB_TARGET_NEW) {
-        guint i = 0;
-
-        /* memory allocation */
-        char **cmd = g_malloc_n(
-            3                       /* basename + uri + ending NULL */
-#ifndef FEATURE_NO_XEMBED
-            + (vb.embed ? 2 : 0)
-#endif
-            + (vb.config.file ? 2 : 0)
-            + (vb.config.profile ? 2 : 0)
-            + (vb.config.kioskmode ? 1 : 0)
-#ifdef FEATURE_SOCKET
-            + (vb.config.socket ? 1 : 0)
-#endif
-            + g_slist_length(vb.config.cmdargs) * 2,
-            sizeof(char *)
-        );
-
-        /* build commandline */
-        cmd[i++] = argv0;
-#ifndef FEATURE_NO_XEMBED
-        if (vb.embed) {
-            char xid[64];
-            snprintf(xid, LENGTH(xid), "%u", (int)vb.embed);
-            cmd[i++] = "-e";
-            cmd[i++] = xid;
-        }
-#endif
-        if (vb.config.file) {
-            cmd[i++] = "-c";
-            cmd[i++] = vb.config.file;
-        }
-        if (vb.config.profile) {
-            cmd[i++] = "-p";
-            cmd[i++] = vb.config.profile;
-        }
-        for (GSList *l = vb.config.cmdargs; l; l = l->next) {
-            cmd[i++] = "-C";
-            cmd[i++] = l->data;
-        }
-        if (vb.config.kioskmode) {
-            cmd[i++] = "-k";
-        }
-#ifdef FEATURE_SOCKET
-        if (vb.config.socket) {
-            cmd[i++] = "-s";
-        }
-#endif
-        cmd[i++] = uri;
-        cmd[i++] = NULL;
-
-        /* spawn a new browser instance */
-        g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
-
-        /* free commandline */
-        g_free(cmd);
-    } else {
-        /* Load a web page into the browser instance */
-        webkit_web_view_load_uri(vb.gui.webview, uri);
-        /* show the url to be opened in the window title until we receive the
-         * page title */
-        set_title(uri);
+    if (arg->i == TARGET_CURRENT) {
+        /* Load the uri into the browser instance. */
+        webkit_web_view_load_uri(c->webview, uri);
+        set_title(c, uri);
+    } else if (arg->i == TARGET_NEW) {
+        spawn_new_instance(uri, TRUE);
+    } else { /* TARGET_RELATET */
+        Client *newclient = client_new(c->webview, FALSE);
+        /* Load the uri into the new client. */
+        webkit_web_view_load_uri(newclient->webview, uri);
+        set_title(c, uri);
     }
     g_free(uri);
 
-    return true;
-}
-
-gboolean vb_set_clipboard(const Arg *arg)
-{
-    gboolean result = false;
-    if (!arg->s) {
-        return result;
-    }
-
-    if (arg->i & VB_CLIPBOARD_PRIMARY) {
-        gtk_clipboard_set_text(PRIMARY_CLIPBOARD(), arg->s, -1);
-        result = true;
-    }
-    if (arg->i & VB_CLIPBOARD_SECONDARY) {
-        gtk_clipboard_set_text(SECONDARY_CLIPBOARD(), arg->s, -1);
-        result = true;
-    }
-
-    return result;
-}
-
-void vb_set_widget_font(GtkWidget *widget, const VbColor *fg, const VbColor *bg, PangoFontDescription *font)
-{
-    VB_WIDGET_OVERRIDE_FONT(widget, font);
-    VB_WIDGET_OVERRIDE_TEXT(widget, VB_GTK_STATE_NORMAL, fg);
-    VB_WIDGET_OVERRIDE_COLOR(widget, VB_GTK_STATE_NORMAL, fg);
-    VB_WIDGET_OVERRIDE_BASE(widget, VB_GTK_STATE_NORMAL, bg);
-    VB_WIDGET_OVERRIDE_BACKGROUND(widget, VB_GTK_STATE_NORMAL, bg);
-}
-
-#ifdef FEATURE_WGET_PROGRESS_BAR
-static void wget_bar(int len, int progress, char *string)
-{
-    int i, state;
-
-    state = progress * len / 100;
-    for (i = 0; i < state; i++) {
-        string[i] = PROGRESS_BAR[0];
-    }
-    string[i++] = PROGRESS_BAR[1];
-    for (; i < len; i++) {
-        string[i] = PROGRESS_BAR[2];
-    }
-    string[i] = '\0';
-}
-#endif
-
-void vb_update_statusbar()
-{
-    int max, val, num;
-    GString *status;
-
-    if (!gtk_widget_get_visible(GTK_WIDGET(vb.gui.statusbar.box))) {
-        return;
-    }
-
-    status = g_string_new("");
-    /* show the active downloads */
-    if (vb.state.downloads) {
-        num = g_list_length(vb.state.downloads);
-        g_string_append_printf(status, " %d %s", num, num == 1 ? "download" : "downloads");
-    }
-
-    /* show the number of matches search results */
-    if (vb.state.search_matches) {
-        g_string_append_printf(status, " (%d)", vb.state.search_matches);
-    }
-
-    /* show load status of page or the downloads */
-    if (vb.state.progress != 100) {
-#ifdef FEATURE_WGET_PROGRESS_BAR
-        char bar[PROGRESS_BAR_LEN + 1];
-        wget_bar(PROGRESS_BAR_LEN, vb.state.progress, bar);
-        g_string_append_printf(status, " [%s]", bar);
-#else
-        g_string_append_printf(status, " [%i%%]", vb.state.progress);
-#endif
-    }
-
-    /* show the scroll status */
-    max = gtk_adjustment_get_upper(vb.gui.adjust_v) - gtk_adjustment_get_page_size(vb.gui.adjust_v);
-    val = (int)(0.5 + (gtk_adjustment_get_value(vb.gui.adjust_v) / max * 100));
-
-    if (max == 0) {
-        g_string_append(status, " All");
-    } else if (val == 0) {
-        g_string_append(status, " Top");
-    } else if (val >= 100) {
-        g_string_append(status, " Bot");
-    } else {
-        g_string_append_printf(status, " %d%%", val);
-    }
-
-    gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.right), status->str);
-    g_string_free(status, true);
-}
-
-void vb_update_status_style(void)
-{
-    StatusType type = vb.state.status_type;
-    vb_set_widget_font(
-        vb.gui.eventbox, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
-    );
-#ifndef HAS_GTK3
-    vb_set_widget_font(
-        vb.gui.statusbar.mode, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
-    );
-    vb_set_widget_font(
-        vb.gui.statusbar.left, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
-    );
-    vb_set_widget_font(
-        vb.gui.statusbar.right, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
-    );
-    vb_set_widget_font(
-        vb.gui.statusbar.cmd, &vb.style.status_fg[type], &vb.style.status_bg[type], vb.style.status_font[type]
-    );
-#endif
-}
-
-void vb_update_input_style(void)
-{
-    MessageType type = vb.state.input_type;
-    vb_set_widget_font(
-        vb.gui.input, &vb.style.input_fg[type], &vb.style.input_bg[type], vb.style.input_font[type]
-    );
-}
-
-void vb_update_urlbar(const char *uri)
-{
-    Gui *gui = &vb.gui;
-#if !defined(FEATURE_HISTORY_INDICATOR) && !defined(FEATURE_PROFILE_INDICATOR)
-    /* if only the uri is shown - write it like it is on the label */
-    gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
-#else
-    GString *str = g_string_new("");
-#ifdef FEATURE_PROFILE_INDICATOR
-    if (vb.config.profile) {
-        g_string_append_printf(str, "[%s] ", vb.config.profile);
-    }
-#endif /* FEATURE_PROFILE_INDICATOR */
-
-    g_string_append_printf(str, "%s", uri);
-
-#ifdef FEATURE_HISTORY_INDICATOR
-    gboolean back, fwd;
-
-    back = webkit_web_view_can_go_back(gui->webview);
-    fwd  = webkit_web_view_can_go_forward(gui->webview);
-
-    /* show history indicator only if there is something to show */
-    if (back || fwd) {
-        g_string_append_printf(str, " [%s]", back ? (fwd ? "-+" : "-") : "+");
-    }
-#endif /* FEATURE_HISTORY_INDICATOR */
-
-    gtk_label_set_text(GTK_LABEL(gui->statusbar.left), str->str);
-    g_string_free(str, true);
-#endif /* !defined(FEATURE_HISTORY_INDICATOR) && !defined(FEATURE_PROFILE_INDICATOR) */
-}
-
-void vb_update_mode_label(const char *label)
-{
-    if (GET_BOOL("input-autohide")) {
-        /* if the inputbox is potentially not shown write mode into statusbar */
-        gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.mode), label);
-    } else {
-        vb_echo(VB_MSG_NORMAL, false, "%s", label);
-    }
-}
-
-void vb_quit(gboolean force)
-{
-    /* if not forced quit - don't quit if there are still running downloads */
-    if (!force && vb.state.downloads) {
-        vb_echo_force(VB_MSG_ERROR, true, "Can't quit: there are running downloads");
-        return;
-    }
-
-    webkit_web_view_stop_loading(vb.gui.webview);
-
-    /* write last URL into file for recreation */
-    if (vb.state.uri && vb.config.closed_max) {
-        char **lines = util_get_lines(vb.files[FILES_CLOSED]);
-        GString *new = g_string_new(vb.state.uri);
-        g_string_append(new, "\n");
-        if (lines) {
-            int len = g_strv_length(lines);
-            int i;
-            for (i = 0; i < len - 1 && i < vb.config.closed_max - 1; i++) {
-                g_string_append_printf(new, "%s\n", lines[i]);
-            }
-            g_strfreev(lines);
-        }
-        g_file_set_contents(vb.files[FILES_CLOSED], new->str, -1, NULL);
-        g_string_free(new, true);
-    }
-
-    gtk_main_quit();
-}
-
-static gboolean hide_message()
-{
-    input_print(false, VB_MSG_NORMAL, false, "");
-
-    return false;
+    return TRUE;
 }
 
 /**
- * Process input changed event on current active mode.
+ * Creates and add a new mode with given callback functions.
  */
-static void buffer_changed_cb(GtkTextBuffer* buffer, gpointer data)
+void vb_mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
+    ModeKeyFunc keypress, ModeInputChangedFunc input_changed)
 {
-    char *text;
-    GtkTextIter start, end;
-    /* don't observe changes in completion mode */
-    if (vb.mode->flags & FLAG_COMPLETION) {
-        return;
-    }
-    /* don't process changes not typed by the user */
-    if (gtk_widget_is_focus(vb.gui.input) && vb.mode && vb.mode->input_changed) {
-        gtk_text_buffer_get_bounds(buffer, &start, &end);
-        text = gtk_text_buffer_get_text(buffer, &start, &end, false);
+    Mode *new = g_slice_new(Mode);
+    new->id            = id;
+    new->enter         = enter;
+    new->leave         = leave;
+    new->keypress      = keypress;
+    new->input_changed = input_changed;
+    new->flags         = 0;
 
-        vb.mode->input_changed(text);
-
-        g_free(text);
+    /* Initialize the hashmap if this was not done before */
+    if (!vb.modes) {
+        vb.modes = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, (GDestroyNotify)mode_free);
     }
+    g_hash_table_insert(vb.modes, GINT_TO_POINTER(id), new);
 }
 
-#if WEBKIT_CHECK_VERSION(1, 10, 0)
-static gboolean context_menu_cb(WebKitWebView *view, GtkWidget *menu,
-    WebKitHitTestResult *hitTestResult, gboolean keyboard, gpointer data)
+VbResult vb_mode_handle_key(Client *c, int key)
 {
-    GList *items = gtk_container_get_children(GTK_CONTAINER(GTK_MENU(menu)));
-    for (GList *l = items; l; l = l->next) {
-        g_signal_connect(l->data, "activate", G_CALLBACK(context_menu_activate_cb), NULL);
-    }
-    g_list_free(items);
+    VbResult res;
 
-    return false;
-}
-#else
-static void context_menu_cb(WebKitWebView *view, GtkMenu *menu, gpointer data)
-{
-    GList *items = gtk_container_get_children(GTK_CONTAINER(GTK_MENU(menu)));
-    for (GList *l = items; l; l = l->next) {
-        g_signal_connect(l->data, "activate", G_CALLBACK(context_menu_activate_cb), NULL);
-    }
-    g_list_free(items);
-}
-#endif
+    if (c->state.ctrlv) {
+        c->state.processed_key = FALSE;
+        c->state.ctrlv         = FALSE;
 
-static void context_menu_activate_cb(GtkMenuItem *item, gpointer data)
-{
-#if WEBKIT_CHECK_VERSION(1, 10, 0)
-    WebKitContextMenuAction action = webkit_context_menu_item_get_action(item);
-    if (action == WEBKIT_CONTEXT_MENU_ACTION_COPY_LINK_TO_CLIPBOARD) {
-        vb_set_clipboard(
-            &((Arg){VB_CLIPBOARD_PRIMARY|VB_CLIPBOARD_SECONDARY, vb.state.linkhover})
-        );
+        return RESULT_COMPLETE;
     }
-#else
-    const char *name;
-    GtkAction *action = gtk_activatable_get_related_action(GTK_ACTIVATABLE(item));
+    if (c->mode->id != 'p' && key == CTRL('V')) {
+        c->mode->flags |= FLAG_NOMAP;
+        c->state.ctrlv  = TRUE;
 
-    if (!action) {
-        return;
+        return RESULT_MORE;
     }
 
-    name = gtk_action_get_name(action);
-    /* context-menu-action-3 copy link location */
-    if (!g_strcmp0(name, "context-menu-action-3")) {
-        vb_set_clipboard(
-            &((Arg){VB_CLIPBOARD_PRIMARY|VB_CLIPBOARD_SECONDARY,vb.state.linkhover})
-        );
-    }
-#endif
-}
-
-static void uri_change_cb(WebKitWebView *view, GParamSpec param_spec)
-{
-    set_uri(webkit_web_view_get_uri(view));
-}
-
-static void webview_progress_cb(WebKitWebView *view, GParamSpec *pspec)
-{
-    vb.state.progress = webkit_web_view_get_progress(view) * 100;
-    vb_update_statusbar();
-    update_title();
-}
-
-static void webview_download_progress_cb(WebKitWebView *view, GParamSpec *pspec)
-{
-    if (vb.state.downloads) {
-        vb.state.progress = 0;
-        GList *ptr;
-        for (ptr = vb.state.downloads; ptr; ptr = g_list_next(ptr)) {
-            vb.state.progress += 100 * webkit_download_get_progress(ptr->data);
+    if (c->mode && c->mode->keypress) {
+#ifdef DEBUGDISABLED
+        int flags = c->mode->flags;
+        int id    = c->mode->id;
+        res = c->mode->keypress(c, key);
+        if (c->mode) {
+            PRINT_DEBUG(
+                "%c[%d]: %#.2x '%c' -> %c[%d]",
+                id - ' ', flags, key, (key >= 0x20 && key <= 0x7e) ? key : ' ',
+                c->mode->id - ' ', c->mode->flags
+            );
         }
-        vb.state.progress /= g_list_length(vb.state.downloads);
-    }
-    vb_update_statusbar();
-    update_title();
-}
-
-static void webview_load_status_cb(WebKitWebView *view, GParamSpec *pspec)
-{
-    const char *uri;
-    WebKitWebFrame *frame = webkit_web_view_get_main_frame(view);
-
-    switch (webkit_web_view_get_load_status(view)) {
-        case WEBKIT_LOAD_PROVISIONAL:
-#ifdef FEATURE_AUTOCMD
-            {
-                WebKitWebDataSource *src  = webkit_web_frame_get_provisional_data_source(frame);
-                WebKitNetworkRequest *req = webkit_web_data_source_get_initial_request(src);
-                uri = webkit_network_request_get_uri(req);
-                autocmd_run(AU_LOAD_PROVISIONAL, uri, NULL);
-            }
+#else
+        res = c->mode->keypress(c, key);
 #endif
-            /* update load progress in statusbar */
-            vb.state.progress = 0;
-            vb_update_statusbar();
-            update_title();
-            break;
-
-        case WEBKIT_LOAD_COMMITTED:
-            uri = webkit_web_view_get_uri(view);
-#ifdef FEATURE_AUTOCMD
-            autocmd_run(AU_LOAD_COMMITED, uri, NULL);
-#endif
-            {
-                JSContextRef ctx;
-                /* set the status */
-                if (g_str_has_prefix(uri, "https://")) {
-                    WebKitWebDataSource *src      = webkit_web_frame_get_data_source(frame);
-                    WebKitNetworkRequest *request = webkit_web_data_source_get_request(src);
-                    SoupMessage *msg              = webkit_network_request_get_message(request);
-                    SoupMessageFlags flags        = soup_message_get_flags(msg);
-                    set_status(
-                        (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VB_STATUS_SSL_VALID : VB_STATUS_SSL_INVALID
-                    );
-                } else {
-                    set_status(VB_STATUS_NORMAL);
-                }
-
-                /* inject the hinting javascript */
-                hints_init(frame);
-
-                /* run user script file */
-                ctx = webkit_web_frame_get_global_context(frame);
-                js_eval_file(ctx, vb.files[FILES_SCRIPT]);
-            }
-
-            vb_update_statusbar();
-            set_uri(uri);
-            set_title(uri);
-            /* save the current URI in register % */
-            vb_register_add('%', uri);
-
-            /* clear possible set marks */
-            marks_clear();
-
-            break;
-
-        case WEBKIT_LOAD_FIRST_VISUALLY_NON_EMPTY_LAYOUT:
-#ifdef FEATURE_AUTOCMD
-            uri = webkit_web_view_get_uri(view);
-            autocmd_run(AU_LOAD_FIRST_LAYOUT, uri, NULL);
-#endif
-            /* if we load a page from a submitted form, leave the insert mode */
-            if (vb.mode->id == 'i') {
-                vb_enter('n');
-            }
-
-            dom_install_focus_blur_callbacks(webkit_web_frame_get_dom_document(frame));
-            vb.state.done_loading_page = false;
-
-            /* Unset possible last search. */
-            command_search(&((Arg){0}));
-
-            break;
-
-        case WEBKIT_LOAD_FINISHED:
-            dom_install_focus_blur_callbacks(webkit_web_frame_get_dom_document(frame));
-            uri = webkit_web_view_get_uri(view);
-#ifdef FEATURE_AUTOCMD
-            autocmd_run(AU_LOAD_FINISHED, uri, NULL);
-#endif
-            /* update load progress in statusbar */
-            vb.state.progress = 100;
-            vb_update_statusbar();
-            update_title();
-
-            if (strncmp(uri, "about:", 6)) {
-                history_add(HISTORY_URL, uri, webkit_web_view_get_title(view));
-            }
-#ifdef FEATURE_SOUP_CACHE
-            /* Make sure the caches are written to file to be picked up by new
-             * browser instance. */
-            soup_cache_flush(vb.config.soup_cache);
-            soup_cache_dump(vb.config.soup_cache);
-#endif
-            break;
-
-        case WEBKIT_LOAD_FAILED:
-            {
-                /* In case the requested uri could not be loaded the Current
-                 * uri of the Webview would still be the PRevious one. So We
-                 * use the provisional uri here. */
-                WebKitWebDataSource *src  = webkit_web_frame_get_provisional_data_source(frame);
-                if (src) {
-                    WebKitNetworkRequest *req = webkit_web_data_source_get_initial_request(src);
-                    uri = webkit_network_request_get_uri(req);
-                    /* set the status */
-                    if (g_str_has_prefix(uri, "https://")) {
-                        SoupMessage *msg       = webkit_network_request_get_message(req);
-                        SoupMessageFlags flags = soup_message_get_flags(msg);
-                        set_status(
-                            (flags & SOUP_MESSAGE_CERTIFICATE_TRUSTED) ? VB_STATUS_SSL_VALID : VB_STATUS_SSL_INVALID
-                        );
-                    } else {
-                        set_status(VB_STATUS_NORMAL);
-                    }
-                } else {
-                    uri = webkit_web_view_get_uri(view);
-                }
-                set_uri(uri);
-                /* Show the failed uri as title. */
-                set_title(uri);
-#ifdef FEATURE_AUTOCMD
-                autocmd_run(AU_LOAD_FAILED, uri, NULL);
-#endif
-            }
-            break;
+        return res;
     }
+    return RESULT_ERROR;
 }
 
-static void webview_request_starting_cb(WebKitWebView *view,
-    WebKitWebFrame *frame, WebKitWebResource *res, WebKitNetworkRequest *req,
-    WebKitNetworkResponse *resp, gpointer data)
+/**
+ * Change the label for the current mode in inputbox or on the left of
+ * statusbar if inputbox is in autohide mode.
+ */
+void vb_modelabel_update(Client *c, const char *label)
 {
-    char *name, *value;
-    GHashTableIter iter;
-    SoupMessage *msg;
-
-    /* don't try to load favicon */
-    const char *uri = webkit_network_request_get_uri(req);
-    if (g_str_has_suffix(uri, "/favicon.ico")) {
-        webkit_network_request_set_uri(req, "about:blank");
-        return;
-    }
-
-    msg = webkit_network_request_get_message(req);
-    if (!msg) {
-        return;
-    }
-
-    if (!vb.config.headers) {
-        return;
-    }
-
-    /* set/remove/change user defined headers */
-    g_hash_table_iter_init(&iter, vb.config.headers);
-    while (g_hash_table_iter_next(&iter, (gpointer*)&name, (gpointer*)&value)) {
-        /* allow to remove header with null value */
-        if (value == NULL) {
-            soup_message_headers_remove(msg->request_headers, name);
-        } else {
-            soup_message_headers_replace(msg->request_headers, name, value);
-        }
-    }
-}
-
-static gboolean focus_out_event_cb(GtkWidget *widget, GdkEvent *event,
-    gpointer user_data)
-{
-    vb.state.window_has_focus = false;
-    return false;
-}
-
-static gboolean focus_in_event_cb(GtkWidget *widget, GdkEvent *event,
-    gpointer user_data)
-{
-    vb.state.window_has_focus = true;
-    return false;
-}
-
-static void destroy_window_cb(GtkWidget *widget)
-{
-    vb_quit(true);
-}
-
-static void scroll_cb(GtkAdjustment *adjustment)
-{
-    vb_update_statusbar();
-}
-
-static gboolean input_focus_in_cb(GtkWidget *widget, GdkEventFocus *event,
-    gpointer data)
-{
-    /* enter the command mode if the focus is on inputbox */
-    vb_enter('c');
-
-    return false;
-}
-
-static WebKitWebView *inspector_new(WebKitWebInspector *inspector, WebKitWebView *webview)
-{
-    return WEBKIT_WEB_VIEW(webkit_web_view_new());
-}
-
-static gboolean inspector_show(WebKitWebInspector *inspector)
-{
-    WebKitWebView *webview;
-    int height;
-
-    if (vb.state.is_inspecting) {
-        return false;
-    }
-
-    webview = webkit_web_inspector_get_web_view(inspector);
-
-    /* use about 1/3 of window height for the inspector */
-    gtk_window_get_size(GTK_WINDOW(vb.gui.window), NULL, &height);
-    gtk_paned_set_position(GTK_PANED(vb.gui.pane), 2 * height / 3);
-
-    gtk_paned_pack2(GTK_PANED(vb.gui.pane), GTK_WIDGET(webview), true, true);
-    gtk_widget_show(GTK_WIDGET(webview));
-
-    vb.state.is_inspecting = true;
-
-    return true;
-}
-
-static gboolean inspector_close(WebKitWebInspector *inspector)
-{
-    WebKitWebView *webview;
-
-    if (!vb.state.is_inspecting) {
-        return false;
-    }
-    webview = webkit_web_inspector_get_web_view(inspector);
-    gtk_widget_hide(GTK_WIDGET(webview));
-    gtk_widget_destroy(GTK_WIDGET(webview));
-
-    vb.state.is_inspecting = false;
-
-    return true;
-}
-
-static void inspector_finished(WebKitWebInspector *inspector)
-{
-    g_free(vb.gui.inspector);
-}
-
-static void set_status(const StatusType status)
-{
-    if (vb.state.status_type != status) {
-        vb.state.status_type = status;
-        /* update the statusbar style only if the status changed */
-        vb_update_status_style();
-    }
-}
-
-static void init_core(void)
-{
-    Gui *gui = &vb.gui;
-#ifndef FEATURE_NO_XEMBED
-    char *xid;
-
-    if (vb.embed) {
-        gui->window = gtk_plug_new(vb.embed);
-        xid = g_strdup_printf("%u", (int)vb.embed);
+    if (c->config.input_autohide) {
+        /* if the inputbox is potentially not shown write mode into statusbar */
+        gtk_label_set_text(GTK_LABEL(c->statusbar.mode), label);
     } else {
-        gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT_UCFIRST);
-
-        gtk_widget_realize(GTK_WIDGET(gui->window));
-
-        /* set the x window id to env */
-        xid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(GTK_WIDGET(gui->window))));
-    }
-
-    g_setenv("VIMB_XID", xid, true);
-    g_free(xid);
-#else
-    gui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_role(GTK_WINDOW(gui->window), PROJECT_UCFIRST);
-
-    gtk_widget_realize(GTK_WIDGET(gui->window));
-#endif
-
-    GdkGeometry hints = {10, 10};
-    gtk_window_set_default_size(GTK_WINDOW(gui->window), WIN_WIDTH, WIN_HEIGHT);
-    gtk_window_set_title(GTK_WINDOW(gui->window), PROJECT "/" VERSION);
-    gtk_window_set_geometry_hints(GTK_WINDOW(gui->window), NULL, &hints, GDK_HINT_MIN_SIZE);
-    gtk_window_set_icon(GTK_WINDOW(gui->window), NULL);
-    gtk_widget_set_name(GTK_WIDGET(gui->window), PROJECT);
-
-    /* Create a browser instance */
-    gui->webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
-    gui->inspector = webkit_web_view_get_inspector(gui->webview);
-
-    /* Create a scrollable area */
-    GtkWidget *scroll = gtk_scrolled_window_new(NULL, NULL);
-    gui->adjust_h = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(scroll));
-    gui->adjust_v = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scroll));
-
-#ifdef FEATURE_NO_SCROLLBARS
-#ifdef HAS_GTK3
-    /* set the default style for the application - this can be overwritten by
-     * the users style in gtk-3.0/gtk.css */
-    const char *style = "GtkScrollbar{-GtkRange-slider-width:0;-GtkRange-trough-border:0;}\
-                        GtkScrolledWindow{-GtkScrolledWindow-scrollbar-spacing:0;}";
-    GtkCssProvider *provider = gtk_css_provider_get_default();
-    gtk_css_provider_load_from_data(provider, style, -1, NULL);
-    gtk_style_context_add_provider_for_screen(
-        gdk_screen_get_default(),
-        GTK_STYLE_PROVIDER(provider),
-        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
-    );
-#else /* no GTK3 */
-    /* GTK_POLICY_NEVER with gtk3 disallows window resizing and scrolling */
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_NEVER);
-#endif
-#endif
-
-    /* Prepare the command line */
-    gui->input  = gtk_text_view_new();
-    gui->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(gui->input));
-
-#ifdef HAS_GTK3
-    gui->pane            = gtk_paned_new(GTK_ORIENTATION_VERTICAL);
-    gui->box             = GTK_BOX(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
-    gui->statusbar.box   = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
-#else
-    gui->pane            = gtk_vpaned_new();
-    gui->box             = GTK_BOX(gtk_vbox_new(false, 0));
-    gui->statusbar.box   = GTK_BOX(gtk_hbox_new(false, 0));
-#endif
-    gui->statusbar.mode  = gtk_label_new(NULL);
-    gui->statusbar.left  = gtk_label_new(NULL);
-    gui->statusbar.right = gtk_label_new(NULL);
-    gui->statusbar.cmd   = gtk_label_new(NULL);
-
-    /* Prepare the event box */
-    gui->eventbox = gtk_event_box_new();
-
-    gtk_paned_pack1(GTK_PANED(gui->pane), GTK_WIDGET(gui->box), true, true);
-
-    /* Put all part together */
-    gtk_container_add(GTK_CONTAINER(scroll), GTK_WIDGET(gui->webview));
-    gtk_container_add(GTK_CONTAINER(gui->eventbox), GTK_WIDGET(gui->statusbar.box));
-    gtk_container_add(GTK_CONTAINER(gui->window), GTK_WIDGET(gui->pane));
-#ifdef HAS_GTK3
-    gtk_widget_set_halign(gui->statusbar.mode, GTK_ALIGN_START);
-    gtk_widget_set_halign(gui->statusbar.left, GTK_ALIGN_START);
-#else
-    gtk_misc_set_alignment(GTK_MISC(gui->statusbar.mode), 0.0, 0.0);
-    gtk_misc_set_alignment(GTK_MISC(gui->statusbar.left), 0.0, 0.0);
-#endif
-    gtk_label_set_ellipsize(GTK_LABEL(gui->statusbar.left), PANGO_ELLIPSIZE_MIDDLE);
-    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.mode, false, true, 0);
-    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.left, true, true, 2);
-    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.cmd, false, false, 0);
-    gtk_box_pack_start(gui->statusbar.box, gui->statusbar.right, false, false, 2);
-
-    gtk_box_pack_start(gui->box, scroll, true, true, 0);
-    gtk_box_pack_start(gui->box, gui->eventbox, false, false, 0);
-
-#ifdef HAS_GTK3
-    /* use a scrolled window to hide overflowing text in inputbox like GTK2 */
-    GtkWidget *inputscroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(inputscroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
-    gtk_container_add(GTK_CONTAINER(inputscroll), gui->input);
-
-    gtk_box_pack_end(gui->box, inputscroll, false, false, 0);
-#else
-    gtk_box_pack_end(gui->box, gui->input, false, false, 0);
-#endif
-
-    /* initialize the modes */
-    vb_add_mode('n', normal_enter, normal_leave, normal_keypress, NULL);
-    vb_add_mode('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
-    vb_add_mode('i', input_enter, input_leave, input_keypress, NULL);
-    vb_add_mode('p', pass_enter, pass_leave, pass_keypress, NULL);
-
-    /* initialize the marks with empty values */
-    marks_clear();
-
-    init_files();
-    session_init();
-    setting_init();
-    register_init();
-#ifdef FEATURE_AUTOCMD
-    autocmd_init();
-#endif
-    map_init();
-
-    setup_signals();
-
-    /* enter normal mode */
-    vb_enter('n');
-
-    /* make sure the main window and all its contents are visible */
-    gtk_widget_show_all(gui->window);
-
-    /* read the config file */
-    ex_run_file(vb.files[FILES_CONFIG]);
-
-    /* initially apply input style */
-    vb_update_input_style();
-
-    if (vb.config.kioskmode) {
-        WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
-
-        /* hide input box - to not create it would be better, but this needs a
-         * lot of changes in the code where the input is used */
-        gtk_widget_hide(vb.gui.input);
-
-        /* disable context menu */
-        g_object_set(G_OBJECT(setting), "enable-default-context-menu", false, NULL);
-    }
-
-#ifdef FEATURE_HIGH_DPI
-#ifdef FEATURE_DEFAULT_ZOOM
-    /* if default_zoom was not changed via config */
-    if (vb.config.default_zoom == 1.0) {
-#endif
-        /* fix for high dpi displays */
-        GdkScreen *screen = gdk_window_get_screen(gtk_widget_get_window(vb.gui.window));
-        gdouble dpi = gdk_screen_get_resolution(screen);
-        if (dpi != -1) {
-            WebKitWebSettings *setting = webkit_web_view_get_settings(gui->webview);
-            webkit_web_view_set_full_content_zoom(gui->webview, true);
-            g_object_set(G_OBJECT(setting), "enforce-96-dpi", true, NULL);
-
-            /* calculate the zoom level based on 96 dpi */
-            vb.config.default_zoom = dpi/96;
-
-            webkit_web_view_set_zoom_level(gui->webview, vb.config.default_zoom);
-        }
-#ifdef FEATURE_DEFAULT_ZOOM
-    }
-#endif
-#endif
-}
-
-static void marks_clear(void)
-{
-    int i;
-
-    /* init empty marks array */
-    for (i = 0; i < VB_MARK_SIZE; i++) {
-        vb.state.marks[i] = -1;
+        vb_echo(c, MSG_NORMAL, FALSE, "%s", label);
     }
 }
 
-static void setup_signals()
+/**
+ * Close the given client instances window.
+ */
+gboolean vb_quit(Client *c, gboolean force)
 {
-    /* Set up callbacks so that if either the main window or the browser
-     * instance is closed, the program will exit */
-    g_signal_connect(vb.gui.window, "destroy", G_CALLBACK(destroy_window_cb), NULL);
-    g_object_connect(
-        G_OBJECT(vb.gui.webview),
-#if WEBKIT_CHECK_VERSION(1, 10, 0)
-        "signal::context-menu", G_CALLBACK(context_menu_cb), NULL,
-#else
-        "signal::populate-popup", G_CALLBACK(context_menu_cb), NULL,
-#endif
-        "signal::notify::uri", G_CALLBACK(uri_change_cb), NULL,
-        "signal::notify::progress", G_CALLBACK(webview_progress_cb), NULL,
-        "signal::notify::load-status", G_CALLBACK(webview_load_status_cb), NULL,
-        "signal::button-release-event", G_CALLBACK(button_relase_cb), NULL,
-        "signal::new-window-policy-decision-requested", G_CALLBACK(new_window_policy_cb), NULL,
-        "signal::create-web-view", G_CALLBACK(create_web_view_cb), NULL,
-        "signal::hovering-over-link", G_CALLBACK(hover_link_cb), NULL,
-        "signal::title-changed", G_CALLBACK(title_changed_cb), NULL,
-        "signal::mime-type-policy-decision-requested", G_CALLBACK(mimetype_decision_cb), NULL,
-        "signal::download-requested", G_CALLBACK(vb_download), NULL,
-        "signal::should-show-delete-interface-for-element", G_CALLBACK(gtk_false), NULL,
-        "signal::resource-request-starting", G_CALLBACK(webview_request_starting_cb), NULL,
-        "signal::navigation-policy-decision-requested", G_CALLBACK(navigation_decision_requested_cb), NULL,
-        "signal::onload-event", G_CALLBACK(onload_event_cb), NULL,
-        NULL
-    );
-    g_signal_connect(vb.gui.window, "focus-in-event", G_CALLBACK(focus_in_event_cb), NULL);
-    g_signal_connect(vb.gui.window, "focus-out-event", G_CALLBACK(focus_out_event_cb), NULL);
-#ifdef FEATURE_ARH
-    g_signal_connect(vb.session, "request-queued", G_CALLBACK(session_request_queued_cb), NULL);
-#endif
-
-#ifdef FEATURE_NO_SCROLLBARS
-    WebKitWebFrame *frame = webkit_web_view_get_main_frame(vb.gui.webview);
-    g_signal_connect(G_OBJECT(frame), "scrollbars-policy-changed", G_CALLBACK(gtk_true), NULL);
-#endif
-
-    if (!vb.config.kioskmode) {
-        g_signal_connect(
-            G_OBJECT(vb.gui.window), "key-press-event", G_CALLBACK(map_keypress), NULL
-        );
-        g_signal_connect(
-            G_OBJECT(vb.gui.input), "focus-in-event", G_CALLBACK(input_focus_in_cb), NULL
-        );
-
-        /* inspector */
-        g_object_connect(
-            G_OBJECT(vb.gui.inspector),
-            "signal::inspect-web-view", G_CALLBACK(inspector_new), NULL,
-            "signal::show-window", G_CALLBACK(inspector_show), NULL,
-            "signal::close-window", G_CALLBACK(inspector_close), NULL,
-            "signal::finished", G_CALLBACK(inspector_finished), NULL,
-            NULL
-        );
-    }
-    /* There is no inputbox in kioskmode - but the contents may be changed in
-     * case vimb is controlled via socket. To track inputbox changes is
-     * required for the hinting to work. */
-    g_signal_connect(G_OBJECT(vb.gui.buffer), "changed", G_CALLBACK(buffer_changed_cb), NULL);
-
-    /* webview adjustment */
-    g_signal_connect(G_OBJECT(vb.gui.adjust_v), "value-changed", G_CALLBACK(scroll_cb), NULL);
-}
-
-static void init_files(void)
-{
-    char *path = util_get_config_dir(vb.config.profile);
-
-    if (vb.config.file) {
-        char *rp = realpath(vb.config.file, NULL);
-        vb.files[FILES_CONFIG] = g_strdup(rp);
-        free(rp);
-    } else {
-        vb.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
-        util_create_file_if_not_exists(vb.files[FILES_CONFIG]);
+    /* if not forced quit - don't quit if there are still running downloads */
+    if (!force && c->state.downloads) {
+        vb_echo_force(c, MSG_ERROR, TRUE, "Can't quit: there are running downloads. Use :q! to force quit");
+        return FALSE;
     }
 
-#ifdef FEATURE_COOKIE
-    vb.files[FILES_COOKIE] = g_build_filename(path, "cookies", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_COOKIE]);
-#endif
+    /* Don't run the quit synchronously, because this could lead to access of
+     * no more existing widget where some command response is written. */
+    g_idle_add((GSourceFunc)quit, c);
 
-    vb.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_CLOSED]);
-
-    vb.files[FILES_HISTORY] = g_build_filename(path, "history", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_HISTORY]);
-
-    vb.files[FILES_COMMAND] = g_build_filename(path, "command", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_COMMAND]);
-
-    vb.files[FILES_SEARCH] = g_build_filename(path, "search", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_SEARCH]);
-
-    vb.files[FILES_BOOKMARK] = g_build_filename(path, "bookmark", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_BOOKMARK]);
-
-#ifdef FEATURE_QUEUE
-    vb.files[FILES_QUEUE] = g_build_filename(path, "queue", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_QUEUE]);
-#endif
-#ifdef FEATURE_HSTS
-    vb.files[FILES_HSTS] = g_build_filename(path, "hsts", NULL);
-    util_create_file_if_not_exists(vb.files[FILES_HSTS]);
-#endif
-
-    vb.files[FILES_SCRIPT] = g_build_filename(path, "scripts.js", NULL);
-
-    vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
-
-    g_free(path);
+    return TRUE;
 }
 
-static void session_init(void)
-{
-    /* init soup session */
-    vb.session = webkit_get_default_session();
-    g_object_set(vb.session, "max-conns", SETTING_MAX_CONNS , NULL);
-    g_object_set(vb.session, "max-conns-per-host", SETTING_MAX_CONNS_PER_HOST, NULL);
-    g_object_set(vb.session, "accept-language-auto", true, NULL);
-
-#ifdef FEATURE_COOKIE
-    SoupCookieJar *cookie = cookiejar_new(vb.files[FILES_COOKIE], false);
-    soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(cookie));
-    g_object_unref(cookie);
-#endif
-#ifdef FEATURE_HSTS
-    /* create only the session feature - the feature is added in setting.c
-     * when the setting hsts=on */
-    vb.config.hsts_provider = hsts_provider_new();
-#endif
-#ifdef FEATURE_SOUP_CACHE
-    /* setup the soup cache but without setting the cache size - this is done in setting.c */
-    char *cache_dir      = util_get_cache_dir(vb.config.profile);
-    vb.config.soup_cache = soup_cache_new(cache_dir, SOUP_CACHE_SINGLE_USER);
-    soup_session_add_feature(vb.session, SOUP_SESSION_FEATURE(vb.config.soup_cache));
-    soup_cache_load(vb.config.soup_cache);
-    g_free(cache_dir);
-#endif
-}
-
-static void session_cleanup(void)
-{
-#ifdef FEATURE_HSTS
-    /* remove feature from session and unref the feature to make sure the
-     * feature is finalized */
-    g_object_unref(vb.config.hsts_provider);
-    soup_session_remove_feature_by_type(vb.session, HSTS_TYPE_PROVIDER);
-#endif
-#ifdef FEATURE_SOUP_CACHE
-    /* commit all cache writes */
-    soup_cache_flush(vb.config.soup_cache);
-    /* make sure that the cache will be kept on next browser start */
-    soup_cache_dump(vb.config.soup_cache);
-#endif
-}
-
-static void register_init(void)
-{
-    memset(vb.state.reg, 0, sizeof(char*));
-}
-
-void vb_register_add(char buf, const char *value)
+/**
+ * Adds content to a named register.
+ */
+void vb_register_add(Client *c, char buf, const char *value)
 {
     char *mark;
     int idx;
 
-    if (!vb.state.enable_register || !buf) {
+    if (!c->state.enable_register || !buf) {
         return;
     }
 
     /* make sure the mark is a valid mark char */
-    if ((mark = strchr(VB_REG_CHARS, buf))) {
+    if ((mark = strchr(REG_CHARS, buf))) {
         /* get the index of the mark char */
-        idx = mark - VB_REG_CHARS;
+        idx = mark - REG_CHARS;
 
-        OVERWRITE_STRING(vb.state.reg[idx], value);
+        OVERWRITE_STRING(c->state.reg[idx], value);
     }
 }
 
-const char *vb_register_get(char buf)
+/**
+ * Lookup register entry by it's name.
+ */
+const char *vb_register_get(Client *c, char buf)
 {
     char *mark;
     int idx;
 
     /* make sure the mark is a valid mark char */
-    if ((mark = strchr(VB_REG_CHARS, buf))) {
+    if ((mark = strchr(REG_CHARS, buf))) {
         /* get the index of the mark char */
-        idx = mark - VB_REG_CHARS;
+        idx = mark - REG_CHARS;
 
-        return vb.state.reg[idx];
+        return c->state.reg[idx];
     }
 
     return NULL;
 }
 
-static void register_cleanup(void)
+static void statusbar_update_downloads(Client *c, GString *status)
 {
-    int i;
-    for (i = 0; i < VB_REG_SIZE; i++) {
-        if (vb.state.reg[i]) {
-            g_free(vb.state.reg[i]);
+    GList *list;
+    guint list_length, remaining_max = 0;
+    gdouble progress, elapsed, total, remaining;
+    WebKitDownload *download;
+
+    g_assert(c);
+    g_assert(status);
+
+    if (c->state.downloads) {
+        list_length = g_list_length(c->state.downloads);
+        g_assert(list_length);
+
+        /* get highest ETA value of all downloads based on each download's
+         * current progress fraction and time elapsed */
+        for (list = c->state.downloads; list != NULL; list = list->next) {
+            download = (WebKitDownload *)list->data;
+            g_assert(download);
+
+            progress = webkit_download_get_estimated_progress(download);
+
+            /* avoid dividing by zero */
+            if (progress == 0.0) {
+                continue;
+            }
+
+            elapsed = webkit_download_get_elapsed_time(download);
+            total = (1.0 / progress) * elapsed;
+            remaining = total - elapsed;
+
+            remaining_max = MAX(remaining, remaining_max);
         }
+
+        g_string_append_printf(status, " %d %s (ETA %us)",
+                list_length, list_length == 1? "dnld" : "dnlds", remaining_max);
     }
 }
 
-static gboolean button_relase_cb(WebKitWebView *webview, GdkEventButton *event)
+void vb_statusbar_update(Client *c)
 {
-    /* let webkit handle the click - for example on a link */
-    gboolean nopropagate = false;
-    WebKitHitTestResultContext context;
+    GString *status;
 
-    WebKitHitTestResult *result = webkit_web_view_get_hit_test_result(webview, event);
-
-    g_object_get(result, "context", &context, NULL);
-    /* ctrl click or middle mouse click onto link */
-    if (context & WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK
-        && (event->button == 2 || (event->button == 1 && event->state & GDK_CONTROL_MASK))
-    ) {
-        Arg a = {VB_TARGET_NEW};
-        g_object_get(result, "link-uri", &a.s, NULL);
-        vb_load_uri(&a);
-
-        nopropagate = true;
+    if (!gtk_widget_get_visible(GTK_WIDGET(c->statusbar.box))) {
+        return;
     }
-    g_object_unref(result);
 
-    return nopropagate;
-}
+    status = g_string_new("");
 
-static gboolean new_window_policy_cb(
-    WebKitWebView *view, WebKitWebFrame *frame, WebKitNetworkRequest *request,
-    WebKitWebNavigationAction *navig, WebKitWebPolicyDecision *policy)
-{
-    if (webkit_web_navigation_action_get_reason(navig) == WEBKIT_WEB_NAVIGATION_REASON_LINK_CLICKED) {
-        webkit_web_policy_decision_ignore(policy);
-        /* open in a new window */
-        Arg a = {VB_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
-        vb_load_uri(&a);
-        return true;
+    /* show the number of matches search results */
+    if (c->state.search.matches) {
+        g_string_append_printf(status, " (%d)", c->state.search.matches);
     }
-    return false;
-}
 
-static WebKitWebView *create_web_view_cb(WebKitWebView *view, WebKitWebFrame *frame)
-{
-    WebKitWebView *new = WEBKIT_WEB_VIEW(webkit_web_view_new());
-
-    /* wait until the new webview receives its new URI */
-    g_signal_connect(new, "navigation-policy-decision-requested", G_CALLBACK(create_web_view_received_uri_cb), NULL);
-
-    return new;
-}
-
-static gboolean create_web_view_received_uri_cb(WebKitWebView *view,
-    WebKitWebFrame *frame, WebKitNetworkRequest *request,
-    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
-    gpointer data)
-{
-    Arg a = {VB_TARGET_NEW, (char*)webkit_network_request_get_uri(request)};
-    vb_load_uri(&a);
-
-    /* destroy temporary webview */
-    gtk_widget_destroy(GTK_WIDGET(view));
-
-    /* mark that we handled the signal */
-    return true;
-}
-
-static gboolean navigation_decision_requested_cb(WebKitWebView *view,
-    WebKitWebFrame *frame, WebKitNetworkRequest *request,
-    WebKitWebNavigationAction *action, WebKitWebPolicyDecision *policy,
-    gpointer data)
-{
-#ifdef FEATURE_HSTS
-    char *uri;
-    SoupMessage *msg = webkit_network_request_get_message(request);
-
-    /* manually reload the page for HSTS only when it occurs in
-     * the main-frame. the others cases are covered by requeueing. */
-    if (webkit_web_view_get_main_frame(view) == frame) {
-        uri = hsts_get_changed_uri(vb.session, msg);
-        if (uri) {
-            webkit_web_frame_load_uri(frame, uri);
-            webkit_web_policy_decision_ignore(policy);
-
-            g_free(uri);
-            /* mark the request as handled */
-            return true;
-        }
-    }
-#endif
-
-    /* try to find a protocol handler to open the uri */
-    if (handle_uri(webkit_network_request_get_uri(request))) {
-        webkit_web_policy_decision_ignore(policy);
-
-        return true;
-    }
-    return false;
-}
-
-static void onload_event_cb(WebKitWebView *view, WebKitWebFrame *frame,
-    gpointer user_data)
-{
-    Document *doc = webkit_web_frame_get_dom_document(frame);
-    dom_check_auto_insert(doc);
-    vb.state.done_loading_page = true;
-}
-
-static void hover_link_cb(WebKitWebView *webview, const char *title, const char *link)
-{
-    char *message;
-    if (link) {
-        /* save the uri to have this if the user want's to copy the link
-         * location via context menu */
-        OVERWRITE_STRING(vb.state.linkhover, link);
-
-        message = g_strconcat("Link: ", link, NULL);
-        gtk_label_set_text(GTK_LABEL(vb.gui.statusbar.left), message);
-        g_free(message);
-    } else if (vb.state.uri) {
-        /* Use previous url in case of hover out of a link. */
-        vb_update_urlbar(vb.state.uri);
-    } else {
-        /* If there is no previous uri use the current uri from webview. */
-        set_uri(webkit_web_view_get_uri(webview));
-    }
-}
-
-static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, const char *title)
-{
-    set_title(title);
-}
-
-static void update_title(void)
-{
-#ifdef FEATURE_TITLE_PROGRESS
     /* show load status of page or the downloads */
-    if (vb.state.progress != 100) {
-        char *title = g_strdup_printf(
-            "[%i%%] %s",
-            vb.state.progress,
-            vb.state.title ? vb.state.title : ""
-        );
-        gtk_window_set_title(GTK_WINDOW(vb.gui.window), title);
-        g_free(title);
-        return;
-    }
-#endif
-    if (vb.state.title) {
-        gtk_window_set_title(GTK_WINDOW(vb.gui.window), vb.state.title);
-    }
-}
+    if (c->state.progress != 100) {
+#ifdef FEATURE_WGET_PROGRESS_BAR
+        char bar[PROGRESS_BAR_LEN + 1];
+        int i, state;
 
-static void set_uri(const char *uri)
-{
-    OVERWRITE_STRING(vb.state.uri, uri);
-    g_setenv("VIMB_URI", uri, true);
-    vb_update_urlbar(uri);
-}
-
-static void set_title(const char *title)
-{
-    OVERWRITE_STRING(vb.state.title, title);
-    update_title();
-    g_setenv("VIMB_TITLE", title ? title : "", true);
-}
-
-static gboolean mimetype_decision_cb(WebKitWebView *webview,
-    WebKitWebFrame *frame, WebKitNetworkRequest *request, char *mime_type,
-    WebKitWebPolicyDecision *decision)
-{
-    SoupMessage *msg;
-    /* don't start download if request failed or stopped by proxy or can be
-     * displayed in the webview */
-    if (!mime_type || *mime_type == '\0'
-        || webkit_web_view_can_show_mime_type(webview, mime_type)) {
-
-        return false;
-    }
-
-    /* Don't start a download when the response has no 2xx status code. Or the
-     * message was not sent before - this seems to be the case when the server
-     * responds with a Accept-Ranges header. */
-    msg = webkit_network_request_get_message(request);
-    if (SOUP_STATUS_IS_SUCCESSFUL(msg->status_code)
-        || msg->status_code == SOUP_STATUS_NONE
-    ) {
-        webkit_web_policy_decision_download(decision);
-        return true;
-    }
-    return false;
-}
-
-gboolean vb_download(WebKitWebView *view, WebKitDownload *download, const char *path)
-{
-    char *file, *dir;
-    const char *download_cmd = GET_CHAR("download-command");
-    gboolean use_external    = GET_BOOL("download-use-external");
-
-    /* prepare the path to save the download */
-    if (path) {
-        file = util_build_path(path, vb.config.download_dir);
-
-        /* if file is an directory append a file name */
-        if (g_file_test(file, (G_FILE_TEST_IS_DIR))) {
-            dir  = file;
-            file = g_build_filename(dir, PROJECT "-download", NULL);
-            g_free(dir);
+        state = c->state.progress * PROGRESS_BAR_LEN / 100;
+        for (i = 0; i < state; i++) {
+            bar[i] = PROGRESS_BAR[0];
         }
-    } else {
-        /* if there was no path given where to download the file, used
-         * suggested file name or a static one */
-        path = webkit_download_get_suggested_filename(download);
-        if (!path || *path == '\0') {
-            path = PROJECT "-download";
+        bar[i++] = PROGRESS_BAR[1];
+        for (; i < PROGRESS_BAR_LEN; i++) {
+            bar[i] = PROGRESS_BAR[2];
         }
-        file = util_build_path(path, vb.config.download_dir);
-    }
-
-#ifdef FEATURE_AUTOCMD
-    autocmd_run(AU_DOWNLOAD_START, webkit_download_get_uri(download), NULL);
+        bar[i] = '\0';
+        g_string_append_printf(status, " [%s]", bar);
+#else
+        g_string_append_printf(status, " [%i%%]", c->state.progress);
 #endif
-    if (use_external && *download_cmd) {
-        /* run download with external program */
-        vb_download_external(view, download, file);
-        g_free(file);
+    }
 
-        /* signalize that we handle the download ourself */
-        return false;
+    statusbar_update_downloads(c, status);
+
+    /* show the scroll status */
+    if (c->state.scroll_max == 0) {
+        g_string_append(status, " All");
+    } else if (c->state.scroll_percent == 0) {
+        g_string_append(status, " Top");
+    } else if (c->state.scroll_percent == 100) {
+        g_string_append(status, " Bot");
     } else {
-        /* use webkit download helpr to download the uri */
-        vb_download_internal(view, download, file);
-        g_free(file);
-
-        return true;
+        g_string_append_printf(status, " %d%%", c->state.scroll_percent);
     }
+
+    gtk_label_set_text(GTK_LABEL(c->statusbar.right), status->str);
+    g_string_free(status, TRUE);
 }
-
-void vb_download_internal(WebKitWebView *view, WebKitDownload *download, const char *file)
-{
-    char *uri;
-    guint64 size;
-    WebKitDownloadStatus status;
-
-    /* build the file uri from file path */
-    uri = g_filename_to_uri(file, NULL, NULL);
-    webkit_download_set_destination_uri(download, uri);
-    g_free(uri);
-
-    size = webkit_download_get_total_size(download);
-    if (size > 0) {
-        vb_echo(VB_MSG_NORMAL, false, "Download %s [%uB] started ...", file, size);
-    } else {
-        vb_echo(VB_MSG_NORMAL, false, "Download %s started ...", file);
-    }
-
-    status = webkit_download_get_status(download);
-    if (status == WEBKIT_DOWNLOAD_STATUS_CREATED) {
-        webkit_download_start(download);
-    }
-
-    /* prepend the download to the download list */
-    vb.state.downloads = g_list_prepend(vb.state.downloads, download);
-
-    /* connect signal handler to check if the download is done */
-    g_signal_connect(download, "notify::status", G_CALLBACK(download_progress_cp), NULL);
-    g_signal_connect(download, "notify::progress", G_CALLBACK(webview_download_progress_cb), NULL);
-
-    vb_update_statusbar();
-}
-
-void vb_download_external(WebKitWebView *view, WebKitDownload *download, const char *file)
-{
-    const char *user_agent = NULL, *mimetype = NULL, *download_cmd;
-    char **argv, **envp;
-    char *cmd;
-    int argc;
-    guint64 size;
-    SoupMessage *msg;
-    WebKitNetworkRequest *request;
-    GError *error = NULL;
-
-    request = webkit_download_get_network_request(download);
-    msg     = webkit_network_request_get_message(request);
-    /* if the download is started by the :save command or hinting we get no
-     * message here */
-    if (msg) {
-        user_agent = soup_message_headers_get_one(msg->request_headers, "User-Agent");
-        mimetype   = soup_message_headers_get_one(msg->request_headers, "Content-Type");
-    }
-
-    /* set the required download information as environment */
-    envp = g_get_environ();
-    envp = g_environ_setenv(envp, "VIMB_FILE", file, true);
-    envp = g_environ_setenv(envp, "VIMB_USE_PROXY", GET_BOOL("proxy") ? "1" : "0", true);
-#ifdef FEATURE_COOKIE
-    envp = g_environ_setenv(envp, "VIMB_COOKIES", vb.files[FILES_COOKIE], true);
-#endif
-    if (mimetype) {
-        envp = g_environ_setenv(envp, "VIMB_MIME_TYPE", mimetype, true);
-    }
-
-    if (!user_agent) {
-        WebKitWebSettings *setting = webkit_web_view_get_settings(view);
-        g_object_get(G_OBJECT(setting), "user-agent", &user_agent, NULL);
-    }
-    envp         = g_environ_setenv(envp, "VIMB_USER_AGENT", user_agent, true);
-    download_cmd = GET_CHAR("download-command");
-    cmd          = g_strdup_printf(download_cmd, webkit_download_get_uri(download));
-
-    if (!g_shell_parse_argv(cmd, &argc, &argv, &error)) {
-        g_warning("Could not parse download-command '%s': %s", download_cmd, error->message);
-        g_error_free(error);
-        g_free(cmd);
-
-        return;
-    }
-    g_free(cmd);
-
-    if (g_spawn_async(NULL, argv, envp, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
-        size = webkit_download_get_total_size(download);
-        if (size > 0) {
-            vb_echo(VB_MSG_NORMAL, true, "Download of %uB started", size);
-        } else {
-            vb_echo(VB_MSG_NORMAL, true, "Download started");
-        }
-    } else {
-        g_warning("%s", error->message);
-        g_clear_error(&error);
-        vb_echo(VB_MSG_ERROR, true, "Could not start download");
-    }
-    g_strfreev(argv);
-    g_strfreev(envp);
-}
-
-static void download_progress_cp(WebKitDownload *download, GParamSpec *pspec)
-{
-    WebKitDownloadStatus status = webkit_download_get_status(download);
-
-    if (status == WEBKIT_DOWNLOAD_STATUS_STARTED || status == WEBKIT_DOWNLOAD_STATUS_CREATED) {
-        return;
-    }
-
-    const char *file = webkit_download_get_destination_uri(download);
-    /* skip the file protocol for the display */
-    if (!strncmp(file, "file://", 7)) {
-        file += 7;
-    }
-    if (status != WEBKIT_DOWNLOAD_STATUS_FINISHED) {
-#ifdef FEATURE_AUTOCMD
-        autocmd_run(AU_DOWNLOAD_FAILED, webkit_download_get_uri(download), NULL);
-#endif
-        vb_echo(VB_MSG_ERROR, false, "Error downloading %s", file);
-    } else {
-#ifdef FEATURE_AUTOCMD
-        autocmd_run(AU_DOWNLOAD_FINISHED, webkit_download_get_uri(download), NULL);
-#endif
-        vb_echo(VB_MSG_NORMAL, false, "Download %s finished", file);
-    }
-
-    /* remove the download from the list */
-    vb.state.downloads = g_list_remove(vb.state.downloads, download);
-
-    vb_update_statusbar();
-}
-
-static void read_from_stdin(void)
-{
-    /* read content from stdin */
-    GIOChannel *ch = g_io_channel_unix_new(fileno(stdin));
-    gchar *buf     = NULL;
-    GError *err    = NULL;
-    gsize len;
-
-    g_io_channel_read_to_end(ch, &buf, &len, &err);
-    g_io_channel_unref(ch);
-    if (err) {
-        g_warning("Error loading from stdin: %s", err->message);
-        g_error_free(err);
-    } else {
-        webkit_web_view_load_string(vb.gui.webview, buf, "text/html", NULL, "(stdin)");
-    }
-    g_free(buf);
-}
-
-#ifdef FEATURE_ARH
-static void session_request_queued_cb(SoupSession *session, SoupMessage *msg, gpointer data)
-{
-    SoupURI *suri = soup_message_get_uri(msg);
-    char     *uri = soup_uri_to_string(suri, false);
-
-    arh_run(vb.config.autoresponseheader, uri, msg);
-
-    g_free(uri);
-}
-#endif
 
 /**
- * Free some memory when vimb is quit.
+ * Destroys given client and removed it from client queue. If no client is
+ * there in queue, quit the gtk main loop.
  */
-static void vb_cleanup(void)
+static void client_destroy(Client *c)
 {
+    Client *p;
+    webkit_web_view_stop_loading(c->webview);
 
-    completion_clean();
-    map_cleanup();
-    cleanup_modes();
-    setting_cleanup();
-    history_cleanup();
-    session_cleanup();
-    register_cleanup();
-#ifdef FEATURE_AUTOCMD
-    autocmd_cleanup();
-#endif
-#ifdef FEATURE_ARH
-    arh_free(vb.config.autoresponseheader);
-#endif
-#ifdef FEATURE_SOCKET
-    io_cleanup();
-#endif
-    g_free(vb.state.pid_str);
-    g_free(vb.state.uri);
+    /* Write last URL into file for recreation.
+     * The URL is only stored if the closed-max-items is not 0 and the file
+     * exists. */
+    if (c->state.uri && vb.config.closed_max && vb.files[FILES_CLOSED]) {
+        util_file_prepend_line(vb.files[FILES_CLOSED], c->state.uri,
+                vb.config.closed_max);
+    }
 
-    g_slist_free_full(vb.config.cmdargs, g_free);
+    gtk_widget_destroy(c->window);
 
-    for (int i = 0; i < FILES_LAST; i++) {
-        g_free(vb.files[i]);
-        vb.files[i] = NULL;
+    /* Look for the client in the list, if we searched through the list and
+     * didn't find it the client must be the first item. */
+    for (p = vb.clients; p && p->next != c; p = p->next);
+    if (p) {
+        p->next = c->next;
+    } else {
+        vb.clients = c->next;
+    }
+
+    completion_cleanup(c);
+    map_cleanup(c);
+    register_cleanup(c);
+    setting_cleanup(c);
+    handler_cleanup(c);
+
+    g_slice_free(Client, c);
+
+    /* if there are no clients - quit the main loop */
+    if (!vb.clients) {
+        gtk_main_quit();
     }
 }
 
-static void cleanup_modes(void)
+/**
+ * Creates a new client instance with it's own window.
+ *
+ * @webview:    Related webview or NULL if a client with an independent
+ *              webview shoudl be created.
+ */
+static Client *client_new(WebKitWebView *webview, gboolean show)
 {
-    if (vb.modes) {
-        g_hash_table_destroy(vb.modes);
-        vb.modes = NULL;
-        vb.mode  = NULL;
+    Client *c;
+    char *xid;
+    GtkWidget *box;
+
+    /* create the client */
+    c = g_slice_new0(Client);
+    c->state.progress = 100;
+
+    if (vb.embed) {
+        c->window = gtk_plug_new(vb.embed);
+        xid       = g_strdup_printf("%d", (int)vb.embed);
+    } else {
+        GtkRequisition req;
+        c->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+        gtk_window_set_role(GTK_WINDOW(c->window), PROJECT_UCFIRST);
+        /* We have to call gtk_widget_get_preferred_size before
+         * gtk_widget_size_allocate otherwise a warning is thrown when the
+         * widget is realized. */
+        gtk_widget_get_preferred_size(GTK_WIDGET(c->window), &req, NULL);
+        gtk_widget_realize(GTK_WIDGET(c->window));
+
+        xid = g_strdup_printf("%d",
+                (int)GDK_WINDOW_XID(gtk_widget_get_window(GTK_WIDGET(c->window))));
+    }
+
+    gtk_window_set_default_size(GTK_WINDOW(c->window), WIN_WIDTH, WIN_HEIGHT);
+
+    completion_init(c);
+    map_init(c);
+
+    g_object_connect(
+            G_OBJECT(c->window),
+            "signal::destroy", G_CALLBACK(on_window_destroy), c,
+            "signal::delete-event", G_CALLBACK(on_window_delete_event), c,
+            "signal::key-press-event", G_CALLBACK(on_map_keypress), c,
+            NULL);
+
+    /* statusbar */
+    c->statusbar.box   = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+    c->statusbar.mode  = gtk_label_new(NULL);
+    c->statusbar.left  = gtk_label_new(NULL);
+    c->statusbar.right = gtk_label_new(NULL);
+    c->statusbar.cmd   = gtk_label_new(NULL);
+    gtk_widget_set_name(GTK_WIDGET(c->statusbar.box), "statusbar");
+    gtk_label_set_ellipsize(GTK_LABEL(c->statusbar.left), PANGO_ELLIPSIZE_MIDDLE);
+    gtk_widget_set_halign(c->statusbar.left, GTK_ALIGN_START);
+    gtk_widget_set_halign(c->statusbar.mode, GTK_ALIGN_START);
+
+    gtk_box_pack_start(c->statusbar.box, c->statusbar.mode, FALSE, TRUE, 0);
+    gtk_box_pack_start(c->statusbar.box, c->statusbar.left, TRUE, TRUE, 2);
+    gtk_box_pack_start(c->statusbar.box, c->statusbar.cmd, FALSE, FALSE, 0);
+    gtk_box_pack_start(c->statusbar.box, c->statusbar.right, FALSE, FALSE, 2);
+
+    /* webview */
+    c->webview = webview_new(c, webview);
+    c->page_id = webkit_web_view_get_page_id(c->webview);
+
+    /* inputbox */
+    c->input  = gtk_text_view_new();
+    gtk_widget_set_name(c->input, "input");
+    c->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(c->input));
+    g_signal_connect(c->buffer, "changed", G_CALLBACK(on_textbuffer_changed), c);
+    /* Make sure the user can see the typed text. */
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->input), GTK_WRAP_WORD_CHAR);
+
+    /* pack the parts together */
+    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(c->window), box);
+    gtk_box_pack_start(GTK_BOX(box), GTK_WIDGET(c->webview), TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(box), GTK_WIDGET(c->statusbar.box), FALSE, FALSE, 0);
+    gtk_box_pack_end(GTK_BOX(box), GTK_WIDGET(c->input), FALSE, FALSE, 0);
+
+    /* Set the default style for statusbar and inputbox. */
+    gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(c->statusbar.box)),
+            GTK_STYLE_PROVIDER(vb.style_provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    gtk_style_context_add_provider(gtk_widget_get_style_context(c->input),
+            GTK_STYLE_PROVIDER(vb.style_provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+    /* set the x window id to env */
+    g_setenv("VIMB_XID", xid, TRUE);
+    g_free(xid);
+
+    /* initialize the settings */
+    setting_init(c);
+
+    /* initialize the url handlers */
+    handler_init(c);
+
+    /* start client in normal mode */
+    vb_enter(c, 'n');
+
+    c->state.enable_register = TRUE;
+
+    if (show) {
+        gtk_widget_show_all(c->window);
+    }
+
+    /* read the config file */
+    ex_run_file(c, vb.files[FILES_CONFIG]);
+
+    /* Prepend the new client to the queue of clients. */
+    c->next    = vb.clients;
+    vb.clients = c;
+
+    return c;
+}
+
+/**
+ * Callback that clear the input box after a timeout if this was set on
+ * input_print.
+ */
+static gboolean input_clear(Client *c)
+{
+    input_print(c, FALSE, MSG_NORMAL, FALSE, "");
+
+    return FALSE;
+}
+
+/**
+ * Print a message to the input box.
+ *
+ * @force: If TRUE the message is also written when the inputbox is already
+ *         focused, might be the case when the user types text into it.
+ * @type: Type of message normal or error
+ * @hide: If TRUE the inputbox is cleared after a short timeout.
+ * @message: The message to print.
+ */
+static void input_print(Client *c, gboolean force, MessageType type,
+        gboolean hide, const char *message)
+{
+    /* don't print message if the input is focussed */
+    if (!force && gtk_widget_is_focus(GTK_WIDGET(c->input))) {
+        return;
+    }
+
+    /* apply input style only if the message type was changed */
+    if (type != c->state.input_type) {
+        c->state.input_type = type;
+        vb_input_update_style(c);
+    }
+    vb_input_set_text(c, message);
+    if (hide) {
+        /* add timeout function */
+        c->state.input_timer = g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)input_clear, c);
+    } else if (c->state.input_timer > 0) {
+        /* If there is already a timeout function but the input box content is
+         * changed - remove the timeout. Seems the user started another
+         * command or typed into inputbox. */
+        g_source_remove(c->state.input_timer);
+        c->state.input_timer = 0;
     }
 }
 
-static void free_mode(Mode *mode)
+/**
+ * Reinitializes or clears the set page marks.
+ */
+static void marks_clear(Client *c)
+{
+    int i;
+
+    /* init empty marks array */
+    for (i = 0; i < MARK_SIZE; i++) {
+        c->state.marks[i] = -1;
+    }
+}
+
+/**
+ * Free the memory of given mode. This is used as destroy function of the
+ * modes hashmap.
+ */
+static void mode_free(Mode *mode)
 {
     g_slice_free(Mode, mode);
 }
 
-static gboolean autocmdOptionArgFunc(const gchar *option_name, const gchar *value, gpointer data, GError **error)
+/**
+ * The ::changed signal is emitted when the content of a GtkTextBuffer has
+ * changed. This call back function is connected to the input box' text buffer.
+ */
+static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data)
 {
-    vb.config.cmdargs = g_slist_append(vb.config.cmdargs, g_strdup(value));
+    gchar *text;
+    GtkTextIter start, end;
+    Client *c = (Client *)user_data;
+
+    g_assert(c);
+
+    /* don't observe changes in completion mode */
+    if (c->mode->flags & FLAG_COMPLETION) {
+        return;
+    }
+
+    /* don't process changes not typed by the user */
+    if (gtk_widget_is_focus(c->input) && c->mode && c->mode->input_changed) {
+
+        gtk_text_buffer_get_bounds(textbuffer, &start, &end);
+        text = gtk_text_buffer_get_text(textbuffer, &start, &end, false);
+
+        c->mode->input_changed(c, text);
+
+        g_free(text);
+    }
+}
+
+/**
+ * Set the style of the statusbar.
+ */
+static void set_statusbar_style(Client *c, StatusType type)
+{
+    GtkStyleContext *ctx;
+    /* Do nothing if the new to set style is the same as the current. */
+    if (type == c->state.status_type) {
+        return;
+    }
+
+    ctx = gtk_widget_get_style_context(GTK_WIDGET(c->statusbar.box));
+
+    if (type == STATUS_SSL_VALID) {
+        gtk_style_context_remove_class(ctx, "unsecure");
+        gtk_style_context_add_class(ctx, "secure");
+    } else if (type == STATUS_SSL_INVALID) {
+        gtk_style_context_remove_class(ctx, "secure");
+        gtk_style_context_add_class(ctx, "unsecure");
+    } else {
+        gtk_style_context_remove_class(ctx, "secure");
+        gtk_style_context_remove_class(ctx, "unsecure");
+    }
+    c->state.status_type = type;
+}
+
+/**
+ * Update the window title of the main window.
+ */
+static void set_title(Client *c, const char *title)
+{
+    OVERWRITE_STRING(c->state.title, title);
+    update_title(c);
+    g_setenv("VIMB_TITLE", title ? title : "", true);
+}
+
+/**
+ * Spawns a new browser instance for given uri.
+ *
+ * @uri:    URI used for the new instance.
+ * @embed:  If FALSE, the new instance is not embedded, independent from
+ *          current set -e option.
+ */
+static void spawn_new_instance(const char *uri, gboolean embed)
+{
+    guint i = 0;
+    /* memory allocation */
+    char **cmd = g_malloc_n(
+        3                       /* basename + uri + ending NULL */
+        + (vb.configfile ? 2 : 0)
+#ifndef FEATURE_NO_XEMBED
+        + (vb.embed && embed ? 2 : 0)
+#endif
+        + (vb.profile ? 2 : 0),
+        sizeof(char *)
+    );
+
+    cmd[i++] = vb.argv0;
+
+    if (vb.configfile) {
+        cmd[i++] = "-c";
+        cmd[i++] = vb.configfile;
+    }
+#ifndef FEATURE_NO_XEMBED
+    if (vb.embed && embed) {
+        char xid[64];
+        cmd[i++] = "-e";
+        snprintf(xid, LENGTH(xid), "%d", (int)vb.embed);
+        cmd[i++] = xid;
+    }
+#endif
+    if (vb.profile) {
+        cmd[i++] = "-p";
+        cmd[i++] = vb.profile;
+    }
+    cmd[i++] = (char*)uri;
+    cmd[i++] = NULL;
+
+    /* spawn a new browser instance */
+    g_spawn_async(NULL, cmd, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, NULL);
+
+    /* free commandline */
+    g_free(cmd);
+}
+
+/**
+ * Callback for the web contexts download-started signal.
+ */
+static void on_webctx_download_started(WebKitWebContext *webctx,
+        WebKitDownload *download, Client *c)
+{
+    g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
+    g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
+    g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
+    g_signal_connect(download, "received-data", G_CALLBACK(on_webdownload_received_data), c);
+
+    c->state.downloads = g_list_append(c->state.downloads, download);
+
+    /* to reflect the correct download count */
+    vb_statusbar_update(c);
+}
+
+/**
+ * Callback for the web contexts initialize-web-extensions signal.
+ */
+static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data)
+{
+    const char *name;
+    GVariant *vdata;
+
+    /* Setup the extension directory. */
+    webkit_web_context_set_web_extensions_directory(webctx, EXTENSIONDIR);
+
+    name  = ext_proxy_init();
+    vdata = g_variant_new("(ms)", name);
+    webkit_web_context_set_web_extensions_initialization_user_data(webctx, vdata);
+}
+
+/**
+ * Callback for the webkit download decide destination signal.
+ * This signal is emitted after response is received to decide a destination
+ * URI for the download.
+ */
+static gboolean on_webdownload_decide_destination(WebKitDownload *download,
+        gchar *suggested_filename, Client *c)
+{
+    if (webkit_download_get_destination(download)) {
+        return TRUE;
+    }
+
+    return vb_download_set_destination(c, download, suggested_filename, NULL);
+}
+
+/**
+ * Callback for the webkit download failed signal.
+ * This signal is emitted when an error occurs during the download operation.
+ */
+static void on_webdownload_failed(WebKitDownload *download,
+               GError *error, Client *c)
+{
+    gchar *destination = NULL, *filename = NULL, *basename = NULL;
+
+    g_assert(download);
+    g_assert(error);
+    g_assert(c);
+
+    /* get the failed download's destination uri */
+    g_object_get(download, "destination", &destination, NULL);
+    g_assert(destination);
+
+    /* filename from uri */
+    if (destination) {
+        filename = g_filename_from_uri(destination, NULL, NULL);
+        g_free(destination);
+    }
+
+    /* basename from filename */
+    if (filename) {
+        basename = g_path_get_basename(filename);
+        g_free(filename);
+    }
+
+    /* report the error to the user */
+    if (basename) {
+        vb_echo(c, MSG_ERROR, FALSE, "Download of %s failed (%s)", basename, error->message);
+        g_free(basename);
+    }
+}
+
+/**
+ * Callback for the webkit download finished signal.
+ * This signal is emitted when download finishes successfully or due to an
+ * error. In case of errors “failed” signal is emitted before this one.
+ */
+static void on_webdownload_finished(WebKitDownload *download, Client *c)
+{
+    gchar *destination = NULL, *filename = NULL, *basename = NULL;
+
+    g_assert(download);
+    g_assert(c);
+
+    c->state.downloads = g_list_remove(c->state.downloads, download);
+
+    /* to reflect the correct download count */
+    vb_statusbar_update(c);
+
+    /* get the finished downloads destination uri */
+    g_object_get(download, "destination", &destination, NULL);
+    g_assert(destination);
+
+    /* filename from uri */
+    if (destination) {
+        filename = g_filename_from_uri(destination, NULL, NULL);
+        g_free(destination);
+    }
+
+    if (filename) {
+        /* basename from filename */
+        basename = g_path_get_basename(filename);
+
+        if (basename) {
+            /* Only report to the user if the downloaded file exists, so the
+             * download was successful. Otherwise, this is a failed download
+             * finished signal and it was reported to the user in
+             * on_webdownload_failed() already. */
+            if (g_file_test(filename, G_FILE_TEST_EXISTS)) {
+                vb_echo(c, MSG_NORMAL, FALSE, "Download of %s finished", basename);
+            }
+
+            g_free(basename);
+        }
+
+        g_free(filename);
+    }
+}
+
+/**
+ * Callback for the webkit download received-data signal.
+ * This signal is emitted after response is received, every time new data has
+ * been written to the destination. It's useful to know the progress of the
+ * download operation.
+ */
+static void on_webdownload_received_data(WebKitDownload *download,
+        guint64 data_length, Client *c)
+{
+    /* rate limit statusbar updates */
+    static gint64 statusbar_update_next = 0;
+
+    if (g_get_monotonic_time() > statusbar_update_next) {
+        statusbar_update_next = g_get_monotonic_time() + 1000000; /* 1 second */
+
+        vb_statusbar_update(c);
+    }
+}
+
+/**
+ * Callback for the webview close signal.
+ */
+static void on_webview_close(WebKitWebView *webview, Client *c)
+{
+    client_destroy(c);
+}
+
+/**
+ * Callback for the webview create signal.
+ * This creates a new client - with it's own window with a related webview.
+ */
+static WebKitWebView *on_webview_create(WebKitWebView *webview,
+        WebKitNavigationAction *navact, Client *c)
+{
+    Client *new = client_new(webview, FALSE);
+
+    return new->webview;
+}
+
+/**
+ * Callback for the webview decide-policy signal.
+ * Checks the reasons for some navigation actions and decides if the action is
+ * allowed, or should go into a new instance of vimb.
+ */
+static gboolean on_webview_decide_policy(WebKitWebView *webview,
+        WebKitPolicyDecision *dec, WebKitPolicyDecisionType type, Client *c)
+{
+    guint status, button, mod;
+    WebKitNavigationAction *a;
+    WebKitURIRequest *req;
+    WebKitURIResponse *res;
+
+    switch (type) {
+        case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
+            a      = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
+            req    = webkit_navigation_action_get_request(a);
+            button = webkit_navigation_action_get_mouse_button(a);
+            mod    = webkit_navigation_action_get_modifiers(a);
+
+            /* Try to handle with specific protocol handler. */
+            if (handler_handle_uri(c, webkit_uri_request_get_uri(req))) {
+                webkit_policy_decision_ignore(dec);
+                return TRUE;
+            }
+            /* Spawn new instance if the new win flag is set on the mode, or
+             * the navigation was triggered by CTRL-LeftMouse or MiddleMouse. */
+            if ((c->mode->flags & FLAG_NEW_WIN)
+                || (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
+                    && (button == 2 || (button == 1 && mod & GDK_CONTROL_MASK)))) {
+
+                /* Remove the FLAG_NEW_WIN after the first use. */
+                c->mode->flags &= ~FLAG_NEW_WIN;
+
+                webkit_policy_decision_ignore(dec);
+                spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
+                return TRUE;
+            }
+            return FALSE;
+
+        case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
+            a   = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
+
+            /* Ignore opening new window if this was started without user gesture. */
+            if (!webkit_navigation_action_is_user_gesture(a)) {
+                webkit_policy_decision_ignore(dec);
+                return TRUE;
+            }
+
+            if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
+                webkit_policy_decision_ignore(dec);
+                /* This is triggered on link click for links with *
+                 * target="_blank". Maybe it should be configurable if the
+                 * page is opened as tabe or a new instance. */
+                req = webkit_navigation_action_get_request(a);
+                spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
+                return TRUE;
+            }
+            return FALSE;
+
+        case WEBKIT_POLICY_DECISION_TYPE_RESPONSE:
+            res    = webkit_response_policy_decision_get_response(WEBKIT_RESPONSE_POLICY_DECISION(dec));
+            status = webkit_uri_response_get_status_code(res);
+
+            if (!webkit_response_policy_decision_is_mime_type_supported(WEBKIT_RESPONSE_POLICY_DECISION(dec))
+                    && (SOUP_STATUS_IS_SUCCESSFUL(status) || status == SOUP_STATUS_NONE)) {
+
+                webkit_policy_decision_download(dec);
+
+                return TRUE;
+            }
+            return FALSE;
+
+        default:
+            return FALSE;
+    }
+}
+
+static void on_webview_load_changed(WebKitWebView *webview,
+        WebKitLoadEvent event, Client *c)
+{
+    GTlsCertificateFlags tlsflags;
+    const char *uri;
+
+    switch (event) {
+        case WEBKIT_LOAD_STARTED:
+            /* update load progress in statusbar */
+            c->state.progress = 0;
+            vb_statusbar_update(c);
+            set_title(c, webkit_web_view_get_uri(webview));
+            /* Make sure hinting is cleared before the new page is loaded.
+             * Without that vimb would still be in hinting mode after hinting
+             * was started and some links was clicked my mouse. Even if there
+             * could not hints be shown. */
+            if (c->mode->flags & FLAG_HINTING) {
+                vb_enter(c, 'n');
+            }
+            break;
+
+        case WEBKIT_LOAD_REDIRECTED:
+            break;
+
+        case WEBKIT_LOAD_COMMITTED:
+            uri = webkit_web_view_get_uri(webview);
+            /* save the current URI in register % */
+            vb_register_add(c, '%', uri);
+            /* check if tls is on and the page is trusted */
+            if (g_str_has_prefix(uri, "https://")) {
+                if (webkit_web_view_get_tls_info(webview, NULL, &tlsflags) && tlsflags) {
+                    set_statusbar_style(c, STATUS_SSL_INVALID);
+                } else {
+                    set_statusbar_style(c, STATUS_SSL_VALID);
+                }
+            } else {
+                set_statusbar_style(c, STATUS_NORMAL);
+            }
+
+            /* clear possible set marks */
+            marks_clear(c);
+
+            /* Unset possible last search. */
+            command_search(c, &(Arg){0, NULL}, FALSE);
+
+            break;
+
+        case WEBKIT_LOAD_FINISHED:
+            uri = webkit_web_view_get_uri(webview);
+            c->state.progress = 100;
+            if (strncmp(uri, "about:", 6)) {
+                history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
+            }
+            break;
+    }
+}
+
+/**
+ * Callback for the webview mouse-target-changed signal.
+ * This is used to print the uri too statusbar if the user hovers over links
+ * or images.
+ */
+static void on_webview_mouse_target_changed(WebKitWebView *webview,
+        WebKitHitTestResult *result, guint modifiers, Client *c)
+{
+    char *msg;
+    const char *uri;
+
+    /* Save the hitTestResult to have this later available for events that
+     * don't support this. */
+    if (c->state.hit_test_result) {
+        g_object_unref(c->state.hit_test_result);
+    }
+    c->state.hit_test_result = g_object_ref(result);
+
+    if (webkit_hit_test_result_context_is_link(result)) {
+        uri = webkit_hit_test_result_get_link_uri(result);
+        msg = g_strconcat("Link: ", uri, NULL);
+        gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
+        g_free(msg);
+    } else if (webkit_hit_test_result_context_is_image(result)) {
+        uri = webkit_hit_test_result_get_image_uri(result);
+        msg = g_strconcat("Image: ", uri, NULL);
+        gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
+        g_free(msg);
+    } else {
+        /* No link under cursor - show the current URI. */
+        update_urlbar(c);
+    }
+}
+
+/**
+ * Called on webviews notify::estimated-load-progress event. This writes the
+ * esitamted load progress in percent in a variable and updates the statusbar
+ * to make the changes visible.
+ */
+static void on_webview_notify_estimated_load_progress(WebKitWebView *webview,
+        GParamSpec *spec, Client *c)
+{
+    c->state.progress = webkit_web_view_get_estimated_load_progress(webview) * 100;
+    vb_statusbar_update(c);
+    update_title(c);
+}
+
+/**
+ * Callback for the webview notify::title signal.
+ * Changes the window title according to the title of the current page.
+ */
+static void on_webview_notify_title(WebKitWebView *webview, GParamSpec *pspec, Client *c)
+{
+    const char *title = webkit_web_view_get_title(webview);
+
+    if (*title) {
+        set_title(c, title);
+    }
+}
+
+/**
+ * Callback for the webview notify::uri signal.
+ * Changes the current uri shown on left of statusbar.
+ */
+static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec, Client *c)
+{
+    OVERWRITE_STRING(c->state.uri, webkit_web_view_get_uri(c->webview));
+    update_urlbar(c);
+    g_setenv("VIMB_URI", c->state.uri, TRUE);
+}
+
+/**
+ * Callback for the webview ready-to-show signal.
+ * Show the webview only if it's ready to be shown.
+ */
+static void on_webview_ready_to_show(WebKitWebView *webview, Client *c)
+{
+    gtk_widget_show_all(GTK_WIDGET(c->window));
+}
+
+/**
+ * Callback for the webview web-process-crashed signal.
+ */
+static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c)
+{
+    vb_echo(c, MSG_ERROR, FALSE, "Webview Crashed on %s", webkit_web_view_get_uri(webview));
+
     return TRUE;
 }
 
-int main(int argc, char *argv[])
+/**
+ * Callback for window ::delete-event signal which is emitted if a user
+ * requests that a toplevel window is closed. The default handler for this
+ * signal destroys the window. Returns TRUE to stop other handlers from being
+ * invoked for the event. FALSE to propagate the event further.
+ */
+static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c)
 {
-#ifndef FEATURE_NO_XEMBED
-    static char *winid   = NULL;
-#endif
-    static gboolean ver  = false;
-#ifdef FEATURE_SOCKET
-    static gboolean dump = false;
-#endif
-    static GError *err;
+    /* if vb_quit fails, do not propagate event further, keep window open */
+    return !vb_quit(c, FALSE);
+}
 
-    static GOptionEntry opts[] = {
-        {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
-        {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.config.file, "Custom configuration file", NULL},
-        {"profile", 'p', 0, G_OPTION_ARG_STRING, &vb.config.profile, "Profile name", NULL},
-#ifndef FEATURE_NO_XEMBED
-        {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+/**
+ * Callback for the window destroy signal.
+ * Destroys the client that is associated to the window.
+ */
+static void on_window_destroy(GtkWidget *window, Client *c)
+{
+    client_destroy(c);
+}
+
+/**
+ * Callback for to quit given client as idle event source.
+ */
+static gboolean quit(Client *c)
+{
+    /* Destroy the main window to tirgger the destruction of the client. */
+    gtk_widget_destroy(c->window);
+
+    /* Remove this from the list of event sources. */
+    return FALSE;
+}
+
+/**
+ * Read string from stdin and pass it to webkit for html interpretation.
+ */
+static void read_from_stdin(Client *c)
+{
+    GIOChannel *ch;
+    gchar *buf = NULL;
+    GError *err = NULL;
+    gsize len = 0;
+
+    g_assert(c);
+
+    ch = g_io_channel_unix_new(fileno(stdin));
+    g_io_channel_read_to_end(ch, &buf, &len, &err);
+    g_io_channel_unref(ch);
+
+    if (err) {
+        g_warning("Error loading from stdin: %s", err->message);
+        g_error_free(err);
+    } else {
+        webkit_web_view_load_html(c->webview, buf, NULL);
+    }
+    g_free(buf);
+}
+
+/**
+ * Free the register contents memory.
+ */
+static void register_cleanup(Client *c)
+{
+    int i;
+    for (i = 0; i < REG_SIZE; i++) {
+        if (c->state.reg[i]) {
+            g_free(c->state.reg[i]);
+        }
+    }
+}
+
+static void update_title(Client *c)
+{
+#ifdef FEATURE_TITLE_PROGRESS
+    /* Show load status of page or the downloads. */
+    if (c->state.progress != 100) {
+        char *title = g_strdup_printf(
+                "[%i%%] %s",
+                c->state.progress,
+                c->state.title ? c->state.title : "");
+        gtk_window_set_title(GTK_WINDOW(c->window), title);
+        g_free(title);
+
+        return;
+    }
 #endif
-#ifdef FEATURE_SOCKET
-        {"dump", 'd', 0, G_OPTION_ARG_NONE, &dump, "Dump the socket path to stdout", NULL},
-        {"socket", 's', 0, G_OPTION_ARG_NONE, &vb.config.socket, "Create control socket", NULL},
+    if (c->state.title) {
+        gtk_window_set_title(GTK_WINDOW(c->window), c->state.title);
+    }
+}
+
+/**
+ * Update the contents of the url bar on the left of the statu bar according
+ * to current opened url and position in back forward history.
+ */
+static void update_urlbar(Client *c)
+{
+    GString *str;
+    gboolean back, fwd;
+
+    str = g_string_new("");
+    /* show profile name */
+    if (vb.profile) {
+        g_string_append_printf(str, "[%s] ", vb.profile);
+    }
+
+    /* show current url */
+    g_string_append_printf(str, "%s", c->state.uri);
+
+    /* show history indicator only if there is something to show */
+    back = webkit_web_view_can_go_back(c->webview);
+    fwd  = webkit_web_view_can_go_forward(c->webview);
+    if (back || fwd) {
+        g_string_append_printf(str, " [%s]", back ? (fwd ? "-+" : "-") : "+");
+    }
+
+    gtk_label_set_text(GTK_LABEL(c->statusbar.left), str->str);
+    g_string_free(str, TRUE);
+}
+
+#ifdef FREE_ON_QUIT
+/**
+ * Free memory of the whole application.
+ */
+static void vimb_cleanup(void)
+{
+    int i;
+
+    while (vb.clients) {
+        client_destroy(vb.clients);
+    }
+
+    /* free memory of other components */
+    util_cleanup();
+
+    for (i = 0; i < FILES_LAST; i++) {
+        if (vb.files[i]) {
+            g_free(vb.files[i]);
+        }
+    }
+    g_free(vb.profile);
+}
 #endif
-        {"kiosk", 'k', 0, G_OPTION_ARG_NONE, &vb.config.kioskmode, "Run in kiosk mode", NULL},
+
+/**
+ * Setup resources used on application scope.
+ */
+static void vimb_setup(void)
+{
+    WebKitWebContext *ctx;
+    WebKitCookieManager *cm;
+    char *path;
+
+    /* prepare the file pathes */
+    path = util_get_config_dir();
+
+    if (vb.configfile) {
+        char *rp = realpath(vb.configfile, NULL);
+        vb.files[FILES_CONFIG] = g_strdup(rp);
+        free(rp);
+    } else {
+        vb.files[FILES_CONFIG] = util_get_filepath(path, "config", FALSE);
+    }
+
+    /* Setup those files that are use multiple time during runtime */
+    vb.files[FILES_CLOSED]     = util_get_filepath(path, "closed", TRUE);
+    vb.files[FILES_COOKIE]     = util_get_filepath(path, "cookies", TRUE);
+    vb.files[FILES_USER_STYLE] = util_get_filepath(path, "style.css", FALSE);
+    vb.files[FILES_SCRIPT]     = util_get_filepath(path, "scripts.js", FALSE);
+    vb.files[FILES_HISTORY]    = util_get_filepath(path, "history", TRUE);
+    vb.files[FILES_COMMAND]    = util_get_filepath(path, "command", TRUE);
+    vb.files[FILES_BOOKMARK]   = util_get_filepath(path, "bookmark", TRUE);
+    vb.files[FILES_QUEUE]      = util_get_filepath(path, "queue", TRUE);
+    vb.files[FILES_SEARCH]     = util_get_filepath(path, "search", TRUE);
+    g_free(path);
+
+    /* Use seperate rendering processed for the webview of the clients in the
+     * current instance. This must be called as soon as possible according to
+     * the documentation. */
+    ctx = webkit_web_context_get_default();
+    webkit_web_context_set_process_model(ctx, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
+    webkit_web_context_set_web_process_count_limit(ctx, 1);
+    webkit_web_context_set_cache_model(ctx, WEBKIT_CACHE_MODEL_WEB_BROWSER);
+
+    g_signal_connect(ctx, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL);
+
+    /* Add cookie support only if the cookie file exists. */
+    if (vb.files[FILES_COOKIE]) {
+        cm = webkit_web_context_get_cookie_manager(ctx);
+        webkit_cookie_manager_set_persistent_storage(
+                cm,
+                vb.files[FILES_COOKIE],
+                WEBKIT_COOKIE_PERSISTENT_STORAGE_TEXT);
+    }
+
+    /* initialize the modes */
+    vb_mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
+    vb_mode_add('c', ex_enter, ex_leave, ex_keypress, ex_input_changed);
+    vb_mode_add('i', input_enter, input_leave, input_keypress, NULL);
+    vb_mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
+
+    /* Prepare the style provider to be used for the clients and completion. */
+    vb.style_provider = gtk_css_provider_get_default();
+}
+
+/**
+ * Update the gui style settings for client c, given a style setting name and a
+ * style setting value to be updated. The complete style sheet document will be
+ * regenerated and re-fed into gtk css provider.
+ */
+void vb_gui_style_update(Client *c, const char *setting_name_new, const char *setting_value_new)
+{
+    g_assert(c);
+    g_assert(setting_name_new);
+    g_assert(setting_value_new);
+
+    /* The css style sheet document being composed in this function */
+    GString *style_sheet = g_string_new(GUI_STYLE_CSS_BASE);
+    size_t i;
+
+    /* Mapping from vimb config setting name to css style sheet string */
+    static const char *setting_style_map[][2] = {
+#ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
+        {"completion-bg-active",        " #completion:selected{background-color:%s}"},
+        {"completion-bg-normal",        " #completion{background-color:%s}"},
+        {"completion-fg-active",        " #completion:selected{color:%s}"},
+        {"completion-fg-normal",        " #completion{color:%s}"},
+        {"completion-font",             " #completion{font:%s}"},
+        {"input-bg-error",              " #input.error{background-color:%s}"},
+        {"input-bg-normal",             " #input{background-color:%s}"},
+        {"input-fg-error",              " #input.error{color:%s}"},
+        {"input-fg-normal",             " #input{color:%s}"},
+        {"input-font-error",            " #input.error{font:%s}"},
+        {"input-font-normal",           " #input{font:%s}"},
+        {"status-color-bg",             " #statusbar{background-color:%s}"},
+        {"status-color-fg",             " #statusbar{color:%s}"},
+        {"status-font",                 " #statusbar{font:%s}"},
+        {"status-ssl-color-bg",         " #statusbar.secure{background-color:%s}"},
+        {"status-ssl-color-fg",         " #statusbar.secure{color:%s}"},
+        {"status-ssl-font",             " #statusbar.secure{font:%s}"},
+        {"status-sslinvalid-color-bg",  " #statusbar.unsecure{background-color:%s}"},
+        {"status-sslinvalid-color-fg",  " #statusbar.unsecure{color:%s}"},
+        {"status-sslinvalid-font",      " #statusbar.unsecure{font:%s}"},
+#else /* vimb3 gui style settings */
+        {"completion-css",              " #completion{%s}"},
+        {"completion-hover-css",        " #completion:hover{%s}"},
+        {"completion-selected-css",     " #completion:selected{%s}"},
+        {"input-css",                   " #input{%s}"},
+        {"input-error-css",             " #input.error{%s}"},
+        {"status-css",                  " #statusbar{%s}"},
+        {"status-ssl-css",              " #statusbar.secure{%s}"},
+        {"status-ssl-invalid-css",      " #statusbar.unsecure{%s}"},
+#endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
+
+        {0, 0},
+    };
+
+    /* For each supported style setting name */
+    for (i = 0; setting_style_map[i][0]; i++) {
+        const char *setting_name = setting_style_map[i][0];
+        const char *style_string = setting_style_map[i][1];
+
+        /* If the current style setting name is the one to be updated,
+         * append the given value with appropriate css wrapping to the
+         * style sheet document. */
+        if (strcmp(setting_name, setting_name_new) == 0) {
+            if (strlen(setting_value_new)) {
+                g_string_append_printf(style_sheet, style_string, setting_value_new);
+            }
+        }
+        /* If the current style setting name is NOT the one being updated,
+         * append the css string based on the current config setting. */
+        else {
+            Setting* setting_value = (Setting*)g_hash_table_lookup(c->config.settings, setting_name);
+
+            /* If the current style setting name is not available via settings
+             * yet - this happens during setting_init() - cleanup and return.
+             * We are going to be called again. With the last setting_add(),
+             * all style setting names are available. */
+            if(!setting_value) {
+                goto cleanup;
+            }
+
+            if (strlen(setting_value->value.s)) {
+                g_string_append_printf(style_sheet, style_string, setting_value->value.s);
+            }
+        }
+    }
+
+    /* Feed style sheet document to gtk */
+    gtk_css_provider_load_from_data(vb.style_provider, style_sheet->str, -1, NULL);
+
+    /* WORKAROUND to always ensure correct size of input field
+     *
+     * The following line is required to apply the style defined font size on
+     * the GtkTextView c->input. Without the call, the font size is updated on
+     * first user input, leading to a sudden unpleasant widget size and layout
+     * change. According to the GTK+ docs, this call should not be required as
+     * style context invalidation is automatic.
+     *
+     * "gtk_style_context_invalidate has been deprecated since version 3.12
+     * and should not be used in newly-written code. Style contexts are
+     * invalidated automatically."
+     * https://developer.gnome.org/gtk3/stable/GtkStyleContext.html#gtk-style-context-invalidate
+     *
+     * Required settings in vimb config file:
+     * set input-autohide=true
+     * set input-font-normal=20pt monospace
+     *
+     * A bug has been filed at GTK+
+     * https://bugzilla.gnome.org/show_bug.cgi?id=781158
+     *
+     * Tested on ARCH linux with gtk3 3.22.10-1
+     */
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
+    gtk_style_context_invalidate(gtk_widget_get_style_context(c->input));
+    G_GNUC_END_IGNORE_DEPRECATIONS;
+
+cleanup:
+    g_string_free(style_sheet, TRUE);
+}
+
+/**
+ * Factory to create a new webview.
+ *
+ * @webview:    Relates webview or NULL. If given a related webview is
+ *              generated.
+ */
+static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
+{
+    WebKitWebView *new;
+    WebKitUserContentManager *ucm;
+
+    /* create a new webview */
+    if (webview) {
+        new = WEBKIT_WEB_VIEW(webkit_web_view_new_with_related_view(webview));
+        ucm = webkit_web_view_get_user_content_manager(webview);
+    } else {
+        ucm = webkit_user_content_manager_new();
+        new = WEBKIT_WEB_VIEW(webkit_web_view_new_with_user_content_manager(ucm));
+    }
+
+    g_object_connect(
+        G_OBJECT(new),
+        "signal::close", G_CALLBACK(on_webview_close), c,
+        "signal::create", G_CALLBACK(on_webview_create), c,
+        "signal::decide-policy", G_CALLBACK(on_webview_decide_policy), c,
+        "signal::load-changed", G_CALLBACK(on_webview_load_changed), c,
+        "signal::mouse-target-changed", G_CALLBACK(on_webview_mouse_target_changed), c,
+        "signal::notify::estimated-load-progress", G_CALLBACK(on_webview_notify_estimated_load_progress), c,
+        "signal::notify::title", G_CALLBACK(on_webview_notify_title), c,
+        "signal::notify::uri", G_CALLBACK(on_webview_notify_uri), c,
+        "signal::ready-to-show", G_CALLBACK(on_webview_ready_to_show), c,
+        "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
+        NULL
+    );
+
+    g_signal_connect(webkit_web_context_get_default(), "download-started", G_CALLBACK(on_webctx_download_started), c);
+
+    /* Setup script message handlers. */
+    webkit_user_content_manager_register_script_message_handler(ucm, "focus");
+    g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), NULL);
+
+    return new;
+}
+
+static void on_script_message_focus(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *res, gpointer data)
+{
+    char *message;
+    GVariant *variant;
+    guint64 pageid;
+    gboolean is_focused;
+    Client *c;
+
+    message = util_js_result_as_string(res);
+    variant = g_variant_parse(G_VARIANT_TYPE("(tb)"), message, NULL, NULL, NULL);
+    g_free(message);
+
+    g_variant_get(variant, "(tb)", &pageid, &is_focused);
+    g_variant_unref(variant);
+
+    c = vb_get_client_for_page_id(pageid);
+    if (!c) {
+        return;
+    }
+
+    /* Don't change the mode if we are in pass through mode. */
+    if (c->mode->id == 'n' && is_focused) {
+        vb_enter(c, 'i');
+    } else if (c->mode->id == 'i' && !is_focused) {
+        vb_enter(c, 'n');
+    }
+}
+
+static gboolean profileOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error)
+{
+    vb.profile = util_sanitize_filename(g_strdup(value));
+
+    return TRUE;
+}
+
+int main(int argc, char* argv[])
+{
+    Client *c;
+    GError *err = NULL;
+    char *pidstr, *winid = NULL;
+    gboolean ver = FALSE;
+
+    GOptionEntry opts[] = {
+        {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid,  "Reparents to window specified by xid", NULL},
+        {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
+        {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {NULL}
     };
-    /* Initialize GTK+ */
+
+    /* initialize GTK+ */
     if (!gtk_init_with_args(&argc, &argv, "[URI]", opts, NULL, &err)) {
-        g_printerr("can't init gtk: %s\n", err->message);
+        fprintf(stderr, "can't init gtk: %s\n", err->message);
         g_error_free(err);
 
         return EXIT_FAILURE;
     }
 
     if (ver) {
-        fprintf(stdout, "%s, version %s\n", PROJECT, VERSION);
-        fprintf(stdout, "Copyright © 2012 - 2016 Daniel Carl <danielcarl@gmx.de>\n");
+        fprintf(stdout, "%s, version %s\n\n", PROJECT, VERSION);
+        fprintf(stdout, "Copyright © 2012 - 2017 Daniel Carl <danielcarl@gmx.de>\n");
         fprintf(stdout, "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
         fprintf(stdout, "This is free software; you are free to change and redistribute it.\n");
         fprintf(stdout, "There is NO WARRANTY, to the extent permitted by law.\n");
+
         return EXIT_SUCCESS;
     }
 
-    /* save vimb basename */
-    argv0 = argv[0];
+    /* Save the base name for spawning new instances. */
+    vb.argv0 = argv[0];
 
-#ifndef FEATURE_NO_XEMBED
+    /* set the current pid in env */
+    pidstr = g_strdup_printf("%d", (int)getpid());
+    g_setenv("VIMB_PID", pidstr, TRUE);
+
+    vimb_setup();
+
     if (winid) {
         vb.embed = strtol(winid, NULL, 0);
     }
-#endif
 
-    vb.state.pid_str = g_strdup_printf("%d", (int)getpid());
-    g_setenv("VIMB_PID", vb.state.pid_str, true);
-
-    /* init some state variable */
-    vb.state.enable_register = false;
-    vb.state.uri             = g_strdup("");
-
-    init_core();
-
-    /* process the --cmd if this was given */
-    for (GSList *l = vb.config.cmdargs; l; l = l->next) {
-        ex_run_string(l->data, false);
-    }
-
-    /* active the registers and writing of command history */
-    vb.state.enable_register = true;
-
-    /* open uri given as last argument */
+    c = client_new(NULL, TRUE);
     if (argc <= 1) {
-        /* open configured home page if no uri was given */
-        vb_load_uri(&(Arg){VB_TARGET_CURRENT, NULL});
+        vb_load_uri(c, &(Arg){TARGET_CURRENT, NULL});
     } else if (!strcmp(argv[argc - 1], "-")) {
         /* read from stdin if uri is - */
-        read_from_stdin();
+        read_from_stdin(c);
     } else {
-        vb_load_uri(&(Arg){VB_TARGET_CURRENT, argv[argc - 1]});
+        vb_load_uri(c, &(Arg){TARGET_CURRENT, argv[argc - 1]});
     }
 
-#ifdef FEATURE_SOCKET
-    /* setup the control socket - quit vimb if this failed */
-    if (vb.config.socket && !io_init_socket(vb.state.pid_str)) {
-        /* cleanup memory */
-        vb_cleanup();
-        return EXIT_FAILURE;
-    }
-    if (dump && vb.state.socket_path) {
-        printf("%s\n", vb.state.socket_path);
-        fflush(NULL);
-    }
-#endif
-
-    /* Run the main GTK+ event loop */
     gtk_main();
-
-    /* cleanup memory */
-    vb_cleanup();
+#ifdef FREE_ON_QUIT
+    vimb_cleanup();
+#endif
 
     return EXIT_SUCCESS;
 }

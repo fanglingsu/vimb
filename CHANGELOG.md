@@ -1,5 +1,43 @@
 # Changes in vimb
 
+## [unreleased]
+
+### Changed
+
+* completely rebuild of vimb on webkit2 api.
+* Syntax for the font related gui settings has be changed.
+  Fonts have to be given as `[ font-style | font-variant | font-weight | font-stretch ]? font-size font-family`
+  Example `set input-font-normal=bold 10pt "DejaVu Sans Mono"` instead of
+  previous `set input-fg-normal=DejaVu Sans Mono Bold 10` 
+* Renames some settings to consequently use dashed setting names. Following
+  settings where changed.
+  ```
+  previous setting - new setting name
+  --------------------------------------
+  cursivfont       - cursiv-font
+  defaultfont      - default-font
+  fontsize         - font-size
+  hintkeys         - hint-keys
+  minimumfontsize  - minimum-font-size
+  monofont         - monospace-font
+  monofontsize     - monospace-font-size
+  offlinecache     - offline-cache
+  useragent        - user-agent
+  sansfont         - sans-serif-font
+  scrollstep       - scroll-step
+  seriffont        - serif-font
+  statusbar        - status-bar
+  userscripts      - user-scripts
+  xssauditor       - xss-auditor
+  ```
+
+### Removed
+
+* There where many features removed during the webkit2 migration.
+  TODO list removed features and if they will be added again
+
+---
+
 ## [2.12] - 2017-04-11
 
 ### Added
@@ -61,5 +99,6 @@
   cookie file
 * Fixed none POSIX `echo -n` call
 
+[unreleased]: https://github.com/fanglingsu/vimb/compare/2.12...webkit2
 [2.12]: https://github.com/fanglingsu/vimb/compare/2.11...2.12
 [2.11]: https://github.com/fanglingsu/vimb/compare/2.10...2.11

@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,132 +18,102 @@
  */
 
 #include "config.h"
+#include <string.h>
+#include <webkit2/webkit2.h>
+#include <JavaScriptCore/JavaScript.h>
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
 #include "main.h"
 #include "ascii.h"
-#include "dom.h"
 #include "command.h"
-#include "hints.js.h"
 #include "input.h"
 #include "map.h"
-#include "js.h"
-
-#define HINT_FILE "hints.js"
+#include "ext-proxy.h"
 
 static struct {
-    JSObjectRef    obj;       /* the js object */
     char           mode;      /* mode identifying char - that last char of the hint prompt */
     int            promptlen; /* length of the hint prompt chars 2 or 3 */
     gboolean       gmode;     /* indicate if the hints 'g' mode is used */
-    JSContextRef   ctx;
-#if WEBKIT_CHECK_VERSION(2, 0, 0)
     /* holds the setting if JavaScript can open windows automatically that we
      * have to change to open windows via hinting */
     gboolean       allow_open_win;
-#endif
     guint          timeout_id;
 } hints;
 
-extern VbCore vb;
+extern struct Vimb vb;
 
-static gboolean call_hints_function(const char *func, int count, JSValueRef params[]);
-static void fire_timeout(gboolean on);
+static gboolean call_hints_function(Client *c, const char *func, const char* args);
+static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
 
 
-void hints_init(WebKitWebFrame *frame)
+VbResult hints_keypress(Client *c, int key)
 {
-    if (hints.obj) {
-        JSValueUnprotect(hints.ctx, hints.obj);
-        hints.obj = NULL;
-    }
-    if (!hints.obj) {
-        hints.ctx = webkit_web_frame_get_global_context(frame);
-        hints.obj = js_create_object(hints.ctx, HINTS_JS);
-    }
-}
-
-VbResult hints_keypress(int key)
-{
-    JSValueRef arguments[1];
-
     if (key == KEY_CR) {
-        hints_fire();
+        hints_fire(c);
 
         return RESULT_COMPLETE;
-    } else if (key == CTRL('H')) {
-        fire_timeout(false);
-        arguments[0] = JSValueMakeNull(hints.ctx);
-        if (call_hints_function("update", 1, arguments)) {
+    } else if (key == CTRL('H')) { /* backspace */
+        fire_timeout(c, false);
+        if (call_hints_function(c, "update", "null")) {
             return RESULT_COMPLETE;
         }
     } else if (key == KEY_TAB) {
-        fire_timeout(false);
-        hints_focus_next(false);
+        fire_timeout(c, false);
+        hints_focus_next(c, false);
 
         return RESULT_COMPLETE;
     } else if (key == KEY_SHIFT_TAB) {
-        fire_timeout(false);
-        hints_focus_next(true);
+        fire_timeout(c, false);
+        hints_focus_next(c, true);
 
         return RESULT_COMPLETE;
     } else {
-        fire_timeout(true);
+        fire_timeout(c, true);
         /* try to handle the key by the javascript */
-        arguments[0] = js_string_to_ref(hints.ctx, (char[]){key, '\0'});
-        if (call_hints_function("update", 1, arguments)) {
+        if (call_hints_function(c, "update", (char[]){'"', key, '"', '\0'})) {
             return RESULT_COMPLETE;
         }
     }
 
-    fire_timeout(false);
+    fire_timeout(c, false);
     return RESULT_ERROR;
 }
 
-void hints_clear(void)
+void hints_clear(Client *c)
 {
-    if (vb.mode->flags & FLAG_HINTING) {
-        vb.mode->flags &= ~FLAG_HINTING;
-        vb_set_input_text("");
+    if (c->mode->flags & FLAG_HINTING) {
+        c->mode->flags &= ~FLAG_HINTING;
+        vb_input_set_text(c, "");
 
-        call_hints_function("clear", 0, NULL);
+        call_hints_function(c, "clear", "");
 
-        g_signal_emit_by_name(vb.gui.webview, "hovering-over-link", NULL, NULL);
-
-#if WEBKIT_CHECK_VERSION(2, 0, 0)
         /* if open window was not allowed for JavaScript, restore this */
         if (!hints.allow_open_win) {
-            WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
+            WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
             g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", hints.allow_open_win, NULL);
         }
-#endif
     }
 }
 
-void hints_create(const char *input)
+void hints_create(Client *c, const char *input)
 {
-    /* don't start hinting if the hinting object isn't created - for example
-     * if hinting is started before the first data of page are received */
-    if (!hints.obj) {
-        return;
-    }
+    char *jsargs;
 
     /* check if the input contains a valid hinting prompt */
     if (!hints_parse_prompt(input, &hints.mode, &hints.gmode)) {
         /* if input is not valid, clear possible previous hint mode */
-        if (vb.mode->flags & FLAG_HINTING) {
-            vb_enter('n');
+        if (c->mode->flags & FLAG_HINTING) {
+            vb_enter(c, 'n');
         }
         return;
     }
 
-    if (!(vb.mode->flags & FLAG_HINTING)) {
-        vb.mode->flags |= FLAG_HINTING;
+    if (!(c->mode->flags & FLAG_HINTING)) {
+        c->mode->flags |= FLAG_HINTING;
 
-#if WEBKIT_CHECK_VERSION(2, 0, 0)
-        WebKitWebSettings *setting = webkit_web_view_get_settings(vb.gui.webview);
+        WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
 
         /* before we enable JavaScript to open new windows, we save the actual
          * value to be able restore it after hints where fired */
@@ -153,66 +123,70 @@ void hints_create(const char *input)
         if (!hints.allow_open_win) {
             g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", true, NULL);
         }
-#endif
 
         hints.promptlen = hints.gmode ? 3 : 2;
 
-        JSValueRef arguments[] = {
-            js_string_to_ref(hints.ctx, (char[]){hints.mode, '\0'}),
-            JSValueMakeBoolean(hints.ctx, hints.gmode),
-            JSValueMakeNumber(hints.ctx, MAXIMUM_HINTS),
-            js_string_to_ref(hints.ctx, GET_CHAR("hintkeys")),
-            JSValueMakeBoolean(hints.ctx, GET_BOOL("hint-follow-last")),
-            JSValueMakeBoolean(hints.ctx, GET_BOOL("hint-number-same-length"))
-        };
-        call_hints_function("init", 6, arguments);
+        jsargs = g_strdup_printf("'%s', %s, %d, '%s', %s, %s",
+            (char[]){hints.mode, '\0'},
+            hints.gmode ? "true" : "false",
+            MAXIMUM_HINTS,
+            GET_CHAR(c, "hint-keys"),
+            GET_BOOL(c, "hint-follow-last") ? "true" : "false",
+            GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
+        );
+
+        call_hints_function(c, "init", jsargs);
+        g_free(jsargs);
 
         /* if hinting is started there won't be any additional filter given and
          * we can go out of this function */
         return;
     }
 
-    JSValueRef arguments[] = {js_string_to_ref(hints.ctx, *(input + hints.promptlen) ? input + hints.promptlen : "")};
-    call_hints_function("filter", 1, arguments);
+    jsargs = g_strdup_printf("'%s'", *(input + hints.promptlen) ? input + hints.promptlen : "");
+    call_hints_function(c, "filter", jsargs);
+    g_free(jsargs);
 }
 
-void hints_focus_next(const gboolean back)
+void hints_focus_next(Client *c, const gboolean back)
 {
-    JSValueRef arguments[] = {
-        JSValueMakeNumber(hints.ctx, back)
-    };
-    call_hints_function("focus", 1, arguments);
+    call_hints_function(c, "focus", back ? "true" : "false");
 }
 
-void hints_fire(void)
+void hints_fire(Client *c)
 {
-    call_hints_function("fire", 0, NULL);
+    call_hints_function(c, "fire", "");
 }
 
-void hints_follow_link(const gboolean back, int count)
+void hints_follow_link(Client *c, const gboolean back, int count)
 {
-    char *json = g_strdup_printf(
-        "[%s]",
-        back ? vb.config.prevpattern : vb.config.nextpattern
-    );
+    /* TODO implement outside of hints.c */
+    /* We would previously "piggyback" on hints.js for the "js" part of this feature
+     * but this would actually be more elegant in its own JS file. This has nothing
+     * to do with hints.
+     */
+    /* char *json = g_strdup_printf(                            */
+    /*     "[%s]",                                              */
+    /*     back ? vb.config.prevpattern : vb.config.nextpattern */
+    /* );                                                       */
 
-    JSValueRef arguments[] = {
-        js_string_to_ref(hints.ctx, back ? "prev" : "next"),
-        js_object_to_ref(hints.ctx, json),
-        JSValueMakeNumber(hints.ctx, count)
-    };
-    g_free(json);
+    /* JSValueRef arguments[] = {                               */
+    /*     js_string_to_ref(hints.ctx, back ? "prev" : "next"), */
+    /*     js_object_to_ref(hints.ctx, json),                   */
+    /*     JSValueMakeNumber(hints.ctx, count)                  */
+    /* };                                                       */
+    /* g_free(json);                                            */
 
-    call_hints_function("followLink", 3, arguments);
+    /* call_hints_function(c, "followLink", 3, arguments);         */
 }
 
-void hints_increment_uri(int count)
+void hints_increment_uri(Client *c, int count)
 {
-    JSValueRef arguments[] = {
-        JSValueMakeNumber(hints.ctx, count)
-    };
+    char *jsargs;
 
-    call_hints_function("incrementUri", 1, arguments);
+    jsargs = g_strdup_printf("%d", count);
+    call_hints_function(c, "incrementUri", jsargs);
+    g_free(jsargs);
 }
 
 /**
@@ -274,86 +248,92 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static gboolean call_hints_function(const char *func, int count, JSValueRef params[])
+static gboolean call_hints_function(Client *c, const char *func, const char* args)
 {
-    char *value = js_object_call_function(hints.ctx, hints.obj, func, count, params);
+    GVariant *return_value;
+    char *jscode, *value = NULL;
+    gboolean success = FALSE;
 
-    g_return_val_if_fail(value != NULL, false);
+    jscode = g_strdup_printf("hints.%s(%s);", func, args);
+    return_value = ext_proxy_eval_script_sync(c, jscode);
+    g_free(jscode);
 
-    if (!strncmp(value, "ERROR:", 6)) {
-        g_free(value);
-        return false;
+    if (!return_value) {
+        return FALSE;
     }
 
-    if (!strncmp(value, "OVER:", 5)) {
-        g_signal_emit_by_name(
-            vb.gui.webview, "hovering-over-link", NULL, *(value + 5) == '\0' ? NULL : (value + 5)
-        );
-        g_free(value);
-
-        return true;
+    g_variant_get(return_value, "(bs)", &success, &value);
+    if (!success || !strncmp(value, "ERROR:", 6)) {
+        return FALSE;
     }
 
     /* following return values mark fired hints */
     if (!strncmp(value, "DONE:", 5)) {
-        fire_timeout(false);
+        fire_timeout(c, false);
         /* Change to normal mode only if we are currently in command mode and
          * we are not in g-mode hinting. This is required to not switch to
          * normal mode when the hinting triggered a click that set focus on
          * editable element that lead vimb to switch to input mode. */
-        if (!hints.gmode && vb.mode->id == 'c') {
-            vb_enter('n');
+        if (!hints.gmode && c->mode->id == 'c') {
+            vb_enter(c, 'n');
+        }
+        /* If open in new window hinting is use, set a flag on the mode after
+         * changing to normal mode. This is used in on_webview_decide_policy
+         * to enforce opening into new instance for the next navigation
+         * action. */
+        if (hints.mode == 't') {
+            c->mode->flags |= FLAG_NEW_WIN;
         }
     } else if (!strncmp(value, "INSERT:", 7)) {
-        fire_timeout(false);
-        vb_enter('i');
+        fire_timeout(c, false);
+        vb_enter(c, 'i');
         if (hints.mode == 'e') {
-            input_open_editor();
+            input_open_editor(c);
         }
     } else if (!strncmp(value, "DATA:", 5)) {
-        fire_timeout(false);
+        fire_timeout(c, false);
         /* switch first to normal mode - else we would clear the inputbox
          * on switching mode also if we want to show yanked data */
         if (!hints.gmode) {
-            vb_enter('n');
+            vb_enter(c, 'n');
         }
 
         char *v = (value + 5);
         Arg a   = {0};
         /* put the hinted value into register "; */
-        vb_register_add(';', v);
+        vb_register_add(c, ';', v);
         switch (hints.mode) {
             /* used if images should be opened */
             case 'i':
             case 'I':
                 a.s = v;
-                a.i = (hints.mode == 'I') ? VB_TARGET_NEW : VB_TARGET_CURRENT;
-                vb_load_uri(&a);
+                a.i = (hints.mode == 'I') ? TARGET_NEW : TARGET_CURRENT;
+                vb_load_uri(c, &a);
                 break;
 
             case 'O':
             case 'T':
-                vb_echo(VB_MSG_NORMAL, false, "%s %s", (hints.mode == 'T') ? ":tabopen" : ":open", v);
+                vb_echo(c, MSG_NORMAL, false, "%s %s", (hints.mode == 'T') ? ":tabopen" : ":open", v);
                 if (!hints.gmode) {
-                    vb_enter('c');
+                    vb_enter(c, 'c');
                 }
                 break;
 
             case 's':
                 a.s = v;
                 a.i = COMMAND_SAVE_URI;
-                command_save(&a);
+                command_save(c, &a);
                 break;
 
             case 'x':
-                map_handle_string(GET_CHAR("x-hint-command"), true);
+                map_handle_string(c, GET_CHAR(c, "x-hint-command"), true);
                 break;
 
             case 'y':
             case 'Y':
                 a.i = COMMAND_YANK_ARG;
                 a.s = v;
-                command_yank(&a, vb.state.current_register);
+                command_yank(c, &a, c->state.current_register);
                 break;
 
 #ifdef FEATURE_QUEUE
@@ -361,16 +341,16 @@ static gboolean call_hints_function(const char *func, int count, JSValueRef para
             case 'P':
                 a.s = v;
                 a.i = (hints.mode == 'P') ? COMMAND_QUEUE_UNSHIFT : COMMAND_QUEUE_PUSH;
-                command_queue(&a);
+                command_queue(c, &a);
                 break;
 #endif
         }
     }
-    g_free(value);
-    return true;
+
+    return TRUE;
 }
 
-static void fire_timeout(gboolean on)
+static void fire_timeout(Client *c, gboolean on)
 {
     int millis;
     /* remove possible timeout function */
@@ -380,16 +360,16 @@ static void fire_timeout(gboolean on)
     }
 
     if (on) {
-        millis = GET_INT("hint-timeout");
+        millis = GET_INT(c, "hint-timeout");
         if (millis) {
-            hints.timeout_id = g_timeout_add(millis, (GSourceFunc)fire_cb, NULL);
+            hints.timeout_id = g_timeout_add(millis, (GSourceFunc)fire_cb, c);
         }
     }
 }
 
 static gboolean fire_cb(gpointer data)
 {
-    hints_fire();
+    hints_fire(data);
 
     /* remove timeout id for the timeout that is removed by return value of
      * false automatic */

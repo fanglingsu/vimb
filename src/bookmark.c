@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2016 Daniel Carl
+ * Copyright (C) 2012-2017 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,19 +17,21 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <string.h>
+
 #include "config.h"
 #include "main.h"
 #include "bookmark.h"
 #include "util.h"
 #include "completion.h"
 
-extern VbCore vb;
-
 typedef struct {
     char *uri;
     char *title;
     char *tags;
 } Bookmark;
+
+extern struct Vimb vb;
 
 static GList *load(const char *file);
 static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
@@ -324,3 +326,4 @@ static void free_bookmark(Bookmark *bm)
     g_free(bm->tags);
     g_slice_free(Bookmark, bm);
 }
+
