@@ -1128,6 +1128,7 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
     WebKitNavigationAction *a;
     WebKitURIRequest *req;
     WebKitURIResponse *res;
+    const char *uri;
 
     switch (type) {
         case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
@@ -1135,9 +1136,10 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
             req    = webkit_navigation_action_get_request(a);
             button = webkit_navigation_action_get_mouse_button(a);
             mod    = webkit_navigation_action_get_modifiers(a);
+            uri    = webkit_uri_request_get_uri(req);
 
             /* Try to handle with specific protocol handler. */
-            if (handler_handle_uri(c, webkit_uri_request_get_uri(req))) {
+            if (handler_handle_uri(c, uri)) {
                 webkit_policy_decision_ignore(dec);
                 return TRUE;
             }
@@ -1151,7 +1153,7 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
                 c->mode->flags &= ~FLAG_NEW_WIN;
 
                 webkit_policy_decision_ignore(dec);
-                spawn_new_instance(webkit_uri_request_get_uri(req));
+                spawn_new_instance(uri);
                 return TRUE;
             }
             return FALSE;
@@ -1167,9 +1169,9 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
 
             if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
                 webkit_policy_decision_ignore(dec);
-                /* This is triggered on link click for links with *
+                /* This is triggered on link click for links with
                  * target="_blank". Maybe it should be configurable if the
-                 * page is opened as tabe or a new instance. */
+                 * page is opened as tab or a new instance. */
                 req = webkit_navigation_action_get_request(a);
                 spawn_new_instance(webkit_uri_request_get_uri(req));
                 return TRUE;
