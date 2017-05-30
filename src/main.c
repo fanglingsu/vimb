@@ -1785,6 +1785,7 @@ int main(int argc, char* argv[])
     /* set the current pid in env */
     pidstr = g_strdup_printf("%d", (int)getpid());
     g_setenv("VIMB_PID", pidstr, TRUE);
+    g_free(pidstr);
 
     vimb_setup();
 
