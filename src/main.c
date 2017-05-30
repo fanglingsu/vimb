@@ -88,7 +88,7 @@ static void update_title(Client *c);
 static void update_urlbar(Client *c);
 static void set_statusbar_style(Client *c, StatusType type);
 static void set_title(Client *c, const char *title);
-static void spawn_new_instance(const char *uri, gboolean embed);
+static void spawn_new_instance(const char *uri);
 #ifdef FREE_ON_QUIT
 static void vimb_cleanup(void);
 #endif
@@ -373,8 +373,8 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
         webkit_web_view_load_uri(c->webview, uri);
         set_title(c, uri);
     } else if (arg->i == TARGET_NEW) {
-        spawn_new_instance(uri, TRUE);
-    } else { /* TARGET_RELATET */
+        spawn_new_instance(uri);
+    } else { /* TARGET_RELATED */
         Client *newclient = client_new(c->webview, FALSE);
         /* Load the uri into the new client. */
         webkit_web_view_load_uri(newclient->webview, uri);
@@ -903,10 +903,8 @@ static void set_title(Client *c, const char *title)
  * Spawns a new browser instance for given uri.
  *
  * @uri:    URI used for the new instance.
- * @embed:  If FALSE, the new instance is not embedded, independent from
- *          current set -e option.
  */
-static void spawn_new_instance(const char *uri, gboolean embed)
+static void spawn_new_instance(const char *uri)
 {
     guint i = 0;
     /* memory allocation */
@@ -914,7 +912,7 @@ static void spawn_new_instance(const char *uri, gboolean embed)
         3                       /* basename + uri + ending NULL */
         + (vb.configfile ? 2 : 0)
 #ifndef FEATURE_NO_XEMBED
-        + (vb.embed && embed ? 2 : 0)
+        + (vb.embed ? 2 : 0)
 #endif
         + (vb.profile ? 2 : 0),
         sizeof(char *)
@@ -927,7 +925,7 @@ static void spawn_new_instance(const char *uri, gboolean embed)
         cmd[i++] = vb.configfile;
     }
 #ifndef FEATURE_NO_XEMBED
-    if (vb.embed && embed) {
+    if (vb.embed) {
         char xid[64];
         cmd[i++] = "-e";
         snprintf(xid, LENGTH(xid), "%d", (int)vb.embed);
@@ -1153,7 +1151,7 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
                 c->mode->flags &= ~FLAG_NEW_WIN;
 
                 webkit_policy_decision_ignore(dec);
-                spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
+                spawn_new_instance(webkit_uri_request_get_uri(req));
                 return TRUE;
             }
             return FALSE;
@@ -1173,7 +1171,7 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
                  * target="_blank". Maybe it should be configurable if the
                  * page is opened as tabe or a new instance. */
                 req = webkit_navigation_action_get_request(a);
-                spawn_new_instance(webkit_uri_request_get_uri(req), TRUE);
+                spawn_new_instance(webkit_uri_request_get_uri(req));
                 return TRUE;
             }
             return FALSE;
