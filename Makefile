@@ -27,7 +27,10 @@ install: $(SRCDIR).subdir-all
 	install -m 644 vimb.desktop $(DOTDESKTOPPREFIX)/vimb.desktop
 
 uninstall:
-	$(RM) $(BINPREFIX)/vimb $(DESTDIR)$(MANDIR)/man1/vimb.1 $(LIBDIR)/$(EXTTARGET)
+	$(RM) $(BINPREFIX)/vimb
+	$(RM) $(DESTDIR)$(MANDIR)/man1/vimb.1
+	$(RM) $(LIBDIR)/$(EXTTARGET)
+	$(RM) $(DOTDESKTOPPREFIX)/vimb.desktop
 
 clean: $(SRCDIR).subdir-clean
 
