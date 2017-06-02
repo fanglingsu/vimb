@@ -15,7 +15,11 @@ vimb: $(OBJ)
 	@echo "${CC} $@"
 	$(Q)$(CC) $(OBJ) $(LDFLAGS) -o $@
 
-$(OBJ): config.h $(BASEDIR)/config.mk scripts/scripts.h
+$(OBJ): config.h $(BASEDIR)/config.mk
+
+normal.o: scripts/scripts.h
+
+setting.o: scripts/scripts.h
 
 -include $(OBJ:.o=.d)
 
