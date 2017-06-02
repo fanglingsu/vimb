@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# Defined a constant for given JavaScript file. The file name is used to get
-# the constant name and the contents are minifed and escaped as the value.
-# ./js.h do_fancy_stuff.js creates somethings like
-# #define DO_FANCY_STUFF "Escaped JavaScriptCode"
+# Defined a constant for given JavaScript or CSS file. The file name is used
+# to get the constant name and the contents are minifed and escaped as the
+# value. ./js.h do_fancy_stuff.js creates somethings like
+# #define JS_DO_FANCY_STUFF "Escaped JavaScriptCode"
 
 FILE="$1"
 
