@@ -366,7 +366,7 @@ char *util_get_filepath(const char *dir, const char *filename, gboolean create)
     char *fullpath;
 
     /* Built the full path out of config dir and given file name. */
-    fullpath = g_build_filename(util_get_config_dir(), filename, NULL);
+    fullpath = g_build_filename(dir, filename, NULL);
 
     if (g_file_test(fullpath, G_FILE_TEST_IS_REGULAR)) {
         return fullpath;
