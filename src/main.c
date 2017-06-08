@@ -1524,7 +1524,6 @@ static void vimb_setup(void)
      * the documentation. */
     ctx = webkit_web_context_get_default();
     webkit_web_context_set_process_model(ctx, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
-    webkit_web_context_set_web_process_count_limit(ctx, 1);
     webkit_web_context_set_cache_model(ctx, WEBKIT_CACHE_MODEL_WEB_BROWSER);
 
     g_signal_connect(ctx, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL);
