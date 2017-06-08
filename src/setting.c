@@ -53,7 +53,9 @@ static int cookie_accept(Client *c, const char *name, DataType type, void *value
 static int default_zoom(Client *c, const char *name, DataType type, void *value, void *data);
 static int fullscreen(Client *c, const char *name, DataType type, void *value, void *data);
 static int gui_style(Client *c, const char *name, DataType type, void *value, void *data);
+#if WEBKIT_CHECK_VERSION (2, 16, 0)
 static int hardware_acceleration_policy(Client *c, const char *name, DataType type, void *value, void *data);
+#endif
 static int input_autohide(Client *c, const char *name, DataType type, void *value, void *data);
 static int internal(Client *c, const char *name, DataType type, void *value, void *data);
 static int headers(Client *c, const char *name, DataType type, void *value, void *data);
@@ -90,7 +92,9 @@ void setting_init(Client *c)
     i = SETTING_DEFAULT_FONT_SIZE;
     setting_add(c, "font-size", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
     setting_add(c, "frame-flattening", TYPE_BOOLEAN, &off, webkit, 0, "enable-frame-flattening");
+#if WEBKIT_CHECK_VERSION (2, 16, 0)
     setting_add(c, "hardware-acceleration-policy", TYPE_CHAR, &"ondemand", hardware_acceleration_policy, FLAG_NODUP, NULL);
+#endif
     setting_add(c, "header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, "header");
     i = 1000;
     setting_add(c, "hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
@@ -105,10 +109,8 @@ void setting_init(Client *c)
     setting_add(c, "javascript-can-open-windows-automatically", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-open-windows-automatically");
     setting_add(c, "media-playback-allows-inline", TYPE_BOOLEAN, &on, webkit, 0, "media-playback-allows-inline");
     setting_add(c, "media-playback-requires-user-gesture", TYPE_BOOLEAN, &off, webkit, 0, "media-playback-requires-user-gesture");
-#if WEBKIT_CHECK_VERSION(2, 4, 0)
     setting_add(c, "media-stream", TYPE_BOOLEAN, &off, webkit, 0, "enable-media-stream");
     setting_add(c, "mediasource", TYPE_BOOLEAN, &off, webkit, 0, "enable-mediasource");
-#endif
     i = 5;
     setting_add(c, "minimum-font-size", TYPE_INTEGER, &i, webkit, 0, "minimum-font-size");
     setting_add(c, "monospace-font", TYPE_CHAR, &"monospace", webkit, 0, "monospace-font-family");
@@ -542,6 +544,7 @@ static int fullscreen(Client *c, const char *name, DataType type, void *value, v
     return CMD_SUCCESS;
 }
 
+#if WEBKIT_CHECK_VERSION (2, 16, 0)
 static int hardware_acceleration_policy(Client *c, const char *name, DataType type, void *value, void *data)
 {
     WebKitSettings *settings = webkit_web_view_get_settings(c->webview);
@@ -559,6 +562,7 @@ static int hardware_acceleration_policy(Client *c, const char *name, DataType ty
 
     return CMD_SUCCESS;
 }
+#endif
 
 /**
  * Allow to set user defined http headers.

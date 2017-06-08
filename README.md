@@ -29,7 +29,7 @@ the project page of [Vimb][].
 
 ## dependencies
 
-- webkit2gtk-4.0 >= 2.16.x
+- webkit2gtk-4.0 >= 2.8.x
 
 ## Install
 
