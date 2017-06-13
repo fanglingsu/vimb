@@ -683,6 +683,10 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
                 (int)GDK_WINDOW_XID(gtk_widget_get_window(GTK_WIDGET(c->window))));
     }
 
+    /* set the x window id to env */
+    g_setenv("VIMB_XID", xid, TRUE);
+    g_free(xid);
+
     completion_init(c);
     map_init(c);
 
@@ -735,10 +739,6 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
     gtk_style_context_add_provider(gtk_widget_get_style_context(c->input),
             GTK_STYLE_PROVIDER(vb.style_provider),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-    /* set the x window id to env */
-    g_setenv("VIMB_XID", xid, TRUE);
-    g_free(xid);
 
     /* initialize the settings */
     setting_init(c);
