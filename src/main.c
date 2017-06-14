@@ -1673,6 +1673,7 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
 {
     WebKitWebView *new;
     WebKitUserContentManager *ucm;
+    WebKitWebContext *webcontext;
 
     /* create a new webview */
     if (webview) {
@@ -1698,7 +1699,8 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         NULL
     );
 
-    g_signal_connect(webkit_web_context_get_default(), "download-started", G_CALLBACK(on_webctx_download_started), c);
+    webcontext = webkit_web_view_get_context(new);
+    g_signal_connect(webcontext, "download-started", G_CALLBACK(on_webctx_download_started), c);
 
     /* Setup script message handlers. */
     webkit_user_content_manager_register_script_message_handler(ucm, "focus");
