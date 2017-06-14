@@ -5,7 +5,7 @@ hints when doing so.
 
 ## Communication
 
-If you wan't to discuss some feature or provide some suggestion that can't be
+If you want to discuss some feature or provide some suggestion that can't be
 done very well with the github issues. You should use the [mailing list][mail]
 for this purpose. Else it's a good decision to use the features provided by
 github for that.
