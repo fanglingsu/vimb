@@ -31,6 +31,14 @@
 #include "history.h"
 #include "main.h"
 
+/**
+ * Start/perform/stop searching in webview.
+ *
+ * @commit: If TRUE, the search query is registered into register "/
+ *          In case searching is stopped the commit of value TRUE
+ *          is used to clear the inputbox if search is active. This is needed
+ *          in case a link is fired by <CR> on highlighted link.
+ */
 gboolean command_search(Client *c, const Arg *arg, bool commit)
 {
     WebKitFindController *fc;
@@ -46,8 +54,10 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
     if (arg->i == 0) {
         webkit_find_controller_search_finish(fc);
 
-        /* Clear the input only if the search is active. */
-        if (c->state.search.active) {
+        /* Clear the input only if the search is active and commit flag is
+         * set. This allows us to stop searching with and without cleaning
+         * inputbox */
+        if (commit && c->state.search.active) {
             vb_echo(c, MSG_NORMAL, FALSE, "");
         }
 

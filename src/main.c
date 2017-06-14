@@ -1240,8 +1240,9 @@ static void on_webview_load_changed(WebKitWebView *webview,
             /* clear possible set marks */
             marks_clear(c);
 
-            /* Unset possible last search. */
-            command_search(c, &(Arg){0, NULL}, FALSE);
+            /* Unset possible last search. Use commit==TRUE to clear inputbox
+             * in case a link was fired from highlighted link. */
+            command_search(c, &(Arg){0, NULL}, TRUE);
 
             break;
 
