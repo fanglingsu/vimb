@@ -3,6 +3,18 @@
 This document contains guidelines for contributing to vimb, as well as useful
 hints when doing so.
 
+## Goals
+
+Getting a light, fast and keyboard-driven browser that is easy to use for
+those users familiar with vim.
+
+- Provide powerful knobs allowing the user to tweak vimb to fit the own needs
+  and usecases.
+- Add only knobs/features that do not do what other knobs do. In this point
+  vimb is in contrast to vim.
+- If there are two colliding features we should pick the mightier one, or that
+  which need less code or resources.
+
 ## Communication
 
 If you want to discuss some feature or provide some suggestion that can't be
@@ -60,7 +72,7 @@ github for that.
 
     ├── doc                 documentation like manual page
     └── src                 all sources to build vimb
-        ├── scripts         JavaScripts that are compiled in for various purposes
+        ├── scripts         JavaScripts and CSS that are compiled in for various purposes
         └── webextension    Source files for the webextension
 
 ## compile and run
