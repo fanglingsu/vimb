@@ -47,8 +47,8 @@
 static void client_destroy(Client *c);
 static Client *client_new(WebKitWebView *webview, gboolean);
 static gboolean input_clear(Client *c);
-static void input_print(Client *c, gboolean force, MessageType type,
-        gboolean hide, const char *message);
+static void input_print(Client *c, MessageType type, gboolean hide,
+        const char *message);
 static void marks_clear(Client *c);
 static void mode_free(Mode *mode);
 static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data);
@@ -191,12 +191,17 @@ void vb_echo(Client *c, MessageType type, gboolean hide, const char *error, ...)
 {
     char *buffer;
     va_list args;
+    /* Don't write to input box in case this is focused, might be the user is
+     * typing in it. */
+    if (gtk_widget_is_focus(GTK_WIDGET(c->input))) {
+        return;
+    }
 
     va_start(args, error);
     buffer = g_strdup_vprintf(error, args);
     va_end(args);
 
-    input_print(c, FALSE, type, hide, buffer);
+    input_print(c, type, hide, buffer);
     g_free(buffer);
 }
 
@@ -213,7 +218,7 @@ void vb_echo_force(Client *c, MessageType type, gboolean hide, const char *error
     buffer = g_strdup_vprintf(error, args);
     va_end(args);
 
-    input_print(c, TRUE, type, hide, buffer);
+    input_print(c, type, hide, buffer);
     g_free(buffer);
 }
 
@@ -771,7 +776,10 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
  */
 static gboolean input_clear(Client *c)
 {
-    input_print(c, FALSE, MSG_NORMAL, FALSE, "");
+    if (!gtk_widget_is_focus(GTK_WIDGET(c->input))) {
+        return FALSE;
+    }
+    input_print(c, MSG_NORMAL, FALSE, "");
 
     return FALSE;
 }
@@ -779,26 +787,21 @@ static gboolean input_clear(Client *c)
 /**
  * Print a message to the input box.
  *
- * @force: If TRUE the message is also written when the inputbox is already
- *         focused, might be the case when the user types text into it.
  * @type: Type of message normal or error
  * @hide: If TRUE the inputbox is cleared after a short timeout.
  * @message: The message to print.
  */
-static void input_print(Client *c, gboolean force, MessageType type,
-        gboolean hide, const char *message)
+static void input_print(Client *c, MessageType type, gboolean hide,
+        const char *message)
 {
-    /* don't print message if the input is focussed */
-    if (!force && gtk_widget_is_focus(GTK_WIDGET(c->input))) {
-        return;
-    }
-
     /* apply input style only if the message type was changed */
     if (type != c->state.input_type) {
         c->state.input_type = type;
         vb_input_update_style(c);
     }
+
     vb_input_set_text(c, message);
+
     if (hide) {
         /* add timeout function */
         c->state.input_timer = g_timeout_add_seconds(MESSAGE_TIMEOUT, (GSourceFunc)input_clear, c);
