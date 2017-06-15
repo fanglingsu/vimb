@@ -15,6 +15,20 @@ those users familiar with vim.
 - If there are two colliding features we should pick the mightier one, or that
   which need less code or resources.
 
+## Find something to work on
+
+If you are interested to contribute to vimb it's a good idea to check if
+someone else is already working on. I would be a shame when you work was for
+nothing.
+
+If you have some ideas how to improve vimb by new features or to simplify it.
+Write an issue so that other contributors can comment/vote on it or help you
+with it.
+
+If you do not want to write code you are pretty welcome to update
+[documentation][issue-doc] or to argue and vote for features and [request for
+comments][issue-rfc].
+
 ## Communication
 
 If you want to discuss some feature or provide some suggestion that can't be
@@ -89,3 +103,5 @@ This will compile and install vimb into the local _sandbox_ folder in the
 project directory.
 
 [mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[issue-doc]:   https://github.com/fanglingsu/vimb/labels/component%3A%20docu
+[issue-rfc]:   https://github.com/fanglingsu/vimb/labels/rfc
