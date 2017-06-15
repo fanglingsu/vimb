@@ -75,10 +75,6 @@ void setting_init(Client *c)
     int i;
     gboolean on = TRUE, off = FALSE;
 
-    /* TODO put the setting definitions into config.def.h and save them on vb
-     * struct. Use a hash table for fast name to key processing on the client.
-     * Separate the setting definition from the data.
-     * Don't set the webkit settings if they are the default on startup. */
     c->config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
     setting_add(c, "user-agent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/604.1 (KHTML, like Gecko) Version/11.0 Safari/604.1 " PROJECT "/" VERSION, webkit, 0, "user-agent");
     /* TODO use the real names for webkit settings */
