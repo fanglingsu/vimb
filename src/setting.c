@@ -98,7 +98,7 @@ void setting_init(Client *c)
     setting_add(c, "header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, "header");
     i = 1000;
     setting_add(c, "hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
-    setting_add(c, "hint-keys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
+    setting_add(c, "hint-keys", TYPE_CHAR, &"1234567890", NULL, 0, NULL);
     setting_add(c, "hint-follow-last", TYPE_BOOLEAN, &on, NULL, 0, NULL);
     setting_add(c, "hint-number-same-length", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "html5-database", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-database");
