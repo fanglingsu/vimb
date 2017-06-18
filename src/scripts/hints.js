@@ -227,25 +227,21 @@ var hints = Object.freeze((function(){
         helper(window);
     }
 
-    function getMaxHintsSameLength(hintStringLength) {
-        if(hintStringLength <= 0) {
+    function getMaxHintsSameLength(len) {
+        if (len <= 0) {
             return 0;
         }
 
-        return config.hintKeys.length ** hintStringLength;
+        return config.hintKeys.length ** len;
     }
 
-    function getMaxHints(hintStringMaxLength) {
+    function getMaxHints(maxlen) {
         var res = 0,
-            hintStringLength = hintStringMaxLength;
+            len = maxlen;
 
-        if(hintStringMaxLength <= 0) {
-            return 0;
-        }
-
-        while(hintStringLength > 0) {
-            res += getMaxHintsSameLength(hintStringLength);
-            hintStringLength--;
+        while (len > 0) {
+            res += getMaxHintsSameLength(len);
+            len--;
         }
 
         return res;
