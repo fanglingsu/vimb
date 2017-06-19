@@ -55,13 +55,10 @@ void history_add(Client *c, HistoryType type, const char *value, const char *add
 {
     const char *file;
 
-#if 0
-    /* Don't write a history entry if the history max size is set to 0. Else
-     * skip command history in case the command was not typed by the user. */
-    if (!vb.config.history_max || (!vb.state.typed && type == HISTORY_COMMAND)) {
+    /* Don't write a history entry if the history max size is set to 0. */
+    if (!vb.config.history_max) {
         return;
     }
-#endif
 
     file = HIST_FILE(type);
     if (additional) {
