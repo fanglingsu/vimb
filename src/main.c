@@ -1758,7 +1758,7 @@ int main(int argc, char* argv[])
     gboolean ver = FALSE;
 
     GOptionEntry opts[] = {
-        {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid,  "Reparents to window specified by xid", NULL},
+        {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
@@ -1774,11 +1774,32 @@ int main(int argc, char* argv[])
     }
 
     if (ver) {
-        fprintf(stdout, "%s, version %s\n\n", PROJECT, VERSION);
-        fprintf(stdout, "Copyright © 2012 - 2017 Daniel Carl <danielcarl@gmx.de>\n");
-        fprintf(stdout, "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n");
-        fprintf(stdout, "This is free software; you are free to change and redistribute it.\n");
-        fprintf(stdout, "There is NO WARRANTY, to the extent permitted by law.\n");
+        printf("%s, version %s\n\n", PROJECT, VERSION);
+        printf("Commit:          %s\n", COMMIT);
+        printf("WebKit compile:  %d.%d.%d\n",
+                WEBKIT_MAJOR_VERSION,
+                WEBKIT_MINOR_VERSION, 
+                WEBKIT_MICRO_VERSION);
+        printf("WebKit run:      %d.%d.%d\n",
+                webkit_get_major_version(),
+                webkit_get_minor_version(),
+                webkit_get_micro_version());
+        printf("GTK compile:     %d.%d.%d\n",
+                GTK_MAJOR_VERSION,
+                GTK_MINOR_VERSION,
+                GTK_MICRO_VERSION);
+        printf("GTK run:         %d.%d.%d\n",
+                gtk_major_version,
+                gtk_minor_version,
+                gtk_micro_version);
+        printf("libsoup compile: %d.%d.%d\n",
+                SOUP_MAJOR_VERSION,
+                SOUP_MINOR_VERSION,
+                SOUP_MICRO_VERSION);
+        printf("libsoup run:     %u.%u.%u\n",
+                soup_get_major_version(),
+                soup_get_minor_version(),
+                soup_get_micro_version());
 
         return EXIT_SUCCESS;
     }
