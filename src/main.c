@@ -1800,6 +1800,8 @@ int main(int argc, char* argv[])
                 soup_get_major_version(),
                 soup_get_minor_version(),
                 soup_get_micro_version());
+        printf("Extension dir:   %s\n",
+                EXTENSIONDIR);
 
         return EXIT_SUCCESS;
     }
