@@ -48,6 +48,12 @@ var hints = Object.freeze((function(){
         };
     }
 
+    function onresize() {
+        clear();
+        create();
+        show(false);
+    }
+
     function clear() {
         var i, j, doc, e;
         for (i = 0; i < docs.length; i++) {
@@ -465,7 +471,7 @@ var hints = Object.freeze((function(){
 
     /* the api */
     return {
-        init: function init(mode, keepOpen, maxHints, hintKeys, followLast, hintNumSameLength) {
+        init: function(mode, keepOpen, maxHints, hintKeys, followLast, hintNumSameLength) {
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
@@ -505,17 +511,20 @@ var hints = Object.freeze((function(){
                 }
             }
 
+            window.addEventListener("resize", onresize, true);
+            window.addEventListener("scroll", onresize, false);
+
             create();
             return show(true);
         },
-        filter: function filter(text) {
+        filter: function(text) {
             /* remove previously set hint-keys filters to make the filter */
             /* easier to understand for the users */
             filterKeys = "";
             filterText = text || "";
             return show(true);
         },
-        update: function update(n) {
+        update: function(n) {
             var pos,
                 keys = config.hintKeys;
             /* delete last hint-keys filter digit */
@@ -529,7 +538,13 @@ var hints = Object.freeze((function(){
             }
             return "ERROR:";
         },
-        clear:        clear,
+        clear: function() {
+            clear();
+            if (window) {
+                window.removeEventListener("resize", onresize, true);
+                window.removeEventListener("scroll", onresize, false);
+            }
+        },
         fire:         fire,
         focus:        focus,
     };
