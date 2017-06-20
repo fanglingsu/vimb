@@ -234,11 +234,7 @@ var hints = Object.freeze((function(){
     }
 
     function getMaxHintsSameLength(len) {
-        if (len <= 0) {
-            return 0;
-        }
-
-        return config.hintKeys.length ** len;
+        return (len > 0) ? (config.hintKeys.length ** len) : 0;
     }
 
     function getMaxHints(maxlen) {
@@ -258,7 +254,7 @@ var hints = Object.freeze((function(){
             n       = 0,
             matcher = getMatcher(filterText);
 
-        if (config.hintNumSameLength) {
+        if (config.keysSameLength) {
             /* get number of hints to be shown */
             var hintCount = 0;
             for (i = 0; i < hints.length; i++) {
@@ -471,7 +467,7 @@ var hints = Object.freeze((function(){
 
     /* the api */
     return {
-        init: function(mode, keepOpen, maxHints, hintKeys, followLast, hintNumSameLength) {
+        init: function(mode, keepOpen, maxHints, hintKeys, followLast, keysSameLength) {
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
@@ -493,10 +489,10 @@ var hints = Object.freeze((function(){
                 /* handle forms only useful when there are form fields in xpath */
                 /* don't handle form for Y to allow to yank form filed content */
                 /* instead of switching to input mode */
-                handleForm:        ("eot".indexOf(mode) >= 0),
-                hintKeys:          hintKeys,
-                followLast:        followLast,
-                hintNumSameLength: hintNumSameLength,
+                handleForm:     ("eot".indexOf(mode) >= 0),
+                hintKeys:       hintKeys,
+                followLast:     followLast,
+                keysSameLength: keysSameLength,
             };
             for (prop in xpathmap) {
                 if (prop.indexOf(mode) >= 0) {
