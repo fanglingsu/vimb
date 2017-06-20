@@ -237,9 +237,9 @@ var hints = Object.freeze((function(){
         return (len > 0) ? (config.hintKeys.length ** len) : 0;
     }
 
-    function getMaxHints(maxlen) {
-        var res = 0,
-            len = maxlen;
+    /* Calculate the number of addressable hints for given label length. */
+    function getMaxHints(len) {
+        var res = 0;
 
         while (len > 0) {
             res += getMaxHintsSameLength(len);
@@ -254,17 +254,19 @@ var hints = Object.freeze((function(){
             n       = 0,
             matcher = getMatcher(filterText);
 
-        if (config.keysSameLength) {
+        /* We can generate same length label if there is only one hint key */
+        /* except in case there is only one hint. But we don't need to */
+        /* handle this. */
+        if (config.keysSameLength && config.hintKeys.length > 1) {
             /* get number of hints to be shown */
-            var hintCount = 0;
+            var hintCount = 0, hintStringLen = 1;
             for (i = 0; i < hints.length; i++) {
                 if (matcher(hints[i].text)) {
                     hintCount++;
                 }
             }
 
-            /* find hint string length to describe all hints with same length */
-            var hintStringLen = 1;
+            /* Find hint string length to describe all hints with same length. */
             while (getMaxHintsSameLength(hintStringLen) < hintCount) {
                 hintStringLen++;
             }
