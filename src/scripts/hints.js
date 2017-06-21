@@ -414,15 +414,17 @@ var hints = Object.freeze((function(){
 
     /* internal used methods */
     function open(e) {
-        var href;
-        if ((href = e.getAttribute('href')) && href != '#') {
-            window.location.href = href;
-        } else {
-            /* We call click() in async mode to return as fast as possible. If
-             * we don't return immediately, the EvalJS dbus call will probably
-             * timeout and cause errors. */
-            window.setTimeout(function() {e.click();}, 0);
-        }
+        /* We call click() in async mode to return as fast as possible. If
+         * we don't return immediately, the EvalJS dbus call will probably
+         * timeout and cause errors. */
+        window.setTimeout(function() {
+            var href;
+            if ((href = e.getAttribute('href')) && href != '#') {
+                window.location.href = href;
+            } else {
+                e.click();
+            }
+        }, 0);
     }
 
     /* set focus on hint with given index valid hints array */
