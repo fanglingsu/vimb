@@ -173,8 +173,8 @@ nav {
   li.active * {
 	background-color: #fff;
 	color: #555;
-	border-color: #fff;
 	border-right-width: 0;
+	border-bottom-width: 0;
   }
 
   li.active + li * {
