@@ -38,6 +38,7 @@ static struct {
     /* holds the setting if JavaScript can open windows automatically that we
      * have to change to open windows via hinting */
     gboolean       allow_open_win;
+    gboolean       allow_javascript;
     guint          timeout_id;
 } hints;
 
@@ -90,9 +91,12 @@ void hints_clear(Client *c)
         call_hints_function(c, "clear", "true");
 
         /* if open window was not allowed for JavaScript, restore this */
+        WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
         if (!hints.allow_open_win) {
-            WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
             g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", hints.allow_open_win, NULL);
+        }
+        if (!hints.allow_javascript) {
+            g_object_set(G_OBJECT(setting), "enable-javascript", hints.allow_javascript, NULL);
         }
     }
 }
@@ -117,11 +121,21 @@ void hints_create(Client *c, const char *input)
 
         /* before we enable JavaScript to open new windows, we save the actual
          * value to be able restore it after hints where fired */
-        g_object_get(G_OBJECT(setting), "javascript-can-open-windows-automatically", &(hints.allow_open_win), NULL);
+        g_object_get(G_OBJECT(setting),
+                "javascript-can-open-windows-automatically", &(hints.allow_open_win),
+                "enable-javascript", &(hints.allow_javascript),
+                NULL);
 
         /* if window open is already allowed there's no need to allow it again */
         if (!hints.allow_open_win) {
             g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", true, NULL);
+        }
+        /* TODO This might be a security issue to toggle JavaScript
+         * temporarily on. */
+        /* This is a hack to allow window.setTimeout() and scroll observers in
+         * hinting script which does not work when JavaScript is disabled. */
+        if (!hints.allow_javascript) {
+            g_object_set(G_OBJECT(setting), "enable-javascript", true, NULL);
         }
 
         hints.promptlen = hints.gmode ? 3 : 2;
