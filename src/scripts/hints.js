@@ -49,13 +49,17 @@ var hints = Object.freeze((function(){
     }
 
     function onresize() {
-        clear();
+        clear(false);
         create();
         show(false);
     }
 
-    function clear() {
-        var i, j, doc, e;
+    function clear(removeListener) {
+        var i, j, doc, e, w = window;
+        if (removeListener && w) {
+            w.removeEventListener("resize", onresize, true);
+            w.removeEventListener("scroll", onresize, false);
+        }
         for (i = 0; i < docs.length; i++) {
             doc = docs[i];
             /* find all hinted elements vimbhint 'hint' */
@@ -378,7 +382,7 @@ var hints = Object.freeze((function(){
             filterKeys = "";
             show(false);
         } else {
-            clear();
+            clear(true);
         }
 
         return res || config.action(e);
@@ -536,14 +540,8 @@ var hints = Object.freeze((function(){
             }
             return "ERROR:";
         },
-        clear: function() {
-            clear();
-            if (window) {
-                window.removeEventListener("resize", onresize, true);
-                window.removeEventListener("scroll", onresize, false);
-            }
-        },
-        fire:         fire,
-        focus:        focus,
+        clear: clear,
+        fire:  fire,
+        focus: focus,
     };
 })());

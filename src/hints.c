@@ -87,7 +87,7 @@ void hints_clear(Client *c)
         c->mode->flags &= ~FLAG_HINTING;
         vb_input_set_text(c, "");
 
-        call_hints_function(c, "clear", "");
+        call_hints_function(c, "clear", "true");
 
         /* if open window was not allowed for JavaScript, restore this */
         if (!hints.allow_open_win) {
