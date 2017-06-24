@@ -1680,11 +1680,10 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     WebKitWebContext *webcontext;
 
     /* create a new webview */
+    ucm = webkit_user_content_manager_new();
     if (webview) {
         new = WEBKIT_WEB_VIEW(webkit_web_view_new_with_related_view(webview));
-        ucm = webkit_web_view_get_user_content_manager(webview);
     } else {
-        ucm = webkit_user_content_manager_new();
         new = WEBKIT_WEB_VIEW(webkit_web_view_new_with_user_content_manager(ucm));
     }
 
