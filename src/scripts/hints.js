@@ -361,7 +361,7 @@ var hints = Object.freeze((function(){
                 idx = 0;
             }
         }
-        return focusHint(idx);
+        focusHint(idx);
     }
 
     function fire() {

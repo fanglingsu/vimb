@@ -44,7 +44,11 @@ static struct {
 
 extern struct Vimb vb;
 
-static gboolean call_hints_function(Client *c, const char *func, const char* args);
+static gboolean call_hints_function(Client *c, const char *func, const char* args,
+        gboolean sync);
+static void on_hint_function_finished(GDBusProxy *proxy, GAsyncResult *result,
+        Client *c);
+static gboolean hint_function_check_result(Client *c, GVariant *return_value);
 static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
 
@@ -57,7 +61,7 @@ VbResult hints_keypress(Client *c, int key)
         return RESULT_COMPLETE;
     } else if (key == CTRL('H')) { /* backspace */
         fire_timeout(c, false);
-        if (call_hints_function(c, "update", "null")) {
+        if (call_hints_function(c, "update", "null", TRUE)) {
             return RESULT_COMPLETE;
         }
     } else if (key == KEY_TAB) {
@@ -73,7 +77,7 @@ VbResult hints_keypress(Client *c, int key)
     } else {
         fire_timeout(c, true);
         /* try to handle the key by the javascript */
-        if (call_hints_function(c, "update", (char[]){'"', key, '"', '\0'})) {
+        if (call_hints_function(c, "update", (char[]){'"', key, '"', '\0'}, TRUE)) {
             return RESULT_COMPLETE;
         }
     }
@@ -88,7 +92,9 @@ void hints_clear(Client *c)
         c->mode->flags &= ~FLAG_HINTING;
         vb_input_set_text(c, "");
 
-        call_hints_function(c, "clear", "true");
+        /* Run this sync else we would disable JavaScript before the hint is
+         * fired. */
+        call_hints_function(c, "clear", "true", TRUE);
 
         /* if open window was not allowed for JavaScript, restore this */
         WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
@@ -149,7 +155,7 @@ void hints_create(Client *c, const char *input)
             GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
         );
 
-        call_hints_function(c, "init", jsargs);
+        call_hints_function(c, "init", jsargs, FALSE);
         g_free(jsargs);
 
         /* if hinting is started there won't be any additional filter given and
@@ -158,18 +164,18 @@ void hints_create(Client *c, const char *input)
     }
 
     jsargs = g_strdup_printf("'%s'", *(input + hints.promptlen) ? input + hints.promptlen : "");
-    call_hints_function(c, "filter", jsargs);
+    call_hints_function(c, "filter", jsargs, FALSE);
     g_free(jsargs);
 }
 
 void hints_focus_next(Client *c, const gboolean back)
 {
-    call_hints_function(c, "focus", back ? "true" : "false");
+    call_hints_function(c, "focus", back ? "true" : "false", FALSE);
 }
 
 void hints_fire(Client *c)
 {
-    call_hints_function(c, "fire", "");
+    call_hints_function(c, "fire", "", FALSE);
 }
 
 void hints_follow_link(Client *c, const gboolean back, int count)
@@ -199,7 +205,7 @@ void hints_increment_uri(Client *c, int count)
     char *jsargs;
 
     jsargs = g_strdup_printf("%d", count);
-    call_hints_function(c, "incrementUri", jsargs);
+    call_hints_function(c, "incrementUri", jsargs, FALSE);
     g_free(jsargs);
 }
 
@@ -262,15 +268,39 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     return res;
 }
 
-static gboolean call_hints_function(Client *c, const char *func, const char* args)
+static gboolean call_hints_function(Client *c, const char *func, const char* args,
+        gboolean sync)
 {
-    GVariant *return_value;
-    char *jscode, *value = NULL;
-    gboolean success = FALSE;
+    char *jscode;
+    /* Default value is only return in case of async call. */
+    gboolean success = TRUE;
 
     jscode = g_strdup_printf("hints.%s(%s);", func, args);
-    return_value = ext_proxy_eval_script_sync(c, jscode);
+    if (sync) {
+        GVariant *result;
+        result  = ext_proxy_eval_script_sync(c, jscode);
+        success = hint_function_check_result(c, result);
+    } else {
+        ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)on_hint_function_finished);
+    }
     g_free(jscode);
+
+    return success;
+}
+
+static void on_hint_function_finished(GDBusProxy *proxy, GAsyncResult *result,
+        Client *c)
+{
+    GVariant *return_value;
+
+    return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
+    hint_function_check_result(c, return_value);
+}
+
+static gboolean hint_function_check_result(Client *c, GVariant *return_value)
+{
+    gboolean success = FALSE;
+    char *value = NULL;
 
     if (!return_value) {
         return FALSE;
