@@ -44,7 +44,7 @@ gboolean handler_add(Client *c, const char *key, const char *cmd)
 {
     g_hash_table_insert(c->handlers.table, g_strdup(key), g_strdup(cmd));
 
-    return true;
+    return TRUE;
 }
 
 gboolean handler_remove(Client *c, const char *key)

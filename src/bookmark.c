@@ -59,10 +59,10 @@ gboolean bookmark_remove(const char *uri)
     char **lines, *line, *p;
     int len, i;
     GString *new;
-    gboolean removed = false;
+    gboolean removed = FALSE;
 
     if (!uri) {
-        return false;
+        return FALSE;
     }
 
     lines = util_get_lines(vb.files[FILES_BOOKMARK]);
@@ -76,7 +76,7 @@ gboolean bookmark_remove(const char *uri)
             if ((p = strchr(line, '\t'))) {
                 *p = '\0';
                 if (!strcmp(uri, line)) {
-                    removed = true;
+                    removed = TRUE;
                     continue;
                 } else {
                     /* reappend the tags */
@@ -84,14 +84,14 @@ gboolean bookmark_remove(const char *uri)
                 }
             }
             if (!strcmp(uri, line)) {
-                removed = true;
+                removed = TRUE;
                 continue;
             }
             g_string_append_printf(new, "%s\n", line);
         }
         g_strfreev(lines);
         g_file_set_contents(vb.files[FILES_BOOKMARK], new->str, -1, NULL);
-        g_string_free(new, true);
+        g_string_free(new, TRUE);
     }
 
     return removed;
@@ -99,7 +99,7 @@ gboolean bookmark_remove(const char *uri)
 
 gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
 {
-    gboolean found = false;
+    gboolean found = FALSE;
     char **parts;
     unsigned int len;
     GtkTreeIter iter;
@@ -121,7 +121,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
 #endif
                 -1
             );
-            found = true;
+            found = TRUE;
         }
     } else {
         parts = g_strsplit(input, " ", 0);
@@ -139,7 +139,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
 #endif
                     -1
                 );
-                found = true;
+                found = TRUE;
             }
         }
         g_strfreev(parts);
@@ -228,9 +228,9 @@ gboolean bookmark_queue_clear(void)
     FILE *f;
     if ((f = fopen(vb.files[FILES_QUEUE], "w"))) {
         fclose(f);
-        return true;
+        return TRUE;
     }
-    return false;
+    return FALSE;
 }
 #endif /* FEATURE_QUEUE */
 
@@ -247,7 +247,7 @@ static GList *load(const char *file)
  * @query: char array with tags to search for
  * @qlen:  length of given query char array
  *
- * Return: true if the bookmark contained all tags
+ * Return: TRUE if the bookmark contained all tags
  */
 static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     unsigned int qlen)
@@ -258,7 +258,7 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
     gboolean found;
 
     if (!qlen) {
-        return true;
+        return TRUE;
     }
 
     if (bm->tags) {
@@ -273,7 +273,7 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
 
     /* iterate over all query parts */
     for (i = 0; i < qlen; i++) {
-        found = false;
+        found = FALSE;
 
         /* we want to do a prefix match on all bookmark tags - so we check for
          * a match on string begin - if this fails we move the cursor to the
@@ -281,7 +281,7 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
         while (cursor && *cursor) {
             /* match was not found at current cursor position */
             if (g_str_has_prefix(cursor, query[i])) {
-                found = true;
+                found = TRUE;
                 break;
             }
             /* If match was not found at the cursor position - move cursor
@@ -292,11 +292,11 @@ static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
         }
 
         if (!found) {
-            return false;
+            return FALSE;
         }
     }
 
-    return true;
+    return TRUE;
 }
 
 static Bookmark *line_to_bookmark(const char *uri, const char *data)

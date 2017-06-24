@@ -217,7 +217,7 @@ static void add_onload_event_observers(WebKitDOMDocument *doc,
 
     /* Observe scroll events to get current position in the document. */
     webkit_dom_event_target_add_event_listener(target, "scroll",
-            G_CALLBACK(on_document_scroll), false, page);
+            G_CALLBACK(on_document_scroll), FALSE, page);
     /* Call the callback explicitly to make sure we have the right position
      * shown in statusbar also in cases the user does not scroll. */
     on_document_scroll(target, NULL, page);

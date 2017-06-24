@@ -467,7 +467,7 @@ VbCmdResult ex_run_file(Client *c, const char *filename)
         if (*line == '#' || !*line) {
             continue;
         }
-        if ((ex_run_string(c, line, false) & ~CMD_KEEPINPUT) == CMD_ERROR) {
+        if ((ex_run_string(c, line, FALSE) & ~CMD_KEEPINPUT) == CMD_ERROR) {
             res = CMD_ERROR | CMD_KEEPINPUT;
             g_warning("Invalid command in %s: '%s'", filename, line);
         }
@@ -1059,7 +1059,7 @@ static VbCmdResult ex_handlers(Client *c, const ExArg *arg)
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
 {
     gchar *uri;
-    gboolean success = false;
+    gboolean success = FALSE;
 
     if (!c) {
         return CMD_ERROR;

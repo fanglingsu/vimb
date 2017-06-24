@@ -857,7 +857,7 @@ static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data)
     if (gtk_widget_is_focus(c->input) && c->mode && c->mode->input_changed) {
 
         gtk_text_buffer_get_bounds(textbuffer, &start, &end);
-        text = gtk_text_buffer_get_text(textbuffer, &start, &end, false);
+        text = gtk_text_buffer_get_text(textbuffer, &start, &end, FALSE);
 
         c->mode->input_changed(c, text);
 
@@ -898,7 +898,7 @@ static void set_title(Client *c, const char *title)
 {
     OVERWRITE_STRING(c->state.title, title);
     update_title(c);
-    g_setenv("VIMB_TITLE", title ? title : "", true);
+    g_setenv("VIMB_TITLE", title ? title : "", TRUE);
 }
 
 /**

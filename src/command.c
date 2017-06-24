@@ -173,7 +173,7 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
     /* store in X "windows style" clipboard */
     gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), yanked, -1);
 
-    vb_echo(c, MSG_NORMAL, false, "Yanked: %s", yanked);
+    vb_echo(c, MSG_NORMAL, FALSE, "Yanked: %s", yanked);
 
     g_free(yanked);
 

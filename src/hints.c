@@ -60,29 +60,29 @@ VbResult hints_keypress(Client *c, int key)
 
         return RESULT_COMPLETE;
     } else if (key == CTRL('H')) { /* backspace */
-        fire_timeout(c, false);
+        fire_timeout(c, FALSE);
         if (call_hints_function(c, "update", "null", TRUE)) {
             return RESULT_COMPLETE;
         }
     } else if (key == KEY_TAB) {
-        fire_timeout(c, false);
-        hints_focus_next(c, false);
+        fire_timeout(c, FALSE);
+        hints_focus_next(c, FALSE);
 
         return RESULT_COMPLETE;
     } else if (key == KEY_SHIFT_TAB) {
-        fire_timeout(c, false);
-        hints_focus_next(c, true);
+        fire_timeout(c, FALSE);
+        hints_focus_next(c, TRUE);
 
         return RESULT_COMPLETE;
     } else {
-        fire_timeout(c, true);
+        fire_timeout(c, TRUE);
         /* try to handle the key by the javascript */
         if (call_hints_function(c, "update", (char[]){'"', key, '"', '\0'}, TRUE)) {
             return RESULT_COMPLETE;
         }
     }
 
-    fire_timeout(c, false);
+    fire_timeout(c, FALSE);
     return RESULT_ERROR;
 }
 
@@ -94,7 +94,7 @@ void hints_clear(Client *c)
 
         /* Run this sync else we would disable JavaScript before the hint is
          * fired. */
-        call_hints_function(c, "clear", "true", TRUE);
+        call_hints_function(c, "clear", "TRUE", TRUE);
 
         /* if open window was not allowed for JavaScript, restore this */
         WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
@@ -134,25 +134,25 @@ void hints_create(Client *c, const char *input)
 
         /* if window open is already allowed there's no need to allow it again */
         if (!hints.allow_open_win) {
-            g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", true, NULL);
+            g_object_set(G_OBJECT(setting), "javascript-can-open-windows-automatically", TRUE, NULL);
         }
         /* TODO This might be a security issue to toggle JavaScript
          * temporarily on. */
         /* This is a hack to allow window.setTimeout() and scroll observers in
          * hinting script which does not work when JavaScript is disabled. */
         if (!hints.allow_javascript) {
-            g_object_set(G_OBJECT(setting), "enable-javascript", true, NULL);
+            g_object_set(G_OBJECT(setting), "enable-javascript", TRUE, NULL);
         }
 
         hints.promptlen = hints.gmode ? 3 : 2;
 
         jsargs = g_strdup_printf("'%s', %s, %d, '%s', %s, %s",
             (char[]){hints.mode, '\0'},
-            hints.gmode ? "true" : "false",
+            hints.gmode ? "TRUE" : "false",
             MAXIMUM_HINTS,
             GET_CHAR(c, "hint-keys"),
-            GET_BOOL(c, "hint-follow-last") ? "true" : "false",
-            GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
+            GET_BOOL(c, "hint-follow-last") ? "TRUE" : "false",
+            GET_BOOL(c, "hint-number-same-length") ? "TRUE" : "false"
         );
 
         call_hints_function(c, "init", jsargs, FALSE);
@@ -170,7 +170,7 @@ void hints_create(Client *c, const char *input)
 
 void hints_focus_next(Client *c, const gboolean back)
 {
-    call_hints_function(c, "focus", back ? "true" : "false", FALSE);
+    call_hints_function(c, "focus", back ? "TRUE" : "false", FALSE);
 }
 
 void hints_fire(Client *c)
@@ -235,7 +235,7 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
 #endif
 
     if (!prompt) {
-        return false;
+        return FALSE;
     }
 
     /* get the mode identifying char from prompt */
@@ -248,7 +248,7 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
 
     /* no mode found in prompt */
     if (!pmode) {
-        return false;
+        return FALSE;
     }
 
     res = *prompt == 'g'
@@ -313,7 +313,7 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
 
     /* following return values mark fired hints */
     if (!strncmp(value, "DONE:", 5)) {
-        fire_timeout(c, false);
+        fire_timeout(c, FALSE);
         /* Change to normal mode only if we are currently in command mode and
          * we are not in g-mode hinting. This is required to not switch to
          * normal mode when the hinting triggered a click that set focus on
@@ -329,13 +329,13 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
             c->mode->flags |= FLAG_NEW_WIN;
         }
     } else if (!strncmp(value, "INSERT:", 7)) {
-        fire_timeout(c, false);
+        fire_timeout(c, FALSE);
         vb_enter(c, 'i');
         if (hints.mode == 'e') {
             input_open_editor(c);
         }
     } else if (!strncmp(value, "DATA:", 5)) {
-        fire_timeout(c, false);
+        fire_timeout(c, FALSE);
         /* switch first to normal mode - else we would clear the inputbox
          * on switching mode also if we want to show yanked data */
         if (!hints.gmode) {
@@ -357,7 +357,7 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
 
             case 'O':
             case 'T':
-                vb_echo(c, MSG_NORMAL, false, "%s %s", (hints.mode == 'T') ? ":tabopen" : ":open", v);
+                vb_echo(c, MSG_NORMAL, FALSE, "%s %s", (hints.mode == 'T') ? ":tabopen" : ":open", v);
                 if (!hints.gmode) {
                     vb_enter(c, 'c');
                 }
@@ -370,7 +370,7 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
                 break;
 
             case 'x':
-                map_handle_string(c, GET_CHAR(c, "x-hint-command"), true);
+                map_handle_string(c, GET_CHAR(c, "x-hint-command"), TRUE);
                 break;
 
             case 'y':
@@ -418,5 +418,5 @@ static gboolean fire_cb(gpointer data)
     /* remove timeout id for the timeout that is removed by return value of
      * false automatic */
     hints.timeout_id = 0;
-    return false;
+    return FALSE;
 }

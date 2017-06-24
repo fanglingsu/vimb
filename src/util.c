@@ -126,7 +126,7 @@ gboolean util_create_tmp_file(const char *content, char **file)
     if (fp == -1) {
         g_critical("Could not create temp file %s", *file);
         g_free(*file);
-        return false;
+        return FALSE;
     }
 
     len = strlen(content);
@@ -139,11 +139,11 @@ gboolean util_create_tmp_file(const char *content, char **file)
         g_critical("Could not write temp file %s", *file);
         g_free(*file);
 
-        return false;
+        return FALSE;
     }
     close(fp);
 
-    return true;
+    return TRUE;
 }
 
 /**
@@ -212,7 +212,7 @@ gboolean util_file_append(const char *file, const char *format, ...)
  */
 gboolean util_file_prepend(const char *file, const char *format, ...)
 {
-    gboolean res = false;
+    gboolean res = FALSE;
     va_list args;
     char *content;
     FILE *f;
@@ -235,7 +235,7 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
         flock(fileno(f), LOCK_UN);
         fclose(f);
 
-        res = true;
+        res = TRUE;
     }
     g_free(content);
 
@@ -484,14 +484,14 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
  */
 gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src)
 {
-    gboolean found = false;
+    gboolean found = FALSE;
     GtkTreeIter iter;
 
     if (!input || !*input) {
         for (GList *l = src; l; l = l->next) {
             gtk_list_store_append(store, &iter);
             gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = true;
+            found = TRUE;
         }
     } else {
         for (GList *l = src; l; l = l->next) {
@@ -499,7 +499,7 @@ gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src
             if (g_str_has_prefix(value, input)) {
                 gtk_list_store_append(store, &iter);
                 gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-                found = true;
+                found = TRUE;
             }
         }
     }

@@ -118,7 +118,7 @@ VbResult input_open_editor(Client *c)
     /* get the editor command */
     editor_command = GET_CHAR(c, "editor-command");
     if (!editor_command || !*editor_command) {
-        vb_echo(c, MSG_ERROR, true, "No editor-command configured");
+        vb_echo(c, MSG_ERROR, TRUE, "No editor-command configured");
         return RESULT_ERROR;
     }
 
