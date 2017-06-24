@@ -94,7 +94,7 @@ void hints_clear(Client *c)
 
         /* Run this sync else we would disable JavaScript before the hint is
          * fired. */
-        call_hints_function(c, "clear", "TRUE", TRUE);
+        call_hints_function(c, "clear", "true", TRUE);
 
         /* if open window was not allowed for JavaScript, restore this */
         WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
@@ -148,11 +148,11 @@ void hints_create(Client *c, const char *input)
 
         jsargs = g_strdup_printf("'%s', %s, %d, '%s', %s, %s",
             (char[]){hints.mode, '\0'},
-            hints.gmode ? "TRUE" : "false",
+            hints.gmode ? "true" : "false",
             MAXIMUM_HINTS,
             GET_CHAR(c, "hint-keys"),
-            GET_BOOL(c, "hint-follow-last") ? "TRUE" : "false",
-            GET_BOOL(c, "hint-number-same-length") ? "TRUE" : "false"
+            GET_BOOL(c, "hint-follow-last") ? "true" : "false",
+            GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
         );
 
         call_hints_function(c, "init", jsargs, FALSE);
@@ -170,7 +170,7 @@ void hints_create(Client *c, const char *input)
 
 void hints_focus_next(Client *c, const gboolean back)
 {
-    call_hints_function(c, "focus", back ? "TRUE" : "false", FALSE);
+    call_hints_function(c, "focus", back ? "true" : "false", FALSE);
 }
 
 void hints_fire(Client *c)
