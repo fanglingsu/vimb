@@ -71,6 +71,10 @@ ul, ol {
   margin: 0 0 0 1.5em;
 }
 
+ul li {
+  list-style-type: square;
+}
+
 ol li {
   list-style-type: decimal;
 }
