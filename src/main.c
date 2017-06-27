@@ -58,10 +58,10 @@ static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data
 static gboolean on_webdownload_decide_destination(WebKitDownload *download,
         gchar *suggested_filename, Client *c);
 static void on_webdownload_failed(WebKitDownload *download,
-               GError *error, Client *c);
+        GError *error, Client *c);
 static void on_webdownload_finished(WebKitDownload *download, Client *c);
 static void on_webdownload_received_data(WebKitDownload *download,
-       guint64 data_length, Client *c);
+        guint64 data_length, Client *c);
 static void on_webview_close(WebKitWebView *webview, Client *c);
 static WebKitWebView *on_webview_create(WebKitWebView *webview,
         WebKitNavigationAction *navact, Client *c);
