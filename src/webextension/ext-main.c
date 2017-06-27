@@ -239,34 +239,33 @@ static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *eve
     }
 
     if (doc) {
-        WebKitDOMElement *b, *de;
-        glong max, scrollTop, scrollHeight, clientHeight;
+        WebKitDOMElement *body, *de;
+        glong max = 0, scrollTop, scrollHeight, clientHeight;
         guint percent = 0;
 
         de = webkit_dom_document_get_document_element(doc);
         if (!de) {
             return;
         }
-        /* Get the clientHeight. */
-        clientHeight = webkit_dom_element_get_client_height(WEBKIT_DOM_ELEMENT(de));
 
-        b = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body(doc));
-        /* Get the scrollTop of the document or the body. */
-        if (!(scrollTop = webkit_dom_element_get_scroll_top(de)) && b) {
-            scrollTop = webkit_dom_element_get_scroll_top(b);
-        }
-        /* Get the scrollHeight of the document or the body. */
-        if (!(scrollHeight = webkit_dom_element_get_scroll_height(de)) && b) {
-            scrollHeight = webkit_dom_element_get_scroll_height(b);
+        body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body(doc));
+        if (!body) {
+            return;
         }
 
-        /* Get the maximum scrollable page size. This is the size of the whole
-         * document - height of the viewport. */
-        max = scrollHeight - clientHeight ;
+        scrollTop = webkit_dom_element_get_scroll_top(body);
+        if (scrollTop) {
+            clientHeight = webkit_dom_element_get_client_height(WEBKIT_DOM_ELEMENT(de));
+            scrollHeight = webkit_dom_element_get_scroll_height(body);
 
-        if (scrollTop && max) {
-            percent = (guint)(0.5 + (scrollTop * 100 / max));
+            /* Get the maximum scrollable page size. This is the size of the whole
+            * document - height of the viewport. */
+            max = scrollHeight - clientHeight ;
+            if (max) {
+                percent = (guint)(0.5 + (scrollTop * 100 / max));
+            }
         }
+
         dbus_emit_signal("VerticalScroll", g_variant_new("(ttq)",
                     webkit_web_page_get_id(page), max, percent));
     }
