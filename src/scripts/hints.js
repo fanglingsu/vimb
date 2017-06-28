@@ -279,22 +279,33 @@ var hints = Object.freeze((function(){
         }
 
         /* clear the array of valid hints */
-        validHints = [];
+        var hintCount  = 0,
+            candidates = [];
+
+        /* Check which hints match to the filter. */
         for (i = 0; i < hints.length; i++) {
             hint = hints[i];
             /* hide hints not matching the text filter */
             if (!matcher(hint.text)) {
                 hint.hide();
             } else {
-                /* assign the new hint number/letters as label to the hint */
-                hint.num = getHintString(n++);
-                /* check for hint-keys filter */
-                if (!filterKeys.length || hint.num.indexOf(filterKeys) == 0) {
-                    hint.show();
-                    validHints.push(hint);
-                } else {
-                    hint.hide();
-                }
+                hintCount++;
+                candidates.push(hint);
+            }
+        }
+
+        /* Now we can assigne the hint labels and check if hose match. */
+        var labeler = config.getHintLabeler(hintCount);
+        for (i = 0; i < candidates.length; i++) {
+            hint = candidates[i];
+            /* assign the new hint number/letters as label to the hint */
+            hint.num = labeler(n++);
+            /* check for hint-keys filter */
+            if (!filterKeys.length || hint.num.indexOf(filterKeys) == 0) {
+                hint.show();
+                validHints.push(hint);
+            } else {
+                hint.hide();
             }
         }
 
@@ -319,18 +330,6 @@ var hints = Object.freeze((function(){
                 return 0 <= itemText.indexOf(token);
             });
         };
-    }
-
-    /* Returns the hint string based on hint-keys for a given hint number */
-    function getHintString(n) {
-        var res = [],
-            len = config.hintKeys.length;
-        do {
-            res.push(config.hintKeys[n % len]);
-            n = Math.floor(n / len) - 1;
-        } while (n >= 0);
-
-        return res.reverse().join("");
     }
 
     function getOffsets(doc) {
@@ -472,6 +471,29 @@ var hints = Object.freeze((function(){
         }
         return frames;
     }
+    function _labeler(keys) {
+        var k = keys,
+            l = k.length,
+            num = (k[0] == '0') ? 1 : 0;
+
+        return function (count) {
+            var c = count;
+            return function (n) {
+                var r = [];
+                /* if hint keys starts with '0' increment n to count from one */
+                n += num;
+                do {
+                    r.push(k[n % l]);
+                    n  = ~~(n / l);
+                    if (!num) {
+                        n--;
+                    }
+                } while (n - num >= 0);
+
+                return r.reverse().join("");
+            };
+        };
+    }
 
     /* the api */
     return {
@@ -501,16 +523,18 @@ var hints = Object.freeze((function(){
                 hintKeys:       hintKeys,
                 followLast:     followLast,
                 keysSameLength: keysSameLength,
+                getHintLabeler: _labeler(hintKeys)
             };
+
             for (prop in xpathmap) {
                 if (prop.indexOf(mode) >= 0) {
-                    config["xpath"] = xpathmap[prop];
+                    config.xpath = xpathmap[prop];
                     break;
                 }
             }
             for (prop in actionmap) {
                 if (prop.indexOf(mode) >= 0) {
-                    config["action"] = actionmap[prop];
+                    config.action = actionmap[prop];
                     break;
                 }
             }
