@@ -241,7 +241,6 @@ var hints = Object.freeze((function(){
         var i, hint, newIdx,
             matcher = getMatcher(filterText);
 
-        /* clear the array of valid hints */
         var hintCount  = 0,
             candidates = [];
 
@@ -257,6 +256,8 @@ var hints = Object.freeze((function(){
             }
         }
 
+        /* clear the array of valid hints */
+        validHints = [];
         /* Now we can assigne the hint labels and check if hose match. */
         var labeler = config.getHintLabeler(hintCount);
         for (i = 0; i < candidates.length; i++) {
