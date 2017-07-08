@@ -237,64 +237,38 @@ var hints = Object.freeze((function(){
         helper(window);
     }
 
-    function getMaxHintsSameLength(len) {
-        return (len > 0) ? (config.hintKeys.length ** len) : 0;
-    }
-
-    /* Calculate the number of addressable hints for given label length. */
-    function getMaxHints(len) {
-        var res = 0;
-
-        while (len > 0) {
-            res += getMaxHintsSameLength(len);
-            len--;
-        }
-
-        return res;
-    }
-
     function show(fireLast) {
         var i, hint, newIdx,
-            n       = 0,
             matcher = getMatcher(filterText);
 
-        /* We can generate same length label if there is only one hint key */
-        /* except in case there is only one hint. But we don't need to */
-        /* handle this. */
-        if (config.keysSameLength && config.hintKeys.length > 1) {
-            /* get number of hints to be shown */
-            var hintCount = 0, hintStringLen = 1;
-            for (i = 0; i < hints.length; i++) {
-                if (matcher(hints[i].text)) {
-                    hintCount++;
-                }
-            }
-
-            /* Find hint string length to describe all hints with same length. */
-            while (getMaxHintsSameLength(hintStringLen) < hintCount) {
-                hintStringLen++;
-            }
-            /* the n-th hint string is the first one to use */
-            n = getMaxHints(hintStringLen - 1);
-        }
-
         /* clear the array of valid hints */
-        validHints = [];
+        var hintCount  = 0,
+            candidates = [];
+
+        /* Check which hints match to the filter. */
         for (i = 0; i < hints.length; i++) {
             hint = hints[i];
             /* hide hints not matching the text filter */
             if (!matcher(hint.text)) {
                 hint.hide();
             } else {
-                /* assign the new hint number/letters as label to the hint */
-                hint.num = getHintString(n++);
-                /* check for hint-keys filter */
-                if (!filterKeys.length || hint.num.indexOf(filterKeys) == 0) {
-                    hint.show();
-                    validHints.push(hint);
-                } else {
-                    hint.hide();
-                }
+                hintCount++;
+                candidates.push(hint);
+            }
+        }
+
+        /* Now we can assigne the hint labels and check if hose match. */
+        var labeler = config.getHintLabeler(hintCount);
+        for (i = 0; i < candidates.length; i++) {
+            hint = candidates[i];
+            /* assign the new hint number/letters as label to the hint */
+            hint.num = labeler();
+            /* check for hint-keys filter */
+            if (!filterKeys.length || hint.num.indexOf(filterKeys) == 0) {
+                hint.show();
+                validHints.push(hint);
+            } else {
+                hint.hide();
             }
         }
 
@@ -319,18 +293,6 @@ var hints = Object.freeze((function(){
                 return 0 <= itemText.indexOf(token);
             });
         };
-    }
-
-    /* Returns the hint string based on hint-keys for a given hint number */
-    function getHintString(n) {
-        var res = [],
-            len = config.hintKeys.length;
-        do {
-            res.push(config.hintKeys[n % len]);
-            n = Math.floor(n / len) - 1;
-        } while (n >= 0);
-
-        return res.reverse().join("");
     }
 
     function getOffsets(doc) {
@@ -472,6 +434,63 @@ var hints = Object.freeze((function(){
         }
         return frames;
     }
+    function _labeler(keys, sameLength) {
+        var kl  = keys.length,
+            /* Avoid don't consider the hint keys to be numeric in case the */
+            /* hintKeys='0' to avoid endless loop by attempt to use next */
+            /* hintKey char later. */
+            num = (keys[0] == '0' && kl > 1) ? 1 : 0,
+            sl  = sameLength;
+
+        return function (count) {
+            /* if hint keys starts with '0' count from 1 instead of 0 */
+            var hcount = num,
+                offset = 0;
+
+            function getMaxHintOfLen(len) {
+                return (len > 0) ? ((kl - num) ** len) : 0;
+            }
+
+            /* We can generate same length label if there is only one hint key */
+            /* except in case there is only one hint. But we don't need to */
+            /* handle this. */
+            if (sl && kl > 1) {
+                if (num) {
+                    offset = 1;
+                    /* increase starting point of hint numbers until there are */
+                    /* enough available numbers */
+                    while (offset * (kl - 1) < count) {
+                        offset *= kl;
+                    }
+                    offset--;
+                } else {
+                    var val, labellen = 0, res = 0;
+                    /* Find hint string length to describe all hints with same length. */
+                    while ((val = getMaxHintOfLen(labellen)) < count) {
+                        labellen++;
+                        res += val;
+                    }
+                    /* the offset-th hint string is the first one to use */
+                    offset = res;
+                }
+            }
+            return function () {
+                /* Start on second hint key in incase of numeric hints. */
+                var res = [],
+                    n   = hcount + offset;
+                do {
+                    res.push(keys[n % kl]);
+                    n  = ~~(n / kl);
+                    if (!num) {
+                        n--;
+                    }
+                } while (n - num >= 0);
+                hcount++;
+
+                return res.reverse().join("");
+            };
+        };
+    }
 
     /* the api */
     return {
@@ -501,16 +520,18 @@ var hints = Object.freeze((function(){
                 hintKeys:       hintKeys,
                 followLast:     followLast,
                 keysSameLength: keysSameLength,
+                getHintLabeler: _labeler(hintKeys, keysSameLength)
             };
+
             for (prop in xpathmap) {
                 if (prop.indexOf(mode) >= 0) {
-                    config["xpath"] = xpathmap[prop];
+                    config.xpath = xpathmap[prop];
                     break;
                 }
             }
             for (prop in actionmap) {
                 if (prop.indexOf(mode) >= 0) {
-                    config["action"] = actionmap[prop];
+                    config.action = actionmap[prop];
                     break;
                 }
             }

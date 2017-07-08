@@ -934,19 +934,24 @@ To disable auto fire of hints, set this value to 0.
 .TP
 .B hint-keys (string)
 The keys used to label and select hints.
-With its default value, each hint has a unique number which can be typed
+With its default value, each hint has a unique label which can be typed
 to select it, while all other characters are used to filter hints based
 on their text.
 With a value such as asdfg;lkjh,
-each hint is `numbered' based on the characters of the home row.
+each hint is `labeled' based on the characters of the home row.
+.IP
+If the hint-keys string starts with a '0' the keys are considered to follow
+the rules of numeric labeling. So that the ifrst char of the label will never
+start with the '0'.
+.IP
 Note that the hint matching by label built of hint-keys is case sensitive.
 In this vimb differs from some other browsers that show hint labels in upper
 case, but match them lowercase.
-.RS
+.IP
 To have upper case hint labels, it's possible to add following css to the
 `style.css' file in vimb's configuration directory.
-.IP "._hintLabel {text-transform: uppercase !important;}"
-.RE
+.IP
+"._hintLabel {text-transform: uppercase !important;}"
 .TP
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history.
