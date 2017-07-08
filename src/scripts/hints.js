@@ -551,14 +551,13 @@ var hints = Object.freeze((function(){
             return show(true);
         },
         update: function(n) {
-            var pos,
-                keys = config.hintKeys;
+            var pos;
             /* delete last hint-keys filter digit */
             if (null === n && filterKeys.length) {
                 filterKeys = filterKeys.slice(0, -1);
                 return show(false);
             }
-            if ((pos = keys.indexOf(n)) >= 0) {
+            if ((pos = config.hintKeys.indexOf(n)) >= 0) {
                 filterKeys = filterKeys + n;
                 return show(true);
             }
