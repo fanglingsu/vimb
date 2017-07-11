@@ -216,6 +216,7 @@ struct Client {
     /* WebKitWebContext    *webctx; */          /* not used atm, use webkit_web_context_get_default() instead */
     GtkWidget           *window, *input;
     WebKitWebView       *webview;
+    WebKitWebInspector  *inspector;
     guint64             page_id;                /* page id of the webview */
     GtkTextBuffer       *buffer;
     GDBusProxy          *dbusproxy;

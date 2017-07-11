@@ -45,7 +45,9 @@
 #include "util.h"
 
 static void client_destroy(Client *c);
-static Client *client_new(WebKitWebView *webview, gboolean);
+static Client *client_new(WebKitWebView *webview);
+static void client_show(WebKitWebView *webview, Client *c);
+static GtkWidget *create_window(Client *c);
 static gboolean input_clear(Client *c);
 static void input_print(Client *c, MessageType type, gboolean hide,
         const char *message);
@@ -380,7 +382,7 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
     } else if (arg->i == TARGET_NEW) {
         spawn_new_instance(uri);
     } else { /* TARGET_RELATED */
-        Client *newclient = client_new(c->webview, FALSE);
+        Client *newclient = client_new(c->webview);
         /* Load the uri into the new client. */
         webkit_web_view_load_uri(newclient->webview, uri);
         set_title(c, uri);
@@ -660,47 +662,36 @@ static void client_destroy(Client *c)
  * @webview:    Related webview or NULL if a client with an independent
  *              webview shoudl be created.
  */
-static Client *client_new(WebKitWebView *webview, gboolean show)
+static Client *client_new(WebKitWebView *webview)
 {
     Client *c;
-    char *xid;
-    GtkWidget *box;
 
     /* create the client */
-    c = g_slice_new0(Client);
+    /* Prepend the new client to the queue of clients. */
+    c          = g_slice_new0(Client);
+    c->next    = vb.clients;
+    vb.clients = c;
+
     c->state.progress = 100;
-
-    if (vb.embed) {
-        c->window = gtk_plug_new(vb.embed);
-        xid       = g_strdup_printf("%d", (int)vb.embed);
-    } else {
-        GtkRequisition req;
-        c->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_role(GTK_WINDOW(c->window), PROJECT_UCFIRST);
-        /* We have to call gtk_widget_get_preferred_size before
-         * gtk_widget_size_allocate otherwise a warning is thrown when the
-         * widget is realized. */
-        gtk_widget_get_preferred_size(GTK_WIDGET(c->window), &req, NULL);
-        gtk_widget_realize(GTK_WIDGET(c->window));
-        gtk_window_set_default_size(GTK_WINDOW(c->window), WIN_WIDTH, WIN_HEIGHT);
-
-        xid = g_strdup_printf("%d",
-                (int)GDK_WINDOW_XID(gtk_widget_get_window(GTK_WIDGET(c->window))));
-    }
-
-    /* set the x window id to env */
-    g_setenv("VIMB_XID", xid, TRUE);
-    g_free(xid);
 
     completion_init(c);
     map_init(c);
+    handler_init(c);
 
-    g_object_connect(
-            G_OBJECT(c->window),
-            "signal::destroy", G_CALLBACK(on_window_destroy), c,
-            "signal::delete-event", G_CALLBACK(on_window_delete_event), c,
-            "signal::key-press-event", G_CALLBACK(on_map_keypress), c,
-            NULL);
+    /* webview */
+    c->webview   = webview_new(c, webview);
+    c->page_id   = webkit_web_view_get_page_id(c->webview);
+    c->inspector = webkit_web_view_get_inspector(c->webview);
+
+    return c;
+}
+
+static void client_show(WebKitWebView *webview, Client *c)
+{
+    GtkWidget *box;
+    char *xid;
+
+    c->window = create_window(c);
 
     /* statusbar */
     c->statusbar.box   = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
@@ -717,10 +708,6 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
     gtk_box_pack_start(c->statusbar.box, c->statusbar.left, TRUE, TRUE, 2);
     gtk_box_pack_start(c->statusbar.box, c->statusbar.cmd, FALSE, FALSE, 0);
     gtk_box_pack_start(c->statusbar.box, c->statusbar.right, FALSE, FALSE, 2);
-
-    /* webview */
-    c->webview = webview_new(c, webview);
-    c->page_id = webkit_web_view_get_page_id(c->webview);
 
     /* inputbox */
     c->input  = gtk_text_view_new();
@@ -745,29 +732,52 @@ static Client *client_new(WebKitWebView *webview, gboolean show)
             GTK_STYLE_PROVIDER(vb.style_provider),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-    /* initialize the settings */
+    /* TODO separate initialization o setting from applying the values or
+     * allow to se the default values for different scopes. For now we can
+     * init the settings not in client_new because we need the access to some
+     * widget for some settings. */
     setting_init(c);
 
-    /* initialize the url handlers */
-    handler_init(c);
+    gtk_widget_show_all(c->window);
+    if (vb.embed) {
+        xid = g_strdup_printf("%d", (int)vb.embed);
+    } else {
+        xid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(c->window)));
+    }
+
+    /* set the x window id to env */
+    g_setenv("VIMB_XID", xid, TRUE);
+    g_free(xid);
 
     /* start client in normal mode */
     vb_enter(c, 'n');
 
     c->state.enable_register = TRUE;
 
-    if (show) {
-        gtk_widget_show_all(c->window);
-    }
-
     /* read the config file */
     ex_run_file(c, vb.files[FILES_CONFIG]);
+}
 
-    /* Prepend the new client to the queue of clients. */
-    c->next    = vb.clients;
-    vb.clients = c;
+static GtkWidget *create_window(Client *c)
+{
+    GtkWidget *window;
 
-    return c;
+    if (vb.embed) {
+        window = gtk_plug_new(vb.embed);
+    } else {
+        window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+        gtk_window_set_role(GTK_WINDOW(window), PROJECT_UCFIRST);
+        gtk_window_set_default_size(GTK_WINDOW(window), WIN_WIDTH, WIN_HEIGHT);
+    }
+
+    g_object_connect(
+            G_OBJECT(window),
+            "signal::destroy", G_CALLBACK(on_window_destroy), c,
+            "signal::delete-event", G_CALLBACK(on_window_delete_event), c,
+            "signal::key-press-event", G_CALLBACK(on_map_keypress), c,
+            NULL);
+
+    return window;
 }
 
 /**
@@ -1113,7 +1123,7 @@ static void on_webview_close(WebKitWebView *webview, Client *c)
 static WebKitWebView *on_webview_create(WebKitWebView *webview,
         WebKitNavigationAction *navact, Client *c)
 {
-    Client *new = client_new(webview, FALSE);
+    Client *new = client_new(webview);
 
     return new->webview;
 }
@@ -1333,7 +1343,7 @@ static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec, Cli
  */
 static void on_webview_ready_to_show(WebKitWebView *webview, Client *c)
 {
-    gtk_widget_show_all(GTK_WIDGET(c->window));
+    client_show(webview, c);
 }
 
 /**
@@ -1777,7 +1787,7 @@ int main(int argc, char* argv[])
         printf("Commit:          %s\n", COMMIT);
         printf("WebKit compile:  %d.%d.%d\n",
                 WEBKIT_MAJOR_VERSION,
-                WEBKIT_MINOR_VERSION, 
+                WEBKIT_MINOR_VERSION,
                 WEBKIT_MICRO_VERSION);
         printf("WebKit run:      %d.%d.%d\n",
                 webkit_get_major_version(),
@@ -1819,7 +1829,8 @@ int main(int argc, char* argv[])
         vb.embed = strtol(winid, NULL, 0);
     }
 
-    c = client_new(NULL, TRUE);
+    c = client_new(NULL);
+    client_show(NULL, c);
     if (argc <= 1) {
         vb_load_uri(c, &(Arg){TARGET_CURRENT, NULL});
     } else if (!strcmp(argv[argc - 1], "-")) {

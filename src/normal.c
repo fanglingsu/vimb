@@ -691,18 +691,16 @@ static VbResult normal_search_selection(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_view_inspector(Client *c, const NormalCmdInfo *info)
 {
-    WebKitWebInspector *inspector;
     WebKitSettings *settings;
 
-    settings  = webkit_web_view_get_settings(c->webview);
-    inspector = webkit_web_view_get_inspector(c->webview);
+    settings = webkit_web_view_get_settings(c->webview);
 
     /* Try to get the inspected uri to identify if the inspector is shown at
      * the time or not. */
-    if (webkit_web_inspector_is_attached(inspector)) {
-        webkit_web_inspector_close(inspector);
+    if (webkit_web_inspector_is_attached(c->inspector)) {
+        webkit_web_inspector_close(c->inspector);
     } else if (webkit_settings_get_enable_developer_extras(settings)) {
-        webkit_web_inspector_show(inspector);
+        webkit_web_inspector_show(c->inspector);
     } else {
         /* Inform the user on attempt to enable webinspector when the
          * developer extra are not enabled. */
