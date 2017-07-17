@@ -4,11 +4,12 @@ all: $(SRCDIR).subdir-all
 
 options:
 	@echo "vimb build options:"
-	@echo "LIBS      = $(LIBS)"
-	@echo "CFLAGS    = $(CFLAGS)"
-	@echo "LDFLAGS   = $(LDFLAGS)"
-	@echo "EXTCFLAGS = $(EXTCFLAGS)"
-	@echo "CC        = $(CC)"
+	@echo "LIBS        = $(LIBS)"
+	@echo "CFLAGS      = $(VIMB_CFLAGS)"
+	@echo "LDFLAGS     = $(VIIMB_LDFLAGS)"
+	@echo "EXT_CFLAGS  = $(EXT_CFLAGS)"
+	@echo "EXT_LDFLAGS = $(EXT_LDFLAGS)"
+	@echo "CC          = $(CC)"
 
 install: $(SRCDIR).subdir-all
 	@# binary

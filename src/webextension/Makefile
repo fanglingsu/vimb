@@ -10,10 +10,10 @@ clean:
 
 $(EXTTARGET): $(OBJ)
 	@echo "$(CC) $@"
-	$(Q)$(CC) $(OBJ) $(EXTLDFLAGS) -o $@
+	$(Q)$(CC) $(OBJ) $(EXT_LDFLAGS) -o $@
 
 %.lo: %.c
 	@echo "${CC} $@"
-	$(Q)$(CC) $(EXTCFLAGS) -fPIC -c -o $@ $<
+	$(Q)$(CC) $(EXT_CFLAGS) -fPIC -c -o $@ $<
 
 .PHONY: all clean
