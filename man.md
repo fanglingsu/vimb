@@ -734,11 +734,12 @@ history
 bookmarks
 : The bookmark completion is similar to the history completion, but does match
   only the tags of the bookmarks. The bookmark completion ist started by
-  `:open !` or `:tabopen !` and does a prefix search for all given words in
-  the bookmark tags.
+  `:open !`, `:tabopen !` or `:bmr ` and does a prefix search for all given
+  words in the bookmark tags.
 
 : `:open !foo ba` will match all bookmark that have the tags "foo" or "foot"
   and tags starting with "ba" like "ball".
+: `:bmr foo bar` to complete existing bookmark matching the tags "foo" or "bar"
 
 boomark tags
 : The boomark tag completion allows to insert already used bookmarks for the
