@@ -789,9 +789,8 @@ will complete only URIs that contain the words foo and bar.
 .B bookmarks
 The bookmark completion is similar to the history completion, but does match
 only the tags of the bookmarks.
-The bookmark completion is started by `:open \fB!\fP`
-or `:tabopen \fB!\fP` and does a prefix search for all given words in
-the bookmark tags.
+The bookmark completion is started by `:open \fB!\fP`, `:tabopen \fB!\fP` or
+`:bmr ` and does a prefix search for all given words in the bookmark tags.
 .sp
 Example:
 .RS
@@ -800,6 +799,8 @@ Example:
 will match all bookmarks that have tags starting with "foo" and "ba".
 If the bookmark does not have any tags set, the URL is split on `.' and `/'
 into tags.
+.IP ":bmr tag"
+will match all bookmarks that have tags starting with "tag".
 .PD
 .RE
 .TP

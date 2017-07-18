@@ -1205,6 +1205,10 @@ static gboolean complete(Client *c, short direction)
                     found = bookmark_fill_tag_completion(store, token);
                     break;
 
+                case EX_BMR:
+                    found = bookmark_fill_completion(store, token);
+                    break;
+
                 case EX_SCR: /* Fallthrough */
                 case EX_SCD:
                     found = shortcut_fill_completion(c, store, token);
