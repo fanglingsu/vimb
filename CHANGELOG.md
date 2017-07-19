@@ -1,4 +1,46 @@
-# Changes in vimb
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+* Added completion of bookmarked URIs for `:bmr` to allow to easily remove
+  bookmarks without loading the page first.
+* Refresh hints after scrolling the page or resizing the window which makes
+  extended hint mode more comfortable.
+
+### Changed
+
+* Number of webprocesses in no longer limited to one.
+* Treat hint label generation depending on the first hint-key char.
+  If first char is '0' generate numeric style labels else the labels start with
+  the first char.
+  * `hint-keys=0123` -> `1 2 3 10 11 12 13`
+  * `hint-keys=asdf` -> `a s d f aa as ad af`
+* Show versions of used libs on `vimb -v` and the extension directory for
+  easier issue investigation.
+* During hinting JavaScript is enabled and reset to it's previous setting after
+  hinting is done might be security relevant.
+* Allow extended hints mode also for open `g;o` to allow the user to toggle
+  checkboxes and radiobuttons of forms.
+
+### Fixed
+
+* Deduced min required webkit version 2.16.x -> 2.8.x to compile vimb also on
+  older systems.
+* Fixed undeleted desktop file on `make uninstall`.
+* Fixed window not redrawn properly in case vimb was run within tabbed.
+* Fixed cursor appearing in empty inputbox on searching in case a normal mode
+  command was used that switches vimb into command mode like 'T' or ':'.
+* Fixed hint labels never started by the first char of the 'hint-keys'.
+* Fixed items where added to history even when `history-max-items` is set to 0.
+* Fixed hinting caused dbus timeout on attempt to open URI with location hash.
+* Fixed wrong scroll position shown in the right of the statusbar on some pages.
 
 ## [3.0-alpha] - 2017-05-27
 
@@ -8,7 +50,7 @@
 * Syntax for the font related gui settings has be changed.
   Fonts have to be given as `[ font-style | font-variant | font-weight | font-stretch ]? font-size font-family`
   Example `set input-font-normal=bold 10pt "DejaVu Sans Mono"` instead of
-  previous `set input-fg-normal=DejaVu Sans Mono Bold 10` 
+  previous `set input-fg-normal=DejaVu Sans Mono Bold 10`
 * Renames some settings to consequently use dashed setting names. Following
   settings where changed.
   ```
@@ -110,6 +152,7 @@
   cookie file
 * Fixed none POSIX `echo -n` call
 
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.0-alpha...master
 [3.0-alpha]: https://github.com/fanglingsu/vimb/compare/2.12...3.0-alpha
 [2.12]: https://github.com/fanglingsu/vimb/compare/2.11...2.12
 [2.11]: https://github.com/fanglingsu/vimb/compare/2.10...2.11
