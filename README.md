@@ -24,8 +24,8 @@ the project page of [Vimb][].
 
 ## Packages
 
-- Arch Linux [arch-git][]
-- Gentoo [gentoo-git][], [gentoo][]
+- Arch Linux: [aur/vimb][], [aur/vimb-git][], [pkgbuild/vimb-git][]
+- Gentoo: [gentoo-git][], [gentoo][]
 
 ## dependencies
 
@@ -62,8 +62,10 @@ target.
 
 Information about the license are found in the file LICENSE.
 
-[arch-git]:    https://github.com/fanglingsu/dotfiles/tree/master/build/vimb-git
-[gentoo-git]:  https://github.com/tharvik/overlay/tree/master/www-client/vimb
-[gentoo]:      https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
-[vimb]:        https://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
-[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[aur/vimb]:          https://aur.archlinux.org/packages/vimb
+[aur/vimb-git]:      https://aur.archlinux.org/packages/vimb-git
+[pkgbuild/vimb-git]: https://github.com/fanglingsu/dotfiles/tree/master/build/vimb-git
+[gentoo-git]:        https://github.com/tharvik/overlay/tree/master/www-client/vimb
+[gentoo]:            https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
+[vimb]:              https://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
+[mail]:              https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
