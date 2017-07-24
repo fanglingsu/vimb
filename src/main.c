@@ -1764,13 +1764,14 @@ int main(int argc, char* argv[])
     Client *c;
     GError *err = NULL;
     char *pidstr, *winid = NULL;
-    gboolean ver = FALSE;
+    gboolean ver = FALSE, buginfo = FALSE;
 
     GOptionEntry opts[] = {
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
+        {"bug-info", 0, 0, G_OPTION_ARG_NONE, &buginfo, "Print used library versions", NULL},
         {NULL}
     };
 
@@ -1784,6 +1785,10 @@ int main(int argc, char* argv[])
 
     if (ver) {
         printf("%s, version %s\n\n", PROJECT, VERSION);
+        return EXIT_SUCCESS;
+    }
+
+    if (buginfo) {
         printf("Commit:          %s\n", COMMIT);
         printf("WebKit compile:  %d.%d.%d\n",
                 WEBKIT_MAJOR_VERSION,

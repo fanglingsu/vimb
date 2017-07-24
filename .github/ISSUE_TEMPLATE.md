@@ -1,5 +1,5 @@
 <!-- If this is a bug report, please provide your version information
-$ vimb --version -->
+$ vimb --bug-info -->
 ### Steps to reproduce
 
 ### Expected behaviour

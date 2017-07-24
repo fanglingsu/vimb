@@ -22,8 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   the first char.
   * `hint-keys=0123` -> `1 2 3 10 11 12 13`
   * `hint-keys=asdf` -> `a s d f aa as ad af`
-* Show versions of used libs on `vimb -v` and the extension directory for
-  easier issue investigation.
+* Show versions of used libs on `vimb --bug-info` and the extension directory
+  for easier issue investigation.
 * During hinting JavaScript is enabled and reset to it's previous setting after
   hinting is done might be security relevant.
 * Allow extended hints mode also for open `g;o` to allow the user to toggle
