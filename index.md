@@ -45,8 +45,8 @@ But following images may give a impression of they way vimb works.
 
 ## packages
 
-- Arch Linux [arch-git][]
-- Gentoo [gentoo-git][], [gentoo][]
+- Arch Linux: [aur/vimb][], [aur/vimb-git][]
+- Gentoo: [gentoo-git][], [gentoo][]
 
 ## download
 
@@ -96,12 +96,13 @@ target.
 If you find a misbehaviour or have feature requests use the
 [issue tracker][bug] provided by github or via [mailing list][mail].
 
-[arch-git]:    https://github.com/fanglingsu/dotfiles/tree/master/build/vimb-git
-[gentoo-git]:  https://github.com/tharvik/overlay/tree/master/www-client/vimb
-[gentoo]:      https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
-[vimb]:        https://github.com/fanglingsu/vimb "vimb project sources"
-[mail]:        https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
-[bug]:         https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
-[zip]:         https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
-[tgz]:         https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
-[releases]:    https://github.com/fanglingsu/vimb/releases "vimb download releases"
+[aur/vimb]:          https://aur.archlinux.org/packages/vimb
+[aur/vimb-git]:      https://aur.archlinux.org/packages/vimb-git
+[gentoo-git]:        https://github.com/tharvik/overlay/tree/master/www-client/vimb
+[gentoo]:            https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
+[vimb]:              https://github.com/fanglingsu/vimb "vimb project sources"
+[mail]:              https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
+[bug]:               https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
+[zip]:               https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
+[tgz]:               https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
+[releases]:          https://github.com/fanglingsu/vimb/releases "vimb download releases"
