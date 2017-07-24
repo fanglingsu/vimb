@@ -47,7 +47,10 @@ Mandatory arguments to long options are mandatory for short options too.
   directory for configuration data.
 
 −v, −−version
-: Print build and version information.
+: Print build and version information and then quit.
+
+−−bug-info
+: Prints information about used libraries for bug reports and then quit.
 
 ## MODES
 {:#MODES}
