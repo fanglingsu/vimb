@@ -1189,7 +1189,7 @@ static gboolean complete(Client *c, short direction)
             switch (arg->code) {
                 case EX_OPEN:
                 case EX_TABOPEN:
-                    sort  = FALSE;
+                    sort = FALSE;
                     if (*token == '!') {
                         found = bookmark_fill_completion(store, token + 1);
                     } else {
@@ -1206,6 +1206,7 @@ static gboolean complete(Client *c, short direction)
                     break;
 
                 case EX_BMR:
+                    sort  = FALSE;
                     found = bookmark_fill_completion(store, token);
                     break;
 
