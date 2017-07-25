@@ -912,6 +912,13 @@ If there is no '=' after the header name, then the complete header
 will be removed from the request, if the '=' is present means that
 the header value is set to empty value.
 .sp
+Note that webkit reused already set headers in case of a reload of a page.
+So if there are headers removed that where previously use to access a certain
+page and the page is reloaded or opened via back/forward history the header
+will still be sent.
+To apply the new header setting properly it's required to request another page
+or to open current page new by `O<Cr>`.
+.sp
 To use '=' within a header value the value must be quoted like shown in
 Example for the Cookie header.
 .RS
