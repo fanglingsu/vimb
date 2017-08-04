@@ -107,7 +107,7 @@ void webkit_web_extension_initialize_with_user_data(WebKitWebExtension *extensio
     char *server_address;
     GDBusAuthObserver *observer;
 
-    g_variant_get(data, "(ms)", &server_address);
+    g_variant_get(data, "(m&s)", &server_address);
     if (!server_address) {
         g_warning("UI process did not start D-Bus server");
         return;
