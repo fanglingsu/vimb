@@ -208,6 +208,9 @@ The webkit scrollbars in the main view can be disabled by
   - disable `:e document.documentElement.style.overflow = 'hidden';`
   - enabled `:e document.documentElement.style.overflow = 'auto';`
 
+But note that setting the overflow to hidden will disable webkit built in
+scrolling via cursor keys or mouse wheel.
+
 [jsqsa]:    http://mdn.beonex.com/en/DOM/document.querySelectorAll.html
 [tabbed]:   http://tools.suckless.org/tabbed/
 [xdotool]:  http://www.semicomplete.com/projects/xdotool/
