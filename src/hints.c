@@ -152,7 +152,7 @@ void hints_create(Client *c, const char *input)
             MAXIMUM_HINTS,
             GET_CHAR(c, "hint-keys"),
             GET_BOOL(c, "hint-follow-last") ? "true" : "false",
-            GET_BOOL(c, "hint-number-same-length") ? "true" : "false"
+            GET_BOOL(c, "hint-keys-same-length") ? "true" : "false"
         );
 
         call_hints_function(c, "init", jsargs, FALSE);

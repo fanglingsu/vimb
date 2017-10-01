@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   hinting is done might be security relevant.
 * Allow extended hints mode also for open `g;o` to allow the user to toggle
   checkboxes and radiobuttons of forms.
+* Rename `hint-number-same-length` into `hint-keys-same-length` for consistency.
 
 ### Fixed
 
