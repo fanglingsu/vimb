@@ -632,6 +632,126 @@ queue.
 .TP
 .B :qc[lear]
 Removes all entries from queue.
+.SS Automatic commands
+An autocommand is a command that is executed automatically in response to some
+event, such as a URI being opened.
+Autocommands are very powerful.
+Use them with care and they will help you avoid typing many commands.
+.PP
+Autocommands are built with following properties.
+.TP
+.I group
+When the [\fIgroup\fP] argument is not given, Vimb uses the current group as
+defined with ':augroup', otherwise, Vimb uses the group defined with
+[\fIgroup\fP].
+Groups are useful to remove multiple grouped autocommands.
+.TP
+.I event
+You can specify a comma separated list of event names.
+No white space can be used in this list.
+.RS
+.PP
+.PD 0
+Events:
+.TP
+.B LoadStarted
+Fired if a new page is going to be opened.
+No data has been received yet, the load may still fail for transport issues.
+.TP
+.B LoadCommited
+Fired if first data chunk has arrived, meaning that the necessary transport
+requirements are established, and the load is being performed.
+This is the right event to toggle content related setting
+like 'scripts', 'plugins' and such things.
+.TP
+.B LoadFinished
+Fires when everything that was required to display on the page has been loaded.
+.TP
+.B DownloadStarted
+Fired right after a download is started.
+.TP
+.B DownloadFinished
+Fired if a Vimb managed download is finished.
+For external download this event is not available.
+.TP
+.B DownloadFailed
+Fired if a Vimb managed download failed.
+For external download this event is not available.
+.PD
+.RE
+.TP
+.I pat
+Comma separated list of patterns, matches in order to check if a autocommand
+applies to the URI associated to an event.
+To use ',' within the single patterns this must be escaped as '\e,'.
+.RS
+.PP
+.PD 0
+Patterns:
+.IP "\fB*\fP"
+Matches any sequence of characters.
+This includes also '/' in contrast to shell patterns.
+.IP "\fB?\fP"
+Matches any single character except of '/'.
+.IP "\fB{one,two}\fP"
+Matches 'one' or 'two'.
+Any '{', ',' and '}' within this pattern must be escaped by a '\\'.
+\&'*' and '?' have no special meaning within the curly braces.
+.IP "\fB\e\fP"
+Use backslash to escape the special meaning of '?*{},' in the pattern or
+pattern list.
+.PD
+.RE
+.TP
+.I cmd
+Any `ex` command vimb understands.
+The leading ':' is not required.
+Multiple commands can be separated by '|'.
+.TP
+.BI ":au[tocmd] [" group "] {" event "} {" pat "} {" cmd "}"
+Add \fIcmd\fP to the list of commands that Vimb will execute automatically on
+\fIevent\fP for a URI matching \fIpat\fP autocmd-patterns.
+Vimb always adds the \fIcmd\fP after existing autocommands, so that the
+autocommands are executed in the order in which they were given.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "} {" pat "} {" cmd "}"
+Remove all autocommands associated with \fIevent\fP and which pattern match
+\fIpat\fP, and add the command \fIcmd\fP.
+Note that the pattern is not matches literally to find autocommands
+to remove, like Vim does.
+Vimb matches the autocommand pattern with \fIpat\fP.
+If [\fIgroup\fP] is not given, deletes autocommands in current group,
+as noted above.
+.TP
+.BI ":au[tocmd]! [" group "] {" event "} {" pat "}"
+Remove all autocommands associated with \fIevent\fP and which pattern matches
+\fIpat\fP in given group (current group by default).
+.TP
+.BI ":au[tocmd]! [" group "] * {" pat "}"
+Remove all autocommands with patterns matching \fIpat\fP for all events
+in given group (current group by default).
+.TP
+.BI ":au[tocmd]! [" group "] {" event "}"
+Remove all autocommands for \fIevent\fP in given group (current group
+by default).
+.TP
+.BI ":au[tocmd]! [" group "]"
+Remove all autocommands in given group (current group by default).
+.TP
+.BI ":aug[roup] {" name "}"
+Define the autocmd group \fIname\fP for the following ":autocmd" commands.
+The name "end" selects the default group.
+.TP
+.BI ":aug[roup]! {" name "}"
+Delete the autocmd group \fIname\fP.
+.PP
+Example:
+.EX
+:aug github
+:  au LoadCommited * set scripts=off|set cookie-accept=never
+:  au LoadCommited http{s,}://github.com/* set scripts=on
+:aug end
+.EE
 .SS Misc
 .TP
 .B :cl[earcache]

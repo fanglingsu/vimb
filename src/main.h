@@ -207,6 +207,8 @@ struct Statusbar {
     GtkWidget *mode, *left, *right, *cmd;
 };
 
+struct AuGroup;
+
 struct Client {
     struct Client       *next;
     struct State        state;
@@ -250,6 +252,11 @@ struct Client {
     struct {
         GHashTable *table;                      /* holds the protocol handlers */
     } handlers;
+    struct {
+        struct AuGroup *curgroup;
+        GSList         *groups;
+        guint          usedbits;                /* holds all used event bits */
+    } autocmd;
 };
 
 struct Vimb {

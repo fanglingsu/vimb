@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   bookmarks without loading the page first.
 * Refresh hints after scrolling the page or resizing the window which makes
   extended hint mode more comfortable.
+* Reintroduce the automatic commands from vimb2. An automatic command is
+  executed automatically in response to some event, such as a URI being opened.
 
 ### Changed
 

@@ -38,6 +38,8 @@ static struct {
 extern struct Vimb vb;
 
 static void create_dir_if_not_exists(const char *dirpath);
+static gboolean match(const char *pattern, int patlen, const char *subject);
+static gboolean match_list(const char *pattern, int patlen, const char *subject);
 
 /**
  * Build the absolute file path of given path and possible given directory.
@@ -776,3 +778,204 @@ static void create_dir_if_not_exists(const char *dirpath)
         g_mkdir_with_parents(dirpath, 0755);
     }
 }
+
+/**
+ * Compares given string against also given list of patterns.
+ *
+ * *         Matches any sequence of characters.
+ * ?         Matches any single character except of '/'.
+ * {foo,bar} Matches foo or bar - '{', ',' and '}' within this pattern must be
+ *           escaped by '\'. '*' and '?' have no special meaning within the
+ *           curly braces.
+ * *?{}      these chars must always be escaped by '\' to match them literally
+ */
+gboolean util_wildmatch(const char *pattern, const char *subject)
+{
+    const char *end;
+    int braces, patlen, count;
+
+    /* loop through all pattens */
+    for (count = 0; *pattern; pattern = (*end == ',' ? end + 1 : end), count++) {
+        /* find end of the pattern - but be careful with comma in curly braces */
+        braces = 0;
+        for (end = pattern; *end && (*end != ',' || braces || *(end - 1) == '\\'); ++end) {
+            if (*end == '{') {
+                braces++;
+            } else if (*end == '}') {
+                braces--;
+            }
+        }
+        /* ignore single comma */
+        if (*pattern == *end) {
+            continue;
+        }
+        /* calculate the length of the pattern */
+        patlen = end - pattern;
+
+        /* if this pattern matches - return */
+        if (match(pattern, patlen, subject)) {
+            return true;
+        }
+    }
+
+    if (!count) {
+        /* empty pattern matches only on empty subject */
+        return !*subject;
+    }
+    /* there where one or more patterns but none of them matched */
+    return false;
+}
+
+
+/**
+ * Compares given subject string against the given pattern.
+ * The pattern needs not to bee NUL terminated.
+ */
+static gboolean match(const char *pattern, int patlen, const char *subject)
+{
+    int i;
+    char sl, pl;
+
+    while (patlen > 0) {
+        switch (*pattern) {
+            case '?':
+                /* '?' matches a single char except of / and subject end */
+                if (*subject == '/' || !*subject) {
+                    return false;
+                }
+                break;
+
+            case '*':
+                /* easiest case - the '*' ist the last char in pattern - this
+                 * will always match */
+                if (patlen == 1) {
+                    return true;
+                }
+                /* Try to match as much as possible. Try to match the complete
+                 * uri, if that fails move forward in uri and check for a
+                 * match. */
+                i = strlen(subject);
+                while (i >= 0 && !match(pattern + 1, patlen - 1, subject + i)) {
+                    i--;
+                }
+                return i >= 0;
+
+            case '}':
+                /* spurious '}' in pattern */
+                return false;
+
+            case '{':
+                /* possible {foo,bar} pattern */
+                return match_list(pattern, patlen, subject);
+
+            case '\\':
+                /* '\' escapes next special char */
+                if (strchr("*?{}", pattern[1])) {
+                    pattern++;
+                    patlen--;
+                    if (*pattern != *subject) {
+                        return false;
+                    }
+                }
+                break;
+
+            default:
+                /* compare case insensitive */
+                sl = *subject;
+                if (VB_IS_UPPER(sl)) {
+                    sl += 'a' - 'A';
+                }
+                pl = *pattern;
+                if (VB_IS_UPPER(pl)) {
+                    pl += 'a' - 'A';
+                }
+                if (sl != pl) {
+                    return false;
+                }
+                break;
+        }
+        /* do another loop run with next pattern and subject char */
+        pattern++;
+        patlen--;
+        subject++;
+    }
+
+    /* on end of pattern only a also ended subject is a match */
+    return !*subject;
+}
+
+/**
+ * Matches pattern starting with '{'.
+ * This function can process also on none null terminated pattern.
+ */
+static gboolean match_list(const char *pattern, int patlen, const char *subject)
+{
+    int endlen;
+    const char *end, *s;
+
+    /* finde the next none escaped '}' */
+    for (end = pattern, endlen = patlen; endlen > 0 && *end != '}'; end++, endlen--) {
+        /* if escape char - move pointer one additional step */
+        if (*end == '\\') {
+            end++;
+            endlen--;
+        }
+    }
+
+    if (!*end) {
+        /* unterminated '{' in pattern */
+        return false;
+    }
+
+    s = subject;
+    end++;      /* skip over } */
+    endlen--;
+    pattern++;  /* skip over { */
+    patlen--;
+    while (true) {
+        switch (*pattern) {
+            case ',':
+                if (match(end, endlen, s)) {
+                    return true;
+                }
+                s = subject;
+                pattern++;
+                patlen--;
+                break;
+
+            case '}':
+                return match(end, endlen, s);
+
+            case '\\':
+                if (pattern[1] == ',' || pattern[1] == '}' || pattern[1] == '{') {
+                    pattern++;
+                    patlen--;
+                }
+                /* fall through */
+
+            default:
+                if (*pattern == *s) {
+                    pattern++;
+                    patlen--;
+                    s++;
+                } else {
+                    /* this item of the list does not match - move forward to
+                     * the next none escaped ',' or '}' */
+                    s = subject;
+                    for (s = subject; *pattern != ',' && *pattern != '}'; pattern++, patlen--) {
+                        /* if escape char is found - skip next char */
+                        if (*pattern == '\\') {
+                            pattern++;
+                            patlen--;
+                        }
+                    }
+                    /* found ',' skip over it to check the next list item */
+                    if (*pattern == ',') {
+                        pattern++;
+                        patlen--;
+                    }
+                }
+        }
+    }
+}
+

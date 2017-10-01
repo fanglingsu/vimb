@@ -55,5 +55,6 @@ gboolean util_parse_expansion(Client *c, const char **input, GString *str,
 char *util_sanitize_filename(char *filename);
 char *util_strcasestr(const char *haystack, const char *needle);
 char *util_str_replace(const char* search, const char* replace, const char* string);
+gboolean util_wildmatch(const char *pattern, const char *subject);
 
 #endif /* end of include guard: _UTIL_H */

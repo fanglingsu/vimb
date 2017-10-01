@@ -35,6 +35,8 @@
 #define PROGRESS_BAR_LEN            20
 #endif
 
+#define FEATURE_AUTOCMD
+
 /* time in seconds after that message will be removed from inputbox if the
  * message where only temporary */
 #define MESSAGE_TIMEOUT             5

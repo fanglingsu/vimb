@@ -41,9 +41,13 @@
 #include "shortcut.h"
 #include "util.h"
 #include "ext-proxy.h"
+#include "autocmd.h"
 
 typedef enum {
-    /* TODO add feature autocmd */
+#ifdef FEATURE_AUTOCMD
+    EX_AUTOCMD,
+    EX_AUGROUP,
+#endif
     EX_BMA,
     EX_BMR,
     EX_EVAL,
@@ -127,6 +131,10 @@ static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static VbCmdResult execute(Client *c, const ExArg *arg);
 
+#ifdef FEATURE_AUTOCMD
+static VbCmdResult ex_augroup(Client *c, const ExArg *arg);
+static VbCmdResult ex_autocmd(Client *c, const ExArg *arg);
+#endif
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
 static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
@@ -161,6 +169,10 @@ static void history_rewind(void);
  * match. */
 static ExInfo commands[] = {
     /* command           code            func           flags */
+#ifdef FEATURE_AUTOCMD
+    {"autocmd",          EX_AUTOCMD,     ex_autocmd,    EX_FLAG_CMD|EX_FLAG_BANG},
+    {"augroup",          EX_AUGROUP,     ex_augroup,    EX_FLAG_LHS|EX_FLAG_BANG},
+#endif
     {"bma",              EX_BMA,         ex_bookmark,   EX_FLAG_RHS},
     {"bmr",              EX_BMR,         ex_bookmark,   EX_FLAG_RHS},
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
@@ -778,6 +790,18 @@ static void free_cmdarg(ExArg *arg)
     g_slice_free(ExArg, arg);
 }
 
+#ifdef FEATURE_AUTOCMD
+static VbCmdResult ex_augroup(Client *c, const ExArg *arg)
+{
+    return autocmd_augroup(c, arg->lhs->str, arg->bang) ? CMD_SUCCESS : CMD_ERROR;
+}
+
+static VbCmdResult ex_autocmd(Client *c, const ExArg *arg)
+{
+    return autocmd_add(c, arg->rhs->str, arg->bang) ? CMD_SUCCESS : CMD_ERROR;
+}
+#endif
+
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg)
 {
     if (arg->code == EX_BMR) {
@@ -1223,6 +1247,16 @@ static gboolean complete(Client *c, short direction)
                 case EX_SOURCE:
                     found = util_filename_fill_completion(c, store, token);
                     break;
+
+#ifdef FEATURE_AUTOCMD
+                case EX_AUTOCMD:
+                    found = autocmd_fill_event_completion(c, store, token);
+                    break;
+
+                case EX_AUGROUP:
+                    found = autocmd_fill_group_completion(c, store, token);
+                    break;
+#endif
 
                 default:
                     break;

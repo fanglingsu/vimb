@@ -43,6 +43,7 @@
 #include "setting.h"
 #include "shortcut.h"
 #include "util.h"
+#include "autocmd.h"
 
 static void client_destroy(Client *c);
 static Client *client_new(WebKitWebView *webview);
@@ -647,6 +648,9 @@ static void client_destroy(Client *c)
     register_cleanup(c);
     setting_cleanup(c);
     handler_cleanup(c);
+#ifdef FEATURE_AUTOCMD
+    autocmd_cleanup(c);
+#endif
 
     g_slice_free(Client, c);
 
@@ -677,6 +681,9 @@ static Client *client_new(WebKitWebView *webview)
     completion_init(c);
     map_init(c);
     handler_init(c);
+#ifdef FEATURE_AUTOCMD
+    autocmd_init(c);
+#endif
 
     /* webview */
     c->webview   = webview_new(c, webview);
@@ -964,6 +971,11 @@ static void spawn_new_instance(const char *uri)
 static void on_webctx_download_started(WebKitWebContext *webctx,
         WebKitDownload *download, Client *c)
 {
+#ifdef FEATURE_AUTOCMD
+    const char *uri = webkit_uri_request_get_uri(webkit_download_get_request(download));
+    autocmd_run(c, AU_DOWNLOAD_STARTED, uri, NULL);
+#endif
+
     g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
     g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
     g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
@@ -1019,6 +1031,11 @@ static void on_webdownload_failed(WebKitDownload *download,
     g_assert(error);
     g_assert(c);
 
+#ifdef FEATURE_AUTOCMD
+    const char *uri = webkit_uri_request_get_uri(webkit_download_get_request(download));
+    autocmd_run(c, AU_DOWNLOAD_FAILED, uri, NULL);
+#endif
+
     /* get the failed download's destination uri */
     g_object_get(download, "destination", &destination, NULL);
     g_assert(destination);
@@ -1053,6 +1070,11 @@ static void on_webdownload_finished(WebKitDownload *download, Client *c)
 
     g_assert(download);
     g_assert(c);
+
+#ifdef FEATURE_AUTOCMD
+    const char *uri = webkit_uri_request_get_uri(webkit_download_get_request(download));
+    autocmd_run(c, AU_DOWNLOAD_FINISHED, uri, NULL);
+#endif
 
     c->state.downloads = g_list_remove(c->state.downloads, download);
 
@@ -1216,10 +1238,14 @@ static void on_webview_load_changed(WebKitWebView *webview,
 
     switch (event) {
         case WEBKIT_LOAD_STARTED:
+            uri = webkit_web_view_get_uri(webview);
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(c, AU_LOAD_STARTED, uri, NULL);
+#endif
             /* update load progress in statusbar */
             c->state.progress = 0;
             vb_statusbar_update(c);
-            set_title(c, webkit_web_view_get_uri(webview));
+            set_title(c, uri);
             /* Make sure hinting is cleared before the new page is loaded.
              * Without that vimb would still be in hinting mode after hinting
              * was started and some links was clicked my mouse. Even if there
@@ -1234,6 +1260,9 @@ static void on_webview_load_changed(WebKitWebView *webview,
 
         case WEBKIT_LOAD_COMMITTED:
             uri = webkit_web_view_get_uri(webview);
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(c, AU_LOAD_COMMITTED, uri, NULL);
+#endif
             /* save the current URI in register % */
             vb_register_add(c, '%', uri);
             /* check if tls is on and the page is trusted */
@@ -1258,6 +1287,9 @@ static void on_webview_load_changed(WebKitWebView *webview,
 
         case WEBKIT_LOAD_FINISHED:
             uri = webkit_web_view_get_uri(webview);
+#ifdef FEATURE_AUTOCMD
+            autocmd_run(c, AU_LOAD_FINISHED, uri, NULL);
+#endif
             c->state.progress = 100;
             if (strncmp(uri, "about:", 6)) {
                 history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
