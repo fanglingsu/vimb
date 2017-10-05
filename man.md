@@ -377,7 +377,7 @@ Multiple commands, separated by a `|` can be given in a single command line
 and will be executed consecutively. The pipe can be included as an argument to
 a command by escaping it with a backslash.
 Following commands process the entire command-line string literally. These
-commands will include any `|` as part of their argument string and so cannot
+commands will include any `|` as part of their argument string and so can not
 be followed by another command.
 
 - autocmd
