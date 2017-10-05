@@ -658,7 +658,7 @@ Events:
 Fired if a new page is going to be opened.
 No data has been received yet, the load may still fail for transport issues.
 .TP
-.B LoadCommited
+.B LoadCommitted
 Fired if first data chunk has arrived, meaning that the necessary transport
 requirements are established, and the load is being performed.
 This is the right event to toggle content related setting
@@ -748,8 +748,8 @@ Delete the autocmd group \fIname\fP.
 Example:
 .EX
 :aug github
-:  au LoadCommited * set scripts=off|set cookie-accept=never
-:  au LoadCommited http{s,}://github.com/* set scripts=on
+:  au LoadCommitted * set scripts=off|set cookie-accept=never
+:  au LoadCommitted http{s,}://github.com/* set scripts=on
 :aug end
 .EE
 .SS Misc
