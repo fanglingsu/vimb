@@ -17,6 +17,10 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+Autogroup and Autocmd
+: [augroup and autocmd](man.html#Autocmd) where ported to webkit2 too (thanks
+  to Yoann Blein)
+
 Vimb migrated to [webkit2](https://github.com/fanglingsu/vimb/compare/2.12...3.0-alpha)
 : webkit1 is not supported anymore and we started porting it to webkit2. Now
   the vimb 3.0.alpha with a reduced featureset is ready to use.
