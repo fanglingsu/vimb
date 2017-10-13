@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Fixed items where added to history even when `history-max-items` is set to 0.
 * Fixed hinting caused dbus timeout on attempt to open URI with location hash.
 * Fixed wrong scroll position shown in the right of the statusbar on some pages.
+* Fixed vimb keeping in normal mode when HTTP Authentication dialog is shown.
 
 ## [3.0-alpha] - 2017-05-27
 
