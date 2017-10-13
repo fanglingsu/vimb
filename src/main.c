@@ -82,6 +82,8 @@ static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec,
         Client *c);
 static void on_webview_ready_to_show(WebKitWebView *webview, Client *c);
 static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c);
+static gboolean on_webview_authenticate(WebKitWebView *webview,
+        WebKitAuthenticationRequest *request, Client *c);
 static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c);
 static void on_window_destroy(GtkWidget *window, Client *c);
 static gboolean quit(Client *c);
@@ -1259,6 +1261,12 @@ static void on_webview_load_changed(WebKitWebView *webview,
             break;
 
         case WEBKIT_LOAD_COMMITTED:
+            /* In case of HTTP authentication request we ignore the focus
+             * changes so that the input mode can be set for the
+             * authentication request. If the authentication dialog is filled
+             * or aborted the load will be commited. So this seems to be the
+             * right place to remove the flag. */
+            c->mode->flags &= ~FLAG_IGNORE_FOCUS;
             uri = webkit_web_view_get_uri(webview);
 #ifdef FEATURE_AUTOCMD
             autocmd_run(c, AU_LOAD_COMMITTED, uri, NULL);
@@ -1386,6 +1394,22 @@ static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c
     vb_echo(c, MSG_ERROR, FALSE, "Webview Crashed on %s", webkit_web_view_get_uri(webview));
 
     return TRUE;
+}
+
+/**
+ * Callback in case HTTP authentication is requested by the server.
+ */
+static gboolean on_webview_authenticate(WebKitWebView *webview,
+        WebKitAuthenticationRequest *request, Client *c)
+{
+    /* Don't change the mode if we are in pass through mode. */
+    if (c->mode->id == 'n') {
+        vb_enter(c, 'i');
+        /* Make sure we do not switch back to normal mode in case a previos
+         * page is open and looses the focus. */
+        c->mode->flags |= FLAG_IGNORE_FOCUS;
+    }
+    return FALSE;
 }
 
 /**
@@ -1741,6 +1765,7 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::notify::uri", G_CALLBACK(on_webview_notify_uri), c,
         "signal::ready-to-show", G_CALLBACK(on_webview_ready_to_show), c,
         "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
+        "signal::authenticate", G_CALLBACK(on_webview_authenticate), c,
         NULL
     );
 
@@ -1771,7 +1796,7 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
     g_variant_unref(variant);
 
     c = vb_get_client_for_page_id(pageid);
-    if (!c) {
+    if (!c || c->mode->flags & FLAG_IGNORE_FOCUS) {
         return;
     }
 
