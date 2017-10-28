@@ -176,6 +176,7 @@ struct State {
         gboolean    active;         /* indicate if there is a active search */
         short       direction;      /* last direction 1 forward, -1 backward */
         int         matches;        /* number of matching search results */
+        char        *last_query;    /* last search query */
     } search;
 };
 

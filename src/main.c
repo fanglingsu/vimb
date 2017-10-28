@@ -645,6 +645,10 @@ static void client_destroy(Client *c)
         vb.clients = c->next;
     }
 
+    if (c->state.search.last_query) {
+        g_free(c->state.search.last_query);
+    }
+
     completion_cleanup(c);
     map_cleanup(c);
     register_cleanup(c);
