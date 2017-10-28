@@ -22,6 +22,7 @@
  * together.
  */
 #include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 #ifdef FEATURE_QUEUE
@@ -44,6 +45,7 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
     WebKitFindController *fc;
     const char *query;
     guint count;
+    int direction;
 
     fc = webkit_web_view_get_find_controller(c->webview);
 
@@ -62,7 +64,6 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
         }
 
         c->state.search.active = FALSE;
-        c->state.search.direction = 0;
         c->state.search.matches = 0;
 
         vb_statusbar_update(c);
@@ -72,6 +73,14 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
 
     query = arg->s;
     count = abs(arg->i);
+    direction = arg->i > 0 ? 1 : -1;
+
+    /* restart the last search if a search result is asked for and no
+     * search was active */
+    if (!query && !c->state.search.active) {
+        query = c->state.search.last_query;
+        direction = c->state.search.direction;
+    }
 
     /* Only committed search strings adjust registers and are recorded in
      * history, intermediate strings (while using incsearch) don't. */
@@ -95,14 +104,21 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
             webkit_find_controller_search(fc, "", WEBKIT_FIND_OPTIONS_NONE, G_MAXUINT);
         }
 
+        if (!c->state.search.last_query) {
+            c->state.search.last_query = g_strdup(query);
+        } else if (strcmp(c->state.search.last_query, query)) {
+            g_free(c->state.search.last_query);
+            c->state.search.last_query = g_strdup(query);
+        }
+
         webkit_find_controller_search(fc, query,
                 WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
                 WEBKIT_FIND_OPTIONS_WRAP_AROUND |
-                (arg->i > 0 ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
+                (direction > 0 ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
                 G_MAXUINT);
 
         c->state.search.active = TRUE;
-        c->state.search.direction = arg->i > 0 ? 1 : -1;
+        c->state.search.direction = direction;
         /* TODO get the number of matches */
 
         /* Skip first search because the first match is already
