@@ -20,6 +20,7 @@
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 #include <gtk/gtkx.h>
+#include <libsoup/soup.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -113,12 +114,19 @@ struct Vimb vb;
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
     char *suggested_filename, const char *path)
 {
-    char *download_path, *dir, *file, *uri;
+    char *download_path, *dir, *file, *uri, *basename = NULL,
+         *decoded_uri = NULL;
+    const char *download_uri;
     download_path = GET_CHAR(c, "download-path");
 
-    /* For unnamed downloads set default filename. */
     if (!suggested_filename || !*suggested_filename) {
-        suggested_filename = "vimb-download";
+        /* Try to find a matching name if there is no suggested filename. */
+        download_uri = webkit_uri_request_get_uri(webkit_download_get_request(download));
+        decoded_uri  = soup_uri_decode(download_uri);
+        basename     = g_filename_display_basename(decoded_uri);
+        g_free(decoded_uri);
+
+        suggested_filename = basename;
     }
 
     /* Prepare the path to save the download. */
@@ -134,6 +142,8 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
     } else {
         file = util_build_path(c, suggested_filename, download_path);
     }
+
+    g_free(basename);
 
     if (!file) {
         return FALSE;
