@@ -27,6 +27,7 @@
 #include "setting.h"
 #include "scripts/scripts.h"
 #include "shortcut.h"
+#include "util.h"
 
 typedef enum {
     SETTING_SET,        /* :set option=value */
@@ -60,6 +61,7 @@ static int input_autohide(Client *c, const char *name, DataType type, void *valu
 static int internal(Client *c, const char *name, DataType type, void *value, void *data);
 static int headers(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_scripts(Client *c, const char *name, DataType type, void *value, void *data);
+static int style_sheet_file(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_style(Client *c, const char *name, DataType type, void *value, void *data);
 static int statusbar(Client *c, const char *name, DataType type, void *value, void *data);
 static int tls_policy(Client *c, const char *name, DataType type, void *value, void *data);
@@ -129,6 +131,7 @@ void setting_init(Client *c)
     setting_add(c, "xss-auditor", TYPE_BOOLEAN, &on, webkit, 0, "enable-xss-auditor");
 
     /* internal variables */
+    setting_add(c, "stylesheetfile", TYPE_CHAR, &"style.css", style_sheet_file, 0, NULL);
     setting_add(c, "stylesheet", TYPE_BOOLEAN, &on, user_style, 0, NULL);
     setting_add(c, "user-scripts", TYPE_BOOLEAN, &on, user_scripts, 0, NULL);
     setting_add(c, "cookie-accept", TYPE_CHAR, &"always", cookie_accept, 0, NULL);
@@ -689,6 +692,32 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
             WEBKIT_USER_STYLE_LEVEL_AUTHOR, NULL, NULL);
     webkit_user_content_manager_add_style_sheet(ucm, style);
     webkit_user_style_sheet_unref(style);
+
+    return CMD_SUCCESS;
+}
+
+static int style_sheet_file(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    char *path;
+    gchar *source;
+
+    path = util_get_config_dir();
+
+    vb.files[FILES_USER_STYLE] = util_get_filepath(path, value, FALSE);
+
+    WebKitUserContentManager *ucm;
+    ucm = webkit_web_view_get_user_content_manager(c->webview);
+
+    WebKitUserStyleSheet *style;
+    g_file_get_contents(vb.files[FILES_USER_STYLE], &source, NULL, NULL);
+    style = webkit_user_style_sheet_new(
+        source, WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+        WEBKIT_USER_STYLE_LEVEL_USER, NULL, NULL
+    );
+
+    webkit_user_content_manager_add_style_sheet(ucm, style);
+    webkit_user_style_sheet_unref(style);
+    g_free(source);
 
     return CMD_SUCCESS;
 }
