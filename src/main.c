@@ -91,6 +91,7 @@ static gboolean quit(Client *c);
 static void read_from_stdin(Client *c);
 static void register_cleanup(Client *c);
 static void update_title(Client *c);
+static gchar *sanitize_uri(const gchar *uri);
 static void update_urlbar(Client *c);
 static void set_statusbar_style(Client *c, StatusType type);
 static void set_title(Client *c, const char *title);
@@ -1329,7 +1330,7 @@ static void on_webview_mouse_target_changed(WebKitWebView *webview,
         WebKitHitTestResult *result, guint modifiers, Client *c)
 {
     char *msg;
-    const char *uri;
+    char *uri;
 
     /* Save the hitTestResult to have this later available for events that
      * don't support this. */
@@ -1339,15 +1340,17 @@ static void on_webview_mouse_target_changed(WebKitWebView *webview,
     c->state.hit_test_result = g_object_ref(result);
 
     if (webkit_hit_test_result_context_is_link(result)) {
-        uri = webkit_hit_test_result_get_link_uri(result);
+        uri = sanitize_uri(webkit_hit_test_result_get_link_uri(result));
         msg = g_strconcat("Link: ", uri, NULL);
         gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
         g_free(msg);
+        g_free(uri);
     } else if (webkit_hit_test_result_context_is_image(result)) {
-        uri = webkit_hit_test_result_get_image_uri(result);
+        uri = sanitize_uri(webkit_hit_test_result_get_image_uri(result));
         msg = g_strconcat("Image: ", uri, NULL);
         gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
         g_free(msg);
+        g_free(uri);
     } else {
         /* No link under cursor - show the current URI. */
         update_urlbar(c);
@@ -1518,12 +1521,31 @@ static void update_title(Client *c)
 }
 
 /**
+ * Strips username:password@ from a uri if there is one.
+ */
+static gchar *sanitize_uri(const gchar *uri)
+{
+    GRegex *reg;
+    gchar *sanitized_uri;
+
+    reg = g_regex_new("^(.+?//).+?:.+?@(.+)$", 0, 0, NULL);
+    if (g_regex_match(reg, uri, 0, NULL)) {
+      sanitized_uri = g_regex_replace(reg, uri, -1, 0, "\\1\\2", 0, NULL);
+    } else {
+      sanitized_uri = g_strdup(uri);
+    }
+    g_regex_unref(reg);
+    return sanitized_uri;
+}
+
+/**
  * Update the contents of the url bar on the left of the statu bar according
  * to current opened url and position in back forward history.
  */
 static void update_urlbar(Client *c)
 {
     GString *str;
+    gchar *uri;
     gboolean back, fwd;
 
     str = g_string_new("");
@@ -1532,8 +1554,9 @@ static void update_urlbar(Client *c)
         g_string_append_printf(str, "[%s] ", vb.profile);
     }
 
-    /* show current url */
-    g_string_append_printf(str, "%s", c->state.uri);
+    /* show current url, stripping username and password first */
+    uri = sanitize_uri(c->state.uri);
+    g_string_append_printf(str, "%s", uri);
 
     /* show history indicator only if there is something to show */
     back = webkit_web_view_can_go_back(c->webview);
@@ -1544,6 +1567,7 @@ static void update_urlbar(Client *c)
 
     gtk_label_set_text(GTK_LABEL(c->statusbar.left), str->str);
     g_string_free(str, TRUE);
+    g_free(uri);
 }
 
 #ifdef FREE_ON_QUIT
