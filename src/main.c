@@ -1521,20 +1521,17 @@ static void update_title(Client *c)
 }
 
 /**
- * Strips username:password@ from a uri if there is one.
+ * Strips password from a uri.
  */
-static gchar *sanitize_uri(const gchar *uri)
+static gchar *sanitize_uri(const gchar *uri_str)
 {
-    GRegex *reg;
+    SoupURI *uri;
     gchar *sanitized_uri;
 
-    reg = g_regex_new("^(.+?//).+?:.+?@(.+)$", 0, 0, NULL);
-    if (g_regex_match(reg, uri, 0, NULL)) {
-      sanitized_uri = g_regex_replace(reg, uri, -1, 0, "\\1\\2", 0, NULL);
-    } else {
-      sanitized_uri = g_strdup(uri);
-    }
-    g_regex_unref(reg);
+    uri = soup_uri_new(uri_str);
+    sanitized_uri = soup_uri_to_string(uri, FALSE);
+    soup_uri_free(uri);
+
     return sanitized_uri;
 }
 
@@ -1554,7 +1551,7 @@ static void update_urlbar(Client *c)
         g_string_append_printf(str, "[%s] ", vb.profile);
     }
 
-    /* show current url, stripping username and password first */
+    /* show current url, stripping password first */
     uri = sanitize_uri(c->state.uri);
     g_string_append_printf(str, "%s", uri);
 
