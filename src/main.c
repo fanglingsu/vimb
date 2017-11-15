@@ -1250,11 +1250,11 @@ static void on_webview_load_changed(WebKitWebView *webview,
         WebKitLoadEvent event, Client *c)
 {
     GTlsCertificateFlags tlsflags;
-    const char *uri;
+    char *uri;
 
     switch (event) {
         case WEBKIT_LOAD_STARTED:
-            uri = webkit_web_view_get_uri(webview);
+            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
 #ifdef FEATURE_AUTOCMD
             autocmd_run(c, AU_LOAD_STARTED, uri, NULL);
 #endif
@@ -1281,7 +1281,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
              * or aborted the load will be commited. So this seems to be the
              * right place to remove the flag. */
             c->mode->flags &= ~FLAG_IGNORE_FOCUS;
-            uri = webkit_web_view_get_uri(webview);
+            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
 #ifdef FEATURE_AUTOCMD
             autocmd_run(c, AU_LOAD_COMMITTED, uri, NULL);
 #endif
@@ -1308,7 +1308,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
             break;
 
         case WEBKIT_LOAD_FINISHED:
-            uri = webkit_web_view_get_uri(webview);
+            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
 #ifdef FEATURE_AUTOCMD
             autocmd_run(c, AU_LOAD_FINISHED, uri, NULL);
 #endif
@@ -1318,6 +1318,8 @@ static void on_webview_load_changed(WebKitWebView *webview,
             }
             break;
     }
+
+    g_free(uri);
 }
 
 /**
@@ -1388,7 +1390,11 @@ static void on_webview_notify_title(WebKitWebView *webview, GParamSpec *pspec, C
  */
 static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec, Client *c)
 {
-    OVERWRITE_STRING(c->state.uri, webkit_web_view_get_uri(c->webview));
+    if (c->state.uri) {
+        g_free(c->state.uri);
+    }
+    c->state.uri = util_sanitize_uri(webkit_web_view_get_uri(c->webview));
+
     update_urlbar(c);
     g_setenv("VIMB_URI", c->state.uri, TRUE);
 }
@@ -1526,7 +1532,6 @@ static void update_title(Client *c)
 static void update_urlbar(Client *c)
 {
     GString *str;
-    gchar *uri;
     gboolean back, fwd;
 
     str = g_string_new("");
@@ -1535,9 +1540,7 @@ static void update_urlbar(Client *c)
         g_string_append_printf(str, "[%s] ", vb.profile);
     }
 
-    /* show current url, stripping password first */
-    uri = util_sanitize_uri(c->state.uri);
-    g_string_append_printf(str, "%s", uri);
+    g_string_append_printf(str, "%s", c->state.uri);
 
     /* show history indicator only if there is something to show */
     back = webkit_web_view_can_go_back(c->webview);
@@ -1548,7 +1551,6 @@ static void update_urlbar(Client *c)
 
     gtk_label_set_text(GTK_LABEL(c->statusbar.left), str->str);
     g_string_free(str, TRUE);
-    g_free(uri);
 }
 
 #ifdef FREE_ON_QUIT
