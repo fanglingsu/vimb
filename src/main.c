@@ -91,7 +91,6 @@ static gboolean quit(Client *c);
 static void read_from_stdin(Client *c);
 static void register_cleanup(Client *c);
 static void update_title(Client *c);
-static gchar *sanitize_uri(const gchar *uri);
 static void update_urlbar(Client *c);
 static void set_statusbar_style(Client *c, StatusType type);
 static void set_title(Client *c, const char *title);
@@ -1340,13 +1339,13 @@ static void on_webview_mouse_target_changed(WebKitWebView *webview,
     c->state.hit_test_result = g_object_ref(result);
 
     if (webkit_hit_test_result_context_is_link(result)) {
-        uri = sanitize_uri(webkit_hit_test_result_get_link_uri(result));
+        uri = util_sanitize_uri(webkit_hit_test_result_get_link_uri(result));
         msg = g_strconcat("Link: ", uri, NULL);
         gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
         g_free(msg);
         g_free(uri);
     } else if (webkit_hit_test_result_context_is_image(result)) {
-        uri = sanitize_uri(webkit_hit_test_result_get_image_uri(result));
+        uri = util_sanitize_uri(webkit_hit_test_result_get_image_uri(result));
         msg = g_strconcat("Image: ", uri, NULL);
         gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
         g_free(msg);
@@ -1521,21 +1520,6 @@ static void update_title(Client *c)
 }
 
 /**
- * Strips password from a uri.
- */
-static gchar *sanitize_uri(const gchar *uri_str)
-{
-    SoupURI *uri;
-    gchar *sanitized_uri;
-
-    uri = soup_uri_new(uri_str);
-    sanitized_uri = soup_uri_to_string(uri, FALSE);
-    soup_uri_free(uri);
-
-    return sanitized_uri;
-}
-
-/**
  * Update the contents of the url bar on the left of the statu bar according
  * to current opened url and position in back forward history.
  */
@@ -1552,7 +1536,7 @@ static void update_urlbar(Client *c)
     }
 
     /* show current url, stripping password first */
-    uri = sanitize_uri(c->state.uri);
+    uri = util_sanitize_uri(c->state.uri);
     g_string_append_printf(str, "%s", uri);
 
     /* show history indicator only if there is something to show */

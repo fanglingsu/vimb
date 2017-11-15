@@ -53,6 +53,7 @@ double util_js_result_as_number(WebKitJavascriptResult *result);
 gboolean util_parse_expansion(Client *c, const char **input, GString *str,
         int flags, const char *quoteable);
 char *util_sanitize_filename(char *filename);
+char *util_sanitize_uri(const char *uri_str);
 char *util_strcasestr(const char *haystack, const char *needle);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 gboolean util_wildmatch(const char *pattern, const char *subject);

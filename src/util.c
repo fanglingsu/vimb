@@ -733,6 +733,24 @@ char *util_sanitize_filename(char *filename)
     return g_strdelimit(filename, G_DIR_SEPARATOR_S, '_');
 }
 
+/**
+ * Strips password from a uri.
+ *
+ * Return newly allocated string.
+ */
+char *util_sanitize_uri(const char *uri_str)
+{
+    SoupURI *uri;
+    char *sanitized_uri;
+
+    uri = soup_uri_new(uri_str);
+    sanitized_uri = soup_uri_to_string(uri, FALSE);
+    soup_uri_free(uri);
+
+    return sanitized_uri;
+}
+
+
 char *util_strcasestr(const char *haystack, const char *needle)
 {
     guchar c1, c2;
