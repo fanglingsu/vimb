@@ -1250,7 +1250,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
         WebKitLoadEvent event, Client *c)
 {
     GTlsCertificateFlags tlsflags;
-    char *uri;
+    char *uri = NULL;
 
     switch (event) {
         case WEBKIT_LOAD_STARTED:
@@ -1319,7 +1319,9 @@ static void on_webview_load_changed(WebKitWebView *webview,
             break;
     }
 
-    g_free(uri);
+    if (uri) {
+        g_free(uri);
+    }
 }
 
 /**
