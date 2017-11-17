@@ -743,6 +743,12 @@ char *util_sanitize_uri(const char *uri_str)
     SoupURI *uri;
     char *sanitized_uri;
 
+    /* Sanitize the uri only in case there is a @ which might be the indicator
+     * for credentials used in uri. */
+    if (!strchr(uri_str, '@')) {
+        return g_strdup(uri_str);
+    }
+
     uri = soup_uri_new(uri_str);
     sanitized_uri = soup_uri_to_string(uri, FALSE);
     soup_uri_free(uri);
