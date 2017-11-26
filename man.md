@@ -699,8 +699,8 @@ Autocommands are built with following properties.
 Example:
 
     :aug mygroup
-    :  au LoadCommited * set scripts=off|set cookie-accept=never
-    :  au LoadCommited http{s,}://github.com/*.https://maps.google.de/* set scripts=on
+    :  au LoadCommitted * set scripts=off|set cookie-accept=never
+    :  au LoadCommitted http{s,}://github.com/*.https://maps.google.de/* set scripts=on
     :  au LoadFinished https://maps.google.de/* set useragent=foo
     :aug end
 
