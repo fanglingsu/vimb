@@ -15,10 +15,11 @@ active: howto
 If you like to read web pages without clutter you can use some user script
 like [simplyread][] to add reading mode to vimb by:
 
-- downloading the sources of simplyread and copy simplyread.js as
+1. downloading the sources of simplyread and copy simplyread.js as
   `$XDG_CONFIG_HOME/vimb/scripts.js`
-- adding some nice keybinding to toggle the reading mode on and off like
-  `:nnoremap <C-R> :e! simplyread();<CR>`
+2. adding some nice keybinding to toggle the reading mode on and off like
+
+       :nnoremap <C-R> :e! simplyread();<CR>
 
 ## editor opens without the contents of textarea
 
