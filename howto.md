@@ -10,6 +10,16 @@ active: howto
 * toc
 {:toc}
 
+## reading mode via simplyread
+
+If you like to read web pages without clutter you can use some user script
+like [simplyread][] to add reading mode to vimb by:
+
+- downloading the sources of simplyread and copy simplyread.js as
+  `$XDG_CONFIG_HOME/vimb/scripts.js`
+- adding some nice keybinding to toggle the reading mode on and off like
+  `:nnoremap <C-R> :e! simplyread();<CR>`
+
 ## editor opens without the contents of textarea
 
 There are two known cases of the `editor-command` setting that do not work.
@@ -214,3 +224,4 @@ scrolling via cursor keys or mouse wheel.
 [jsqsa]:    http://mdn.beonex.com/en/DOM/document.querySelectorAll.html
 [tabbed]:   http://tools.suckless.org/tabbed/
 [xdotool]:  http://www.semicomplete.com/projects/xdotool/
+[simplyread]: https://njw.name/simplyread/
