@@ -1011,6 +1011,14 @@ static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data
     const char *name;
     GVariant *vdata;
 
+#ifdef DEBUG
+    char *extension = g_build_filename(EXTENSIONDIR,  "webext_main.so", NULL);
+    if (!g_file_test(extension, G_FILE_TEST_IS_REGULAR)) {
+        g_warning("Cannot access web extension %s", extension);
+    }
+    g_free(extension);
+#endif
+
     /* Setup the extension directory. */
     webkit_web_context_set_web_extensions_directory(webctx, EXTENSIONDIR);
 
