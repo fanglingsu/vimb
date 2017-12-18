@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.1.0] - 2017-12-18
+
 ### Added
 
 * Added completion of bookmarked URIs for `:bmr` to allow to easily remove
@@ -21,7 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Number of webprocesses in no longer limited to one.
 * Treat hint label generation depending on the first hint-key char.
   If first char is '0' generate numeric style labels else the labels start with
-  the first char.
+  the first char (thanks to Yoann Blein).
   * `hint-keys=0123` -> `1 2 3 10 11 12 13`
   * `hint-keys=asdf` -> `a s d f aa as ad af`
 * Show versions of used libs on `vimb --bug-info` and the extension directory
@@ -31,6 +33,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Allow extended hints mode also for open `g;o` to allow the user to toggle
   checkboxes and radiobuttons of forms.
 * Rename `hint-number-same-length` into `hint-keys-same-length` for consistency.
+* Search is restarted on pressing `n` or `N` with previous search query if no
+  one was given (thanks to Yoann Blein).
 
 ### Fixed
 
@@ -41,10 +45,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Fixed cursor appearing in empty inputbox on searching in case a normal mode
   command was used that switches vimb into command mode like 'T' or ':'.
 * Fixed hint labels never started by the first char of the 'hint-keys'.
-* Fixed items where added to history even when `history-max-items` is set to 0.
+* Fixed items where added to history even when `history-max-items` is set to 0
+  (thanks to Patrick Steinhardt).
 * Fixed hinting caused dbus timeout on attempt to open URI with location hash.
 * Fixed wrong scroll position shown in the right of the statusbar on some pages.
 * Fixed vimb keeping in normal mode when HTTP Authentication dialog is shown.
+* Fixed password show in title bar and beeing written to hisotry in case the
+  pssword was given by URI like https://user:password@host.tdl.
 
 ## [3.0-alpha] - 2017-05-27
 
@@ -156,7 +163,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.0-alpha...master
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/master...3.1.0
+[3.1.0]: https://github.com/fanglingsu/vimb/compare/3.0-alpha...3.1.0
 [3.0-alpha]: https://github.com/fanglingsu/vimb/compare/2.12...3.0-alpha
 [2.12]: https://github.com/fanglingsu/vimb/compare/2.11...2.12
 [2.11]: https://github.com/fanglingsu/vimb/compare/2.10...2.11
