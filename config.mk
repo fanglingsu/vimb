@@ -6,7 +6,7 @@ endif
 
 PREFIX           ?= /usr/local
 BINPREFIX        := $(DESTDIR)$(PREFIX)/bin
-MANPREFIX        := $(DESTDIR)$(PREFIX)/share/man
+MANPREFIX        := $(DESTDIR)$(PREFIX)/man
 EXAMPLEPREFIX    := $(DESTDIR)$(PREFIX)/share/vimb/example
 DOTDESKTOPPREFIX := $(DESTDIR)$(PREFIX)/share/applications
 LIBDIR           := $(DESTDIR)$(PREFIX)/lib/vimb
