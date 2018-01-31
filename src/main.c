@@ -1313,6 +1313,10 @@ static void on_webview_load_changed(WebKitWebView *webview,
              * in case a link was fired from highlighted link. */
             command_search(c, &(Arg){0, NULL}, TRUE);
 
+            if (strncmp(uri, "about:", 6)) {
+                history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
+            }
+
             break;
 
         case WEBKIT_LOAD_FINISHED:
@@ -1321,9 +1325,6 @@ static void on_webview_load_changed(WebKitWebView *webview,
             autocmd_run(c, AU_LOAD_FINISHED, uri, NULL);
 #endif
             c->state.progress = 100;
-            if (strncmp(uri, "about:", 6)) {
-                history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
-            }
             break;
     }
 
