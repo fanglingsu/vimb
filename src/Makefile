@@ -13,7 +13,7 @@ clean: $(SUBDIRS:%=%.subdir-clean)
 
 vimb: $(OBJ)
 	@echo "${CC} $@"
-	$(Q)$(CC) $(OBJ) $(VIMB_LDFLAGS) -o $@
+	$(Q)$(CC) $(OBJ) $(LDFLAGS) -o $@
 
 $(OBJ): config.h $(BASEDIR)/config.mk
 
@@ -36,7 +36,7 @@ scripts/scripts.h: $(JSFILES) $(CSSFILES)
 
 %.o: %.c
 	@echo "${CC} $@"
-	$(Q)$(CC) $(VIMB_CFLAGS) -c -o $@ $<
+	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 
 %.subdir-all: config.h
 	$(Q)$(MAKE) -C $*

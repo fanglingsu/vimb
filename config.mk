@@ -24,7 +24,6 @@ COMMIT := $(shell git describe --tags --always 2> /dev/null || echo "unknown")
 
 # setup general used CFLAGS
 CFLAGS   += -std=c99 -pipe -Wall
-
 #CPPFLAGS += -pedantic
 CPPFLAGS += -DVERSION=\"${VERSION}\" -DEXTENSIONDIR=\"${EXTENSIONDIR}\" -DCOMMIT=\"$(COMMIT)\"
 CPPFLAGS += -DPROJECT=\"vimb\" -DPROJECT_UCFIRST=\"Vimb\"
@@ -36,9 +35,10 @@ CPPFLAGS += -DGDK_DISABLE_DEPRECATED
 
 # flags used to build webextension
 EXTTARGET   = webext_main.so
-EXT_CFLAGS  = -fPIC $(shell pkg-config --cflags webkit2gtk-4.0) $(CPPFLAGS) $(CFLAGS)
-EXT_LDFLAGS = $(shell pkg-config --libs webkit2gtk-4.0) -shared $(LDFLAGS)
+EXTCFLAGS   = ${CFLAGS} -fPIC $(shell pkg-config --cflags webkit2gtk-4.0)
+EXTCPPFLAGS = $(CPPFLAGS)
+EXTLDFLAGS  = $(shell pkg-config --libs webkit2gtk-4.0) -shared
 
 # flags used for the main application
-VIMB_CFLAGS  = $(shell pkg-config --cflags $(LIBS)) $(CPPFLAGS) $(CFLAGS) 
-VIMB_LDFLAGS = $(shell pkg-config --libs $(LIBS)) $(LDFLAGS)
+CFLAGS     += $(shell pkg-config --cflags $(LIBS))
+LDFLAGS    += $(shell pkg-config --libs $(LIBS))
