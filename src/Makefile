@@ -11,6 +11,9 @@ vimb: $(OBJ)
 	@echo "${CC} $@"
 	$(Q)$(CC) $(OBJ) $(LDFLAGS) -o $@
 
+vimb.so: $(OBJ)
+	$(Q)$(CC) -shared $(OBJ) $(LDFLAGS) -o $@
+
 $(OBJ): config.h ../config.mk
 
 normal.o: scripts/scripts.h

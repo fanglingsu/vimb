@@ -40,6 +40,10 @@ sandbox:
 runsandbox: sandbox
 	sandbox/usr/bin/vimb
 
+test:
+	$(MAKE) -C src vimb.so
+	$(MAKE) -C tests
+
 %.subdir-all:
 	$(Q)$(MAKE) -C $*
 
