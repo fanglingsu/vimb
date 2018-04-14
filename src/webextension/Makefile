@@ -1,5 +1,4 @@
-BASEDIR=../..
-include $(BASEDIR)/config.mk
+include ../../config.mk
 
 OBJ = $(patsubst %.c, %.lo, $(wildcard *.c))
 

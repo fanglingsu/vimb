@@ -1,6 +1,6 @@
 include config.mk
 
-all: $(SRCDIR).subdir-all
+all: src.subdir-all
 
 options:
 	@echo "vimb build options:"
@@ -10,13 +10,13 @@ options:
 	@echo "EXTCFLAGS = $(EXTCFLAGS)"
 	@echo "CC        = $(CC)"
 
-install: $(SRCDIR).subdir-all
+install: src.subdir-all
 	@# binary
 	install -d $(BINPREFIX)
-	install -m 755 $(SRCDIR)/vimb $(BINPREFIX)/vimb
+	install -m 755 src/vimb $(BINPREFIX)/vimb
 	@# extension
 	install -d $(LIBDIR)
-	install -m 644 $(SRCDIR)/webextension/$(EXTTARGET) $(LIBDIR)/$(EXTTARGET)
+	install -m 644 src/webextension/$(EXTTARGET) $(LIBDIR)/$(EXTTARGET)
 	@# man page
 	install -d $(MANPREFIX)/man1
 	@sed -e "s!VERSION!$(VERSION)!g" \
@@ -32,7 +32,7 @@ uninstall:
 	$(RM) $(LIBDIR)/$(EXTTARGET)
 	$(RM) $(DOTDESKTOPPREFIX)/vimb.desktop
 
-clean: $(SRCDIR).subdir-clean
+clean: src.subdir-clean
 
 sandbox:
 	$(Q)$(MAKE) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install

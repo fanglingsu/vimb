@@ -1,21 +1,19 @@
-BASEDIR=..
-include $(BASEDIR)/config.mk
+include ../config.mk
 
-SUBDIRS  = webextension
 OBJ      = $(patsubst %.c, %.o, $(wildcard *.c))
 JSFILES  = $(wildcard scripts/*.js)
 CSSFILES = $(wildcard scripts/*.css)
 
-all: vimb $(SUBDIRS:%=%.subdir-all)
+all: vimb webextension.subdir-all
 
-clean: $(SUBDIRS:%=%.subdir-clean)
+clean: webextension.subdir-clean
 	$(RM) vimb *.o scripts/scripts.h
 
 vimb: $(OBJ)
 	@echo "${CC} $@"
 	$(Q)$(CC) $(OBJ) $(LDFLAGS) -o $@
 
-$(OBJ): config.h $(BASEDIR)/config.mk
+$(OBJ): config.h ../config.mk
 
 normal.o: scripts/scripts.h
 
