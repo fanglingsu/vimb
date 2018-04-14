@@ -1099,18 +1099,18 @@ static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
                 *uri++ = '\0'; /* devide key and uri */
                 g_strstrip(arg->rhs->str);
                 g_strstrip(uri);
-                success = shortcut_add(c, arg->rhs->str, uri);
+                success = shortcut_add(c->config.shortcuts, arg->rhs->str, uri);
             }
             break;
 
         case EX_SCR:
             g_strstrip(arg->rhs->str);
-            success = shortcut_remove(c, arg->rhs->str);
+            success = shortcut_remove(c->config.shortcuts, arg->rhs->str);
             break;
 
         case EX_SCD:
             g_strstrip(arg->rhs->str);
-            success = shortcut_set_default(c, arg->rhs->str);
+            success = shortcut_set_default(c->config.shortcuts, arg->rhs->str);
             break;
 
         default:
@@ -1236,7 +1236,7 @@ static gboolean complete(Client *c, short direction)
 
                 case EX_SCR: /* Fallthrough */
                 case EX_SCD:
-                    found = shortcut_fill_completion(c, store, token);
+                    found = shortcut_fill_completion(c->config.shortcuts, store, token);
                     break;
 
                 case EX_HANDREM:

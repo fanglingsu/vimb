@@ -192,10 +192,9 @@ void setting_init(Client *c)
 #endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
 
     /* initialize the shortcuts and set the default shortcuts */
-    shortcut_init(c);
-    shortcut_add(c, "dl", "https://duckduckgo.com/html/?q=$0");
-    shortcut_add(c, "dd", "https://duckduckgo.com/?q=$0");
-    shortcut_set_default(c, "dl");
+    shortcut_add(c->config.shortcuts, "dl", "https://duckduckgo.com/html/?q=$0");
+    shortcut_add(c->config.shortcuts, "dd", "https://duckduckgo.com/?q=$0");
+    shortcut_set_default(c->config.shortcuts, "dl");
 }
 
 VbCmdResult setting_run(Client *c, char *name, const char *param)
@@ -301,7 +300,6 @@ void setting_cleanup(Client *c)
         g_hash_table_destroy(c->config.settings);
         c->config.settings = NULL;
     }
-    shortcut_cleanup(c);
 }
 
 static int setting_set_value(Client *c, Setting *prop, void *value, SettingType type)

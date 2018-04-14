@@ -381,7 +381,7 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
         free(rp);
     } else if (strchr(path, ' ') || !strchr(path, '.')) {
         /* use a shortcut if path contains spaces or no dot */
-        uri = shortcut_get_uri(c, path);
+        uri = shortcut_get_uri(c->config.shortcuts, path);
     }
 
     if (!uri) {
@@ -667,6 +667,7 @@ static void client_destroy(Client *c)
 #ifdef FEATURE_AUTOCMD
     autocmd_cleanup(c);
 #endif
+    shortcut_free(c->config.shortcuts);
 
     g_slice_free(Client, c);
 
@@ -693,6 +694,7 @@ static Client *client_new(WebKitWebView *webview)
     vb.clients = c;
 
     c->state.progress = 100;
+    c->config.shortcuts = shortcut_new();
 
     completion_init(c);
     map_init(c);

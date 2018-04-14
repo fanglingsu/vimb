@@ -24,6 +24,7 @@
 #include <gtk/gtkx.h>
 #include <stdio.h>
 #include <webkit2/webkit2.h>
+#include "shortcut.h"
 
 #include "config.h"
 
@@ -238,6 +239,7 @@ struct Client {
         GdkRGBA                 comp_bg[COMP_LAST];
         PangoFontDescription    *comp_font;
         guint                   default_zoom;   /* default zoom level in percent */
+        Shortcut                *shortcuts;
     } config;
     struct {
         GSList      *list;
@@ -248,10 +250,6 @@ struct Client {
         char        showcmd[SHOWCMD_LEN + 1];   /* buffer to show ambiguous key sequence */
         guint       timeoutlen;                 /* timeout for ambiguous mappings */
     } map;
-    struct {
-        GHashTable  *table;
-        char        *fallback;                  /* default shortcut to use if none given in request */
-    } shortcut;
     struct {
         GHashTable *table;                      /* holds the protocol handlers */
     } handlers;
