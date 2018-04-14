@@ -749,7 +749,7 @@ static gboolean parse_rhs(Client *c, const char **input, ExArg *arg)
      * EX_FLAG_CMD is not set also on | */
     while (**input && **input != '\n' && (cmdlist || **input != '|')) {
         /* check for expansion placeholder */
-        util_parse_expansion(c, input, arg->rhs, flags, "|\\");
+        util_parse_expansion(c->state, input, arg->rhs, flags, "|\\");
 
         if (VB_IS_SEPARATOR(**input)) {
             /* add tilde expansion for next loop needs to be first char or to
@@ -1245,7 +1245,7 @@ static gboolean complete(Client *c, short direction)
 
                 case EX_SAVE: /* Fallthrough */
                 case EX_SOURCE:
-                    found = util_filename_fill_completion(c, store, token);
+                    found = util_filename_fill_completion(c->state, store, token);
                     break;
 
 #ifdef FEATURE_AUTOCMD

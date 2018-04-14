@@ -119,6 +119,7 @@ enum {
 };
 
 typedef struct Client Client;
+typedef struct State State;
 typedef struct Map Map;
 typedef struct Mode Mode;
 typedef struct Arg Arg;

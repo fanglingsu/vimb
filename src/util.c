@@ -46,13 +46,13 @@ static gboolean match_list(const char *pattern, int patlen, const char *subject)
  *
  * Returned path must be freed.
  */
-char *util_build_path(Client *c, const char *path, const char *dir)
+char *util_build_path(State state, const char *path, const char *dir)
 {
     char *fullPath = NULL, *fexp, *dexp, *p;
     int expflags   = UTIL_EXP_TILDE|UTIL_EXP_DOLLAR;
 
     /* if the path could be expanded */
-    if ((fexp = util_expand(c, path, expflags))) {
+    if ((fexp = util_expand(state, path, expflags))) {
         if (*fexp == '/') {
             /* path is already absolute, no need to use given dir - there is
              * no need to free fexp, because this should be done by the caller
@@ -60,7 +60,7 @@ char *util_build_path(Client *c, const char *path, const char *dir)
             fullPath = fexp;
         } else if (dir && *dir) {
             /* try to expand also the dir given - this may be ~/path */
-            if ((dexp = util_expand(c, dir, expflags))) {
+            if ((dexp = util_expand(state, dir, expflags))) {
                 /* use expanded dir and append expanded path */
                 fullPath = g_build_filename(dexp, fexp, NULL);
                 g_free(dexp);
@@ -154,7 +154,7 @@ gboolean util_create_tmp_file(const char *content, char **file)
  *
  * Returned path must be g_freed.
  */
-char *util_expand(Client *c, const char *src, int expflags)
+char *util_expand(State state, const char *src, int expflags)
 {
     const char **input = &src;
     char *result;
@@ -162,7 +162,7 @@ char *util_expand(Client *c, const char *src, int expflags)
     int flags    = expflags;
 
     while (**input) {
-        util_parse_expansion(c, input, dst, flags, "\\");
+        util_parse_expansion(state, input, dst, flags, "\\");
         if (VB_IS_SEPARATOR(**input)) {
             /* after space the tilde expansion is allowed */
             flags = expflags;
@@ -513,7 +513,7 @@ gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src
  * Fills file path completion entries into given list store for also given
  * input.
  */
-gboolean util_filename_fill_completion(Client *c, GtkListStore *store, const char *input)
+gboolean util_filename_fill_completion(State state, GtkListStore *store, const char *input)
 {
     gboolean found = FALSE;
     GError *error  = NULL;
@@ -525,7 +525,7 @@ gboolean util_filename_fill_completion(Client *c, GtkListStore *store, const cha
     input_basename = last_slash ? last_slash + 1 : input;
     input_dirname  = g_strndup(input, input_basename - input);
     real_dirname   = util_expand(
-        c,
+        state,
         *input_dirname ? input_dirname : ".",
         UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL
     );
@@ -608,7 +608,7 @@ double util_js_result_as_number(WebKitJavascriptResult *result)
  * @quoteable: String of chars that are additionally escapable by \.
  * Returns TRUE if input started with expandable pattern.
  */
-gboolean util_parse_expansion(Client *c, const char **input, GString *str,
+gboolean util_parse_expansion(State state, const char **input, GString *str,
         int flags, const char *quoteable)
 {
     GString *name;
@@ -683,9 +683,9 @@ gboolean util_parse_expansion(Client *c, const char **input, GString *str,
         expanded = TRUE;
         g_string_free(name, TRUE);
     } else if (flags & UTIL_EXP_SPECIAL && **input == '%') {
-        if (*c->state.uri) {
+        if (state.uri) {
             /* TODO check for modifiers like :h:t:r:e */
-            g_string_append(str, c->state.uri);
+            g_string_append(str, state.uri);
             expanded = TRUE;
         }
     }
