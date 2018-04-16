@@ -19,8 +19,6 @@ setting.o: scripts/scripts.h
 
 scripts/scripts.h: scripts.subdir-all
 
--include $(OBJ:.o=.d)
-
 config.h:
 	@echo create $@ from config.def.h
 	$(Q)cp config.def.h $@
@@ -34,5 +32,7 @@ config.h:
 
 %.subdir-clean:
 	$(Q)$(MAKE) -C $* clean
+
+-include $(OBJ:.o=.d)
 
 .PHONY: all clean

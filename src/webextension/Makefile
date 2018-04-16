@@ -15,4 +15,6 @@ $(EXTTARGET): $(OBJ)
 	@echo "${CC} $@"
 	$(Q)$(CC) $(EXTCPPFLAGS) $(EXTCFLAGS) -fPIC -c -o $@ $<
 
+-include $(OBJ:.lo=.d)
+
 .PHONY: all clean
