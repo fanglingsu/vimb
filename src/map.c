@@ -27,16 +27,6 @@
 #include "map.h"
 #include "util.h"
 
-struct MapInfo {
-    GSList      *list;
-    GString     *queue;                     /* queue holding typed keys */
-    int         qlen;                       /* pointer to last char in queue */
-    int         resolved;                   /* number of resolved keys (no mapping required) */
-    guint       timout_id;                  /* source id of the timeout function */
-    char        showcmd[SHOWCMD_LEN + 1];   /* buffer to show ambiguous key sequence */
-    guint       timeoutlen;                 /* timeout for ambiguous mappings */
-};
-
 static char *convert_keylabel(const char *in, int inlen, int *len);
 static char *convert_keys(const char *in, int inlen, int *len);
 static gboolean do_timeout(Client *c);
