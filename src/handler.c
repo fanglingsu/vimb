@@ -33,7 +33,7 @@ static char *handler_lookup(Handler *h, const char *uri);
 
 Handler *handler_new(void)
 {
-    Handler *h = g_slice_new(Handler);
+    Handler *h = g_new(Handler, 1);
     h->table   = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
     return h;
@@ -45,7 +45,7 @@ void handler_free(Handler *h)
         g_hash_table_destroy(h->table);
         h->table = NULL;
     }
-    g_slice_free(Handler, h);
+    g_free(h);
 }
 
 gboolean handler_add(Handler *h, const char *key, const char *cmd)

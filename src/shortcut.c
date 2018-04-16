@@ -37,7 +37,7 @@ static const char *shortcut_lookup(Shortcut *sc, const char *string, const char 
 
 Shortcut *shortcut_new()
 {
-    Shortcut *sc = g_slice_new(Shortcut);
+    Shortcut *sc = g_new(Shortcut, 1);
     sc->table    = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     sc->fallback = NULL;
 
@@ -49,7 +49,7 @@ void shortcut_free(Shortcut *sc)
     if (sc->table) {
         g_hash_table_destroy(sc->table);
     }
-    g_slice_free(Shortcut, sc);
+    g_free(sc);
 }
 
 gboolean shortcut_add(Shortcut *sc, const char *key, const char *uri)
