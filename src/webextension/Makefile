@@ -5,7 +5,7 @@ OBJ = $(patsubst %.c, %.lo, $(wildcard *.c))
 all: $(EXTTARGET)
 
 clean:
-	$(RM) $(EXTTARGET) $($OBJ)
+	$(RM) $(EXTTARGET) $(OBJ)
 
 $(EXTTARGET): $(OBJ)
 	@echo "$(CC) $@"
