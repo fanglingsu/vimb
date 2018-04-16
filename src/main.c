@@ -663,10 +663,10 @@ static void client_destroy(Client *c)
     map_cleanup(c);
     register_cleanup(c);
     setting_cleanup(c);
-    handler_cleanup(c);
 #ifdef FEATURE_AUTOCMD
     autocmd_cleanup(c);
 #endif
+    handler_free(c->handler);
     shortcut_free(c->config.shortcuts);
 
     g_slice_free(Client, c);
@@ -698,7 +698,7 @@ static Client *client_new(WebKitWebView *webview)
 
     completion_init(c);
     map_init(c);
-    handler_init(c);
+    c->handler = handler_new();
 #ifdef FEATURE_AUTOCMD
     autocmd_init(c);
 #endif
@@ -1199,7 +1199,7 @@ static gboolean on_webview_decide_policy(WebKitWebView *webview,
             uri    = webkit_uri_request_get_uri(req);
 
             /* Try to handle with specific protocol handler. */
-            if (handler_handle_uri(c, uri)) {
+            if (handler_handle_uri(c->handler, uri)) {
                 webkit_policy_decision_ignore(dec);
                 return TRUE;
             }

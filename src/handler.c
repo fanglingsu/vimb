@@ -25,40 +25,48 @@
 
 extern struct Vimb vb;
 
-static char *handler_lookup(Client *c, const char *uri);
+struct handler {
+    GHashTable *table;  /* holds the protocol handlers */
+};
 
-void handler_init(Client *c)
+static char *handler_lookup(Handler *h, const char *uri);
+
+Handler *handler_new(void)
 {
-    c->handlers.table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    Handler *h = g_slice_new(Handler);
+    h->table   = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+    return h;
 }
 
-void handler_cleanup(Client *c)
+void handler_free(Handler *h)
 {
-    if (c->handlers.table) {
-        g_hash_table_destroy(c->handlers.table);
-        c->handlers.table = NULL;
+    if (h->table) {
+        g_hash_table_destroy(h->table);
+        h->table = NULL;
     }
+    g_slice_free(Handler, h);
 }
 
-gboolean handler_add(Client *c, const char *key, const char *cmd)
+gboolean handler_add(Handler *h, const char *key, const char *cmd)
 {
-    g_hash_table_insert(c->handlers.table, g_strdup(key), g_strdup(cmd));
+    g_hash_table_insert(h->table, g_strdup(key), g_strdup(cmd));
 
     return TRUE;
 }
 
-gboolean handler_remove(Client *c, const char *key)
+gboolean handler_remove(Handler *h, const char *key)
 {
-    return g_hash_table_remove(c->handlers.table, key);
+    return g_hash_table_remove(h->table, key);
 }
 
-gboolean handler_handle_uri(Client *c, const char *uri)
+gboolean handler_handle_uri(Handler *h, const char *uri)
 {
     char *handler, *cmd;
     GError *error = NULL;
     gboolean res;
 
-    if (!(handler = handler_lookup(c, uri))) {
+    if (!(handler = handler_lookup(h, uri))) {
         return FALSE;
     }
 
@@ -75,25 +83,24 @@ gboolean handler_handle_uri(Client *c, const char *uri)
     return res;
 }
 
-gboolean handler_fill_completion(Client *c, GtkListStore *store, const char *input)
+gboolean handler_fill_completion(Handler *h, GtkListStore *store, const char *input)
 {
-    GList *src = g_hash_table_get_keys(c->handlers.table);
+    GList *src     = g_hash_table_get_keys(h->table);
     gboolean found = util_fill_completion(store, input, src);
     g_list_free(src);
 
     return found;
 }
 
-static char *handler_lookup(Client *c, const char *uri)
+static char *handler_lookup(Handler *h, const char *uri)
 {
     char *p, *schema, *handler = NULL;
 
     if ((p = strchr(uri, ':'))) {
         schema  = g_strndup(uri, p - uri);
-        handler = g_hash_table_lookup(c->handlers.table, schema);
+        handler = g_hash_table_lookup(h->table, schema);
         g_free(schema);
     }
 
     return handler;
 }
-

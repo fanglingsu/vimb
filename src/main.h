@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <webkit2/webkit2.h>
 #include "shortcut.h"
+#include "handler.h"
 
 #include "config.h"
 
@@ -227,6 +228,7 @@ struct Client {
     GtkTextBuffer       *buffer;
     GDBusProxy          *dbusproxy;
     GDBusServer         *dbusserver;
+    Handler             *handler;               /* the protocoll handlers */
     struct {
         /* TODO split in global setting definitions and set values on a per
          * client base. */
@@ -250,9 +252,6 @@ struct Client {
         char        showcmd[SHOWCMD_LEN + 1];   /* buffer to show ambiguous key sequence */
         guint       timeoutlen;                 /* timeout for ambiguous mappings */
     } map;
-    struct {
-        GHashTable *table;                      /* holds the protocol handlers */
-    } handlers;
     struct {
         struct AuGroup *curgroup;
         GSList         *groups;

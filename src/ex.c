@@ -1065,12 +1065,12 @@ static VbCmdResult ex_handlers(Client *c, const ExArg *arg)
         case EX_HANDADD:
             if (arg->rhs->len && (p = strchr(arg->rhs->str, '='))) {
                 *p++ = '\0';
-                res = handler_add(c, arg->rhs->str, p);
+                res = handler_add(c->handler, arg->rhs->str, p);
             }
             break;
 
         case EX_HANDREM:
-            res = handler_remove(c, arg->rhs->str);
+            res = handler_remove(c->handler, arg->rhs->str);
             break;
 
         default:
@@ -1240,7 +1240,7 @@ static gboolean complete(Client *c, short direction)
                     break;
 
                 case EX_HANDREM:
-                    found = handler_fill_completion(c, store, token);
+                    found = handler_fill_completion(c->handler, store, token);
                     break;
 
                 case EX_SAVE: /* Fallthrough */
