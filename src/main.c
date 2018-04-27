@@ -1666,28 +1666,6 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
 
     /* Mapping from vimb config setting name to css style sheet string */
     static const char *setting_style_map[][2] = {
-#ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
-        {"completion-bg-active",        " #completion:selected{background-color:%s}"},
-        {"completion-bg-normal",        " #completion{background-color:%s}"},
-        {"completion-fg-active",        " #completion:selected{color:%s}"},
-        {"completion-fg-normal",        " #completion{color:%s}"},
-        {"completion-font",             " #completion{font:%s}"},
-        {"input-bg-error",              " #input.error{background-color:%s}"},
-        {"input-bg-normal",             " #input{background-color:%s}"},
-        {"input-fg-error",              " #input.error{color:%s}"},
-        {"input-fg-normal",             " #input{color:%s}"},
-        {"input-font-error",            " #input.error{font:%s}"},
-        {"input-font-normal",           " #input{font:%s}"},
-        {"status-color-bg",             " #statusbar{background-color:%s}"},
-        {"status-color-fg",             " #statusbar{color:%s}"},
-        {"status-font",                 " #statusbar{font:%s}"},
-        {"status-ssl-color-bg",         " #statusbar.secure{background-color:%s}"},
-        {"status-ssl-color-fg",         " #statusbar.secure{color:%s}"},
-        {"status-ssl-font",             " #statusbar.secure{font:%s}"},
-        {"status-sslinvalid-color-bg",  " #statusbar.unsecure{background-color:%s}"},
-        {"status-sslinvalid-color-fg",  " #statusbar.unsecure{color:%s}"},
-        {"status-sslinvalid-font",      " #statusbar.unsecure{font:%s}"},
-#else /* vimb3 gui style settings */
         {"completion-css",              " #completion{%s}"},
         {"completion-hover-css",        " #completion:hover{%s}"},
         {"completion-selected-css",     " #completion:selected{%s}"},
@@ -1696,8 +1674,6 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
         {"status-css",                  " #statusbar{%s}"},
         {"status-ssl-css",              " #statusbar.secure{%s}"},
         {"status-ssl-invalid-css",      " #statusbar.unsecure{%s}"},
-#endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
-
         {0, 0},
     };
 
