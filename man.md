@@ -240,7 +240,7 @@ Following keys have special meanings in Hints mode:
 \<Esc\>, CTRL−C, CTRL−[
 : Exits Hints mode without selecting an element
 
-### Hint modes:
+#### Hint modes:
 {:#Hint_modes}
 
 f
@@ -303,6 +303,30 @@ normal hinting except that after a hint is selected, hints remain visible so
 that another one can be selected with the same action as the first. Note that
 the extended hint mode can only be combined with the following hint modes
 *I p P s t y Y*.
+
+#### Motion
+{:#hint_mode_motion}
+
+Motions commands are like those for normal mode except that CTRL is used as
+modifier. But they can not be used together with a count.
+
+CTRL-F 
+: Scroll one page down.
+
+CTRL-B
+: Scroll one page up.
+
+CTRL-D
+: Scroll half page down.
+
+CTRL-U
+: Scroll half page up.
+
+CTRL-J
+: Scroll one step down.
+
+CTRL-K
+: Scroll one step up.
 
 ### Searching
 {:#Searching}
