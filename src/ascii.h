@@ -78,6 +78,7 @@ static const unsigned char chartable[256] = {
 
 /* get internal representation for conrol character ^C */
 #define CTRL(c)             ((c) ^ 0x40)
+#define UNCTRL(c)           (((c) ^ 0x40) + 'a' - 'A')
 
 #define IS_SPECIAL(c)       (c < 0)
 

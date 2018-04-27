@@ -29,6 +29,7 @@
 #include "command.h"
 #include "input.h"
 #include "map.h"
+#include "normal.h"
 #include "ext-proxy.h"
 
 static struct {
@@ -74,6 +75,10 @@ VbResult hints_keypress(Client *c, int key)
         hints_focus_next(c, TRUE);
 
         return RESULT_COMPLETE;
+    } else if (key == CTRL('D') || key == CTRL('F') || key == CTRL('B') || key == CTRL('U')) {
+        return normal_keypress(c, key);
+    } else if (key == CTRL('J') || key == CTRL('K')) {
+        return normal_keypress(c, UNCTRL(key));
     } else {
         fire_timeout(c, TRUE);
         /* try to handle the key by the javascript */
