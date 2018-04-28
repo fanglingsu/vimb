@@ -242,6 +242,9 @@ void ex_leave(Client *c)
 {
     completion_clean(c);
     hints_clear(c);
+    if (c->config.incsearch) {
+        command_search(c, &((Arg){0, NULL}), FALSE);
+    }
 }
 
 /**
