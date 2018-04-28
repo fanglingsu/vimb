@@ -32,6 +32,9 @@
 #include "history.h"
 #include "main.h"
 
+static void on_found_text(WebKitFindController *fc, guint count,
+        Client *c);
+
 /**
  * Start/perform/stop searching in webview.
  *
@@ -63,7 +66,7 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
             vb_echo(c, MSG_NORMAL, FALSE, "");
         }
 
-        c->state.search.active = FALSE;
+        c->state.search.active  = FALSE;
         c->state.search.matches = 0;
 
         vb_statusbar_update(c);
@@ -111,15 +114,15 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
             c->state.search.last_query = g_strdup(query);
         }
 
+        g_signal_connect(fc, "found-text", G_CALLBACK(on_found_text), c);
         webkit_find_controller_search(fc, query,
                 WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
                 WEBKIT_FIND_OPTIONS_WRAP_AROUND |
                 (direction > 0 ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
                 G_MAXUINT);
 
-        c->state.search.active = TRUE;
+        c->state.search.active    = TRUE;
         c->state.search.direction = direction;
-        /* TODO get the number of matches */
 
         /* Skip first search because the first match is already
          * highlighted on search start. */
@@ -261,3 +264,14 @@ gboolean command_queue(Client *c, const Arg *arg)
     return res;
 }
 #endif
+
+static void on_found_text(WebKitFindController *fc, guint count,
+        Client *c)
+{
+    /* Avoid multiple useless status updates in case incsearch is enabled and
+     * we get the same count several times. */
+    if (c->state.search.matches != count) {
+        c->state.search.matches = count;
+        vb_statusbar_update(c);
+    }
+}
