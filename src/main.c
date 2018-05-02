@@ -1611,7 +1611,7 @@ static void vimb_setup(void)
 
     /* Setup those files that are use multiple time during runtime */
     vb.files[FILES_CLOSED]     = util_get_filepath(path, "closed", TRUE);
-    vb.files[FILES_COOKIE]     = util_get_filepath(path, "cookies", TRUE);
+    vb.files[FILES_COOKIE]     = util_get_filepath(path, "cookies.db", TRUE);
     vb.files[FILES_USER_STYLE] = util_get_filepath(path, "style.css", FALSE);
     vb.files[FILES_SCRIPT]     = util_get_filepath(path, "scripts.js", FALSE);
     vb.files[FILES_HISTORY]    = util_get_filepath(path, "history", TRUE);
@@ -1636,7 +1636,7 @@ static void vimb_setup(void)
         webkit_cookie_manager_set_persistent_storage(
                 cm,
                 vb.files[FILES_COOKIE],
-                WEBKIT_COOKIE_PERSISTENT_STORAGE_TEXT);
+                WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE);
     }
 
     /* initialize the modes */

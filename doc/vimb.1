@@ -703,11 +703,9 @@ Fired right after a download is started.
 .TP
 .B DownloadFinished
 Fired if a Vimb managed download is finished.
-For external download this event is not available.
 .TP
 .B DownloadFailed
 Fired if a Vimb managed download failed.
-For external download this event is not available.
 .PD
 .RE
 .TP
@@ -1320,8 +1318,8 @@ this subdirectory.
 .I config
 Configuration file to set WebKit setting, some GUI styles and keybindings.
 .TP
-.I cookies
-Cookie store file.
+.I cookies.db
+Sqlite cookie storage.
 .TP
 .I closed
 Holds the URIs of last closed browser windows.
