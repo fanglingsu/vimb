@@ -34,7 +34,7 @@ typedef struct {
     char *second;
 } History;
 
-static gboolean history_item_contains_all_tags(History *item, char **query, guint qlen);
+static gboolean fill_completion(GtkListStore *store, HistoryType type);
 static void free_history(History *item);
 static History *line_to_history(const char *uri, const char *title);
 static GList *load(const char *file);
@@ -90,70 +90,71 @@ void history_cleanup(void)
     }
 }
 
-gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input)
+gboolean history_fill_url_completion(GtkListStore *store, gpointer data)
 {
-    char **parts;
-    unsigned int len;
+    return fill_completion(store, HISTORY_URL);
+}
+
+gboolean history_fill_search_completion(GtkListStore *store, gpointer data)
+{
+    return fill_completion(store, HISTORY_SEARCH);
+}
+
+static gboolean fill_completion(GtkListStore *store, HistoryType type)
+{
     gboolean found = FALSE;
     GList *src = NULL;
     GtkTreeIter iter;
-    History *item;
 
     src = load(HIST_FILE(type));
     src = g_list_reverse(src);
-    if (!input || !*input) {
-        /* without any tags return all items */
-        for (GList *l = src; l; l = l->next) {
-            item = l->data;
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(
-                store, &iter,
-                COMPLETION_STORE_FIRST, item->first,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                COMPLETION_STORE_SECOND, item->second,
-#endif
-                -1
-            );
-            found = TRUE;
-        }
-    } else if (HISTORY_URL == type) {
-        parts = g_strsplit(input, " ", 0);
-        len   = g_strv_length(parts);
+    /* without any tags return all items */
+    for (GList *l = src; l; l = l->next) {
+        History *item = l->data;
 
-        for (GList *l = src; l; l = l->next) {
-            item = l->data;
-            if (history_item_contains_all_tags(item, parts, len)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(
-                    store, &iter,
-                    COMPLETION_STORE_FIRST, item->first,
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(
+            store, &iter,
+            COMPLETION_STORE_FIRST, item->first,
 #ifdef FEATURE_TITLE_IN_COMPLETION
-                    COMPLETION_STORE_SECOND, item->second,
+            COMPLETION_STORE_SECOND, item->second,
 #endif
-                    -1
-                );
-                found = TRUE;
-            }
-        }
-        g_strfreev(parts);
-    } else {
-        for (GList *l = src; l; l = l->next) {
-            item = l->data;
-            if (g_str_has_prefix(item->first, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(
-                    store, &iter,
-                    COMPLETION_STORE_FIRST, item->first,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                    COMPLETION_STORE_SECOND, item->second,
-#endif
-                    -1
-                );
-                found = TRUE;
+            -1
+        );
+        found = TRUE;
+    }
+    g_list_free_full(src, (GDestroyNotify)free_history);
+
+    return found;
+}
+
+gboolean history_completion_visible_func(GtkTreeModel *model, GtkTreeIter *iter, char **input)
+{
+    char *url, *tags;
+    char **parts;
+    unsigned int len;
+    gboolean found = TRUE;
+
+    gtk_tree_model_get(model, iter, COMPLETION_STORE_FIRST, &url, COMPLETION_STORE_SECOND, &tags, -1);
+    parts = g_strsplit(*input, " ", 0);
+    len   = g_strv_length(parts);
+
+    if (len) {
+        unsigned int i;
+        /* iterate over all query parts */
+        for (i = 0; i < len; i++) {
+            if (!(util_strcasestr(url, parts[i])
+                || (tags && util_strcasestr(tags, parts[i])))
+            ) {
+                found = FALSE;
+                break;
             }
         }
     }
-    g_list_free_full(src, (GDestroyNotify)free_history);
+
+    g_strfreev(parts);
+    g_free(tags);
+    g_free(url);
 
     return found;
 }
@@ -195,28 +196,6 @@ GList *history_get_list(VbInputType type, const char *query)
     result = g_list_prepend(result, g_strdup(query));
 
     return result;
-}
-
-/**
- * Checks if the given array of tags are all found in history item.
- */
-static gboolean history_item_contains_all_tags(History *item, char **query, guint qlen)
-{
-    unsigned int i;
-    if (!qlen) {
-        return TRUE;
-    }
-
-    /* iterate over all query parts */
-    for (i = 0; i < qlen; i++) {
-        if (!(util_strcasestr(item->first, query[i])
-            || (item->second && util_strcasestr(item->second, query[i])))
-        ) {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
 }
 
 static void free_history(History *item)

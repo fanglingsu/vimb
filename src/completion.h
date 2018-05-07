@@ -21,25 +21,29 @@
 #define _COMPLETION_H
 
 #include <glib.h>
-
 #include "main.h"
 
-typedef void (*CompletionSelectFunc) (Client *c, char *match);
+typedef void (*CompletionSelectFunc) (char *match, gpointer data);
+typedef gboolean (*CompletionFillFunc) (GtkListStore *store, gpointer data);
+typedef struct completion Completion;
 
 enum {
     COMPLETION_STORE_FIRST,
 #ifdef FEATURE_TITLE_IN_COMPLETION
     COMPLETION_STORE_SECOND,
 #endif
+    COMPLETION_ADDITIONAL,
     COMPLETION_STORE_NUM
 };
 
 
-void completion_clean(Client *c);
-void completion_cleanup(Client *c);
-gboolean completion_create(Client *c, GtkTreeModel *model,
-        CompletionSelectFunc selfunc, gboolean back);
-void completion_init(Client *c);
-gboolean completion_next(Client *c, gboolean back);
+Completion *completion_new(void);
+void completion_free(Completion *comp);
+gboolean completion_start(Completion *comp, GtkTreeModel *model,
+        CompletionSelectFunc selfunc, gpointer data, GtkWidget *widget,
+        gboolean back);
+gboolean completion_next(Completion *comp, gboolean back);
+gboolean completion_is_active(Completion *comp);
+void completion_stop(Completion *comp);
 
 #endif /* end of include guard: _COMPLETION_H */

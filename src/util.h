@@ -47,7 +47,7 @@ char *util_get_filepath(const char *dir, const char *filename, gboolean create, 
 char **util_get_lines(const char *filename);
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         guint max_items);
-gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src);
+gboolean util_fill_completion(GtkListStore *store, GList *src);
 gboolean util_filename_fill_completion(State state, GtkListStore *store, const char *input);
 char *util_js_result_as_string(WebKitJavascriptResult *result);
 double util_js_result_as_number(WebKitJavascriptResult *result);

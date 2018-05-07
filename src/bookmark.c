@@ -34,8 +34,6 @@ typedef struct {
 extern struct Vimb vb;
 
 static GList *load(const char *file);
-static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
-    unsigned int qlen);
 static Bookmark *line_to_bookmark(const char *uri, const char *data);
 static void free_bookmark(Bookmark *bm);
 
@@ -97,52 +95,29 @@ gboolean bookmark_remove(const char *uri)
     return removed;
 }
 
-gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
+gboolean bookmark_fill_url_completion(GtkListStore *store, gpointer data)
 {
-    gboolean found = FALSE;
-    char **parts;
-    unsigned int len;
-    GtkTreeIter iter;
-    GList *src = NULL;
     Bookmark *bm;
+    GList *src = NULL;
+    GtkTreeIter iter;
+    gboolean found = FALSE;
 
     src = load(vb.files[FILES_BOOKMARK]);
     src = g_list_reverse(src);
-    if (!input || !*input) {
-        /* without any tags return all bookmarked items */
-        for (GList *l = src; l; l = l->next) {
-            bm = (Bookmark*)l->data;
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(
-                store, &iter,
-                COMPLETION_STORE_FIRST, bm->uri,
+    /* without any tags return all bookmarked items */
+    for (GList *l = src; l; l = l->next) {
+        bm = (Bookmark*)l->data;
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(
+            store, &iter,
+            COMPLETION_STORE_FIRST, bm->uri,
 #ifdef FEATURE_TITLE_IN_COMPLETION
-                COMPLETION_STORE_SECOND, bm->title,
+            COMPLETION_STORE_SECOND, bm->title,
 #endif
-                -1
-            );
-            found = TRUE;
-        }
-    } else {
-        parts = g_strsplit(input, " ", 0);
-        len   = g_strv_length(parts);
-
-        for (GList *l = src; l; l = l->next) {
-            bm = (Bookmark*)l->data;
-            if (bookmark_contains_all_tags(bm, parts, len)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(
-                    store, &iter,
-                    COMPLETION_STORE_FIRST, bm->uri,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                    COMPLETION_STORE_SECOND, bm->title,
-#endif
-                    -1
-                );
-                found = TRUE;
-            }
-        }
-        g_strfreev(parts);
+            COMPLETION_ADDITIONAL, bm->tags,
+            -1
+        );
+        found = TRUE;
     }
 
     g_list_free_full(src, (GDestroyNotify)free_bookmark);
@@ -150,9 +125,63 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
     return found;
 }
 
-gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
+gboolean bookmark_tag_completion_visible_func(GtkTreeModel *model,
+        GtkTreeIter *iter, char **input)
 {
+    const char *separators;
+    char *url, *tags, *cursor, **parts;
+    unsigned int len, i;
     gboolean found;
+
+    gtk_tree_model_get(model, iter, COMPLETION_STORE_FIRST, &url, COMPLETION_ADDITIONAL, &tags, -1);
+    parts = g_strsplit(*input, " ", 0);
+    len   = g_strv_length(parts);
+
+    if (tags) {
+        /* If there are tags - use them for matching. */
+        separators = " ";
+        cursor     = tags;
+    } else {
+        /* No tags available - matching is based on the path parts of the URL. */
+        separators = "./";
+        cursor     = url;
+    }
+
+    /* iterate over all parts */
+    for (i = 0; i < len; i++) {
+        found = FALSE;
+
+        /* we want to do a prefix match on all bookmark tags - so we check for
+         * a match on string begin - if this fails we move the cursor to the
+         * next space and do the test again */
+        while (cursor && *cursor) {
+            if (g_str_has_prefix(cursor, parts[i])) {
+                found = TRUE;
+                break;
+            }
+            /* If match was not found at the cursor position - move cursor
+             * behind the next separator char. */
+            if ((cursor = strpbrk(cursor, separators))) {
+                cursor++;
+            }
+        }
+
+        if (!found) {
+            break;
+        }
+    }
+
+    g_strfreev(parts);
+    g_free(tags);
+    g_free(url);
+
+    return found;
+}
+
+gboolean bookmark_fill_tag_completion(GtkListStore *store, gpointer data)
+{
+    GtkTreeIter iter;
+    gboolean found = FALSE;
     unsigned int len, i;
     char **tags, *tag;
     GList *src = NULL, *taglist = NULL;
@@ -180,7 +209,11 @@ gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
     }
 
     /* generate the completion with the found tags */
-    found = util_fill_completion(store, input, taglist);
+    for (GList *l = taglist; l; l = l->next) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+        found = TRUE;
+    }
 
     g_list_free_full(src, (GDestroyNotify)free_bookmark);
     g_list_free_full(taglist, (GDestroyNotify)g_free);
@@ -237,66 +270,6 @@ gboolean bookmark_queue_clear(void)
 static GList *load(const char *file)
 {
     return util_file_to_unique_list(file, (Util_Content_Func)line_to_bookmark, 0);
-}
-
-/**
- * Checks if the given bookmark matches all given query strings as prefix. If
- * the bookmark has no tags, the matching is done on the '/' splited URL.
- *
- * @bm:    bookmark to test if it matches
- * @query: char array with tags to search for
- * @qlen:  length of given query char array
- *
- * Return: TRUE if the bookmark contained all tags
- */
-static gboolean bookmark_contains_all_tags(Bookmark *bm, char **query,
-    unsigned int qlen)
-{
-    const char *separators;
-    char *cursor;
-    unsigned int i;
-    gboolean found;
-
-    if (!qlen) {
-        return TRUE;
-    }
-
-    if (bm->tags) {
-        /* If there are tags - use them for matching. */
-        separators = " ";
-        cursor     = bm->tags;
-    } else {
-        /* No tags available - matching is based on the path parts of the URL. */
-        separators = "./";
-        cursor     = bm->uri;
-    }
-
-    /* iterate over all query parts */
-    for (i = 0; i < qlen; i++) {
-        found = FALSE;
-
-        /* we want to do a prefix match on all bookmark tags - so we check for
-         * a match on string begin - if this fails we move the cursor to the
-         * next space and do the test again */
-        while (cursor && *cursor) {
-            /* match was not found at current cursor position */
-            if (g_str_has_prefix(cursor, query[i])) {
-                found = TRUE;
-                break;
-            }
-            /* If match was not found at the cursor position - move cursor
-             * behind the next separator char. */
-            if ((cursor = strpbrk(cursor, separators))) {
-                cursor++;
-            }
-        }
-
-        if (!found) {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
 }
 
 static Bookmark *line_to_bookmark(const char *uri, const char *data)

@@ -703,7 +703,7 @@ static void client_destroy(Client *c)
         g_free(c->state.search.last_query);
     }
 
-    completion_cleanup(c);
+    completion_free(c->comp);
     map_cleanup(c);
     register_cleanup(c);
     setting_cleanup(c);
@@ -740,8 +740,8 @@ static Client *client_new(WebKitWebView *webview)
     c->state.progress = 100;
     c->config.shortcuts = shortcut_new();
 
-    completion_init(c);
     map_init(c);
+    c->comp    = completion_new();
     c->handler = handler_new();
 #ifdef FEATURE_AUTOCMD
     autocmd_init(c);
@@ -955,10 +955,12 @@ static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data)
 
     g_assert(c);
 
+#if 0
     /* don't observe changes in completion mode */
-    if (c->mode->flags & FLAG_COMPLETION) {
+    if (completion_is_active(c->comp)) {
         return;
     }
+#endif
 
     /* don't process changes not typed by the user */
     if (gtk_widget_is_focus(c->input) && c->mode && c->mode->input_changed) {

@@ -27,7 +27,7 @@ void ex_enter(Client *c);
 void ex_leave(Client *c);
 VbResult ex_keypress(Client *c, int key);
 void ex_input_changed(Client *c, const char *text);
-gboolean ex_fill_completion(GtkListStore *store, const char *input);
+gboolean ex_fill_completion(GtkListStore *store, gpointer data);
 VbCmdResult ex_run_file(Client *c, const char *filename);
 VbCmdResult ex_run_string(Client *c, const char *input, gboolean enable_history);
 

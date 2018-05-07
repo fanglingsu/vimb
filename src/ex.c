@@ -89,6 +89,27 @@ typedef enum {
     PHASE_REG,
 } Phase;
 
+typedef enum {
+    COMP_STOP,
+    COMP_RECREATE,
+    COMP_REFILTER,
+} CompParseResult;
+
+typedef enum {
+    CT_OPEN_HIST,
+    CT_OPEN_TAG,
+    CT_SET,
+    CT_BMA,
+    CT_BMR,
+    CT_SC,
+    CT_HANDREM,
+    CT_SEARCH,
+    CT_FILE,
+    CT_CMD,
+    CT_AUC,
+    CT_AUG,
+} CompType;
+
 typedef struct {
     int        count;    /* commands count */
     int        idx;      /* index in commands array */
@@ -157,7 +178,13 @@ static VbCmdResult ex_source(Client *c, const ExArg *arg);
 static VbCmdResult ex_handlers(Client *c, const ExArg *arg);
 
 static gboolean complete(Client *c, short direction);
-static void completion_select(Client *c, char *match);
+static void complete_stop(Client *c);
+static CompParseResult completion_parse(Client *c, char *input);
+static void completion_select(char *match, gpointer data);
+static gboolean prefix_match_visible_func(GtkTreeModel *model,
+        GtkTreeIter *iter, char **input);
+static gboolean infix_match_visible_func(GtkTreeModel *model,
+        GtkTreeIter *iter, char **input);
 static gboolean history(Client *c, gboolean prev);
 static void history_rewind(void);
 
@@ -210,10 +237,17 @@ static ExInfo commands[] = {
 };
 
 static struct {
-    guint count;
-    char  *prefix;  /* completion prefix like :, ? and / */
-    char  *current; /* holds the current written input box content */
-    char  *token;   /* initial filter content */
+    guint                           count;
+    char                            *prefix;  /* completion prefix like :, ? and / */
+    char                            *current; /* holds the current written input box content */
+    char                            *token;   /* initial filter content */
+    GtkTreeModelFilter              *filter;
+    CompletionFillFunc              fill_func;
+    gpointer                        fill_func_data;
+    GtkTreeModelFilterVisibleFunc   visible_func;
+    gboolean                        no_observe_input;
+    gboolean                        sortable;
+    CompType                        type;
 } excomp;
 
 static struct {
@@ -240,7 +274,7 @@ void ex_enter(Client *c)
  */
 void ex_leave(Client *c)
 {
-    completion_clean(c);
+    complete_stop(c);
     hints_clear(c);
     if (c->config.incsearch) {
         command_search(c, &((Arg){0, NULL}), FALSE);
@@ -345,8 +379,8 @@ VbResult ex_keypress(Client *c, int key)
 
             case CTRL('E'):
                 /* move the cursor to the end of line */
-                gtk_text_buffer_get_end_iter(buffer, &start);
-                gtk_text_buffer_place_cursor(buffer, &start);
+                gtk_text_buffer_get_end_iter(buffer, &end);
+                gtk_text_buffer_place_cursor(buffer, &end);
                 break;
 
             case CTRL('U'):
@@ -380,9 +414,14 @@ VbResult ex_keypress(Client *c, int key)
         gtk_text_buffer_get_bounds(buffer, &start, &end);
         if (gtk_text_iter_equal(&start, &end)) {
             vb_enter(c, 'n');
-            vb_input_set_text(c, "");
         }
     }
+
+    /*
+    if (completion_is_active(c->comp)) {
+        complete(c, 0);
+    }
+    */
 
     if (res == RESULT_COMPLETE) {
         info.reg   = 0;
@@ -399,6 +438,7 @@ void ex_input_changed(Client *c, const char *text)
 {
     GtkTextIter start, end;
     GtkTextBuffer *buffer = c->buffer;
+    gboolean can_complete = FALSE;
 
     /* don't add line breaks if content is pasted from clipboard into inputbox */
     if (gtk_text_buffer_get_line_count(buffer) > 1) {
@@ -427,37 +467,31 @@ void ex_input_changed(Client *c, const char *text)
             break;
         case '/': /* fall through */
         case '?':
+            can_complete = TRUE;
             if (c->config.incsearch) {
                 command_search(c, &((Arg){*text == '/' ? 1 : -1, (char*)text + 1}), FALSE);
             }
             break;
+        default:
+            can_complete = TRUE;
+    }
+    if (can_complete && completion_is_active(c->comp) && !excomp.no_observe_input) {
+        complete(c, 0);
     }
 }
 
-gboolean ex_fill_completion(GtkListStore *store, const char *input)
+gboolean ex_fill_completion(GtkListStore *store, gpointer data)
 {
     GtkTreeIter iter;
     ExInfo *cmd;
     gboolean found = FALSE;
 
-    if (!input || *input == '\0') {
-        for (int i = 0; i < LENGTH(commands); i++) {
-            cmd = &commands[i];
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, cmd->name, -1);
-            found = TRUE;
-        }
-    } else {
-        for (int i = 0; i < LENGTH(commands); i++) {
-            cmd = &commands[i];
-            if (g_str_has_prefix(cmd->name, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, cmd->name, -1);
-                found = TRUE;
-            }
-        }
+    for (int i = 0; i < LENGTH(commands); i++) {
+        cmd = &commands[i];
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, cmd->name, -1);
+        found = TRUE;
     }
-
     return found;
 }
 
@@ -1136,36 +1170,78 @@ static VbCmdResult ex_source(Client *c, const ExArg *arg)
  */
 static gboolean complete(Client *c, short direction)
 {
-    char *input;            /* input read from inputbox */
-    const char *in;         /* pointer to input that we move */
-    gboolean found = FALSE;
-    gboolean sort  = TRUE;
-    GtkListStore *store;
+    char *input;
+    CompParseResult result;
 
-    input = vb_input_get_text(c);
-    /* if completion was already started move to the next/prev item */
-    if (c->mode->flags & FLAG_COMPLETION) {
-        if (excomp.current && !strcmp(input, excomp.current)) {
-            /* Step through the next/prev completion item. */
-            if (!completion_next(c, direction < 0)) {
-                /* If we stepped over the last/first item - put the initial content in */
-                completion_select(c, excomp.token);
+    input  = vb_input_get_text(c);
+    result = completion_parse(c, input);
+    switch (result) {
+        case COMP_STOP:
+            complete_stop(c);
+            break;
+        case COMP_RECREATE:
+            if (completion_is_active(c->comp)) {
+                complete_stop(c);
             }
-            g_free(input);
+            /* intentional fallthrough */
+        case COMP_REFILTER:
+            if (completion_is_active(c->comp)) {
+                /* If there is direction not given means we want to filter
+                 * only without changing the selected tree element. */
+                if (0 == direction) {
+                    if (!excomp.current || strcmp(input, excomp.current)) {
+                        gtk_tree_model_filter_refilter(excomp.filter);
+                    }
+                } else {
+                    completion_next(c->comp, direction < 0);
+                }
+            } else {
+                GtkListStore *store;
+                if (excomp.fill_func) {
+                    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+                    if (excomp.fill_func(store, excomp.fill_func_data) && excomp.visible_func) {
+                        excomp.filter = GTK_TREE_MODEL_FILTER(gtk_tree_model_filter_new(GTK_TREE_MODEL(store), NULL));
+                        gtk_tree_model_filter_set_visible_func(excomp.filter,
+                                (GtkTreeModelFilterVisibleFunc)excomp.visible_func,
+                                &excomp.token, NULL);
 
-            return TRUE;
-        }
-
-        /* if current input isn't the content of the completion item, stop
-         * completion and start it after that again */
-        completion_clean(c);
+                        if (excomp.sortable) {
+                            gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
+                                    COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING);
+                        }
+                        completion_start(c->comp, GTK_TREE_MODEL(excomp.filter),
+                                completion_select, c, GTK_WIDGET(c->statusbar.box),
+                                direction < 0);
+                    }
+                }
+            }
+            break;
     }
 
-    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
+    g_free(input);
+    return TRUE;
+}
 
+static void complete_stop(Client *c)
+{
+    if (c->comp) {
+        completion_stop(c->comp);
+        excomp.filter         = NULL;
+        excomp.fill_func      = NULL;
+        excomp.fill_func_data = NULL;
+        excomp.visible_func   = NULL;
+    }
+}
+
+static CompParseResult completion_parse(Client *c, char *input)
+{
+    gboolean sort          = TRUE;
+    CompParseResult result = COMP_REFILTER;
+    CompType type;
+    const char *before_cmdname, *token, *in;
     in = (const char*)input;
+
     if (*in == ':') {
-        const char *before_cmdname;
         /* skip leading ':' and whitespace */
         while (*in && (*in == ':' || VB_IS_SPACE(*in))) {
             in++;
@@ -1182,7 +1258,6 @@ static gboolean complete(Client *c, short direction)
         /* Do ex command specific completion if the command is recognized and
          * there is a space after the command and the optional '!' bang. */
         if (parse_command_name(c, &in, arg) && parse_bang(&in, arg) && VB_IS_SPACE(*in)) {
-            const char *token;
             /* Get only the last word of input string for the completion for
              * bookmark tag completion. */
             if (arg->code == EX_BMA) {
@@ -1211,90 +1286,121 @@ static gboolean complete(Client *c, short direction)
                 case EX_TABOPEN:
                     sort = FALSE;
                     if (*token == '!') {
-                        found = bookmark_fill_completion(store, token + 1);
+                        OVERWRITE_STRING(excomp.token, token + 1);
+                        excomp.fill_func      = bookmark_fill_url_completion;
+                        excomp.fill_func_data = NULL;
+                        excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)bookmark_tag_completion_visible_func;
+                        type                  = CT_OPEN_HIST;
                     } else {
-                        found = history_fill_completion(store, HISTORY_URL, token);
+                        OVERWRITE_STRING(excomp.token, token);
+                        excomp.fill_func      = history_fill_url_completion;
+                        excomp.fill_func_data = NULL;
+                        excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)history_completion_visible_func;
+                        type                  = CT_OPEN_TAG;
                     }
                     break;
-
                 case EX_SET:
-                    found = setting_fill_completion(c, store, token);
+                    excomp.fill_func      = setting_fill_completion;
+                    excomp.fill_func_data = c->config.settings;
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)infix_match_visible_func;
+                    type                  = CT_SET;
                     break;
 
                 case EX_BMA:
-                    found = bookmark_fill_tag_completion(store, token);
+                    excomp.fill_func      = bookmark_fill_tag_completion;
+                    excomp.fill_func_data = NULL;
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)prefix_match_visible_func;
+                    type                  = CT_BMA;
                     break;
 
                 case EX_BMR:
-                    sort  = FALSE;
-                    found = bookmark_fill_completion(store, token);
+                    OVERWRITE_STRING(excomp.token, token + 1);
+                    sort                  = FALSE;
+                    excomp.fill_func      = bookmark_fill_url_completion;
+                    excomp.fill_func_data = c;
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)bookmark_tag_completion_visible_func;
+                    type                  = CT_BMR;
                     break;
 
                 case EX_SCR: /* Fallthrough */
                 case EX_SCD:
-                    found = shortcut_fill_completion(c->config.shortcuts, store, token);
+                    excomp.fill_func      = shortcut_fill_completion;
+                    excomp.fill_func_data = c->config.shortcuts;
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)infix_match_visible_func;
+                    type                  = CT_SC;
                     break;
 
                 case EX_HANDREM:
-                    found = handler_fill_completion(c->handler, store, token);
+                    excomp.fill_func      = handler_fill_completion;
+                    excomp.fill_func_data = c->handler;
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)infix_match_visible_func;
+                    type                  = CT_HANDREM;
                     break;
 
+#if 0
                 case EX_SAVE: /* Fallthrough */
                 case EX_SOURCE:
-                    found = util_filename_fill_completion(c->state, store, token);
+                    excomp.fill_func      = util_filename_fill_completion;
+                    excomp.fill_func_data = &(c->state);
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)infix_match_visible_func;
+                    type                  = CT_FILE;
                     break;
+#endif
 
 #ifdef FEATURE_AUTOCMD
                 case EX_AUTOCMD:
-                    found = autocmd_fill_event_completion(c, store, token);
+                    excomp.fill_func      = autocmd_fill_event_completion;
+                    excomp.fill_func_data = NULL;
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)prefix_match_visible_func;
+                    type                  = CT_AUC;
                     break;
 
                 case EX_AUGROUP:
-                    found = autocmd_fill_group_completion(c, store, token);
+                    excomp.fill_func      = autocmd_fill_group_completion;
+                    excomp.fill_func_data = c->autocmd.groups;
+                    excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)prefix_match_visible_func;
+                    type                  = CT_AUG;
                     break;
 #endif
 
                 default:
+                    result = COMP_STOP;
                     break;
             }
-        } else { /* complete command names */
+        } else {
+            /* complete command names */
             /* restore the 'in' pointer after try to parse command name */
             in = before_cmdname;
             OVERWRITE_STRING(excomp.token, in);
+            /* Use all the input before the command as prefix. */
+            OVERWRITE_NSTRING(excomp.prefix, input, in - input);
 
             /* Backup the parsed data so we can access them in
              * completion_select function. */
-            excomp.count = arg->count;
-
-            if (ex_fill_completion(store, in)) {
-                /* Use all the input before the command as prefix. */
-                OVERWRITE_NSTRING(excomp.prefix, input, in - input);
-                found = TRUE;
-            }
+            excomp.count          = arg->count;
+            excomp.fill_func      = ex_fill_completion;
+            excomp.fill_func_data = NULL;
+            excomp.visible_func   = (GtkTreeModelFilterVisibleFunc)prefix_match_visible_func;
+            type                  = CT_CMD;
         }
         free_cmdarg(arg);
     } else if (*in == '/' || *in == '?') {
-        if (history_fill_completion(store, HISTORY_SEARCH, in + 1)) {
-            OVERWRITE_STRING(excomp.token, in + 1);
-            OVERWRITE_NSTRING(excomp.prefix, in, 1);
-            found = TRUE;
-            sort  = FALSE;
-        }
+        OVERWRITE_STRING(excomp.token, in + 1);
+        OVERWRITE_NSTRING(excomp.prefix, in, 1);
+        excomp.fill_func    = history_fill_search_completion;
+        excomp.visible_func = (GtkTreeModelFilterVisibleFunc)infix_match_visible_func;
+        type = CT_SEARCH;
     }
 
-    /* if the input could be parsed and the tree view could be filled */
-    if (sort) {
-        gtk_tree_sortable_set_sort_column_id(
-            GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING
-        );
+    /* If the input could be parsed to a valid completion but the completion
+     * typed was changed - recreate the completion. */
+    if (result == COMP_REFILTER && excomp.type != type) {
+        result = COMP_RECREATE;
     }
+    excomp.type     = type;
+    excomp.sortable = sort;
 
-    if (found) {
-        completion_create(c, GTK_TREE_MODEL(store), completion_select, direction < 0);
-    }
-
-    g_free(input);
-    return TRUE;
+    return result;
 }
 
 /**
@@ -1302,16 +1408,52 @@ static gboolean complete(Client *c, short direction)
  * matched item according with previously saved prefix and command name to the
  * inputbox.
  */
-static void completion_select(Client *c, char *match)
+static void completion_select(char *match, gpointer data)
 {
-    OVERWRITE_STRING(excomp.current, NULL);
+    Client *c = (Client*)data;
+    excomp.no_observe_input = TRUE;
+    if (excomp.current) {
+        g_free(excomp.current);
+        excomp.current = NULL;
+    }
 
     if (excomp.count) {
         excomp.current = g_strdup_printf("%s%d%s", excomp.prefix, excomp.count, match);
     } else {
         excomp.current = g_strconcat(excomp.prefix, match, NULL);
     }
+
+    /* Avoid completion refiltering on writing current selection to input box. */
     vb_input_set_text(c, excomp.current);
+    excomp.no_observe_input = FALSE;
+}
+
+static gboolean prefix_match_visible_func(GtkTreeModel *model, GtkTreeIter *iter, char **input)
+{
+    char *value;
+    gboolean visible = FALSE;
+
+    gtk_tree_model_get(model, iter, COMPLETION_STORE_FIRST, &value, -1);
+    if (value) {
+        visible = g_str_has_prefix(value, *input);
+    }
+    g_free(value);
+
+    return visible;
+}
+
+static gboolean infix_match_visible_func(GtkTreeModel *model, GtkTreeIter *iter, char **input)
+{
+    char *value;
+    gboolean visible = FALSE;
+
+    gtk_tree_model_get(model, iter, COMPLETION_STORE_FIRST, &value, -1);
+    if (value) {
+        visible = g_str_match_string(*input, value, FALSE);
+    }
+    g_free(value);
+
+    return visible;
 }
 
 static gboolean history(Client *c, gboolean prev)

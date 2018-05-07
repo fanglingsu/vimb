@@ -565,26 +565,15 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
 /**
  * Fills the given list store by matching data of also given src list.
  */
-gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src)
+gboolean util_fill_completion(GtkListStore *store, GList *src)
 {
     gboolean found = FALSE;
     GtkTreeIter iter;
 
-    if (!input || !*input) {
-        for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = TRUE;
-        }
-    } else {
-        for (GList *l = src; l; l = l->next) {
-            char *value = (char*)l->data;
-            if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-                found = TRUE;
-            }
-        }
+    for (GList *l = src; l; l = l->next) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+        found = TRUE;
     }
 
     return found;

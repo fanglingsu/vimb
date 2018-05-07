@@ -284,54 +284,31 @@ gboolean autocmd_run(Client *c, AuEvent event, const char *uri, const char *grou
     return true;
 }
 
-gboolean autocmd_fill_group_completion(Client *c, GtkListStore *store, const char *input)
+gboolean autocmd_fill_group_completion(GtkListStore *store, gpointer data)
 {
     GSList *lg;
-    gboolean found = false;
+    gboolean found = FALSE;
     GtkTreeIter iter;
+    GSList *src = (GSList *)data;
 
-    if (!input || !*input) {
-        for (lg = c->autocmd.groups; lg; lg = lg->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, ((AuGroup*)lg->data)->name, -1);
-            found = true;
-        }
-    } else {
-        for (lg = c->autocmd.groups; lg; lg = lg->next) {
-            char *value = ((AuGroup*)lg->data)->name;
-            if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, value, -1);
-                found = true;
-            }
-        }
+    for (lg = src; lg; lg = lg->next) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, ((AuGroup*)lg->data)->name, -1);
+        found = TRUE;
     }
 
     return found;
 }
 
-gboolean autocmd_fill_event_completion(Client *c, GtkListStore *store, const char *input)
+gboolean autocmd_fill_event_completion(GtkListStore *store, gpointer data)
 {
-    int i;
-    const char *value;
-    gboolean found = false;
+    gboolean found = FALSE;
     GtkTreeIter iter;
 
-    if (!input || !*input) {
-        for (i = 0; i < LENGTH(events); i++) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, events[i].name, -1);
-            found = true;
-        }
-    } else {
-        for (i = 0; i < LENGTH(events); i++) {
-            value = events[i].name;
-            if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, value, -1);
-                found = true;
-            }
-        }
+    for (int i = 0; i < LENGTH(events); i++) {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, events[i].name, -1);
+        found = TRUE;
     }
 
     return found;

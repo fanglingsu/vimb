@@ -28,6 +28,7 @@
 #include "setting.h"
 #include "scripts/scripts.h"
 #include "shortcut.h"
+#include "util.h"
 
 typedef enum {
     SETTING_SET,        /* :set option=value */
@@ -262,35 +263,15 @@ VbCmdResult setting_run(Client *c, char *name, const char *param)
     return CMD_ERROR | CMD_KEEPINPUT;
 }
 
-gboolean setting_fill_completion(Client *c, GtkListStore *store, const char *input)
+gboolean setting_fill_completion(GtkListStore *store, gpointer data)
 {
-    GtkTreeIter iter;
-    gboolean found = FALSE;
-    GList *src     = g_hash_table_get_keys(c->config.settings);
+    gboolean found;
+    GList *src;
 
-    /* If no filter input given - copy all entries into the data store. */
-    if (!input || !*input) {
-        for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = TRUE;
-        }
-        g_list_free(src);
-        return found;
-    }
-
-    /* If filter input is given - copy matching list entires into data store.
-     * Strings are compared by prefix matching. */
-    for (GList *l = src; l; l = l->next) {
-        char *value = (char*)l->data;
-        if (g_str_has_prefix(value, input)) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = TRUE;
-        }
-    }
-
+    src   = g_hash_table_get_keys((GHashTable *)data);
+    found = util_fill_completion(store, src);
     g_list_free(src);
+
     return found;
 }
 

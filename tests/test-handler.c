@@ -21,28 +21,32 @@
 #include <src/handler.h>
 #include <src/completion.h>
 
-static Handler *handler = NULL;
-
 #define TEST_URI "http://fanglingsu.github.io/vimb/"
 
 static void test_handler_add(void)
 {
+    Handler *handler = handler_new();
     g_assert_true(handler_add(handler, "https", "e"));
+    handler_free(handler);
 }
 
 static void test_handler_remove(void)
 {
+    Handler *handler = handler_new();
     g_assert_true(handler_add(handler, "https", "e"));
 
     g_assert_true(handler_remove(handler, "https"));
     g_assert_false(handler_remove(handler, "https"));
+    handler_free(handler);
 }
 
 static void test_handler_run_success(void)
 {
     if (g_test_subprocess()) {
+        Handler *handler = handler_new();
         handler_add(handler, "http", "echo -n 'handled uri %s'");
         handler_handle_uri(handler, TEST_URI);
+        handler_free(handler);
         return;
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -53,8 +57,10 @@ static void test_handler_run_success(void)
 static void test_handler_run_failed(void)
 {
     if (g_test_subprocess()) {
+        Handler *handler = handler_new();
         handler_add(handler, "http", "unknown-program %s");
         handler_handle_uri(handler, TEST_URI);
+        handler_free(handler);
         return;
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -64,39 +70,23 @@ static void test_handler_run_failed(void)
 
 static void test_handler_fill_completion(void)
 {
+    Handler *handler = handler_new();
     GtkListStore *store;
     g_assert_true(handler_add(handler, "http", "echo"));
     g_assert_true(handler_add(handler, "https", "echo"));
     g_assert_true(handler_add(handler, "about", "echo"));
     g_assert_true(handler_add(handler, "ftp", "echo"));
 
-    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
-    /* check case where multiple matches are found */
-    g_assert_true(handler_fill_completion(handler, store, "http"));
-    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 2);
-    gtk_list_store_clear(store);
-
-    /* check case where only one matches are found */
-    g_assert_true(handler_fill_completion(handler, store, "f"));
-    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 1);
-    gtk_list_store_clear(store);
-
-    /* check case where no match is found */
-    g_assert_false(handler_fill_completion(handler, store, "unknown"));
-    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 0);
-    gtk_list_store_clear(store);
-
-    /* check case without apllied filters */
-    g_assert_true(handler_fill_completion(handler, store, ""));
+    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+    g_assert_true(handler_fill_completion(store, handler));
     g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 4);
     gtk_list_store_clear(store);
+    handler_free(handler);
 }
 
 int main(int argc, char *argv[])
 {
     int result;
-    handler = handler_new();
-
     g_test_init(&argc, &argv, NULL);
 
     g_test_add_func("/test-handlers/add", test_handler_add);
@@ -105,8 +95,6 @@ int main(int argc, char *argv[])
     g_test_add_func("/test-handlers/handle_uri/failed", test_handler_run_failed); 
     g_test_add_func("/test-handlers/fill-completion", test_handler_fill_completion); 
     result = g_test_run();
-
-    handler_free(handler);
 
     return result;
 }

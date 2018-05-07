@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "ascii.h"
+#include "completion.h"
 #include "main.h"
 #include "shortcut.h"
 #include "util.h"
@@ -165,10 +166,13 @@ char *shortcut_get_uri(Shortcut *sc, const char *string)
     return uri;
 }
 
-gboolean shortcut_fill_completion(Shortcut *sc, GtkListStore *store, const char *input)
+gboolean shortcut_fill_completion(GtkListStore *store, gpointer data)
 {
-    GList *src = g_hash_table_get_keys(sc->table);
-    gboolean found = util_fill_completion(store, input, src);
+    GList *src;
+    gboolean found;
+
+    src   = g_hash_table_get_keys(((Shortcut *)data)->table);
+    found = util_fill_completion(store, src);
     g_list_free(src);
 
     return found;
