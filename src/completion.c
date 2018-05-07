@@ -233,38 +233,6 @@ gboolean completion_next(Client *c, gboolean back)
     return TRUE;
 }
 
-/**
- * Fills the given list store by matching data of also given src list.
- */
-gboolean completion_fill(GtkListStore *store, const char *input, GList *src)
-{
-    gboolean found = FALSE;
-    GtkTreeIter iter;
-
-    /* If no filter input given - copy all entries into the data store. */
-    if (!input || !*input) {
-        for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = TRUE;
-        }
-        return found;
-    }
-
-    /* If filter input is given - copy matching list entires into data store.
-     * Strings are compared by prefix matching. */
-    for (GList *l = src; l; l = l->next) {
-        char *value = (char*)l->data;
-        if (g_str_has_prefix(value, input)) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
-            found = TRUE;
-        }
-    }
-
-    return found;
-}
-
 static gboolean tree_selection_func(GtkTreeSelection *selection,
     GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data)
 {

@@ -262,10 +262,33 @@ VbCmdResult setting_run(Client *c, char *name, const char *param)
 
 gboolean setting_fill_completion(Client *c, GtkListStore *store, const char *input)
 {
-    GList *src = g_hash_table_get_keys(c->config.settings);
-    gboolean found = completion_fill(store, input, src);
-    g_list_free(src);
+    GtkTreeIter iter;
+    gboolean found = FALSE;
+    GList *src     = g_hash_table_get_keys(c->config.settings);
 
+    /* If no filter input given - copy all entries into the data store. */
+    if (!input || !*input) {
+        for (GList *l = src; l; l = l->next) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            found = TRUE;
+        }
+        g_list_free(src);
+        return found;
+    }
+
+    /* If filter input is given - copy matching list entires into data store.
+     * Strings are compared by prefix matching. */
+    for (GList *l = src; l; l = l->next) {
+        char *value = (char*)l->data;
+        if (g_str_has_prefix(value, input)) {
+            gtk_list_store_append(store, &iter);
+            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            found = TRUE;
+        }
+    }
+
+    g_list_free(src);
     return found;
 }
 

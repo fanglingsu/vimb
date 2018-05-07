@@ -41,6 +41,5 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
         CompletionSelectFunc selfunc, gboolean back);
 void completion_init(Client *c);
 gboolean completion_next(Client *c, gboolean back);
-gboolean completion_fill(GtkListStore *store, const char *input, GList *src);
 
 #endif /* end of include guard: _COMPLETION_H */
