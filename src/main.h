@@ -103,10 +103,6 @@ typedef enum {
 } VbInputType;
 
 enum {
-    COMP_NORMAL, COMP_ACTIVE, COMP_LAST
-};
-
-enum {
     FILES_BOOKMARK,
     FILES_CLOSED,
     FILES_COMMAND,
@@ -236,10 +232,6 @@ struct Client {
         guint                   scrollstep;
         gboolean                input_autohide;
         gboolean                incsearch;
-        /* completion */
-        GdkRGBA                 comp_fg[COMP_LAST];
-        GdkRGBA                 comp_bg[COMP_LAST];
-        PangoFontDescription    *comp_font;
         guint                   default_zoom;   /* default zoom level in percent */
         Shortcut                *shortcuts;
     } config;

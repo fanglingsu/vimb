@@ -127,7 +127,6 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
-        "font-desc", c->config.comp_font,
         "ellipsize", PANGO_ELLIPSIZE_MIDDLE,
         NULL
     );
@@ -143,7 +142,6 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
-        "font-desc", c->config.comp_font,
         "ellipsize", PANGO_ELLIPSIZE_END,
         NULL
     );
