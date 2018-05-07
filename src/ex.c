@@ -1142,13 +1142,6 @@ static gboolean complete(Client *c, short direction)
     gboolean sort  = TRUE;
     GtkListStore *store;
 
-    /* if direction is 0 stop the completion */
-    if (!direction) {
-        completion_clean(c);
-
-        return TRUE;
-    }
-
     input = vb_input_get_text(c);
     /* if completion was already started move to the next/prev item */
     if (c->mode->flags & FLAG_COMPLETION) {
