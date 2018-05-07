@@ -156,30 +156,6 @@ void setting_init(Client *c)
     setting_add(c, "spell-checking", TYPE_BOOLEAN, &off, webkit_spell_checking, 0, NULL);
     setting_add(c, "spell-checking-languages", TYPE_CHAR, &"en_US", webkit_spell_checking_language, FLAG_LIST|FLAG_NODUP, NULL);
 
-
-#ifdef FEATURE_GUI_STYLE_VIMB2_COMPAT
-    /* gui style settings vimb2 compatibility */
-    setting_add(c, "completion-bg-active", TYPE_CHAR, &"#888", gui_style, 0, NULL);
-    setting_add(c, "completion-bg-normal", TYPE_CHAR, &"#656565", gui_style, 0, NULL);
-    setting_add(c, "completion-fg-active", TYPE_CHAR, &"#f6f3e8", gui_style, 0, NULL);
-    setting_add(c, "completion-fg-normal", TYPE_CHAR, &"#fff", gui_style, 0, NULL);
-    setting_add(c, "completion-font", TYPE_CHAR, &"" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
-    setting_add(c, "input-bg-error", TYPE_CHAR, &"#f77", gui_style, 0, NULL);
-    setting_add(c, "input-bg-normal", TYPE_CHAR, &"#fff", gui_style, 0, NULL);
-    setting_add(c, "input-fg-error", TYPE_CHAR, &"#000", gui_style, 0, NULL);
-    setting_add(c, "input-fg-normal", TYPE_CHAR, &"#000", gui_style, 0, NULL);
-    setting_add(c, "input-font-error", TYPE_CHAR, &"" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
-    setting_add(c, "input-font-normal", TYPE_CHAR, &"" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
-    setting_add(c, "status-color-bg", TYPE_CHAR, &"#000", gui_style, 0, NULL);
-    setting_add(c, "status-color-fg", TYPE_CHAR, &"#fff", gui_style, 0, NULL);
-    setting_add(c, "status-font", TYPE_CHAR, &"" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
-    setting_add(c, "status-ssl-color-bg", TYPE_CHAR, &"#95e454", gui_style, 0, NULL);
-    setting_add(c, "status-ssl-color-fg", TYPE_CHAR, &"#000", gui_style, 0, NULL);
-    setting_add(c, "status-ssl-font", TYPE_CHAR, &"", gui_style, 0, NULL);
-    setting_add(c, "status-sslinvalid-color-bg", TYPE_CHAR, &"#f77", gui_style, 0, NULL);
-    setting_add(c, "status-sslinvalid-color-fg", TYPE_CHAR, &"#000", gui_style, 0, NULL);
-    setting_add(c, "status-sslinvalid-font", TYPE_CHAR, &"" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
-#else
     /* gui style settings vimb3 */
     setting_add(c, "completion-css", TYPE_CHAR, &"color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
     setting_add(c, "completion-hover-css", TYPE_CHAR, &"background-color:#777;", gui_style, 0, NULL);
@@ -189,7 +165,6 @@ void setting_init(Client *c)
     setting_add(c, "status-css", TYPE_CHAR, &"color:#fff;background-color:#000;font:" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
     setting_add(c, "status-ssl-css", TYPE_CHAR, &"background-color:#95e454;color:#000;", gui_style, 0, NULL);
     setting_add(c, "status-ssl-invalid-css", TYPE_CHAR, &"background-color:#f77;color:#000;", gui_style, 0, NULL);
-#endif /* FEATURE_GUI_STYLE_VIMB2_COMPAT */
 
     /* initialize the shortcuts and set the default shortcuts */
     shortcut_add(c->config.shortcuts, "dl", "https://duckduckgo.com/html/?q=$0");
