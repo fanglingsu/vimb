@@ -96,7 +96,7 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
 
     /* prepare the tree view */
     comp->win  = gtk_scrolled_window_new(NULL, NULL);
-    comp->tree = gtk_tree_view_new();
+    comp->tree = gtk_tree_view_new_with_model(model);
 
     gtk_style_context_add_provider(gtk_widget_get_style_context(comp->tree),
             GTK_STYLE_PROVIDER(vb.style_provider),
@@ -109,7 +109,6 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp->tree), FALSE);
     /* we have only on line per item so we can use the faster fixed heigh mode */
     gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(comp->tree), TRUE);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(comp->tree), model);
     g_object_unref(model);
 
     /* prepare the selection */
