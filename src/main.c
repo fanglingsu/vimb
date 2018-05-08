@@ -793,6 +793,7 @@ static GtkWidget *create_window(Client *c)
         window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
         gtk_window_set_role(GTK_WINDOW(window), PROJECT_UCFIRST);
         gtk_window_set_default_size(GTK_WINDOW(window), WIN_WIDTH, WIN_HEIGHT);
+        gtk_window_maximize(GTK_WINDOW(window));
     }
 
     g_object_connect(
