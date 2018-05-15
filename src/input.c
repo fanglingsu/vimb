@@ -112,6 +112,7 @@ VbResult input_open_editor(Client *c)
     GPid pid;
     gboolean success;
     GVariant *jsreturn;
+    GError *error = NULL;
 
     g_assert(c);
 
@@ -136,7 +137,7 @@ VbResult input_open_editor(Client *c)
     }
 
     /* spawn editor */
-    char* command = g_strdup_printf(editor_command, file_path);
+    char *command = g_strdup_printf(editor_command, file_path);
     if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
         g_critical("Could not parse editor-command '%s'", command);
         g_free(command);
@@ -146,14 +147,15 @@ VbResult input_open_editor(Client *c)
 
     success = g_spawn_async(
         NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
-        NULL, NULL, &pid, NULL
+        NULL, NULL, &pid, &error
     );
     g_strfreev(argv);
 
     if (!success) {
         unlink(file_path);
         g_free(file_path);
-        g_warning("Could not spawn editor-command");
+        g_warning("Could not spawn editor-command: %s", error->message);
+        g_error_free(error);
         return RESULT_ERROR;
     }
 
