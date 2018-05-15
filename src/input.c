@@ -173,7 +173,7 @@ VbResult input_open_editor(Client *c)
 
 static void resume_editor(GPid pid, int status, EditorData *data)
 {
-    char *text, *tmp;
+    char *text, *escaped;
     char *jscode;
 
     g_assert(pid);
@@ -186,59 +186,14 @@ static void resume_editor(GPid pid, int status, EditorData *data)
         text = util_get_file_contents(data->file, NULL);
 
         if (text) {
-            /* escape the text to form a valid JS string */
-            /* TODO: could go into util.c maybe */
-            struct search_replace {
-                const char* search;
-                const char* replace;
-            } escapes[] = {
-                {"\x01", ""},
-                {"\x02", ""},
-                {"\x03", ""},
-                {"\x04", ""},
-                {"\x05", ""},
-                {"\x06", ""},
-                {"\a", ""},
-                {"\b", ""},
-                {"\t", "\\t"},
-                {"\n", "\\n"},
-                {"\v", ""},
-                {"\f", ""},
-                {"\r", ""},
-                {"\x0E", ""},
-                {"\x0F", ""},
-                {"\x10", ""},
-                {"\x11", ""},
-                {"\x12", ""},
-                {"\x13", ""},
-                {"\x14", ""},
-                {"\x15", ""},
-                {"\x16", ""},
-                {"\x17", ""},
-                {"\x18", ""},
-                {"\x19", ""},
-                {"\x1A", ""},
-                {"\x1B", ""},
-                {"\x1C", ""},
-                {"\x1D", ""},
-                {"\x1E", ""},
-                {"\x1F", ""},
-                {"\"", "\\\""},
-                {"\x7F", ""},
-                {NULL, NULL},
-            };
-
-            for(struct search_replace *i = escapes; i->search; i++) {
-                tmp = util_str_replace(i->search, i->replace, text);
-                g_free(text);
-                text = tmp;
-            }
+            escaped = g_strescape(text, NULL);
 
             /* put the text back into the element */
-            jscode = g_strdup_printf("vimb_input_mode_element.value=\"%s\"", text);
+            jscode = g_strdup_printf("vimb_input_mode_element.value=\"%s\"", escaped);
             ext_proxy_eval_script(data->c, jscode, NULL);
 
             g_free(jscode);
+            g_free(escaped);
             g_free(text);
         }
     }
