@@ -58,6 +58,13 @@ target.
 
 - feature requests, issues and patches can be discussed on the [mailing list][mail]
 
+## Similar projects
+
+- [luakit](https://luakit.github.io/)
+- [qutebrowser](https://www.qutebrowser.org/)
+- [surf](https://surf.suckless.org/)
+- [uzbl](https://www.uzbl.org/)
+
 ## license
 
 Information about the license are found in the file LICENSE.
