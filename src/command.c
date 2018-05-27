@@ -32,9 +32,6 @@
 #include "history.h"
 #include "main.h"
 
-static void on_found_text(WebKitFindController *fc, guint count,
-        Client *c);
-
 /**
  * Start/perform/stop searching in webview.
  *
@@ -45,19 +42,15 @@ static void on_found_text(WebKitFindController *fc, guint count,
  */
 gboolean command_search(Client *c, const Arg *arg, bool commit)
 {
-    WebKitFindController *fc;
     const char *query;
     guint count;
     int direction;
 
-    fc = webkit_web_view_get_find_controller(c->webview);
-
     g_assert(c);
     g_assert(arg);
-    g_assert(fc);
 
     if (arg->i == 0) {
-        webkit_find_controller_search_finish(fc);
+        webkit_find_controller_search_finish(c->finder);
 
         /* Clear the input only if the search is active and commit flag is
          * set. This allows us to stop searching with and without cleaning
@@ -103,8 +96,8 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
          * on the page. Without this workaround the first selected match
          * depends on the most recent selection or caret position (even when
          * caret browsing is disabled). */
-        if(commit) {
-            webkit_find_controller_search(fc, "", WEBKIT_FIND_OPTIONS_NONE, G_MAXUINT);
+        if (commit) {
+            webkit_find_controller_search(c->finder, "", WEBKIT_FIND_OPTIONS_NONE, G_MAXUINT);
         }
 
         if (!c->state.search.last_query) {
@@ -114,8 +107,11 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
             c->state.search.last_query = g_strdup(query);
         }
 
-        g_signal_connect(fc, "found-text", G_CALLBACK(on_found_text), c);
-        webkit_find_controller_search(fc, query,
+        webkit_find_controller_count_matches(c->finder, query,
+                WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
+                WEBKIT_FIND_OPTIONS_WRAP_AROUND,
+                G_MAXUINT);
+        webkit_find_controller_search(c->finder, query,
                 WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
                 WEBKIT_FIND_OPTIONS_WRAP_AROUND |
                 (direction > 0 ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
@@ -133,11 +129,11 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
     if (c->state.search.active) {
         if (arg->i * c->state.search.direction > 0) {
             while (count--) {
-                webkit_find_controller_search_next(fc);
+                webkit_find_controller_search_next(c->finder);
             }
         } else {
             while (count--) {
-                webkit_find_controller_search_previous(fc);
+                webkit_find_controller_search_previous(c->finder);
             }
         }
     }
@@ -264,14 +260,3 @@ gboolean command_queue(Client *c, const Arg *arg)
     return res;
 }
 #endif
-
-static void on_found_text(WebKitFindController *fc, guint count,
-        Client *c)
-{
-    /* Avoid multiple useless status updates in case incsearch is enabled and
-     * we get the same count several times. */
-    if (c->state.search.matches != count) {
-        c->state.search.matches = count;
-        vb_statusbar_update(c);
-    }
-}

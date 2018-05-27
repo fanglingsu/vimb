@@ -100,6 +100,7 @@ static void vimb_cleanup(void);
 #endif
 static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
+static void on_counted_matches(WebKitFindController *finder, guint count, Client *c);
 static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
@@ -705,6 +706,9 @@ static Client *client_new(WebKitWebView *webview)
 
     /* webview */
     c->webview   = webview_new(c, webview);
+    c->finder    = webkit_web_view_get_find_controller(c->webview);
+    g_signal_connect(c->finder, "counted-matches", G_CALLBACK(on_counted_matches), c);
+
     c->page_id   = webkit_web_view_get_page_id(c->webview);
     c->inspector = webkit_web_view_get_inspector(c->webview);
 
@@ -1787,6 +1791,12 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), NULL);
 
     return new;
+}
+
+static void on_counted_matches(WebKitFindController *finder, guint count, Client *c)
+{
+    c->state.search.matches = count;
+    vb_statusbar_update(c);
 }
 
 static void on_script_message_focus(WebKitUserContentManager *manager,
