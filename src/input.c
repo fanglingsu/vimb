@@ -171,7 +171,7 @@ VbResult input_open_editor(Client *c)
     EditorData *data = g_slice_new0(EditorData);
     data->file = file_path;
     data->c    = c;
-	 data->element_id   = g_strdup(id);
+    data->element_id   = g_strdup(id);
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
 
     return RESULT_COMPLETE;
@@ -181,6 +181,7 @@ static void resume_editor(GPid pid, int status, EditorData *data)
 {
     char *text, *escaped;
     char *jscode;
+    char *jscode_enable;
 
     g_assert(pid);
     g_assert(data);
@@ -204,12 +205,11 @@ static void resume_editor(GPid pid, int status, EditorData *data)
         }
     }
 
-	 char *jscode_enable = g_strdup_printf(
-				 "document.getElementById(\"%s\").disabled=false;"
-				 "document.getElementById(\"%s\").focus()"
-			 , data->element_id, data->element_id);
-    ext_proxy_eval_script(data->c,
-			 jscode_enable, NULL);
+    jscode_enable = g_strdup_printf(
+                "document.getElementById(\"%s\").disabled=false;"
+                "document.getElementById(\"%s\").focus()"
+                 , data->element_id, data->element_id);
+    ext_proxy_eval_script(data->c, jscode_enable, NULL);
 
     g_unlink(data->file);
     g_free(data->file);
