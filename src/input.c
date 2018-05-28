@@ -31,6 +31,7 @@
 typedef struct {
     Client *c;
     char   *file;
+	 char   *element_id;
 } EditorData;
 
 static void resume_editor(GPid pid, int status, EditorData *data);
@@ -107,11 +108,12 @@ VbResult input_keypress(Client *c, int key)
 VbResult input_open_editor(Client *c)
 {
     char **argv, *file_path = NULL;
-    const char *text = NULL, *editor_command;
+    const char *text = NULL, *id = NULL, *editor_command;
     int argc;
     GPid pid;
-    gboolean success;
+    gboolean success, idSuccess;
     GVariant *jsreturn;
+    GVariant *idreturn;
     GError *error = NULL;
 
     g_assert(c);
@@ -130,6 +132,9 @@ VbResult input_open_editor(Client *c)
     if (!success || !text) {
         return RESULT_ERROR;
     }
+
+    idreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.id");
+    g_variant_get(idreturn, "(bs)", &idSuccess, &id);
 
     /* create a temp file to pass text to and from editor */
     if (!util_create_tmp_file(text, &file_path)) {
@@ -166,6 +171,7 @@ VbResult input_open_editor(Client *c)
     EditorData *data = g_slice_new0(EditorData);
     data->file = file_path;
     data->c    = c;
+	 data->element_id   = g_strdup(id);
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
 
     return RESULT_COMPLETE;
@@ -189,7 +195,7 @@ static void resume_editor(GPid pid, int status, EditorData *data)
             escaped = g_strescape(text, NULL);
 
             /* put the text back into the element */
-            jscode = g_strdup_printf("vimb_input_mode_element.value=\"%s\"", escaped);
+            jscode = g_strdup_printf("document.getElementById(\"%s\").value=\"%s\"", data->element_id, escaped);
             ext_proxy_eval_script(data->c, jscode, NULL);
 
             g_free(jscode);
@@ -198,9 +204,12 @@ static void resume_editor(GPid pid, int status, EditorData *data)
         }
     }
 
+	 char *jscode_enable = g_strdup_printf(
+				 "document.getElementById(\"%s\").disabled=false;"
+				 "document.getElementById(\"%s\").focus()"
+			 , data->element_id, data->element_id);
     ext_proxy_eval_script(data->c,
-            "vimb_input_mode_element.disabled=false;"
-            "vimb_input_mode_element.focus()", NULL);
+			 jscode_enable, NULL);
 
     g_unlink(data->file);
     g_free(data->file);
