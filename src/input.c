@@ -187,6 +187,7 @@ static void resume_editor(GPid pid, int status, EditorData *data)
     g_assert(data);
     g_assert(data->c);
     g_assert(data->file);
+    g_assert(data->element_id);
 
     if (status == 0) {
         /* get the text the editor stored */
@@ -213,6 +214,7 @@ static void resume_editor(GPid pid, int status, EditorData *data)
 
     g_unlink(data->file);
     g_free(data->file);
+    g_free(data->element_id);
     g_slice_free(EditorData, data);
     g_spawn_close_pid(pid);
 }
