@@ -1,50 +1,71 @@
 var hints = Object.freeze((function(){
     'use strict';
 
-    var hints      = [],               /* holds all hint data (hinted element, label, number) in view port */
-        docs       = [],               /* hold the affected document with the start and end index of the hints */
-        validHints = [],               /* holds the valid hinted elements matching the filter condition */
-        activeHint,                    /* holds the active hint object */
-        filterText = "",               /* holds the typed text filter */
-        filterKeys = "",               /* holds the typed hint-keys filter */
-        /* TODO remove these classes and use the 'vimbhint' attribute for */
-        /* styling the hints and labels - but this might break user */
-        /* stylesheets that use the classes for styling */
-        cId      = "_hintContainer",   /* id of the container holding the hint labels */
-        lClass   = "_hintLabel",       /* class used on the hint labels with the hint numbers */
-        hClass   = "_hintElem",        /* marks hinted elements */
-        fClass   = "_hintFocus",       /* marks focused element and focussed hint */
+    var hints      = [],   /* holds all hint data (hinted element, label, number) in view port */
+        docs       = [],   /* hold the affected document with the start and end index of the hints */
+        validHints = [],   /* holds the valid hinted elements matching the filter condition */
+        activeHint,        /* holds the active hint object */
+        filterText = "",   /* holds the typed text filter */
+        filterKeys = "",   /* holds the typed hint-keys filter */
+        attr = "vimbhint",
         config;
     /* the hint class used to maintain hinted element and labels */
     function Hint() {
+        var state = "";
         /* hide hint label and remove coloring from hinted element */
         this.hide = function() {
+            var l = this.label,
+                e = this.e;
             /* remove hint labels from no more visible hints */
-            this.label.style.display = "none";
-            this.e.classList.remove(fClass);
-            this.e.classList.remove(hClass);
+            l.style.display = "none";
+            l.setAttribute(attr, "");
+            e.setAttribute(attr, "");
+            state = "hidden";
+        };
+
+        /* marks the element and label of a hint as focused */
+        this.focus = function() {
+            this.label.setAttribute(attr, "label focus");
+            this.e.setAttribute(attr, "hint focus");
+            state = "focus";
+        };
+
+        /* remove focus mark from hint and label */
+        this.unfocus = function() {
+            /* do not unfocus hidden hints */
+            if (state != "hidden") {
+                this.label.setAttribute(attr, "label");
+                this.e.setAttribute(attr, "hint");
+                state = "visible";
+            }
         };
 
         /* show the hint element colored with the hint label */
         this.show = function() {
-            this.label.style.display = "";
-            this.e.classList.add(hClass);
+            var e = this.e,
+                l = this.label,
+                text = [];
+            if (state != "focus") {
+                l.style.display = "";
+                l.setAttribute(attr, "label");
+                e.setAttribute(attr, "hint");
+                state = "visible";
+            }
 
             /* create the label with the hint number/letters */
-            var text = [];
-            if (this.e instanceof HTMLInputElement) {
-                var type = this.e.type;
+            if (e instanceof HTMLInputElement) {
+                var type = e.type;
                 if (type === "checkbox") {
-                    text.push(this.e.checked ? "☑" : "☐");
+                    text.push(e.checked ? "☑" : "☐");
                 } else if (type === "radio") {
-                    text.push(this.e.checked ? "⊙" : "○");
+                    text.push(e.checked ? "⊙" : "○");
                 }
             }
             if (this.showText && this.text) {
                 text.push(this.text.substr(0, 20));
             }
             /* use \x20 instead of ' ' to keep this space during js2h.sh processing */
-            this.label.innerText = this.num + (text.length ? ":\x20" + text.join("\x20") : "");
+            l.innerText = this.num + (text.length ? ":\x20" + text.join("\x20") : "");
         };
     }
 
@@ -63,12 +84,10 @@ var hints = Object.freeze((function(){
         for (i = 0; i < docs.length; i++) {
             doc = docs[i];
             /* find all hinted elements vimbhint 'hint' */
-            var res = xpath(doc.doc, "//*[contains(@vimbhint, 'hint')]");
+            var res = xpath(doc.doc, "//*[@vimbhint]");
             for (j = 0; j < res.snapshotLength; j++) {
                 e = res.snapshotItem(j);
-                e.removeAttribute("vimbhint");
-                e.classList.remove(fClass);
-                e.classList.remove(hClass);
+                e.removeAttribute(attr);
             }
             doc.div.parentNode.removeChild(doc.div);
         }
@@ -128,8 +147,7 @@ var hints = Object.freeze((function(){
                 labelTmpl = doc.createElement("span"),
                 e, i;
 
-            labelTmpl.className = lClass;
-            labelTmpl.setAttribute("vimbhint", "label");
+            labelTmpl.setAttribute(attr, "label");
 
             var containerOffsets = getOffsets(doc),
                 offsetX = containerOffsets[0],
@@ -184,7 +202,7 @@ var hints = Object.freeze((function(){
                 }
                 /* add the hint class to the hinted element */
                 fragment.appendChild(label);
-                e.setAttribute("vimbhint", "hint");
+                e.setAttribute(attr, "hint");
 
                 hints.push({
                     e:         e,
@@ -201,8 +219,7 @@ var hints = Object.freeze((function(){
 
             /* append the fragment to the document */
             var hDiv = doc.createElement("div");
-            hDiv.id  = cId;
-            hDiv.setAttribute("vimbhint", "container");
+            hDiv.setAttribute(attr, "container");
             hDiv.appendChild(fragment);
             if (doc.body) {
                 doc.body.appendChild(hDiv);
@@ -394,14 +411,12 @@ var hints = Object.freeze((function(){
     function focusHint(newIdx) {
         /* reset previous focused hint */
         if (activeHint) {
-            activeHint.e.classList.remove(fClass);
-            activeHint.label.classList.remove(fClass);
+            activeHint.unfocus();
             mouseEvent(activeHint.e, "mouseout");
         }
         /* get the new active hint */
         if ((activeHint = validHints[newIdx])) {
-            activeHint.e.classList.add(fClass);
-            activeHint.label.classList.add(fClass);
+            activeHint.focus();
             mouseEvent(activeHint.e, "mouseover");
         }
     }
