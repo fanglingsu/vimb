@@ -180,25 +180,23 @@ img:hover {
  * The precedence of the user style is lower than that of the website so you
  * have to mark your style definition to have higher priority.
  */
-._hintLabel {
+span[vimbhint^='label'] {
     background-color: #f2f0ec !important;
     border: 1px solid #2d2d2d !important;
     color: #2d2d2d !important;
     font: bold 10pt monospace !important;
     opacity: 1 !important;
-    padding: 0.1em !important;
-    padding-left: 0.4em !important;
-    padding-right: 0.4em !important;
+    padding: .1em .4em !important;
     text-transform: uppercase !important;
 }
-._hintLabel._hintFocus {
+span[vimbhint='label focus'] {
     font: bold 13pt monospace !important;
 }
-._hintElem {
+*[vimbhint^='hint'] {
     background-color: #ffcc66 !important;
     color: #2d2d2d !important;
 }
-._hintElem._hintFocus {
+*[vimbhint='hint focus'] {
     background-color: #6699cc !important;
     color: #2d2d2d !important;
 }
