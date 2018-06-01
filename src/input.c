@@ -111,6 +111,7 @@ VbResult input_open_editor(Client *c)
 {
     static unsigned long element_map_next_key = 1;
     unsigned long element_map_key = 0;
+    char *element_id = NULL;
     char **argv, *file_path = NULL;
     const char *text = NULL, *id = NULL, *editor_command;
     int argc;
@@ -148,6 +149,8 @@ VbResult input_open_editor(Client *c)
         char *js_command = g_strdup_printf(JS_SET_EDITOR_MAP_ELEMENT, element_map_key);
         ext_proxy_eval_script(c, js_command, NULL);
         g_free(js_command);
+    } else {
+        element_id   = g_strdup(id);
     }
 
     /* create a temp file to pass text to and from editor */
@@ -185,10 +188,7 @@ VbResult input_open_editor(Client *c)
     EditorData *data = g_slice_new0(EditorData);
     data->file = file_path;
     data->c    = c;
-    if( id && strlen(id) > 0 )
-        data->element_id   = g_strdup(id);
-    else
-        data->element_id = NULL;
+    data->element_id = element_id;
     data->element_map_key = element_map_key;
     
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
