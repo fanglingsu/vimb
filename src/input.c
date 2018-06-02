@@ -111,7 +111,7 @@ VbResult input_open_editor(Client *c)
 {
     static unsigned long element_map_next_key = 1;
     unsigned long element_map_key = 0;
-    char *element_id = NULL;
+    char *element_id = NULL, *command = NULL;
     char **argv, *file_path = NULL;
     const char *text = NULL, *id = NULL, *editor_command;
     int argc;
@@ -153,31 +153,27 @@ VbResult input_open_editor(Client *c)
 
     /* create a temp file to pass text to and from editor */
     if (!util_create_tmp_file(text, &file_path)) {
-        return RESULT_ERROR;
+        goto error;
     }
 
     /* spawn editor */
-    char *command = g_strdup_printf(editor_command, file_path);
+    command = g_strdup_printf(editor_command, file_path);
     if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
         g_critical("Could not parse editor-command '%s'", command);
-        g_free(command);
-        return RESULT_ERROR;
+        goto error;
     }
-    g_free(command);
 
     success = g_spawn_async(
         NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
         NULL, NULL, &pid, &error
     );
-    g_strfreev(argv);
 
     if (!success) {
-        unlink(file_path);
-        g_free(file_path);
         g_warning("Could not spawn editor-command: %s", error->message);
         g_error_free(error);
-        return RESULT_ERROR;
+        goto error;
     }
+    g_strfreev(argv);
 
     /* disable the active element */
     ext_proxy_eval_script(c, "vimb_input_mode_element.disabled=true", NULL);
@@ -192,6 +188,13 @@ VbResult input_open_editor(Client *c)
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
 
     return RESULT_COMPLETE;
+
+error:
+    unlink(file_path);
+    g_free(file_path);
+    g_strfreev(argv);
+    g_free(element_id);
+    return RESULT_ERROR;
 }
 
 static void resume_editor(GPid pid, int status, EditorData *data)
