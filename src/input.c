@@ -116,7 +116,7 @@ VbResult input_open_editor(Client *c)
     const char *text = NULL, *id = NULL, *editor_command;
     int argc;
     GPid pid;
-    gboolean success, idSuccess;
+    gboolean success;
     GVariant *jsreturn;
     GVariant *idreturn;
     GError *error = NULL;
@@ -139,16 +139,16 @@ VbResult input_open_editor(Client *c)
     }
 
     idreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.id");
-    g_variant_get(idreturn, "(bs)", &idSuccess, &id);
+    g_variant_get(idreturn, "(bs)", &success, &id);
 
     /* Special case: the input element does not have an id assigned to it */
-    if (!idSuccess || !id || strlen(id) == 0) {
+    if (!success || !*id) {
         element_map_key = element_map_next_key++;
         char *js_command = g_strdup_printf(JS_SET_EDITOR_MAP_ELEMENT, element_map_key);
         ext_proxy_eval_script(c, js_command, NULL);
         g_free(js_command);
     } else {
-        element_id   = g_strdup(id);
+        element_id = g_strdup(id);
     }
 
     /* create a temp file to pass text to and from editor */
@@ -184,9 +184,9 @@ VbResult input_open_editor(Client *c)
 
     /* watch the editor process */
     EditorData *data = g_slice_new0(EditorData);
-    data->file = file_path;
-    data->c    = c;
-    data->element_id = element_id;
+    data->file            = file_path;
+    data->c               = c;
+    data->element_id      = element_id;
     data->element_map_key = element_map_key;
 
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
