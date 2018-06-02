@@ -26,11 +26,14 @@
 #include "main.h"
 #include "normal.h"
 #include "util.h"
+#include "scripts/scripts.h"
 #include "ext-proxy.h"
 
 typedef struct {
     Client *c;
     char   *file;
+    char   *element_id;
+    unsigned long element_map_key;
 } EditorData;
 
 static void resume_editor(GPid pid, int status, EditorData *data);
@@ -106,12 +109,16 @@ VbResult input_keypress(Client *c, int key)
 
 VbResult input_open_editor(Client *c)
 {
+    static unsigned long element_map_next_key = 1;
+    unsigned long element_map_key = 0;
+    char *element_id = NULL;
     char **argv, *file_path = NULL;
-    const char *text = NULL, *editor_command;
+    const char *text = NULL, *id = NULL, *editor_command;
     int argc;
     GPid pid;
-    gboolean success;
+    gboolean success, idSuccess;
     GVariant *jsreturn;
+    GVariant *idreturn;
     GError *error = NULL;
 
     g_assert(c);
@@ -129,6 +136,21 @@ VbResult input_open_editor(Client *c)
 
     if (!success || !text) {
         return RESULT_ERROR;
+    }
+
+    idreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.id");
+    g_variant_get(idreturn, "(bs)", &idSuccess, &id);
+
+	 /**
+	  * Special case: the input element does not have an id assigned to it 
+	  **/
+    if( !idSuccess || !id || strlen(id) == 0) {
+        element_map_key = element_map_next_key++;
+        char *js_command = g_strdup_printf(JS_SET_EDITOR_MAP_ELEMENT, element_map_key);
+        ext_proxy_eval_script(c, js_command, NULL);
+        g_free(js_command);
+    } else {
+        element_id   = g_strdup(id);
     }
 
     /* create a temp file to pass text to and from editor */
@@ -166,6 +188,9 @@ VbResult input_open_editor(Client *c)
     EditorData *data = g_slice_new0(EditorData);
     data->file = file_path;
     data->c    = c;
+    data->element_id = element_id;
+    data->element_map_key = element_map_key;
+    
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
 
     return RESULT_COMPLETE;
@@ -175,6 +200,7 @@ static void resume_editor(GPid pid, int status, EditorData *data)
 {
     char *text, *escaped;
     char *jscode;
+    char *jscode_enable;
 
     g_assert(pid);
     g_assert(data);
@@ -189,7 +215,12 @@ static void resume_editor(GPid pid, int status, EditorData *data)
             escaped = g_strescape(text, NULL);
 
             /* put the text back into the element */
-            jscode = g_strdup_printf("vimb_input_mode_element.value=\"%s\"", escaped);
+            if( data->element_id && strlen(data->element_id) > 0 )
+                jscode = g_strdup_printf("document.getElementById(\"%s\").value=\"%s\"", data->element_id, escaped);
+            else
+                jscode = g_strdup_printf("vimb_editor_map.get(\"%lu\").value=\"%s\"", data->element_map_key, escaped);
+            
+                
             ext_proxy_eval_script(data->c, jscode, NULL);
 
             g_free(jscode);
@@ -198,12 +229,19 @@ static void resume_editor(GPid pid, int status, EditorData *data)
         }
     }
 
-    ext_proxy_eval_script(data->c,
-            "vimb_input_mode_element.disabled=false;"
-            "vimb_input_mode_element.focus()", NULL);
+    if( data->element_id && strlen(data->element_id) > 0 ) {
+        jscode_enable = g_strdup_printf(JS_FOCUS_ELEMENT_BY_ID,
+				  data->element_id, data->element_id);
+    } else {
+        jscode_enable = g_strdup_printf(JS_FOCUS_EDITOR_MAP_ELEMENT,
+				  data->element_map_key, data->element_map_key);
+    }
+    ext_proxy_eval_script(data->c, jscode_enable, NULL);
+    g_free(jscode_enable);
 
     g_unlink(data->file);
     g_free(data->file);
+    g_free(data->element_id);
     g_slice_free(EditorData, data);
     g_spawn_close_pid(pid);
 }
