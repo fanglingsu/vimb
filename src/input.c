@@ -141,10 +141,8 @@ VbResult input_open_editor(Client *c)
     idreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.id");
     g_variant_get(idreturn, "(bs)", &idSuccess, &id);
 
-	 /**
-	  * Special case: the input element does not have an id assigned to it 
-	  **/
-    if( !idSuccess || !id || strlen(id) == 0) {
+    /* Special case: the input element does not have an id assigned to it */
+    if (!idSuccess || !id || strlen(id) == 0) {
         element_map_key = element_map_next_key++;
         char *js_command = g_strdup_printf(JS_SET_EDITOR_MAP_ELEMENT, element_map_key);
         ext_proxy_eval_script(c, js_command, NULL);
@@ -190,7 +188,7 @@ VbResult input_open_editor(Client *c)
     data->c    = c;
     data->element_id = element_id;
     data->element_map_key = element_map_key;
-    
+
     g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
 
     return RESULT_COMPLETE;
@@ -215,12 +213,12 @@ static void resume_editor(GPid pid, int status, EditorData *data)
             escaped = g_strescape(text, NULL);
 
             /* put the text back into the element */
-            if( data->element_id && strlen(data->element_id) > 0 )
+            if (data->element_id && strlen(data->element_id) > 0) {
                 jscode = g_strdup_printf("document.getElementById(\"%s\").value=\"%s\"", data->element_id, escaped);
-            else
+            } else {
                 jscode = g_strdup_printf("vimb_editor_map.get(\"%lu\").value=\"%s\"", data->element_map_key, escaped);
-            
-                
+            }
+
             ext_proxy_eval_script(data->c, jscode, NULL);
 
             g_free(jscode);
@@ -229,12 +227,12 @@ static void resume_editor(GPid pid, int status, EditorData *data)
         }
     }
 
-    if( data->element_id && strlen(data->element_id) > 0 ) {
+    if (data->element_id && strlen(data->element_id) > 0) {
         jscode_enable = g_strdup_printf(JS_FOCUS_ELEMENT_BY_ID,
-				  data->element_id, data->element_id);
+                data->element_id, data->element_id);
     } else {
         jscode_enable = g_strdup_printf(JS_FOCUS_EDITOR_MAP_ELEMENT,
-				  data->element_map_key, data->element_map_key);
+                data->element_map_key, data->element_map_key);
     }
     ext_proxy_eval_script(data->c, jscode_enable, NULL);
     g_free(jscode_enable);
