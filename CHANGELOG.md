@@ -187,7 +187,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/master...3.1.0
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.1.0...master
 [3.1.0]: https://github.com/fanglingsu/vimb/compare/3.0-alpha...3.1.0
 [3.0-alpha]: https://github.com/fanglingsu/vimb/compare/2.12...3.0-alpha
 [2.12]: https://github.com/fanglingsu/vimb/compare/2.11...2.12
