@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+* Allow basic motion commands for hinting too.
+* Show the numbers of search matches in status bar.
+* Show dialog if the page makes a permission request e.g. gelocation to allow
+  the user to make a decission.
+
+### Changed
+* Use sqlite as cookie storage #470 to prevent cookies lost on running many
+  vimb instances.
+* Start vimb with maximized window #483.
+* Hints are now styled based on the vimbhint attributes. The old additional set
+  classes are not set anymore to the hints. So customized css for the hints have
+  to be adapted to this.
+* Element ID is stored in case the editor was spawned. So it's now possible to
+  start the editor, load another page, come back and paste the edotor contents
+  (thanks to Sven Speckmaier).
+
+### Fixed
+* Fixed none cleaned webextension object files on `make clean`.
+* Remove none used gui styling for completion.
+
+### Removed
+* Removed webkit1 combat code.
+
 ## [3.1.0] - 2017-12-18
 
 ### Added
