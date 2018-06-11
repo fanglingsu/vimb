@@ -101,6 +101,8 @@ static void vimb_cleanup(void);
 static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_counted_matches(WebKitFindController *finder, guint count, Client *c);
+static gboolean on_permission_request(WebKitWebView *webview,
+        WebKitPermissionRequest *request, Client *c);
 static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
@@ -1777,6 +1779,7 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::notify::estimated-load-progress", G_CALLBACK(on_webview_notify_estimated_load_progress), c,
         "signal::notify::title", G_CALLBACK(on_webview_notify_title), c,
         "signal::notify::uri", G_CALLBACK(on_webview_notify_uri), c,
+        "signal::permission-request", G_CALLBACK(on_permission_request), c,
         "signal::ready-to-show", G_CALLBACK(on_webview_ready_to_show), c,
         "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
         "signal::authenticate", G_CALLBACK(on_webview_authenticate), c,
@@ -1797,6 +1800,40 @@ static void on_counted_matches(WebKitFindController *finder, guint count, Client
 {
     c->state.search.matches = count;
     vb_statusbar_update(c);
+}
+
+static gboolean on_permission_request(WebKitWebView *webview,
+        WebKitPermissionRequest *request, Client *c)
+{
+    GtkWidget *dialog;
+    int result;
+    char *msg = NULL;
+
+    if (WEBKIT_IS_GEOLOCATION_PERMISSION_REQUEST(request)) {
+        msg = "Page wants to request your location";
+    } else if (WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(request)) {
+        if (webkit_user_media_permission_is_for_audio_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
+            msg = "Page wants to access the microphone";
+        } else if (webkit_user_media_permission_is_for_video_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
+            msg = "Page wants to access you webcam";
+        }
+    } else {
+        return FALSE;
+    }
+
+    dialog = gtk_message_dialog_new(GTK_WINDOW(c->window), GTK_DIALOG_MODAL,
+            GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, msg);
+
+    gtk_widget_show(dialog);
+    result = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (GTK_RESPONSE_YES == result) {
+        webkit_permission_request_allow(request);
+    } else {
+        webkit_permission_request_deny(request);
+    }
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
 }
 
 static void on_script_message_focus(WebKitUserContentManager *manager,
