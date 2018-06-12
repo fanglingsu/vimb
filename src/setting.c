@@ -66,6 +66,7 @@ static int tls_policy(Client *c, const char *name, DataType type, void *value, v
 static int webkit(Client *c, const char *name, DataType type, void *value, void *data);
 static int webkit_spell_checking(Client *c, const char *name, DataType type, void *value, void *data);
 static int webkit_spell_checking_language(Client *c, const char *name, DataType type, void *value, void *data);
+static int window_decorate(Client *c, const char *name, DataType type, void *value, void *data);
 
 extern struct Vimb vb;
 
@@ -145,6 +146,7 @@ void setting_init(Client *c)
     setting_add(c, "timeoutlen", TYPE_INTEGER, &i, internal, 0, &c->map.timeoutlen);
     setting_add(c, "input-autohide", TYPE_BOOLEAN, &off, input_autohide, 0, &c->config.input_autohide);
     setting_add(c, "fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
+    setting_add(c, "show-titlebar", TYPE_BOOLEAN, &on, window_decorate, 0, NULL);
     i = 100;
     setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
     setting_add(c, "download-path", TYPE_CHAR, &"~/", NULL, 0, NULL);
@@ -534,6 +536,17 @@ static int fullscreen(Client *c, const char *name, DataType type, void *value, v
     }
 
     return CMD_SUCCESS;
+}
+
+/* This needs to be called before the window is shown for the best chance of
+ * success, but it may be called at any time.
+ * Currently the setting file is read after the window has been shown, which
+ * might mean the titlebar isn't hidden on certain environments. */
+static int window_decorate(Client *c, const char *name, DataType type, void *value, void *data)
+{
+  gtk_window_set_decorated(GTK_WINDOW(c->window), *(gboolean*)value);
+
+  return CMD_SUCCESS;
 }
 
 #if WEBKIT_CHECK_VERSION (2, 16, 0)
