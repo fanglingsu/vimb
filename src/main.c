@@ -382,8 +382,11 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
         rp  = realpath(path, NULL);
         uri = g_strconcat("file://", rp, NULL);
         free(rp);
-    } else if (strchr(path, ' ') || !strchr(path, '.')) {
-        /* use a shortcut if path contains spaces or no dot */
+    } else if (strchr(path, ' ') || !(strchr(path, '.') ||
+          (strchr(path, '[') && strchr(path, ':') && strchr(path, ']')) ||
+          strstr(path, "localhost"))) {
+        /* use a shortcut if path contains spaces or doesn't contain typical
+         * characters ('.', [:] for IPv6 addresses, 'localhost') */
         uri = shortcut_get_uri(c->config.shortcuts, path);
     }
 
