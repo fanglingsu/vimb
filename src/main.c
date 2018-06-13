@@ -353,6 +353,21 @@ void vb_input_update_style(Client *c)
 }
 
 /**
+ * Tests if a path is likely intended to be an URI (given that it's not a file
+ * path or containing "://").
+ */
+gboolean vb_plausible_uri(const char *path) {
+  if (strchr(path, ' ')) return FALSE;
+  if (strchr(path, '.')) return TRUE;
+  const char *i, *j;
+  if ((i = strstr(path, "localhost")) &&
+      (i == path || i[-1] == '/' || i[-1] == '@') &&
+      (i[9] == 0 || i[9]  == '/' || i[9] == ':')) return TRUE;
+  return ((i = strchr(path, '[')) && (j = strchr(i, ':')) && strchr(j, ']'))
+    ? TRUE : FALSE;
+}
+
+/**
  * Load the a uri given in Arg. This function handles also shortcuts and local
  * file paths.
  *
@@ -382,11 +397,9 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
         rp  = realpath(path, NULL);
         uri = g_strconcat("file://", rp, NULL);
         free(rp);
-    } else if (strchr(path, ' ') || !(strchr(path, '.') ||
-          (strchr(path, '[') && strchr(path, ':') && strchr(path, ']')) ||
-          strstr(path, "localhost"))) {
+    } else if (!vb_plausible_uri(path)) {
         /* use a shortcut if path contains spaces or doesn't contain typical
-         * characters ('.', [:] for IPv6 addresses, 'localhost') */
+         * tokens ('.', [:] for IPv6 addresses, 'localhost') */
         uri = shortcut_get_uri(c->config.shortcuts, path);
     }
 
