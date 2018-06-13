@@ -796,6 +796,52 @@ char *util_str_replace(const char *search, const char *replace, const char *stri
     return ret;
 }
 
+/**
+ * Escapes some special characters in the source string by inserting a '\'
+ * before them. Acts like g_strescape() but does not demage utf8 chars.
+ * Returns a newly allocated string.
+ */
+char *util_strescape(const char *source, const char *exceptions)
+{
+    GString *result = g_string_new(NULL);
+    while (TRUE) {
+        char c = *source++;
+        if ('\0' == c) {
+            goto done;
+        }
+        if (exceptions && !strchr(exceptions, c)) {
+            continue;
+        }
+        switch (c) {
+            case '\n':
+                g_string_append(result, "\\n");
+                break;
+            case '\"':
+                g_string_append(result, "\\\"");
+                break;
+            case '\\':
+                g_string_append(result, "\\\\");
+                break;
+            case '\b':
+                g_string_append(result, "\\b");
+                break;
+            case '\f':
+                g_string_append(result, "\\f");
+                break;
+            case '\r':
+                g_string_append(result, "\\r");
+                break;
+            case '\t':
+                g_string_append(result, "\\t");
+                break;
+            default:
+                g_string_append_c(result, c);
+        }
+    }
+done:
+    return g_string_free(result, FALSE);
+}
+
 static void create_dir_if_not_exists(const char *dirpath)
 {
     if (!g_file_test(dirpath, G_FILE_TEST_IS_DIR)) {

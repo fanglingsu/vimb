@@ -211,7 +211,7 @@ static void resume_editor(GPid pid, int status, EditorData *data)
         text = util_get_file_contents(data->file, NULL);
 
         if (text) {
-            escaped = g_strescape(text, NULL);
+            escaped = util_strescape(text, NULL);
 
             /* put the text back into the element */
             if (data->element_id && strlen(data->element_id) > 0) {

@@ -262,6 +262,35 @@ static void test_wildmatch_multi(void)
     g_assert_false(util_wildmatch("foo,?", "fo"));
 }
 
+static void test_strescape(void)
+{
+    unsigned int i;
+    char *value;
+    struct {
+        char *in;
+        char *expected;
+        char *excludes;
+    } data[] = {
+        {"", "", NULL},
+        {"foo", "foo", NULL},
+        {"a\nb\nc", "a\\nb\\nc", NULL},
+        {"foo\"bar", "foo\\bar", NULL},
+        {"s\\t", "s\\\\t", NULL},
+        {"u\bv", "u\\bv", NULL},
+        {"w\fx", "w\\fx", NULL},
+        {"y\rz", "y\\rz", NULL},
+        {"tab\tdi\t", "tab\\tdi\\t", NULL},
+        {"❧äüö\n@foo\t\"bar\"", "❧äüö\\n@foo\\t\\\"bar\\\"", NULL},
+        {"❧äüö\n@foo\t\"bar\"", "❧äüö\\n@foo\\t\"bar\"", "\""},
+        {"❧äüö\n@foo\t\"bar\"", "❧äüö\n@foo\t\\\"bar\\\"", "\n\t"},
+    };
+    for (i = 0; i < LENGTH(data); i++) {
+        value = util_strescape(data->in, data->excludes);
+        g_assert_cmpstr(value, ==, data->expected);
+        g_free(value);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
@@ -279,6 +308,7 @@ int main(int argc, char *argv[])
     g_test_add_func("/test-util/wildmatch-curlybraces", test_wildmatch_curlybraces);
     g_test_add_func("/test-util/wildmatch-complete", test_wildmatch_complete);
     g_test_add_func("/test-util/wildmatch-multi", test_wildmatch_multi);
+    g_test_add_func("/test-util/strescape", test_strescape);
 
     return g_test_run();
 }
