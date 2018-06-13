@@ -544,9 +544,9 @@ static int fullscreen(Client *c, const char *name, DataType type, void *value, v
  * might mean the titlebar isn't hidden on certain environments. */
 static int window_decorate(Client *c, const char *name, DataType type, void *value, void *data)
 {
-  gtk_window_set_decorated(GTK_WINDOW(c->window), *(gboolean*)value);
+    gtk_window_set_decorated(GTK_WINDOW(c->window), *(gboolean*)value);
 
-  return CMD_SUCCESS;
+    return CMD_SUCCESS;
 }
 
 #if WEBKIT_CHECK_VERSION (2, 16, 0)
