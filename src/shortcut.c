@@ -35,7 +35,7 @@ extern struct Vimb vb;
 static int get_max_placeholder(const char *str);
 static const char *shortcut_lookup(Shortcut *sc, const char *string, const char **query);
 
-Shortcut *shortcut_new()
+Shortcut *shortcut_new(void)
 {
     Shortcut *sc = g_new(Shortcut, 1);
     sc->table    = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

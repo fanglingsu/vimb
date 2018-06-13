@@ -22,7 +22,7 @@
 
 typedef struct shortcut Shortcut;
 
-Shortcut *shortcut_new();
+Shortcut *shortcut_new(void);
 void shortcut_free(Shortcut *sc);
 gboolean shortcut_add(Shortcut *sc, const char *key, const char *uri);
 gboolean shortcut_remove(Shortcut *sc, const char *key);

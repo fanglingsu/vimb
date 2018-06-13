@@ -3,7 +3,8 @@ CFLAGS   = -fPIC -pedantic
 
 include ../config.mk
 
-TEST_PROGS = test-util
+TEST_PROGS = test-util \
+			 test-shortcut
 
 all: $(TEST_PROGS)
 	LD_LIBRARY_PATH="$(LD_LIBRARY_PATH):." gtester --verbose $(TEST_PROGS)
