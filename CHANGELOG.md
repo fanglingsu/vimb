@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Show the numbers of search matches in status bar.
 * Show dialog if the page makes a permission request e.g. gelocation to allow
   the user to make a decission.
+* new Setting `show-titlebar` to toggle window decorations.
 
 ### Changed
 * Use sqlite as cookie storage #470 to prevent cookies lost on running many
