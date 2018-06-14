@@ -53,6 +53,7 @@ static GtkWidget *create_window(Client *c);
 static gboolean input_clear(Client *c);
 static void input_print(Client *c, MessageType type, gboolean hide,
         const char *message);
+static gboolean is_plausible_uri(const char *path);
 static void marks_clear(Client *c);
 static void mode_free(Mode *mode);
 static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data);
@@ -353,21 +354,6 @@ void vb_input_update_style(Client *c)
 }
 
 /**
- * Tests if a path is likely intended to be an URI (given that it's not a file
- * path or containing "://").
- */
-gboolean vb_plausible_uri(const char *path) {
-  if (strchr(path, ' ')) return FALSE;
-  if (strchr(path, '.')) return TRUE;
-  const char *i, *j;
-  if ((i = strstr(path, "localhost")) &&
-      (i == path || i[-1] == '/' || i[-1] == '@') &&
-      (i[9] == 0 || i[9]  == '/' || i[9] == ':')) return TRUE;
-  return ((i = strchr(path, '[')) && (j = strchr(i, ':')) && strchr(j, ']'))
-    ? TRUE : FALSE;
-}
-
-/**
  * Load the a uri given in Arg. This function handles also shortcuts and local
  * file paths.
  *
@@ -397,7 +383,7 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
         rp  = realpath(path, NULL);
         uri = g_strconcat("file://", rp, NULL);
         free(rp);
-    } else if (!vb_plausible_uri(path)) {
+    } else if (!is_plausible_uri(path)) {
         /* use a shortcut if path contains spaces or doesn't contain typical
          * tokens ('.', [:] for IPv6 addresses, 'localhost') */
         uri = shortcut_get_uri(c->config.shortcuts, path);
@@ -870,6 +856,28 @@ static void input_print(Client *c, MessageType type, gboolean hide,
         g_source_remove(c->state.input_timer);
         c->state.input_timer = 0;
     }
+}
+
+/**
+ * Tests if a path is likely intended to be an URI (given that it's not a file
+ * path or containing "://").
+ */
+static gboolean is_plausible_uri(const char *path)
+{
+    const char *i, *j;
+    if (strchr(path, ' ')) {
+        return FALSE;
+    }
+    if (strchr(path, '.')) {
+        return TRUE;
+    }
+    if ((i = strstr(path, "localhost")) &&
+        (i == path || i[-1] == '/' || i[-1] == '@') &&
+        (i[9] == 0 || i[9]  == '/' || i[9] == ':')
+    ) {
+        return TRUE;
+    }
+    return (i = strchr(path, '[')) && (j = strchr(i, ':')) && strchr(j, ']');
 }
 
 /**
