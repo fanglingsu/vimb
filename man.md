@@ -1087,6 +1087,10 @@ scroll-step (int)
 serif-font (string)
 : The font family used as the default for content using serif font.
 
+show-titlebar (bool)
+: Determines whether the titlebar is shown (on systems that provide window
+  decoration). Defaults to true.
+
 site-specific-quirks (bool)
 : Enables the site-specific compatibility workarounds.
 
