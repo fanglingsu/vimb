@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+### Changed
+### Fixed
+### Removed
+
+## [3.2.0] - 2018-06-16
 
 ### Added
 * Allow basic motion commands for hinting too.
@@ -188,7 +194,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.1.0...master
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.2.0...master
+[3.2.0]: https://github.com/fanglingsu/vimb/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/fanglingsu/vimb/compare/3.0-alpha...3.1.0
 [3.0-alpha]: https://github.com/fanglingsu/vimb/compare/2.12...3.0-alpha
 [2.12]: https://github.com/fanglingsu/vimb/compare/2.11...2.12
