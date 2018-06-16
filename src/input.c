@@ -19,6 +19,7 @@
 
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <string.h>
 
 #include "ascii.h"
 #include "config.h"
