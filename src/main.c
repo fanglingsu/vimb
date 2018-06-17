@@ -1834,19 +1834,20 @@ static gboolean on_permission_request(WebKitWebView *webview,
     char *msg = NULL;
 
     if (WEBKIT_IS_GEOLOCATION_PERMISSION_REQUEST(request)) {
-        msg = "Page wants to request your location";
+        msg = "request your location";
     } else if (WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(request)) {
         if (webkit_user_media_permission_is_for_audio_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
-            msg = "Page wants to access the microphone";
+            msg = "access the microphone";
         } else if (webkit_user_media_permission_is_for_video_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
-            msg = "Page wants to access you webcam";
+            msg = "access you webcam";
         }
     } else {
         return FALSE;
     }
 
     dialog = gtk_message_dialog_new(GTK_WINDOW(c->window), GTK_DIALOG_MODAL,
-            GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, msg);
+            GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, "Page wants to %s",
+            msg);
 
     gtk_widget_show(dialog);
     result = gtk_dialog_run(GTK_DIALOG(dialog));
