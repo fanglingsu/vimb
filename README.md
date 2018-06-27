@@ -1,5 +1,7 @@
 # Vimb - the Vim-like browser
 
+[![Build Status](https://api.travis-ci.com/fanglingsu/vimb.svg?branch=master)](https://travis-ci.com/fanglingsu/vimb)
+
 Vimb is a Vim-like web browser that is inspired by Pentadactyl and Vimprobable.
 The goal of Vimb is to build a completely keyboard-driven, efficient and
 pleasurable browsing-experience with low memory and CPU usage that is
