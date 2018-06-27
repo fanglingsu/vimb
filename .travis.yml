@@ -14,4 +14,4 @@ before_install:
   - sudo apt-get update -q
   - sudo apt-get install -y --allow-unauthenticated --no-install-suggests libwebkit2gtk-4.0-dev
 
-script: make V=1 test
+script: make options && make -j test
