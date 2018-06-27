@@ -112,7 +112,7 @@ VbResult input_open_editor(Client *c)
 {
     static unsigned long element_map_key = 0;
     char *element_id = NULL, *command = NULL;
-    char **argv, *file_path = NULL;
+    char **argv = NULL, *file_path = NULL;
     const char *text = NULL, *id = NULL, *editor_command;
     int argc;
     GPid pid;

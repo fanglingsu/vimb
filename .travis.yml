@@ -1,0 +1,17 @@
+branches:
+  except:
+    gh-pages
+
+language: c
+dist: trusty
+sudo: required
+
+compiler:
+  - clang
+
+before_install:
+  - sudo add-apt-repository ppa:webkit-team/ppa -y
+  - sudo apt-get update -q
+  - sudo apt-get install -y --allow-unauthenticated --no-install-suggests libwebkit2gtk-4.0-dev
+
+script: make V=1 test
