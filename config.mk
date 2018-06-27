@@ -34,7 +34,7 @@ CPPFLAGS += -DGDK_DISABLE_DEPRECATED
 
 # flags used to build webextension
 EXTTARGET   = webext_main.so
-EXTCFLAGS   = ${CFLAGS} -fPIC $(shell pkg-config --cflags webkit2gtk-4.0)
+EXTCFLAGS   = ${CFLAGS} $(shell pkg-config --cflags webkit2gtk-4.0)
 EXTCPPFLAGS = $(CPPFLAGS)
 EXTLDFLAGS  = $(shell pkg-config --libs webkit2gtk-4.0) -shared
 

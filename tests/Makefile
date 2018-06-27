@@ -1,5 +1,4 @@
 CPPFLAGS = -I ../
-CFLAGS   = -fPIC -pedantic
 
 include ../config.mk
 
