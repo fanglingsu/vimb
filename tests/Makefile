@@ -12,7 +12,7 @@ ${TEST_PROGS}: ../$(SRCDIR)/vimb.so
 
 test-%: test-%.c
 	@echo "${CC} $@"
-	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $< ../$(SRCDIR)/vimb.so
+	$(Q)$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $< ../$(SRCDIR)/vimb.so $(LDFLAGS)
 
 clean:
 	$(RM) $(TEST_PROGS)
