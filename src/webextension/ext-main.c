@@ -253,21 +253,24 @@ static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *eve
             return;
         }
 
-        scrollTop = webkit_dom_element_get_scroll_top(body);
-        if (scrollTop) {
-            clientHeight = webkit_dom_element_get_client_height(WEBKIT_DOM_ELEMENT(de));
-            scrollHeight = webkit_dom_element_get_scroll_height(body);
+        scrollTop = MAX(webkit_dom_element_get_scroll_top(de),
+                webkit_dom_element_get_scroll_top(body));
 
-            /* Get the maximum scrollable page size. This is the size of the whole
-            * document - height of the viewport. */
-            max = scrollHeight - clientHeight ;
-            if (max) {
-                percent = (guint)(0.5 + (scrollTop * 100 / max));
-            }
+        clientHeight = webkit_dom_dom_window_get_inner_height(
+                webkit_dom_document_get_default_view(doc));
+
+        scrollHeight = MAX(webkit_dom_element_get_scroll_height(de),
+                webkit_dom_element_get_scroll_height(body));
+
+        /* Get the maximum scrollable page size. This is the size of the whole
+         * document - height of the viewport. */
+        max = scrollHeight - clientHeight;
+        if (max > 0) {
+            percent = (guint)(0.5 + (scrollTop * 100 / max));
         }
 
         dbus_emit_signal("VerticalScroll", g_variant_new("(ttq)",
-                    webkit_web_page_get_id(page), max, percent));
+                webkit_web_page_get_id(page), max, percent));
     }
 }
 
