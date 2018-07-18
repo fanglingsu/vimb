@@ -24,6 +24,13 @@ COMMIT := $(shell git describe --tags --always 2> /dev/null || echo "unknown")
 
 # setup general used CFLAGS
 CFLAGS   += -std=c99 -pipe -Wall -fPIC
+CFLAGS   += -I/usr/include/atk-1.0
+CFLAGS   += -I/usr/include/cairo
+CFLAGS   += -I/usr/include/glib-2.0
+CFLAGS   += -I/usr/include/gtk-3.0
+CFLAGS   += -I/usr/include/pango-1.0
+CFLAGS   += -I/usr/include/gdk-pixbuf-2.0
+CFLAGS   += -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
 CPPFLAGS += -DVERSION=\"${VERSION}\" -DEXTENSIONDIR=\"${EXTENSIONDIR}\" -DCOMMIT=\"$(COMMIT)\"
 CPPFLAGS += -DPROJECT=\"vimb\" -DPROJECT_UCFIRST=\"Vimb\"
 CPPFLAGS += -D_XOPEN_SOURCE=500
