@@ -1,11 +1,14 @@
 include ../config.mk
 
 OBJ = $(patsubst %.c, %.o, $(wildcard *.c))
+JSFILES  = $(wildcard scripts/*.js)
+CSSFILES = $(wildcard scripts/*.css)
 
 all: vimb webextension.subdir-all
 
 clean: webextension.subdir-clean
 	$(RM) vimb $(OBJ)
+	$(RM) scripts/scripts.h
 
 vimb: $(OBJ)
 	@echo "${CC} $@"
@@ -22,7 +25,12 @@ normal.o: scripts/scripts.h
 
 setting.o: scripts/scripts.h
 
-scripts/scripts.h: scripts.subdir-all
+scripts/scripts.h: $(JSFILES) $(CSSFILES)
+	$(Q)$(RM) $@
+	@echo "create $@ from *.{css,js}"
+	$(Q)for file in $(JSFILES) $(CSSFILES); do \
+		./scripts/js2h.sh $$file >> $@; \
+	done
 
 config.h:
 	@echo create $@ from config.def.h
