@@ -175,7 +175,7 @@ VbResult input_open_editor(Client *c)
     g_strfreev(argv);
 
     /* disable the active element */
-    ext_proxy_eval_script(c, "vimb_input_mode_element.disabled=true", NULL);
+    ext_proxy_lock_input(c, element_id);
 
     /* watch the editor process */
     EditorData *data = g_slice_new0(EditorData);
@@ -230,15 +230,13 @@ static void resume_editor(GPid pid, int status, EditorData *data)
     }
 
     if (data->element_id && strlen(data->element_id) > 0) {
-        jscode_enable = g_strdup_printf(JS_FOCUS_ELEMENT_BY_ID,
-                data->element_id, data->element_id);
+        ext_proxy_unlock_input(data->c, data->element_id);
     } else {
         jscode_enable = g_strdup_printf(JS_FOCUS_EDITOR_MAP_ELEMENT,
                 data->element_map_key, data->element_map_key);
+        ext_proxy_eval_script(data->c, jscode_enable, NULL);
+        g_free(jscode_enable);
     }
-    ext_proxy_eval_script(data->c, jscode_enable, NULL);
-    g_free(jscode_enable);
-
     g_unlink(data->file);
     g_free(data->file);
     g_free(data->element_id);

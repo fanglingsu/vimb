@@ -33,11 +33,11 @@ gboolean ext_dom_is_editable(WebKitDOMElement *element)
 {
     char *type;
     gboolean result = FALSE;
-    
+
     if (!element) {
         return FALSE;
     }
-    
+
     /* element is editable if it's a text area or input with no type, text or
      * password */
     if (webkit_dom_html_element_get_is_content_editable(WEBKIT_DOM_HTML_ELEMENT(element))
@@ -170,6 +170,27 @@ char *ext_dom_editable_get_value(WebKitDOMElement *element)
     return value;
 }
 
+void ext_dom_lock_input(WebKitDOMDocument *parent, char *element_id)
+{
+    WebKitDOMElement *elem;
+
+    elem = webkit_dom_document_get_element_by_id(parent, element_id);
+    if (elem != NULL) {
+        webkit_dom_element_set_attribute(elem, "disabled", "true", NULL);
+    }
+}
+
+void ext_dom_unlock_input(WebKitDOMDocument *parent, char *element_id)
+{
+    WebKitDOMElement *elem;
+
+    elem = webkit_dom_document_get_element_by_id(parent, element_id);
+    if (elem != NULL) {
+        webkit_dom_element_remove_attribute(elem, "disabled");
+        webkit_dom_element_focus(elem);
+    }
+}
+
 /**
  * Indicates if the give nelement is visible.
  */
@@ -177,3 +198,4 @@ static gboolean is_element_visible(WebKitDOMHTMLElement *element)
 {
     return TRUE;
 }
+
