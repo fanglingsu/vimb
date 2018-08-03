@@ -8,15 +8,23 @@
         width: 500px;
         margin-left: -250px;
     }
+    a.negative {
+        padding: 2em;
+        margin: -2em;
+    }
     </style>
-    <title>Hint Label on pages with absolute positioned body</title>
+    <title>Hint Label positioning with negative margins</title>
 </head>
 <body>
     <p>
         When using hints (f) on this page, the hint should be placed on
-        the upper left corner of the links.
-        <a href="#one">one</a><br/>
-        <a href="#two">two</a>
+        the upper left corner of the links.<br/>
+        <a href="#one">one</a>
+    </p>
+    <p>
+        Following link should not generate a big highlighted box on hinting.
+        <a href="#two" class="negative">two</a> -
+        see <a href="https://github.com/fanglingsu/vimb/issues/507">#507</a>.
     </p>
 </body>
 </html>
