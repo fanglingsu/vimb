@@ -10,7 +10,7 @@ span[vimbhint^='label']{
     margin:0;
     opacity:0.7;
     padding:0px 1px;
-    position:absolute;
+    position:fixed !important;
     z-index:225000
 }
 *[vimbhint^='hint']{
