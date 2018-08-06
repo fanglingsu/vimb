@@ -879,6 +879,17 @@ accelerated-2d-canvas (bool)
   enabled, WebKit may render some 2D canvas content using hardware accelerated
   drawing operations.
 
+allow-file-access-from-file-urls (bool)
+: Indicates whether file access is allowed from file URLs. By default, when
+  something is loaded using a file URI, cross origin requests to other file
+  resources are not allowed.
+
+allow-universal-access-from-file-urls (bool)
+: Indicates whether or not JavaScript running in the context of a file scheme
+  URL should be allowed to access content from any origin. By default, when
+  something is loaded in a using a file scheme URL, access to the local file
+  system and arbitrary local storage is not allowed.
+
 caret (bool)
 : Whether to enable accessibility enhanced keyboard navigation.
 
