@@ -967,12 +967,24 @@ The search completion allows a filtered list of already done searches.
 This completion starts by `/` or `?` in inputbox and performs a prefix
 comparison for further typed chars.
 .SH SETTINGS
-All settings listed below can be set with the `:set' command. See \fBSettings\fP under \fBCOMMAND MODE\fP for syntax.
+All settings listed below can be set with the `:set' command.
+See \fBSettings\fP under \fBCOMMAND MODE\fP for syntax.
 .TP
 .B accelerated-2d-canvas (bool)
 Enable or disable accelerated 2D canvas.
 When accelerated 2D canvas is enabled, WebKit may render some 2D canvas
 content using hardware accelerated drawing operations.
+.TP
+.B allow-file-access-from-file-urls (bool)
+Indicates whether file access is allowed from file URLs.
+By default, when something is loaded using a file URI, cross origin requests
+to other file resources are not allowed.
+.TP
+.B allow-universal-access-from-file-urls (bool)
+Indicates whether or not JavaScript running in the context of a file scheme
+URL should be allowed to access content from any origin.
+By default, when something is loaded in a using a file scheme URL, access to
+the local file system and arbitrary local storage is not allowed.
 .TP
 .B caret (bool)
 Whether to enable accessibility enhanced keyboard navigation.

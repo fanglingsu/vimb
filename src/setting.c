@@ -81,6 +81,12 @@ void setting_init(Client *c)
     /* TODO use the real names for webkit settings */
     i = 14;
     setting_add(c, "accelerated-2d-canvas", TYPE_BOOLEAN, &off, webkit, 0, "enable-accelerated-2d-canvas");
+#if WEBKIT_CHECK_VERSION (2, 10, 0)
+    setting_add(c, "allow-file-access-from-file-urls", TYPE_BOOLEAN, &off, webkit, 0, "allow-file-access-from-file-urls");
+#endif
+#if WEBKIT_CHECK_VERSION (2, 14, 0)
+    setting_add(c, "allow-universal-access-from-file-urls", TYPE_BOOLEAN, &off, webkit, 0, "allow-universal-access-from-file-urls");
+#endif
     setting_add(c, "caret", TYPE_BOOLEAN, &off, webkit, 0, "enable-caret-browsing");
     setting_add(c, "cursiv-font", TYPE_CHAR, &"serif", webkit, 0, "cursive-font-family");
     setting_add(c, "default-charset", TYPE_CHAR, &"utf-8", webkit, 0, "default-charset");
