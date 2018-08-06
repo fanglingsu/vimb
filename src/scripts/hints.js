@@ -80,6 +80,12 @@ var hints = Object.freeze((function(){
         if (removeListener && w) {
             w.removeEventListener("resize", onresize, true);
             w.removeEventListener("scroll", onresize, false);
+            for (i = 0; i < w.frames.length; i++) {
+                try {
+                    w.frames[i].frameElement.contentDocument.removeEventListener("scroll", onresize, false);
+                } catch (ex) {
+                }
+            }
         }
         for (i = 0; i < docs.length; i++) {
             doc = docs[i];
@@ -555,6 +561,12 @@ var hints = Object.freeze((function(){
 
             window.addEventListener("resize", onresize, true);
             window.addEventListener("scroll", onresize, false);
+            for (var i = 0; i < window.frames.length; i++) {
+                try {
+                    window.frames[i].frameElement.contentDocument.addEventListener("scroll", onresize, false);
+                } catch (ex) {
+                }
+            }
 
             create();
             return show(true);
