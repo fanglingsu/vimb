@@ -700,7 +700,7 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
     /* Inject the global styles with author level to allow restyling by user
      * style sheets. */
     style = webkit_user_style_sheet_new(CSS_HINTS,
-            WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+            WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
             WEBKIT_USER_STYLE_LEVEL_AUTHOR, NULL, NULL);
     webkit_user_content_manager_add_style_sheet(ucm, style);
     webkit_user_style_sheet_unref(style);

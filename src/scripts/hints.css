@@ -1,6 +1,3 @@
-div[vimbhint='container']{
-    position:static
-}
 span[vimbhint^='label']{
     -webkit-transform:translate(-4px,-4px);
     background-color:#fff;
@@ -25,5 +22,4 @@ span[vimbhint^='label']{
 }
 span[vimbhint='label focus']{
     opacity:1;
-    z-index:225000
 }

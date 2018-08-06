@@ -170,8 +170,8 @@ var hints = Object.freeze((function(){
                 label.setAttribute(
                     "style", [
                         "display:none;",
-                        "left:", Math.max((rect.left + offsetX), offsetX), "px;",
-                        "top:", Math.max((rect.top + offsetY), offsetY), "px;"
+                        "left:", rect.left, "px;",
+                        "top:", rect.top, "px;"
                     ].join("")
                 );
 
@@ -220,6 +220,7 @@ var hints = Object.freeze((function(){
             /* append the fragment to the document */
             var hDiv = doc.createElement("div");
             hDiv.setAttribute(attr, "container");
+            hDiv.setAttribute("style", "position:fixed;top:0;left:0;z-index:225000;");
             hDiv.appendChild(fragment);
             if (doc.body) {
                 doc.body.appendChild(hDiv);
