@@ -18,7 +18,7 @@ SRCDIR  = src
 DOCDIR  = doc
 
 # used libs
-LIBS = gtk+-3.0 'webkit2gtk-4.0 >= 2.3.5'
+LIBS = gtk+-3.0 'webkit2gtk-4.0 >= 2.8.0'
 
 COMMIT := $(shell git describe --tags --always 2> /dev/null || echo "unknown")
 
