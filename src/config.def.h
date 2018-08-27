@@ -55,3 +55,6 @@
 /* default window dimensions */
 #define WIN_WIDTH                  800
 #define WIN_HEIGHT                 600
+
+/* if set to 1 vimb will check if the webextension could be found. */
+#define CHECK_WEBEXTENSION_ON_STARTUP 1
