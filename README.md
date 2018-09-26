@@ -47,10 +47,10 @@ Therefore, you should always compare your customised `config.h` with
 `config.h`.
 
 Run the following commands to compile and install Vimb (if necessary, the last one as
-root).
+root). If you want to change the `PREFIX`, note that it's required to give it on both stages, build and install.
 
-    make
-    make install
+    make PREFIX=/usr
+    make PREFIX=/usr install
 
 To run vimb without installation for testing it out use the 'runsandbox' make
 target.
