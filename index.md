@@ -87,11 +87,11 @@ see full compiler option lines.
     make V=1
     make install
 
-If you wish to install with other PREFIX or DESTDIR note that these options
-must be given for both steps the compile step as well as the install step.
+If you wish to install with other `PREFIX` note that this option must be
+given for both steps the compile step as well as the install step.
 
-    make DESTDIR="/home/user" PREFIX="/usr"
-    make DESTDIR="/home/user" PREFIX="/usr" install
+    make PREFIX="/usr"
+    make PREFIX="/usr" DESTDIR="/home/user" install
 
 To run vimb without installation for testing it out use the 'runsandbox' make
 target.
