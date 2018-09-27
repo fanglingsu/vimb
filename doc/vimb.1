@@ -1369,10 +1369,10 @@ There are also some sample scripts installed together with Vimb under
 PREFIX/share/vimb/examples.
 .SH ENVIRONMENT
 .TP
-.B http_proxy
-If this variable is set to an non-empty value, and the configuration option
-`proxy' is enabled, this will be used as HTTP proxy.
-If the proxy URL has no scheme set, HTTP is assumed.
+.B http_proxy, HTTP_PROXY
+If either environment variable is non-emtpy, the optional scheme (default
+http), server and port will be used to tunneling request. For example:
+HTTP_PROXY=http://localhost:8118.
 .SH "REPORTING BUGS"
 Report bugs to the main project page on https://github.com/fanglingsu/vimb/issues
 .br
