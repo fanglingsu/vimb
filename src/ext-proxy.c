@@ -195,11 +195,11 @@ static void on_vertical_scroll(GDBusConnection *connection,
 
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
-	if (callback) {
+    if (callback) {
         dbus_call(c, "EvalJs", g_variant_new("(ts)", c->page_id, js), callback);
-	} else {
+    } else {
         dbus_call(c, "EvalJsNoResult", g_variant_new("(ts)", c->page_id, js), NULL);
-	}
+    }
 }
 
 GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
@@ -253,7 +253,7 @@ static void dbus_call(Client *c, const char *method, GVariant *param,
  */
 static GVariant *dbus_call_sync(Client *c, const char *method, GVariant *param)
 {
-	GVariant *result = NULL;
+    GVariant *result = NULL;
     GError *error = NULL;
 
     if (!c->dbusproxy) {
@@ -268,7 +268,7 @@ static GVariant *dbus_call_sync(Client *c, const char *method, GVariant *param)
         g_error_free(error);
     }
 
-	return result;
+    return result;
 }
 
 /**
