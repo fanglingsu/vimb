@@ -7,7 +7,7 @@ CSSFILES = $(wildcard scripts/*.css)
 all: vimb webextension.subdir-all
 
 clean: webextension.subdir-clean
-	$(RM) vimb $(OBJ)
+	$(RM) vimb vimb.so $(OBJ)
 	$(RM) scripts/scripts.h
 
 vimb: $(OBJ)
