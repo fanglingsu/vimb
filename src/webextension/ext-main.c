@@ -136,23 +136,24 @@ void webkit_web_extension_initialize_with_user_data(WebKitWebExtension *extensio
 static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer extension)
 {
-    static GCredentials *own_credentials = NULL;
-    GError *error = NULL;
+	gboolean authorized = FALSE;
+    if (credentials) {
+        GCredentials *own_credentials;
 
-    if (!own_credentials) {
+        GError *error   = NULL;
         own_credentials = g_credentials_new();
+        if (g_credentials_is_same_user(credentials, own_credentials, &error)) {
+            authorized = TRUE;
+        } else {
+            g_warning("Failed to authorize web extension connection: %s", error->message);
+            g_error_free(error);
+        }
+        g_object_unref(own_credentials);
+    } else {
+		g_warning ("No credentials received from UI process.\n");
     }
 
-    if (credentials && g_credentials_is_same_user(credentials, own_credentials, &error)) {
-        return TRUE;
-    }
-
-    if (error) {
-        g_warning("Failed to authorize connection to ui: %s", error->message);
-        g_error_free(error);
-    }
-
-    return FALSE;
+	return authorized;
 }
 
 static void on_dbus_connection_created(GObject *source_object,

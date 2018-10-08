@@ -95,23 +95,23 @@ out:
 static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer data)
 {
-    static GCredentials *own_credentials = NULL;
-    GError *error = NULL;
+    gboolean authorized = FALSE;
 
-    if (!own_credentials) {
+    if (credentials) {
+        GCredentials *own_credentials;
+
+        GError *error   = NULL;
         own_credentials = g_credentials_new();
+        if (g_credentials_is_same_user(credentials, own_credentials, &error)) {
+            authorized = TRUE;
+        } else {
+            g_warning("Failed to authorize web extension connection: %s", error->message);
+            g_error_free(error);
+        }
+        g_object_unref(own_credentials);
     }
 
-    if (credentials && g_credentials_is_same_user(credentials, own_credentials, &error)) {
-        return TRUE;
-    }
-
-    if (error) {
-        g_warning("Failed to authorize web extension connection: %s", error->message);
-        g_error_free(error);
-    }
-
-    return FALSE;
+    return authorized;
 }
 
 static gboolean on_new_connection(GDBusServer *server,
