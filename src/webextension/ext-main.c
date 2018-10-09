@@ -136,7 +136,7 @@ void webkit_web_extension_initialize_with_user_data(WebKitWebExtension *extensio
 static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer extension)
 {
-	gboolean authorized = FALSE;
+    gboolean authorized = FALSE;
     if (credentials) {
         GCredentials *own_credentials;
 
@@ -150,10 +150,10 @@ static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         }
         g_object_unref(own_credentials);
     } else {
-		g_warning ("No credentials received from UI process.\n");
+        g_warning ("No credentials received from UI process.\n");
     }
 
-	return authorized;
+    return authorized;
 }
 
 static void on_dbus_connection_created(GObject *source_object,
