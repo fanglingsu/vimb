@@ -109,6 +109,8 @@ static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
             g_error_free(error);
         }
         g_object_unref(own_credentials);
+    } else {
+        g_warning ("No credentials received from web extension.\n");
     }
 
     return authorized;
