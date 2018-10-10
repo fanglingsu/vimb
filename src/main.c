@@ -1637,19 +1637,19 @@ static void vimb_setup(void)
         vb.files[FILES_CONFIG] = g_strdup(rp);
         free(rp);
     } else {
-        vb.files[FILES_CONFIG] = util_get_filepath(path, "config", FALSE);
+        vb.files[FILES_CONFIG] = util_get_filepath(path, "config", FALSE, 0600);
     }
 
     /* Setup those files that are use multiple time during runtime */
-    vb.files[FILES_CLOSED]     = util_get_filepath(path, "closed", TRUE);
-    vb.files[FILES_COOKIE]     = util_get_filepath(path, "cookies.db", TRUE);
-    vb.files[FILES_USER_STYLE] = util_get_filepath(path, "style.css", FALSE);
-    vb.files[FILES_SCRIPT]     = util_get_filepath(path, "scripts.js", FALSE);
-    vb.files[FILES_HISTORY]    = util_get_filepath(path, "history", TRUE);
-    vb.files[FILES_COMMAND]    = util_get_filepath(path, "command", TRUE);
-    vb.files[FILES_BOOKMARK]   = util_get_filepath(path, "bookmark", TRUE);
-    vb.files[FILES_QUEUE]      = util_get_filepath(path, "queue", TRUE);
-    vb.files[FILES_SEARCH]     = util_get_filepath(path, "search", TRUE);
+    vb.files[FILES_CLOSED]     = util_get_filepath(path, "closed", TRUE, 0600);
+    vb.files[FILES_COOKIE]     = util_get_filepath(path, "cookies.db", TRUE, 0600);
+    vb.files[FILES_USER_STYLE] = util_get_filepath(path, "style.css", FALSE, 0600);
+    vb.files[FILES_SCRIPT]     = util_get_filepath(path, "scripts.js", FALSE, 0600);
+    vb.files[FILES_HISTORY]    = util_get_filepath(path, "history", TRUE, 0600);
+    vb.files[FILES_COMMAND]    = util_get_filepath(path, "command", TRUE, 0600);
+    vb.files[FILES_BOOKMARK]   = util_get_filepath(path, "bookmark", TRUE, 0600);
+    vb.files[FILES_QUEUE]      = util_get_filepath(path, "queue", TRUE, 0600);
+    vb.files[FILES_SEARCH]     = util_get_filepath(path, "search", TRUE, 0600);
     g_free(path);
 
     /* Use seperate rendering processed for the webview of the clients in the

@@ -362,8 +362,9 @@ char *util_get_file_contents(const char *filename, gsize *length)
  * @dir:        Directory in which the file is searched.
  * @filename:   Filename to built the absolute path with.
  * @create:     If TRUE, the file is created if it does not already exist.
+ * @mode:       Mode (file permission as chmod(2)) used for the file when creating it.
  */
-char *util_get_filepath(const char *dir, const char *filename, gboolean create)
+char *util_get_filepath(const char *dir, const char *filename, gboolean create, int mode)
 {
     char *fullpath;
 
@@ -375,6 +376,7 @@ char *util_get_filepath(const char *dir, const char *filename, gboolean create)
     } else if (create) {
         /* If create option was given - create the file. */
         fclose(fopen(fullpath, "a"));
+        g_chmod(fullpath, mode);
         return fullpath;
     }
 
