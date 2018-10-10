@@ -90,7 +90,7 @@ gboolean bookmark_remove(const char *uri)
             g_string_append_printf(new, "%s\n", line);
         }
         g_strfreev(lines);
-        g_file_set_contents(vb.files[FILES_BOOKMARK], new->str, -1, NULL);
+        util_file_set_content(vb.files[FILES_BOOKMARK], new->str, 0600);
         g_string_free(new, TRUE);
     }
 
@@ -217,7 +217,7 @@ gboolean bookmark_queue_unshift(const char *uri)
  */
 char *bookmark_queue_pop(int *item_count)
 {
-    return util_file_pop_line(vb.files[FILES_QUEUE], item_count);
+    return util_file_pop_line(vb.files[FILES_QUEUE], item_count, 0600);
 }
 
 /**

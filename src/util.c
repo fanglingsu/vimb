@@ -21,11 +21,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <JavaScriptCore/JavaScript.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/file.h>
+#include <unistd.h>
 
 #include "ascii.h"
 #include "completion.h"
@@ -104,7 +106,7 @@ void util_cleanup(void)
 gboolean util_create_dir_if_not_exists(const char *dirpath)
 {
     if (g_mkdir_with_parents(dirpath, 0755) == -1) {
-        g_critical("Could not create directory '%s': %s", dirpath, strerror(errno));
+        g_critical("Could not create directory '%s': %s", dirpath, g_strerror(errno));
 
         return FALSE;
     }
@@ -252,9 +254,11 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
  * @line:       Line to be written as new first line into the file.
  *              The line ending is inserted automatic.
  * @max_lines   Maximum number of lines in file after the operation.
+ * @mode        Mode (file permission as chmod(2)) used for the file when
+ *              creating it.
  */
 void util_file_prepend_line(const char *file, const char *line,
-        unsigned int max_lines)
+        unsigned int max_lines, int mode)
 {
     char **lines;
     GString *new_content;
@@ -275,7 +279,7 @@ void util_file_prepend_line(const char *file, const char *line,
         }
         g_strfreev(lines);
     }
-    g_file_set_contents(file, new_content->str, -1, NULL);
+    util_file_set_content(file, new_content->str, mode);
     g_string_free(new_content, TRUE);
 }
 
@@ -285,10 +289,12 @@ void util_file_prepend_line(const char *file, const char *line,
  * @file:       file to read from
  * @item_count: will be filled with the number of remaining lines in file if it
  *              is not NULL.
+ * @mode        Mode (file permission as chmod(2)) used for the file when
+ *              creating it.
  *
  * Returned string must be freed with g_free.
  */
-char *util_file_pop_line(const char *file, int *item_count)
+char *util_file_pop_line(const char *file, int *item_count, int mode)
 {
     char **lines;
     char *new,
@@ -308,7 +314,7 @@ char *util_file_pop_line(const char *file, int *item_count)
             /* minus one for last empty item and one for popped item */
             count = len - 2;
             new   = g_strjoinv("\n", lines + 1);
-            g_file_set_contents(file, new, -1, NULL);
+            util_file_set_content(file, new, mode);
             g_free(new);
         }
         g_strfreev(lines);
@@ -348,6 +354,72 @@ char *util_get_file_contents(const char *filename, gsize *length)
         g_error_free(error);
     }
     return content;
+}
+
+/**
+ * Atomicly writes contents to given file.
+ * Returns TRUE on success, FALSE otherwise.
+ */
+char *util_file_set_content(const char *file, const char *contents, int mode)
+{
+    gboolean retval = FALSE;
+    char *tmp_name;
+    int fd;
+    gsize length;
+
+    /* Create a temporary file. */
+    tmp_name = g_strconcat(file, ".XXXXXX", NULL);
+    errno    = 0;
+    fd       = g_mkstemp_full(tmp_name, O_RDWR, mode);
+    length   = strlen(contents);
+
+    if (fd == -1) {
+        g_error("Failed to create file %s: %s", tmp_name, g_strerror(errno));
+
+        goto out;
+    }
+
+    /* Write the contents to the temporary file. */
+    while (length > 0) {
+        gssize s;
+        s = write(fd, contents, length);
+        if (s < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+            g_error("Failed to write to file %s: write() failed: %s",
+                    tmp_name, g_strerror(errno));
+            close(fd);
+            g_unlink(tmp_name);
+
+            goto out;
+        }
+
+        g_assert (s <= length);
+
+        contents += s;
+        length   -= s;
+    }
+
+    if (!g_close(fd, NULL)) {
+        g_unlink(tmp_name);
+        goto out;
+    }
+
+    /* Atomic rename the temporary file into the destination file. */
+    if (g_rename(tmp_name, file) == -1) {
+        g_error("Failed to rename file %s to %s: g_rename() failed: %s",
+                tmp_name, file, g_strerror(errno));
+        g_unlink(tmp_name);
+        goto out;
+    }
+
+    retval = TRUE;
+
+out:
+    g_free(tmp_name);
+
+    return retval;
 }
 
 /**

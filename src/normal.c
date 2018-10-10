@@ -603,7 +603,7 @@ static VbResult normal_open(Client *c, const NormalCmdInfo *info)
     }
 
     a.i = info->key == 'U' ? TARGET_NEW : TARGET_CURRENT;
-    a.s = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
+    a.s = util_file_pop_line(vb.files[FILES_CLOSED], NULL, 0600);
     if (!a.s) {
         return RESULT_ERROR;
     }
