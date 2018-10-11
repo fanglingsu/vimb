@@ -254,11 +254,9 @@ gboolean util_file_prepend(const char *file, const char *format, ...)
  * @line:       Line to be written as new first line into the file.
  *              The line ending is inserted automatic.
  * @max_lines   Maximum number of lines in file after the operation.
- * @mode        Mode (file permission as chmod(2)) used for the file when
- *              creating it.
  */
 void util_file_prepend_line(const char *file, const char *line,
-        unsigned int max_lines, int mode)
+        unsigned int max_lines)
 {
     char **lines;
     GString *new_content;
@@ -279,7 +277,7 @@ void util_file_prepend_line(const char *file, const char *line,
         }
         g_strfreev(lines);
     }
-    util_file_set_content(file, new_content->str, mode);
+    util_file_set_content(file, new_content->str);
     g_string_free(new_content, TRUE);
 }
 
@@ -289,12 +287,10 @@ void util_file_prepend_line(const char *file, const char *line,
  * @file:       file to read from
  * @item_count: will be filled with the number of remaining lines in file if it
  *              is not NULL.
- * @mode        Mode (file permission as chmod(2)) used for the file when
- *              creating it.
  *
  * Returned string must be freed with g_free.
  */
-char *util_file_pop_line(const char *file, int *item_count, int mode)
+char *util_file_pop_line(const char *file, int *item_count)
 {
     char **lines;
     char *new,
@@ -314,7 +310,7 @@ char *util_file_pop_line(const char *file, int *item_count, int mode)
             /* minus one for last empty item and one for popped item */
             count = len - 2;
             new   = g_strjoinv("\n", lines + 1);
-            util_file_set_content(file, new, mode);
+            util_file_set_content(file, new);
             g_free(new);
         }
         g_strfreev(lines);
@@ -360,12 +356,17 @@ char *util_get_file_contents(const char *filename, gsize *length)
  * Atomicly writes contents to given file.
  * Returns TRUE on success, FALSE otherwise.
  */
-char *util_file_set_content(const char *file, const char *contents, int mode)
+char *util_file_set_content(const char *file, const char *contents)
 {
     gboolean retval = FALSE;
     char *tmp_name;
-    int fd;
+    int fd, mode;
     gsize length;
+    struct stat st;
+
+    mode = 0600;
+    if (stat(file, &st) == 0)
+        mode = st.st_mode;
 
     /* Create a temporary file. */
     tmp_name = g_strconcat(file, ".XXXXXX", NULL);

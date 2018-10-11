@@ -646,7 +646,7 @@ static void client_destroy(Client *c)
      * exists. */
     if (c->state.uri && vb.config.closed_max && vb.files[FILES_CLOSED]) {
         util_file_prepend_line(vb.files[FILES_CLOSED], c->state.uri,
-                vb.config.closed_max, 0600);
+                vb.config.closed_max);
     }
 
     gtk_widget_destroy(c->window);

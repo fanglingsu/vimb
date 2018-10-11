@@ -38,11 +38,11 @@ char *util_expand(State state, const char *src, int expflags);
 gboolean util_file_append(const char *file, const char *format, ...);
 gboolean util_file_prepend(const char *file, const char *format, ...);
 void util_file_prepend_line(const char *file, const char *line,
-        unsigned int max_lines, int mode);
-char *util_file_pop_line(const char *file, int *item_count, int mode);
+        unsigned int max_lines);
+char *util_file_pop_line(const char *file, int *item_count);
 char *util_get_config_dir(void);
 char *util_get_file_contents(const char *filename, gsize *length);
-char *util_file_set_content(const char *file, const char *contents, int mode);
+char *util_file_set_content(const char *file, const char *contents);
 char *util_get_filepath(const char *dir, const char *filename, gboolean create, int mode);
 char **util_get_lines(const char *filename);
 GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
