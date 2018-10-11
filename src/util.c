@@ -365,8 +365,9 @@ char *util_file_set_content(const char *file, const char *contents)
     struct stat st;
 
     mode = 0600;
-    if (stat(file, &st) == 0)
+    if (stat(file, &st) == 0) {
         mode = st.st_mode;
+    }
 
     /* Create a temporary file. */
     tmp_name = g_strconcat(file, ".XXXXXX", NULL);
