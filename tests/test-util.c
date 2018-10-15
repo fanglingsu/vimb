@@ -17,6 +17,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <pwd.h>
 #include <gtk/gtk.h>
 #include <src/util.h>
 
@@ -88,9 +89,15 @@ static void test_expand_tilde_home(void)
 static void test_expand_tilde_user(void)
 {
     State state = {0};
-    const char *home = g_get_home_dir();
     const char *user = g_get_user_name();
+    const char *home;
     char *in, *out;
+    struct passwd *pwd;
+
+    /* initialize home */
+    pwd = getpwnam(user);
+    g_assert_nonnull(pwd);
+    home = pwd->pw_dir;
 
     /* don't expand within words */
     in = g_strdup_printf("foo~%s/bar", user);
