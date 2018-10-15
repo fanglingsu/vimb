@@ -23,6 +23,7 @@ the project page of [Vimb][].
 - user defined URL-shortcuts with placeholders
 - read it later queue to collect URIs for later use
 - multiple yank/paste registers
+- Vim like autocmd - execute commands automatically after an event on specific URIs
 
 ## Packages
 
