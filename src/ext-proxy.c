@@ -180,16 +180,17 @@ static void on_vertical_scroll(GDBusConnection *connection,
         const char *interface_name, const char *signal_name,
         GVariant *parameters, gpointer data)
 {
-    glong max;
+    glong max, top;
     guint percent;
     guint64 pageid;
     Client *c;
 
-    g_variant_get(parameters, "(ttq)", &pageid, &max, &percent);
+    g_variant_get(parameters, "(ttqt)", &pageid, &max, &percent, &top);
     c = vb_get_client_for_page_id(pageid);
     if (c) {
         c->state.scroll_max     = max;
         c->state.scroll_percent = percent;
+        c->state.scroll_top     = top;
     }
 
     vb_statusbar_update(c);

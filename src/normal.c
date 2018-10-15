@@ -521,7 +521,37 @@ static VbResult normal_input_open(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_mark(Client *c, const NormalCmdInfo *info)
 {
-    /* TODO implement setting of marks - we need to get the position in the pagee from the Webextension */
+    glong current;
+    char *js, *mark;
+    int idx;
+
+    /* check if the second char is a valid mark char */
+    if (!(mark = strchr(MARK_CHARS, info->key2))) {
+        return RESULT_ERROR;
+    }
+
+    /* get the index of the mark char */
+    idx = mark - MARK_CHARS;
+
+    if ('m' == info->key) {
+        c->state.marks[idx] = c->state.scroll_top;
+    } else {
+        /* check if the mark was set */
+        if ((int)(c->state.marks[idx] - .5) < 0) {
+            return RESULT_ERROR;
+        }
+
+        current = c->state.scroll_top;
+
+        /* jump to the location */
+        js = g_strdup_printf("window.scroll(window.screenLeft,%ld);", c->state.marks[idx]);
+        ext_proxy_eval_script(c, js, NULL);
+        g_free(js);
+
+        /* save previous adjust as last position */
+        c->state.marks[MARK_TICK] = current;
+    }
+
     return RESULT_COMPLETE;
 }
 

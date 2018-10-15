@@ -80,6 +80,7 @@ static const char introspection_xml[] =
     "   <arg type='t' name='page_id' direction='out'/>"
     "   <arg type='t' name='max' direction='out'/>"
     "   <arg type='q' name='percent' direction='out'/>"
+    "   <arg type='t' name='top' direction='out'/>"
     "  </signal>"
     "  <method name='SetHeaderSetting'>"
     "   <arg type='s' name='headers' direction='in'/>"
@@ -249,7 +250,7 @@ static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *eve
 
     if (doc) {
         WebKitDOMElement *body, *de;
-        glong max = 0, scrollTop, scrollHeight, clientHeight;
+        glong max = 0, top = 0, scrollTop, scrollHeight, clientHeight;
         guint percent = 0;
 
         de = webkit_dom_document_get_document_element(doc);
@@ -276,10 +277,11 @@ static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *eve
         max = scrollHeight - clientHeight;
         if (max > 0) {
             percent = (guint)(0.5 + (scrollTop * 100 / max));
+            top = scrollTop;
         }
 
-        dbus_emit_signal("VerticalScroll", g_variant_new("(ttq)",
-                webkit_web_page_get_id(page), max, percent));
+        dbus_emit_signal("VerticalScroll", g_variant_new("(ttqt)",
+                webkit_web_page_get_id(page), max, percent, top));
     }
 }
 

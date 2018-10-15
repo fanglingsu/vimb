@@ -154,12 +154,13 @@ struct State {
 
 #define PROMPT_SIZE 4
     char                prompt[PROMPT_SIZE];/* current prompt ':', 'g;t', '/' including nul */
-    gdouble             marks[MARK_SIZE];   /* holds marks set to page with 'm{markchar}' */
+    glong               marks[MARK_SIZE];   /* holds marks set to page with 'm{markchar}' */
     guint               input_timer;
     MessageType         input_type;
     StatusType          status_type;
     glong               scroll_max;         /* Maxmimum scrollable height of the document. */
-    guint               scroll_percent;     /* Current position of the viewport in document. */
+    guint               scroll_percent;     /* Current position of the viewport in document (percent). */
+    glong               scroll_top;         /* Current position of the viewport in document (pixel). */
     char                *title;             /* Window title of the client. */
 
     char                *reg[REG_SIZE];     /* holds the yank buffers */
