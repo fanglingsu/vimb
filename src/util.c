@@ -678,6 +678,10 @@ double util_js_result_as_number(WebKitJavascriptResult *result)
  * not expanded char. If no expansion pattern was found, the first char is
  * appended to given GString.
  *
+ * Please note that for a single ~, g_get_home_dir() is used and if a valid
+ * HOME environment variable is set it is preferred than passwd file.
+ * However, for ~user expansion the passwd file is always used.
+ *
  * @input:     String pointer with the content to be parsed.
  * @str:       GString that will be filled with expanded content.
  * @flags      Flags that determine which expansion are processed.
