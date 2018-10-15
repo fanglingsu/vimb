@@ -81,9 +81,14 @@ static void test_handler_fill_completion(void)
     g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 1);
     gtk_list_store_clear(store);
 
-    /* check case where no mathc is found */
+    /* check case where no match is found */
     g_assert_false(handler_fill_completion(handler, store, "unknown"));
     g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 0);
+    gtk_list_store_clear(store);
+
+    /* check case without apllied filters */
+    g_assert_true(handler_fill_completion(handler, store, ""));
+    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 4);
     gtk_list_store_clear(store);
 }
 
