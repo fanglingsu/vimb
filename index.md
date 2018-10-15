@@ -49,6 +49,8 @@ But following images may give a impression of they way vimb works.
 - user defined URL-shortcuts with placeholders
 - read it later queue to collect URIs for later use
 - multiple yank/paste registers
+- Vim like [autocmd][] - execute commands automatically after an event on specific
+  URIs
 
 ## packages
 
@@ -113,3 +115,4 @@ If you find a misbehaviour or have feature requests use the
 [zip]:               https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
 [tgz]:               https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
 [releases]:          https://github.com/fanglingsu/vimb/releases "vimb download releases"
+[autocmd]:           https://fanglingsu.github.io/vimb/man.html#Autocmd "vim like autocmd"
