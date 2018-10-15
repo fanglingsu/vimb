@@ -32,7 +32,7 @@ uninstall:
 	$(RM) $(LIBDIR)/$(EXTTARGET)
 	$(RM) $(DOTDESKTOPPREFIX)/vimb.desktop
 
-clean: src.subdir-clean
+clean: src.subdir-clean test-clean
 
 sandbox:
 	$(Q)$(MAKE) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
@@ -43,6 +43,9 @@ runsandbox: sandbox
 test:
 	$(MAKE) -C src vimb.so
 	$(MAKE) -C tests
+
+test-clean:
+	$(MAKE) -C tests clean
 
 %.subdir-all:
 	$(Q)$(MAKE) -C $*
