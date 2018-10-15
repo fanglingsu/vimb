@@ -356,7 +356,7 @@ char *util_get_file_contents(const char *filename, gsize *length)
  * Atomicly writes contents to given file.
  * Returns TRUE on success, FALSE otherwise.
  */
-char *util_file_set_content(const char *file, const char *contents)
+gboolean util_file_set_content(const char *file, const char *contents)
 {
     gboolean retval = FALSE;
     char *tmp_name;
