@@ -10,6 +10,17 @@ active: howto
 * toc
 {:toc}
 
+## adblock
+{:#block}
+
+Vim does not provide an adblocker itself. But the [wyebadblock][]
+webextension can be used by vimb too to provide adblocking. This is done by
+putting the adblock webextension of wyebadblock into the webextension
+directory of vimb (`vimb --bug-info | grep 'Extension dir'`).
+
+A less fine grained approach is to use host-blocking with some ready to use
+blocklists [https://github.com/hectorm/hmirror][hmirror].
+
 ## reading mode via simplyread
 
 If you like to read web pages without clutter you can use some user script
@@ -216,3 +227,5 @@ body::-webkit-scrollbar {
 [tabbed]:   http://tools.suckless.org/tabbed/
 [xdotool]:  http://www.semicomplete.com/projects/xdotool/
 [simplyread]: https://njw.name/simplyread/
+[wyebadblock]: https://github.com/jun7/wyebadblock
+[hmirror]:  https://github.com/hectorm/hmirror
