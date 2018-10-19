@@ -29,6 +29,7 @@ the project page of [Vimb][].
 
 - Arch Linux: [aur/vimb][], [aur/vimb-git][]
 - Gentoo: [gentoo-git][], [gentoo][]
+- Slackware: [slackbuild/vimb][]
 
 ## dependencies
 
@@ -79,3 +80,4 @@ Information about the license are found in the file LICENSE.
 [gentoo]:            https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
 [vimb]:              https://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
 [mail]:              https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[slackbuild/vimb]:   https://slackbuilds.org/repository/14.2/network/vimb/
