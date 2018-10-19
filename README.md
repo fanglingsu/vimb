@@ -74,6 +74,12 @@ target.
 
 Information about the license are found in the file LICENSE.
 
+## about
+
+- https://en.wikipedia.org/wiki/Vimb
+- http://thedarnedestthing.com/vimb
+- https://blog.jeaye.com/2015/08/23/vimb/
+
 [aur/vimb]:          https://aur.archlinux.org/packages/vimb
 [aur/vimb-git]:      https://aur.archlinux.org/packages/vimb-git
 [gentoo-git]:        https://github.com/tharvik/overlay/tree/master/www-client/vimb
