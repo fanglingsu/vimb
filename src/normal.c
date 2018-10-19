@@ -74,6 +74,7 @@ static VbResult normal_search(Client *c, const NormalCmdInfo *info);
 static VbResult normal_search_selection(Client *c, const NormalCmdInfo *info);
 static VbResult normal_view_inspector(Client *c, const NormalCmdInfo *info);
 static VbResult normal_view_source(Client *c, const NormalCmdInfo *info);
+static void normal_view_source_loaded(WebKitWebResource *resource, GAsyncResult *res, Client *c);
 static VbResult normal_yank(Client *c, const NormalCmdInfo *info);
 static VbResult normal_zoom(Client *c, const NormalCmdInfo *info);
 
@@ -446,7 +447,7 @@ static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info)
             return normal_view_inspector(c, info);
 
         case 'f':
-            normal_view_source(c, info);
+            return normal_view_source(c, info);
 
         case 'g':
             return normal_scroll(c, info);
@@ -743,8 +744,27 @@ static VbResult normal_view_inspector(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_view_source(Client *c, const NormalCmdInfo *info)
 {
-    /* TODO the source mode isn't supported anymore use external editor for this */
+    WebKitWebResource *resource;
+
+    if ((resource = webkit_web_view_get_main_resource(c->webview)) == NULL) {
+        return RESULT_ERROR;
+    }
+
+    webkit_web_resource_get_data(resource, NULL,
+	(GAsyncReadyCallback)normal_view_source_loaded, c);
+
     return RESULT_COMPLETE;
+}
+
+static void normal_view_source_loaded(WebKitWebResource *resource,
+    GAsyncResult *res, Client *c)
+{
+    gsize length;
+    guchar *text = NULL;
+
+    text = webkit_web_resource_get_data_finish(resource, res, &length, NULL);
+    command_spawn_editor(c, &((Arg){0, (char *)text}), NULL, NULL);
+    g_free(text);
 }
 
 static VbResult normal_yank(Client *c, const NormalCmdInfo *info)
