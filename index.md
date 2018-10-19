@@ -56,6 +56,7 @@ But following images may give a impression of they way vimb works.
 
 - Arch Linux: [aur/vimb][], [aur/vimb-git][]
 - Gentoo: [gentoo-git][], [gentoo][]
+- Slackware: [slackbuild/vimb][]
 
 ## download
 
@@ -105,6 +106,12 @@ target.
 If you find a misbehaviour or have feature requests use the
 [issue tracker][bug] provided by github or via [mailing list][mail].
 
+## about
+
+- [https://en.wikipedia.org/wiki/Vimb](https://en.wikipedia.org/wiki/Vimb)
+- [http://thedarnedestthing.com/vimb](http://thedarnedestthing.com/vimb)
+- [https://blog.jeaye.com/2015/08/23/vimb/](https://blog.jeaye.com/2015/08/23/vimb/)
+
 [aur/vimb]:          https://aur.archlinux.org/packages/vimb
 [aur/vimb-git]:      https://aur.archlinux.org/packages/vimb-git
 [gentoo-git]:        https://github.com/tharvik/overlay/tree/master/www-client/vimb
@@ -116,3 +123,4 @@ If you find a misbehaviour or have feature requests use the
 [tgz]:               https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
 [releases]:          https://github.com/fanglingsu/vimb/releases "vimb download releases"
 [autocmd]:           https://fanglingsu.github.io/vimb/man.html#Autocmd "vim like autocmd"
+[slackbuild/vimb]:   https://slackbuilds.org/repository/14.2/network/vimb/
