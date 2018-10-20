@@ -13,7 +13,7 @@ active: howto
 ## adblock
 {:#block}
 
-Vim does not provide an adblocker itself. But the [wyebadblock][]
+Vimb does not provide an adblocker itself. But the [wyebadblock][]
 webextension can be used by vimb too to provide adblocking. This is done by
 putting the adblock webextension of wyebadblock into the webextension
 directory of vimb (`vimb --bug-info | grep 'Extension dir'`).
