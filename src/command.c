@@ -337,6 +337,7 @@ gboolean command_spawn_editor(Client *c, const Arg *arg,
 
 error:
     unlink(file_path);
+    g_free(command);
     g_free(file_path);
     g_strfreev(argv);
     return FALSE;
