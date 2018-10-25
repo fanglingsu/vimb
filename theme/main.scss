@@ -18,7 +18,7 @@ body {
 
 #page {
   background-color: #fff;
-  margin: 0 auto 2em;
+  margin: 1em auto 2em;
   max-width: 60em;
   min-width: 20em;
   border: 1px solid #ccc;
@@ -138,15 +138,11 @@ p.warning {
 }
 
 nav {
-  position: fixed;
+  position: absolute;
   top: 0;
   left:0;
   right:0;
-  margin: 0 auto;
-  min-width: 20em;
-  max-width: 60em;
-  background-image: linear-gradient(#fff 75%, rgba(255,255,255,0) 100%);
-  padding-bottom: 1em;
+  padding: 0 0 1em;
   ul {
     font-size: x-large;
 	margin: 0;
