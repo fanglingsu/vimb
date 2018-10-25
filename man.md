@@ -91,6 +91,9 @@ gi
 CTRL−Z
 : Switch vimb into Pass-Through Mode.
 
+gf
+: Open the configured editor ('editor-command') with the current page's content.
+
 gF
 : Open the Web Inspector for current page.
 
@@ -310,7 +313,7 @@ the extended hint mode can only be combined with the following hint modes
 Motions commands are like those for normal mode except that CTRL is used as
 modifier. But they can not be used together with a count.
 
-CTRL-F 
+CTRL-F
 : Scroll one page down.
 
 CTRL-B
