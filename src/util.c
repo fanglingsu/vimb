@@ -133,6 +133,11 @@ gboolean util_create_tmp_file(const char *content, char **file)
         return FALSE;
     }
 
+    if (content == NULL) {
+	close(fp);
+	return TRUE;
+    }
+
     len = strlen(content);
 
     /* write content into temporary file */

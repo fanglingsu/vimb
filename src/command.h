@@ -43,11 +43,14 @@ enum {
 };
 #endif
 
+typedef void (*PostEditFunc)(const char *, Client *, gpointer);
+
 gboolean command_search(Client *c, const Arg *arg, bool commit);
 gboolean command_yank(Client *c, const Arg *arg, char buf);
 gboolean command_save(Client *c, const Arg *arg);
 #ifdef FEATURE_QUEUE
 gboolean command_queue(Client *c, const Arg *arg);
 #endif
+gboolean command_spawn_editor(Client *c, const Arg *arg, PostEditFunc posteditfunc, gpointer data);
 
 #endif /* end of include guard: _COMMAND_H */

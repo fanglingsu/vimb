@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "ascii.h"
+#include "command.h"
 #include "config.h"
 #include "input.h"
 #include "main.h"
@@ -31,13 +32,11 @@
 #include "ext-proxy.h"
 
 typedef struct {
-    Client *c;
-    char   *file;
     char   *element_id;
     unsigned long element_map_key;
-} EditorData;
+} ElementEditorData;
 
-static void resume_editor(GPid pid, int status, EditorData *data);
+static void input_editor_formfiller(const char *text, Client *c, gpointer data);
 
 /**
  * Function called when vimb enters the input mode.
@@ -111,24 +110,14 @@ VbResult input_keypress(Client *c, int key)
 VbResult input_open_editor(Client *c)
 {
     static unsigned long element_map_key = 0;
-    char *element_id = NULL, *command = NULL;
-    char **argv = NULL, *file_path = NULL;
-    const char *text = NULL, *id = NULL, *editor_command;
-    int argc;
-    GPid pid;
+    char *element_id = NULL;
+    char *text = NULL, *id = NULL;
     gboolean success;
     GVariant *jsreturn;
     GVariant *idreturn;
-    GError *error = NULL;
+    ElementEditorData *data = NULL;
 
     g_assert(c);
-
-    /* get the editor command */
-    editor_command = GET_CHAR(c, "editor-command");
-    if (!editor_command || !*editor_command) {
-        vb_echo(c, MSG_ERROR, TRUE, "No editor-command configured");
-        return RESULT_ERROR;
-    }
 
     /* get the selected input element */
     jsreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.value");
@@ -150,96 +139,54 @@ VbResult input_open_editor(Client *c)
         element_id = g_strdup(id);
     }
 
-    /* create a temp file to pass text to and from editor */
-    if (!util_create_tmp_file(text, &file_path)) {
-        goto error;
+    data                    = g_slice_new0(ElementEditorData);
+    data->element_id        = element_id;
+    data->element_map_key   = element_map_key;
+
+    if (command_spawn_editor(c, &((Arg){0, text}), input_editor_formfiller, data)) {
+        /* disable the active element */
+        ext_proxy_lock_input(c, element_id);
+
+        return RESULT_COMPLETE;
     }
 
-    /* spawn editor */
-    command = g_strdup_printf(editor_command, file_path);
-    if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
-        g_critical("Could not parse editor-command '%s'", command);
-        goto error;
-    }
-
-    success = g_spawn_async(
-        NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
-        NULL, NULL, &pid, &error
-    );
-
-    if (!success) {
-        g_warning("Could not spawn editor-command: %s", error->message);
-        g_error_free(error);
-        goto error;
-    }
-    g_strfreev(argv);
-
-    /* disable the active element */
-    ext_proxy_lock_input(c, element_id);
-
-    /* watch the editor process */
-    EditorData *data = g_slice_new0(EditorData);
-    data->file            = file_path;
-    data->c               = c;
-    data->element_id      = element_id;
-    data->element_map_key = element_map_key;
-
-    g_child_watch_add(pid, (GChildWatchFunc)resume_editor, data);
-
-    return RESULT_COMPLETE;
-
-error:
-    unlink(file_path);
-    g_free(file_path);
-    g_strfreev(argv);
     g_free(element_id);
+    g_slice_free(ElementEditorData, data);
     return RESULT_ERROR;
 }
 
-static void resume_editor(GPid pid, int status, EditorData *data)
+static void input_editor_formfiller(const char *text, Client *c, gpointer data)
 {
-    char *text, *escaped;
+    char *escaped;
     char *jscode;
     char *jscode_enable;
+    ElementEditorData *eed = (ElementEditorData *)data;
 
-    g_assert(pid);
-    g_assert(data);
-    g_assert(data->c);
-    g_assert(data->file);
+    if (text) {
+        escaped = util_strescape(text, NULL);
 
-    if (status == 0) {
-        /* get the text the editor stored */
-        text = util_get_file_contents(data->file, NULL);
-
-        if (text) {
-            escaped = util_strescape(text, NULL);
-
-            /* put the text back into the element */
-            if (data->element_id && strlen(data->element_id) > 0) {
-                jscode = g_strdup_printf("document.getElementById(\"%s\").value=\"%s\"", data->element_id, escaped);
-            } else {
-                jscode = g_strdup_printf("vimb_editor_map.get(\"%lu\").value=\"%s\"", data->element_map_key, escaped);
-            }
-
-            ext_proxy_eval_script(data->c, jscode, NULL);
-
-            g_free(jscode);
-            g_free(escaped);
-            g_free(text);
+        /* put the text back into the element */
+        if (eed->element_id && strlen(eed->element_id) > 0) {
+            jscode = g_strdup_printf("document.getElementById(\"%s\").value=\"%s\"", eed->element_id, escaped);
+        } else {
+            jscode = g_strdup_printf("vimb_editor_map.get(\"%lu\").value=\"%s\"", eed->element_map_key, escaped);
         }
+
+        ext_proxy_eval_script(c, jscode, NULL);
+
+        g_free(jscode);
+        g_free(escaped);
     }
 
-    if (data->element_id && strlen(data->element_id) > 0) {
-        ext_proxy_unlock_input(data->c, data->element_id);
+    if (eed->element_id && strlen(eed->element_id) > 0) {
+        ext_proxy_unlock_input(c, eed->element_id);
     } else {
         jscode_enable = g_strdup_printf(JS_FOCUS_EDITOR_MAP_ELEMENT,
-                data->element_map_key, data->element_map_key);
-        ext_proxy_eval_script(data->c, jscode_enable, NULL);
+                eed->element_map_key, eed->element_map_key);
+        ext_proxy_eval_script(c, jscode_enable, NULL);
         g_free(jscode_enable);
     }
-    g_unlink(data->file);
-    g_free(data->file);
-    g_free(data->element_id);
-    g_slice_free(EditorData, data);
-    g_spawn_close_pid(pid);
+
+    g_free(eed->element_id);
+    g_slice_free(ElementEditorData, eed);
 }
