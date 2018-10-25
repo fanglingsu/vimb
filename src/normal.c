@@ -760,10 +760,13 @@ static void normal_view_source_loaded(WebKitWebResource *resource,
     GAsyncResult *res, Client *c)
 {
     gsize length;
-    guchar *text = NULL;
+    guchar *data = NULL;
+    char *text = NULL;
 
-    text = webkit_web_resource_get_data_finish(resource, res, &length, NULL);
+    data = webkit_web_resource_get_data_finish(resource, res, &length, NULL);
+    text = g_strndup(data, length);
     command_spawn_editor(c, &((Arg){0, (char *)text}), NULL, NULL);
+    g_free(data);
     g_free(text);
 }
 
