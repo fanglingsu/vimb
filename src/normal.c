@@ -751,7 +751,7 @@ static VbResult normal_view_source(Client *c, const NormalCmdInfo *info)
     }
 
     webkit_web_resource_get_data(resource, NULL,
-	(GAsyncReadyCallback)normal_view_source_loaded, c);
+            (GAsyncReadyCallback)normal_view_source_loaded, c);
 
     return RESULT_COMPLETE;
 }
@@ -764,10 +764,12 @@ static void normal_view_source_loaded(WebKitWebResource *resource,
     char *text = NULL;
 
     data = webkit_web_resource_get_data_finish(resource, res, &length, NULL);
-    text = g_strndup(data, length);
-    command_spawn_editor(c, &((Arg){0, (char *)text}), NULL, NULL);
-    g_free(data);
-    g_free(text);
+    if (data) {
+        text = g_strndup(data, length);
+        command_spawn_editor(c, &((Arg){0, (char *)text}), NULL, NULL);
+        g_free(data);
+        g_free(text);
+    }
 }
 
 static VbResult normal_yank(Client *c, const NormalCmdInfo *info)

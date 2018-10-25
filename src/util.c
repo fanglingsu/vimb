@@ -134,8 +134,8 @@ gboolean util_create_tmp_file(const char *content, char **file)
     }
 
     if (content == NULL) {
-	close(fp);
-	return TRUE;
+        close(fp);
+        return TRUE;
     }
 
     len = strlen(content);
