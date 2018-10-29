@@ -290,7 +290,7 @@ gboolean command_spawn_editor(Client *c, const Arg *arg,
     char *command = NULL;
     int argc;
     GPid pid;
-    gboolean success;
+    gboolean success, result;
     char *editor_command;
     GError *error = NULL;
 
@@ -303,44 +303,44 @@ gboolean command_spawn_editor(Client *c, const Arg *arg,
 
     /* create a temp file to pass text in/to editor */
     if (!util_create_tmp_file(arg->s, &file_path)) {
-        goto error;
+        return FALSE;
     }
 
     /* spawn editor */
     command = g_strdup_printf(editor_command, file_path);
-    if (!g_shell_parse_argv(command, &argc, &argv, NULL)) {
+    if (g_shell_parse_argv(command, &argc, &argv, NULL)) {
+        success = g_spawn_async(
+            NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
+            NULL, NULL, &pid, &error
+        );
+        g_strfreev(argv);
+
+        if (success) {
+            EditorData *ed = g_slice_new0(EditorData);
+            ed->file = file_path;
+            ed->c    = c;
+            ed->data = data;
+            ed->func = posteditfunc;
+
+            g_child_watch_add(pid, resume_editor, ed);
+
+            result = TRUE;
+        } else {
+            g_warning("Could not spawn editor-command: %s", error->message);
+            g_error_free(error);
+            result = FALSE;
+        }
+    } else {
         g_critical("Could not parse editor-command '%s'", command);
-        goto error;
+        result = FALSE;
     }
-
-    success = g_spawn_async(
-        NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD,
-        NULL, NULL, &pid, &error
-    );
-
-    if (!success) {
-        g_warning("Could not spawn editor-command: %s", error->message);
-        g_error_free(error);
-        goto error;
-    }
-    g_strfreev(argv);
-
-    EditorData *ed = g_slice_new0(EditorData);
-    ed->file = file_path;
-    ed->c    = c;
-    ed->data = data;
-    ed->func = posteditfunc;
-
-    g_child_watch_add(pid, resume_editor, ed);
-
-    return TRUE;
-
-error:
-    unlink(file_path);
     g_free(command);
-    g_free(file_path);
-    g_strfreev(argv);
-    return FALSE;
+
+    if (!result) {
+        unlink(file_path);
+        g_free(file_path);
+    }
+    return result;
 }
 
 static void resume_editor(GPid pid, int status, gpointer edata)
