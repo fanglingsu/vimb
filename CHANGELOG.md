@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   using names marks.
   Set a marks by `m{a-z}` in normal mode. Jump to marks by `'{a-z}`.
 * Re-Added `gf` to show page source (Thanks to Leonardo Taccari) #361.
-  Webkit2 does not allow to show tha page in the source view mode so the `gf`
+  Webkit2 does not allow to show the page in the source view mode so the `gf`
   writes the HTML to a temporary files and opens it in the editor configured
   by `:set editor-command=...`
 ### Changed
@@ -45,8 +45,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 * Allow basic motion commands for hinting too.
 * Show the numbers of search matches in status bar.
-* Show dialog if the page makes a permission request e.g. gelocation to allow
-  the user to make a decission.
+* Show dialog if the page makes a permission request e.g. geolocation to allow
+  the user to make a decision.
 * new Setting `show-titlebar` to toggle window decorations.
 
 ### Changed
@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   classes are not set anymore to the hints. So customized css for the hints have
   to be adapted to this.
 * Element ID is stored in case the editor was spawned. So it's now possible to
-  start the editor, load another page, come back and paste the edotor contents
+  start the editor, load another page, come back and paste the editor contents
   (thanks to Sven Speckmaier).
 
 ### Fixed
@@ -166,7 +166,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-* Queueing of key events - fixes swalled chars in case of some imap bindings
+* Queueing of key events - fixes swallowed chars in case of some imap bindings
   #258 (thanks to Michael Mackus)
 * Allow to disable xembed by `FEATURE_NO_XEMBED` to compile on wayland only
   platforms (thanks to Patrick Steinhardt)
