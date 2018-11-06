@@ -11,6 +11,35 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 ### Removed
 
+## [3.3.0] - 2018-11-06
+
+### Added
+* Allow to change following webkit settings during runtime
+  * allow-file-access-from-file-urls
+  * allow-universal-access-from-file-urls
+* Added `#define CHECK_WEBEXTENSION_ON_STARTUP 1` to config.def.h to enable
+  checks during runtime if the webextension file could be found. Hope that
+  this helps user to fix compile/installation issues easier.
+* Re-Added support for page marks to jump around within long single pages by
+  using names marks.
+  Set a marks by `m{a-z}` in normal mode. Jump to marks by `'{a-z}`.
+* Re-Added `gf` to show page source (Thanks to Leonardo Taccari) #361.
+  Webkit2 does not allow to show tha page in the source view mode so the `gf`
+  writes the HTML to a temporary files and opens it in the editor configured
+  by `:set editor-command=...`
+### Changed
+* New created files in `$XDG_CONFIG_HOME/vimb` are generated with `0600`
+  permission to prevent cookies be observed on multi users systems. Existing
+  files are not affected by this change. It's a good advice to change the
+  permission of all the files in `$XDG_CONFIG_HOME/vimb` to `0600` by
+  hand.
+### Fixed
+* Fixed missing dependency in Makefile which possibly caused broken builds
+  (Thanks to Patrick Steinhardt).
+* Fixed weird scroll position values shown in scroll indicator on some pages #501.
+* Fixed wrong hint label position on xkcd.com #506.
+* Fixed wrong hint label position in case of hints within iframes.
+
 ## [3.2.0] - 2018-06-16
 
 ### Added
@@ -194,7 +223,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.2.0...master
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.3.0...master
+[3.3.0]: https://github.com/fanglingsu/vimb/compare/3.2.0...3.3.0
 [3.2.0]: https://github.com/fanglingsu/vimb/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/fanglingsu/vimb/compare/3.0-alpha...3.1.0
 [3.0-alpha]: https://github.com/fanglingsu/vimb/compare/2.12...3.0-alpha
