@@ -17,16 +17,14 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 
+[Vimb 3.3.0](https://github.com/fanglingsu/vimb/releases/tag/3.3.0) released
+
 [Vimb 3.2.0](https://github.com/fanglingsu/vimb/releases/tag/3.2.0) released
 
 Hinting mode [motion commands](man.html#hint_mode_motion)
 : Vimb provides some limited motion command support in hinting mode.
 
 [Vimb 3.1.0](https://github.com/fanglingsu/vimb/releases/tag/3.1.0) released
-
-Autogroup and Autocmd
-: [augroup and autocmd](man.html#Autocmd) where ported to webkit2 too (thanks
-  to Yoann Blein)
 
 ## screenshots
 
