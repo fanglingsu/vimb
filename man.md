@@ -203,6 +203,19 @@ $
 [*N*]k
 : Scroll page *N* steps up.
 
+m{*a-z*}
+: Set a page mark {*a-z*} at the current position on the page.
+  Such set marks are only available on the current page;
+  if the page is left, all marks will be removed.
+
+'{*a-z*}
+: Jump to the mark {*a-z*} on the current page.
+
+''
+: Jumps to the position before the latest jump, or where the last "m'" command
+  was given.
+
+
 ### Hinting
 {:#Hinting}
 
