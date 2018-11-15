@@ -39,9 +39,7 @@ footer {
 h1, h2, h3 {
   font-weight: bolder;
   color: #555;
-  /* fix anchor offset in case of fixed menu */
-  padding-top: 2.6em;
-  margin: -1.8em 0 .8em;
+  margin: .8em 0;
   background-clip: content-box;
 }
 
