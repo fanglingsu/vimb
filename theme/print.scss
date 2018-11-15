@@ -1,0 +1,41 @@
+html {
+  background-color: #fff;
+}
+
+#page {
+  margin: 0;
+  border: none;
+  box-shadow: none;
+}
+
+#content {
+  padding: 0;
+  margin: 1.5cm;
+}
+
+nav, footer, #markdown-toc {
+  display: none;
+}
+
+a, a:link, a:visited {
+  color: #000;
+}
+
+#content {
+  a:link:after, a:visited:after {
+    content: " (" attr(href) ") ";
+    font-size: .9em;
+    color: #555;
+  }
+}
+
+ul, ol, img {
+  page-break-inside: avoid;
+}
+
+h1, h2, h3 {
+  color: #555;
+  padding: 0;
+  margin: 0 0 1em;
+  page-break-after: avoid;
+}
