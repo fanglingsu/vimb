@@ -6,18 +6,15 @@ active: man
 ---
 
 # vimb - manual page
-
 * toc
 {:toc}
 
 ## SYNOPSIS
 {:#SYNOPSIS}
-
 **vimb** `[OPTIONS] [URI|file|-]`
 
 ## DESCRIPTION
 {:#DESCRIPTION}
-
 Vimb is a WebKit based web browser that behaves like the Vimperator plugin for
 Firefox and has usage paradigms from the great editor, Vim. The goal of Vimb
 is to build a completely keyboard-driven, efficient and pleasurable
@@ -25,7 +22,6 @@ browsing-experience.
 
 ## OPTIONS
 {:#OPTIONS}
-
 If no *URI* or *file* is given vimb will open the configured home-page. If
 *URI* is `-`, vimb reads the html to display from stdin.
 
@@ -54,7 +50,6 @@ Mandatory arguments to long options are mandatory for short options too.
 
 ## MODES
 {:#MODES}
-
 Vimb is modal an has following main modes:
 
 Normal Mode
@@ -74,14 +69,12 @@ Pass-Through Mode
 
 ## NORMAL MODE
 {:#NORMAL_MODE}
-
 Some of the Normal Model Commands can have a numeric count to multiply the
 effect of the command. If a command supports the count this is shown as
 [*N*].
 
 ### General
 {:#General}
-
 \:
 : Start Command Mode and print `:` to the input box.
 
@@ -105,7 +98,6 @@ CTRL−Q
 
 ### Navigation
 {:#Navigation}
-
 o
 : Start Command Mode and print `:open ` to input box.
 
@@ -164,7 +156,6 @@ CTRL−C
 
 ### Motion
 {:#Motion}
-
 [*N*]CTRL−F
 : Scroll *N* pages down.
 
@@ -218,7 +209,6 @@ m{*a-z*}
 
 ### Hinting
 {:#Hinting}
-
 The hinting is the way to do what you would do with the mouse in common mouse-
 driven browsers. Open URI, yank URI, save page and so on. If the hinting is
 started, the relevant elements on the page will be marked by labels generated
@@ -258,7 +248,6 @@ Following keys have special meanings in Hints mode:
 
 #### Hint modes:
 {:#Hint_modes}
-
 f
 : Is an alias for the `;o` hint mode.
 
@@ -322,7 +311,6 @@ the extended hint mode can only be combined with the following hint modes
 
 #### Motion
 {:#hint_mode_motion}
-
 Motions commands are like those for normal mode except that CTRL is used as
 modifier. But they can not be used together with a count.
 
@@ -346,7 +334,6 @@ CTRL-K
 
 ### Searching
 {:#Searching}
-
 /QUERY, ?QUERY
 : Start searching for `QUERY` in the current page. `/` start search forward,
   `?` in backward direction.
@@ -371,7 +358,6 @@ CTRL-K
 
 ### Zooming
 {:#Zooming}
-
 [*N*]zi
 : Zoom-In the text of the page by *N* steps.
 
@@ -389,7 +375,6 @@ zz
 
 ### Yank
 {:#Yank}
-
 [*"x*]y
 : Yank the URI or current page into register *x* and clipboard.
 
@@ -398,7 +383,6 @@ zz
 
 ## COMMAND MODE
 {:#COMMAND_MODE}
-
 Commands that are listed below are ex-commands like in vim, that are typed
 into the inputbox (the command line of vimb). The commands may vary in their
 syntax or in the parts they allow, but in general they follow a simple syntax.
@@ -429,7 +413,6 @@ be followed by another command.
 
 ### Command Line Editing
 {:#Command_Line_Editing}
-
 \<Esc\>, CTRL−[, CTRL-C
 : Ignore all typed content and switch back to normal mode.
 
@@ -460,7 +443,6 @@ CTRL−R {a-z"%:/;}
 
 ### Command Line History
 {:#Command_Line_History}
-
 \<Tab\>
 : Start completion of the content in inputbox in forward direction.
 
@@ -475,7 +457,6 @@ CTRL−R {a-z"%:/;}
 
 ### Open
 {:#Open}
-
 \:o[pen] [*URI*]
 : Open the give *URI* into current window. If *URI* is empty the configured
   'home-page' is opened.
@@ -486,7 +467,6 @@ CTRL−R {a-z"%:/;}
 
 ### Key Mapping
 {:#Key_Mapping}
-
 Key mappings allow to alter actions of key presses. Each key mapping is
 associated with a mode and only has effect when the mode is active. Following
 commands allow the user to substitute one sequence of key presses by another.
@@ -554,7 +534,6 @@ used `<Left>`, `<Up>`, `<Right>`, `<Down>` for the cursor keys, `<Tab>`,
 
 ### Handlers
 {:#Handlers}
-
 \:handler-add *handler*=*cmd*
 : Adds a handler to direct *handler* links to the external *cmd*. The *cmd* can
   contain one placeholder %s that will be filled by the full URI given when the
@@ -573,7 +552,6 @@ used `<Left>`, `<Up>`, `<Right>`, `<Down>` for the cursor keys, `<Tab>`,
 
 ### Shortcuts
 {:#Shortcuts}
-
 Shortcuts allows to open URL build up from a named template with additional
 parameters. If a shortcut named 'dd' is defined, you can use it with
 `:open dd list of parameters` to open the generated URL.
@@ -605,7 +583,6 @@ same but a single parameter is user defined.
 
 ### Settings
 {:#Settings}
-
 \:se[t] *var=value*
 : Set configuration values named by *var*. To set boolean variable you should
   use 'on', 'off' or 'true' and 'false'. Colors are given as hexadecimal value
@@ -634,7 +611,6 @@ same but a single parameter is user defined.
 
 ### Queue
 {:#Queue}
-
 The queue allows to mark URLs for later reading (something like a read it later
 list). This list is shared between the single instances of vimb. Only available
 if vimb has been compiled with QUEUE feature.
@@ -746,7 +722,6 @@ Example:
 
 ### Misc
 {:#Misc}
-
 \:cl[earcache]
 : Clears all resources currently cached by webkit. Note that this effects all
   running instances of vimb.
@@ -824,7 +799,6 @@ Example:
 
 ## INPUT MODE
 {:#INPUT_MODE}
-
 \<Esc\>, CTRL−[
 : Switch back to normal mode.
 
@@ -842,7 +816,6 @@ CTRL−Z
 
 ## COMPLETIONS
 {:#COMPLETIONS}
-
 The completions are triggered by pressing \<Tab\> or \<S-Tab\> in the
 activated inputbox. Depending of the current inserted content different
 completions are started. The completion takes additional typed chars to filter
@@ -887,7 +860,6 @@ search
 
 ## SETTINGS
 {:#SETTINGS}
-
 All settings listed below can be set with the `:set` command.
 
 accelerated-2d-canvas (bool)
@@ -1207,7 +1179,6 @@ xss-auditor (bool)
 
 ## FILES
 {:#FILES}
-
 *$XDG\_CONFIG\_HOME/vimb[/PROFILE]*
 : Directory for configuration data. If executed with -p PROFILE parameter,
   configuration is read from this subdirectory. config Configuration file to
@@ -1229,7 +1200,6 @@ _PREFIX/share/vimb/examples_.
 
 ## ENVIRONMENT
 {:#ENVIRONMENT}
-
 http_proxy
 : If this variable is set to an none empty value, and the configuration option
   'proxy' is enabled, this will be used as http proxy. If the proxy URL has no

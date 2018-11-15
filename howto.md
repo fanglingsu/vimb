@@ -6,13 +6,11 @@ active: howto
 ---
 
 # howto
-
 * toc
 {:toc}
 
 ## adblock
 {:#block}
-
 Vimb does not provide an adblocker itself. But the [wyebadblock][]
 webextension can be used by vimb too to provide adblocking. This is done by
 putting the adblock webextension of wyebadblock into the webextension
@@ -22,7 +20,6 @@ A less fine grained approach is to use host-blocking with some ready to use
 blocklists [https://github.com/hectorm/hmirror][hmirror].
 
 ## reading mode via simplyread
-
 If you like to read web pages without clutter you can use some user script
 like [simplyread][] to add reading mode to vimb by:
 
@@ -33,7 +30,6 @@ like [simplyread][] to add reading mode to vimb by:
        :nnoremap <C-R> :e! simplyread();<CR>
 
 ## editor opens without the contents of textarea
-
 There are two known cases of the `editor-command` setting that do not work.
 
 1. If gvim or vim -g is used without the `-f` option. So to use gvim as editor
@@ -50,7 +46,6 @@ There are two known cases of the `editor-command` setting that do not work.
 
 ## how can i have tabs?
 {:#tabbed}
-
 Vimb does not support tabs. Every new page is opened in a new browser instance
 with own settings which makes things easier and secure. But vimb can be
 plugged into another xembed aware window that allows tabbing like [tabbed][].
@@ -70,7 +65,6 @@ Following keybindings simulate a little bit the vim behaviour.
 
 
 ## commented sample config
-
 _~/.config/vimb/config_
 
 ```

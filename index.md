@@ -6,7 +6,6 @@ active: home
 ---
 
 # vimb - the vim like browser
-
 [Vimb][vimb] is a fast and lightweight vim like web browser based on the
 webkit web browser engine and the GTK toolkit. Vimb is modal like the great
 vim editor and also easily configurable during runtime. Vimb is mostly
@@ -16,7 +15,6 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
-
 [Vimb 3.3.0](https://github.com/fanglingsu/vimb/releases/tag/3.3.0) released
 
 [Vimb 3.2.0](https://github.com/fanglingsu/vimb/releases/tag/3.2.0) released
@@ -27,7 +25,6 @@ Hinting mode [motion commands](man.html#hint_mode_motion)
 [Vimb 3.1.0](https://github.com/fanglingsu/vimb/releases/tag/3.1.0) released
 
 ## screenshots
-
 There isn't really much to see for a browser that is controlled via keyboard.
 But following images may give a impression of they way vimb works.
 
@@ -35,7 +32,6 @@ But following images may give a impression of they way vimb works.
 [![completion with scrallable completion menu](media/vimb-completion.png "completion of settings (690x472 10kB)"){:width="350"}](media/vimb-completion.png)
 
 ## features
-
 - it's modal like Vim
 - Vim like keybindings - assignable for each browser mode
 - nearly every configuration can be changed at runtime with Vim like set syntax
@@ -51,13 +47,11 @@ But following images may give a impression of they way vimb works.
   URIs
 
 ## packages
-
 - Arch Linux: [aur/vimb][], [aur/vimb-git][]
 - Gentoo: [gentoo-git][], [gentoo][]
 - Slackware: [slackbuild/vimb][]
 
 ## download
-
 - You can get vimb from github by following command.
 
       git clone git://github.com/fanglingsu/vimb.git
@@ -66,11 +60,9 @@ But following images may give a impression of they way vimb works.
   one of the [releases][].
 
 ## dependencies
-
 - webkit2gtk-4.0 >= 2.8.x
 
 ## install
-
 Edit `config.mk` to match your local setup.
 
 Edit `src/config.h` to match your personal preferences.
@@ -100,12 +92,10 @@ target.
     make runsandbox
 
 ## contribute
-
 If you find a misbehaviour or have feature requests use the
 [issue tracker][bug] provided by github or via [mailing list][mail].
 
 ## about
-
 - [https://en.wikipedia.org/wiki/Vimb](https://en.wikipedia.org/wiki/Vimb)
 - [http://thedarnedestthing.com/vimb](http://thedarnedestthing.com/vimb)
 - [https://blog.jeaye.com/2015/08/23/vimb/](https://blog.jeaye.com/2015/08/23/vimb/)
