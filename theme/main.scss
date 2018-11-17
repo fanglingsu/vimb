@@ -36,10 +36,14 @@ footer {
   text-align: center;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Dejavu serif",Palatino,serif;
+}
+
 h1, h2, h3 {
   font-weight: bolder;
   color: #555;
-  margin: .8em 0;
+  margin: 1em 0 .8em;
   background-clip: content-box;
 }
 
