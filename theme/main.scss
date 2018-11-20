@@ -14,9 +14,6 @@ body {
   color: #000;
   font-family: "Dejavu sans-serif",Verdana,Geneva,sans-serif;
   text-rendering: optimizeLegibility;
-}
-
-#page {
   background-color: #fff;
   margin: 1em auto 2em;
   max-width: 60em;
@@ -26,7 +23,7 @@ body {
   position: relative;
 }
 
-#content {
+main {
   padding: 3em 8% 2.5em;
 }
 
@@ -111,7 +108,7 @@ a, a:link {
   text-decoration: none;
 }
 
-a[href^="http://"]:after, a[href^="https://"]:after {
+a[href^="http"]:after {
   content: "\2197";
 }
 
@@ -196,6 +193,16 @@ nav {
   li {
 	list-style-type: none;
 	padding-left: 0;
+  }
+}
+
+@media screen and (max-width: 60em) {
+  body {
+    margin-bottom: 0;
+  }
+  nav {
+    font-size: large;
+    max-width: none;
   }
 }
 

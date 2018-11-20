@@ -8,15 +8,13 @@
   <meta name="author" content="Daniel Carl"/>
   <link rel="stylesheet" type="text/css" href="theme/main.css"/>
   <link rel="stylesheet" type="text/css" media="print" href="theme/print.css"/>
-  <link rel="stylesheet" type="text/css" media="screen and (max-width: 60em)" href="theme/screen.css"/>
   <meta name="viewport" content="width=device-width"/>
 </head>
 <body>
-<div id="page">
-<div id="content">
+<main role="main" id="top">
 <a href="#nav-main" class="nogui">skip to main navigation</a>
 {{ content }}
-</div>
+</main>
 <nav>
   <h3 id="nav-main" class="nogui">main navigation</h3>
   <ul>
@@ -25,7 +23,6 @@
     <li{% if page.active == "howto" %} class="active"><span>howto</span>{% else %}><a href="howto.html">howto</a>{% endif %}</li>
   </ul>
 </nav>
-<footer><a href="#page" title="to top">&#9650; top</a></footer>
-</div>
+<footer><a href="#top" title="to top">&#9650; top</a></footer>
 </body>
 </html>
