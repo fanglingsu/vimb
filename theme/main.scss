@@ -102,7 +102,7 @@ pre {
 
 code {
   font-family: "Dejavu sans mono","Lucida Console",Monaco,monospace;
-  color: #444;
+  color: #333;
   overflow-wrap: break-word;
 }
 
@@ -199,11 +199,6 @@ nav {
   }
 }
 
-.c {
-  color: #998;
-  font-style: italic;
-}
-
 .err {
   color: #a61717;
   background-color: #e3d2d2;
@@ -214,13 +209,13 @@ nav {
   font-weight: bold;
 }
 
-.cm, .c1 {
-  color: #998;
+.c, .cm, .c1 {
+  color: #4a4a4a;
   font-style: italic;
 }
 
 .cp, .cs {
-  color: #999;
+  color: #4c4c4c;
   font-weight: bold;
 }
 
@@ -239,7 +234,7 @@ nav {
 }
 
 .gh {
-  color: #999;
+  color: #4a4a4a;
 }
 
 .go {
@@ -264,7 +259,7 @@ nav {
 }
 
 .nb {
-  color: #0086B3;
+  color: #005774;
 }
 
 .nd {
@@ -278,7 +273,6 @@ nav {
 
 .ne, .nf, .nl {
   color: #900;
-  font-weight: bold;
 }
 
 .nt {
@@ -290,7 +284,7 @@ nav {
 }
 
 .bp, .il, .m, .mf, .mh, .mi, .mo {
-  color: #099;
+  color: #004b4b;
 }
 
 .s, .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .s1 {
