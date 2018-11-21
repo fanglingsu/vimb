@@ -61,7 +61,7 @@ target.
 
 ## Mailing list
 
-- feature requests, issues and patches can be discussed on the [mailing list][mail] ([mail-archive][list archive])
+- feature requests, issues and patches can be discussed on the [mailing list][mail] ([list archive][mail-archive])
 
 ## Similar projects
 
