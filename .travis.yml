@@ -3,7 +3,7 @@ branches:
     gh-pages
 
 language: c
-dist: trusty
+dist: xenial
 sudo: required
 
 compiler:
@@ -11,7 +11,6 @@ compiler:
   - clang
 
 before_install:
-  - sudo add-apt-repository ppa:webkit-team/ppa -y
   - sudo apt-get update -q
   - sudo apt-get install -y --allow-unauthenticated --no-install-recommends libwebkit2gtk-4.0-dev
 
