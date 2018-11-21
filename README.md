@@ -34,7 +34,7 @@ the project page of [Vimb][].
 ## dependencies
 
 - gtk+-3.0
-- webkit2gtk-4.0 >= 2.8.x
+- webkit2gtk-4.0 >= 2.20.x
 
 ## Install
 
