@@ -765,7 +765,7 @@ static void normal_view_source_loaded(WebKitWebResource *resource,
 
     data = webkit_web_resource_get_data_finish(resource, res, &length, NULL);
     if (data) {
-        text = g_strndup(data, length);
+        text = g_strndup((gchar*)data, length);
         command_spawn_editor(c, &((Arg){0, (char *)text}), NULL, NULL);
         g_free(data);
         g_free(text);
