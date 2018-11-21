@@ -93,7 +93,7 @@ target.
 
 ## contribute
 If you find a misbehaviour or have feature requests use the
-[issue tracker][bug] provided by github or via [mailing list][mail].
+[issue tracker][bug] provided by github or via [mailing list][mail] ([list archive][mail-archive]).
 
 ## about
 - [https://en.wikipedia.org/wiki/Vimb](https://en.wikipedia.org/wiki/Vimb)
@@ -106,6 +106,7 @@ If you find a misbehaviour or have feature requests use the
 [gentoo]:            https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
 [vimb]:              https://github.com/fanglingsu/vimb "vimb project sources"
 [mail]:              https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
+[mail-archive]:      https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
 [bug]:               https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
 [zip]:               https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
 [tgz]:               https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
