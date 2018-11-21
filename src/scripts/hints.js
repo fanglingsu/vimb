@@ -173,13 +173,10 @@ var hints = Object.freeze((function(){
                 /* create the hint label with number/letters */
                 rect  = e.getClientRects()[0];
                 label = labelTmpl.cloneNode(false);
-                label.setAttribute(
-                    "style", [
-                        "display:none;",
-                        "left:", rect.left, "px;",
-                        "top:", rect.top, "px;"
-                    ].join("")
-                );
+
+                label.style.display = "none";
+                label.style.left    = rect.left + "px";
+                label.style.top     = rect.top + "px";
 
                 /* if hinted element is an image - show title or alt of the image in hint label */
                 /* this allows to see how to filter for the image */
@@ -226,7 +223,10 @@ var hints = Object.freeze((function(){
             /* append the fragment to the document */
             var hDiv = doc.createElement("div");
             hDiv.setAttribute(attr, "container");
-            hDiv.setAttribute("style", "position:fixed;top:0;left:0;z-index:225000;");
+            hDiv.style.position = "fixed";
+            hDiv.style.top      = "0";
+            hDiv.style.left     = "0";
+            hDiv.style.zIndex   = "225000";
             hDiv.appendChild(fragment);
             if (doc.body) {
                 doc.body.appendChild(hDiv);
