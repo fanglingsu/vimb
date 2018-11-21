@@ -61,7 +61,7 @@ target.
 
 ## Mailing list
 
-- feature requests, issues and patches can be discussed on the [mailing list][mail]
+- feature requests, issues and patches can be discussed on the [mailing list][mail] ([mail-archive][list archive])
 
 ## Similar projects
 
@@ -86,4 +86,5 @@ Information about the license are found in the file LICENSE.
 [gentoo]:            https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
 [vimb]:              https://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
 [mail]:              https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[mail-archive]:      https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
 [slackbuild/vimb]:   https://slackbuilds.org/repository/14.2/network/vimb/
