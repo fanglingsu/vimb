@@ -49,6 +49,7 @@ But following images may give a impression of they way vimb works.
 ## packages
 - Arch Linux: [aur/vimb][], [aur/vimb-git][]
 - Gentoo: [gentoo-git][], [gentoo][]
+- pkgsrc: [pkgsrc/www/vimb][], [pkgsrc/wip/vimb-git][]
 - Slackware: [slackbuild/vimb][]
 
 ## download
@@ -100,16 +101,18 @@ If you find a misbehaviour or have feature requests use the
 - [http://thedarnedestthing.com/vimb](http://thedarnedestthing.com/vimb)
 - [https://blog.jeaye.com/2015/08/23/vimb/](https://blog.jeaye.com/2015/08/23/vimb/)
 
-[aur/vimb]:          https://aur.archlinux.org/packages/vimb
-[aur/vimb-git]:      https://aur.archlinux.org/packages/vimb-git
-[gentoo-git]:        https://github.com/tharvik/overlay/tree/master/www-client/vimb
-[gentoo]:            https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
-[vimb]:              https://github.com/fanglingsu/vimb "vimb project sources"
-[mail]:              https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
-[mail-archive]:      https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
-[bug]:               https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
-[zip]:               https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
-[tgz]:               https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
-[releases]:          https://github.com/fanglingsu/vimb/releases "vimb download releases"
-[autocmd]:           https://fanglingsu.github.io/vimb/man.html#Autocmd "vim like autocmd"
-[slackbuild/vimb]:   https://slackbuilds.org/repository/14.2/network/vimb/
+[aur/vimb]:            https://aur.archlinux.org/packages/vimb
+[aur/vimb-git]:        https://aur.archlinux.org/packages/vimb-git
+[gentoo-git]:          https://github.com/tharvik/overlay/tree/master/www-client/vimb
+[gentoo]:              https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
+[vimb]:                https://github.com/fanglingsu/vimb "vimb project sources"
+[mail]:                https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb vim like browser - mailing list"
+[mail-archive]:        https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
+[bug]:                 https://github.com/fanglingsu/vimb/issues "vimb vim like browser - issues"
+[zip]:                 https://github.com/fanglingsu/vimb/archive/master.zip "vimb download zip"
+[tgz]:                 https://github.com/fanglingsu/vimb/archive/master.tar.gz "vimb download tar.gz"
+[releases]:            https://github.com/fanglingsu/vimb/releases "vimb download releases"
+[autocmd]:             https://fanglingsu.github.io/vimb/man.html#Autocmd "vim like autocmd"
+[slackbuild/vimb]:     https://slackbuilds.org/repository/14.2/network/vimb/
+[pkgsrc/wip/vimb-git]: http://pkgsrc.se/wip/vimb-git
+[pkgsrc/www/vimb]:     http://pkgsrc.se/www/vimb
