@@ -29,6 +29,7 @@ the project page of [Vimb][].
 
 - Arch Linux: [aur/vimb][], [aur/vimb-git][]
 - Gentoo: [gentoo-git][], [gentoo][]
+- pkgsrc: [pkgsrc/www/vimb][], [pkgsrc/wip/vimb-git][]
 - Slackware: [slackbuild/vimb][]
 
 ## dependencies
@@ -80,11 +81,13 @@ Information about the license are found in the file LICENSE.
 - http://thedarnedestthing.com/vimb
 - https://blog.jeaye.com/2015/08/23/vimb/
 
-[aur/vimb]:          https://aur.archlinux.org/packages/vimb
-[aur/vimb-git]:      https://aur.archlinux.org/packages/vimb-git
-[gentoo-git]:        https://github.com/tharvik/overlay/tree/master/www-client/vimb
-[gentoo]:            https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
-[vimb]:              https://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
-[mail]:              https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
-[mail-archive]:      https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
-[slackbuild/vimb]:   https://slackbuilds.org/repository/14.2/network/vimb/
+[aur/vimb-git]:        https://aur.archlinux.org/packages/vimb-git
+[aur/vimb]:            https://aur.archlinux.org/packages/vimb
+[gentoo-git]:          https://github.com/tharvik/overlay/tree/master/www-client/vimb
+[gentoo]:              https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
+[mail-archive]:        https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
+[mail]:                https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[pkgsrc/wip/vimb-git]: http://pkgsrc.se/wip/vimb-git
+[pkgsrc/www/vimb]:     http://pkgsrc.se/www/vimb
+[slackbuild/vimb]:     https://slackbuilds.org/repository/14.2/network/vimb/
+[vimb]:                https://fanglingsu.github.io/vimb/ "Vimb - Vim like browser project page"
