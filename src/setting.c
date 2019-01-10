@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <string.h>
 
+#include "../version.h"
 #include "completion.h"
 #include "config.h"
 #include "ext-proxy.h"

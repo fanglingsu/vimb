@@ -3,3 +3,4 @@
 *.so
 *.tar.gz
 sandbox
+version.h

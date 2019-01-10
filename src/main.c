@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <webkit2/webkit2.h>
 
+#include "../version.h"
 #include "ascii.h"
 #include "command.h"
 #include "completion.h"
@@ -1923,12 +1924,12 @@ int main(int argc, char* argv[])
     }
 
     if (ver) {
-        printf("%s, version %s\n\n", PROJECT, VERSION);
+        printf("%s, version %s\n", PROJECT, VERSION);
         return EXIT_SUCCESS;
     }
 
     if (buginfo) {
-        printf("Commit:          %s\n", COMMIT);
+        printf("Version:         %s\n", VERSION);
         printf("WebKit compile:  %d.%d.%d\n",
                 WEBKIT_MAJOR_VERSION,
                 WEBKIT_MINOR_VERSION,

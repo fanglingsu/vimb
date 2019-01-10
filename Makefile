@@ -1,6 +1,12 @@
+version = 3.3.0
 include config.mk
 
-all: src.subdir-all
+all: version.h src.subdir-all
+
+version.h: Makefile .git/index
+	@echo "create $@"
+	$(Q)v="$$(git describe --tags 2>/dev/null)"; \
+	echo "#define VERSION \"$${v:-$(version)}\"" > $@
 
 options:
 	@echo "vimb build options:"
@@ -10,7 +16,7 @@ options:
 	@echo "EXTCFLAGS = $(EXTCFLAGS)"
 	@echo "CC        = $(CC)"
 
-install: src.subdir-all
+install: all
 	@# binary
 	install -d $(BINPREFIX)
 	install -m 755 src/vimb $(BINPREFIX)/vimb
@@ -19,7 +25,7 @@ install: src.subdir-all
 	install -m 644 src/webextension/$(EXTTARGET) $(LIBDIR)/$(EXTTARGET)
 	@# man page
 	install -d $(MANPREFIX)/man1
-	@sed -e "s!VERSION!$(VERSION)!g" \
+	@sed -e "s!VERSION!$(version)!g" \
 		-e "s!PREFIX!$(PREFIX)!g" \
 		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(MANPREFIX)/man1/vimb.1
 	@# .desktop file
