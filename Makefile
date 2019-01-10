@@ -46,7 +46,7 @@ sandbox:
 runsandbox: sandbox
 	sandbox/usr/bin/vimb
 
-test:
+test: version.h
 	$(MAKE) -C src vimb.so
 	$(MAKE) -C tests
 
