@@ -87,6 +87,8 @@ static void on_webview_ready_to_show(WebKitWebView *webview, Client *c);
 static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c);
 static gboolean on_webview_authenticate(WebKitWebView *webview,
         WebKitAuthenticationRequest *request, Client *c);
+static gboolean on_webview_enter_fullscreen(WebKitWebView *webview, Client *c);
+static gboolean on_webview_leave_fullscreen(WebKitWebView *webview, Client *c);
 static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c);
 static void on_window_destroy(GtkWidget *window, Client *c);
 static gboolean quit(Client *c);
@@ -1479,6 +1481,28 @@ static gboolean on_webview_authenticate(WebKitWebView *webview,
 }
 
 /**
+ * Callback in case JS calls element.webkitRequestFullScreen.
+ */
+static gboolean on_webview_enter_fullscreen(WebKitWebView *webview, Client *c)
+{
+    c->state.is_fullscreen = TRUE;
+    gtk_widget_hide(GTK_WIDGET(c->statusbar.box));
+    gtk_widget_set_visible(GTK_WIDGET(c->input), FALSE);
+    return FALSE;
+}
+
+/**
+ * Callback to restore the window state after entering fullscreen.
+ */
+static gboolean on_webview_leave_fullscreen(WebKitWebView *webview, Client *c)
+{
+    c->state.is_fullscreen = FALSE;
+    gtk_widget_show(GTK_WIDGET(c->statusbar.box));
+    gtk_widget_set_visible(GTK_WIDGET(c->input), TRUE);
+    return FALSE;
+}
+
+/**
  * Callback for window ::delete-event signal which is emitted if a user
  * requests that a toplevel window is closed. The default handler for this
  * signal destroys the window. Returns TRUE to stop other handlers from being
@@ -1808,6 +1832,8 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::ready-to-show", G_CALLBACK(on_webview_ready_to_show), c,
         "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
         "signal::authenticate", G_CALLBACK(on_webview_authenticate), c,
+        "signal::enter-fullscreen", G_CALLBACK(on_webview_enter_fullscreen), c,
+        "signal::leave-fullscreen", G_CALLBACK(on_webview_leave_fullscreen), c,
         NULL
     );
 

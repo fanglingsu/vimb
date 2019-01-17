@@ -171,6 +171,7 @@ struct State {
     GList               *downloads;
     guint               progress;
     WebKitHitTestResult *hit_test_result;
+    gboolean            is_fullscreen;
 
     struct {
         gboolean    active;         /* indicate if there is a active search */

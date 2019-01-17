@@ -339,6 +339,16 @@ VbResult pass_keypress(Client *c, int key)
 
 static VbResult normal_clear_input(Client *c, const NormalCmdInfo *info)
 {
+    /* If an element requested the fullscreen - the <esc> shoudl cause to
+     * leave this fullscreen mode. */
+    if (c->state.is_fullscreen) {
+        /* Unset the processed_key to indicate that the <esc> was not handled
+         * by us and letting the event bubble up. So that webkit handles the
+         * key for us to leave the fullscreen mode. */
+        c->state.processed_key = FALSE;
+        return RESULT_COMPLETE;
+    }
+
     gtk_widget_grab_focus(GTK_WIDGET(c->webview));
 
     /* Clear the inputbox and change the style to normal to reset also the
