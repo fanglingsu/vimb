@@ -1702,7 +1702,7 @@ static void vimb_setup(void)
     vb_mode_add('p', pass_enter, pass_leave, pass_keypress, NULL);
 
     /* Prepare the style provider to be used for the clients and completion. */
-    vb.style_provider = gtk_css_provider_get_default();
+    vb.style_provider = gtk_css_provider_new();
 }
 
 /**
