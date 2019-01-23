@@ -85,14 +85,6 @@ static const char introspection_xml[] =
     "  <method name='SetHeaderSetting'>"
     "   <arg type='s' name='headers' direction='in'/>"
     "  </method>"
-    "  <method name='LockInput'>"
-    "   <arg type='t' name='page_id' direction='in'/>"
-    "   <arg type='s' name='elemend_id' direction='in'/>"
-    "  </method>"
-    "  <method name='UnlockInput'>"
-    "   <arg type='t' name='page_id' direction='in'/>"
-    "   <arg type='s' name='elemend_id' direction='in'/>"
-    "  </method>"
     " </interface>"
     "</node>";
 
@@ -429,22 +421,6 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
             ext.headers = NULL;
         }
         ext.headers = soup_header_parse_param_list(value);
-        g_dbus_method_invocation_return_value(invocation, NULL);
-    } else if (!g_strcmp0(method, "LockInput")) {
-        g_variant_get(parameters, "(ts)", &pageid, &value);
-        page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
-        if (!page) {
-            return;
-        }
-        ext_dom_lock_input(webkit_web_page_get_dom_document(page), value);
-        g_dbus_method_invocation_return_value(invocation, NULL);
-    } else if (!g_strcmp0(method, "UnlockInput")) {
-        g_variant_get(parameters, "(ts)", &pageid, &value);
-        page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
-        if (!page) {
-            return;
-        }
-        ext_dom_unlock_input(webkit_web_page_get_dom_document(page), value);
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
 }

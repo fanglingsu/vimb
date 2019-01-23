@@ -145,7 +145,7 @@ VbResult input_open_editor(Client *c)
 
     if (command_spawn_editor(c, &((Arg){0, text}), input_editor_formfiller, data)) {
         /* disable the active element */
-        ext_proxy_lock_input(c, element_id);
+        ext_proxy_eval_script(c, "vimb_input_mode_element.disabled=true", NULL);
 
         return RESULT_COMPLETE;
     }
@@ -167,9 +167,9 @@ static void input_editor_formfiller(const char *text, Client *c, gpointer data)
 
         /* put the text back into the element */
         if (eed->element_id && strlen(eed->element_id) > 0) {
-            jscode = g_strdup_printf("document.getElementById(\"%s\").value=\"%s\"", eed->element_id, escaped);
+            jscode = g_strdup_printf("document.getElementById('%s').value='%s'", eed->element_id, escaped);
         } else {
-            jscode = g_strdup_printf("vimb_editor_map.get(\"%lu\").value=\"%s\"", eed->element_map_key, escaped);
+            jscode = g_strdup_printf("vimb_editor_map.get('%lu').value='%s'", eed->element_map_key, escaped);
         }
 
         ext_proxy_eval_script(c, jscode, NULL);
@@ -179,13 +179,14 @@ static void input_editor_formfiller(const char *text, Client *c, gpointer data)
     }
 
     if (eed->element_id && strlen(eed->element_id) > 0) {
-        ext_proxy_unlock_input(c, eed->element_id);
+        jscode_enable = g_strdup_printf(JS_FOCUS_ELEMENT_BY_ID,
+                eed->element_id, eed->element_id);
     } else {
         jscode_enable = g_strdup_printf(JS_FOCUS_EDITOR_MAP_ELEMENT,
                 eed->element_map_key, eed->element_map_key);
-        ext_proxy_eval_script(c, jscode_enable, NULL);
-        g_free(jscode_enable);
     }
+    ext_proxy_eval_script(c, jscode_enable, NULL);
+    g_free(jscode_enable);
 
     g_free(eed->element_id);
     g_slice_free(ElementEditorData, eed);

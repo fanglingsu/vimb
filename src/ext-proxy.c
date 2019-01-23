@@ -227,16 +227,6 @@ void ext_proxy_set_header(Client *c, const char *headers)
     dbus_call(c, "SetHeaderSetting", g_variant_new("(s)", headers), NULL);
 }
 
-void ext_proxy_lock_input(Client *c, const char *element_id)
-{
-    dbus_call(c, "LockInput", g_variant_new("(ts)", c->page_id, element_id), NULL);
-}
-
-void ext_proxy_unlock_input(Client *c, const char *element_id)
-{
-    dbus_call(c, "UnlockInput", g_variant_new("(ts)", c->page_id, element_id), NULL);
-}
-
 /**
  * Call a dbus method.
  */
