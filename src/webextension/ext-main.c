@@ -386,11 +386,9 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
     WebKitWebPage *page;
 
     if (g_str_has_prefix(method, "EvalJs")) {
-        char *result       = NULL;
-        gboolean success;
         gboolean no_result;
-        JSValueRef ref     = NULL;
-        JSGlobalContextRef jsContext;
+        JSCContext *js_context;
+        JSCValue *js_value;
 
         g_variant_get(parameters, "(ts)", &pageid, &value);
         page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
@@ -398,21 +396,23 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
             return;
         }
 
-        no_result = !g_strcmp0(method, "EvalJsNoResult");
-        jsContext = webkit_frame_get_javascript_context_for_script_world(
-            webkit_web_page_get_main_frame(page),
-            webkit_script_world_get_default()
-        );
-
-        success = ext_util_js_eval(jsContext, value, &ref);
+        no_result  = !g_strcmp0(method, "EvalJsNoResult");
+        js_context = webkit_frame_get_js_context(webkit_web_page_get_main_frame(page));
+        js_value   = jsc_context_evaluate(js_context, value, -1);
 
         if (no_result) {
             g_dbus_method_invocation_return_value(invocation, NULL);
         } else {
-            result = ext_util_js_ref_to_string(jsContext, ref);
-            g_dbus_method_invocation_return_value(invocation, g_variant_new("(bs)", success, result));
+            char *result = NULL;
+            /* TODO how to check if an exception was thrown to get it's
+             * message? */
+            if (!jsc_value_is_undefined(js_value)) {
+                result = jsc_value_to_string(js_value);
+            }
+            g_dbus_method_invocation_return_value(invocation, g_variant_new("(bs)", TRUE, result ? result : "undefined"));
             g_free(result);
         }
+        g_object_unref(js_value);
     } else if (!g_strcmp0(method, "FocusInput")) {
         g_variant_get(parameters, "(t)", &pageid);
         page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
