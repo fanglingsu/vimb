@@ -650,6 +650,9 @@ gboolean util_filename_fill_completion(State state, GtkListStore *store, const c
  */
 char *util_js_result_as_string(WebKitJavascriptResult *result)
 {
+#if WEBKIT_CHECK_VERSION (2, 22, 0)
+	return jsc_value_to_string(webkit_javascript_result_get_js_value(result));
+#else
     JSValueRef value;
     JSStringRef string;
     size_t len;
@@ -667,14 +670,7 @@ char *util_js_result_as_string(WebKitJavascriptResult *result)
     JSStringRelease(string);
 
     return retval;
-}
-
-double util_js_result_as_number(WebKitJavascriptResult *result)
-{
-    JSValueRef value = webkit_javascript_result_get_value(result);
-
-    return JSValueToNumber(webkit_javascript_result_get_global_context(result), value,
-        NULL);
+#endif
 }
 
 /**

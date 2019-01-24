@@ -381,6 +381,7 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         gboolean no_result;
         JSCContext *js_context;
         JSCValue *js_value;
+        JSCValue *js_exception;
 
         g_variant_get(parameters, "(ts)", &pageid, &value);
         page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
@@ -395,15 +396,22 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         if (no_result) {
             g_dbus_method_invocation_return_value(invocation, NULL);
         } else {
-            char *result = NULL;
-            /* TODO how to check if an exception was thrown to get it's
-             * message? */
-            if (!jsc_value_is_undefined(js_value)) {
+            gboolean success = TRUE;
+            char *result     = NULL;
+
+            js_exception = jsc_context_get_exception(js_context);
+            if (js_exception) {
+                success = FALSE;
+                result  = jsc_exception_to_string(js_exception);
+            } else if (!jsc_value_is_undefined(js_value)) {
                 result = jsc_value_to_string(js_value);
             }
-            g_dbus_method_invocation_return_value(invocation, g_variant_new("(bs)", TRUE, result ? result : "undefined"));
+
+            g_dbus_method_invocation_return_value(invocation,
+                    g_variant_new("(bs)", success, result ? result : ""));
             g_free(result);
         }
+        g_object_unref(js_context);
         g_object_unref(js_value);
     } else if (!g_strcmp0(method, "FocusInput")) {
         g_variant_get(parameters, "(t)", &pageid);

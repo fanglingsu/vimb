@@ -50,7 +50,6 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
 gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src);
 gboolean util_filename_fill_completion(State state, GtkListStore *store, const char *input);
 char *util_js_result_as_string(WebKitJavascriptResult *result);
-double util_js_result_as_number(WebKitJavascriptResult *result);
 gboolean util_parse_expansion(State state, const char **input, GString *str,
         int flags, const char *quoteable);
 char *util_sanitize_filename(char *filename);
