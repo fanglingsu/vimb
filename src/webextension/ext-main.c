@@ -26,6 +26,7 @@
 #include "ext-main.h"
 #include "ext-dom.h"
 #include "ext-util.h"
+#include "../scripts/scripts.h"
 
 static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer extension);
@@ -50,6 +51,9 @@ static void on_page_created(WebKitWebExtension *ext, WebKitWebPage *webpage, gpo
 static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extension);
 static gboolean on_web_page_send_request(WebKitWebPage *webpage, WebKitURIRequest *request,
         WebKitURIResponse *response, gpointer extension);
+static void on_window_object_cleared(WebKitScriptWorld *world,
+        WebKitWebPage *webpage, WebKitFrame *frame, gpointer user_data);
+static void js_exception_handler(JSCContext *context, JSCException *exception);
 
 static const GDBusInterfaceVTable interface_vtable = {
     dbus_handle_method_call,
@@ -115,6 +119,10 @@ void webkit_web_extension_initialize_with_user_data(WebKitWebExtension *extensio
     }
 
     g_signal_connect(extension, "page-created", G_CALLBACK(on_page_created), NULL);
+    g_signal_connect(webkit_script_world_get_default(),
+            "window-object-cleared",
+            G_CALLBACK(on_window_object_cleared),
+            NULL);
 
     observer = g_dbus_auth_observer_new();
     g_signal_connect(observer, "authorize-authenticated-peer",
@@ -414,13 +422,27 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         g_object_unref(js_context);
         g_object_unref(js_value);
     } else if (!g_strcmp0(method, "FocusInput")) {
+        JSCContext *js_context;
+        GPtrArray *form_controls;
+        JSCValue *js_vimb, *js_result;
+
         g_variant_get(parameters, "(t)", &pageid);
-        page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
+        page = get_web_page_or_return_dbus_error(invocation,
+                WEBKIT_WEB_EXTENSION(extension), pageid);
         if (!page) {
             return;
         }
-        ext_dom_focus_input(webkit_web_page_get_dom_document(page));
+
+        js_context = webkit_frame_get_js_context(webkit_web_page_get_main_frame(page));
+        js_vimb    = jsc_context_get_value(js_context, "Vimb");
+        js_result  = jsc_value_object_invoke_method(js_vimb, "focusInput",
+                G_TYPE_NONE);
+
         g_dbus_method_invocation_return_value(invocation, NULL);
+
+        g_object_unref(js_result);
+        g_object_unref(js_vimb);
+        g_object_unref(js_context);
     } else if (!g_strcmp0(method, "SetHeaderSetting")) {
         g_variant_get(parameters, "(s)", &value);
 
@@ -553,3 +575,40 @@ static gboolean on_web_page_send_request(WebKitWebPage *webpage, WebKitURIReques
 
     return FALSE;
 }
+
+static void on_window_object_cleared(WebKitScriptWorld *world,
+        WebKitWebPage *webpage, WebKitFrame *frame, gpointer user_data)
+{
+    JSCContext *js_context;
+    JSCValue *js_result;
+
+    if (!webkit_frame_is_main_frame(frame)) {
+        return;
+    }
+
+    /* Inject out Vimb JS obejct. */
+    js_context = webkit_frame_get_js_context_for_script_world(frame, world);
+
+    jsc_context_push_exception_handler(js_context,
+            (JSCExceptionHandler)js_exception_handler, NULL, NULL);
+
+    js_result = jsc_context_evaluate(js_context, JS_VIMB, -1);
+    g_object_unref(js_result);
+    g_object_unref(js_context);
+}
+
+static void js_exception_handler(JSCContext *context, JSCException *exception)
+{
+    JSCValue *js_console;
+    JSCValue *js_result;
+
+    js_console = jsc_context_get_value(context, "console");
+    js_result  = jsc_value_object_invoke_method(js_console, "error", JSC_TYPE_EXCEPTION, exception, G_TYPE_NONE);
+    g_object_unref(js_result);
+    g_object_unref(js_console);
+
+    g_warning("JavaScriptException: %s", jsc_exception_report(exception));
+
+    jsc_context_throw_exception(context, exception);
+}
+

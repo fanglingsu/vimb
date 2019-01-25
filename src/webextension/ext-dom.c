@@ -23,8 +23,6 @@
 #include "ext-main.h"
 #include "ext-dom.h"
 
-static gboolean is_element_visible(WebKitDOMHTMLElement *element);
-
 
 /**
  * Checks if given dom element is an editable element.
@@ -76,82 +74,6 @@ gboolean ext_dom_is_editable(WebKitDOMElement *element)
 }
 
 /**
- * Find the first editable element and set the focus on it and enter input
- * mode.
- * Returns true if there was an editable element focused.
- */
-gboolean ext_dom_focus_input(WebKitDOMDocument *doc)
-{
-    WebKitDOMNode *html, *node;
-    WebKitDOMHTMLCollection *collection;
-    WebKitDOMXPathNSResolver *resolver;
-    WebKitDOMXPathResult* result;
-    WebKitDOMDocument *frame_doc;
-    guint i, len;
-
-    collection = webkit_dom_document_get_elements_by_tag_name_as_html_collection(doc, "html");
-    if (!collection) {
-        return FALSE;
-    }
-
-    html = webkit_dom_html_collection_item(collection, 0);
-    g_object_unref(collection);
-
-    resolver = webkit_dom_document_create_ns_resolver(doc, html);
-    if (!resolver) {
-        return FALSE;
-    }
-
-    /* Use translate to match xpath expression case insensitive so that also
-     * intput filed of type="TEXT" are matched. */
-    result = webkit_dom_document_evaluate(
-        doc, "//input[not(@type) "
-        "or translate(@type,'ETX','etx')='text' "
-        "or translate(@type,'ADOPRSW','adoprsw')='password' "
-        "or translate(@type,'CLOR','clor')='color' "
-        "or translate(@type,'ADET','adet')='date' "
-        "or translate(@type,'ADEIMT','adeimt')='datetime' "
-        "or translate(@type,'ACDEILMOT','acdeilmot')='datetime-local' "
-        "or translate(@type,'AEILM','aeilm')='email' "
-        "or translate(@type,'HMNOT','hmnot')='month' "
-        "or translate(@type,'BEMNRU','bemnru')='number' "
-        "or translate(@type,'ACEHRS','acehrs')='search' "
-        "or translate(@type,'ELT','elt')='tel' "
-        "or translate(@type,'EIMT','eimt')='time' "
-        "or translate(@type,'LRU','lru')='url' "
-        "or translate(@type,'EKW','ekw')='week' "
-        "]|//textarea",
-        html, resolver, 5, NULL, NULL
-    );
-    if (!result) {
-        return FALSE;
-    }
-    while ((node = webkit_dom_xpath_result_iterate_next(result, NULL))) {
-        if (is_element_visible(WEBKIT_DOM_HTML_ELEMENT(node))) {
-            webkit_dom_element_focus(WEBKIT_DOM_ELEMENT(node));
-            return TRUE;
-        }
-    }
-
-    /* Look for editable elements in frames too. */
-    collection = webkit_dom_document_get_elements_by_tag_name_as_html_collection(doc, "iframe");
-    len        = webkit_dom_html_collection_get_length(collection);
-
-    for (i = 0; i < len; i++) {
-        node      = webkit_dom_html_collection_item(collection, i);
-        frame_doc = webkit_dom_html_iframe_element_get_content_document(WEBKIT_DOM_HTML_IFRAME_ELEMENT(node));
-        /* Stop on first frame with focused element. */
-        if (ext_dom_focus_input(frame_doc)) {
-            g_object_unref(collection);
-            return TRUE;
-        }
-    }
-    g_object_unref(collection);
-
-    return FALSE;
-}
-
-/**
  * Retrieves the content of given editable element.
  * Not that the returned value must be freed.
  */
@@ -168,12 +90,4 @@ char *ext_dom_editable_get_value(WebKitDOMElement *element)
     }
 
     return value;
-}
-
-/**
- * Indicates if the give nelement is visible.
- */
-static gboolean is_element_visible(WebKitDOMHTMLElement *element)
-{
-    return TRUE;
 }

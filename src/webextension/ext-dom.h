@@ -24,7 +24,6 @@
 #include <webkitdom/webkitdom.h>
 
 gboolean ext_dom_is_editable(WebKitDOMElement *element);
-gboolean ext_dom_focus_input(WebKitDOMDocument *doc);
 char *ext_dom_editable_get_value(WebKitDOMElement *element);
 
 #endif /* end of include guard: _EXT-DOM_H */
