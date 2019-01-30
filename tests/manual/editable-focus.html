@@ -3,13 +3,14 @@
 <title>Input mode Switching</title>
 <script type="text/javascript">
 //<![CDATA[
-function setFocus() {
-    document.getElementById("text").focus();
+function setFocus(focus) {
+    let e = document.getElementById("text");
+    focus ? e.focus() : e.blur();
 }
 //]]>
 </script>
 </head>
-<body onload="setFocus();">
+<body onload="setFocus(true);">
     <p>
     Run with <code>scripts=on</code> and <code>strict-focus=off</code>
     <ol>
@@ -24,7 +25,8 @@ function setFocus() {
         <div>
             <textarea name="text" id="text" rows="11" cols="50"></textarea><br/>
             <input type="text" name="field1"/><br/>
-            <input type="button" value="Focus Textarea" onclick="setFocus();"/><br/>
+            <input type="button" value="Focus Textarea" onclick="setFocus(true);"/><br/>
+            <input type="button" value="Blur Textarea" onclick="setFocus(false);"/><br/>
             <input type="text" name="field2"/>
         </div>
     </form>

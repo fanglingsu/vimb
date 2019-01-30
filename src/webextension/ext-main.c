@@ -45,8 +45,6 @@ static WebKitWebPage *get_web_page_or_return_dbus_error(GDBusMethodInvocation *i
 static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         const char *object_path, const char *interface_name, const char *method,
         GVariant *parameters, GDBusMethodInvocation *invocation, gpointer data);
-static void on_editable_change_focus(WebKitDOMEventTarget *target,
-        WebKitDOMEvent *event, WebKitWebPage *page);
 static void on_page_created(WebKitWebExtension *ext, WebKitWebPage *webpage, gpointer data);
 static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extension);
 static gboolean on_web_page_send_request(WebKitWebPage *webpage, WebKitURIRequest *request,
@@ -54,6 +52,7 @@ static gboolean on_web_page_send_request(WebKitWebPage *webpage, WebKitURIReques
 static void on_window_object_cleared(WebKitScriptWorld *world,
         WebKitWebPage *webpage, WebKitFrame *frame, gpointer user_data);
 static void js_exception_handler(JSCContext *context, JSCException *exception);
+static char *form_message_serializer(guint64 page_id, gboolean is_focused);
 
 static const GDBusInterfaceVTable interface_vtable = {
     dbus_handle_method_call,
@@ -215,15 +214,6 @@ static void add_onload_event_observers(WebKitDOMDocument *doc,
      * function is called with content document of an iframe. Else the event
      * observing does not work. */
     target = WEBKIT_DOM_EVENT_TARGET(webkit_dom_document_get_default_view(doc));
-
-    webkit_dom_event_target_add_event_listener(target, "focus",
-            G_CALLBACK(on_editable_change_focus), TRUE, page);
-    webkit_dom_event_target_add_event_listener(target, "blur",
-            G_CALLBACK(on_editable_change_focus), TRUE, page);
-    /* Check for focused editable elements also if they where focused before
-     * the event observer where set up. */
-    /* TODO this is not needed for strict-focus=on */
-    on_editable_change_focus(target, NULL, page);
 
     /* Observe scroll events to get current position in the document. */
     webkit_dom_event_target_add_event_listener(target, "scroll",
@@ -389,7 +379,7 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         gboolean no_result;
         JSCContext *js_context;
         JSCValue *js_value;
-        JSCValue *js_exception;
+        JSCException *js_exception;
 
         g_variant_get(parameters, "(ts)", &pageid, &value);
         page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
@@ -424,7 +414,6 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         g_object_unref(js_value);
     } else if (!g_strcmp0(method, "FocusInput")) {
         JSCContext *js_context;
-        GPtrArray *form_controls;
         JSCValue *js_vimb, *js_result;
 
         g_variant_get(parameters, "(t)", &pageid);
@@ -454,59 +443,6 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         ext.headers = soup_header_parse_param_list(value);
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
-}
-
-/**
- * Callback called if a editable element changes it focus state.
- * Event target may be a WebKitDOMDocument (in case of iframe) or a
- * WebKitDOMDOMWindow.
- */
-static void on_editable_change_focus(WebKitDOMEventTarget *target,
-        WebKitDOMEvent *event, WebKitWebPage *page)
-{
-    WebKitDOMDocument *doc;
-    WebKitDOMDOMWindow *dom_window;
-    WebKitDOMElement *active;
-    GVariant *variant;
-    char *message;
-
-    if (WEBKIT_DOM_IS_DOM_WINDOW(target)) {
-        g_object_get(target, "document", &doc, NULL);
-    } else {
-        /* target is a doc document */
-        doc = WEBKIT_DOM_DOCUMENT(target);
-    }
-
-    dom_window = webkit_dom_document_get_default_view(doc);
-    if (!dom_window) {
-        return;
-    }
-
-    active = webkit_dom_document_get_active_element(doc);
-    /* Don't do anything if there is no active element */
-    if (!active) {
-        return;
-    }
-    if (WEBKIT_DOM_IS_HTML_IFRAME_ELEMENT(active)) {
-        WebKitDOMHTMLIFrameElement *iframe;
-        WebKitDOMDocument *subdoc;
-
-        iframe = WEBKIT_DOM_HTML_IFRAME_ELEMENT(active);
-        subdoc = webkit_dom_html_iframe_element_get_content_document(iframe);
-        add_onload_event_observers(subdoc, page);
-        return;
-    }
-
-    /* Check if the active element is an editable element. */
-    variant = g_variant_new("(tb)", webkit_web_page_get_id(page),
-            ext_dom_is_editable(active));
-    message = g_variant_print(variant, FALSE);
-    g_variant_unref(variant);
-    if (!webkit_dom_dom_window_webkit_message_handlers_post_message(dom_window, "focus", message)) {
-        g_warning("Error sending focus message");
-    }
-    g_free(message);
-    g_object_unref(dom_window);
 }
 
 /**
@@ -581,11 +517,9 @@ static void on_window_object_cleared(WebKitScriptWorld *world,
         WebKitWebPage *webpage, WebKitFrame *frame, gpointer user_data)
 {
     JSCContext *js_context;
-    JSCValue *js_result;
-
-    if (!webkit_frame_is_main_frame(frame)) {
-        return;
-    }
+    JSCValue *js_result,
+             *js_vimb,
+             *js_form_serializer;
 
     /* Inject out Vimb JS obejct. */
     js_context = webkit_frame_get_js_context_for_script_world(frame, world);
@@ -595,6 +529,21 @@ static void on_window_object_cleared(WebKitScriptWorld *world,
 
     js_result = jsc_context_evaluate(js_context, JS_VIMB, -1);
     g_object_unref(js_result);
+
+    js_vimb            = jsc_context_get_value(js_context, "Vimb");
+    js_form_serializer = jsc_value_new_function(js_context,
+            "formMessageSerializer",
+            G_CALLBACK(form_message_serializer), NULL, NULL,
+            G_TYPE_STRING, 2,
+            G_TYPE_UINT64, G_TYPE_BOOLEAN);
+    js_result = jsc_value_object_invoke_method(js_vimb,
+            "applyFocusChangeObservers",
+            G_TYPE_UINT64, webkit_web_page_get_id(webpage),
+            JSC_TYPE_VALUE, js_form_serializer,
+            G_TYPE_NONE);
+    g_object_unref(js_result);
+    g_object_unref(js_form_serializer);
+    g_object_unref(js_vimb);
 
     js_result = jsc_context_evaluate(js_context, JS_HINTS, -1);
     g_object_unref(js_result);
@@ -610,8 +559,8 @@ static void on_window_object_cleared(WebKitScriptWorld *world,
 
 static void js_exception_handler(JSCContext *context, JSCException *exception)
 {
-    JSCValue *js_console;
-    JSCValue *js_result;
+    JSCValue *js_console,
+             *js_result;
 
     js_console = jsc_context_get_value(context, "console");
     js_result  = jsc_value_object_invoke_method(js_console, "error", JSC_TYPE_EXCEPTION, exception, G_TYPE_NONE);
@@ -621,5 +570,17 @@ static void js_exception_handler(JSCContext *context, JSCException *exception)
     g_warning("JavaScriptException: %s", jsc_exception_report(exception));
 
     jsc_context_throw_exception(context, exception);
+}
+
+static char *form_message_serializer(guint64 page_id, gboolean is_focused)
+{
+    GVariant *variant;
+    char *message;
+
+    variant = g_variant_new("(tb)", page_id, is_focused);
+    message = g_variant_print(variant, FALSE);
+    g_variant_unref(variant);
+
+    return message;
 }
 
