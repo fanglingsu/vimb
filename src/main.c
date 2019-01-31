@@ -111,6 +111,8 @@ static gboolean on_permission_request(WebKitWebView *webview,
         WebKitPermissionRequest *request, Client *c);
 static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
+static void on_script_message_vertical_scroll(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
 
@@ -1883,6 +1885,9 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     webkit_user_content_manager_register_script_message_handler(ucm, "focus");
     g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), NULL);
 
+    webkit_user_content_manager_register_script_message_handler(ucm, "verticalScroll");
+    g_signal_connect(ucm, "script-message-received::verticalScroll", G_CALLBACK(on_script_message_vertical_scroll), NULL);
+
     return new;
 }
 
@@ -1953,6 +1958,33 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
         vb_enter(c, 'i');
     } else if (c->mode->id == 'i' && !is_focused) {
         vb_enter(c, 'n');
+    }
+}
+
+static void on_script_message_vertical_scroll(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *res, gpointer data)
+{
+    char *message;
+    GVariant *variant;
+    guint64 pageid;
+    gulong max, top;
+    guint percent;
+    Client *c;
+
+    message = util_js_result_as_string(res);
+    variant = g_variant_parse(G_VARIANT_TYPE("(ttqt)"), message, NULL, NULL, NULL);
+    g_free(message);
+
+    g_variant_get(variant, "(ttqt)", &pageid, &max, &percent, &top);
+    g_variant_unref(variant);
+
+    c = vb_get_client_for_page_id(pageid);
+    if (c) {
+        c->state.scroll_max     = max;
+        c->state.scroll_percent = percent;
+        c->state.scroll_top     = top;
+
+        vb_statusbar_update(c);
     }
 }
 

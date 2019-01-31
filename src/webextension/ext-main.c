@@ -32,14 +32,9 @@ static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer extension);
 static void on_dbus_connection_created(GObject *source_object,
         GAsyncResult *result, gpointer data);
-static void add_onload_event_observers(WebKitDOMDocument *doc,
-        WebKitWebPage *page);
-static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *event,
-        WebKitWebPage *page);
 static void emit_page_created(GDBusConnection *connection, guint64 pageid);
 static void emit_page_created_pending(GDBusConnection *connection);
 static void queue_page_created_signal(guint64 pageid);
-static void dbus_emit_signal(const char *name, GVariant *data);
 static WebKitWebPage *get_web_page_or_return_dbus_error(GDBusMethodInvocation *invocation,
         WebKitWebExtension *extension, guint64 pageid);
 static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
@@ -53,6 +48,8 @@ static void on_window_object_cleared(WebKitScriptWorld *world,
         WebKitWebPage *webpage, WebKitFrame *frame, gpointer user_data);
 static void js_exception_handler(JSCContext *context, JSCException *exception);
 static char *form_message_serializer(guint64 page_id, gboolean is_focused);
+static char *scroll_message_serializer(guint64 page_id, glong max,
+        guint percent, glong top);
 
 static const GDBusInterfaceVTable interface_vtable = {
     dbus_handle_method_call,
@@ -79,12 +76,6 @@ static const char introspection_xml[] =
     "  <signal name='PageCreated'>"
     "   <arg type='t' name='page_id' direction='out'/>"
     "  </signal>"
-    "  <signal name='VerticalScroll'>"
-    "   <arg type='t' name='page_id' direction='out'/>"
-    "   <arg type='t' name='max' direction='out'/>"
-    "   <arg type='q' name='percent' direction='out'/>"
-    "   <arg type='t' name='top' direction='out'/>"
-    "  </signal>"
     "  <method name='SetHeaderSetting'>"
     "   <arg type='s' name='headers' direction='in'/>"
     "  </method>"
@@ -96,8 +87,8 @@ struct Ext {
     guint               regid;
     GDBusConnection     *connection;
     GHashTable          *headers;
-    GHashTable          *documents;
     GArray              *page_created_signals;
+    WebKitScriptWorld   *script_world;
 };
 struct Ext ext = {0};
 
@@ -117,11 +108,11 @@ void webkit_web_extension_initialize_with_user_data(WebKitWebExtension *extensio
         return;
     }
 
+    ext.script_world = webkit_script_world_get_default();
+
     g_signal_connect(extension, "page-created", G_CALLBACK(on_page_created), NULL);
-    g_signal_connect(webkit_script_world_get_default(),
-            "window-object-cleared",
-            G_CALLBACK(on_window_object_cleared),
-            NULL);
+    g_signal_connect(ext.script_world, "window-object-cleared",
+            G_CALLBACK(on_window_object_cleared), NULL);
 
     observer = g_dbus_auth_observer_new();
     g_signal_connect(observer, "authorize-authenticated-peer",
@@ -196,86 +187,6 @@ static void on_dbus_connection_created(GObject *source_object,
 }
 
 /**
- * Add observers to doc event for given document and all the contained iframes
- * too.
- */
-static void add_onload_event_observers(WebKitDOMDocument *doc,
-        WebKitWebPage *page)
-{
-    WebKitDOMEventTarget *target;
-
-    /* Add the document to the table of known documents or if already exists
-     * return to not apply observers multiple times. */
-    if (!g_hash_table_add(ext.documents, doc)) {
-        return;
-    }
-
-    /* We have to use default view instead of the document itself in case this
-     * function is called with content document of an iframe. Else the event
-     * observing does not work. */
-    target = WEBKIT_DOM_EVENT_TARGET(webkit_dom_document_get_default_view(doc));
-
-    /* Observe scroll events to get current position in the document. */
-    webkit_dom_event_target_add_event_listener(target, "scroll",
-            G_CALLBACK(on_document_scroll), FALSE, page);
-    /* Call the callback explicitly to make sure we have the right position
-     * shown in statusbar also in cases the user does not scroll. */
-    on_document_scroll(target, NULL, page);
-}
-
-/**
- * Callback called when the document is scrolled.
- */
-static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *event,
-        WebKitWebPage *page)
-{
-    WebKitDOMDocument *doc;
-
-    if (WEBKIT_DOM_IS_DOM_WINDOW(target)) {
-        g_object_get(target, "document", &doc, NULL);
-    } else {
-        /* target is a doc document */
-        doc = WEBKIT_DOM_DOCUMENT(target);
-    }
-
-    if (doc) {
-        WebKitDOMElement *body, *de;
-        glong max = 0, top = 0, scrollTop, scrollHeight, clientHeight;
-        guint percent = 0;
-
-        de = webkit_dom_document_get_document_element(doc);
-        if (!de) {
-            return;
-        }
-
-        body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body(doc));
-        if (!body) {
-            return;
-        }
-
-        scrollTop = MAX(webkit_dom_element_get_scroll_top(de),
-                webkit_dom_element_get_scroll_top(body));
-
-        clientHeight = webkit_dom_dom_window_get_inner_height(
-                webkit_dom_document_get_default_view(doc));
-
-        scrollHeight = MAX(webkit_dom_element_get_scroll_height(de),
-                webkit_dom_element_get_scroll_height(body));
-
-        /* Get the maximum scrollable page size. This is the size of the whole
-         * document - height of the viewport. */
-        max = scrollHeight - clientHeight;
-        if (max > 0) {
-            percent = (guint)(0.5 + (scrollTop * 100 / max));
-            top = scrollTop;
-        }
-
-        dbus_emit_signal("VerticalScroll", g_variant_new("(ttqt)",
-                webkit_web_page_get_id(page), max, percent, top));
-    }
-}
-
-/**
  * Emit the page created signal that is used in the UI process to finish the
  * dbus proxy connection.
  */
@@ -325,30 +236,6 @@ static void queue_page_created_signal(guint64 pageid)
         ext.page_created_signals = g_array_new(FALSE, FALSE, sizeof(guint64));
     }
     ext.page_created_signals = g_array_append_val(ext.page_created_signals, pageid);
-}
-
-/**
- * Emits a signal over dbus.
- *
- * @name:   Signal name to emit.
- * @data:   GVariant value used as value for the signal or NULL.
- */
-static void dbus_emit_signal(const char *name, GVariant *data)
-{
-    GError *error = NULL;
-
-    if (!ext.connection) {
-        return;
-    }
-
-    /* propagate the signal over dbus */
-    g_dbus_connection_emit_signal(ext.connection, NULL,
-            VB_WEBEXTENSION_OBJECT_PATH, VB_WEBEXTENSION_INTERFACE, name,
-            data, &error);
-    if (error) {
-        g_warning("Failed to emit signal '%s': %s", name, error->message);
-        g_error_free(error);
-    }
 }
 
 static WebKitWebPage *get_web_page_or_return_dbus_error(GDBusMethodInvocation *invocation,
@@ -469,14 +356,31 @@ static void on_page_created(WebKitWebExtension *extension, WebKitWebPage *webpag
  */
 static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extension)
 {
-    /* If there is a hashtable of known document - detroy this and create a
-     * new hashtable. */
-    if (ext.documents) {
-        g_hash_table_unref(ext.documents);
-    }
-    ext.documents = g_hash_table_new(g_direct_hash, g_direct_equal);
+    WebKitFrame *frame;
+    JSCContext *js_context;
+    JSCValue *js_result,
+             *js_vimb_toplevel,
+             *js_scroll_serializer;
 
-    add_onload_event_observers(webkit_web_page_get_dom_document(webpage), webpage);
+    frame            = webkit_web_page_get_main_frame(webpage);
+    js_context       = webkit_frame_get_js_context_for_script_world(frame, ext.script_world);
+    js_vimb_toplevel = jsc_context_get_value(js_context, "VimbToplevel");
+
+    js_scroll_serializer = jsc_value_new_function(js_context,
+            "scrollMessageSerializer",
+            G_CALLBACK(scroll_message_serializer), NULL, NULL,
+            G_TYPE_STRING, 4,
+            G_TYPE_UINT64, G_TYPE_ULONG, G_TYPE_UINT, G_TYPE_ULONG);
+    js_result = jsc_value_object_invoke_method(js_vimb_toplevel,
+            "applyScrollObservers",
+            G_TYPE_UINT64, webkit_web_page_get_id(webpage),
+            JSC_TYPE_VALUE, js_scroll_serializer,
+            G_TYPE_NONE);
+
+    g_object_unref(js_vimb_toplevel);
+    g_object_unref(js_scroll_serializer);
+    g_object_unref(js_result);
+    g_object_unref(js_context);
 }
 
 /**
@@ -554,6 +458,7 @@ static void on_window_object_cleared(WebKitScriptWorld *world,
         js_result = jsc_context_evaluate(js_context, JS_VIMB_TOPLEVEL, -1);
         g_object_unref(js_result);
     }
+
     g_object_unref(js_context);
 }
 
@@ -584,3 +489,14 @@ static char *form_message_serializer(guint64 page_id, gboolean is_focused)
     return message;
 }
 
+static char *scroll_message_serializer(guint64 page_id, glong max,
+        guint percent, glong top)
+{
+    GVariant *variant;
+    char *message;
+    variant = g_variant_new("(ttqt)", page_id, max, percent, top);
+    message = g_variant_print(variant, FALSE);
+    g_variant_unref(variant);
+
+    return message;
+}
