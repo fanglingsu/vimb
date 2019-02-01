@@ -411,6 +411,7 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
             if (js_exception) {
                 success = FALSE;
                 result  = jsc_exception_to_string(js_exception);
+                jsc_context_clear_exception(js_context);
             } else if (!jsc_value_is_undefined(js_value)) {
                 result = jsc_value_to_string(js_value);
             }
