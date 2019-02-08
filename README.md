@@ -2,6 +2,7 @@
 
 [![Build Status](https://api.travis-ci.com/fanglingsu/vimb.svg?branch=master)](https://travis-ci.com/fanglingsu/vimb)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Latest Release](https://img.shields.io/github/release/fanglingsu/vimb.svg?style=flat)](https://github.com/fanglingsu/vimb/releases/latest)
 
 Vimb is a Vim-like web browser that is inspired by Pentadactyl and Vimprobable.
 The goal of Vimb is to build a completely keyboard-driven, efficient and
