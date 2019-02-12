@@ -49,6 +49,7 @@ But following images may give a impression of they way vimb works.
 ## packages
 - Arch Linux: [aur/vimb][], [aur/vimb-git][]
 - Gentoo: [gentoo-git][], [gentoo][]
+- openSUSE: [network/vimb][]
 - pkgsrc: [pkgsrc/www/vimb][], [pkgsrc/wip/vimb-git][]
 - Slackware: [slackbuild/vimb][]
 
@@ -116,3 +117,4 @@ If you find a misbehaviour or have feature requests use the
 [slackbuild/vimb]:     https://slackbuilds.org/repository/14.2/network/vimb/
 [pkgsrc/wip/vimb-git]: http://pkgsrc.se/wip/vimb-git
 [pkgsrc/www/vimb]:     http://pkgsrc.se/www/vimb
+[network/vimb]:        https://build.opensuse.org/package/show/network/vimb
