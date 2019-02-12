@@ -31,6 +31,7 @@ the project page of [Vimb][].
 
 - Arch Linux: [aur/vimb][], [aur/vimb-git][]
 - Gentoo: [gentoo-git][], [gentoo][]
+- openSUSE: [network/vimb][]
 - pkgsrc: [pkgsrc/www/vimb][], [pkgsrc/wip/vimb-git][]
 - Slackware: [slackbuild/vimb][]
 
@@ -89,6 +90,7 @@ Information about the license are found in the file LICENSE.
 [gentoo]:              https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
 [mail-archive]:        https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
 [mail]:                https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
+[network/vimb]:        https://build.opensuse.org/package/show/network/vimb
 [pkgsrc/wip/vimb-git]: http://pkgsrc.se/wip/vimb-git
 [pkgsrc/www/vimb]:     http://pkgsrc.se/www/vimb
 [slackbuild/vimb]:     https://slackbuilds.org/repository/14.2/network/vimb/
