@@ -1195,7 +1195,7 @@ static void on_webdownload_received_data(WebKitDownload *download,
  */
 static void on_webview_close(WebKitWebView *webview, Client *c)
 {
-    client_destroy(c);
+    gtk_widget_destroy(c->window);
 }
 
 /**
