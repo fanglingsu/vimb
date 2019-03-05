@@ -27,7 +27,7 @@ install: all
 	install -d $(MANPREFIX)/man1
 	@sed -e "s!VERSION!$(version)!g" \
 		-e "s!PREFIX!$(PREFIX)!g" \
-		-e "s!DATE!`date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(MANPREFIX)/man1/vimb.1
+		-e "s!DATE!`date -u -r $(DOCDIR)/vimb.1 +'%m %Y' 2>/dev/null || date +'%m %Y'`!g" $(DOCDIR)/vimb.1 > $(MANPREFIX)/man1/vimb.1
 	@# .desktop file
 	install -d $(DOTDESKTOPPREFIX)
 	install -m 644 vimb.desktop $(DOTDESKTOPPREFIX)/vimb.desktop
