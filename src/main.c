@@ -804,7 +804,9 @@ static GtkWidget *create_window(Client *c)
         window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
         gtk_window_set_role(GTK_WINDOW(window), PROJECT_UCFIRST);
         gtk_window_set_default_size(GTK_WINDOW(window), WIN_WIDTH, WIN_HEIGHT);
-        gtk_window_maximize(GTK_WINDOW(window));
+        if (!vb.no_maximize) {
+            gtk_window_maximize(GTK_WINDOW(window));
+        }
     }
 
     g_object_connect(
@@ -985,7 +987,8 @@ static void spawn_new_instance(const char *uri)
 #ifndef FEATURE_NO_XEMBED
         + (vb.embed ? 2 : 0)
 #endif
-        + (vb.profile ? 2 : 0),
+        + (vb.profile ? 2 : 0)
+        + (vb.no_maximize ? 1 : 0),
         sizeof(char *)
     );
 
@@ -1006,6 +1009,9 @@ static void spawn_new_instance(const char *uri)
     if (vb.profile) {
         cmd[i++] = "-p";
         cmd[i++] = vb.profile;
+    }
+    if (vb.no_maximize) {
+        cmd[i++] = "--no-maximize";
     }
     cmd[i++] = (char*)uri;
     cmd[i++] = NULL;
@@ -1933,10 +1939,11 @@ int main(int argc, char* argv[])
     gboolean ver = FALSE, buginfo = FALSE;
 
     GOptionEntry opts[] = {
-        {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
+        {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
+        {"no-maximize", 0, 0, G_OPTION_ARG_NONE, &vb.no_maximize, "Do no attempt to maximize window", NULL},
         {"bug-info", 0, 0, G_OPTION_ARG_NONE, &buginfo, "Print used library versions", NULL},
         {NULL}
     };

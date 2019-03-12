@@ -267,6 +267,7 @@ struct Vimb {
         guint   closed_max;
     } config;
     GtkCssProvider *style_provider;
+    gboolean    no_maximize;
 };
 
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
