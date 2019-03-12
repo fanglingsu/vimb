@@ -73,6 +73,9 @@ static WebKitWebView *on_webview_create(WebKitWebView *webview,
         WebKitNavigationAction *navact, Client *c);
 static gboolean on_webview_decide_policy(WebKitWebView *webview,
         WebKitPolicyDecision *dec, WebKitPolicyDecisionType type, Client *c);
+static void decide_navigation_action(Client *c, WebKitPolicyDecision *dec);
+static void decide_new_window_action(Client *c, WebKitPolicyDecision *dec);
+static void decide_response(Client *c, WebKitPolicyDecision *dec);
 static void on_webview_load_changed(WebKitWebView *webview,
         WebKitLoadEvent event, Client *c);
 static void on_webview_mouse_target_changed(WebKitWebView *webview,
@@ -1224,75 +1227,106 @@ static WebKitWebView *on_webview_create(WebKitWebView *webview,
 static gboolean on_webview_decide_policy(WebKitWebView *webview,
         WebKitPolicyDecision *dec, WebKitPolicyDecisionType type, Client *c)
 {
-    guint status, button, mod;
-    WebKitNavigationAction *a;
-    WebKitURIRequest *req;
-    WebKitURIResponse *res;
-    const char *uri;
-
     switch (type) {
         case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
-            a      = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
-            req    = webkit_navigation_action_get_request(a);
-            button = webkit_navigation_action_get_mouse_button(a);
-            mod    = webkit_navigation_action_get_modifiers(a);
-            uri    = webkit_uri_request_get_uri(req);
-
-            /* Try to handle with specific protocol handler. */
-            if (handler_handle_uri(c->handler, uri)) {
-                webkit_policy_decision_ignore(dec);
-                return TRUE;
-            }
-            /* Spawn new instance if the new win flag is set on the mode, or
-             * the navigation was triggered by CTRL-LeftMouse or MiddleMouse. */
-            if ((c->mode->flags & FLAG_NEW_WIN)
-                || (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
-                    && (button == 2 || (button == 1 && mod & GDK_CONTROL_MASK)))) {
-
-                /* Remove the FLAG_NEW_WIN after the first use. */
-                c->mode->flags &= ~FLAG_NEW_WIN;
-
-                webkit_policy_decision_ignore(dec);
-                spawn_new_instance(uri);
-                return TRUE;
-            }
-            return FALSE;
+            decide_navigation_action(c, dec);
+            break;
 
         case WEBKIT_POLICY_DECISION_TYPE_NEW_WINDOW_ACTION:
-            a   = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
-
-            /* Ignore opening new window if this was started without user gesture. */
-            if (!webkit_navigation_action_is_user_gesture(a)) {
-                webkit_policy_decision_ignore(dec);
-                return TRUE;
-            }
-
-            if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED) {
-                webkit_policy_decision_ignore(dec);
-                /* This is triggered on link click for links with
-                 * target="_blank". Maybe it should be configurable if the
-                 * page is opened as tab or a new instance. */
-                req = webkit_navigation_action_get_request(a);
-                spawn_new_instance(webkit_uri_request_get_uri(req));
-                return TRUE;
-            }
-            return FALSE;
+            decide_new_window_action(c, dec);
+            break;
 
         case WEBKIT_POLICY_DECISION_TYPE_RESPONSE:
-            res    = webkit_response_policy_decision_get_response(WEBKIT_RESPONSE_POLICY_DECISION(dec));
-            status = webkit_uri_response_get_status_code(res);
-
-            if (!webkit_response_policy_decision_is_mime_type_supported(WEBKIT_RESPONSE_POLICY_DECISION(dec))
-                    && (SOUP_STATUS_IS_SUCCESSFUL(status) || status == SOUP_STATUS_NONE)) {
-
-                webkit_policy_decision_download(dec);
-
-                return TRUE;
-            }
-            return FALSE;
+            decide_response(c, dec);
+            break;
 
         default:
-            return FALSE;
+            webkit_policy_decision_ignore(dec);
+            break;
+    }
+
+    return TRUE;
+}
+
+static void decide_navigation_action(Client *c, WebKitPolicyDecision *dec)
+{
+    guint button, mod;
+    WebKitNavigationAction *a;
+    WebKitURIRequest *req;
+    const char *uri;
+
+    a   = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
+    req = webkit_navigation_action_get_request(a);
+    uri = webkit_uri_request_get_uri(req);
+
+    /* Try to handle with specific protocol handler. */
+    if (handler_handle_uri(c->handler, uri)) {
+        webkit_policy_decision_ignore(dec);
+        return;
+    }
+
+    button = webkit_navigation_action_get_mouse_button(a);
+    mod    = webkit_navigation_action_get_modifiers(a);
+    /* Spawn new instance if the new win flag is set on the mode, or the
+     * navigation was triggered by CTRL-LeftMouse or MiddleMouse. */
+    if ((c->mode->flags & FLAG_NEW_WIN)
+        || (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
+            && (button == 2 || (button == 1 && mod & GDK_CONTROL_MASK)))) {
+
+        /* Remove the FLAG_NEW_WIN after the first use. */
+        c->mode->flags &= ~FLAG_NEW_WIN;
+
+        webkit_policy_decision_ignore(dec);
+        spawn_new_instance(uri);
+    } else {
+        webkit_policy_decision_use(dec);
+    }
+}
+
+static void decide_new_window_action(Client *c, WebKitPolicyDecision *dec)
+{
+    WebKitNavigationAction *a;
+    WebKitURIRequest *req;
+
+    a = webkit_navigation_policy_decision_get_navigation_action(WEBKIT_NAVIGATION_POLICY_DECISION(dec));
+
+    switch (webkit_navigation_action_get_navigation_type(a)) {
+        case WEBKIT_NAVIGATION_TYPE_LINK_CLICKED:   /* fallthrough */
+        case WEBKIT_NAVIGATION_TYPE_FORM_SUBMITTED: /* fallthrough */
+        case WEBKIT_NAVIGATION_TYPE_BACK_FORWARD:   /* fallthrough */
+        case WEBKIT_NAVIGATION_TYPE_RELOAD:         /* fallthrough */
+        case WEBKIT_NAVIGATION_TYPE_FORM_RESUBMITTED:
+            /* This is triggered on link click for links with target="_blank".
+             * Maybe it should be configurable if the page is opened as tab or
+             * a new instance. Ignore opening new window if this was started
+             * without user gesture. */
+            if (webkit_navigation_action_is_user_gesture(a)) {
+                req = webkit_navigation_action_get_request(a);
+                spawn_new_instance(webkit_uri_request_get_uri(req));
+            }
+            break;
+
+        case WEBKIT_NAVIGATION_TYPE_OTHER: /* fallthrough */
+        default:
+            break;
+    }
+    webkit_policy_decision_ignore(dec);
+}
+
+static void decide_response(Client *c, WebKitPolicyDecision *dec)
+{
+    guint status;
+    WebKitURIResponse *res;
+
+    res    = webkit_response_policy_decision_get_response(WEBKIT_RESPONSE_POLICY_DECISION(dec));
+    status = webkit_uri_response_get_status_code(res);
+
+    if (webkit_response_policy_decision_is_mime_type_supported(WEBKIT_RESPONSE_POLICY_DECISION(dec))) {
+        webkit_policy_decision_use(dec);
+    } else if (SOUP_STATUS_IS_SUCCESSFUL(status) || status == SOUP_STATUS_NONE) {
+        webkit_policy_decision_download(dec);
+    } else {
+        webkit_policy_decision_ignore(dec);
     }
 }
 
