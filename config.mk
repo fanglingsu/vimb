@@ -2,7 +2,7 @@ ifneq ($(V),1)
 Q := @
 endif
 
-PREFIX           ?= /usr/local
+PREFIX           ?= $(HOME)/usr
 BINPREFIX        := $(DESTDIR)$(PREFIX)/bin
 MANPREFIX        := $(DESTDIR)$(PREFIX)/share/man
 EXAMPLEPREFIX    := $(DESTDIR)$(PREFIX)/share/vimb/example

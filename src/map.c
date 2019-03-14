@@ -1,7 +1,7 @@
 /**
  * vimb - a webkit based vim like browser.
  *
- * Copyright (C) 2012-2018 Daniel Carl
+ * Copyright (C) 2012-2019 Daniel Carl
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 
 #include "ascii.h"
 #include "config.h"
+#include "events.h"
 #include "main.h"
 #include "map.h"
 #include "util.h"
@@ -324,6 +325,11 @@ gboolean map_delete(Client *c, const char *in, char mode)
  */
 gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
 {
+    if (is_processing_events()) {
+        /* events are processing, pass all keys unmodified */
+        return false;
+    }
+
     guint state  = event->state;
     guint keyval = event->keyval;
     guchar string[32];
@@ -362,12 +368,25 @@ gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
     c->state.typed         = TRUE;
     c->state.processed_key = TRUE;
 
-    map_handle_keys(c, string, len, TRUE);
+    queue_event(event);
+
+    MapState res = map_handle_keys(c, string, len, true);
+
+    if (res != MAP_AMBIGUOUS) {
+        if (!c->state.processed_key) {
+            /* events ready to be consumed */
+            process_events();
+        } else {
+            /* no ambiguous - key processed elsewhere */
+            free_events();
+        }
+    }
 
     /* reset the typed flag */
     c->state.typed = FALSE;
 
-    return c->state.processed_key;
+    /* prevent input from going to GDK - input is sent via process_events(); */
+    return TRUE;
 }
 
 /**
@@ -475,6 +494,9 @@ static gboolean do_timeout(Client *c)
 {
     /* signalize the timeout to the key handler */
     map_handle_keys(c, (guchar*)"", 0, TRUE);
+
+    /* consume any unprocessed events */
+    process_events();
 
     /* we return TRUE to not automatically remove the resource - this is
      * required to prevent critical error when we remove the source in
