@@ -3,9 +3,9 @@
 
 /* this is only to queue GDK key events, in order to later send them if the map didn't match */
 static struct {
-    GdkEventKey **queue;               /* queue holding submitted events */
-    int           qlen;                /* pointer to last char in queue */
-    bool          processing;          /* whether or not events are processing */
+    GdkEventKey **queue;        /* queue holding submitted events */
+    int           qlen;         /* pointer to last char in queue */
+    bool          processing;   /* whether or not events are processing */
 } events = {0};
 
 /**
@@ -13,47 +13,32 @@ static struct {
  */
 void queue_event(GdkEventKey *e)
 {
-    GdkEventKey **newqueue = realloc(events.queue, (events.qlen + 1) * sizeof **newqueue);
-
-    if (newqueue == NULL) {
-        // error allocating memory
-        return;
-    }
-
-    events.queue = newqueue;
+    events.queue = g_realloc(events.queue, (events.qlen + 1) * sizeof(GdkEventKey*));
 
     /* copy memory (otherwise event gets cleared by gdk) */
-    GdkEventKey *tmp = malloc(sizeof *tmp);
-    memcpy(tmp, e, sizeof *e);
-
-    if (tmp == NULL) {
-        // error allocating memory
-        return;
-    }
-
-    events.queue[events.qlen] = tmp;
+    events.queue[events.qlen] = g_memdup(e, sizeof(GdkEventKey));
     events.qlen ++;
 }
 
 void process_event(GdkEventKey* event)
 {
-    if (event == NULL) {
+    if (!event) {
         return;
     }
 
-    events.processing = true; /* signal not to queue other events */
-    gtk_main_do_event ((GdkEvent *) event);
-    events.processing = false;
-    free(event);
+    events.processing = TRUE; /* signal not to queue other events */
+    gtk_main_do_event((GdkEvent*)event);
+    events.processing = FALSE;
 }
 
 /**
  * Process events in the queue, sending the key events to GDK.
  */
-void process_events()
+void process_events(void)
 {
     for (int i = 0; i < events.qlen; ++i) {
-        process_event(events.queue[i]); /* process & free the event */
+        process_event(events.queue[i]);
+        g_free(events.queue[i]);
         /* TODO take into account qk mapped key? */
     }
 
@@ -62,9 +47,9 @@ void process_events()
 
 /**
  * Check if the events are currently processing (i.e. being sent to GDK
- * unhandled).  Provided in order to encapsulate the "events" global struct.
+ * unhandled). Provided in order to encapsulate the "events" global struct.
  */
-bool is_processing_events()
+gboolean is_processing_events(void)
 {
     return events.processing;
 }
@@ -73,10 +58,10 @@ bool is_processing_events()
  * Clear the event queue by resetting the length. Provided in order to
  * encapsulate the "events" global struct.
  */
-void free_events()
+void free_events(void)
 {
     for (int i = 0; i < events.qlen; ++i) {
-        free(events.queue[i]);
+        g_free(events.queue[i]);
     }
 
     events.qlen = 0;

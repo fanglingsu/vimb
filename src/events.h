@@ -8,8 +8,8 @@
 #include "map.h"
 
 void queue_event(GdkEventKey *e);
-void process_events();
-bool is_processing_events();
-void free_events();
+void process_events(void);
+gboolean is_processing_events(void);
+void free_events(void);
 
 #endif /* end of include guard: _MAP_H */

@@ -327,7 +327,7 @@ gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
 {
     if (is_processing_events()) {
         /* events are processing, pass all keys unmodified */
-        return false;
+        return FALSE;
     }
 
     guint state  = event->state;
