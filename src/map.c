@@ -23,7 +23,6 @@
 
 #include "ascii.h"
 #include "config.h"
-#include "events.h"
 #include "main.h"
 #include "map.h"
 #include "util.h"
@@ -37,6 +36,10 @@ static gboolean map_delete_by_lhs(Client *c, const char *lhs, int len, char mode
 static void showcmd(Client *c, int ch);
 static char *transchar(int c);
 static int utf_char2bytes(guint c, guchar *buf);
+static void queue_event(GdkEventKey *e);
+static void process_events(void);
+static void free_events(void);
+static void process_event(GdkEventKey* event);
 
 extern struct Vimb vb;
 
@@ -97,6 +100,12 @@ static struct {
     {"<F11>",   5, CSI_STR "F1", 3},
     {"<F12>",   5, CSI_STR "F2", 3},
 };
+
+/* this is only to queue GDK key events, in order to later send them if the map didn't match */
+static struct {
+    GSList   *list;       /* queue holding submitted events */
+    gboolean processing; /* whether or not events are processing */
+} events = {0};
 
 void map_init(Client *c)
 {
@@ -325,7 +334,7 @@ gboolean map_delete(Client *c, const char *in, char mode)
  */
 gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
 {
-    if (is_processing_events()) {
+    if (events.processing) {
         /* events are processing, pass all keys unmodified */
         return FALSE;
     }
@@ -678,4 +687,45 @@ static int utf_char2bytes(guint c, guchar *buf)
     buf[4] = 0x80 + ((c >> 6) & 0x3f);
     buf[5] = 0x80 + (c & 0x3f);
     return 6;
+}
+
+/**
+ * Append an event into the queue.
+ */
+static void queue_event(GdkEventKey *e)
+{
+    events.list = g_slist_append(events.list, gdk_event_copy((GdkEvent*)e));
+}
+
+/**
+ * Process events in the queue, sending the key events to GDK.
+ */
+static void process_events(void)
+{
+    for (GSList *l = events.list; l != NULL; l = l->next) {
+        process_event((GdkEventKey*)l->data);
+        /* TODO take into account qk mapped key? */
+    }
+    free_events();
+}
+
+/**
+ * Clear the events list and free the allocated memory.
+ */
+static void free_events(void)
+{
+    if (events.list) {
+        g_slist_free_full(events.list, (GDestroyNotify)gdk_event_free);
+        events.list = NULL;
+    }
+}
+
+static void process_event(GdkEventKey* event)
+{
+    if (event) {
+        /* signal not to queue other events */
+        events.processing = TRUE;
+        gtk_main_do_event((GdkEvent*)event);
+        events.processing = FALSE;
+    }
 }
