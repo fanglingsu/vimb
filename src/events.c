@@ -1,4 +1,6 @@
 /* Copyright (C) 2016-2019 Michael Mackus */
+#include <gtk/gtk.h>
+
 #include "events.h"
 
 /* this is only to queue GDK key events, in order to later send them if the map didn't match */
@@ -16,7 +18,7 @@ void queue_event(GdkEventKey *e)
     events.queue = g_realloc(events.queue, (events.qlen + 1) * sizeof(GdkEventKey*));
 
     /* copy memory (otherwise event gets cleared by gdk) */
-    events.queue[events.qlen] = g_memdup(e, sizeof(GdkEventKey));
+    events.queue[events.qlen] = gdk_event_copy(e);
     events.qlen ++;
 }
 
@@ -38,7 +40,7 @@ void process_events(void)
 {
     for (int i = 0; i < events.qlen; ++i) {
         process_event(events.queue[i]);
-        g_free(events.queue[i]);
+        gdk_event_free(events.queue[i]);
         /* TODO take into account qk mapped key? */
     }
 
@@ -61,7 +63,7 @@ gboolean is_processing_events(void)
 void free_events(void)
 {
     for (int i = 0; i < events.qlen; ++i) {
-        g_free(events.queue[i]);
+        gdk_event_free(events.queue[i]);
     }
 
     events.qlen = 0;
