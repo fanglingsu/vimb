@@ -507,7 +507,7 @@ static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info)
     char *js;
     int count = info->count ? info->count : 1;
 
-    js = g_strdup_printf(JS_INCREMENT_URI_NUMBER, info->key == CTRL('A') ? count : -count);
+    js = g_strdup_printf("VimbToplevel.incrementUriNumber(%d);", info->key == CTRL('A') ? count : -count);
     ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 
@@ -694,7 +694,7 @@ static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
 {
     char *js;
 
-    js = g_strdup_printf("vbscroll('%c',%d,%d);", info->key, c->config.scrollstep, info->count);
+    js = g_strdup_printf("VimbToplevel.scroll('%c',%d,%d);", info->key, c->config.scrollstep, info->count);
     ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 

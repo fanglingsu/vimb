@@ -1,5 +1,8 @@
-function vbscroll(mode, scrollStep, count) {
-    var w = window,
+/* This script is injected only into toplevel frame. */
+var VimbToplevel = {};
+
+VimbToplevel.scroll = (mode, scrollStep, count) => {
+    let w = window,
         d = document,
         x = y = 0,
         ph = w.innerHeight,
@@ -58,4 +61,21 @@ function vbscroll(mode, scrollStep, count) {
         w.scroll(x, y);
     }
     return 0;
-}
+};
+
+VimbToplevel.incrementUriNumber = (count) => {
+    let on, nn, match = location.href.match(/(.*?)(\d+)(\D*)$/);
+    if (match) {
+        on = match[2];
+        nn = String(Math.max(parseInt(on) + count, 0));
+        /* keep prepending zeros */
+        if (/^0/.test(on)) {
+            while (nn.length < on.length) {
+                nn = "0" + nn;
+            }
+        }
+        match[2] = nn;
+
+        location.href = match.slice(1).join("");
+    }
+};

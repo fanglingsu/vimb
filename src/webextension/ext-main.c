@@ -595,6 +595,16 @@ static void on_window_object_cleared(WebKitScriptWorld *world,
 
     js_result = jsc_context_evaluate(js_context, JS_VIMB, -1);
     g_object_unref(js_result);
+
+    js_result = jsc_context_evaluate(js_context, JS_HINTS, -1);
+    g_object_unref(js_result);
+
+    /* Inject toplevel script only in the main frame. */
+    if (webkit_frame_is_main_frame(frame)) {
+        /* Inject the toplevel script. */
+        js_result = jsc_context_evaluate(js_context, JS_VIMB_TOPLEVEL, -1);
+        g_object_unref(js_result);
+    }
     g_object_unref(js_context);
 }
 
