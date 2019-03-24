@@ -235,6 +235,7 @@ struct Client {
         guint                   scrollstep;
         gboolean                input_autohide;
         gboolean                incsearch;
+        gboolean                prevent_newwindow;
         guint                   default_zoom;   /* default zoom level in percent */
         Shortcut                *shortcuts;
     } config;

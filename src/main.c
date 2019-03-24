@@ -1214,6 +1214,14 @@ static void on_webview_close(WebKitWebView *webview, Client *c)
 static WebKitWebView *on_webview_create(WebKitWebView *webview,
         WebKitNavigationAction *navact, Client *c)
 {
+    WebKitURIRequest *req;
+    if (c->config.prevent_newwindow) {
+        req = webkit_navigation_action_get_request(navact);
+        vb_load_uri(c, &(Arg){TARGET_CURRENT, (char*)webkit_uri_request_get_uri(req)});
+
+        return NULL;
+    }
+
     Client *new = client_new(webview);
 
     return new->webview;
@@ -1302,7 +1310,12 @@ static void decide_new_window_action(Client *c, WebKitPolicyDecision *dec)
              * without user gesture. */
             if (webkit_navigation_action_is_user_gesture(a)) {
                 req = webkit_navigation_action_get_request(a);
-                spawn_new_instance(webkit_uri_request_get_uri(req));
+                if (c->config.prevent_newwindow) {
+                    /* Load the uri into the browser instance. */
+                    vb_load_uri(c, &(Arg){TARGET_CURRENT, (char*)webkit_uri_request_get_uri(req)});
+                } else {
+                    spawn_new_instance(webkit_uri_request_get_uri(req));
+                }
             }
             break;
 
