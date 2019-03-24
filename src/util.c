@@ -827,16 +827,24 @@ char *util_sanitize_uri(const char *uri_str)
 {
     SoupURI *uri;
     char *sanitized_uri;
+    char *for_display;
+
+#if WEBKIT_CHECK_VERSION(2, 24, 0)
+    for_display = webkit_uri_for_display(uri_str);
+#else
+    for_display = g_strdup(uri_str);
+#endif
 
     /* Sanitize the uri only in case there is a @ which might be the indicator
      * for credentials used in uri. */
-    if (!strchr(uri_str, '@')) {
-        return g_strdup(uri_str);
+    if (!strchr(for_display, '@')) {
+        return for_display;
     }
 
-    uri = soup_uri_new(uri_str);
+    uri           = soup_uri_new(for_display);
     sanitized_uri = soup_uri_to_string(uri, FALSE);
     soup_uri_free(uri);
+    g_free(for_display);
 
     return sanitized_uri;
 }

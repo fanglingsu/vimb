@@ -1351,13 +1351,13 @@ static void on_webview_load_changed(WebKitWebView *webview,
 
     switch (event) {
         case WEBKIT_LOAD_STARTED:
-            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(c, AU_LOAD_STARTED, uri, NULL);
+            autocmd_run(c, AU_LOAD_STARTED, webkit_web_view_get_uri(webview), NULL);
 #endif
             /* update load progress in statusbar */
             c->state.progress = 0;
             vb_statusbar_update(c);
+            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
             set_title(c, uri);
             /* Make sure hinting is cleared before the new page is loaded.
              * Without that vimb would still be in hinting mode after hinting
@@ -1378,11 +1378,11 @@ static void on_webview_load_changed(WebKitWebView *webview,
              * or aborted the load will be commited. So this seems to be the
              * right place to remove the flag. */
             c->mode->flags &= ~FLAG_IGNORE_FOCUS;
-            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(c, AU_LOAD_COMMITTED, uri, NULL);
+            autocmd_run(c, AU_LOAD_COMMITTED, webkit_web_view_get_uri(webview), NULL);
 #endif
             /* save the current URI in register % */
+            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
             vb_register_add(c, '%', uri);
             /* check if tls is on and the page is trusted */
             if (g_str_has_prefix(uri, "https://")) {
@@ -1407,7 +1407,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
         case WEBKIT_LOAD_FINISHED:
             uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(c, AU_LOAD_FINISHED, uri, NULL);
+            autocmd_run(c, AU_LOAD_FINISHED, webkit_web_view_get_uri(webview), NULL);
 #endif
             c->state.progress = 100;
             if (strncmp(uri, "about:", 6)) {
