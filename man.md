@@ -1074,6 +1074,10 @@ private-browsing (bool)
 plugins (bool)
 : Determines whether or not plugins on the page are enabled.
 
+prevent-newwindow (bool)
+: Whether to open links, that would normally open in a new window, in the
+  current window. This option does not affect links fired by hinting.
+
 sans-serif-font (string)
 : The font family used as the default for content using sans-serif font.
 

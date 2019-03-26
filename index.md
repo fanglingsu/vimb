@@ -15,14 +15,18 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+[Vimb 3.4.0](https://github.com/fanglingsu/vimb/releases/tag/3.4.0) released
+
+New setting `prevent-newwindow`
+: Whether to open links, that would normally open in a new window, in the
+  current window. This option does not affect links fired by hinting.
+
+New option `--no-maximize`
+: Allow to startup vimb without maximized window.
+
 [Vimb 3.3.0](https://github.com/fanglingsu/vimb/releases/tag/3.3.0) released
 
 [Vimb 3.2.0](https://github.com/fanglingsu/vimb/releases/tag/3.2.0) released
-
-Hinting mode [motion commands](man.html#hint_mode_motion)
-: Vimb provides some limited motion command support in hinting mode.
-
-[Vimb 3.1.0](https://github.com/fanglingsu/vimb/releases/tag/3.1.0) released
 
 ## screenshots
 There isn't really much to see for a browser that is controlled via keyboard.
