@@ -3,7 +3,7 @@ include config.mk
 
 all: version.h src.subdir-all
 
-version.h: Makefile .git/index
+version.h: Makefile $(wildcard .git/index)
 	@echo "create $@"
 	$(Q)v="$$(git describe --tags 2>/dev/null)"; \
 	echo "#define VERSION \"$${v:-$(version)}\"" > $@
