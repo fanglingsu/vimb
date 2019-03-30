@@ -639,6 +639,39 @@ void vb_statusbar_update(Client *c)
 }
 
 /**
+ * Show the given url on the left of statusbar.
+ */
+void vb_statusbar_show_hover_url(Client *c, VbLinkType type, const char *uri)
+{
+    char *sanitized_uri,
+         *msg;
+    const char *type_label;
+
+    /* No uri given - show the current URI. */
+    if (!uri || !*uri) {
+        update_urlbar(c);
+        return;
+    }
+
+    switch (type) {
+        case LINK_TYPE_LINK:
+            type_label = "Link: ";
+            break;
+        case LINK_TYPE_IMAGE:
+            type_label = "Image: ";
+            break;
+        default:
+            return;
+    }
+
+    sanitized_uri = util_sanitize_uri(uri);
+    msg           = g_strconcat(type_label, uri, NULL);
+    gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
+    g_free(msg);
+    g_free(sanitized_uri);
+}
+
+/**
  * Destroys given client and removed it from client queue. If no client is
  * there in queue, quit the gtk main loop.
  */
@@ -1429,9 +1462,6 @@ static void on_webview_load_changed(WebKitWebView *webview,
 static void on_webview_mouse_target_changed(WebKitWebView *webview,
         WebKitHitTestResult *result, guint modifiers, Client *c)
 {
-    char *msg;
-    char *uri;
-
     /* Save the hitTestResult to have this later available for events that
      * don't support this. */
     if (c->state.hit_test_result) {
@@ -1440,20 +1470,14 @@ static void on_webview_mouse_target_changed(WebKitWebView *webview,
     c->state.hit_test_result = g_object_ref(result);
 
     if (webkit_hit_test_result_context_is_link(result)) {
-        uri = util_sanitize_uri(webkit_hit_test_result_get_link_uri(result));
-        msg = g_strconcat("Link: ", uri, NULL);
-        gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
-        g_free(msg);
-        g_free(uri);
+        vb_statusbar_show_hover_url(c, LINK_TYPE_LINK,
+                webkit_hit_test_result_get_link_uri(result));
     } else if (webkit_hit_test_result_context_is_image(result)) {
-        uri = util_sanitize_uri(webkit_hit_test_result_get_image_uri(result));
-        msg = g_strconcat("Image: ", uri, NULL);
-        gtk_label_set_text(GTK_LABEL(c->statusbar.left), msg);
-        g_free(msg);
-        g_free(uri);
+        vb_statusbar_show_hover_url(c, LINK_TYPE_LINK,
+                webkit_hit_test_result_get_image_uri(result));
     } else {
         /* No link under cursor - show the current URI. */
-        update_urlbar(c);
+        vb_statusbar_show_hover_url(c, LINK_TYPE_NONE, NULL);
     }
 }
 

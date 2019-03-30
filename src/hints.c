@@ -306,7 +306,6 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
 {
     gboolean success = FALSE;
     char *value = NULL;
-    WebKitHitTestResult *hitresult;
 
     if (!return_value) {
         goto error;
@@ -323,19 +322,10 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
             /* We get OVER:{I,A}:element-url so we use byte 6 to check for the
              * hinted element type image I or link A. */
             if (*(value + 5) == 'I') {
-                hitresult = g_object_new(WEBKIT_TYPE_HIT_TEST_RESULT,
-                        "context", WEBKIT_HIT_TEST_RESULT_CONTEXT_IMAGE,
-                        "image-uri", value + 7,
-                        NULL);
+                vb_statusbar_show_hover_url(c, LINK_TYPE_IMAGE, value + 7);
             } else {
-                hitresult = g_object_new(WEBKIT_TYPE_HIT_TEST_RESULT,
-                        "context", WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK,
-                        "link-uri", value + 7,
-                        NULL);
+                vb_statusbar_show_hover_url(c, LINK_TYPE_LINK, value + 7);
             }
-            g_signal_emit_by_name(c->webview, "mouse-target-changed",
-                    WEBKIT_HIT_TEST_RESULT(hitresult), 0);
-            g_object_unref(hitresult);
         } else {
             goto error;
         }
@@ -421,11 +411,7 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
     return TRUE;
 
 error:
-    hitresult = g_object_new(WEBKIT_TYPE_HIT_TEST_RESULT,
-            "context", WEBKIT_HIT_TEST_RESULT_CONTEXT_DOCUMENT,
-            NULL);
-    g_signal_emit_by_name(c->webview, "mouse-target-changed", WEBKIT_HIT_TEST_RESULT(hitresult), 0);
-    g_object_unref(hitresult);
+    vb_statusbar_show_hover_url(c, LINK_TYPE_NONE, NULL);
     return FALSE;
 }
 

@@ -116,6 +116,12 @@ enum {
     FILES_LAST
 };
 
+typedef enum {
+    LINK_TYPE_NONE,
+    LINK_TYPE_LINK,
+    LINK_TYPE_IMAGE,
+} VbLinkType;
+
 typedef struct Client Client;
 typedef struct State State;
 typedef struct Map Map;
@@ -290,6 +296,7 @@ gboolean vb_quit(Client *c, gboolean force);
 void vb_register_add(Client *c, char buf, const char *value);
 const char *vb_register_get(Client *c, char buf);
 void vb_statusbar_update(Client *c);
+void vb_statusbar_show_hover_url(Client *c, VbLinkType type, const char *uri);
 void vb_gui_style_update(Client *c, const char *name, const char *value);
 
 #endif /* end of include guard: _MAIN_H */
