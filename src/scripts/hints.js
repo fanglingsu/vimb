@@ -348,7 +348,7 @@ var hints = Object.freeze((function(){
                 idx = 0;
             }
         }
-        focusHint(idx);
+        return focusHint(idx);
     }
 
     function fire() {
@@ -423,8 +423,11 @@ var hints = Object.freeze((function(){
         }
         /* get the new active hint */
         if ((activeHint = validHints[newIdx])) {
+            var e = activeHint.e;
             activeHint.focus();
-            mouseEvent(activeHint.e, "mouseover");
+            mouseEvent(e, "mouseover");
+
+            return "OVER:" + (e instanceof HTMLImageElement ? "I:" : "A:") + getSrc(e);
         }
     }
 

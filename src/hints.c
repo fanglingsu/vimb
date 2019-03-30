@@ -306,18 +306,40 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
 {
     gboolean success = FALSE;
     char *value = NULL;
+    WebKitHitTestResult *hitresult;
 
     if (!return_value) {
-        return FALSE;
+        goto error;
     }
 
     g_variant_get(return_value, "(bs)", &success, &value);
     if (!success || !strncmp(value, "ERROR:", 6)) {
-        return FALSE;
+        goto error;
     }
-
-    /* following return values mark fired hints */
-    if (!strncmp(value, "DONE:", 5)) {
+    if (!strncmp(value, "OVER:", 5)) {
+        /* If focused elements src is given fire mouse-target-changed signal
+         * to show its uri in the statusbar. */
+        if (*(value + 7)) {
+            /* We get OVER:{I,A}:element-url so we use byte 6 to check for the
+             * hinted element type image I or link A. */
+            if (*(value + 5) == 'I') {
+                hitresult = g_object_new(WEBKIT_TYPE_HIT_TEST_RESULT,
+                        "context", WEBKIT_HIT_TEST_RESULT_CONTEXT_IMAGE,
+                        "image-uri", value + 7,
+                        NULL);
+            } else {
+                hitresult = g_object_new(WEBKIT_TYPE_HIT_TEST_RESULT,
+                        "context", WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK,
+                        "link-uri", value + 7,
+                        NULL);
+            }
+            g_signal_emit_by_name(c->webview, "mouse-target-changed",
+                    WEBKIT_HIT_TEST_RESULT(hitresult), 0);
+            g_object_unref(hitresult);
+        } else {
+            goto error;
+        }
+    } else if (!strncmp(value, "DONE:", 5)) {
         fire_timeout(c, FALSE);
         /* Change to normal mode only if we are currently in command mode and
          * we are not in g-mode hinting. This is required to not switch to
@@ -397,6 +419,14 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
     }
 
     return TRUE;
+
+error:
+    hitresult = g_object_new(WEBKIT_TYPE_HIT_TEST_RESULT,
+            "context", WEBKIT_HIT_TEST_RESULT_CONTEXT_DOCUMENT,
+            NULL);
+    g_signal_emit_by_name(c->webview, "mouse-target-changed", WEBKIT_HIT_TEST_RESULT(hitresult), 0);
+    g_object_unref(hitresult);
+    return FALSE;
 }
 
 static void fire_timeout(Client *c, gboolean on)
