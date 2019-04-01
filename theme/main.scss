@@ -99,8 +99,12 @@ pre {
 
 code {
   font-family: "Dejavu sans mono","Lucida Console",Monaco,monospace;
-  color: #333;
+  color: #666;
   overflow-wrap: break-word;
+}
+
+pre > code {
+  color: #333;
 }
 
 a, a:link {
