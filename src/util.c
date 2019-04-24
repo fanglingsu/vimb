@@ -821,7 +821,7 @@ char *util_sanitize_filename(char *filename)
 /**
  * Strips password from a uri.
  *
- * Return newly allocated string.
+ * Return newly allocated string or NULL.
  */
 char *util_sanitize_uri(const char *uri_str)
 {
@@ -829,6 +829,9 @@ char *util_sanitize_uri(const char *uri_str)
     char *sanitized_uri;
     char *for_display;
 
+    if (!uri_str) {
+        return NULL;
+    }
 #if WEBKIT_CHECK_VERSION(2, 24, 0)
     for_display = webkit_uri_for_display(uri_str);
 #else
