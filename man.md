@@ -1185,8 +1185,9 @@ xss-auditor (bool)
 {:#FILES}
 *$XDG\_CONFIG\_HOME/vimb[/PROFILE]*
 : Directory for configuration data. If executed with -p PROFILE parameter,
-  configuration is read from this subdirectory. config Configuration file to
-  set WebKit setting, some GUI styles and keybindings.
+  configuration is read from this subdirectory.
+: **config** Configuration file to set WebKit setting, some GUI styles and
+  keybindings.
 : **cookies.db** Sqlite cookie storage.
 : **closed** Holds the URIs of last closed browser windows.
 : **history** This file holds the history of unique opened URIs.
