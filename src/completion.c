@@ -165,40 +165,45 @@ gboolean completion_start(Completion *comp, GtkTreeModel *model,
 gboolean completion_next(Completion *comp, gboolean back)
 {
     GtkTreeView *tree;
+    GtkTreeModel *model;
     GtkTreePath *path;
     gboolean succeed;
-    int rows;
 
-    tree = GTK_TREE_VIEW(comp->tree);
+    tree  = GTK_TREE_VIEW(comp->tree);
+    model = gtk_tree_view_get_model(tree);
 
     /* Begin from current selected item. */
     gtk_tree_view_get_cursor(tree, &path, NULL);
-    if (path == NULL) {
-        if (back){
-            rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(tree), NULL);
-            path = gtk_tree_path_new_from_indices(rows - 1, -1);
-        } else {
-            path = gtk_tree_path_new_from_indices(0, -1);
-        }
+    if (!path) {
+        int idx;
+        idx     = back ? gtk_tree_model_iter_n_children(model, NULL) - 1 : 0;
+        path    = gtk_tree_path_new_from_indices(idx, -1);
+        succeed = TRUE;
+    } else if (back) {
+        succeed = gtk_tree_path_prev(path);
     } else {
-        if (back) {
-            succeed = gtk_tree_path_prev(path);
-            /* There is no previous tree path - select the last one. */
-            if (!succeed) {
-                rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(tree), NULL);
-                /* Create a new tree path. */
-                gtk_tree_path_free(path);
-                path = gtk_tree_path_new_from_indices(rows - 1, -1);
-            }
-        } else {
-            gtk_tree_path_next(path);
-        }
+        GtkTreeIter iter;
+        gtk_tree_path_next(path);
+        /* gtk_tree_path_next has not return value to inform us about reaching
+         * the end - so check if the realted iter is valid. */
+        succeed = gtk_tree_model_get_iter(model, &iter, path);
     }
+
+    if (!succeed) {
+        /* Clear selection on stepping over the end or the beginning and set
+         * an invalid path to unset the current cursor. This is done to
+         * restart completion on the next attempt when path == NULL. */
+        gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(tree));
+        gtk_tree_path_free(path);
+        /* Create an invalid path. */
+        path = gtk_tree_path_new();
+    }
+
     /* Move cursor to new tree path. */
     gtk_tree_view_set_cursor(tree, path, NULL, FALSE);
     gtk_tree_path_free(path);
 
-    return TRUE;
+    return succeed;
 }
 
 /**

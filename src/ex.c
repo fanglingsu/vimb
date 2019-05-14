@@ -241,6 +241,7 @@ static struct {
     char                            *prefix;  /* completion prefix like :, ? and / */
     char                            *current; /* holds the current written input box content */
     char                            *token;   /* initial filter content */
+    char                            *filter_input;
     GtkTreeModelFilter              *filter;
     CompletionFillFunc              fill_func;
     gpointer                        fill_func_data;
@@ -416,12 +417,6 @@ VbResult ex_keypress(Client *c, int key)
             vb_enter(c, 'n');
         }
     }
-
-    /*
-    if (completion_is_active(c->comp)) {
-        complete(c, 0);
-    }
-    */
 
     if (res == RESULT_COMPLETE) {
         info.reg   = 0;
@@ -1185,17 +1180,9 @@ static gboolean complete(Client *c, short direction)
             }
             /* intentional fallthrough */
         case COMP_REFILTER:
-            if (completion_is_active(c->comp)) {
-                /* If there is direction not given means we want to filter
-                 * only without changing the selected tree element. */
-                if (0 == direction) {
-                    if (!excomp.current || strcmp(input, excomp.current)) {
-                        gtk_tree_model_filter_refilter(excomp.filter);
-                    }
-                } else {
-                    completion_next(c->comp, direction < 0);
-                }
-            } else {
+            if (!completion_is_active(c->comp)) {
+                OVERWRITE_STRING(excomp.filter_input, excomp.token);
+                /* Prepare the list store and tree model for the complation. */
                 GtkListStore *store;
                 if (excomp.fill_func) {
                     store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
@@ -1212,6 +1199,22 @@ static gboolean complete(Client *c, short direction)
                         completion_start(c->comp, GTK_TREE_MODEL(excomp.filter),
                                 completion_select, c, GTK_WIDGET(c->statusbar.box),
                                 direction < 0);
+                    }
+                }
+            } else {
+                /* If there is direction not given means we want to filter
+                 * only without changing the selected tree element. */
+                if (0 == direction) {
+                    if (!excomp.current || strcmp(input, excomp.current)) {
+                        gtk_tree_model_filter_refilter(excomp.filter);
+                        /* Remember the user typed filter input for the case
+                         * where the completion steps over its end or
+                         * beginning to show the intitial filter input. */
+                        OVERWRITE_STRING(excomp.filter_input, excomp.token);
+                    }
+                } else {
+                    if (!completion_next(c->comp, direction < 0)) {
+                        completion_select(excomp.filter_input, c);
                     }
                 }
             }
