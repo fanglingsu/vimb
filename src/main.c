@@ -63,6 +63,9 @@ static void on_webctx_download_started(WebKitWebContext *webctx,
 static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data);
 static gboolean on_webdownload_decide_destination(WebKitDownload *download,
         gchar *suggested_filename, Client *c);
+static void on_webdownload_response_received(WebKitDownload *download,
+        GParamSpec *ps, Client *c);
+static void spawn_download_command(Client *c, WebKitURIResponse *response);
 static void on_webdownload_failed(WebKitDownload *download,
         GError *error, Client *c);
 static void on_webdownload_finished(WebKitDownload *download, Client *c);
@@ -1070,15 +1073,19 @@ static void on_webctx_download_started(WebKitWebContext *webctx,
     autocmd_run(c, AU_DOWNLOAD_STARTED, uri, NULL);
 #endif
 
-    g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
-    g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
-    g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
-    g_signal_connect(download, "received-data", G_CALLBACK(on_webdownload_received_data), c);
+    if (GET_BOOL(c, "download-use-external")) {
+        g_signal_connect(download, "notify::response", G_CALLBACK(on_webdownload_response_received), c);
+    } else {
+        g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
+        g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
+        g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
+        g_signal_connect(download, "received-data", G_CALLBACK(on_webdownload_received_data), c);
 
-    c->state.downloads = g_list_append(c->state.downloads, download);
+        c->state.downloads = g_list_append(c->state.downloads, download);
 
-    /* to reflect the correct download count */
-    vb_statusbar_update(c);
+        /* to reflect the correct download count */
+        vb_statusbar_update(c);
+    }
 }
 
 /**
@@ -1118,6 +1125,48 @@ static gboolean on_webdownload_decide_destination(WebKitDownload *download,
     }
 
     return vb_download_set_destination(c, download, suggested_filename, NULL);
+}
+
+static void on_webdownload_response_received(WebKitDownload *download,
+        GParamSpec *ps, Client *c)
+{
+    spawn_download_command(c, webkit_download_get_response(download));
+	webkit_download_cancel(download);
+}
+
+static void spawn_download_command(Client *c, WebKitURIResponse *response)
+{
+    char *cmd;
+    char **argv, **envp;
+    int argc;
+    GError *error = NULL;
+
+    cmd = g_strdup_printf(GET_CHAR(c, "download-command"),
+            webkit_uri_response_get_uri(response));
+
+    if (!g_shell_parse_argv(cmd, &argc, &argv, &error)) {
+        g_warning("Could not parse download-command '%s': %s",
+                cmd,
+                error->message);
+        g_error_free(error);
+        g_free(cmd);
+        return;
+    }
+
+    envp = g_get_environ();
+    envp = g_environ_setenv(envp, "VIMB_DOWNLOAD_PATH",
+            GET_CHAR(c, "download-path"), TRUE);
+
+    if (g_spawn_async(NULL, argv, envp, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
+        vb_echo(c, MSG_NORMAL, FALSE, "Download started");
+    } else {
+        vb_echo(c, MSG_ERROR, TRUE, "Could not start download");
+        g_warning("%s", error->message);
+        g_clear_error(&error);
+    }
+    g_free(cmd);
+    g_strfreev(envp);
+    g_strfreev(argv);
 }
 
 /**

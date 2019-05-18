@@ -1044,12 +1044,40 @@ Default Full-Content zoom level in percent. Default is 100.
 .B dns-prefetching (bool)
 Indicates if Vimb prefetches domain names.
 .TP
+.B download-command (string)
+A command with placeholder '%s' that will be invoked to download a URI in
+case 'download-use-external' is enabled.
+.RS
+.TP
+The following additional environment variable are available:
+.PD 0
+.TP
+.B $VIMB_URI
+The URI of the current opened page, normally the page where the download was
+started from, also known as referer.
+.TP
+.B $VIMB_DOWNLOAD_PATH
+Setting value of 'dowanload-path' which would be used normally for downloads.
+.PD
+.PP
+Example:
+.PD 0
+.IP ":set download-command=/bin/sh -c ""cd '$VIMB_DOWNLOAD_PATH' \
+&& curl -sLJOC - -e '$VIMB_URI' %s"""
+.PD
+.RE
+.TP
 .B download-path (string)
 Path to the default download directory.
 If no download directory is set, download will be written into current
 directory.
 The following pattern will be expanded if the download is
 started '~/', '~user', '$VAR' and '${VAR}'.
+.TP
+.B download-use-external (bool)
+Indicates if the external download tool set as 'download-command' should be
+used to handle downloads.
+If this is disabled Vimb will handle the download.
 .TP
 .B editor-command (string)
 Command with placeholder '%s' called if form field is opened with $EDITOR to

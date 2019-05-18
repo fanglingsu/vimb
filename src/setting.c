@@ -150,6 +150,8 @@ void setting_init(Client *c)
     i = 100;
     setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
     setting_add(c, "download-path", TYPE_CHAR, &"~/", NULL, 0, NULL);
+    setting_add(c, "download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -e '$VIMB_URI' %s\"", NULL, 0, NULL);
+    setting_add(c, "download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "incsearch", TYPE_BOOLEAN, &off, internal, 0, &c->config.incsearch);
     i = 10;
     /* TODO should be global and not overwritten by a new client */
@@ -158,7 +160,7 @@ void setting_init(Client *c)
     setting_add(c, "spell-checking", TYPE_BOOLEAN, &off, webkit_spell_checking, 0, NULL);
     setting_add(c, "spell-checking-languages", TYPE_CHAR, &"en_US", webkit_spell_checking_language, FLAG_LIST|FLAG_NODUP, NULL);
 
-    /* gui style settings vimb3 */
+    /* gui style settings vimb */
     setting_add(c, "completion-css", TYPE_CHAR, &"color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
     setting_add(c, "completion-hover-css", TYPE_CHAR, &"background-color:#777;", gui_style, 0, NULL);
     setting_add(c, "completion-selected-css", TYPE_CHAR, &"color:#f6f3e8;background-color:#888;", gui_style, 0, NULL);
