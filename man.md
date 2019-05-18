@@ -917,15 +917,31 @@ default-zoom (int)
 dns-prefetching (bool)
 : Indicates if Vimb prefetches domain names.
 
+download-command (string)
+: A command with placeholder `%s` that will be invoked to download a URI in
+  case `download-use-external` is enabled.
+
+: The following additional environment variable are available:
+: - `$VIMB_URI` The URI of the current opened page, normally the page where the
+    download was started from, also known as referer.
+: - `$VIMB_DOWNLOAD_PATH` Setting value of `download-path` which would be used
+    normally for downloads.
+: Example:
+: `:set download-command=/bin/sh -c "cd '$VIMB_DOWNLOAD_PATH' && curl -sLJOC - -e '$VIMB_URI' %s"`
+
 download-path (string)
 : Path to the default download directory. If no download directory is set,
   download will be written into current directory. The following pattern will
   be expanded if the download is started `~/`, `~user`, `$VAR` and `${VAR}`.
 
+download-use-external (bool)
+: Indicates if the external download tool set as `download-command` should be
+  used to handle downloads. If this is disabled Vimb will handle the download.
+
 editor-command (string)
-: Command with placeholder '%s' called if form field is opened with $EDITOR to
-  spawn the editor-like `x-terminal-emulator -e vim %s`. To use Gvim as the
-  editor, it's necessary to call it with `-f' to run it in the foreground.
+: Command with placeholder `%s` called if form field is opened with `$EDITOR`
+  to spawn the editor-like `x-terminal-emulator -e vim %s`. To use gvim as the
+  editor, it's necessary to call it with `-f` to run it in the foreground.
 
 font-size (int)
 : The default font size used to display text.
