@@ -1131,7 +1131,7 @@ static void on_webdownload_response_received(WebKitDownload *download,
         GParamSpec *ps, Client *c)
 {
     spawn_download_command(c, webkit_download_get_response(download));
-	webkit_download_cancel(download);
+    webkit_download_cancel(download);
 }
 
 static void spawn_download_command(Client *c, WebKitURIResponse *response)
@@ -1570,11 +1570,8 @@ static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec, Cli
     if (c->state.uri) {
         g_free(c->state.uri);
     }
-    gchar *url = util_sanitize_uri(webkit_web_view_get_uri(c->webview));
-    if (!url) {
-        return;
-    }
-    c->state.uri = url;
+
+    c->state.uri = util_sanitize_uri(webkit_web_view_get_uri(c->webview));
 
     update_urlbar(c);
     g_setenv("VIMB_URI", c->state.uri, TRUE);

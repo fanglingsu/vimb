@@ -834,12 +834,12 @@ char *util_sanitize_uri(const char *uri_str)
     }
 #if WEBKIT_CHECK_VERSION(2, 24, 0)
     for_display = webkit_uri_for_display(uri_str);
+    if (!for_display) {
+        for_display = g_strdup(uri_str);
+    }
 #else
     for_display = g_strdup(uri_str);
 #endif
-    if (!for_display) {
-	    return NULL;
-    }
 
     /* Sanitize the uri only in case there is a @ which might be the indicator
      * for credentials used in uri. */
