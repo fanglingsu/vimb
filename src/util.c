@@ -837,6 +837,9 @@ char *util_sanitize_uri(const char *uri_str)
 #else
     for_display = g_strdup(uri_str);
 #endif
+    if (!for_display) {
+	    return NULL;
+    }
 
     /* Sanitize the uri only in case there is a @ which might be the indicator
      * for credentials used in uri. */

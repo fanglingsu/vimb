@@ -1445,7 +1445,9 @@ static void on_webview_load_changed(WebKitWebView *webview,
             /* update load progress in statusbar */
             c->state.progress = 0;
             vb_statusbar_update(c);
-            set_title(c, uri);
+            if (uri) {
+                set_title(c, uri);
+            }
             /* Make sure hinting is cleared before the new page is loaded.
              * Without that vimb would still be in hinting mode after hinting
              * was started and some links was clicked my mouse. Even if there
@@ -1471,7 +1473,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
             /* save the current URI in register % */
             vb_register_add(c, '%', uri);
             /* check if tls is on and the page is trusted */
-            if (g_str_has_prefix(uri, "https://")) {
+            if (uri && g_str_has_prefix(uri, "https://")) {
                 if (webkit_web_view_get_tls_info(webview, NULL, &tlsflags) && tlsflags) {
                     set_statusbar_style(c, STATUS_SSL_INVALID);
                 } else {
@@ -1495,7 +1497,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
             autocmd_run(c, AU_LOAD_FINISHED, raw_uri, NULL);
 #endif
             c->state.progress = 100;
-            if (strncmp(uri, "about:", 6)) {
+            if (uri && strncmp(uri, "about:", 6)) {
                 history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
             }
             break;
@@ -1568,7 +1570,11 @@ static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec, Cli
     if (c->state.uri) {
         g_free(c->state.uri);
     }
-    c->state.uri = util_sanitize_uri(webkit_web_view_get_uri(c->webview));
+    gchar *url = util_sanitize_uri(webkit_web_view_get_uri(c->webview));
+    if (!url) {
+        return;
+    }
+    c->state.uri = url;
 
     update_urlbar(c);
     g_setenv("VIMB_URI", c->state.uri, TRUE);
