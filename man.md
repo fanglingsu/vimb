@@ -743,7 +743,7 @@ Example:
 : Example: `:sh ls -la $HOME`
 
 :sh[ellcmd]! *cmd*
-: Like `:shellcmd` but runs given shell *cmd* asyncron.
+: Like `:shellcmd` but runs given shell *cmd* asynchronous.
 : Example: ``:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'``
 
 \:s[ave] [*path*]
@@ -1014,7 +1014,7 @@ home-page (string)
 html5-database (bool)
 : Whether to enable HTML5 client-side SQL database support. Client-side SQL
   database allows web pages to store structured data and be able to use SQL to
-  manipulate that data asynchronously.
+  manipulate that data asynchronous.
 
 html5-local-storage (bool)
 : Whether to enable HTML5 localStorage support. LocalStorage provides simple
