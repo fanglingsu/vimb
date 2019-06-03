@@ -54,18 +54,12 @@ FileStorage *file_storage_new(const char *dir, const char *filename, int mode)
 
     /* Built the full path out of dir and given file name. */
     fullpath = g_build_filename(dir, filename, NULL);
-    if (g_file_test(fullpath, G_FILE_TEST_IS_REGULAR)) {
-        storage->file_path = fullpath;
-    } else if (mode) {
+    if (!g_file_test(fullpath, G_FILE_TEST_IS_REGULAR) && mode) {
         /* If create option was given - create the file. */
         fclose(fopen(fullpath, "a"));
-
-        storage->file_path = fullpath;
         g_chmod(fullpath, mode);
-    } else {
-        storage->file_path = NULL;
-        g_free(fullpath);
     }
+    storage->file_path = fullpath;
 
     /* Use gstring as storage in case when the file is used read only. */
     if (storage->readonly) {
@@ -81,9 +75,7 @@ FileStorage *file_storage_new(const char *dir, const char *filename, int mode)
 void file_storage_free(FileStorage *storage)
 {
     if (storage) {
-        if (storage->file_path) {
-            g_free(storage->file_path);
-        }
+        g_free(storage->file_path);
         if (storage->str) {
             g_string_free(storage->str, TRUE);
         }
@@ -111,7 +103,7 @@ gboolean file_storage_append(FileStorage *storage, const char *format, ...)
         va_end(args);
         return TRUE;
     }
-    if (storage->file_path && (f = fopen(storage->file_path, "a+"))) {
+    if ((f = fopen(storage->file_path, "a+"))) {
         flock(fileno(f), LOCK_EX);
         va_start(args, format);
         vfprintf(f, format, args);
@@ -135,9 +127,7 @@ char **file_storage_get_lines(FileStorage *storage)
     char *content     = NULL;
     char **lines      = NULL;
 
-    if (storage->file_path) {
-        content = util_get_file_contents(storage->file_path, NULL);
-    }
+    g_file_get_contents(storage->file_path, &content, NULL, NULL);
 
     if (storage->str && storage->str->len) {
         if (content) {

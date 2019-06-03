@@ -84,13 +84,18 @@ static void test_ephemeral_with_file(void)
     gboolean result;
 
     file_path = g_build_filename(pwd, existing_file, NULL);
-    result = g_file_set_contents(file_path, "one\n", -1, NULL);
-    g_assert_true(result);
 
     s = file_storage_new(pwd, existing_file, 0);
     g_assert_nonnull(s);
 
+    /* file does not exists yet */
+    lines = file_storage_get_lines(s);
+    g_assert_cmpint(g_strv_length(lines), ==, 0);
+    g_strfreev(lines);
+
     /* empty file storage but file with two lines */
+    result = g_file_set_contents(file_path, "one\n", -1, NULL);
+    g_assert_true(result);
     lines = file_storage_get_lines(s);
     g_assert_cmpint(g_strv_length(lines), ==, 2);
     g_strfreev(lines);
