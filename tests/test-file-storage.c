@@ -36,8 +36,10 @@ static void test_ephemeral_no_file(void)
 
     /* make sure the file does not exist */
     remove(file_path);
-    s = file_storage_new(pwd, none_existing_file, 0);
+    s = file_storage_new(pwd, none_existing_file, TRUE);
     g_assert_nonnull(s);
+    g_assert_cmpstr(file_path, ==, file_storage_get_path(s));
+    g_assert_true(file_storage_is_readonly(s));
 
     /* empty file storage */
     lines = file_storage_get_lines(s);
@@ -68,7 +70,13 @@ static void test_file_created(void)
     remove(file_path);
 
     g_assert_false(g_file_test(file_path, G_FILE_TEST_IS_REGULAR));
-    s = file_storage_new(pwd, created_file, 0640);
+    s = file_storage_new(pwd, created_file, FALSE);
+    g_assert_false(file_storage_is_readonly(s));
+    g_assert_cmpstr(file_path, ==, file_storage_get_path(s));
+
+    /* check that file is created only on first write */
+    g_assert_false(g_file_test(file_path, G_FILE_TEST_IS_REGULAR));
+    file_storage_append(s, "");
     g_assert_true(g_file_test(file_path, G_FILE_TEST_IS_REGULAR));
 
     file_storage_free(s);
@@ -85,8 +93,10 @@ static void test_ephemeral_with_file(void)
 
     file_path = g_build_filename(pwd, existing_file, NULL);
 
-    s = file_storage_new(pwd, existing_file, 0);
+    s = file_storage_new(pwd, existing_file, TRUE);
     g_assert_nonnull(s);
+    g_assert_true(file_storage_is_readonly(s));
+    g_assert_cmpstr(file_path, ==, file_storage_get_path(s));
 
     /* file does not exists yet */
     lines = file_storage_get_lines(s);

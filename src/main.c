@@ -46,6 +46,7 @@
 #include "shortcut.h"
 #include "util.h"
 #include "autocmd.h"
+#include "file-storage.h"
 
 static void client_destroy(Client *c);
 static Client *client_new(WebKitWebView *webview);
@@ -1768,6 +1769,9 @@ static void vimb_cleanup(void)
     /* free memory of other components */
     util_cleanup();
 
+    for (i = 0; i < STORAGE_LAST; i++) {
+        file_storage_free(vb.storage[i]);
+    }
     for (i = 0; i < FILES_LAST; i++) {
         if (vb.files[i]) {
             g_free(vb.files[i]);
@@ -1794,19 +1798,22 @@ static void vimb_setup(void)
         vb.files[FILES_CONFIG] = g_strdup(rp);
         free(rp);
     } else {
-        vb.files[FILES_CONFIG] = util_get_filepath(path, "config", FALSE, 0600);
+        vb.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
     }
 
     /* Setup those files that are use multiple time during runtime */
-    vb.files[FILES_CLOSED]     = util_get_filepath(path, "closed", TRUE, 0600);
-    vb.files[FILES_COOKIE]     = util_get_filepath(path, "cookies.db", TRUE, 0600);
-    vb.files[FILES_USER_STYLE] = util_get_filepath(path, "style.css", FALSE, 0600);
-    vb.files[FILES_SCRIPT]     = util_get_filepath(path, "scripts.js", FALSE, 0600);
-    vb.files[FILES_HISTORY]    = util_get_filepath(path, "history", TRUE, 0600);
-    vb.files[FILES_COMMAND]    = util_get_filepath(path, "command", TRUE, 0600);
-    vb.files[FILES_BOOKMARK]   = util_get_filepath(path, "bookmark", TRUE, 0600);
-    vb.files[FILES_QUEUE]      = util_get_filepath(path, "queue", TRUE, 0600);
-    vb.files[FILES_SEARCH]     = util_get_filepath(path, "search", TRUE, 0600);
+    if (!vb.ephemeral) {
+        vb.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
+        vb.files[FILES_COOKIE] = g_build_filename(path, "cookies.db", NULL);
+    }
+    vb.files[FILES_BOOKMARK]   = g_build_filename(path, "bookmark", NULL);
+    vb.files[FILES_QUEUE]      = g_build_filename(path, "queue", NULL);
+    vb.files[FILES_SCRIPT]     = g_build_filename(path, "scripts.js", NULL);
+    vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
+
+    vb.storage[STORAGE_HISTORY]  = file_storage_new(path, "history", vb.ephemeral);
+    vb.storage[STORAGE_COMMAND]  = file_storage_new(path, "command", vb.ephemeral);
+    vb.storage[STORAGE_SEARCH]   = file_storage_new(path, "search", vb.ephemeral);
     g_free(path);
 
     /* Use seperate rendering processed for the webview of the clients in the
@@ -2066,6 +2073,7 @@ int main(int argc, char* argv[])
 
     GOptionEntry opts[] = {
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
+        {"ephemeral", 'E', 0, G_OPTION_ARG_NONE, &vb.ephemeral, "Run in ephemeral mode", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},

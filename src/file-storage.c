@@ -23,7 +23,6 @@
 #include <glib/gstdio.h>
 
 #include "file-storage.h"
-#include "util.h"
 
 struct filestorage {
     char        *file_path;
@@ -44,26 +43,19 @@ struct filestorage {
  *              creating it. If 0 the file is not created and the storage is
  *              used in read only mode - no data written to the file.
  */
-FileStorage *file_storage_new(const char *dir, const char *filename, int mode)
+FileStorage *file_storage_new(const char *dir, const char *filename, gboolean readonly)
 {
-    char *fullpath;
     FileStorage *storage;
 
-    storage           = g_slice_new(FileStorage);
-    storage->readonly = (mode == 0);
-
-    /* Built the full path out of dir and given file name. */
-    fullpath = g_build_filename(dir, filename, NULL);
-    if (!g_file_test(fullpath, G_FILE_TEST_IS_REGULAR) && mode) {
-        /* If create option was given - create the file. */
-        fclose(fopen(fullpath, "a"));
-        g_chmod(fullpath, mode);
-    }
-    storage->file_path = fullpath;
+    storage            = g_slice_new(FileStorage);
+    storage->readonly  = readonly;
+    storage->file_path = g_build_filename(dir, filename, NULL);
 
     /* Use gstring as storage in case when the file is used read only. */
     if (storage->readonly) {
         storage->str = g_string_new(NULL);
+    } else {
+        storage->str = NULL;
     }
 
     return storage;
@@ -146,4 +138,14 @@ char **file_storage_get_lines(FileStorage *storage)
     }
 
     return lines;
+}
+
+const char *file_storage_get_path(FileStorage *storage)
+{
+    return storage->file_path;
+}
+
+gboolean file_storage_is_readonly(FileStorage *storage)
+{
+    return storage->readonly;
 }

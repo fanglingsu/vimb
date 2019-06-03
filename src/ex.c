@@ -956,7 +956,7 @@ static VbCmdResult ex_queue(Client *c, const ExArg *arg)
 
     return command_queue(c, &a)
         ? CMD_SUCCESS | CMD_KEEPINPUT
-        : CMD_ERROR | CMD_KEEPINPUT;
+        : CMD_ERROR;
 }
 #endif
 

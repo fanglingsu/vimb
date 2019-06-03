@@ -674,7 +674,7 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
 
     ucm = webkit_web_view_get_user_content_manager(c->webview);
 
-    if (enabled && vb.files[FILES_USER_STYLE]) {
+    if (enabled) {
         if (g_file_get_contents(vb.files[FILES_USER_STYLE], &source, NULL, NULL)) {
             style = webkit_user_style_sheet_new(
                 source, WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
@@ -685,7 +685,7 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
             webkit_user_style_sheet_unref(style);
             g_free(source);
         } else {
-            g_warning("Could not reed style file: %s", vb.files[FILES_USER_STYLE]);
+            g_message("Could not reed style file: %s", vb.files[FILES_USER_STYLE]);
         }
     } else {
         webkit_user_content_manager_remove_all_style_sheets(ucm);

@@ -430,41 +430,6 @@ out:
 }
 
 /**
- * Buil the path from given directory and filename and checks if the file
- * exists. If the file does not exists and the create option is not set, this
- * function returns NULL.
- * If the file exists or the create option was given the full generated path
- * is returned as newly allocated string.
- *
- * The return value must be freed with g_free.
- *
- * @dir:        Directory in which the file is searched.
- * @filename:   Filename to built the absolute path with.
- * @create:     If TRUE, the file is created if it does not already exist.
- * @mode:       Mode (file permission as chmod(2)) used for the file when creating it.
- */
-char *util_get_filepath(const char *dir, const char *filename, gboolean create, int mode)
-{
-    char *fullpath;
-
-    /* Built the full path out of config dir and given file name. */
-    fullpath = g_build_filename(dir, filename, NULL);
-
-    if (g_file_test(fullpath, G_FILE_TEST_IS_REGULAR)) {
-        return fullpath;
-    } else if (create) {
-        /* If create option was given - create the file. */
-        fclose(fopen(fullpath, "a"));
-        g_chmod(fullpath, mode);
-        return fullpath;
-    }
-
-    g_free(fullpath);
-    return NULL;
-}
-
-
-/**
  * Retrieves the file content as lines.
  *
  * The result have to be freed by g_strfreev().
@@ -478,7 +443,7 @@ char **util_get_lines(const char *filename)
         return NULL;
     }
 
-    if ((content = util_get_file_contents(filename, NULL))) {
+    if (g_file_get_contents(filename, &content, NULL, NULL)) {
         /* split the file content into lines */
         lines = g_strsplit(content, "\n", -1);
         g_free(content);
@@ -491,20 +456,18 @@ char **util_get_lines(const char *filename)
  * based on the lines comparing all chars until the next <tab> char or end of
  * line.
  *
- * @filename:    file to read items from
  * @func:        Function to parse a single line to item.
  * @max_items:   maximum number of items that are returned, use 0 for
  *               unlimited items
  */
-GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
+GList *util_strv_to_unique_list(char **lines, Util_Content_Func func,
         guint max_items)
 {
-    char *line, **lines;
+    char *line;
     int i, len;
     GList *gl = NULL;
     GHashTable *ht;
 
-    lines = util_get_lines(filename);
     if (!lines) {
         return NULL;
     }
@@ -556,7 +519,6 @@ GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
         }
     }
 
-    g_strfreev(lines);
     g_hash_table_destroy(ht);
 
     return gl;
