@@ -1802,7 +1802,7 @@ static void vimb_setup(void)
     }
 
     /* Setup those files that are use multiple time during runtime */
-    if (!vb.ephemeral) {
+    if (!vb.incognito) {
         vb.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
         vb.files[FILES_COOKIE] = g_build_filename(path, "cookies.db", NULL);
     }
@@ -1811,9 +1811,9 @@ static void vimb_setup(void)
     vb.files[FILES_SCRIPT]     = g_build_filename(path, "scripts.js", NULL);
     vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
 
-    vb.storage[STORAGE_HISTORY]  = file_storage_new(path, "history", vb.ephemeral);
-    vb.storage[STORAGE_COMMAND]  = file_storage_new(path, "command", vb.ephemeral);
-    vb.storage[STORAGE_SEARCH]   = file_storage_new(path, "search", vb.ephemeral);
+    vb.storage[STORAGE_HISTORY]  = file_storage_new(path, "history", vb.incognito);
+    vb.storage[STORAGE_COMMAND]  = file_storage_new(path, "command", vb.incognito);
+    vb.storage[STORAGE_SEARCH]   = file_storage_new(path, "search", vb.incognito);
     g_free(path);
 
     /* Use seperate rendering processed for the webview of the clients in the
@@ -2073,8 +2073,8 @@ int main(int argc, char* argv[])
 
     GOptionEntry opts[] = {
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
-        {"ephemeral", 'E', 0, G_OPTION_ARG_NONE, &vb.ephemeral, "Run in ephemeral mode", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+        {"incognito", 'i', 0, G_OPTION_ARG_NONE, &vb.incognito, "Run with user data read-only", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {"no-maximize", 0, 0, G_OPTION_ARG_NONE, &vb.no_maximize, "Do no attempt to maximize window", NULL},
