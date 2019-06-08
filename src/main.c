@@ -1046,6 +1046,9 @@ static void spawn_new_instance(const char *uri)
         cmd[i++] = xid;
     }
 #endif
+    if (vb.incognito) {
+        cmd[i++] = "-i";
+    }
     if (vb.profile) {
         cmd[i++] = "-p";
         cmd[i++] = vb.profile;
