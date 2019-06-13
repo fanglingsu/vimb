@@ -1027,6 +1027,7 @@ static void spawn_new_instance(const char *uri)
 #ifndef FEATURE_NO_XEMBED
         + (vb.embed ? 2 : 0)
 #endif
+        + (vb.incognito ? 1 : 0)
         + (vb.profile ? 2 : 0)
         + (vb.no_maximize ? 1 : 0),
         sizeof(char *)
