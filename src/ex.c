@@ -140,6 +140,7 @@ static VbCmdResult ex_eval(Client *c, const ExArg *arg);
 static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
 static VbCmdResult ex_clearcache(Client *c, const ExArg *arg);
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg);
+static void print_failed_cb(WebKitPrintOperation* op, GError *err, Client *c);
 static VbCmdResult ex_map(Client *c, const ExArg *arg);
 static VbCmdResult ex_unmap(Client *c, const ExArg *arg);
 static VbCmdResult ex_normal(Client *c, const ExArg *arg);
@@ -858,18 +859,31 @@ static VbCmdResult ex_clearcache(Client *c, const ExArg *arg)
     return CMD_SUCCESS;
 }
 
+/**
+ * Opens the gtk print dialog.
+ */
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg)
 {
     WebKitPrintOperation *op   = webkit_print_operation_new(c->webview);
     GtkPrintSettings *settings = gtk_print_settings_new();
-
     gtk_print_settings_set(settings, GTK_PRINT_SETTINGS_OUTPUT_BASENAME, c->state.title);
+
+    g_signal_connect(op, "failed", G_CALLBACK(print_failed_cb), c);
+
     webkit_print_operation_set_print_settings(op, settings);
     webkit_print_operation_run_dialog(op, NULL);
     g_object_unref(op);
     g_object_unref(settings);
 
     return CMD_SUCCESS;
+}
+
+/**
+ * Callback called when printing failed.
+ */
+static void print_failed_cb(WebKitPrintOperation* op, GError *err, Client *c)
+{
+    vb_echo(c, MSG_ERROR, FALSE, "print failed: %s", err->message);
 }
 
 static VbCmdResult ex_map(Client *c, const ExArg *arg)
