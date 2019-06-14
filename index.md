@@ -16,7 +16,7 @@ of vimb would be a breeze, if not we missed our target.
 
 ## latest features
 Incognito Mode by option `-i, --incognito`
-: Do not persist data in files.
+: Websites will not store any data in the client storage.
 
 New setting `download-command` and `download-use-external`
 : These new settings allow to use external tool for downloading URIs instead
