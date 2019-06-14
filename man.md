@@ -34,6 +34,9 @@ Mandatory arguments to long options are mandatory for short options too.
 −e, −−embed *WINID*
 : *WINID* of an XEmbed-aware application, that vimb will use as its parent.
 
+−i, −−incognito
+: Start an instance with user data read-only (see FILES section).
+
 −h, −−help
 : Show help options.
 
@@ -1007,6 +1010,7 @@ hint-keys (string)
 history-max-items (int)
 : Maximum number of unique items stored in search-, command or URI history. If
   history-max-items is set to 0, the history file will not be changed.
+  This setting has no effect if option `--incognito` is set.
 
 home-page (string)
 : Homepage that vimb opens if started without a URI.
@@ -1205,19 +1209,24 @@ xss-auditor (bool)
 : **config** Configuration file to set WebKit setting, some GUI styles and
   keybindings.
 : **cookies.db** Sqlite cookie storage.
+  This file will not be touched if option `--incognito` is set.
 : **closed** Holds the URIs of last closed browser windows.
+  This file will not be touched if option `--incognito` is set.
 : **history** This file holds the history of unique opened URIs.
+  This file will not be touched if option `--incognito` is set.
 : **command** This file holds the history of commands and search queries
   performed via input box.
-: **queue** Holds the read it later queue filled by `qpush'.
-: **search** This file holds the history of search queries.
+  This file will not be touched if option `--incognito` is set.
+: **queue** Holds the read it later queue filled by `:qpush`.
+: **search** This file holds the history of search queries. 
+  This file will not be touched if option `--incognito` is set.
 : **scripts.js** This file can be used to run user scripts, that are injected
   into every paged that is opened.
 : **style.css** File for userdefined CSS styles. These file is used if the
   config variable `stylesheet' is enabled.
 
 There are also some sample scripts installed together with Vimb under
-_PREFIX/share/vimb/examples_.
+`PREFIX/share/vimb/examples`.
 
 ## ENVIRONMENT
 {:#ENVIRONMENT}

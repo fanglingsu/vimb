@@ -15,6 +15,9 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+Incognito Mode by option `-i, --incognito`
+: Do not persist data in files.
+
 New setting `download-command` and `download-use-external`
 : These new settings allow to use external tool for downloading URIs instead
   of the built in downloader.
@@ -27,8 +30,6 @@ New setting `prevent-newwindow`
 
 New option `--no-maximize`
 : Allow to startup vimb without maximized window.
-
-[Vimb 3.3.0](https://github.com/fanglingsu/vimb/releases/tag/3.3.0) released
 
 ## screenshots
 There isn't really much to see for a browser that is controlled via keyboard.
