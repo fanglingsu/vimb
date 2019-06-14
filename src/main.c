@@ -1823,7 +1823,11 @@ static void vimb_setup(void)
     /* Use seperate rendering processed for the webview of the clients in the
      * current instance. This must be called as soon as possible according to
      * the documentation. */
-    ctx = webkit_web_context_get_default();
+    if (vb.incognito) {
+        ctx = webkit_web_context_new_ephemeral();
+    } else {
+        ctx = webkit_web_context_get_default();
+    }
     webkit_web_context_set_process_model(ctx, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
     webkit_web_context_set_cache_model(ctx, WEBKIT_CACHE_MODEL_WEB_BROWSER);
 

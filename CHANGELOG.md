@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 ### Fixed
 ### Removed
+* setting `private-browsing` was removed in favor of `--incognito` option.
 
 ## [3.4.0] - 2019-03-26
 ### Added
@@ -241,7 +242,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.3.0...master
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.4.0...master
 [3.4.0]: https://github.com/fanglingsu/vimb/compare/3.3.0...3.4.0
 [3.3.0]: https://github.com/fanglingsu/vimb/compare/3.2.0...3.3.0
 [3.2.0]: https://github.com/fanglingsu/vimb/compare/3.1.0...3.2.0

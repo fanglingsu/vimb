@@ -116,7 +116,6 @@ void setting_init(Client *c)
     setting_add(c, "plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");
     setting_add(c, "prevent-newwindow", TYPE_BOOLEAN, &off, internal, 0, &c->config.prevent_newwindow);
     setting_add(c, "print-backgrounds", TYPE_BOOLEAN, &on, webkit, 0, "print-backgrounds");
-    setting_add(c, "private-browsing", TYPE_BOOLEAN, &off, webkit, 0, "enable-private-browsing");
     setting_add(c, "sans-serif-font", TYPE_CHAR, &"sans-serif", webkit, 0, "sans-serif-font-family");
     setting_add(c, "scripts", TYPE_BOOLEAN, &on, webkit, 0, "enable-javascript");
     setting_add(c, "serif-font", TYPE_CHAR, &"serif", webkit, 0, "serif-font-family");
