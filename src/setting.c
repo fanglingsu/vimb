@@ -684,7 +684,7 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
             webkit_user_style_sheet_unref(style);
             g_free(source);
         } else {
-            g_message("Could not reed style file: %s", vb.files[FILES_USER_STYLE]);
+            g_message("Could not read style file: %s", vb.files[FILES_USER_STYLE]);
         }
     } else {
         webkit_user_content_manager_remove_all_style_sheets(ucm);
