@@ -1374,6 +1374,10 @@ static void decide_navigation_action(Client *c, WebKitPolicyDecision *dec)
         webkit_policy_decision_ignore(dec);
         spawn_new_instance(uri);
     } else {
+#ifdef FEATURE_AUTOCMD
+        if (strcmp(uri, "about:blank"))
+            autocmd_run(c, AU_LOAD_STARTING, uri, NULL);
+#endif
         webkit_policy_decision_use(dec);
     }
 }

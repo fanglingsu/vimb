@@ -709,6 +709,10 @@ No white space can be used in this list.
 .PD 0
 Events:
 .TP
+.B LoadStarting
+Fired before a new page is going to be opened.
+No data has been sent or received yet, the load may still fail for transport issues.
+.TP
 .B LoadStarted
 Fired if a new page is going to be opened.
 No data has been received yet, the load may still fail for transport issues.

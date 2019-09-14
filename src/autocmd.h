@@ -28,6 +28,7 @@
 /* this values correspond to indices in events[] array in autocmd.c */
 typedef enum {
     AU_ALL,
+    AU_LOAD_STARTING,
     AU_LOAD_STARTED,
     AU_LOAD_COMMITTED,
     /*AU_LOAD_FIRST_LAYOUT,*/
