@@ -3,7 +3,7 @@ branches:
     gh-pages
 
 language: c
-dist: xenial
+dist: bionic
 sudo: required
 
 compiler:

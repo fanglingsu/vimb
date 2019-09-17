@@ -19,6 +19,8 @@ vimb.so: $(OBJ)
 
 $(OBJ): config.h ../config.mk
 
+main.o: ../version.h
+
 input.o: scripts/scripts.h
 
 normal.o: scripts/scripts.h

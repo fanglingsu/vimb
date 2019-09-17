@@ -308,16 +308,28 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
     char *value = NULL;
 
     if (!return_value) {
-        return FALSE;
+        goto error;
     }
 
     g_variant_get(return_value, "(bs)", &success, &value);
     if (!success || !strncmp(value, "ERROR:", 6)) {
-        return FALSE;
+        goto error;
     }
-
-    /* following return values mark fired hints */
-    if (!strncmp(value, "DONE:", 5)) {
+    if (!strncmp(value, "OVER:", 5)) {
+        /* If focused elements src is given fire mouse-target-changed signal
+         * to show its uri in the statusbar. */
+        if (*(value + 7)) {
+            /* We get OVER:{I,A}:element-url so we use byte 6 to check for the
+             * hinted element type image I or link A. */
+            if (*(value + 5) == 'I') {
+                vb_statusbar_show_hover_url(c, LINK_TYPE_IMAGE, value + 7);
+            } else {
+                vb_statusbar_show_hover_url(c, LINK_TYPE_LINK, value + 7);
+            }
+        } else {
+            goto error;
+        }
+    } else if (!strncmp(value, "DONE:", 5)) {
         fire_timeout(c, FALSE);
         /* Change to normal mode only if we are currently in command mode and
          * we are not in g-mode hinting. This is required to not switch to
@@ -397,6 +409,10 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
     }
 
     return TRUE;
+
+error:
+    vb_statusbar_show_hover_url(c, LINK_TYPE_NONE, NULL);
+    return FALSE;
 }
 
 static void fire_timeout(Client *c, gboolean on)
