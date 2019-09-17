@@ -43,9 +43,8 @@ char *util_file_pop_line(const char *file, int *item_count);
 char *util_get_config_dir(void);
 char *util_get_file_contents(const char *filename, gsize *length);
 gboolean util_file_set_content(const char *file, const char *contents);
-char *util_get_filepath(const char *dir, const char *filename, gboolean create, int mode);
 char **util_get_lines(const char *filename);
-GList *util_file_to_unique_list(const char *filename, Util_Content_Func func,
+GList *util_strv_to_unique_list(char **lines, Util_Content_Func func,
         guint max_items);
 gboolean util_fill_completion(GtkListStore *store, GList *src);
 gboolean util_filename_fill_completion(State state, GtkListStore *store, const char *input);

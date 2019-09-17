@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 ### Removed
 
+## [3.5.0] - 2019-07-29
+### Added
+* Add external download command #543 #348.
+* Added ephemeral mode by new option `--incognito` #562.
+### Changed
+* Hinting shows the current focused elements URI in the statusbar.
+* Show error if printing with `:hardcopy` fails #564.
+### Fixed
+* Fixed compilation if source is not in a git repo (Thanks to Patrick Steinhardt).
+* Fixed partial hidden hint labels on top of screen.
+* Fix segfault on open in new tabe from context menu #556.
+* Fix "... (null)" shown in title during url sanitization.
+### Removed
+* Setting `private-browsing` was removed in favor of `--incognito` option.
+
 ## [3.4.0] - 2019-03-26
 ### Added
 * Allow to show video in fullscreen, without statusbar and inputbox, if requested.
@@ -241,7 +256,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.3.0...master
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.5.0...master
+[3.5.0]: https://github.com/fanglingsu/vimb/compare/3.4.0...3.5.0
 [3.4.0]: https://github.com/fanglingsu/vimb/compare/3.3.0...3.4.0
 [3.3.0]: https://github.com/fanglingsu/vimb/compare/3.2.0...3.3.0
 [3.2.0]: https://github.com/fanglingsu/vimb/compare/3.1.0...3.2.0

@@ -27,8 +27,9 @@
 #include "history.h"
 #include "main.h"
 #include "util.h"
+#include "file-storage.h"
 
-#define HIST_FILE(t) (vb.files[file_map[t]])
+#define HIST_STORAGE(t) (vb.storage[storage_map[t]])
 typedef struct {
     char *first;
     char *second;
@@ -37,14 +38,14 @@ typedef struct {
 static gboolean fill_completion(GtkListStore *store, HistoryType type);
 static void free_history(History *item);
 static History *line_to_history(const char *uri, const char *title);
-static GList *load(const char *file);
+static GList *load(FileStorage *s);
 static void write_to_file(GList *list, const char *file);
 
 /* map history types to files */
-static const int file_map[HISTORY_LAST] = {
-    FILES_COMMAND,
-    FILES_SEARCH,
-    FILES_HISTORY
+static const int storage_map[HISTORY_LAST] = {
+    STORAGE_COMMAND,
+    STORAGE_SEARCH,
+    STORAGE_HISTORY
 };
 extern struct Vimb vb;
 
@@ -53,18 +54,18 @@ extern struct Vimb vb;
  */
 void history_add(Client *c, HistoryType type, const char *value, const char *additional)
 {
-    const char *file;
+    FileStorage *s;
 
     /* Don't write a history entry if the history max size is set to 0. */
     if (!vb.config.history_max) {
         return;
     }
 
-    file = HIST_FILE(type);
+    s = HIST_STORAGE(type);
     if (additional) {
-        util_file_append(file, "%s\t%s\n", value, additional);
+        file_storage_append(s, "%s\t%s\n", value, additional);
     } else {
-        util_file_append(file, "%s\n", value);
+        file_storage_append(s, "%s\n", value);
     }
 }
 
@@ -74,7 +75,7 @@ void history_add(Client *c, HistoryType type, const char *value, const char *add
  */
 void history_cleanup(void)
 {
-    const char *file;
+    FileStorage *s;
     GList *list;
 
     /* don't cleanup the history file if history max size is 0 */
@@ -83,10 +84,12 @@ void history_cleanup(void)
     }
 
     for (HistoryType i = HISTORY_FIRST; i < HISTORY_LAST; i++) {
-        file = HIST_FILE(i);
-        list = load(file);
-        write_to_file(list, file);
-        g_list_free_full(list, (GDestroyNotify)free_history);
+        s = HIST_STORAGE(i);
+        if (!file_storage_is_readonly(s)) {
+            list = load(s);
+            write_to_file(list, file_storage_get_path(s));
+            g_list_free_full(list, (GDestroyNotify)free_history);
+        }
     }
 }
 
@@ -106,7 +109,7 @@ static gboolean fill_completion(GtkListStore *store, HistoryType type)
     GList *src = NULL;
     GtkTreeIter iter;
 
-    src = load(HIST_FILE(type));
+    src = load(HIST_STORAGE(type));
     src = g_list_reverse(src);
     /* without any tags return all items */
     for (GList *l = src; l; l = l->next) {
@@ -169,12 +172,12 @@ GList *history_get_list(VbInputType type, const char *query)
 
     switch (type) {
         case INPUT_COMMAND:
-            src = load(HIST_FILE(HISTORY_COMMAND));
+            src = load(HIST_STORAGE(HISTORY_COMMAND));
             break;
 
         case INPUT_SEARCH_FORWARD:
         case INPUT_SEARCH_BACKWARD:
-            src = load(HIST_FILE(HISTORY_SEARCH));
+            src = load(HIST_STORAGE(HISTORY_SEARCH));
             break;
 
         default:
@@ -220,10 +223,12 @@ static History *line_to_history(const char *uri, const char *title)
  *
  * Returned list must be freed with (GDestroyNotify)free_history.
  */
-static GList *load(const char *file)
+static GList *load(FileStorage *s)
 {
-    return util_file_to_unique_list(
-        file, (Util_Content_Func)line_to_history, vb.config.history_max
+    return util_strv_to_unique_list(
+        file_storage_get_lines(s),
+        (Util_Content_Func)line_to_history,
+        vb.config.history_max
     );
 }
 

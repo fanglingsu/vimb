@@ -46,6 +46,7 @@
 #include "shortcut.h"
 #include "util.h"
 #include "autocmd.h"
+#include "file-storage.h"
 
 static void client_destroy(Client *c);
 static Client *client_new(WebKitWebView *webview);
@@ -63,6 +64,9 @@ static void on_webctx_download_started(WebKitWebContext *webctx,
 static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data);
 static gboolean on_webdownload_decide_destination(WebKitDownload *download,
         gchar *suggested_filename, Client *c);
+static void on_webdownload_response_received(WebKitDownload *download,
+        GParamSpec *ps, Client *c);
+static void spawn_download_command(Client *c, WebKitURIResponse *response);
 static void on_webdownload_failed(WebKitDownload *download,
         GError *error, Client *c);
 static void on_webdownload_finished(WebKitDownload *download, Client *c);
@@ -1025,6 +1029,7 @@ static void spawn_new_instance(const char *uri)
 #ifndef FEATURE_NO_XEMBED
         + (vb.embed ? 2 : 0)
 #endif
+        + (vb.incognito ? 1 : 0)
         + (vb.profile ? 2 : 0)
         + (vb.no_maximize ? 1 : 0),
         sizeof(char *)
@@ -1044,6 +1049,9 @@ static void spawn_new_instance(const char *uri)
         cmd[i++] = xid;
     }
 #endif
+    if (vb.incognito) {
+        cmd[i++] = "-i";
+    }
     if (vb.profile) {
         cmd[i++] = "-p";
         cmd[i++] = vb.profile;
@@ -1072,15 +1080,19 @@ static void on_webctx_download_started(WebKitWebContext *webctx,
     autocmd_run(c, AU_DOWNLOAD_STARTED, uri, NULL);
 #endif
 
-    g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
-    g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
-    g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
-    g_signal_connect(download, "received-data", G_CALLBACK(on_webdownload_received_data), c);
+    if (GET_BOOL(c, "download-use-external")) {
+        g_signal_connect(download, "notify::response", G_CALLBACK(on_webdownload_response_received), c);
+    } else {
+        g_signal_connect(download, "decide-destination", G_CALLBACK(on_webdownload_decide_destination), c);
+        g_signal_connect(download, "failed", G_CALLBACK(on_webdownload_failed), c);
+        g_signal_connect(download, "finished", G_CALLBACK(on_webdownload_finished), c);
+        g_signal_connect(download, "received-data", G_CALLBACK(on_webdownload_received_data), c);
 
-    c->state.downloads = g_list_append(c->state.downloads, download);
+        c->state.downloads = g_list_append(c->state.downloads, download);
 
-    /* to reflect the correct download count */
-    vb_statusbar_update(c);
+        /* to reflect the correct download count */
+        vb_statusbar_update(c);
+    }
 }
 
 /**
@@ -1120,6 +1132,48 @@ static gboolean on_webdownload_decide_destination(WebKitDownload *download,
     }
 
     return vb_download_set_destination(c, download, suggested_filename, NULL);
+}
+
+static void on_webdownload_response_received(WebKitDownload *download,
+        GParamSpec *ps, Client *c)
+{
+    spawn_download_command(c, webkit_download_get_response(download));
+    webkit_download_cancel(download);
+}
+
+static void spawn_download_command(Client *c, WebKitURIResponse *response)
+{
+    char *cmd;
+    char **argv, **envp;
+    int argc;
+    GError *error = NULL;
+
+    cmd = g_strdup_printf(GET_CHAR(c, "download-command"),
+            webkit_uri_response_get_uri(response));
+
+    if (!g_shell_parse_argv(cmd, &argc, &argv, &error)) {
+        g_warning("Could not parse download-command '%s': %s",
+                cmd,
+                error->message);
+        g_error_free(error);
+        g_free(cmd);
+        return;
+    }
+
+    envp = g_get_environ();
+    envp = g_environ_setenv(envp, "VIMB_DOWNLOAD_PATH",
+            GET_CHAR(c, "download-path"), TRUE);
+
+    if (g_spawn_async(NULL, argv, envp, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
+        vb_echo(c, MSG_NORMAL, FALSE, "Download started");
+    } else {
+        vb_echo(c, MSG_ERROR, TRUE, "Could not start download");
+        g_warning("%s", error->message);
+        g_clear_error(&error);
+    }
+    g_free(cmd);
+    g_strfreev(envp);
+    g_strfreev(argv);
 }
 
 /**
@@ -1382,18 +1436,25 @@ static void on_webview_load_changed(WebKitWebView *webview,
         WebKitLoadEvent event, Client *c)
 {
     GTlsCertificateFlags tlsflags;
+    const char *raw_uri;
     char *uri = NULL;
+
+    raw_uri = webkit_web_view_get_uri(webview);
+    if (raw_uri) {
+        uri = util_sanitize_uri(raw_uri);
+    }
 
     switch (event) {
         case WEBKIT_LOAD_STARTED:
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(c, AU_LOAD_STARTED, webkit_web_view_get_uri(webview), NULL);
+            autocmd_run(c, AU_LOAD_STARTED, raw_uri, NULL);
 #endif
             /* update load progress in statusbar */
             c->state.progress = 0;
             vb_statusbar_update(c);
-            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
-            set_title(c, uri);
+            if (uri) {
+                set_title(c, uri);
+            }
             /* Make sure hinting is cleared before the new page is loaded.
              * Without that vimb would still be in hinting mode after hinting
              * was started and some links was clicked my mouse. Even if there
@@ -1414,13 +1475,12 @@ static void on_webview_load_changed(WebKitWebView *webview,
              * right place to remove the flag. */
             c->mode->flags &= ~FLAG_IGNORE_FOCUS;
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(c, AU_LOAD_COMMITTED, webkit_web_view_get_uri(webview), NULL);
+            autocmd_run(c, AU_LOAD_COMMITTED, raw_uri, NULL);
 #endif
             /* save the current URI in register % */
-            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
             vb_register_add(c, '%', uri);
             /* check if tls is on and the page is trusted */
-            if (g_str_has_prefix(uri, "https://")) {
+            if (uri && g_str_has_prefix(uri, "https://")) {
                 if (webkit_web_view_get_tls_info(webview, NULL, &tlsflags) && tlsflags) {
                     set_statusbar_style(c, STATUS_SSL_INVALID);
                 } else {
@@ -1440,12 +1500,11 @@ static void on_webview_load_changed(WebKitWebView *webview,
             break;
 
         case WEBKIT_LOAD_FINISHED:
-            uri = util_sanitize_uri(webkit_web_view_get_uri(webview));
 #ifdef FEATURE_AUTOCMD
-            autocmd_run(c, AU_LOAD_FINISHED, webkit_web_view_get_uri(webview), NULL);
+            autocmd_run(c, AU_LOAD_FINISHED, raw_uri, NULL);
 #endif
             c->state.progress = 100;
-            if (strncmp(uri, "about:", 6)) {
+            if (uri && strncmp(uri, "about:", 6)) {
                 history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
             }
             break;
@@ -1518,6 +1577,7 @@ static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec, Cli
     if (c->state.uri) {
         g_free(c->state.uri);
     }
+
     c->state.uri = util_sanitize_uri(webkit_web_view_get_uri(c->webview));
 
     update_urlbar(c);
@@ -1715,6 +1775,9 @@ static void vimb_cleanup(void)
     /* free memory of other components */
     util_cleanup();
 
+    for (i = 0; i < STORAGE_LAST; i++) {
+        file_storage_free(vb.storage[i]);
+    }
     for (i = 0; i < FILES_LAST; i++) {
         if (vb.files[i]) {
             g_free(vb.files[i]);
@@ -1741,25 +1804,32 @@ static void vimb_setup(void)
         vb.files[FILES_CONFIG] = g_strdup(rp);
         free(rp);
     } else {
-        vb.files[FILES_CONFIG] = util_get_filepath(path, "config", FALSE, 0600);
+        vb.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
     }
 
     /* Setup those files that are use multiple time during runtime */
-    vb.files[FILES_CLOSED]     = util_get_filepath(path, "closed", TRUE, 0600);
-    vb.files[FILES_COOKIE]     = util_get_filepath(path, "cookies.db", TRUE, 0600);
-    vb.files[FILES_USER_STYLE] = util_get_filepath(path, "style.css", FALSE, 0600);
-    vb.files[FILES_SCRIPT]     = util_get_filepath(path, "scripts.js", FALSE, 0600);
-    vb.files[FILES_HISTORY]    = util_get_filepath(path, "history", TRUE, 0600);
-    vb.files[FILES_COMMAND]    = util_get_filepath(path, "command", TRUE, 0600);
-    vb.files[FILES_BOOKMARK]   = util_get_filepath(path, "bookmark", TRUE, 0600);
-    vb.files[FILES_QUEUE]      = util_get_filepath(path, "queue", TRUE, 0600);
-    vb.files[FILES_SEARCH]     = util_get_filepath(path, "search", TRUE, 0600);
+    if (!vb.incognito) {
+        vb.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
+        vb.files[FILES_COOKIE] = g_build_filename(path, "cookies.db", NULL);
+    }
+    vb.files[FILES_BOOKMARK]   = g_build_filename(path, "bookmark", NULL);
+    vb.files[FILES_QUEUE]      = g_build_filename(path, "queue", NULL);
+    vb.files[FILES_SCRIPT]     = g_build_filename(path, "scripts.js", NULL);
+    vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
+
+    vb.storage[STORAGE_HISTORY]  = file_storage_new(path, "history", vb.incognito);
+    vb.storage[STORAGE_COMMAND]  = file_storage_new(path, "command", vb.incognito);
+    vb.storage[STORAGE_SEARCH]   = file_storage_new(path, "search", vb.incognito);
     g_free(path);
 
     /* Use seperate rendering processed for the webview of the clients in the
      * current instance. This must be called as soon as possible according to
      * the documentation. */
-    ctx = webkit_web_context_get_default();
+    if (vb.incognito) {
+        ctx = webkit_web_context_new_ephemeral();
+    } else {
+        ctx = webkit_web_context_get_default();
+    }
     webkit_web_context_set_process_model(ctx, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
     webkit_web_context_set_cache_model(ctx, WEBKIT_CACHE_MODEL_WEB_BROWSER);
 
@@ -2014,6 +2084,7 @@ int main(int argc, char* argv[])
     GOptionEntry opts[] = {
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+        {"incognito", 'i', 0, G_OPTION_ARG_NONE, &vb.incognito, "Run with user data read-only", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
         {"no-maximize", 0, 0, G_OPTION_ARG_NONE, &vb.no_maximize, "Do no attempt to maximize window", NULL},

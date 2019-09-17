@@ -117,7 +117,6 @@ void setting_init(Client *c)
     setting_add(c, "plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");
     setting_add(c, "prevent-newwindow", TYPE_BOOLEAN, &off, internal, 0, &c->config.prevent_newwindow);
     setting_add(c, "print-backgrounds", TYPE_BOOLEAN, &on, webkit, 0, "print-backgrounds");
-    setting_add(c, "private-browsing", TYPE_BOOLEAN, &off, webkit, 0, "enable-private-browsing");
     setting_add(c, "sans-serif-font", TYPE_CHAR, &"sans-serif", webkit, 0, "sans-serif-font-family");
     setting_add(c, "scripts", TYPE_BOOLEAN, &on, webkit, 0, "enable-javascript");
     setting_add(c, "serif-font", TYPE_CHAR, &"serif", webkit, 0, "serif-font-family");
@@ -151,6 +150,8 @@ void setting_init(Client *c)
     i = 100;
     setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
     setting_add(c, "download-path", TYPE_CHAR, &"~/", NULL, 0, NULL);
+    setting_add(c, "download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -e '$VIMB_URI' %s\"", NULL, 0, NULL);
+    setting_add(c, "download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "incsearch", TYPE_BOOLEAN, &off, internal, 0, &c->config.incsearch);
     i = 10;
     /* TODO should be global and not overwritten by a new client */
@@ -159,7 +160,7 @@ void setting_init(Client *c)
     setting_add(c, "spell-checking", TYPE_BOOLEAN, &off, webkit_spell_checking, 0, NULL);
     setting_add(c, "spell-checking-languages", TYPE_CHAR, &"en_US", webkit_spell_checking_language, FLAG_LIST|FLAG_NODUP, NULL);
 
-    /* gui style settings vimb3 */
+    /* gui style settings vimb */
     setting_add(c, "completion-css", TYPE_CHAR, &"color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
     setting_add(c, "completion-hover-css", TYPE_CHAR, &"background-color:#777;", gui_style, 0, NULL);
     setting_add(c, "completion-selected-css", TYPE_CHAR, &"color:#f6f3e8;background-color:#888;", gui_style, 0, NULL);
@@ -653,7 +654,7 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
 
     ucm = webkit_web_view_get_user_content_manager(c->webview);
 
-    if (enabled && vb.files[FILES_USER_STYLE]) {
+    if (enabled) {
         if (g_file_get_contents(vb.files[FILES_USER_STYLE], &source, NULL, NULL)) {
             style = webkit_user_style_sheet_new(
                 source, WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
@@ -664,7 +665,7 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
             webkit_user_style_sheet_unref(style);
             g_free(source);
         } else {
-            g_warning("Could not reed style file: %s", vb.files[FILES_USER_STYLE]);
+            g_message("Could not read style file: %s", vb.files[FILES_USER_STYLE]);
         }
     } else {
         webkit_user_content_manager_remove_all_style_sheets(ucm);

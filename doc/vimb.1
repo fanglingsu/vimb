@@ -37,6 +37,9 @@ This will also be applied on new spawned instances.
 .I WINID
 of an XEmbed-aware application, that Vimb will use as its parent.
 .TP
+.B "\-i, \-\-incognito"
+Start an instance with user data read-only (see \fIFILES\fP section).
+.TP
 .B "\-h, \-\-help"
 Show help options.
 .TP
@@ -836,7 +839,7 @@ started with the -e option.
 .RE
 .TP
 .BI ":sh[ellcmd]! " cmd
-Like :sh[ellcmd], but asyncron.
+Like :sh[ellcmd] but asynchronous.
 .sp
 Example:
 .EX
@@ -1044,12 +1047,40 @@ Default Full-Content zoom level in percent. Default is 100.
 .B dns-prefetching (bool)
 Indicates if Vimb prefetches domain names.
 .TP
+.B download-command (string)
+A command with placeholder '%s' that will be invoked to download a URI in
+case 'download-use-external' is enabled.
+.RS
+.TP
+The following additional environment variable are available:
+.PD 0
+.TP
+.B $VIMB_URI
+The URI of the current opened page, normally the page where the download was
+started from, also known as referer.
+.TP
+.B $VIMB_DOWNLOAD_PATH
+Setting value of 'download-path' which would be used normally for downloads.
+.PD
+.PP
+Example:
+.PD 0
+.IP ":set download-command=/bin/sh -c ""cd '$VIMB_DOWNLOAD_PATH' \
+&& curl -sLJOC - -e '$VIMB_URI' %s"""
+.PD
+.RE
+.TP
 .B download-path (string)
 Path to the default download directory.
 If no download directory is set, download will be written into current
 directory.
 The following pattern will be expanded if the download is
 started '~/', '~user', '$VAR' and '${VAR}'.
+.TP
+.B download-use-external (bool)
+Indicates if the external download tool set as 'download-command' should be
+used to handle downloads.
+If this is disabled Vimb will handle the download.
 .TP
 .B editor-command (string)
 Command with placeholder '%s' called if form field is opened with $EDITOR to
@@ -1149,6 +1180,7 @@ To have upper case hint labels, it's possible to add following css to the
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history.
 If history-max-items is set to 0, the history file will not be changed.
+This setting has no effect if option \-\-incognito is set.
 .TP
 .B home-page (string)
 Homepage that vimb opens if started without a URI.
@@ -1224,12 +1256,6 @@ when the user is not connected to the network.
 .TP
 .B print-backgrounds (bool)
 Whether background images should be drawn during printing.
-.TP
-.B private-browsing (bool)
-Whether to enable private browsing mode.
-This suppresses  printing of messages into JavaScript Console.
-At the time this is the only way to force WebKit to
-not allow a page to store data in the windows sessionStorage.
 .TP
 .B plugins (bool)
 Determines whether or not plugins on the page are enabled.
@@ -1361,12 +1387,15 @@ Configuration file to set WebKit setting, some GUI styles and keybindings.
 .TP
 .I cookies.db
 Sqlite cookie storage.
+This file will not be touched if option \-\-incognito is set.
 .TP
 .I closed
 Holds the URIs of last closed browser windows.
+This file will not be touched if option \-\-incognito is set.
 .TP
 .I history
 This file holds the history of unique opened URIs.
+This file will not be touched if option \-\-incognito is set.
 .TP
 .I bookmark
 This file holds the list of bookmarked URIs with tags.
@@ -1374,12 +1403,14 @@ This file holds the list of bookmarked URIs with tags.
 .I command
 This file holds the history of commands and search queries performed via input
 box.
+This file will not be touched if option \-\-incognito is set.
 .TP
 .I queue
 Holds the read it later queue filled by `qpush'.
 .TP
 .I search
 This file holds the history of search queries.
+This file will not be touched if option \-\-incognito is set.
 .TP
 .I scripts.js
 This file can be used to run user scripts, that are injected into every page
