@@ -175,8 +175,8 @@ var hints = Object.freeze((function(){
                 label = labelTmpl.cloneNode(false);
 
                 label.style.display = "none";
-                label.style.left    = rect.left + "px";
-                label.style.top     = rect.top + "px";
+                label.style.left    = Math.max(rect.left - 4, 0) + "px";
+                label.style.top     = Math.max(rect.top - 4, 0) + "px";
 
                 /* if hinted element is an image - show title or alt of the image in hint label */
                 /* this allows to see how to filter for the image */
@@ -348,7 +348,7 @@ var hints = Object.freeze((function(){
                 idx = 0;
             }
         }
-        focusHint(idx);
+        return focusHint(idx);
     }
 
     function fire() {
@@ -423,8 +423,11 @@ var hints = Object.freeze((function(){
         }
         /* get the new active hint */
         if ((activeHint = validHints[newIdx])) {
+            var e = activeHint.e;
             activeHint.focus();
-            mouseEvent(activeHint.e, "mouseover");
+            mouseEvent(e, "mouseover");
+
+            return "OVER:" + (e instanceof HTMLImageElement ? "I:" : "A:") + getSrc(e);
         }
     }
 

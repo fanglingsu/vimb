@@ -236,7 +236,12 @@ gboolean bookmark_queue_clear(void)
 
 static GList *load(const char *file)
 {
-    return util_file_to_unique_list(file, (Util_Content_Func)line_to_bookmark, 0);
+    char **lines;
+    GList *list;
+    lines = util_get_lines(file);
+    list  = util_strv_to_unique_list(lines, (Util_Content_Func)line_to_bookmark, 0);
+    g_strfreev(lines);
+    return list;
 }
 
 /**

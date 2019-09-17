@@ -26,6 +26,7 @@
 #include <webkit2/webkit2.h>
 #include "shortcut.h"
 #include "handler.h"
+#include "file-storage.h"
 
 #include "config.h"
 
@@ -105,16 +106,28 @@ typedef enum {
 enum {
     FILES_BOOKMARK,
     FILES_CLOSED,
-    FILES_COMMAND,
     FILES_CONFIG,
     FILES_COOKIE,
-    FILES_HISTORY,
     FILES_QUEUE,
     FILES_SCRIPT,
-    FILES_SEARCH,
     FILES_USER_STYLE,
     FILES_LAST
 };
+
+enum {
+    STORAGE_CLOSED,
+    STORAGE_COMMAND,
+    STORAGE_CONFIG,
+    STORAGE_HISTORY,
+    STORAGE_SEARCH,
+    STORAGE_LAST
+};
+
+typedef enum {
+    LINK_TYPE_NONE,
+    LINK_TYPE_LINK,
+    LINK_TYPE_IMAGE,
+} VbLinkType;
 
 typedef struct Client Client;
 typedef struct State State;
@@ -235,6 +248,7 @@ struct Client {
         guint                   scrollstep;
         gboolean                input_autohide;
         gboolean                incsearch;
+        gboolean                prevent_newwindow;
         guint                   default_zoom;   /* default zoom level in percent */
         Shortcut                *shortcuts;
     } config;
@@ -261,6 +275,7 @@ struct Vimb {
     GHashTable  *modes;             /* all available browser main modes */
     char        *configfile;        /* config file given as option on startup */
     char        *files[FILES_LAST];
+    FileStorage *storage[STORAGE_LAST];
     char        *profile;           /* profile name */
     struct {
         guint   history_max;
@@ -268,6 +283,7 @@ struct Vimb {
     } config;
     GtkCssProvider *style_provider;
     gboolean    no_maximize;
+    gboolean    incognito;
 };
 
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
@@ -289,6 +305,7 @@ gboolean vb_quit(Client *c, gboolean force);
 void vb_register_add(Client *c, char buf, const char *value);
 const char *vb_register_get(Client *c, char buf);
 void vb_statusbar_update(Client *c);
+void vb_statusbar_show_hover_url(Client *c, VbLinkType type, const char *uri);
 void vb_gui_style_update(Client *c, const char *name, const char *value);
 
 #endif /* end of include guard: _MAIN_H */

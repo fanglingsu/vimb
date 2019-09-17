@@ -11,6 +11,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 ### Removed
 
+## [3.5.0] - 2019-07-29
+### Added
+* Add external download command #543 #348.
+* Added ephemeral mode by new option `--incognito` #562.
+### Changed
+* Hinting shows the current focused elements URI in the statusbar.
+* Show error if printing with `:hardcopy` fails #564.
+### Fixed
+* Fixed compilation if source is not in a git repo (Thanks to Patrick Steinhardt).
+* Fixed partial hidden hint labels on top of screen.
+* Fix segfault on open in new tabe from context menu #556.
+* Fix "... (null)" shown in title during url sanitization.
+### Removed
+* Setting `private-browsing` was removed in favor of `--incognito` option.
+
+## [3.4.0] - 2019-03-26
+### Added
+* Allow to show video in fullscreen, without statusbar and inputbox, if requested.
+* Added option `--no-maximize` to no start with maximized window #483.
+* New setting `prevent-newwindow` to enforce opening links into same window
+  even if they are crafted by `target="_blank"` or using `window.open(...)` #544.
+### Changed
+* Increased min required webkit version to 2.20.x.
+* Use man page date instead of build date ot make reproducible builds.
+* URLs shown on statusbar and title are now shown as punicode if they contain
+  homographs.
+### Fixed
+* Fix out-of-bounds buffer access in parse_command (Thanks to Sören Tempel) #529.
+* Fixed none shown hint labels by Content-Security-Policy headers #531.
+* Fixed segfault on JavaScript `window.close()` call #537.
+* Fixed no char inserted in input mode after timeout and imap/inoremap
+  candidate #546.
+
 ## [3.3.0] - 2018-11-06
 
 ### Added
@@ -223,7 +256,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.3.0...master
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.5.0...master
+[3.5.0]: https://github.com/fanglingsu/vimb/compare/3.4.0...3.5.0
+[3.4.0]: https://github.com/fanglingsu/vimb/compare/3.3.0...3.4.0
 [3.3.0]: https://github.com/fanglingsu/vimb/compare/3.2.0...3.3.0
 [3.2.0]: https://github.com/fanglingsu/vimb/compare/3.1.0...3.2.0
 [3.1.0]: https://github.com/fanglingsu/vimb/compare/3.0-alpha...3.1.0
