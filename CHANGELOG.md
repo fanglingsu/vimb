@@ -7,14 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-* `:cleardata [timeSpan] [listOfDataTypes]` command to clear various types of
+* `:cleardata [listOfDataTypes] [timeSpan]` command to clear various types of
   stored website data modified in the last _timeSpan_.
 ### Changed
 ### Fixed
 ### Removed
 * `:clearcache` was removed in favor of more advanced `:cleardata` command.
   The previous behaviour of `:clearcache` could be replaces by
-  `:cleardata - memory-cache,disk-cache`.
+  `:cleardata memory-cache,disk-cache`.
 
 ## [3.5.0] - 2019-07-29
 ### Added

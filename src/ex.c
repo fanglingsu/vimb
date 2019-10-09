@@ -855,7 +855,7 @@ static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Cli
 }
 
 /**
- * Clear website data by ':cleardata {time} {dataTypeList}'.
+ * Clear website data by ':cleardata {dataTypeList} {timespan}'.
  */
 static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
 {
@@ -864,13 +864,8 @@ static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
     VbCmdResult result = CMD_SUCCESS;
     GTimeSpan timespan = 0;
 
-    if (arg->lhs->len) {
-        timespan = util_string_to_timespan(arg->lhs->str);
-    }
-    if (!arg->rhs->len) {
-        /* No special type given - clear all known types. */
-        data_types = WEBKIT_WEBSITE_DATA_ALL;
-    } else {
+    /* Parse the left hand side if this is available and not '-' */
+    if (arg->lhs->len && strcmp(arg->lhs->str, "-") != 0) {
         GString *str;
         char **types;
         char *value;
@@ -919,6 +914,13 @@ static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
         }
         g_string_free(str, TRUE);
         g_strfreev(types);
+    } else {
+        /* No special type or '-' given - clear all known types. */
+        data_types = WEBKIT_WEBSITE_DATA_ALL;
+    }
+
+    if (arg->rhs->len) {
+        timespan = util_string_to_timespan(arg->rhs->str);
     }
     manager = webkit_web_context_get_website_data_manager(webkit_web_view_get_context(c->webview));
     webkit_website_data_manager_clear(manager, data_types, timespan, NULL, NULL, NULL);

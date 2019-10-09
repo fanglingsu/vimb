@@ -807,39 +807,12 @@ Example:
 .EE
 .SS Misc
 .TP
-.BI ":cl[eardata] [" timespan "] [" dataTypes "]"
-Asynchronously clears the website data of the given list of\fIdataTypes\fP
+.BI ":cl[eardata] [" dataTypes "] [" timespan "]"
+Asynchronously clears the website data of the given list of \fIdataTypes\fP
 modified in the past \fItimespan\fP.
-If \fItimespan\fP is 0, all website data will be removed.
+Note that the \fIdataTypes\fP must not contain spaces.
+If \fItimespan\fP is not given, all website data will be removed.
 Note that this effects all running instances of vimb.
-.RS
-.PP
-.PD 0
-The \fItimespan\fP is given as sequence of '[multiplier]\fIunit\fP' tupels.
-with following units.
-.TP
-.B y
-year (365 days)
-.TP
-.B w
-week (7 days)
-.TP
-.B d
-day
-.TP
-.B h
-hour
-.TP
-.B m
-minute
-.TP
-.B s
-second
-.TP
-.B -
-can be used to clear data without timespan restriction
-.PD
-.RE
 .RS
 .PP
 .PD 0
@@ -872,16 +845,46 @@ given.
 .TP
 .B hsts-cache
 HTTP Strict Transport Security cache.
-.sp
+.TP
+.B -
+Can be used to clear all known data types in case a \fItimespan\fP is used.
+.PD
+.RE
+.RS
+.PP
+.PD 0
+The \fItimespan\fP is given as sequence of '[multiplier]\fIunit\fP' tupels
+with following units.
+.TP
+.B y
+year (365 days)
+.TP
+.B w
+week (7 days)
+.TP
+.B d
+day
+.TP
+.B h
+hour
+.TP
+.B m
+minute
+.TP
+.B s
+second
+.PD
 .PP
 .I Example:
 .PD 0
 .IP ":cleardata"
 to clear all known website data types without any timespan restriction.
-.IP ":cleardata - local-storage,session-storage,cookies"
+.IP ":cleardata - 5m"
+to clear all known website data types modified in the last 5 minutes.
+.IP ":cleardata local-storage,session-storage,cookies"
 to completely clear the cookies, local- and session-storage without time
 restrictions.
-.IP ":cleardata 2d4h disk-cache"
+.IP ":cleardata disk-cache 2d4h"
 to clear the disk cache that was modified in the past two days and four hours.
 .PD
 .RE
