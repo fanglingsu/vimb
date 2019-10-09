@@ -42,6 +42,7 @@
 #include "util.h"
 #include "ext-proxy.h"
 #include "autocmd.h"
+#include "util.h"
 
 typedef enum {
 #ifdef FEATURE_AUTOCMD
@@ -52,7 +53,7 @@ typedef enum {
     EX_BMR,
     EX_EVAL,
     EX_HARDCOPY,
-    EX_CLEARCACHE,
+    EX_CLEARDATA,
     EX_CMAP,
     EX_CNOREMAP,
     EX_HANDADD,
@@ -138,7 +139,7 @@ static VbCmdResult ex_autocmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
 static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
-static VbCmdResult ex_clearcache(Client *c, const ExArg *arg);
+static VbCmdResult ex_cleardata(Client *c, const ExArg *arg);
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg);
 static void print_failed_cb(WebKitPrintOperation* op, GError *err, Client *c);
 static VbCmdResult ex_map(Client *c, const ExArg *arg);
@@ -179,7 +180,7 @@ static ExInfo commands[] = {
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"cnoremap",         EX_CNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"cunmap",           EX_CUNMAP,      ex_unmap,      EX_FLAG_LHS},
-    {"clearcache",       EX_CLEARCACHE,  ex_clearcache, EX_FLAG_NONE},
+    {"cleardata",        EX_CLEARDATA,   ex_cleardata,  EX_FLAG_LHS|EX_FLAG_RHS},
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
     {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
@@ -853,10 +854,76 @@ static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Cli
     }
 }
 
-static VbCmdResult ex_clearcache(Client *c, const ExArg *arg)
+/**
+ * Clear website data by ':cleardata {time} {dataTypeList}'.
+ */
+static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
 {
-    webkit_web_context_clear_cache(webkit_web_context_get_default());
-    return CMD_SUCCESS;
+    unsigned int data_types = 0;
+    WebKitWebsiteDataManager *manager;
+    VbCmdResult result = CMD_SUCCESS;
+    GTimeSpan timespan = 0;
+
+    if (arg->lhs->len) {
+        timespan = util_string_to_timespan(arg->lhs->str);
+    }
+    if (!arg->rhs->len) {
+        /* No special type given - clear all known types. */
+        data_types = WEBKIT_WEBSITE_DATA_ALL;
+    } else {
+        GString *str;
+        char **types;
+        char *value;
+        unsigned int len, i, t;
+        gboolean found;
+        static const Arg type_map[] = {
+            {WEBKIT_WEBSITE_DATA_MEMORY_CACHE,              "memory-cache"},
+            {WEBKIT_WEBSITE_DATA_DISK_CACHE,                "disk-cache"},
+            {WEBKIT_WEBSITE_DATA_OFFLINE_APPLICATION_CACHE, "offline-cache"},
+            {WEBKIT_WEBSITE_DATA_SESSION_STORAGE,           "session-storage"},
+            {WEBKIT_WEBSITE_DATA_LOCAL_STORAGE,             "local-storage"},
+            {WEBKIT_WEBSITE_DATA_INDEXEDDB_DATABASES,       "indexeddb-databases"},
+            {WEBKIT_WEBSITE_DATA_PLUGIN_DATA,               "plugin-data"},
+            {WEBKIT_WEBSITE_DATA_COOKIES,                   "cookies"},
+#if WEBKIT_CHECK_VERSION(2, 26, 0)
+            {WEBKIT_WEBSITE_DATA_HSTS_CACHE,                "hsts-cache"},
+#endif
+            {0, ""},
+        };
+
+        /* Walk through list of data types given as rhs. */
+        types = g_strsplit(arg->rhs->str, ",", -1);
+        len   = g_strv_length(types);
+        str   = g_string_new(NULL);
+
+        /* Loop over given types and collect the type values into bitmap. */
+        for (i = 0; i < len; i++) {
+            value = types[i];
+            found = FALSE;
+            for (t = 0; type_map[t].i; t++) {
+                if (!strcmp(value, type_map[t].s)) {
+                    data_types |= type_map[t].i;
+                    found       = TRUE;
+                    break;
+                }
+            }
+
+            if (!found) {
+                /* collect unknown types to be shown in error message. */
+                g_string_append_printf(str, "%s ", value);
+            }
+        }
+        if (*str->str) {
+            vb_echo(c, MSG_ERROR, TRUE, "unknown data type(s): %s", str->str);
+            result = CMD_ERROR|CMD_KEEPINPUT;
+        }
+        g_string_free(str, TRUE);
+        g_strfreev(types);
+    }
+    manager = webkit_web_context_get_website_data_manager(webkit_web_view_get_context(c->webview));
+    webkit_website_data_manager_clear(manager, data_types, timespan, NULL, NULL, NULL);
+
+    return result;
 }
 
 /**

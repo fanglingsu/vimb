@@ -807,9 +807,93 @@ Example:
 .EE
 .SS Misc
 .TP
-.B :cl[earcache]
-Clears all resources currently cached by webkit.
+.BI ":cl[eardata] [" timespan "] [" dataTypes "]"
+Asynchronously clears the website data of the given list of\fIdataTypes\fP
+modified in the past \fItimespan\fP.
+If \fItimespan\fP is 0, all website data will be removed.
 Note that this effects all running instances of vimb.
+.RS
+.PP
+.PD 0
+The \fItimespan\fP is given as sequence of '[multiplier]\fIunit\fP' tupels.
+with following units.
+.TP
+.B y
+year (365 days)
+.TP
+.B w
+week (7 days)
+.TP
+.B d
+day
+.TP
+.B h
+hour
+.TP
+.B m
+minute
+.TP
+.B s
+second
+.TP
+.B -
+can be used to clear data without timespan restriction
+.PD
+.RE
+.RS
+.PP
+.PD 0
+The \fIdataTypes\fP is a comma separated list of following types.
+.TP
+.B memory-cache
+Memory cache.
+.TP
+.B disk-cache
+HTTP disk cache.
+.TP
+.B offline-cache
+Offline web application cache.
+.TP
+.B session-storage
+Session storage data.
+.TP
+.B local-storage
+Local storage data.
+.TP
+.B indexeddb-databases
+IndexedDB databases.
+.TP
+.B plugin-data
+Plugin data.
+.TP
+.B cookies
+Cookies. Note that the cookies are not cleared in case a \fItimespan\fP is
+given.
+.TP
+.B hsts-cache
+HTTP Strict Transport Security cache.
+.sp
+.PP
+.I Example:
+.PD 0
+.IP ":cleardata"
+to clear all known website data types without any timespan restriction.
+.IP ":cleardata - local-storage,session-storage,cookies"
+to completely clear the cookies, local- and session-storage without time
+restrictions.
+.IP ":cleardata 2d4h disk-cache"
+to clear the disk cache that was modified in the past two days and four hours.
+.PD
+.RE
+.TP
+.BI ":sh[ellcmd]! " cmd
+Like :sh[ellcmd] but asynchronous.
+.sp
+Example:
+.EX
+:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
+.EE
+.TP
 .TP
 .BI ":sh[ellcmd] " cmd
 Runs the given shell \fIcmd\fP syncron and print the output into inputbox.

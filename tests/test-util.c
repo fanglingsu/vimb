@@ -298,6 +298,32 @@ static void test_strescape(void)
     }
 }
 
+static void test_string_to_timespan(void)
+{
+    g_assert_cmpuint(util_string_to_timespan("d"), ==, G_TIME_SPAN_DAY);
+    g_assert_cmpuint(util_string_to_timespan("h"), ==, G_TIME_SPAN_HOUR);
+    g_assert_cmpuint(util_string_to_timespan("m"), ==, G_TIME_SPAN_MINUTE);
+    g_assert_cmpuint(util_string_to_timespan("s"), ==, G_TIME_SPAN_SECOND);
+
+    g_assert_cmpuint(util_string_to_timespan("y"), ==, G_TIME_SPAN_DAY * 365);
+    g_assert_cmpuint(util_string_to_timespan("w"), ==, G_TIME_SPAN_DAY * 7);
+
+    /* use counters */
+    g_assert_cmpuint(util_string_to_timespan("1s"), ==, G_TIME_SPAN_SECOND);
+    g_assert_cmpuint(util_string_to_timespan("2s"), ==, 2 * G_TIME_SPAN_SECOND);
+    g_assert_cmpuint(util_string_to_timespan("34s"), ==, 34 * G_TIME_SPAN_SECOND);
+    g_assert_cmpuint(util_string_to_timespan("0s"), ==, 0);
+
+    /* combine counters and different units */
+    g_assert_cmpuint(util_string_to_timespan("ds"), ==, G_TIME_SPAN_DAY + G_TIME_SPAN_SECOND);
+    g_assert_cmpuint(util_string_to_timespan("2dh0s"), ==, (2 * G_TIME_SPAN_DAY) + G_TIME_SPAN_HOUR);
+
+    /* unparsabel values */
+    g_assert_cmpuint(util_string_to_timespan(""), ==, 0);
+    g_assert_cmpuint(util_string_to_timespan("-"), ==, 0);
+    g_assert_cmpuint(util_string_to_timespan("5-"), ==, 0);
+}
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);
@@ -316,6 +342,7 @@ int main(int argc, char *argv[])
     g_test_add_func("/test-util/wildmatch-complete", test_wildmatch_complete);
     g_test_add_func("/test-util/wildmatch-multi", test_wildmatch_multi);
     g_test_add_func("/test-util/strescape", test_strescape);
+    g_test_add_func("/test-util/string_to_timespan", test_string_to_timespan);
 
     return g_test_run();
 }

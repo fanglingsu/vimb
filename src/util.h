@@ -58,5 +58,6 @@ char *util_strcasestr(const char *haystack, const char *needle);
 char *util_str_replace(const char* search, const char* replace, const char* string);
 char *util_strescape(const char *source, const char *exceptions);
 gboolean util_wildmatch(const char *pattern, const char *subject);
+GTimeSpan util_string_to_timespan(const char *input);
 
 #endif /* end of include guard: _UTIL_H */

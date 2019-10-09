@@ -1110,3 +1110,39 @@ static gboolean match_list(const char *pattern, int patlen, const char *subject)
     }
 }
 
+/**
+ * Get the time span to given string like '1y5dh' (one year and five days and
+ * one hour).
+ */
+GTimeSpan util_string_to_timespan(const char *input)
+{
+    unsigned int multiplier = 0;
+    GTimeSpan sum           = 0;
+    gboolean hasmultiplier  = FALSE;
+
+    while (*input) {
+        if (VB_IS_DIGIT(*input)) {
+            multiplier    = multiplier * 10 + (*input - '0');
+            /* Use separate variable to differentiate between no multiplier
+             * set (is same as 1) or ultiplier of '0'. */
+            hasmultiplier = TRUE;
+        } else {
+            GTimeSpan s = 0;
+            switch (*input) {
+                case 'y': s = 365 * G_TIME_SPAN_DAY; break;
+                case 'w': s = 7 * G_TIME_SPAN_DAY; break;
+                case 'd': s = G_TIME_SPAN_DAY; break;
+                case 'h': s = G_TIME_SPAN_HOUR; break;
+                case 'm': s = G_TIME_SPAN_MINUTE; break;
+                case 's': s = G_TIME_SPAN_SECOND; break;
+            }
+            sum += s * (hasmultiplier ? multiplier : 1);
+            /* Unset multiplier for th epossible next multiplier in input */
+            multiplier    = 0;
+            hasmultiplier = FALSE;
+        }
+        input++;
+    }
+
+    return sum;
+}
