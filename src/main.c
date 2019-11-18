@@ -2012,7 +2012,14 @@ static gboolean on_permission_request(WebKitWebView *webview,
     char *msg = NULL;
 
     if (WEBKIT_IS_GEOLOCATION_PERMISSION_REQUEST(request)) {
-        msg = "request your location";
+        char* geolocation_setting = GET_CHAR(c, "geolocation");
+        if (strcmp(geolocation_setting, "ask") == 0) {
+            msg = "access your location";
+        } else if (strcmp(geolocation_setting, "always") == 0) {
+            return TRUE;
+        } else if (strcmp(geolocation_setting, "never") == 0) {
+            return FALSE;
+        }
     } else if (WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(request)) {
         if (webkit_user_media_permission_is_for_audio_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
             msg = "access the microphone";

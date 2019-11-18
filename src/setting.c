@@ -53,6 +53,7 @@ static void setting_free(Setting *s);
 static int cookie_accept(Client *c, const char *name, DataType type, void *value, void *data);
 static int default_zoom(Client *c, const char *name, DataType type, void *value, void *data);
 static int fullscreen(Client *c, const char *name, DataType type, void *value, void *data);
+static int geolocation(Client *c, const char *name, DataType type, void *value, void *data);
 static int gui_style(Client *c, const char *name, DataType type, void *value, void *data);
 static int hardware_acceleration_policy(Client *c, const char *name, DataType type, void *value, void *data);
 static int input_autohide(Client *c, const char *name, DataType type, void *value, void *data);
@@ -90,6 +91,7 @@ void setting_init(Client *c)
     i = SETTING_DEFAULT_FONT_SIZE;
     setting_add(c, "font-size", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
     setting_add(c, "frame-flattening", TYPE_BOOLEAN, &off, webkit, 0, "enable-frame-flattening");
+    setting_add(c, "geolocation", TYPE_CHAR, &"ask", geolocation, FLAG_NODUP, NULL);
     setting_add(c, "hardware-acceleration-policy", TYPE_CHAR, &"ondemand", hardware_acceleration_policy, FLAG_NODUP, NULL);
     setting_add(c, "header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, "header");
     i = 1000;
@@ -537,6 +539,16 @@ static int fullscreen(Client *c, const char *name, DataType type, void *value, v
         gtk_window_unfullscreen(GTK_WINDOW(c->window));
     }
 
+    return CMD_SUCCESS;
+}
+
+static int geolocation(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    char *policy = (char *)value;
+    if (strcmp("always", policy) != 0 && strcmp("ask", policy) != 0 && strcmp("never", policy) != 0) {
+        vb_echo(c, MSG_ERROR, FALSE, "%s must be in [always, ask, never]", name);
+        return CMD_ERROR | CMD_KEEPINPUT;
+    }
     return CMD_SUCCESS;
 }
 
