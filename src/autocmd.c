@@ -44,15 +44,16 @@ static struct {
     const char *name;
     guint      bits;
 } events[] = {
-    {"*",                0x00ff},
-    {"LoadStarted",      0x0001},
-    {"LoadCommitted",    0x0002},
-    /*{"LoadFirstLayout",  0x0004},*/
-    {"LoadFinished",     0x0008},
-    /*{"LoadFailed",       0x0010},*/
-    {"DownloadStarted",  0x0020},
-    {"DownloadFinished", 0x0040},
-    {"DownloadFailed",   0x0080},
+    {"*",                0x01ff},
+    {"LoadStarting",     0x0001},
+    {"LoadStarted",      0x0002},
+    {"LoadCommitted",    0x0004},
+    /*{"LoadFirstLayout",  0x0008},*/
+    {"LoadFinished",     0x0010},
+    /*{"LoadFailed",       0x0020},*/
+    {"DownloadStarted",  0x0040},
+    {"DownloadFinished", 0x0080},
+    {"DownloadFailed",   0x0100},
 };
 
 static GSList *get_group(Client *c, const char *name);
