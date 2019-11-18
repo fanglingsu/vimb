@@ -648,7 +648,9 @@ Autocommands are built with following properties.
 : You can specify a comma separated list of event names. No white space can be
   used in this list.
 : Events:
-: - `LoadStarted` Fired if a new page is going to opened. No data has been
+: - `LoadStarting` Fired before a new page is going to be opened. No data has
+    been sent or received yet, the load may still fail for transport issues.
+  - `LoadStarted` Fired if a new page is going to opened. No data has been
 	received yet, the load may still fail for transport issues. Out of this
     reason this event has no associated URL to match.
   - `LoadCommitted` Fired if first data chunk has arrived, meaning that the
