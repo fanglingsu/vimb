@@ -97,6 +97,7 @@ void setting_init(Client *c)
     setting_add(c, "hint-keys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
     setting_add(c, "hint-follow-last", TYPE_BOOLEAN, &on, NULL, 0, NULL);
     setting_add(c, "hint-keys-same-length", TYPE_BOOLEAN, &off, NULL, 0, NULL);
+    setting_add(c, "hint-match-element", TYPE_BOOLEAN, &on, NULL, 0, NULL);
     setting_add(c, "html5-database", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-database");
     setting_add(c, "html5-local-storage", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-local-storage");
     setting_add(c, "hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing");

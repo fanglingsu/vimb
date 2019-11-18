@@ -1288,6 +1288,12 @@ To have upper case hint labels, it's possible to add following css to the
 .IP
 "span[vimbhint="label"] {text-transform: uppercase !important;}"
 .TP
+.B hint-match-element (bool)
+If this is set to 'true' typed chars that are not part of the set 'hint-keys'
+are used to filter hinted DOM elements by their text value.
+If 'hint-keys' are set to chars instead of numbers it might be useful to
+disable matching of the elements by 'hint-match-element=false'.
+.TP
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history.
 If history-max-items is set to 0, the history file will not be changed.
