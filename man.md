@@ -1009,6 +1009,12 @@ hint-keys (string)
 
 : `._hintLabel {text-transform: uppercase !important;}`
 
+hint-match-element (bool)
+: If this is set to 'true' typed chars that are not part of the set 'hint-keys'
+  are used to filter hinted DOM elements by their text value. If 'hint-keys'
+  are set to chars instead of numbers it might be useful to disable matching of
+  the elements by 'hint-match-element=false'.
+
 history-max-items (int)
 : Maximum number of unique items stored in search-, command or URI history. If
   history-max-items is set to 0, the history file will not be changed.
@@ -1050,6 +1056,10 @@ javascript-can-access-clipboard (bool)
 javascript-can-open-windows-automatically (bool)
 : Whether JavaScript can open popup windows automatically without user
   interaction.
+
+geolocation (bool)
+: Controls website access to the geolocation API ('always', 'never', 'ask' -
+  display a prompt each time)
 
 media-playback-allows-inline (bool)
 : Whether media playback is full-screen only or inline playback is allowed.

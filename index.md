@@ -15,21 +15,21 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+New setting `geolocation`
+: Allows to 'always' or 'never' allow geolocation requests, or to be ask each
+  time.
+
+New settings `hint-match-element`
+: Allowes to disable hint matchin by the elements text.
+
+[Vimb 3.5.0](https://github.com/fanglingsu/vimb/releases/tag/3.5.0) released
+
 Incognito Mode by option `-i, --incognito`
 : Websites will not store any data in the client storage.
 
 New setting `download-command` and `download-use-external`
 : These new settings allow to use external tool for downloading URIs instead
   of the built in downloader.
-
-[Vimb 3.4.0](https://github.com/fanglingsu/vimb/releases/tag/3.4.0) released
-
-New setting `prevent-newwindow`
-: Whether to open links, that would normally open in a new window, in the
-  current window. This option does not affect links fired by hinting.
-
-New option `--no-maximize`
-: Allow to startup vimb without maximized window.
 
 ## screenshots
 There isn't really much to see for a browser that is controlled via keyboard.
