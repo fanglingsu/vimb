@@ -2016,9 +2016,11 @@ static gboolean on_permission_request(WebKitWebView *webview,
         if (strcmp(geolocation_setting, "ask") == 0) {
             msg = "access your location";
         } else if (strcmp(geolocation_setting, "always") == 0) {
+            webkit_permission_request_allow(request);
             return TRUE;
         } else if (strcmp(geolocation_setting, "never") == 0) {
-            return FALSE;
+            webkit_permission_request_deny(request);
+            return TRUE;
         }
     } else if (WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(request)) {
         if (webkit_user_media_permission_is_for_audio_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
