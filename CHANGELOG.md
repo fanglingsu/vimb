@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 * `:cleardata [listOfDataTypes] [timeSpan]` command to clear various types of
   stored website data modified in the last _timeSpan_.
+* Setting `hint-match-element` to allow to disable the hinting to filter hints
+  by the elements text content. This is useful if 'hint-keys' are set the
+  chars instead of numbers.
+* New autocmd event `LoadStarting` to run auto commands before the first page
+  content is loaded (Thanks to Patrick Steinhardt).
+* Setting `geolocation` with values ('ask', 'always' and 'never') to allow to
+  user to permit or disable geolcation requests (Thanks to Alva).
 ### Changed
 ### Fixed
 ### Removed
