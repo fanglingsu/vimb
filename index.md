@@ -105,7 +105,6 @@ If you find a misbehaviour or have feature requests use the
 [issue tracker][bug] provided by github or via [mailing list][mail] ([list archive][mail-archive]).
 
 ## about
-- [https://en.wikipedia.org/wiki/Vimb](https://en.wikipedia.org/wiki/Vimb)
 - [http://thedarnedestthing.com/vimb](http://thedarnedestthing.com/vimb)
 - [https://blog.jeaye.com/2015/08/23/vimb/](https://blog.jeaye.com/2015/08/23/vimb/)
 
