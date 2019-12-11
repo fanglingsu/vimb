@@ -51,6 +51,7 @@ static void setting_print(Client *c, Setting *s);
 static void setting_free(Setting *s);
 
 static int cookie_accept(Client *c, const char *name, DataType type, void *value, void *data);
+static int dark_mode(Client *c, const char *name, DataType type, void *value, void *data);
 static int default_zoom(Client *c, const char *name, DataType type, void *value, void *data);
 static int fullscreen(Client *c, const char *name, DataType type, void *value, void *data);
 static int geolocation(Client *c, const char *name, DataType type, void *value, void *data);
@@ -85,6 +86,7 @@ void setting_init(Client *c)
     setting_add(c, "allow-universal-access-from-file-urls", TYPE_BOOLEAN, &off, webkit, 0, "allow-universal-access-from-file-urls");
     setting_add(c, "caret", TYPE_BOOLEAN, &off, webkit, 0, "enable-caret-browsing");
     setting_add(c, "cursiv-font", TYPE_CHAR, &"serif", webkit, 0, "cursive-font-family");
+    setting_add(c, "dark-mode", TYPE_BOOLEAN, &off, dark_mode, 0, NULL);
     setting_add(c, "default-charset", TYPE_CHAR, &"utf-8", webkit, 0, "default-charset");
     setting_add(c, "default-font", TYPE_CHAR, &"sans-serif", webkit, 0, "default-font-family");
     setting_add(c, "dns-prefetching", TYPE_BOOLEAN, &on, webkit, 0, "enable-dns-prefetching");
@@ -515,6 +517,13 @@ static int cookie_accept(Client *c, const char *name, DataType type, void *value
 
         return CMD_ERROR | CMD_KEEPINPUT;
     }
+
+    return CMD_SUCCESS;
+}
+
+static int dark_mode(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    g_object_set(gtk_widget_get_settings(GTK_WIDGET(c->window)), "gtk-application-prefer-dark-theme", *(gboolean*)value, NULL);
 
     return CMD_SUCCESS;
 }
