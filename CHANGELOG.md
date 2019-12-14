@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   content is loaded (Thanks to Patrick Steinhardt).
 * Setting `geolocation` with values ('ask', 'always' and 'never') to allow to
   user to permit or disable geolcation requests (Thanks to Alva).
+* Setting `dark-mode` to switch the webview into dark mode, which might be
+  picked up by pages media query to setup dark styling (Thanks to Alva).
 ### Changed
 ### Fixed
 ### Removed
