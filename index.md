@@ -15,6 +15,9 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+New setting `dark-mode`
+: These new settings enabled dark mode in the webview.
+
 New setting `geolocation`
 : Allows to 'always' or 'never' allow geolocation requests, or to be ask each
   time.
@@ -26,10 +29,6 @@ New settings `hint-match-element`
 
 Incognito Mode by option `-i, --incognito`
 : Websites will not store any data in the client storage.
-
-New setting `download-command` and `download-use-external`
-: These new settings allow to use external tool for downloading URIs instead
-  of the built in downloader.
 
 ## screenshots
 There isn't really much to see for a browser that is controlled via keyboard.

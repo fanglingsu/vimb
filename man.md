@@ -908,6 +908,10 @@ completion-selected-css (string)
 cursiv-font (string)
 : The font family used as the default for content using cursive font.
 
+dark-mode (bool)
+: Whether to enable dark mode. Websites can use the `prefers-color-scheme'
+  media query to adjust styles according to this option.
+
 default-charset (string)
 : The default text charset used when interpreting content with an unspecified
   charset.
