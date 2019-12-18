@@ -118,6 +118,8 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
+static gboolean autocmdOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error);
 
 struct Vimb vb;
 
@@ -1029,7 +1031,8 @@ static void spawn_new_instance(const char *uri)
 #endif
         + (vb.incognito ? 1 : 0)
         + (vb.profile ? 2 : 0)
-        + (vb.no_maximize ? 1 : 0),
+        + (vb.no_maximize ? 1 : 0)
+        + g_slist_length(vb.cmdargs) * 2,
         sizeof(char *)
     );
 
@@ -1056,6 +1059,10 @@ static void spawn_new_instance(const char *uri)
     }
     if (vb.no_maximize) {
         cmd[i++] = "--no-maximize";
+    }
+    for (GSList *l = vb.cmdargs; l; l = l->next) {
+        cmd[i++] = "-C";
+        cmd[i++] = l->data;
     }
     cmd[i++] = (char*)uri;
     cmd[i++] = NULL;
@@ -1786,6 +1793,8 @@ static void vimb_cleanup(void)
         }
     }
     g_free(vb.profile);
+
+    g_slist_free_full(vb.cmdargs, g_free);
 }
 #endif
 
@@ -2085,6 +2094,13 @@ static gboolean profileOptionArgFunc(const gchar *option_name,
     return TRUE;
 }
 
+static gboolean autocmdOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error)
+{
+    vb.cmdargs = g_slist_append(vb.cmdargs, g_strdup(value));
+    return TRUE;
+}
+
 int main(int argc, char* argv[])
 {
     Client *c;
@@ -2093,6 +2109,7 @@ int main(int argc, char* argv[])
     gboolean ver = FALSE, buginfo = FALSE;
 
     GOptionEntry opts[] = {
+        {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
         {"incognito", 'i', 0, G_OPTION_ARG_NONE, &vb.incognito, "Run with user data read-only", NULL},
@@ -2164,6 +2181,11 @@ int main(int argc, char* argv[])
 
     c = client_new(NULL);
     client_show(NULL, c);
+
+    /* process the --cmd if this was given */
+    for (GSList *l = vb.cmdargs; l; l = l->next) {
+        ex_run_string(c, l->data, false);
+    }
     if (argc <= 1) {
         vb_load_uri(c, &(Arg){TARGET_CURRENT, NULL});
     } else if (!strcmp(argv[argc - 1], "-")) {

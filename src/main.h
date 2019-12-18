@@ -277,6 +277,7 @@ struct Vimb {
     char        *files[FILES_LAST];
     FileStorage *storage[STORAGE_LAST];
     char        *profile;           /* profile name */
+    GSList      *cmdargs;           /* ex commands given asl --command, -C option */
     struct {
         guint   history_max;
         guint   closed_max;

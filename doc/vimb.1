@@ -25,6 +25,17 @@ If \fIURI\fP is '-', Vimb reads the HTML to display from stdin.
 .P
 Mandatory arguments to long options are mandatory for short options too.
 .TP
+.BI "\-C, \-\-cmd " "CMD"
+Run \fICMD\fP as ex command line right before the first page is loaded.
+If the flag is used more than one time, the commands are called in order they
+are given.
+You could also pass several ex commands in one \fICMD\fP,
+if they are separated by "|".
+.sp
+.EX
+vimb --cmd "set dark-mode=on|set header=Referer,DNT=1"
+.EE
+.TP
 .BI "\-c, \-\-config " "FILE"
 Use custom configuration given as \fIFILE\fP.
 This will also be applied on new spawned instances.
