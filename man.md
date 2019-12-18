@@ -27,6 +27,13 @@ If no *URI* or *file* is given vimb will open the configured home-page. If
 
 Mandatory arguments to long options are mandatory for short options too.
 
+−C, −−cmd *CD*
+: Run *CMD* as ex command line right before the first page is loaded. If the
+  flag is used more than one time, the commands are called in order they are
+  given. You could also pass several ex commands in one CMD, if they are
+  separated by `|`.
+: `vimb --cmd "set dark-mode=on|set header=Referer,DNT=1"`
+
 −c, −−config *FILE*
 : Use custom configuration given as *CONFIG-FILE*. This will also be applied
   on new spawned instances.
