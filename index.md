@@ -15,6 +15,8 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+[Vimb 3.6.0](https://github.com/fanglingsu/vimb/releases/tag/3.6.0) released
+
 New option `--cmd, -C`
 : Allow to give ex commands on startup that are give to new spawned child
   instances too.
@@ -28,8 +30,6 @@ New setting `geolocation`
 
 New settings `hint-match-element`
 : Allows to disable hint matching by the elements text.
-
-[Vimb 3.5.0](https://github.com/fanglingsu/vimb/releases/tag/3.5.0) released
 
 ## screenshots
 There isn't really much to see for a browser that is controlled via keyboard.
