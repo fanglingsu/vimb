@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.6.0] - 2020-01-02
 ### Added
 * `:cleardata [listOfDataTypes] [timeSpan]` command to clear various types of
   stored website data modified in the last _timeSpan_.
@@ -14,8 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   chars instead of numbers.
 * New autocmd event `LoadStarting` to run auto commands before the first page
   content is loaded (Thanks to Patrick Steinhardt).
-* Setting `geolocation` with values ('ask', 'always' and 'never') to allow to
-  user to permit or disable geolcation requests (Thanks to Alva).
+* Setting `geolocation` with values ('ask', 'always' and 'never') to allow the
+  user to permit or disable geolcation requests by default (Thanks to Alva).
 * Setting `dark-mode` to switch the webview into dark mode, which might be
   picked up by pages media query to setup dark styling (Thanks to Alva).
 * Option `--cmd, -C` to run ex commands on startup.
@@ -271,7 +273,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   cookie file
 * Fixed none POSIX `echo -n` call
 
-[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.5.0...master
+[Unreleased]: https://github.com/fanglingsu/vimb/compare/3.6.0...master
+[3.6.0]: https://github.com/fanglingsu/vimb/compare/3.5.0...3.6.0
 [3.5.0]: https://github.com/fanglingsu/vimb/compare/3.4.0...3.5.0
 [3.4.0]: https://github.com/fanglingsu/vimb/compare/3.3.0...3.4.0
 [3.3.0]: https://github.com/fanglingsu/vimb/compare/3.2.0...3.3.0
