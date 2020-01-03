@@ -127,7 +127,7 @@ static gboolean parse_count(const char **input, ExArg *arg);
 static gboolean parse_command_name(Client *c, const char **input, ExArg *arg);
 static gboolean parse_bang(const char **input, ExArg *arg);
 static gboolean parse_lhs(const char **input, ExArg *arg);
-static gboolean parse_rhs(Client *c, const char **input, ExArg *arg);
+static gboolean parse_rhs(const char **input, ExArg *arg);
 static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static VbCmdResult execute(Client *c, const ExArg *arg);
@@ -598,7 +598,7 @@ static gboolean parse(Client *c, const char **input, ExArg *arg, gboolean *nohis
     }
     /* parse the rhs if this is available */
     skip_whitespace(input);
-    parse_rhs(c, input, arg);
+    parse_rhs(input, arg);
 
     if (**input) {
         (*input)++;
@@ -731,7 +731,7 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
  * command can contain any char accept of the newline, else the right hand
  * side end on the first none escaped | or newline.
  */
-static gboolean parse_rhs(Client *c, const char **input, ExArg *arg)
+static gboolean parse_rhs(const char **input, ExArg *arg)
 {
     int expflags, flags;
     gboolean cmdlist;
@@ -746,7 +746,7 @@ static gboolean parse_rhs(Client *c, const char **input, ExArg *arg)
 
     cmdlist  = (arg->flags & EX_FLAG_CMD) != 0;
     expflags = (arg->flags & EX_FLAG_EXP)
-        ? UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL
+        ? UTIL_EXP_TILDE|UTIL_EXP_DOLLAR
         : 0;
     flags = expflags;
 
@@ -754,7 +754,7 @@ static gboolean parse_rhs(Client *c, const char **input, ExArg *arg)
      * EX_FLAG_CMD is not set also on | */
     while (**input && **input != '\n' && (cmdlist || **input != '|')) {
         /* check for expansion placeholder */
-        util_parse_expansion(c->state, input, arg->rhs, flags, "|\\");
+        util_parse_expansion(input, arg->rhs, flags, "|\\");
 
         if (VB_IS_SEPARATOR(**input)) {
             /* add tilde expansion for next loop needs to be first char or to
@@ -1324,7 +1324,7 @@ static gboolean complete(Client *c, short direction)
 
                 case EX_SAVE: /* Fallthrough */
                 case EX_SOURCE:
-                    found = util_filename_fill_completion(c->state, store, token);
+                    found = util_filename_fill_completion(store, token);
                     break;
 
 #ifdef FEATURE_AUTOCMD

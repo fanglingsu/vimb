@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Removed
+* Expansion of `%` to the current opened URI for `:shellcmd` was removed
+  because it breaks the `x-hint-command` with URIs containing '%'. But it is
+  still possible to use `$VIMB_URI` for the `:shellcmd` which has the same
+  effect.
 
 ## [3.6.0] - 2020-01-02
 ### Added

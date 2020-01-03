@@ -147,7 +147,7 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
 
     /* Prepare the path to save the download. */
     if (path && *path) {
-        file = util_build_path(c->state, path, download_path);
+        file = util_build_path(path, download_path);
 
         /* if file is an directory append a file name */
         if (g_file_test(file, (G_FILE_TEST_IS_DIR))) {
@@ -156,7 +156,7 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
             g_free(dir);
         }
     } else {
-        file = util_build_path(c->state, suggested_filename, download_path);
+        file = util_build_path(suggested_filename, download_path);
     }
 
     g_free(basename);
