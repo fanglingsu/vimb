@@ -1,7 +1,7 @@
 ---
 title:  Vimb - manual page
 layout: default
-meta:   The whole manual page
+meta:   manual page of vimb
 nav_sort: 2
 nav_title: man
 ---
