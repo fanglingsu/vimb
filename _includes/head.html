@@ -1,0 +1,13 @@
+<head>
+  <meta charset="utf-8"/>
+  <meta name="description" content="{{ page.meta | strip_html | normalize_whitespace | truncate 160 | escape }}"/>
+  <meta name="author" content="{{ site.author }}"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title | escape }}</title>
+  <link rel="stylesheet" href="{{ "/theme/main.css" | relative_url }}"/>
+  <link rel="stylesheet" media="print" href="{{ "/theme/print.css" | relative_url }}"/>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ page.title | escape }}">
+  <meta property="og:description" content="{{ page.meta | strip_html | normalize_whitespace | truncate: 160, "" | escape }}">
+  <meta property="og:locale" content="en_US">
+</head>

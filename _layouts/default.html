@@ -1,31 +1,16 @@
+---
+layout: compress
+---
+
 <!DOCTYPE html>
 <html lang="en" itemscope itemtype="https://schema.org/WebPage">
-<head>
-  <title>{{ page.title }}</title>
-  <meta charset="UTF-8"/>
-  <meta name="description" content="{{ page.meta }}"/>
-  <meta name="author" content="Daniel Carl"/>
-  <link rel="stylesheet" type="text/css" href="theme/main.css"/>
-  <link rel="stylesheet" type="text/css" media="print" href="theme/print.css"/>
-  <meta name="viewport" content="width=device-width"/>
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="{{ page.title }}">
-  <meta property="og:description" content="{{ page.meta }}">
-  <meta property="og:locale" content="en_US">
-</head>
+{% include head.html %}
 <body>
 <main id="top">
 <a href="#nav-main" class="nogui">skip to main navigation</a>
 {{ content }}
 </main>
-<nav>
-  <h3 id="nav-main" class="nogui">main navigation</h3>
-  <ul>
-    <li{% if page.active == "home" %} class="active"><span>home</span>{% else %}><a href="./">home</a>{% endif %}</li>
-    <li{% if page.active == "man" %} class="active"><span>man</span>{% else %}><a href="man.html">man</a>{% endif %}</li>
-    <li{% if page.active == "howto" %} class="active"><span>howto</span>{% else %}><a href="howto.html">howto</a>{% endif %}</li>
-  </ul>
-</nav>
+{% include menu.html %}
 <footer><a href="#top" title="to top">&#9650; top</a></footer>
 </body>
 </html>

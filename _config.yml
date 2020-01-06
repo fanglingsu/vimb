@@ -1,3 +1,4 @@
+author: Daniel Carl
 save: true
 lsi: false
 markdown: kramdown
@@ -16,4 +17,12 @@ kramdown:
       disable: true
 sass:
   style: compressed
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  profile: false
+  startings: []
+  blanklines: false
 exclude: [README.md]

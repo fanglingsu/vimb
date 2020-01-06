@@ -2,7 +2,8 @@
 title:  Vimb - user scripts
 layout: default
 meta:   Tipp, Tricks and scripts to make vimb even more productive
-active: howto
+nav_sort: 3
+nav_title: howto
 ---
 
 # howto

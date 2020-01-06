@@ -1,0 +1,13 @@
+<nav>
+  <h3 id="nav-main" class="nogui">main navigation</h3>
+  <ul>
+    {% assign entries = site.pages | sort: "nav_sort" %}
+    {% for entry in entries %}
+      {% if entry.nav_sort %}
+        {% assign title = entry.nav_title | default: entry.title %}
+        <li{% if page.url == entry.url %} class="active"><span>{{ title }}</span>{% else %}><a href="{{ entry.url | relative_url }}">{{ title }}</a>{% endif %}</li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</nav>
+
