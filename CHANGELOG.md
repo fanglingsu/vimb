@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+* The new env variable `$VIMB_SELECTION` is set to the current selected text
+  whenever a `shellcmd` is run #592.
 ### Removed
 * Expansion of `%` to the current opened URI for `:shellcmd` was removed
   because it breaks the `x-hint-command` with URIs containing '%'. But it is

@@ -238,6 +238,31 @@ void ext_proxy_unlock_input(Client *c, const char *element_id)
 }
 
 /**
+ * Returns the current selection if there is one as newly allocates string.
+ *
+ * Result must be freed by caller with g_free.
+ */
+char *ext_proxy_get_current_selection(Client *c)
+{
+    char *selection, *js;
+    gboolean success;
+    GVariant *jsreturn;
+
+    js       = g_strdup_printf("getSelection().toString();");
+    jsreturn = ext_proxy_eval_script_sync(c, js);
+    g_variant_get(jsreturn, "(bs)", &success, &selection);
+    g_free(js);
+
+    if (!success) {
+        g_warning("can not get current selection: %s", selection);
+        g_free(selection);
+        return NULL;
+    }
+
+    return selection;
+}
+
+/**
  * Call a dbus method.
  */
 static void dbus_call(Client *c, const char *method, GVariant *param,

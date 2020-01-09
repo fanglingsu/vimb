@@ -1105,12 +1105,21 @@ static VbCmdResult ex_set(Client *c, const ExArg *arg)
 static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg)
 {
     int status;
-    char *stdOut = NULL, *stdErr = NULL;
+    char *stdOut = NULL, *stdErr = NULL, *selection = NULL;
     VbCmdResult res;
     GError *error = NULL;
 
     if (!*arg->rhs->str) {
         return CMD_ERROR;
+    }
+
+    /* Get current selection and write it as VIMB_SELECTION into env. */
+    selection = ext_proxy_get_current_selection(c);
+    if (selection) {
+        g_setenv("VIMB_SELECTION", selection, TRUE);
+        g_free(selection);
+    } else {
+        g_setenv("VIMB_SELECTION", "", TRUE);
     }
 
     if (arg->bang) {
