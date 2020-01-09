@@ -16,6 +16,10 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+Add `$VIMB_SELECTION` when `:shellcmd` is run.
+: This variable is set to the current selected text whenever a `:shellcmd` is
+  executed.
+
 [Vimb 3.6.0](https://github.com/fanglingsu/vimb/releases/tag/3.6.0) released
 
 New option `--cmd, -C`
@@ -29,8 +33,7 @@ New setting `geolocation`
 : Allows to 'always' or 'never' allow geolocation requests, or to be ask each
   time.
 
-New settings `hint-match-element`
-: Allows to disable hint matching by the elements text.
+More about latest changes can be found in the [CHANGELOG.md][]. 
 
 ## screenshots
 There isn't really much to see for a browser that is controlled via keyboard.
@@ -125,3 +128,4 @@ If you find a misbehaviour or have feature requests use the
 [pkgsrc/wip/vimb-git]: http://pkgsrc.se/wip/vimb-git
 [pkgsrc/www/vimb]:     http://pkgsrc.se/www/vimb
 [network/vimb]:        https://build.opensuse.org/package/show/network/vimb
+[CHANGELOG.md]:        https://github.com/fanglingsu/vimb/blob/master/CHANGELOG.md "Changelog of the vimb browser project"

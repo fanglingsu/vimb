@@ -749,6 +749,8 @@ Example:
 : Following environment variables are set for called shell commands.
 : - `VIMB_URI` This variable is set by vimb everytime a new page is opened to
     the URI of the page.
+  - `VIMB_SELECTION` This variable is set to the current selected text on the
+    page.
   - `VIMB_TITLE` Contains the title of the current opened page.
   - `VIMB_PID` Contains the pid of the running vimb instance.
   - `VIMB_XID` Holds the X-Window id of the vim window or of the embedding
