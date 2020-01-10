@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 * The new env variable `$VIMB_SELECTION` is set to the current selected text
   whenever a `shellcmd` is run #592.
+### Fixed
+* Fixed ignored last line in config file if this line did not end in newline.
 ### Removed
 * Expansion of `%` to the current opened URI for `:shellcmd` was removed
   because it breaks the `x-hint-command` with URIs containing '%'. But it is

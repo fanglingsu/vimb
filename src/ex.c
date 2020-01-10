@@ -477,7 +477,7 @@ VbCmdResult ex_run_file(Client *c, const char *filename)
         return res;
     }
 
-    length = g_strv_length(lines) - 1;
+    length = g_strv_length(lines);
     for (i = 0; i < length; i++) {
         line = lines[i];
         /* skip commented or empty lines */
