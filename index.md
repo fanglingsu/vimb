@@ -39,8 +39,8 @@ More about latest changes can be found in the [CHANGELOG.md][].
 There isn't really much to see for a browser that is controlled via keyboard.
 But following images may give a impression of they way vimb works.
 
-[![vimb hinting marks active element like links](media/vimb-hints.png "link hinting (688x472 15kB)"){:width="350"}](media/vimb-hints.png)
-[![completion with scrallable completion menu](media/vimb-completion.png "completion of settings (690x472 11kB)"){:width="350"}](media/vimb-completion.png)
+[![vimb hinting marks active element like links](media/vimb-hints.png "link hinting (684x465 : 13kB)"){:width="350"}](media/vimb-hints.png)
+[![completion with scrallable completion menu](media/vimb-completion.png "completion of settings (686x467 : 13kB)"){:width="350"}](media/vimb-completion.png)
 
 ## features
 - it's modal like Vim
@@ -129,3 +129,4 @@ If you find a misbehaviour or have feature requests use the
 [pkgsrc/www/vimb]:     http://pkgsrc.se/www/vimb
 [network/vimb]:        https://build.opensuse.org/package/show/network/vimb
 [CHANGELOG.md]:        https://github.com/fanglingsu/vimb/blob/master/CHANGELOG.md "Changelog of the vimb browser project"
+*[feature]: "asdf asdf"
