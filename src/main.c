@@ -17,9 +17,12 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <gdk/gdkx.h>
+#include "config.h"
 #include <gtk/gtk.h>
+#ifndef FEATURE_NO_XEMBED
+#include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
+#endif
 #include <libsoup/soup.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -32,7 +35,6 @@
 #include "ascii.h"
 #include "command.h"
 #include "completion.h"
-#include "config.h"
 #include "ex.h"
 #include "ext-proxy.h"
 #include "handler.h"
@@ -767,7 +769,9 @@ static Client *client_new(WebKitWebView *webview)
 static void client_show(WebKitWebView *webview, Client *c)
 {
     GtkWidget *box;
+#ifndef FEATURE_NO_XEMBED
     char *xid;
+#endif
 
     c->window = create_window(c);
 
@@ -817,6 +821,7 @@ static void client_show(WebKitWebView *webview, Client *c)
     setting_init(c);
 
     gtk_widget_show_all(c->window);
+#ifndef FEATURE_NO_XEMBED
     if (vb.embed) {
         xid = g_strdup_printf("%d", (int)vb.embed);
     } else {
@@ -826,6 +831,7 @@ static void client_show(WebKitWebView *webview, Client *c)
     /* set the x window id to env */
     g_setenv("VIMB_XID", xid, TRUE);
     g_free(xid);
+#endif
 
     /* start client in normal mode */
     vb_enter(c, 'n');
@@ -840,16 +846,20 @@ static GtkWidget *create_window(Client *c)
 {
     GtkWidget *window;
 
+#ifndef FEATURE_NO_XEMBED
     if (vb.embed) {
         window = gtk_plug_new(vb.embed);
     } else {
+#endif
         window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
         gtk_window_set_role(GTK_WINDOW(window), PROJECT_UCFIRST);
         gtk_window_set_default_size(GTK_WINDOW(window), WIN_WIDTH, WIN_HEIGHT);
         if (!vb.no_maximize) {
             gtk_window_maximize(GTK_WINDOW(window));
         }
+#ifndef FEATURE_NO_XEMBED
     }
+#endif
 
     g_object_connect(
             G_OBJECT(window),
@@ -2105,13 +2115,18 @@ int main(int argc, char* argv[])
 {
     Client *c;
     GError *err = NULL;
-    char *pidstr, *winid = NULL;
+    char *pidstr;
+#ifndef FEATURE_NO_XEMBED
+    char *winid = NULL;
+#endif
     gboolean ver = FALSE, buginfo = FALSE;
 
     GOptionEntry opts[] = {
         {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
+#ifndef FEATURE_NO_XEMBED
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+#endif
         {"incognito", 'i', 0, G_OPTION_ARG_NONE, &vb.incognito, "Run with user data read-only", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
@@ -2175,9 +2190,11 @@ int main(int argc, char* argv[])
 
     vimb_setup();
 
+#ifndef FEATURE_NO_XEMBED
     if (winid) {
         vb.embed = strtol(winid, NULL, 0);
     }
+#endif
 
     c = client_new(NULL);
     client_show(NULL, c);

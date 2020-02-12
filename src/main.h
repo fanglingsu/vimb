@@ -21,14 +21,16 @@
 #define _MAIN_H
 
 #include <fcntl.h>
+#include "config.h"
+#ifndef FEATURE_NO_XEMBED
 #include <gtk/gtkx.h>
+#endif
 #include <stdio.h>
 #include <webkit2/webkit2.h>
 #include "shortcut.h"
 #include "handler.h"
 #include "file-storage.h"
 
-#include "config.h"
 
 #define LENGTH(x) (sizeof x / sizeof x[0])
 #define OVERWRITE_STRING(t, s) {if (t) g_free(t); t = g_strdup(s);}
@@ -271,7 +273,9 @@ struct Client {
 struct Vimb {
     char        *argv0;
     Client      *clients;
+#ifndef FEATURE_NO_XEMBED
     Window      embed;
+#endif
     GHashTable  *modes;             /* all available browser main modes */
     char        *configfile;        /* config file given as option on startup */
     char        *files[FILES_LAST];
