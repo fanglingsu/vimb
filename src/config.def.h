@@ -27,7 +27,7 @@
 /* enable the read it later queue */
 #define FEATURE_QUEUE
 /* disable X window embedding */
-//#define FEATURE_NO_XEMBED
+/* #define FEATURE_NO_XEMBED */
 
 #ifdef FEATURE_WGET_PROGRESS_BAR
 /* chars to use for the progressbar */
