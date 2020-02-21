@@ -382,7 +382,7 @@ gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
     MapState res = map_handle_keys(c, string, len, true);
 
     if (res != MAP_AMBIGUOUS) {
-        if (!c->state.processed_key) {
+        if (c->state.typed && !c->state.processed_key) {
             /* events ready to be consumed */
             process_events();
         } else {
