@@ -56,6 +56,7 @@ static VbResult normal_clear_input(Client *c, const NormalCmdInfo *info);
 static VbResult normal_descent(Client *c, const NormalCmdInfo *info);
 static VbResult normal_ex(Client *c, const NormalCmdInfo *info);
 static VbResult normal_fire(Client *c, const NormalCmdInfo *info);
+static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info);
 static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info);
 static VbResult normal_hint(Client *c, const NormalCmdInfo *info);
 static VbResult normal_do_hint(Client *c, const char *prompt);
@@ -186,7 +187,7 @@ static struct {
 /* f   0x66 */ {normal_ex},
 /* g   0x67 */ {normal_g_cmd},
 /* h   0x68 */ {normal_scroll},
-/* i   0x69 */ {NULL},
+/* i   0x69 */ {normal_focus_last_active},
 /* j   0x6a */ {normal_scroll},
 /* k   0x6b */ {normal_scroll},
 /* l   0x6c */ {normal_scroll},
@@ -438,6 +439,20 @@ static VbResult normal_fire(Client *c, const NormalCmdInfo *info)
         ext_proxy_eval_script(c, "getSelection().anchorNode.parentNode.click();", NULL);
 
         return RESULT_COMPLETE;
+    }
+
+    return RESULT_ERROR;
+}
+
+static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info)
+{
+    GVariant *variant;
+    gboolean focused;
+
+    variant = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.focus();");
+    g_variant_get(variant, "(bs)", &focused);
+    if (!focused) {
+        ext_proxy_focus_input(c);
     }
 
     return RESULT_ERROR;
