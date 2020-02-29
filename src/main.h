@@ -248,6 +248,7 @@ struct Client {
          * client base. */
         GHashTable              *settings;
         guint                   scrollstep;
+        guint                   scrollmultiplier;
         gboolean                input_autohide;
         gboolean                incsearch;
         gboolean                prevent_newwindow;

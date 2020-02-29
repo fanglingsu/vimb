@@ -139,6 +139,8 @@ void setting_init(Client *c)
     setting_add(c, "cookie-accept", TYPE_CHAR, &"always", cookie_accept, 0, NULL);
     i = 40;
     setting_add(c, "scroll-step", TYPE_INTEGER, &i, internal, 0, &c->config.scrollstep);
+    i = 1;
+    setting_add(c, "scroll-multiplier", TYPE_INTEGER, &i, internal, 0, &c->config.scrollmultiplier);
     setting_add(c, "home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, 0, NULL);
     i = 2000;
     /* TODO should be global and not overwritten by a new client */

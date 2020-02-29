@@ -116,6 +116,7 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_counted_matches(WebKitFindController *finder, guint count, Client *c);
 static gboolean on_permission_request(WebKitWebView *webview,
         WebKitPermissionRequest *request, Client *c);
+static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c);
 static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
@@ -1999,6 +2000,7 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::notify::title", G_CALLBACK(on_webview_notify_title), c,
         "signal::notify::uri", G_CALLBACK(on_webview_notify_uri), c,
         "signal::permission-request", G_CALLBACK(on_permission_request), c,
+        "signal::scroll-event", G_CALLBACK(on_scroll), c,
         "signal::ready-to-show", G_CALLBACK(on_webview_ready_to_show), c,
         "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
         "signal::authenticate", G_CALLBACK(on_webview_authenticate), c,
@@ -2065,6 +2067,12 @@ static gboolean on_permission_request(WebKitWebView *webview,
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c)
+{
+    event->scroll.delta_y *= c->config.scrollmultiplier;
+    return FALSE;
 }
 
 static void on_script_message_focus(WebKitUserContentManager *manager,
