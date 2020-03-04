@@ -92,6 +92,10 @@ effect of the command. If a command supports the count this is shown as
 gi
 : Set cursor to the first editable element in the page and switch to Input Mode.
 
+i
+: Set cursor to the last focused element in the page and switch to Input Mode.
+  If no element was focused before the first element is focused like with `gi`.
+
 CTRL−Z
 : Switch vimb into Pass-Through Mode.
 
@@ -1132,6 +1136,10 @@ scripts (bool)
 
 scroll-step (int)
 : Number of pixel vimb scrolls if 'j' or 'k' is used.
+
+scroll-multiplier (int)
+: Multiplier to increase the scroll distance if window is scrolled by mouse
+  wheel.
 
 serif-font (string)
 : The font family used as the default for content using serif font.
