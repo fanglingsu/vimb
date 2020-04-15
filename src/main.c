@@ -1392,9 +1392,21 @@ static void decide_navigation_action(Client *c, WebKitPolicyDecision *dec)
         webkit_policy_decision_ignore(dec);
         spawn_new_instance(uri);
     } else {
+#ifdef FEATURE_QUEUE
+        /* Push link target to queue on Shift-LeftMouse. */
+        if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
+                && button == 1
+                && mod & GDK_SHIFT_MASK
+                && strcmp(uri, "about:blank")) {
+            command_queue(c, &((Arg){.i = COMMAND_QUEUE_PUSH, .s = (char *)uri}));
+            webkit_policy_decision_ignore(dec);
+            return;
+        }
+#endif
 #ifdef FEATURE_AUTOCMD
-        if (strcmp(uri, "about:blank"))
+        if (strcmp(uri, "about:blank")) {
             autocmd_run(c, AU_LOAD_STARTING, uri, NULL);
+        }
 #endif
         webkit_policy_decision_use(dec);
     }

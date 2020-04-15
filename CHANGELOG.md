@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 * The new env variable `$VIMB_SELECTION` is set to the current selected text
   whenever a `shellcmd` is run #592.
+* Allow to push link url to queue by `<S-LeftMouse>` #610.
 ### Fixed
 * Fixed ignored last line in config file if this line did not end in newline.
 ### Removed
