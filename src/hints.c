@@ -328,8 +328,6 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
             } else {
                 vb_statusbar_show_hover_url(c, LINK_TYPE_LINK, value + 7);
             }
-        } else {
-            goto error;
         }
     } else if (!strncmp(value, "DONE:", 5)) {
         fire_timeout(c, FALSE);
