@@ -450,7 +450,7 @@ static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info)
     gboolean focused;
 
     variant = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.focus();");
-    g_variant_get(variant, "(bs)", &focused);
+    g_variant_get(variant, "(bs)", &focused, NULL);
     if (!focused) {
         ext_proxy_focus_input(c);
     }
