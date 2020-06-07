@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Allow to push link url to queue by `<S-LeftMouse>` #610.
 ### Fixed
 * Fixed ignored last line in config file if this line did not end in newline.
+* Fixed crash in normal_focus_last_active (Thanks to Maxime Coste)
+* Fixed hint keys going to webview if the hinted element had no src-attribut
+  (thanks to Maxime Coste)
 ### Removed
 * Expansion of `%` to the current opened URI for `:shellcmd` was removed
   because it breaks the `x-hint-command` with URIs containing '%'. But it is
