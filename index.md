@@ -76,9 +76,12 @@ But following images may give a impression of they way vimb works.
 - webkit2gtk-4.0 >= 2.8.x
 
 ## install
-Edit `config.mk` to match your local setup.
+Edit `config.mk` to match your local setup. You might need to do this if 
+you use another compiler, like tcc. Most people, however, will almost never 
+need to do this on systems like Ubuntu or Debian.
 
-Edit `src/config.h` to match your personal preferences.
+Edit `src/config.h` to match your personal preferences, like changing the
+characters used in the loading bar, or the font.
 
 The default `Makefile` will not overwrite your customised `config.h` with the
 contents of `config.def.h`, even if it was updated in the latest git pull.
