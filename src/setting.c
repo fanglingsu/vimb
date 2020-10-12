@@ -98,7 +98,7 @@ void setting_init(Client *c)
     setting_add(c, "header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, "header");
     i = 1000;
     setting_add(c, "hint-timeout", TYPE_INTEGER, &i, NULL, 0, NULL);
-    setting_add(c, "hint-keys", TYPE_CHAR, &"0123456789", NULL, 0, NULL);
+    setting_add(c, "hint-keys", TYPE_CHAR, &SETTING_HINT_KEYS, NULL, 0, NULL);
     setting_add(c, "hint-follow-last", TYPE_BOOLEAN, &on, NULL, 0, NULL);
     setting_add(c, "hint-keys-same-length", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "hint-match-element", TYPE_BOOLEAN, &on, NULL, 0, NULL);
@@ -136,7 +136,7 @@ void setting_init(Client *c)
     /* internal variables */
     setting_add(c, "stylesheet", TYPE_BOOLEAN, &on, user_style, 0, NULL);
     setting_add(c, "user-scripts", TYPE_BOOLEAN, &on, user_scripts, 0, NULL);
-    setting_add(c, "cookie-accept", TYPE_CHAR, &"always", cookie_accept, 0, NULL);
+    setting_add(c, "cookie-accept", TYPE_CHAR, &SETTING_COOKIE_ACCEPT, cookie_accept, 0, NULL);
     i = 40;
     setting_add(c, "scroll-step", TYPE_INTEGER, &i, internal, 0, &c->config.scrollstep);
     i = 1;
@@ -155,8 +155,8 @@ void setting_init(Client *c)
     setting_add(c, "show-titlebar", TYPE_BOOLEAN, &on, window_decorate, 0, NULL);
     i = 100;
     setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
-    setting_add(c, "download-path", TYPE_CHAR, &"~/", NULL, 0, NULL);
-    setting_add(c, "download-command", TYPE_CHAR, &"/bin/sh -c \"curl -sLJOC - -e '$VIMB_URI' %s\"", NULL, 0, NULL);
+    setting_add(c, "download-path", TYPE_CHAR, &SETTING_DOWNLOAD_PATH, NULL, 0, NULL);
+    setting_add(c, "download-command", TYPE_CHAR, &SETTING_DOWNLOAD_COMMAND, NULL, 0, NULL);
     setting_add(c, "download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "incsearch", TYPE_BOOLEAN, &off, internal, 0, &c->config.incsearch);
     i = 10;
@@ -167,14 +167,14 @@ void setting_init(Client *c)
     setting_add(c, "spell-checking-languages", TYPE_CHAR, &"en_US", webkit_spell_checking_language, FLAG_LIST|FLAG_NODUP, NULL);
 
     /* gui style settings vimb */
-    setting_add(c, "completion-css", TYPE_CHAR, &"color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
-    setting_add(c, "completion-hover-css", TYPE_CHAR, &"background-color:#777;", gui_style, 0, NULL);
-    setting_add(c, "completion-selected-css", TYPE_CHAR, &"color:#f6f3e8;background-color:#888;", gui_style, 0, NULL);
-    setting_add(c, "input-css", TYPE_CHAR, &"background-color:#fff;color:#000;font:" SETTING_GUI_FONT_NORMAL, gui_style, 0, NULL);
-    setting_add(c, "input-error-css", TYPE_CHAR, &"background-color:#f77;font:" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
-    setting_add(c, "status-css", TYPE_CHAR, &"color:#fff;background-color:#000;font:" SETTING_GUI_FONT_EMPH, gui_style, 0, NULL);
-    setting_add(c, "status-ssl-css", TYPE_CHAR, &"background-color:#95e454;color:#000;", gui_style, 0, NULL);
-    setting_add(c, "status-ssl-invalid-css", TYPE_CHAR, &"background-color:#f77;color:#000;", gui_style, 0, NULL);
+    setting_add(c, "completion-css", TYPE_CHAR, &SETTING_COMPLETION_CSS, gui_style, 0, NULL);
+    setting_add(c, "completion-hover-css", TYPE_CHAR, &SETTING_COMPLETION_HOVER_CSS, gui_style, 0, NULL);
+    setting_add(c, "completion-selected-css", TYPE_CHAR, &SETTING_COMPLETION_SELECTED_CSS, gui_style, 0, NULL);
+    setting_add(c, "input-css", TYPE_CHAR, &SETTING_INPUT_CSS, gui_style, 0, NULL);
+    setting_add(c, "input-error-css", TYPE_CHAR, &SETTING_INPUT_ERROR_CSS, gui_style, 0, NULL);
+    setting_add(c, "status-css", TYPE_CHAR, &SETTING_STATUS_CSS, gui_style, 0, NULL);
+    setting_add(c, "status-ssl-css", TYPE_CHAR, &SETTING_STATUS_SSL_CSS, gui_style, 0, NULL);
+    setting_add(c, "status-ssl-invalid-css", TYPE_CHAR, &SETTING_STATUS_SSL_INVLID_CSS, gui_style, 0, NULL);
 
     /* initialize the shortcuts and set the default shortcuts */
     shortcut_add(c->config.shortcuts, "dl", "https://duckduckgo.com/html/?q=$0");
