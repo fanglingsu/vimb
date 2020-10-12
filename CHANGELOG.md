@@ -10,6 +10,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * The new env variable `$VIMB_SELECTION` is set to the current selected text
   whenever a `shellcmd` is run #592.
 * Allow to push link url to queue by `<S-LeftMouse>` #610.
+### Changed
+* Modes some files from `$XDG_CONFIG_HOME/vimb` into `$XDG_DATA_HOME/vimb` #582.
+  Following files are affected `bookmark`, `closed`, `command`, `config`,
+  `cookies.db`, `history`, `queue` and `search`.
+  Existing files could be moved to the new location by
+  ```
+  mv $XDG_CONFIG_HOME/vimb/{bookmark,closed,command,cookies.db,history,queue,search} \
+      $XDG_DATA_HOME/vimb
+
+  # and same for existing profiles
+  mkdir $XDG_DATA_HOME/vimb/<ProfileName>
+  mv $XDG_CONFIG_HOME/vimb/<ProfileName>/{bookmark,closed,command,cookies.db,history,queue,search} \
+      $XDG_DATA_HOME/vimb/<ProfileName>
+  ```
 ### Fixed
 * Fixed ignored last line in config file if this line did not end in newline.
 * Fixed crash in normal_focus_last_active (Thanks to Maxime Coste)

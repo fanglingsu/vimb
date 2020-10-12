@@ -1828,9 +1828,9 @@ static void vimb_setup(void)
 {
     WebKitWebContext *ctx;
     WebKitCookieManager *cm;
-    char *path;
+    char *path, *dataPath;
 
-    /* prepare the file pathes */
+    /* Prepare files in XDG_CONFIG_HOME */
     path = util_get_config_dir();
 
     if (vb.configfile) {
@@ -1840,21 +1840,23 @@ static void vimb_setup(void)
     } else {
         vb.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
     }
-
-    /* Setup those files that are use multiple time during runtime */
-    if (!vb.incognito) {
-        vb.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
-        vb.files[FILES_COOKIE] = g_build_filename(path, "cookies.db", NULL);
-    }
-    vb.files[FILES_BOOKMARK]   = g_build_filename(path, "bookmark", NULL);
-    vb.files[FILES_QUEUE]      = g_build_filename(path, "queue", NULL);
     vb.files[FILES_SCRIPT]     = g_build_filename(path, "scripts.js", NULL);
     vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
-
-    vb.storage[STORAGE_HISTORY]  = file_storage_new(path, "history", vb.incognito);
-    vb.storage[STORAGE_COMMAND]  = file_storage_new(path, "command", vb.incognito);
-    vb.storage[STORAGE_SEARCH]   = file_storage_new(path, "search", vb.incognito);
     g_free(path);
+
+    /* Prepare files in XDG_DATA_HOME */
+    dataPath = util_get_data_dir();
+    if (!vb.incognito) {
+        vb.files[FILES_CLOSED] = g_build_filename(dataPath, "closed", NULL);
+        vb.files[FILES_COOKIE] = g_build_filename(dataPath, "cookies.db", NULL);
+    }
+    vb.files[FILES_BOOKMARK]   = g_build_filename(dataPath, "bookmark", NULL);
+    vb.files[FILES_QUEUE]      = g_build_filename(dataPath, "queue", NULL);
+
+    vb.storage[STORAGE_HISTORY]  = file_storage_new(dataPath, "history", vb.incognito);
+    vb.storage[STORAGE_COMMAND]  = file_storage_new(dataPath, "command", vb.incognito);
+    vb.storage[STORAGE_SEARCH]   = file_storage_new(dataPath, "search", vb.incognito);
+    g_free(dataPath);
 
     /* Use seperate rendering processed for the webview of the clients in the
      * current instance. This must be called as soon as possible according to

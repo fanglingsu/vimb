@@ -1542,6 +1542,24 @@ this subdirectory.
 .I config
 Configuration file to set WebKit setting, some GUI styles and keybindings.
 .TP
+.I scripts.js
+This file can be used to run user scripts, that are injected into every page
+that is opened.
+.TP
+.I style.css
+File for userdefined CSS styles.
+These file is used if the config variable `stylesheet' is enabled.
+.PD
+.RE
+.
+.TP
+.IR $XDG_DATA_HOME/vimb[/PROFILE]
+Directory for runtime data.
+If executed with \fB-p \fIPROFILE\fR parameter, data files are written from
+this subdirectory.
+.
+.RS
+.PD 0
 .I cookies.db
 Sqlite cookie storage.
 This file will not be touched if option \-\-incognito is set.
@@ -1568,20 +1586,8 @@ Holds the read it later queue filled by `qpush'.
 .I search
 This file holds the history of search queries.
 This file will not be touched if option \-\-incognito is set.
-.TP
-.I scripts.js
-This file can be used to run user scripts, that are injected into every page
-that is opened.
-.TP
-.I style.css
-File for userdefined CSS styles.
-These file is used if the config variable `stylesheet' is enabled.
 .PD
 .RE
-.TP
-There are also some sample scripts installed together with Vimb under
-PREFIX/share/vimb/examples.
-.
 .
 .SH ENVIRONMENT
 .TP
