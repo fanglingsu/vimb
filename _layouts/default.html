@@ -6,11 +6,12 @@ layout: compress
 <html lang="en" itemscope itemtype="https://schema.org/WebPage">
 {% include head.html %}
 <body>
-<main id="top">
-<a href="#nav-main" class="nogui">skip to main navigation</a>
-{{ content }}
-</main>
+<nav>
 {% include menu.html %}
+</nav>
+<article id="top">
+{{ content }}
+</article>
 <footer><a href="#top" title="to top">&#9650; top</a></footer>
 </body>
 </html>
