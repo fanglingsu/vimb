@@ -5,6 +5,10 @@ $left-wdith: 10rem;
 $right-width: 46rem;
 $max-width: 56rem;
 
+* {
+    margin: 0;
+    padding: 0;
+}
 html {
     background-color: #fff;
     color: #000;
