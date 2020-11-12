@@ -39,6 +39,9 @@ the project page of [Vimb][].
 
 - gtk+-3.0
 - webkit2gtk-4.0 >= 2.20.x
+- gstreamer
+- gst-libav
+- gst-plugins-good
 
 ## Install
 
