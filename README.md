@@ -39,8 +39,8 @@ the project page of [Vimb][].
 
 - gtk+-3.0
 - webkit2gtk-4.0 >= 2.20.x
-- gst-libav (for media decoding)
-- gst-plugins-good (for nonfree media decoding)
+- gst-libav (optional, for media decoding)
+- gst-plugins-good (optional, for nonfree media decoding among other things)
 
 ## Install
 
