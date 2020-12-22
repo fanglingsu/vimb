@@ -17,7 +17,6 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <stdio.h>
 #include "config.h"
 #include <gtk/gtk.h>
 #ifndef FEATURE_NO_XEMBED
