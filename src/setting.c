@@ -59,6 +59,7 @@ static int gui_style(Client *c, const char *name, DataType type, void *value, vo
 static int hardware_acceleration_policy(Client *c, const char *name, DataType type, void *value, void *data);
 static int input_autohide(Client *c, const char *name, DataType type, void *value, void *data);
 static int internal(Client *c, const char *name, DataType type, void *value, void *data);
+static int notification(Client *c, const char *name, DataType type, void *value, void *data);
 static int headers(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_scripts(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_style(Client *c, const char *name, DataType type, void *value, void *data);
@@ -117,6 +118,7 @@ void setting_init(Client *c)
     setting_add(c, "monospace-font", TYPE_CHAR, &"monospace", webkit, 0, "monospace-font-family");
     i = SETTING_DEFAULT_MONOSPACE_FONT_SIZE;
     setting_add(c, "monospace-font-size", TYPE_INTEGER, &i, webkit, 0, "default-monospace-font-size");
+    setting_add(c, "notification", TYPE_CHAR, &"ask", notification, FLAG_NODUP, NULL);
     setting_add(c, "offline-cache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache");
     setting_add(c, "plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");
     setting_add(c, "prevent-newwindow", TYPE_BOOLEAN, &off, internal, 0, &c->config.prevent_newwindow);
@@ -647,6 +649,16 @@ static int internal(Client *c, const char *name, DataType type, void *value, voi
             str = (char**)data;
             OVERWRITE_STRING(*str, (char*)value);
             break;
+    }
+    return CMD_SUCCESS;
+}
+
+static int notification(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    char *policy = (char *)value;
+    if (strcmp("always", policy) != 0 && strcmp("ask", policy) != 0 && strcmp("never", policy) != 0) {
+        vb_echo(c, MSG_ERROR, FALSE, "%s must be in [always, ask, never]", name);
+        return CMD_ERROR | CMD_KEEPINPUT;
     }
     return CMD_SUCCESS;
 }

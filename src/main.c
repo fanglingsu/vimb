@@ -17,6 +17,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <stdio.h>
 #include "config.h"
 #include <gtk/gtk.h>
 #ifndef FEATURE_NO_XEMBED
@@ -2062,6 +2063,18 @@ static gboolean on_permission_request(WebKitWebView *webview,
             msg = "access the microphone";
         } else if (webkit_user_media_permission_is_for_video_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
             msg = "access you webcam";
+        }
+    } else if (WEBKIT_IS_NOTIFICATION_PERMISSION_REQUEST(request)) {
+        char* notification_setting = GET_CHAR(c, "notification");
+		printf("%s\n", notification_setting);
+        if (strcmp(notification_setting, "ask") == 0) {
+            msg = "show notifications";
+        } else if (strcmp(notification_setting, "always") == 0) {
+            webkit_permission_request_allow(request);
+            return TRUE;
+        } else if (strcmp(notification_setting, "never") == 0) {
+            webkit_permission_request_deny(request);
+            return TRUE;
         }
     } else {
         return FALSE;
