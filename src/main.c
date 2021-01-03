@@ -2065,7 +2065,6 @@ static gboolean on_permission_request(WebKitWebView *webview,
         }
     } else if (WEBKIT_IS_NOTIFICATION_PERMISSION_REQUEST(request)) {
         char* notification_setting = GET_CHAR(c, "notification");
-		printf("%s\n", notification_setting);
         if (strcmp(notification_setting, "ask") == 0) {
             msg = "show notifications";
         } else if (strcmp(notification_setting, "always") == 0) {
