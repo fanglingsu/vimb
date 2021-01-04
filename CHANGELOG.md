@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * The new env variable `$VIMB_SELECTION` is set to the current selected text
   whenever a `shellcmd` is run #592.
 * Allow to push link url to queue by `<S-LeftMouse>` #610.
+* Allow to decide if html5 notfication are allowed #651. New setting
+  'notification=[ask,always,never]' added.
 ### Changed
 * Modes some files from `$XDG_CONFIG_HOME/vimb` into `$XDG_DATA_HOME/vimb` #582.
   Following files are affected `bookmark`, `closed`, `command`, `config`,
