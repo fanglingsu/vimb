@@ -1108,6 +1108,10 @@ monospace-font (string)
 monospace-font-size (int)
 : Default font size for the monospace font.
 
+notification (string)
+: Controls website access to the notification API, that sends notifications
+  via dbus. ('always', 'never', 'ask' - display a prompt each time)
+
 offline-cache (bool)
 : Whether to enable HTML5 offline web application cache support. Offline web
   application cache allows web applications to run even when the user is not

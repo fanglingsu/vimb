@@ -16,6 +16,10 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+New setting `notification`
+: These new settings allow to control the website access to the notification
+  API.
+
 Add `$VIMB_SELECTION` when `:shellcmd` is run.
 : This variable is set to the current selected text whenever a `:shellcmd` is
   executed.
@@ -28,10 +32,6 @@ New option `--cmd, -C`
 
 New setting `dark-mode`
 : These new settings enabled dark mode in the webview.
-
-New setting `geolocation`
-: Allows to 'always' or 'never' allow geolocation requests, or to be ask each
-  time.
 
 More about latest changes can be found in the [CHANGELOG.md][]. 
 
