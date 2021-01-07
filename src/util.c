@@ -353,6 +353,18 @@ char *util_get_data_dir(void)
 }
 
 /**
+ * Retrieves the cache directory path according to current used profile.
+ * Returned string must be freed.
+ */
+char *util_get_cache_dir(void)
+{
+    char *path = g_build_filename(g_get_user_cache_dir(), PROJECT, vb.profile, NULL);
+    create_dir_if_not_exists(path);
+
+    return path;
+}
+
+/**
  * Retrieves the length bytes from given file.
  *
  * The memory of returned string have to be freed with g_free().

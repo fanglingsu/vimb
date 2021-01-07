@@ -290,6 +290,8 @@ struct Vimb {
     GtkCssProvider *style_provider;
     gboolean    no_maximize;
     gboolean    incognito;
+
+    WebKitWebContext *webcontext;
 };
 
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,

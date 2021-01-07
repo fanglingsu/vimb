@@ -41,6 +41,7 @@ void util_file_prepend_line(const char *file, const char *line,
 char *util_file_pop_line(const char *file, int *item_count);
 char *util_get_config_dir(void);
 char *util_get_data_dir(void);
+char *util_get_cache_dir(void);
 char *util_get_file_contents(const char *filename, gsize *length);
 gboolean util_file_set_content(const char *file, const char *contents);
 char **util_get_lines(const char *filename);
