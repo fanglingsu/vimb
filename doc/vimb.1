@@ -579,8 +579,8 @@ This allows for nested and recursive use of mappings.
 Adds a keybind to insert a file path into the input box.
 This could be useful for the `:save' command
 that could be used as ":save ^Gh".
-.IP ":nmap <F1> :set scripts=on<CR>:open !glib<Tab><CR>"
-This will enable scripts and lookup the first bookmarked URI with the tag
+.IP ":nmap <F1> :set dark-mode=on<CR>:open !glib<Tab><CR>"
+This will enable dark-mode and lookup the first bookmarked URI with the tag
 `glib' and open it immediately if F1 key is pressed.
 .IP ":nmap \e \e  50G"
 Example which maps two spaces to go to 50% of the page.
@@ -847,8 +847,8 @@ Delete the autocmd group \fIname\fP.
 Example:
 .EX
 :aug github
-:  au LoadCommitted * set scripts=off|set cookie-accept=never
-:  au LoadCommitted http{s,}://github.com/* set scripts=on
+:  au LoadCommitted * set images=off|set cookie-accept=never
+:  au LoadCommitted http{s,}://github.com/* set images=on
 :aug end
 .EE
 .
@@ -1046,7 +1046,7 @@ This makes it possible to execute normal mode commands typed on the input box.
 \fIcmds\fP cannot start with a space.
 Put a count of 1 (one) before it, "1 " is one space.
 .sp
-Example: :set scripts!|no! R
+Example: :set images!|no! R
 .TP
 .BI ":no[rmal]! [" cmds ]
 Like :normal, but no mapping is applied to \fIcmds\fP.
@@ -1423,9 +1423,6 @@ This option does not affect links fired by hinting.
 .TP
 .B sans-serif-font (string)
 The font family used as the default for content using sans-serif font.
-.TP
-.B scripts (bool)
-Determines whether or not JavaScript executes within a page.
 .TP
 .B scroll-step (int)
 Number of pixel vimb scrolls if 'j' or 'k' is used.
