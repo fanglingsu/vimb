@@ -1,33 +1,40 @@
 .\" vim: ft=groff
-.ss 12 0
-.ad l
 .TH VIMB 1 "DATE" "vimb/VERSION" "Vimb Manual"
-.de EX
-.nf
-.ft CW
-..
-.de EE
-.ft R
-.fi
-..
 .SH NAME
 Vimb - Vim Browser - A modal web browser based on WebKit, inspired by Vim: the
 great editor.
+.
+.
 .SH SYNOPSIS
 .B vimb
 .OP OPTIONS
 .RI [ URI "|" file "|" - ]
+.
+.
 .SH DESCRIPTION
 Vimb is a WebKit based web browser that behaves like the Vimperator
 plugin for Firefox and has usage paradigms from the great editor, Vim.
 The goal of Vimb is to build a completely keyboard-driven, efficient
 and pleasurable browsing-experience.
+.
+.
 .SH OPTIONS
 If no \fIURI\fP or \fIfile\fP is given, Vimb will open the configured
 home-page.
 If \fIURI\fP is '-', Vimb reads the HTML to display from stdin.
-.PP
+.P
 Mandatory arguments to long options are mandatory for short options too.
+.TP
+.BI "\-C, \-\-cmd " "CMD"
+Run \fICMD\fP as ex command line right before the first page is loaded.
+If the flag is used more than one time, the commands are called in order they
+are given.
+You could also pass several ex commands in one \fICMD\fP,
+if they are separated by "|".
+.sp
+.EX
+vimb --cmd "set dark-mode=on|set header=Referer,DNT=1"
+.EE
 .TP
 .BI "\-c, \-\-config " "FILE"
 Use custom configuration given as \fIFILE\fP.
@@ -56,28 +63,29 @@ Do no attempt to maximize window.
 .TP
 .B "\-\-bug-info"
 Prints information about used libraries for bug reports and then quit.
+.
+.
 .SH MODES
 Vimb is modal and has the following main modes:
-.TP
-.B Normal Mode
+.IP "Normal Mode"
 The default mode.
 Pressing Escape always enter normal mode.
-.TP
-.B Input Mode
+.IP "Input Mode"
 Used for editing text elements in a webpage.
-.TP
-.B Command Mode
+.IP "Command Mode"
 Execute `ex` commands from the builtin inputbox (commandline).
-.TP
-.B Pass-Through Mode
+.IP "Pass-Through Mode"
 In Pass-Through mode only the `<Esc>` and `<C-[>` keybindings are interpreted
 by Vimb, all other keystrokes are given to the webview to handle them.
 This allows the use of a website's configured keybindings, that might otherwise
 be swallowed by Vimb.
+.
+.
 .SH NORMAL MODE COMMANDS
 Some of the Normal Model Commands can have a numeric count to multiply the
 effect of the command.
-If a command supports the count this is shown as \fB[N]\fP.
+If a command supports the count this is shown as [\fBN\fP].
+.
 .SS General
 .TP
 .B :
@@ -86,6 +94,10 @@ Start Command Mode and print `:' to the input box.
 .B gi
 Set cursor to the first editable element in the page and switch to Input
 Mode.
+.TP
+.B i
+Set cursor to the last focused element in the page and switch to Input Mode.
+If no element was focused before the first element is focused like with `gi'.
 .TP
 .B CTRL\-Z
 Switch Vimb into Pass-Through Mode.
@@ -101,6 +113,7 @@ Pass the next key press directly to GTK.
 .TP
 .B CTRL\-Q
 Quit the browser if there are no running downloads.
+.
 .SS Navigation
 .TP
 .B o
@@ -158,6 +171,14 @@ Reload the website without using caches.
 .TP
 .B CTRL\-C
 Stop loading the current page.
+.TP
+.B CTRL-LeftMouse, MiddleMouse
+Opens the clicket link into new window.
+.TP
+.B Shift-LeftMouse
+Push the link url under the cursor to the end of the Read It Later queue like
+the `:qpush' command.
+.
 .SS Motion
 .TP
 .BI [ N ]CTRL\-F
@@ -210,6 +231,7 @@ Jump to the mark {\fIa-z\fP} on the current page.
 .B ''
 Jumps to the position before the latest jump, or where the last "m'" command
 was given.
+.
 .SS Hinting
 Hinting in Vimb is how you accomplish the tasks that you would do with the
 mouse in common mouse-driven browsers: open a URI, yank a URI, save a page and
@@ -221,32 +243,36 @@ that is part of the hinted element (like URI, link text, button label)
 or any combination of these methods.
 If <enter> is pressed, the current active hint will be fired.
 If only one possible hint remains, this will be fired automatically.
-.PP
-.BI Syntax: " ;{mode}{hint}"
-.PP
+.P
+.BR Syntax: " ;{mode}{hint}"
+.P
 Start Hints mode.
 Different elements depending on \fImode\fP are highlighted and `numbered'.
 Elements can be selected either by typing their label, or by typing part
 of their text (\fIhint\fP) to narrow down the result.
 When an element has been selected, it is automatically clicked
 or used (depending on \fImode\fP) and hint mode ends.
-.PP
+.P
 The filtering of hints by text splits the query at ' ' and use the single parts
 as separate queries to filter the hints.
 This is useful for hints that have a lot of filterable chars in common
 and many chars are required to make a distinct selection.
 For example ';over tw' will easily select the second hint out of
 {'very long link text one', 'very long link text two'}.
-.PP
+.P
 The following keys have special meanings in Hints modes:
 .PD 0
-.IP \fB<CR>\fP
+.TP
+.B <CR>
 Selects the first highlighted element, or the current focused.
-.IP "\fB<Tab>\fP"
+.TP
+.B <Tab>
 Moves the focus to the next hint element.
-.IP "\fB<S-Tab>\fP"
+.TP
+.B <S-Tab>
 Moves the focus to the previous hint element.
-.IP "\fB<Esc>, CTRL\-C, CTRL\-[\fP"
+.TP
+.B <Esc>, CTRL\-C, CTRL\-[
 Exits Hints mode without selecting an element.
 .PD
 .TP
@@ -311,13 +337,14 @@ and into the register \fIx\fP.
 .PD
 .RE
 .TP
-.BI Syntax: " g;{mode}{hint}"
+.BR Syntax: " g;{mode}{hint}"
 Start an extended hints mode and stay there until <Esc> is pressed.
 Like normal hinting, except that after a hint is selected, hints
 remain visible so that another one can be selected with the same action
 as the first.
 Note that the extended hint mode can only be combined with the following
-hint modes \fII o p P s t y Y\fP.
+hint modes
+.IR "I o p P s t y Y" .
 .PD
 .TP
 .B Motion
@@ -325,7 +352,7 @@ hint modes \fII o p P s t y Y\fP.
 Motions commands are like those for normal mode except that CTRL is used as
 modifier.
 But they can not be used together with a count.
-.PP
+.P
 .PD 0
 .TP
 .B CTRL-F
@@ -347,13 +374,14 @@ Scroll one step down.
 Scroll one step up.
 .PD
 .RE
+.
 .SS Searching
 .TP
 .BI / QUERY ", ?" QUERY
 Start searching for \fIQUERY\fP in the current page.
 \fI/\fP start search forward, \fI?\fP in backward direction.
 .TP
-.B *, #
+.BR * , " #"
 Start searching for the current selected text, or if no text is selected for
 the content of the primary or secondary clipboard.
 \fI*\fP start the search in forward direction and \fI#\fP in backward
@@ -372,6 +400,7 @@ Search for \fIN\fPnth previous search result depending on current search
 .B <CR>
 Perform a click on element containing the current highlighted search result.
 direction.
+.
 .SS Zooming
 .TP
 .BI [ N ]zi
@@ -388,6 +417,7 @@ Full-Content Zoom-Out the page by \fIN\fP steps.
 .TP
 .B zz
 Reset Zoom.
+.
 .SS Yank
 .TP
 .BI [ \(dqx ]y
@@ -395,13 +425,15 @@ Yank the URI or current page into register \fIx\fP and clipboard.
 .TP
 .BI [ \(dqx ]Y
 Yank the current selection into register x and clipboard.
+.
+.
 .SH COMMAND MODE
 Commands that are listed below are ex-commands like in Vim, that are typed
 into the inputbox (the command line of vimb).
 The commands may vary in their syntax or in the parts they allow,
 but in general they follow a simple syntax.
-.PP
-.BI Syntax: " :[:| ][N]cmd[name][!][ lhs][ rhs]"
+.P
+.BR Syntax: " :[:| ][N]cmd[name][!][ lhs][ rhs]"
 .sp
 Where \fIlhs\fP (left hand side) must not contain any unescaped space.
 The syntax of the rhs (right hand side) if this is available depends on the
@@ -413,7 +445,7 @@ Commands that are typed interactivly are normally recorded into command
 history and register.
 To avoid this, the commands can be prefixed by one or more additional `:' or
 whitespace.
-.PP
+.P
 Multiple commands, separated by a `|' can be given in a single command line
 and will be executed consecutively.
 The pipe can be included as an argument to a command by escaping it with a
@@ -422,7 +454,7 @@ backslash.
 Following commands process the entire command-line string literally.
 These commands will include any `|' as part of their argument string and so
 can not be followed by another command.
-.PP
+.P
 .PD 0
 .IP - 2
 autocmd
@@ -437,6 +469,7 @@ open, tabopen
 .IP -
 shellcmd
 .PD
+.
 .SS Command Line Editing
 .TP
 .B <Esc>, CTRL\-[, CTRL-C
@@ -466,6 +499,7 @@ Pass the next key press directly to GTK.
 .B CTRL\-R {a-z"%:/;}
 Insert the content of given register at cursor position.
 See also section about `:reg[ister]' command.
+.
 .SS Command Line History
 .TP
 .B <Tab>
@@ -480,6 +514,7 @@ Step backward in the command history.
 .B <Down>
 Step forward in the command history.
 Yank the current selection into register \fIx\fP and clipboard.
+.
 .SS Open
 .TP
 .BI ":o[pen] [" URI ]
@@ -489,41 +524,46 @@ If \fIURI\fP is empty, the configured 'home-page' is opened.
 .BI ":t[abopen] [" URI ]
 Open the give \fIURI\fP in a new window.
 If \fIURI\fP is empty, the configured 'home-page' is opened.
+.
 .SS Key Mapping
 Key mappings allow users to alter the actions of key presses.
 Each key mapping is associated with a mode and only has effect
 when the mode is active.
 The following commands allow the user to substitute one sequence
 of key presses by another.
-.PP
-.BI Syntax: " :{m}map {lhs} {rhs}"
-.PP
+.P
+.BR Syntax: " :{m}map {lhs} {rhs}"
+.P
 Note that the \fIlhs\fP ends with the first found space.
 If you want to use space also in the {lhs} you have to escape this
 with a single `\\', as shown in the examples.
 .sp
 The \fIrhs\fP starts with the first non-space char. If you want a \fIrhs\fP
 that starts with a space, you have to use "<Space>".
-.PP
+.P
 Standard key mapping commands are provided for these modes \fIm\fP:
 .PD 0
-.IP \fBn\fP
+.TP
+.B n
 Normal mode: when browsing normally.
-.IP \fBi\fP
+.TP
+.B i
 Insert mode: when interacting with text fields on a website.
-.IP \fBc\fP
+.TP
+.B c
 Command Line mode: when typing into Vimb's command line.
 .PD
-.PP
+.P
 Most keys in key sequences are represented simply by the character that you
 see on the screen when you type them.
 However, as a number of these characters have special meanings, and a
 number of keys have no visual representation, a special notation is required.
-.PP
+.P
 As special key names have the format \fI<...>\fP.
 The following special keys can be used: <Left>, <Up>, <Right>, <Down>
 for the cursor keys, <Tab>, <Esc>, <CR>, <Space>, <BS>, <F1>-<F12> and <C-A>-<C-Z>.
 .TP
+.PD 0
 .BI ":nm[ap] {" lhs "} {" rhs }
 .TP
 .BI ":im[ap] {" lhs "} {" rhs }
@@ -534,9 +574,7 @@ command applies.
 The result, including \fIrhs\fP, is then further scanned for mappings.
 This allows for nested and recursive use of mappings.
 .RS
-.P
-Examples:
-.PD 0
+.sp
 .IP ":cmap <C-G>h /home/user/downloads/"
 Adds a keybind to insert a file path into the input box.
 This could be useful for the `:save' command
@@ -544,9 +582,8 @@ that could be used as ":save ^Gh".
 .IP ":nmap <F1> :set scripts=on<CR>:open !glib<Tab><CR>"
 This will enable scripts and lookup the first bookmarked URI with the tag
 `glib' and open it immediately if F1 key is pressed.
-.IP ":nmap \\\\\ \\\\\  50G"
+.IP ":nmap \e \e  50G"
 Example which maps two spaces to go to 50% of the page.
-.PD
 .RE
 .TP
 .BI ":nn[oremap] {" lhs "} {" rhs }
@@ -565,6 +602,8 @@ Often used to redefine a command.
 .TP
 .BI ":cu[nmap] {" lhs }
 Remove the mapping of \fIlhs\fP for the applicable mode.
+.PD
+.
 .SS Bookmarks
 .TP
 .BI ":bma [" tags ]
@@ -573,6 +612,7 @@ Save the current opened URI with \fItags\fP to the bookmark file.
 .BI ":bmr [" URI ]
 Removes all bookmarks for given \fIURI\fP or, if not given, the current opened
 page.
+.
 .SS Handlers
 Handlers allow specifying external scripts to handle alternative URI methods.
 .TP
@@ -582,7 +622,6 @@ The \fIcmd\fP can contain one placeholder `%s` that will be filled by the
 full URI given when the command is called.
 .RS
 .P
-Examples:
 .PD 0
 .IP ":handler-add mailto=urxvt -e mutt %s"
 to start email client for mailto links.
@@ -595,16 +634,17 @@ to handle ftp downloads via wget.
 .TP
 .BI ":handler-remove " "handler"
 Remove the handler for the given URI \fIhandler\fP.
+.
 .SS Shortcuts
 Shortcuts allow the opening of an URI built up from a named template with additional
 parameters.
 If a shortcut named 'dd' is defined, you can use it with `:open dd
 list of parameters' to open the generated URI.
-.PP
+.P
 Shortcuts are convenient to use with search engines where the URI is standardised
 and a single parameter is user defined.
 .TP
-.BI ":shortcut-add " "shortcut" "=" "URI"
+.BI ":shortcut-add " shortcut = URI
 Adds a shortcut with the \fIshortcut\fP and \fIURI\fP template.
 The \fIURI\fP can contain multiple placeholders $0-$9 that will be
 filled by the parameters given when the shortcut is called.
@@ -616,7 +656,6 @@ surrounding them with single-or double quotes-as shown in example shortcut
 `map'.
 .RS
 .P
-Examples:
 .PD 0
 .IP ":shortcut-add dl=https://duckduckgo.com/lite/?q=$0"
 to setup a search engine.
@@ -630,14 +669,15 @@ contain spaces like `:open map "city hall, London" railway station, London'
 .PD
 .RE
 .TP
-.BI ":shortcut-remove " "shortcut"
+.BI ":shortcut-remove " shortcut
 Remove the search engine to the given \fIshortcut\fP.
 .TP
-.BI ":shortcut-default " "shortcut"
+.BI ":shortcut-default " shortcut
 Set the shortcut for given \fIshortcut\fP as the default, that is the shortcut
 to be used if no shortcut is given and the string to open is not an URI. It
 doesn't matter if the \fIshortcut\fP is already in use or not to be able to set
 it.
+.
 .SS Settings
 .TP
 .BI ":se[t] " var = value
@@ -671,6 +711,7 @@ Show the current set value of variable.
 .TP
 .BI ":se[t] " var !
 Toggle the value of boolean variable \fIvar\fP and display the new set value.
+.
 .SS Queue
 The queue allows the marking of URIs for later reading.
 This list is shared between the single instances of Vimb.
@@ -687,12 +728,13 @@ queue.
 .TP
 .B :qc[lear]
 Removes all entries from queue.
+.
 .SS Automatic commands
 An autocommand is a command that is executed automatically in response to some
 event, such as a URI being opened.
 Autocommands are very powerful.
 Use them with care and they will help you avoid typing many commands.
-.PP
+.P
 Autocommands are built with following properties.
 .TP
 .I group
@@ -704,10 +746,14 @@ Groups are useful to remove multiple grouped autocommands.
 .I event
 You can specify a comma separated list of event names.
 No white space can be used in this list.
+.P
 .RS
-.PP
 .PD 0
 Events:
+.TP
+.B LoadStarting
+Fired before a new page is going to be opened.
+No data has been sent or received yet, the load may still fail for transport issues.
 .TP
 .B LoadStarted
 Fired if a new page is going to be opened.
@@ -738,7 +784,7 @@ Comma separated list of patterns, matches in order to check if a autocommand
 applies to the URI associated to an event.
 To use ',' within the single patterns this must be escaped as '\e,'.
 .RS
-.PP
+.P
 .PD 0
 Patterns:
 .IP "\fB*\fP"
@@ -797,7 +843,7 @@ The name "end" selects the default group.
 .TP
 .BI ":aug[roup]! {" name "}"
 Delete the autocmd group \fIname\fP.
-.PP
+.P
 Example:
 .EX
 :aug github
@@ -805,20 +851,108 @@ Example:
 :  au LoadCommitted http{s,}://github.com/* set scripts=on
 :aug end
 .EE
+.
 .SS Misc
 .TP
-.B :cl[earcache]
-Clears all resources currently cached by webkit.
+.BI ":cl[eardata] [" dataTypes "] [" timespan "]"
+Asynchronously clears the website data of the given list of \fIdataTypes\fP
+modified in the past \fItimespan\fP.
+Note that the \fIdataTypes\fP must not contain spaces.
+If \fItimespan\fP is not given, all website data will be removed.
 Note that this effects all running instances of vimb.
+.RS
+.P
+.PD 0
+The \fIdataTypes\fP is a comma separated list of following types.
+.TP
+.B memory-cache
+Memory cache.
+.TP
+.B disk-cache
+HTTP disk cache.
+.TP
+.B offline-cache
+Offline web application cache.
+.TP
+.B session-storage
+Session storage data.
+.TP
+.B local-storage
+Local storage data.
+.TP
+.B indexeddb-databases
+IndexedDB databases.
+.TP
+.B plugin-data
+Plugin data.
+.TP
+.B cookies
+Cookies. Note that the cookies are not cleared in case a \fItimespan\fP is
+given.
+.TP
+.B hsts-cache
+HTTP Strict Transport Security cache.
+.TP
+.B -
+Can be used to clear all known data types in case a \fItimespan\fP is used.
+.PD
+.RE
+.RS
+.P
+.PD 0
+The \fItimespan\fP is given as sequence of '[multiplier]\fIunit\fP' tupels
+with following units.
+.TP
+.B y
+year (365 days)
+.TP
+.B w
+week (7 days)
+.TP
+.B d
+day
+.TP
+.B h
+hour
+.TP
+.B m
+minute
+.TP
+.B s
+second
+.PD
+.P
+.I Example:
+.PD 0
+.IP ":cleardata"
+to clear all known website data types without any timespan restriction.
+.IP ":cleardata - 5m"
+to clear all known website data types modified in the last 5 minutes.
+.IP ":cleardata local-storage,session-storage,cookies"
+to completely clear the cookies, local- and session-storage without time
+restrictions.
+.IP ":cleardata disk-cache 2d4h"
+to clear the disk cache that was modified in the past two days and four hours.
+.PD
+.RE
+.TP
+.BI ":sh[ellcmd]! " cmd
+Like :sh[ellcmd] but asynchronous.
+.sp
+Example:
+.EX
+:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
+.EE
+.TP
 .TP
 .BI ":sh[ellcmd] " cmd
 Runs the given shell \fIcmd\fP syncron and print the output into inputbox.
 The following patterns in \fIcmd\fP are expanded: '~username', '~/', '$VAR'
 and '${VAR}'.
-A '\\' before these patterns disables the expansion.
-.PP
+A '\e' before these patterns disables the expansion.
+.P
 .RS
-.PP
+.P
 .PD 0
 The following environment variables are set for called shell commands.
 .TP
@@ -826,15 +960,21 @@ The following environment variables are set for called shell commands.
 This variable is set by Vimb everytime a new page is opened to the URI of the
 page.
 .TP
+.B VIMB_SELECTION
+This variable is set to the current selected text on the page.
+.TP
 .B VIMB_TITLE
 Contains the title of the current opened page.
 .TP
 .B VIMB_PID
 Contains the pid of the running Vimb instance.
 .TP
+.B VIMB_WIN_ID
+Holds the X-Window id of the Vimb window.
+.TP
 .B VIMB_XID
 Holds the X-Window id of the Vimb window or of the embedding window if Vimb is
-started with the -e option.
+compiled with XEMBED and started with the -e option.
 .EE
 .RE
 .TP
@@ -865,11 +1005,11 @@ Close the browser independent from an running download.
 .B :reg[ister]
 Display the contents of all registers.
 .RS
-.PP
+.P
 .PD 0
 Registers:
 .TP
-.BR \(dqa " - " \(dqz
+.BR \(dqa " \(em " \(dqz
 26 named registers "a to "z.
 Vimb fills these registers only when you say so.
 .TP
@@ -915,9 +1055,11 @@ Like :normal, but no mapping is applied to \fIcmds\fP.
 Print current document.
 Open a GUI dialog where you can select the printer,
 number of copies, orientation, etc.
+.
+.
 .SH INPUT MODE
 .TP
-.B <Esc>, CTRL\-[
+.BR <Esc> , " CTRL\-["
 Switch back to normal mode.
 .TP
 .B CTRL\-O
@@ -931,6 +1073,8 @@ Pass the next key press directly to WebKit.
 .TP
 .B CTRL\-Z
 Enter the pass-through mode.
+.
+.
 .SH COMPLETIONS
 The completions are triggered by pressing `<Tab>` or `<S-Tab>` in the
 activated inputbox.
@@ -953,13 +1097,9 @@ prefix.
 The history of URIs is shown for the `:open ` and `:tabopen ` commands.
 This completion looks up every given word in the history URI and titles.
 Only those history items are shown, where the title or URI contains all tags.
-.sp
-Example:
 .RS
-.PD 0
 .IP ":open foo bar<Tab>"
 will complete only URIs that contain the words foo and bar.
-.PD
 .RE
 .TP
 .B bookmarks
@@ -967,17 +1107,13 @@ The bookmark completion is similar to the history completion, but does match
 only the tags of the bookmarks.
 The bookmark completion is started by `:open \fB!\fP`, `:tabopen \fB!\fP` or
 `:bmr ` and does a prefix search for all given words in the bookmark tags.
-.sp
-Example:
 .RS
-.PD 0
 .IP ":open \fB!\fPfoo ba"
 will match all bookmarks that have tags starting with "foo" and "ba".
 If the bookmark does not have any tags set, the URL is split on `.' and `/'
 into tags.
 .IP ":bmr tag"
 will match all bookmarks that have tags starting with "tag".
-.PD
 .RE
 .TP
 .B bookmark tags
@@ -988,27 +1124,29 @@ The bookmark tag completion allows the insertion of already used bookmarks for t
 The search completion allows a filtered list of already done searches.
 This completion starts by `/` or `?` in inputbox and performs a prefix
 comparison for further typed chars.
+.
+.
 .SH SETTINGS
 All settings listed below can be set with the `:set' command.
 See \fBSettings\fP under \fBCOMMAND MODE\fP for syntax.
 .TP
-.B accelerated-2d-canvas (bool)
+.BR accelerated-2d-canvas (bool)
 Enable or disable accelerated 2D canvas.
 When accelerated 2D canvas is enabled, WebKit may render some 2D canvas
 content using hardware accelerated drawing operations.
 .TP
-.B allow-file-access-from-file-urls (bool)
+.BR allow-file-access-from-file-urls (bool)
 Indicates whether file access is allowed from file URLs.
 By default, when something is loaded using a file URI, cross origin requests
 to other file resources are not allowed.
 .TP
-.B allow-universal-access-from-file-urls (bool)
+.BR allow-universal-access-from-file-urls (bool)
 Indicates whether or not JavaScript running in the context of a file scheme
 URL should be allowed to access content from any origin.
 By default, when something is loaded in a using a file scheme URL, access to
 the local file system and arbitrary local storage is not allowed.
 .TP
-.B caret (bool)
+.BR caret (bool)
 Whether to enable accessibility enhanced keyboard navigation.
 .TP
 .B cookie-accept (string)
@@ -1032,6 +1170,10 @@ selected.
 .TP
 .B cursiv-font (string)
 The font family used as the default for content using cursive font.
+.TP
+.B dark-mode (bool)
+Whether to enable dark mode. Websites can use the `prefers-color-scheme' media
+query to adjust styles according to this option.
 .TP
 .B default-charset (string)
 The default text charset used when interpreting content with an unspecified
@@ -1062,8 +1204,7 @@ started from, also known as referer.
 .B $VIMB_DOWNLOAD_PATH
 Setting value of 'download-path' which would be used normally for downloads.
 .PD
-.PP
-Example:
+.P
 .PD 0
 .IP ":set download-command=/bin/sh -c ""cd '$VIMB_DOWNLOAD_PATH' \
 && curl -sLJOC - -e '$VIMB_URI' %s"""
@@ -1103,13 +1244,16 @@ Show the current window full-screen.
 This setting decides how to enable and disable hardware acceleration.
 .PD 0
 .RS
-.IP - 2
-`ondemand' enables the hardware acceleration when the web contents request it, disabling it again when no
-longer needed.
-.IP - 2
-`always' enforce hardware acceleration to be enabled.
-.IP - 2
-`never' disables it completely.
+.TP
+.B ondemand
+enables the hardware acceleration when the web contents request it, disabling
+it again when no longer needed.
+.TP
+.B always
+enforce hardware acceleration to be enabled.
+.TP
+.B never
+disables it completely.
 Note that disabling hardware acceleration might cause some websites to not
 render correctly or consume more CPU.
 .RE
@@ -1135,8 +1279,7 @@ or to open current page new by `O<Cr>`.
 To use '=' within a header value the value must be quoted like shown in
 Example for the Cookie header.
 .RS
-.PP
-Example:
+.P
 .PD 0
 .IP ":set header=DNT=1,User-Agent,Cookie='name=value'"
 Send the 'Do Not Track' header with each request and remove the User-Agent
@@ -1176,6 +1319,12 @@ To have upper case hint labels, it's possible to add following css to the
 `style.css' file in vimb's configuration directory.
 .IP
 "span[vimbhint="label"] {text-transform: uppercase !important;}"
+.TP
+.B hint-match-element (bool)
+If this is set to 'true' typed chars that are not part of the set 'hint-keys'
+are used to filter hinted DOM elements by their text value.
+If 'hint-keys' are set to chars instead of numbers it might be useful to
+disable matching of the elements by 'hint-match-element=false'.
 .TP
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history.
@@ -1219,6 +1368,9 @@ Whether JavaScript can access the clipboard.
 Whether JavaScript can open popup windows automatically without user
 interaction.
 .TP
+.B geolocation (string)
+Controls website access to the geolocation API {`always', `never', `ask' (display a prompt each time)}
+.TP
 .B media-playback-allows-inline (bool)
 Whether media playback is full-screen only or inline playback is allowed.
 Setting it to false allows specifying that media playback should be always
@@ -1249,6 +1401,10 @@ The font family used as the default for content using monospace font.
 .B monospace-font-size (int)
 Default font size for the monospace font.
 .TP
+.B notification (string)
+Controls website access to the notification API, that sends notifications via
+dbus. {`always', `never', `ask' (display a prompt each time)}
+.TP
 .B offline-cache (bool)
 Whether to enable HTML5 offline web application cache support.
 Offline web application cache allows web applications to run even
@@ -1274,11 +1430,17 @@ Determines whether or not JavaScript executes within a page.
 .B scroll-step (int)
 Number of pixel vimb scrolls if 'j' or 'k' is used.
 .TP
+.B scroll-multiplier (int)
+Multiplier to increase the scroll distance if window is scrolled by mouse
+wheel.
+.TP
 .B serif-font (string)
 The font family used as the default for content using serif font.
 .TP
 .B show-titlebar (bool)
-Determines whether the titlebar is shown (on systems that provide window decoration). Defaults to true.
+Determines whether the titlebar is shown (on systems that provide window
+decoration).
+Defaults to true.
 .TP
 .B site-specific-quirks (bool)
 Enables the site-specific compatibility workarounds.
@@ -1286,7 +1448,7 @@ Enables the site-specific compatibility workarounds.
 .B smooth-scrolling (bool)
 Enable or disable support for smooth scrolling.
 .TP
-.B spacial-navigation (bool)
+.B spatial-navigation (bool)
 Whether to enable the Spatial Navigation.
 This feature consists in the ability to navigate between focusable
 elements in a Web page, such as hyperlinks and form controls, by using
@@ -1373,6 +1535,8 @@ This fills the inputbox with the prefilled download command and replaces
 Whether to enable the XSS auditor.
 This feature filters some kinds of reflective XSS attacks on vulnerable web
 sites.
+.
+.
 .SH FILES
 .TP
 .IR $XDG_CONFIG_HOME/vimb[/PROFILE]
@@ -1385,6 +1549,24 @@ this subdirectory.
 .I config
 Configuration file to set WebKit setting, some GUI styles and keybindings.
 .TP
+.I scripts.js
+This file can be used to run user scripts, that are injected into every page
+that is opened.
+.TP
+.I style.css
+File for userdefined CSS styles.
+These file is used if the config variable `stylesheet' is enabled.
+.PD
+.RE
+.
+.TP
+.IR $XDG_DATA_HOME/vimb[/PROFILE]
+Directory for runtime data.
+If executed with \fB-p \fIPROFILE\fR parameter, data files are written from
+this subdirectory.
+.
+.RS
+.PD 0
 .I cookies.db
 Sqlite cookie storage.
 This file will not be touched if option \-\-incognito is set.
@@ -1411,28 +1593,22 @@ Holds the read it later queue filled by `qpush'.
 .I search
 This file holds the history of search queries.
 This file will not be touched if option \-\-incognito is set.
-.TP
-.I scripts.js
-This file can be used to run user scripts, that are injected into every page
-that is opened.
-.TP
-.I style.css
-File for userdefined CSS styles.
-These file is used if the config variable `stylesheet' is enabled.
 .PD
 .RE
-.TP
-There are also some sample scripts installed together with Vimb under
-PREFIX/share/vimb/examples.
+.
 .SH ENVIRONMENT
 .TP
 .B http_proxy, HTTP_PROXY
 If either environment variable is non-empty, the specified host and
 optional port is used to tunnel requests. For example:
 HTTP_PROXY=localhost:8118.
+.
+.
 .SH "REPORTING BUGS"
 Report bugs to the main project page on https://github.com/fanglingsu/vimb/issues
 .br
 or on the mailing list https://lists.sourceforge.net/lists/listinfo/vimb-users.
+.
+.
 .SH AUTHOR
 Daniel Carl

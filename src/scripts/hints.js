@@ -168,16 +168,19 @@ var hints = Object.freeze((function(){
                     continue;
                 }
 
-                count++;
-
-                /* create the hint label with number/letters */
                 rect  = e.getClientRects()[0];
+                if (!rect) {
+                    continue;
+                }
+
+                count++;
                 label = labelTmpl.cloneNode(false);
 
                 label.style.display = "none";
                 label.style.left    = Math.max(rect.left - 4, 0) + "px";
                 label.style.top     = Math.max(rect.top - 4, 0) + "px";
 
+                /* create the hint label with number/letters */
                 /* if hinted element is an image - show title or alt of the image in hint label */
                 /* this allows to see how to filter for the image */
                 text = "";

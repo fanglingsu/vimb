@@ -17,9 +17,12 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <gdk/gdkx.h>
+#include "config.h"
 #include <gtk/gtk.h>
+#ifndef FEATURE_NO_XEMBED
+#include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
+#endif
 #include <libsoup/soup.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -32,7 +35,6 @@
 #include "ascii.h"
 #include "command.h"
 #include "completion.h"
-#include "config.h"
 #include "ex.h"
 #include "ext-proxy.h"
 #include "handler.h"
@@ -113,11 +115,14 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_counted_matches(WebKitFindController *finder, guint count, Client *c);
 static gboolean on_permission_request(WebKitWebView *webview,
         WebKitPermissionRequest *request, Client *c);
+static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c);
 static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
 static void on_script_message_vertical_scroll(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error);
+static gboolean autocmdOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
 
 struct Vimb vb;
@@ -146,7 +151,7 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
 
     /* Prepare the path to save the download. */
     if (path && *path) {
-        file = util_build_path(c->state, path, download_path);
+        file = util_build_path(path, download_path);
 
         /* if file is an directory append a file name */
         if (g_file_test(file, (G_FILE_TEST_IS_DIR))) {
@@ -155,7 +160,7 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
             g_free(dir);
         }
     } else {
-        file = util_build_path(c->state, suggested_filename, download_path);
+        file = util_build_path(suggested_filename, download_path);
     }
 
     g_free(basename);
@@ -766,7 +771,6 @@ static Client *client_new(WebKitWebView *webview)
 static void client_show(WebKitWebView *webview, Client *c)
 {
     GtkWidget *box;
-    char *xid;
 
     c->window = create_window(c);
 
@@ -816,15 +820,22 @@ static void client_show(WebKitWebView *webview, Client *c)
     setting_init(c);
 
     gtk_widget_show_all(c->window);
-    if (vb.embed) {
-        xid = g_strdup_printf("%d", (int)vb.embed);
-    } else {
-        xid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(c->window)));
-    }
 
+    char *wid;
+    wid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(c->window)));
+    g_setenv("VIMB_WIN_ID", wid, TRUE);
+#ifndef FEATURE_NO_XEMBED
     /* set the x window id to env */
-    g_setenv("VIMB_XID", xid, TRUE);
-    g_free(xid);
+    if (vb.embed) {
+        char *xid;
+        xid = g_strdup_printf("%d", (int)vb.embed);
+        g_setenv("VIMB_XID", xid, TRUE);
+        g_free(xid);
+    } else {
+        g_setenv("VIMB_XID", wid, TRUE);
+    }
+#endif
+    g_free(wid);
 
     /* start client in normal mode */
     vb_enter(c, 'n');
@@ -839,16 +850,20 @@ static GtkWidget *create_window(Client *c)
 {
     GtkWidget *window;
 
+#ifndef FEATURE_NO_XEMBED
     if (vb.embed) {
         window = gtk_plug_new(vb.embed);
     } else {
+#endif
         window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
         gtk_window_set_role(GTK_WINDOW(window), PROJECT_UCFIRST);
         gtk_window_set_default_size(GTK_WINDOW(window), WIN_WIDTH, WIN_HEIGHT);
         if (!vb.no_maximize) {
             gtk_window_maximize(GTK_WINDOW(window));
         }
+#ifndef FEATURE_NO_XEMBED
     }
+#endif
 
     g_object_connect(
             G_OBJECT(window),
@@ -1030,7 +1045,8 @@ static void spawn_new_instance(const char *uri)
 #endif
         + (vb.incognito ? 1 : 0)
         + (vb.profile ? 2 : 0)
-        + (vb.no_maximize ? 1 : 0),
+        + (vb.no_maximize ? 1 : 0)
+        + g_slist_length(vb.cmdargs) * 2,
         sizeof(char *)
     );
 
@@ -1057,6 +1073,10 @@ static void spawn_new_instance(const char *uri)
     }
     if (vb.no_maximize) {
         cmd[i++] = "--no-maximize";
+    }
+    for (GSList *l = vb.cmdargs; l; l = l->next) {
+        cmd[i++] = "-C";
+        cmd[i++] = l->data;
     }
     cmd[i++] = (char*)uri;
     cmd[i++] = NULL;
@@ -1375,6 +1395,22 @@ static void decide_navigation_action(Client *c, WebKitPolicyDecision *dec)
         webkit_policy_decision_ignore(dec);
         spawn_new_instance(uri);
     } else {
+#ifdef FEATURE_QUEUE
+        /* Push link target to queue on Shift-LeftMouse. */
+        if (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
+                && button == 1
+                && mod & GDK_SHIFT_MASK
+                && strcmp(uri, "about:blank")) {
+            command_queue(c, &((Arg){.i = COMMAND_QUEUE_PUSH, .s = (char *)uri}));
+            webkit_policy_decision_ignore(dec);
+            return;
+        }
+#endif
+#ifdef FEATURE_AUTOCMD
+        if (strcmp(uri, "about:blank")) {
+            autocmd_run(c, AU_LOAD_STARTING, uri, NULL);
+        }
+#endif
         webkit_policy_decision_use(dec);
     }
 }
@@ -1783,6 +1819,9 @@ static void vimb_cleanup(void)
         }
     }
     g_free(vb.profile);
+
+    g_slist_free_full(vb.cmdargs, g_free);
+    g_clear_object(&vb.webcontext);
 }
 #endif
 
@@ -1791,11 +1830,9 @@ static void vimb_cleanup(void)
  */
 static void vimb_setup(void)
 {
-    WebKitWebContext *ctx;
-    WebKitCookieManager *cm;
-    char *path;
+    char *path, *dataPath;
 
-    /* prepare the file pathes */
+    /* Prepare files in XDG_CONFIG_HOME */
     path = util_get_config_dir();
 
     if (vb.configfile) {
@@ -1805,38 +1842,49 @@ static void vimb_setup(void)
     } else {
         vb.files[FILES_CONFIG] = g_build_filename(path, "config", NULL);
     }
-
-    /* Setup those files that are use multiple time during runtime */
-    if (!vb.incognito) {
-        vb.files[FILES_CLOSED] = g_build_filename(path, "closed", NULL);
-        vb.files[FILES_COOKIE] = g_build_filename(path, "cookies.db", NULL);
-    }
-    vb.files[FILES_BOOKMARK]   = g_build_filename(path, "bookmark", NULL);
-    vb.files[FILES_QUEUE]      = g_build_filename(path, "queue", NULL);
     vb.files[FILES_SCRIPT]     = g_build_filename(path, "scripts.js", NULL);
     vb.files[FILES_USER_STYLE] = g_build_filename(path, "style.css", NULL);
-
-    vb.storage[STORAGE_HISTORY]  = file_storage_new(path, "history", vb.incognito);
-    vb.storage[STORAGE_COMMAND]  = file_storage_new(path, "command", vb.incognito);
-    vb.storage[STORAGE_SEARCH]   = file_storage_new(path, "search", vb.incognito);
     g_free(path);
 
+    /* Prepare files in XDG_DATA_HOME */
+    dataPath = util_get_data_dir();
+    if (!vb.incognito) {
+        vb.files[FILES_CLOSED] = g_build_filename(dataPath, "closed", NULL);
+        vb.files[FILES_COOKIE] = g_build_filename(dataPath, "cookies.db", NULL);
+    }
+    vb.files[FILES_BOOKMARK]   = g_build_filename(dataPath, "bookmark", NULL);
+    vb.files[FILES_QUEUE]      = g_build_filename(dataPath, "queue", NULL);
+
+    vb.storage[STORAGE_HISTORY]  = file_storage_new(dataPath, "history", vb.incognito);
+    vb.storage[STORAGE_COMMAND]  = file_storage_new(dataPath, "command", vb.incognito);
+    vb.storage[STORAGE_SEARCH]   = file_storage_new(dataPath, "search", vb.incognito);
+    g_free(dataPath);
+
+    WebKitWebsiteDataManager *manager = NULL;
+    if (vb.incognito) {
+        manager = webkit_website_data_manager_new_ephemeral();
+    } else {
+        manager = webkit_website_data_manager_new(
+                "base-data-directory", util_get_data_dir(),
+                "base-cache-directory", util_get_cache_dir(),
+                NULL);
+    }
+    vb.webcontext = webkit_web_context_new_with_website_data_manager(manager);
+    manager       = webkit_web_context_get_website_data_manager(vb.webcontext);
     /* Use seperate rendering processed for the webview of the clients in the
      * current instance. This must be called as soon as possible according to
      * the documentation. */
-    if (vb.incognito) {
-        ctx = webkit_web_context_new_ephemeral();
-    } else {
-        ctx = webkit_web_context_get_default();
-    }
-    webkit_web_context_set_process_model(ctx, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
-    webkit_web_context_set_cache_model(ctx, WEBKIT_CACHE_MODEL_WEB_BROWSER);
+    webkit_web_context_set_process_model(vb.webcontext, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
+    webkit_web_context_set_cache_model(vb.webcontext, WEBKIT_CACHE_MODEL_WEB_BROWSER);
 
-    g_signal_connect(ctx, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL);
+    g_signal_connect(vb.webcontext, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL);
 
-    /* Add cookie support only if the cookie file exists. */
-    if (vb.files[FILES_COOKIE]) {
-        cm = webkit_web_context_get_cookie_manager(ctx);
+    /* Add cookie support only if the cookie file exists and web context is
+     * not ephemeral */
+    if (vb.files[FILES_COOKIE] && !webkit_web_context_is_ephemeral(vb.webcontext)) {
+        WebKitCookieManager *cm;
+
+        cm = webkit_web_context_get_cookie_manager(vb.webcontext);
         webkit_cookie_manager_set_persistent_storage(
                 cm,
                 vb.files[FILES_COOKIE],
@@ -1961,9 +2009,15 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     /* create a new webview */
     ucm = webkit_user_content_manager_new();
     if (webview) {
-        new = WEBKIT_WEB_VIEW(webkit_web_view_new_with_related_view(webview));
+        new = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+                    "user-content-manager", ucm,
+                    "related-view", webview,
+                    NULL));
     } else {
-        new = WEBKIT_WEB_VIEW(webkit_web_view_new_with_user_content_manager(ucm));
+        new = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+                    "user-content-manager", ucm,
+                    "web-context", vb.webcontext,
+                    NULL));
     }
 
     g_object_connect(
@@ -1977,6 +2031,7 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::notify::title", G_CALLBACK(on_webview_notify_title), c,
         "signal::notify::uri", G_CALLBACK(on_webview_notify_uri), c,
         "signal::permission-request", G_CALLBACK(on_permission_request), c,
+        "signal::scroll-event", G_CALLBACK(on_scroll), c,
         "signal::ready-to-show", G_CALLBACK(on_webview_ready_to_show), c,
         "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
         "signal::authenticate", G_CALLBACK(on_webview_authenticate), c,
@@ -2012,12 +2067,32 @@ static gboolean on_permission_request(WebKitWebView *webview,
     char *msg = NULL;
 
     if (WEBKIT_IS_GEOLOCATION_PERMISSION_REQUEST(request)) {
-        msg = "request your location";
+        char* geolocation_setting = GET_CHAR(c, "geolocation");
+        if (strcmp(geolocation_setting, "ask") == 0) {
+            msg = "access your location";
+        } else if (strcmp(geolocation_setting, "always") == 0) {
+            webkit_permission_request_allow(request);
+            return TRUE;
+        } else if (strcmp(geolocation_setting, "never") == 0) {
+            webkit_permission_request_deny(request);
+            return TRUE;
+        }
     } else if (WEBKIT_IS_USER_MEDIA_PERMISSION_REQUEST(request)) {
         if (webkit_user_media_permission_is_for_audio_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
             msg = "access the microphone";
         } else if (webkit_user_media_permission_is_for_video_device(WEBKIT_USER_MEDIA_PERMISSION_REQUEST(request))) {
             msg = "access you webcam";
+        }
+    } else if (WEBKIT_IS_NOTIFICATION_PERMISSION_REQUEST(request)) {
+        char* notification_setting = GET_CHAR(c, "notification");
+        if (strcmp(notification_setting, "ask") == 0) {
+            msg = "show notifications";
+        } else if (strcmp(notification_setting, "always") == 0) {
+            webkit_permission_request_allow(request);
+            return TRUE;
+        } else if (strcmp(notification_setting, "never") == 0) {
+            webkit_permission_request_deny(request);
+            return TRUE;
         }
     } else {
         return FALSE;
@@ -2037,6 +2112,12 @@ static gboolean on_permission_request(WebKitWebView *webview,
     gtk_widget_destroy(dialog);
 
     return TRUE;
+}
+
+static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c)
+{
+    event->scroll.delta_y *= c->config.scrollmultiplier;
+    return FALSE;
 }
 
 static void on_script_message_focus(WebKitUserContentManager *manager,
@@ -2103,16 +2184,29 @@ static gboolean profileOptionArgFunc(const gchar *option_name,
     return TRUE;
 }
 
+static gboolean autocmdOptionArgFunc(const gchar *option_name,
+        const gchar *value, gpointer data, GError **error)
+{
+    vb.cmdargs = g_slist_append(vb.cmdargs, g_strdup(value));
+    return TRUE;
+}
+
 int main(int argc, char* argv[])
 {
     Client *c;
     GError *err = NULL;
-    char *pidstr, *winid = NULL;
+    char *pidstr;
+#ifndef FEATURE_NO_XEMBED
+    char *winid = NULL;
+#endif
     gboolean ver = FALSE, buginfo = FALSE;
 
     GOptionEntry opts[] = {
+        {"cmd", 'C', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)autocmdOptionArgFunc, "Ex command run before first page is loaded", NULL},
         {"config", 'c', 0, G_OPTION_ARG_FILENAME, &vb.configfile, "Custom configuration file", NULL},
+#ifndef FEATURE_NO_XEMBED
         {"embed", 'e', 0, G_OPTION_ARG_STRING, &winid, "Reparents to window specified by xid", NULL},
+#endif
         {"incognito", 'i', 0, G_OPTION_ARG_NONE, &vb.incognito, "Run with user data read-only", NULL},
         {"profile", 'p', 0, G_OPTION_ARG_CALLBACK, (GOptionArgFunc*)profileOptionArgFunc, "Profile name", NULL},
         {"version", 'v', 0, G_OPTION_ARG_NONE, &ver, "Print version", NULL},
@@ -2176,12 +2270,19 @@ int main(int argc, char* argv[])
 
     vimb_setup();
 
+#ifndef FEATURE_NO_XEMBED
     if (winid) {
         vb.embed = strtol(winid, NULL, 0);
     }
+#endif
 
     c = client_new(NULL);
     client_show(NULL, c);
+
+    /* process the --cmd if this was given */
+    for (GSList *l = vb.cmdargs; l; l = l->next) {
+        ex_run_string(c, l->data, false);
+    }
     if (argc <= 1) {
         vb_load_uri(c, &(Arg){TARGET_CURRENT, NULL});
     } else if (!strcmp(argv[argc - 1], "-")) {

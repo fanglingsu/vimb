@@ -168,9 +168,11 @@ void hints_create(Client *c, const char *input)
         return;
     }
 
-    jsargs = g_strdup_printf("'%s'", *(input + hints.promptlen) ? input + hints.promptlen : "");
-    call_hints_function(c, "filter", jsargs, FALSE);
-    g_free(jsargs);
+    if (GET_BOOL(c, "hint-match-element")) {
+        jsargs = g_strdup_printf("'%s'", *(input + hints.promptlen) ? input + hints.promptlen : "");
+        call_hints_function(c, "filter", jsargs, FALSE);
+        g_free(jsargs);
+    }
 }
 
 void hints_focus_next(Client *c, const gboolean back)
@@ -326,8 +328,6 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
             } else {
                 vb_statusbar_show_hover_url(c, LINK_TYPE_LINK, value + 7);
             }
-        } else {
-            goto error;
         }
     } else if (!strncmp(value, "DONE:", 5)) {
         fire_timeout(c, FALSE);

@@ -42,6 +42,7 @@
 #include "util.h"
 #include "ext-proxy.h"
 #include "autocmd.h"
+#include "util.h"
 
 typedef enum {
 #ifdef FEATURE_AUTOCMD
@@ -52,7 +53,7 @@ typedef enum {
     EX_BMR,
     EX_EVAL,
     EX_HARDCOPY,
-    EX_CLEARCACHE,
+    EX_CLEARDATA,
     EX_CMAP,
     EX_CNOREMAP,
     EX_HANDADD,
@@ -126,7 +127,7 @@ static gboolean parse_count(const char **input, ExArg *arg);
 static gboolean parse_command_name(Client *c, const char **input, ExArg *arg);
 static gboolean parse_bang(const char **input, ExArg *arg);
 static gboolean parse_lhs(const char **input, ExArg *arg);
-static gboolean parse_rhs(Client *c, const char **input, ExArg *arg);
+static gboolean parse_rhs(const char **input, ExArg *arg);
 static void skip_whitespace(const char **input);
 static void free_cmdarg(ExArg *arg);
 static VbCmdResult execute(Client *c, const ExArg *arg);
@@ -138,7 +139,7 @@ static VbCmdResult ex_autocmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
 static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
-static VbCmdResult ex_clearcache(Client *c, const ExArg *arg);
+static VbCmdResult ex_cleardata(Client *c, const ExArg *arg);
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg);
 static void print_failed_cb(WebKitPrintOperation* op, GError *err, Client *c);
 static VbCmdResult ex_map(Client *c, const ExArg *arg);
@@ -179,7 +180,7 @@ static ExInfo commands[] = {
     {"cmap",             EX_CMAP,        ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"cnoremap",         EX_CNOREMAP,    ex_map,        EX_FLAG_LHS|EX_FLAG_CMD},
     {"cunmap",           EX_CUNMAP,      ex_unmap,      EX_FLAG_LHS},
-    {"clearcache",       EX_CLEARCACHE,  ex_clearcache, EX_FLAG_NONE},
+    {"cleardata",        EX_CLEARDATA,   ex_cleardata,  EX_FLAG_LHS|EX_FLAG_RHS},
     {"hardcopy",         EX_HARDCOPY,    ex_hardcopy,   EX_FLAG_NONE},
     {"handler-add",      EX_HANDADD,     ex_handlers,   EX_FLAG_RHS},
     {"handler-remove",   EX_HANDREM,     ex_handlers,   EX_FLAG_RHS},
@@ -476,7 +477,7 @@ VbCmdResult ex_run_file(Client *c, const char *filename)
         return res;
     }
 
-    length = g_strv_length(lines) - 1;
+    length = g_strv_length(lines);
     for (i = 0; i < length; i++) {
         line = lines[i];
         /* skip commented or empty lines */
@@ -597,7 +598,7 @@ static gboolean parse(Client *c, const char **input, ExArg *arg, gboolean *nohis
     }
     /* parse the rhs if this is available */
     skip_whitespace(input);
-    parse_rhs(c, input, arg);
+    parse_rhs(input, arg);
 
     if (**input) {
         (*input)++;
@@ -730,7 +731,7 @@ static gboolean parse_lhs(const char **input, ExArg *arg)
  * command can contain any char accept of the newline, else the right hand
  * side end on the first none escaped | or newline.
  */
-static gboolean parse_rhs(Client *c, const char **input, ExArg *arg)
+static gboolean parse_rhs(const char **input, ExArg *arg)
 {
     int expflags, flags;
     gboolean cmdlist;
@@ -745,7 +746,7 @@ static gboolean parse_rhs(Client *c, const char **input, ExArg *arg)
 
     cmdlist  = (arg->flags & EX_FLAG_CMD) != 0;
     expflags = (arg->flags & EX_FLAG_EXP)
-        ? UTIL_EXP_TILDE|UTIL_EXP_DOLLAR|UTIL_EXP_SPECIAL
+        ? UTIL_EXP_TILDE|UTIL_EXP_DOLLAR
         : 0;
     flags = expflags;
 
@@ -753,7 +754,7 @@ static gboolean parse_rhs(Client *c, const char **input, ExArg *arg)
      * EX_FLAG_CMD is not set also on | */
     while (**input && **input != '\n' && (cmdlist || **input != '|')) {
         /* check for expansion placeholder */
-        util_parse_expansion(c->state, input, arg->rhs, flags, "|\\");
+        util_parse_expansion(input, arg->rhs, flags, "|\\");
 
         if (VB_IS_SEPARATOR(**input)) {
             /* add tilde expansion for next loop needs to be first char or to
@@ -853,10 +854,78 @@ static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Cli
     }
 }
 
-static VbCmdResult ex_clearcache(Client *c, const ExArg *arg)
+/**
+ * Clear website data by ':cleardata {dataTypeList} {timespan}'.
+ */
+static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
 {
-    webkit_web_context_clear_cache(webkit_web_context_get_default());
-    return CMD_SUCCESS;
+    unsigned int data_types = 0;
+    WebKitWebsiteDataManager *manager;
+    VbCmdResult result = CMD_SUCCESS;
+    GTimeSpan timespan = 0;
+
+    /* Parse the left hand side if this is available and not '-' */
+    if (arg->lhs->len && strcmp(arg->lhs->str, "-") != 0) {
+        GString *str;
+        char **types;
+        char *value;
+        unsigned int len, i, t;
+        gboolean found;
+        static const Arg type_map[] = {
+            {WEBKIT_WEBSITE_DATA_MEMORY_CACHE,              "memory-cache"},
+            {WEBKIT_WEBSITE_DATA_DISK_CACHE,                "disk-cache"},
+            {WEBKIT_WEBSITE_DATA_OFFLINE_APPLICATION_CACHE, "offline-cache"},
+            {WEBKIT_WEBSITE_DATA_SESSION_STORAGE,           "session-storage"},
+            {WEBKIT_WEBSITE_DATA_LOCAL_STORAGE,             "local-storage"},
+            {WEBKIT_WEBSITE_DATA_INDEXEDDB_DATABASES,       "indexeddb-databases"},
+            {WEBKIT_WEBSITE_DATA_PLUGIN_DATA,               "plugin-data"},
+            {WEBKIT_WEBSITE_DATA_COOKIES,                   "cookies"},
+#if WEBKIT_CHECK_VERSION(2, 26, 0)
+            {WEBKIT_WEBSITE_DATA_HSTS_CACHE,                "hsts-cache"},
+#endif
+            {0, ""},
+        };
+
+        /* Walk through list of data types given as rhs. */
+        types = g_strsplit(arg->rhs->str, ",", -1);
+        len   = g_strv_length(types);
+        str   = g_string_new(NULL);
+
+        /* Loop over given types and collect the type values into bitmap. */
+        for (i = 0; i < len; i++) {
+            value = types[i];
+            found = FALSE;
+            for (t = 0; type_map[t].i; t++) {
+                if (!strcmp(value, type_map[t].s)) {
+                    data_types |= type_map[t].i;
+                    found       = TRUE;
+                    break;
+                }
+            }
+
+            if (!found) {
+                /* collect unknown types to be shown in error message. */
+                g_string_append_printf(str, "%s ", value);
+            }
+        }
+        if (*str->str) {
+            vb_echo(c, MSG_ERROR, TRUE, "unknown data type(s): %s", str->str);
+            result = CMD_ERROR|CMD_KEEPINPUT;
+        }
+        g_string_free(str, TRUE);
+        g_strfreev(types);
+    } else {
+        /* No special type or '-' given - clear all known types. */
+        data_types = WEBKIT_WEBSITE_DATA_ALL;
+    }
+
+    if (arg->rhs->len) {
+        timespan = util_string_to_timespan(arg->rhs->str);
+    }
+    manager = webkit_web_context_get_website_data_manager(webkit_web_view_get_context(c->webview));
+    webkit_website_data_manager_clear(manager, data_types, timespan, NULL, NULL, NULL);
+
+    return result;
 }
 
 /**
@@ -1036,12 +1105,21 @@ static VbCmdResult ex_set(Client *c, const ExArg *arg)
 static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg)
 {
     int status;
-    char *stdOut = NULL, *stdErr = NULL;
+    char *stdOut = NULL, *stdErr = NULL, *selection = NULL;
     VbCmdResult res;
     GError *error = NULL;
 
     if (!*arg->rhs->str) {
         return CMD_ERROR;
+    }
+
+    /* Get current selection and write it as VIMB_SELECTION into env. */
+    selection = ext_proxy_get_current_selection(c);
+    if (selection) {
+        g_setenv("VIMB_SELECTION", selection, TRUE);
+        g_free(selection);
+    } else {
+        g_setenv("VIMB_SELECTION", "", TRUE);
     }
 
     if (arg->bang) {
@@ -1255,7 +1333,7 @@ static gboolean complete(Client *c, short direction)
 
                 case EX_SAVE: /* Fallthrough */
                 case EX_SOURCE:
-                    found = util_filename_fill_completion(c->state, store, token);
+                    found = util_filename_fill_completion(store, token);
                     break;
 
 #ifdef FEATURE_AUTOCMD

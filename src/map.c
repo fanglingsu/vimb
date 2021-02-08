@@ -170,7 +170,7 @@ MapState map_handle_keys(Client *c, const guchar *keys, int keylen, gboolean use
                 c->map.resolved -= 3;
                 c->map.qlen     -= 3;
                 /* move all other queue entries three steps to the left */
-                memmove(c->map.queue->str, c->map.queue->str + 3, c->map.qlen);
+                g_string_erase(c->map.queue, 0, 3);
             } else {
                 /* get first char of queue */
                 qk = c->map.queue->str[0];
@@ -179,7 +179,7 @@ MapState map_handle_keys(Client *c, const guchar *keys, int keylen, gboolean use
                 c->map.qlen--;
 
                 /* move all other queue entries one step to the left */
-                memmove(c->map.queue->str, c->map.queue->str + 1, c->map.qlen);
+                g_string_erase(c->map.queue, 0, 1);
             }
 
             /* remove the no-map flag */
@@ -382,7 +382,7 @@ gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
     MapState res = map_handle_keys(c, string, len, true);
 
     if (res != MAP_AMBIGUOUS) {
-        if (!c->state.processed_key) {
+        if (c->state.typed && !c->state.processed_key) {
             /* events ready to be consumed */
             process_events();
         } else {
