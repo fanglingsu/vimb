@@ -250,7 +250,7 @@ static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *eve
 
     if (doc) {
         WebKitDOMElement *body, *de;
-        glong max = 0, top = 0, scrollTop, scrollHeight, clientHeight;
+        guint64 max = 0, top = 0, scrollTop, scrollHeight, clientHeight;
         guint percent = 0;
 
         de = webkit_dom_document_get_document_element(doc);

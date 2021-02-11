@@ -547,7 +547,7 @@ static VbResult normal_input_open(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_mark(Client *c, const NormalCmdInfo *info)
 {
-    glong current;
+    guint64 current;
     char *js, *mark;
     int idx;
 
@@ -570,7 +570,7 @@ static VbResult normal_mark(Client *c, const NormalCmdInfo *info)
         current = c->state.scroll_top;
 
         /* jump to the location */
-        js = g_strdup_printf("window.scroll(window.screenLeft,%ld);", c->state.marks[idx]);
+        js = g_strdup_printf("window.scroll(window.screenLeft,%" G_GUINT64_FORMAT ");", c->state.marks[idx]);
         ext_proxy_eval_script(c, js, NULL);
         g_free(js);
 
