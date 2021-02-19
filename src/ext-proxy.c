@@ -180,7 +180,7 @@ static void on_vertical_scroll(GDBusConnection *connection,
         const char *interface_name, const char *signal_name,
         GVariant *parameters, gpointer data)
 {
-    glong max, top;
+    guint64 max, top;
     guint percent;
     guint64 pageid;
     Client *c;
