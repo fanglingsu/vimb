@@ -234,10 +234,10 @@ gboolean hints_parse_prompt(const char *prompt, char *mode, gboolean *is_gmode)
     gboolean res;
     char pmode = '\0';
 #ifdef FEATURE_QUEUE
-    static char *modes   = "eiIoOpPstTxyY";
+    static char *modes   = "eiIkoOpPstTxyY";
     static char *g_modes = "IopPstyY";
 #else
-    static char *modes   = "eiIoOstTxyY";
+    static char *modes   = "eiIkoOstTxyY";
     static char *g_modes = "IostyY";
 #endif
 

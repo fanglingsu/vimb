@@ -528,12 +528,14 @@ var hints = Object.freeze((function(){
                 /* holds the xpaths for the different modes */
                 xpathmap = {
                     otY:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
+                    k:       "//div",
                     e:       "//input[not(@type) or @type='text'] | //textarea",
                     iI:      "//img[@src]",
                     OpPsTxy: "//*[@href] | //img[@src and not(ancestor::a)] | //iframe[@src]"
                 },
                 /* holds the actions to perform on hint fire */
                 actionmap = {
+                    k:          function(e) {e.remove(); return "DONE:";},
                     ot:         function(e) {open(e); return "DONE:";},
                     eiIOpPsTxy: function(e) {return "DATA:" + getSrc(e);},
                     Y:          function(e) {return "DATA:" + (e.textContent || "");}
