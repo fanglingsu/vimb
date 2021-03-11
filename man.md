@@ -739,10 +739,37 @@ Example:
 
 ### Misc
 {:#Misc}
-\:cl[earcache]
-: Clears all resources currently cached by webkit. Note that this effects all
-  running instances of vimb.
+\:cl[eardata]
+: Asynchronously clears the website data of the given list of dataTypes
+  modified in the past timespan. Note that the dataTypes must not contain
+  spaces. If timespan is not given, all website data will be removed. Note
+  that this effects all running instances of vimb.
+: The dataTypes is a comma separated list of following types.
+: - `memory-cache` - Memory cache.
+: - `disk-cache` - HTTP disk cache.
+: - `offline-cache` - Offline web application cache.
+: - `session-storage` - Session storage data.
+: - `local-storage` - Local storage data.
+: - `indexeddb-databases` - IndexedDB databases.
+: - `plugin-data` - Plugin data.
+: - `cookies` - Cookies. Note that the cookies are not cleared in case a timespan is given.
+: - `hsts-cache` - HTTP Strict Transport Security cache.
+: - `-` - Can be used to clear all known data types in case a timespan is used.
 
+: The timespan is given as sequence of '[multiplier]unit' tupels with following units.
+: - `y` - year (365 days)
+: - `w` - week (7 days)
+: - `d` - day
+: - `h` - hour
+: - `m` - minute
+: - `s` - second
+
+: Examples
+: - `cleardata` - to clear all known website data types without any timespan restriction.
+: - `cleardata - 5m` -  to clear all known website data types modified in the last 5 minutes.
+: - `cleardata local-storage,session-storage,cookies` to completely clear the cookies, local- and session-storage without time restrictions.
+: - `cleardata disk-cache 2d4h` to clear the disk cache that was modified in the past two days and four hours.
+ 
 \:sh[ellcmd] *cmd*
 : Runs given shell *cmd* synchronous and print the output into inputbox. The
   *CMD* can contain multiple `%` chars that are expanded to the current opened
