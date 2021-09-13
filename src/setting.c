@@ -109,7 +109,9 @@ void setting_init(Client *c)
     setting_add(c, "images", TYPE_BOOLEAN, &on, webkit, 0, "auto-load-images");
     setting_add(c, "javascript-can-access-clipboard", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-access-clipboard");
     setting_add(c, "javascript-can-open-windows-automatically", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-open-windows-automatically");
+#if WEBKIT_CHECK_VERSION(2, 24, 0)
     setting_add(c, "javascript-enable-markup", TYPE_BOOLEAN, &on, webkit, 0, "enable-javascript-markup");
+#endif
     setting_add(c, "media-playback-allows-inline", TYPE_BOOLEAN, &on, webkit, 0, "media-playback-allows-inline");
     setting_add(c, "media-playback-requires-user-gesture", TYPE_BOOLEAN, &off, webkit, 0, "media-playback-requires-user-gesture");
     setting_add(c, "media-stream", TYPE_BOOLEAN, &off, webkit, 0, "enable-media-stream");
