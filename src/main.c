@@ -640,7 +640,7 @@ void vb_statusbar_update(Client *c)
     } else if (c->state.scroll_percent == 100) {
         g_string_append(status, " Bot");
     } else {
-        g_string_append_printf(status, " %d%%", c->state.scroll_percent);
+        g_string_append_printf(status, " %hu%%", c->state.scroll_percent);
     }
 
     gtk_label_set_text(GTK_LABEL(c->statusbar.right), status->str);
