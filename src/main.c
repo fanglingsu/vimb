@@ -632,6 +632,15 @@ void vb_statusbar_update(Client *c)
 
     statusbar_update_downloads(c, status);
 
+		/**
+		* These architectures have different kinds of issues with scroll 
+		* percentage, this is a somewhat clean fix that doesn't affect	others.
+		*/
+#if defined(_ARCH_PPC64) || defined(_ARCH_PPC) | defined(_ARCH_ARM)
+		/* force the scroll percent to be 16-bit */
+		c->state.scroll_percent = * (guint16*) ( &c->state.scroll_percent );
+#endif
+
     /* show the scroll status */
     if (c->state.scroll_max == 0) {
         g_string_append(status, " All");
@@ -640,7 +649,7 @@ void vb_statusbar_update(Client *c)
     } else if (c->state.scroll_percent == 100) {
         g_string_append(status, " Bot");
     } else {
-        g_string_append_printf(status, " %hu%%", c->state.scroll_percent);
+        g_string_append_printf(status, " %d%%", c->state.scroll_percent);
     }
 
     gtk_label_set_text(GTK_LABEL(c->statusbar.right), status->str);
