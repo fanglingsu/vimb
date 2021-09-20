@@ -174,7 +174,7 @@ struct State {
     MessageType         input_type;
     StatusType          status_type;
     guint64             scroll_max;         /* Maxmimum scrollable height of the document. */
-    guint16             scroll_percent;     /* Current position of the viewport in document (percent). */
+    guint               scroll_percent;     /* Current position of the viewport in document (percent). */
     guint64             scroll_top;         /* Current position of the viewport in document (pixel). */
     char                *title;             /* Window title of the client. */
 
