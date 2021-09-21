@@ -148,6 +148,7 @@ void setting_init(Client *c)
     setting_add(c, "scroll-multiplier", TYPE_INTEGER, &i, internal, 0, &c->config.scrollmultiplier);
     setting_add(c, "home-page", TYPE_CHAR, &SETTING_HOME_PAGE, NULL, 0, NULL);
     i = 2000;
+    setting_add(c, "status-bar-show-settings", TYPE_BOOLEAN, &off, internal, 0, &c->config.statusbar_show_settings);
     /* TODO should be global and not overwritten by a new client */
     setting_add(c, "history-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.history_max);
     setting_add(c, "editor-command", TYPE_CHAR, &"x-terminal-emulator -e -vi '%s'", NULL, 0, NULL);
