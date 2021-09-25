@@ -634,14 +634,9 @@ void vb_statusbar_update(Client *c)
 
     if ( c->config.statusbar_show_settings ) {
         /* show js, cookies, and local storage status */
-
-        Setting *js = g_hash_table_lookup(c->config.settings, "scripts");
-        Setting *cookies = g_hash_table_lookup(c->config.settings, "cookie-accept");
-        Setting *local_storage = g_hash_table_lookup(c->config.settings, "html5-local-storage");
-
-        g_string_append_printf(status, " js: %s |", js->value.b ? "on" : "off");
-        g_string_append_printf(status, " cookies: %s |", cookies->value.s);
-        g_string_append_printf(status, " storage: %s", local_storage->value.b ? "on" : "off");
+        g_string_append_printf(status, " js: %s |", GET_BOOL(c, "scripts") ? "on" : "off");
+        g_string_append_printf(status, " cookies: %s |", GET_CHAR(c, "cookie-accept") );
+        g_string_append_printf(status, " storage: %s", GET_BOOL(c, "html5-local-storage") ? "on" : "off");
     }
 
     /* show the scroll status */
