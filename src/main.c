@@ -633,10 +633,10 @@ void vb_statusbar_update(Client *c)
     statusbar_update_downloads(c, status);
 
     if ( c->config.statusbar_show_settings ) {
-        /* show js, cookies, and local storage status */
-        g_string_append_printf(status, " js: %s |", GET_BOOL(c, "scripts") ? "on" : "off");
-        g_string_append_printf(status, " cookies: %s |", GET_CHAR(c, "cookie-accept") );
-        g_string_append_printf(status, " storage: %s", GET_BOOL(c, "html5-local-storage") ? "on" : "off");
+        /* show 3 user defined variables on statusbar. can add more by using same template */
+        g_string_append_printf(status, " %s: %s |", STATUS_NAME1, STATUS_TYPE1 );
+        g_string_append_printf(status, " %s: %s |", STATUS_NAME2, STATUS_TYPE2 );
+        g_string_append_printf(status, " %s: %s |", STATUS_NAME3, STATUS_TYPE3 );
     }
 
     /* show the scroll status */
