@@ -254,6 +254,7 @@ struct Client {
         gboolean                prevent_newwindow;
         guint                   default_zoom;   /* default zoom level in percent */
         Shortcut                *shortcuts;
+        gboolean                statusbar_show_settings;
     } config;
     struct {
         GSList      *list;

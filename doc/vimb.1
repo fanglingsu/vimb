@@ -1370,6 +1370,12 @@ Whether JavaScript can access the clipboard.
 .B javascript-can-open-windows-automatically (bool)
 Whether JavaScript can open popup windows automatically without user
 interaction.
+.PD
+.RE
+.TP
+.B javascript-enable-markup (bool)
+Whether JavaScript markup is enabled.
+Disabling can help with some older systems (ppc, ppc64, etc.) that don't have complete JavaScript support to run webpages without crashing.
 .TP
 .B geolocation (string)
 Controls website access to the geolocation API {`always', `never', `ask' (display a prompt each time)}
@@ -1474,6 +1480,12 @@ Brazil.
 .TP
 .B status-bar (bool)
 Indicates if the status bar should be shown.
+.PD
+.RE
+.TP
+.B status-bar-show-settings (bool)
+Whether to show settings on the status bar.
+This shows on the right hand of the status bar whether JavaScript, Cookies, and HTML5 LocalStorage are enabled.
 .TP
 .B status-css (string)
 CSS style applied to the status bar on none https pages.
@@ -1538,12 +1550,6 @@ This fills the inputbox with the prefilled download command and replaces
 Whether to enable the XSS auditor.
 This feature filters some kinds of reflective XSS attacks on vulnerable web
 sites.
-.PD
-.RE
-.TP
-.B javascript-enable-markup (bool)
-Whether JavaScript markup is enabled.
-Disabling can help with some older systems (ppc, ppc64, etc.) that don't have complete JavaScript support to run webpages without crashing.
 .
 .
 .SH FILES

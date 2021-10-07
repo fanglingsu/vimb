@@ -640,6 +640,12 @@ void vb_statusbar_update(Client *c)
 		/* force the scroll percent to be 16-bit */
 		c->state.scroll_percent = * (guint16*) ( &c->state.scroll_percent );
 #endif
+    if ( c->config.statusbar_show_settings ) {
+        /* show 3 user defined variables on statusbar. can add more by using same template */
+        g_string_append_printf(status, " %s: %s |", STATUS_NAME1, STATUS_TYPE1 );
+        g_string_append_printf(status, " %s: %s |", STATUS_NAME2, STATUS_TYPE2 );
+        g_string_append_printf(status, " %s: %s |", STATUS_NAME3, STATUS_TYPE3 );
+    }
 
     /* show the scroll status */
     if (c->state.scroll_max == 0) {
