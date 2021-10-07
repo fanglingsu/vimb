@@ -73,3 +73,28 @@
 
 /* if set to 1 vimb will check if the webextension could be found. */
 #define CHECK_WEBEXTENSION_ON_STARTUP 1
+
+/* This status indicator is only shown if "status-bar-show-settings" is
+ * enabled.
+ * The CHAR_MAP(value, internalValue, outputValue, valueIfNotMapped) is a
+ * little workaround to translate internal used string value like for
+ * GET_CHAR(c, "cookie-accept") which is one of "always", "origin" or "never"
+ * to those values that should be shown on statusbar.
+ * The STATUS_VARAIBLE_SHOW is used as argument for a printf like function. So
+ * the first argument is the output pattern. */
+/*
+#define STATUS_VARAIBLE_SHOW "js: %s, cookies: %s, hint-timeout: %d", \
+    GET_BOOL(c, "scripts") ? "on" : "off", \
+    GET_CHAR(c, "cookie-accept"), \
+    GET_INT(c, "hint-timeout")
+*/
+#define COOKIE GET_CHAR(c, "cookie-accept")
+#define STATUS_VARAIBLE_SHOW "%c%c%c%c%c%c%c%c", \
+    CHAR_MAP(COOKIE, "always", 'A', CHAR_MAP(COOKIE, "origin", '@', 'a')), \
+    GET_BOOL(c, "dark-mode") ? 'D' : 'd', \
+    vb.incognito ? 'E' : 'e', \
+    GET_BOOL(c, "images") ? 'I' : 'i', \
+    GET_BOOL(c, "html5-local-storage") ? 'L' : 'l', \
+    GET_BOOL(c, "stylesheet") ? 'M' : 'm', \
+    GET_BOOL(c, "scripts") ? 'S' : 's', \
+    GET_BOOL(c, "strict-ssl") ? 'T' : 't'

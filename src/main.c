@@ -632,13 +632,17 @@ void vb_statusbar_update(Client *c)
 
     statusbar_update_downloads(c, status);
 
-		/**
-		* These architectures have different kinds of issues with scroll 
-		* percentage, this is a somewhat clean fix that doesn't affect	others.
-		*/
+    /* These architectures have different kinds of issues with scroll 
+     * percentage, this is a somewhat clean fix that doesn't affect others.  */
 #if defined(_ARCH_PPC64) || defined(_ARCH_PPC) | defined(_ARCH_ARM)
-		/* force the scroll percent to be 16-bit */
-		c->state.scroll_percent = * (guint16*) ( &c->state.scroll_percent );
+    /* force the scroll percent to be 16-bit */
+    c->state.scroll_percent = *(guint16*)(&c->state.scroll_percent);
+#endif
+
+#ifdef STATUS_VARAIBLE_SHOW
+    if (c->config.statusbar_show_settings) {
+        g_string_append_printf(status, STATUS_VARAIBLE_SHOW);
+    }
 #endif
 
     /* show the scroll status */
