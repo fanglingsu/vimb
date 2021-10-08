@@ -16,6 +16,10 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
+New setting `status-bar-show-settings`
+: This allows to enable visualization of some runtime settings. Format of this
+  and the settings to show are configured in `src/config.h` on compilation time.
+
 New setting `notification`
 : These new settings allow to control the website access to the notification
   API.
@@ -29,9 +33,6 @@ Add `$VIMB_SELECTION` when `:shellcmd` is run.
 New option `--cmd, -C`
 : Allow to give ex commands on startup that are give to new spawned child
   instances too.
-
-New setting `dark-mode`
-: These new settings enabled dark mode in the webview.
 
 More about latest changes can be found in the [CHANGELOG.md][]. 
 

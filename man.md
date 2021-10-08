@@ -1206,6 +1206,10 @@ spell-checking-languages (string)
 status-bar (bool)
 : Indicates if the status bar should be shown.
 
+status-bar-show-settings (bool)
+: Whether to show settings on the status bar. This shows on the right hand of
+  the status bar whether some flags about current active setting..
+
 status-css (string)
 : CSS style applied to the status bar on none https pages.
 
