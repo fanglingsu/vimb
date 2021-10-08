@@ -89,6 +89,7 @@
     GET_INT(c, "hint-timeout")
 */
 #define COOKIE GET_CHAR(c, "cookie-accept")
+#define CHAR_MAP(v, i, m, d) (strcmp(v, i) == 0 ? m : (d))
 #define STATUS_VARAIBLE_SHOW "%c%c%c%c%c%c%c%c", \
     CHAR_MAP(COOKIE, "always", 'A', CHAR_MAP(COOKIE, "origin", '@', 'a')), \
     GET_BOOL(c, "dark-mode") ? 'D' : 'd', \
