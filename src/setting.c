@@ -61,6 +61,7 @@ static int input_autohide(Client *c, const char *name, DataType type, void *valu
 static int internal(Client *c, const char *name, DataType type, void *value, void *data);
 static int notification(Client *c, const char *name, DataType type, void *value, void *data);
 static int headers(Client *c, const char *name, DataType type, void *value, void *data);
+static int intelligent_tracking_prevention(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_scripts(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_style(Client *c, const char *name, DataType type, void *value, void *data);
 static int statusbar(Client *c, const char *name, DataType type, void *value, void *data);
@@ -107,6 +108,7 @@ void setting_init(Client *c)
     setting_add(c, "html5-local-storage", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-local-storage");
     setting_add(c, "hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing");
     setting_add(c, "images", TYPE_BOOLEAN, &on, webkit, 0, "auto-load-images");
+    setting_add(c, "intelligent-tracking-prevention", TYPE_BOOLEAN, &off, intelligent_tracking_prevention, 0, NULL);
     setting_add(c, "javascript-can-access-clipboard", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-access-clipboard");
     setting_add(c, "javascript-can-open-windows-automatically", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-open-windows-automatically");
 #if WEBKIT_CHECK_VERSION(2, 24, 0)
@@ -566,6 +568,14 @@ static int geolocation(Client *c, const char *name, DataType type, void *value, 
         vb_echo(c, MSG_ERROR, FALSE, "%s must be in [always, ask, never]", name);
         return CMD_ERROR | CMD_KEEPINPUT;
     }
+    return CMD_SUCCESS;
+}
+
+static int intelligent_tracking_prevention(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    WebKitWebContext *ctx = webkit_web_view_get_context(c->webview);
+    WebKitWebsiteDataManager *manager = webkit_web_context_get_website_data_manager(ctx);
+    webkit_website_data_manager_set_itp_enabled(manager, *(gboolean*)value);
     return CMD_SUCCESS;
 }
 
