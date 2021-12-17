@@ -108,7 +108,9 @@ void setting_init(Client *c)
     setting_add(c, "html5-local-storage", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-local-storage");
     setting_add(c, "hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing");
     setting_add(c, "images", TYPE_BOOLEAN, &on, webkit, 0, "auto-load-images");
+#if WEBKIT_CHECK_VERSION(2, 30, 0)
     setting_add(c, "intelligent-tracking-prevention", TYPE_BOOLEAN, &off, intelligent_tracking_prevention, 0, NULL);
+#endif
     setting_add(c, "javascript-can-access-clipboard", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-access-clipboard");
     setting_add(c, "javascript-can-open-windows-automatically", TYPE_BOOLEAN, &off, webkit, 0, "javascript-can-open-windows-automatically");
 #if WEBKIT_CHECK_VERSION(2, 24, 0)
@@ -571,6 +573,7 @@ static int geolocation(Client *c, const char *name, DataType type, void *value, 
     return CMD_SUCCESS;
 }
 
+#if WEBKIT_CHECK_VERSION(2, 30, 0)
 static int intelligent_tracking_prevention(Client *c, const char *name, DataType type, void *value, void *data)
 {
     WebKitWebContext *ctx = webkit_web_view_get_context(c->webview);
@@ -578,6 +581,7 @@ static int intelligent_tracking_prevention(Client *c, const char *name, DataType
     webkit_website_data_manager_set_itp_enabled(manager, *(gboolean*)value);
     return CMD_SUCCESS;
 }
+#endif
 
 /* This needs to be called before the window is shown for the best chance of
  * success, but it may be called at any time.
