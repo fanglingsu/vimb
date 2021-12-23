@@ -527,7 +527,7 @@ var hints = Object.freeze((function(){
             var prop,
                 /* holds the xpaths for the different modes */
                 xpathmap = {
-                    otY:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select",
+                    otY:     "//*[@href] | //*[@onclick or @tabindex or @class='lk' or @role='link' or @role='button'] | //input[not(@type='hidden' or @disabled or @readonly)] | //textarea[not(@disabled or @readonly)] | //button | //select | //summary",
                     k:       "//div",
                     e:       "//input[not(@type) or @type='text'] | //textarea",
                     iI:      "//img[@src]",
