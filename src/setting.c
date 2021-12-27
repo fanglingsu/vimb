@@ -773,9 +773,16 @@ static int tls_policy(Client *c, const char *name, DataType type, void *value, v
 {
     gboolean strict = *((gboolean*)value);
 
+#if WEBKIT_CHECK_VERSION(2, 30, 0)
+    WebKitWebContext *ctx = webkit_web_view_get_context(c->webview);
+    WebKitWebsiteDataManager *manager = webkit_web_context_get_website_data_manager(ctx);
+    webkit_website_data_manager_set_tls_errors_policy(manager,
+        strict ? WEBKIT_TLS_ERRORS_POLICY_FAIL : WEBKIT_TLS_ERRORS_POLICY_IGNORE);
+#else
     webkit_web_context_set_tls_errors_policy(
         webkit_web_context_get_default(),
         strict ? WEBKIT_TLS_ERRORS_POLICY_FAIL : WEBKIT_TLS_ERRORS_POLICY_IGNORE);
+#endif
 
     return CMD_SUCCESS;
 }
