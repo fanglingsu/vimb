@@ -229,7 +229,7 @@ var hints = Object.freeze((function(){
             hDiv.style.position = "fixed";
             hDiv.style.top      = "0";
             hDiv.style.left     = "0";
-            hDiv.style.zIndex   = "225000";
+            hDiv.style.zIndex   = "2147483647";
             hDiv.appendChild(fragment);
             if (doc.body) {
                 doc.body.appendChild(hDiv);
