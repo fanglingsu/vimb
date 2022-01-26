@@ -81,6 +81,7 @@ typedef enum {
     EX_SCR,
     EX_SET,
     EX_SHELLCMD,
+    EX_SHELLOPEN,
     EX_SOURCE,
     EX_TABOPEN,
 } ExCode;
@@ -154,6 +155,7 @@ static VbCmdResult ex_quit(Client *c, const ExArg *arg);
 static VbCmdResult ex_save(Client *c, const ExArg *arg);
 static VbCmdResult ex_set(Client *c, const ExArg *arg);
 static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg);
+static VbCmdResult ex_shellopen(Client *c, const ExArg *arg);
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg);
 static VbCmdResult ex_source(Client *c, const ExArg *arg);
 static VbCmdResult ex_handlers(Client *c, const ExArg *arg);
@@ -204,6 +206,7 @@ static ExInfo commands[] = {
     {"save",             EX_SAVE,        ex_save,       EX_FLAG_RHS|EX_FLAG_EXP},
     {"set",              EX_SET,         ex_set,        EX_FLAG_RHS},
     {"shellcmd",         EX_SHELLCMD,    ex_shellcmd,   EX_FLAG_CMD|EX_FLAG_EXP|EX_FLAG_BANG},
+    {"shellopen",        EX_SHELLOPEN,   ex_shellopen,  EX_FLAG_CMD|EX_FLAG_EXP},
     {"shortcut-add",     EX_SCA,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-default", EX_SCD,         ex_shortcut,   EX_FLAG_RHS},
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
@@ -1146,6 +1149,45 @@ static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg)
         } else {
             vb_echo(c, MSG_ERROR, TRUE, "[%d] %s", WEXITSTATUS(status), stdErr);
         }
+    }
+
+    return res;
+}
+
+static VbCmdResult ex_shellopen(Client *c, const ExArg *arg)
+{
+    int status;
+    char *stdOut = NULL, *stdErr = NULL, *selection = NULL;
+    VbCmdResult res;
+    GError *error = NULL;
+
+    if (!*arg->rhs->str) {
+        return CMD_ERROR;
+    }
+
+    /* Get current selection and write it as VIMB_SELECTION into env. */
+    selection = ext_proxy_get_current_selection(c);
+    if (selection) {
+        g_setenv("VIMB_SELECTION", selection, TRUE);
+        g_free(selection);
+    } else {
+        g_setenv("VIMB_SELECTION", "", TRUE);
+    }
+
+    if (!g_spawn_command_line_sync(arg->rhs->str, &stdOut, &stdErr, &status, &error)) {
+        g_warning("Can't run '%s': %s", arg->rhs->str, error->message);
+        g_clear_error(&error);
+        res = CMD_ERROR | CMD_KEEPINPUT;
+    } else {
+        /* the commands success depends not on the return code of the
+         * called shell command, so we know the result already here */
+        res = CMD_SUCCESS;
+    }
+
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+        vb_load_uri(c, &((Arg){TARGET_CURRENT, stdOut}));
+    } else {
+        vb_echo(c, MSG_ERROR, TRUE, "[%d] %s", WEXITSTATUS(status), stdErr);
     }
 
     return res;
