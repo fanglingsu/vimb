@@ -30,7 +30,7 @@ the project page of [Vimb][].
 ## Packages
 
 - Arch Linux: [community/vimb][], [aur/vimb-git][], [aur/vimb-gtk2][]
-- Gentoo: [gentoo-git][], [gentoo][]
+- Gentoo: [tharvik overlay][], [jjakob overlay][]
 - openSUSE: [network/vimb][]
 - pkgsrc: [pkgsrc/www/vimb][], [pkgsrc/wip/vimb-git][]
 - Slackware: [slackbuild/vimb][]
@@ -91,8 +91,8 @@ Information about the license are found in the file LICENSE.
 [aur/vimb-git]:        https://aur.archlinux.org/packages/vimb-git
 [aur/vimb-gtk2]:       https://aur.archlinux.org/packages/vimb-gtk2/
 [community/vimb]:      https://www.archlinux.org/packages/community/x86_64/vimb/
-[gentoo-git]:          https://github.com/tharvik/overlay/tree/master/www-client/vimb
-[gentoo]:              https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
+[tharvik overlay]:     https://github.com/tharvik/overlay/tree/master/www-client/vimb
+[jjakob overlay]:      https://github.com/jjakob/gentoo-overlay/tree/master/www-client/vimb
 [mail-archive]:        https://sourceforge.net/p/vimb/vimb/vimb-users/ "vimb - mailing list archive"
 [mail]:                https://lists.sourceforge.net/lists/listinfo/vimb-users "vimb - mailing list"
 [network/vimb]:        https://build.opensuse.org/package/show/network/vimb
