@@ -62,6 +62,8 @@ static VbResult normal_hint(Client *c, const NormalCmdInfo *info);
 static VbResult normal_do_hint(Client *c, const char *prompt);
 static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info);
 static VbResult normal_input_open(Client *c, const NormalCmdInfo *info);
+static VbResult normal_input_queue(Client *c, const NormalCmdInfo *info);
+static VbResult normal_input_qunshift(Client *c, const NormalCmdInfo *info);
 static VbResult normal_mark(Client *c, const NormalCmdInfo *info);
 static VbResult normal_navigate(Client *c, const NormalCmdInfo *info);
 static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info);
@@ -163,13 +165,13 @@ static struct {
 /* N   0x4e */ {normal_search},
 /* O   0x4f */ {normal_input_open},
 /* P   0x50 */ {normal_open_clipboard},
-/* Q   0x51 */ {NULL},
+/* Q   0x51 */ {normal_input_queue},
 /* R   0x52 */ {normal_navigate},
 /* S   0x53 */ {NULL},
 /* T   0x54 */ {normal_input_open},
 /* U   0x55 */ {normal_open},
 /* V   0x56 */ {NULL},
-/* W   0x57 */ {NULL},
+/* W   0x57 */ {normal_input_qunshift},
 /* X   0x58 */ {NULL},
 /* Y   0x59 */ {normal_yank},
 /* Z   0x5a */ {NULL},
@@ -195,13 +197,13 @@ static struct {
 /* n   0x6e */ {normal_search},
 /* o   0x6f */ {normal_input_open},
 /* p   0x70 */ {normal_open_clipboard},
-/* q   0x71 */ {NULL},
+/* q   0x71 */ {normal_input_queue},
 /* r   0x72 */ {normal_navigate},
 /* s   0x73 */ {NULL},
 /* t   0x74 */ {normal_input_open},
 /* u   0x75 */ {normal_open},
 /* v   0x76 */ {NULL},
-/* w   0x77 */ {NULL},
+/* w   0x77 */ {normal_input_qunshift},
 /* x   0x78 */ {NULL},
 /* y   0x79 */ {normal_yank},
 /* z   0x7a */ {normal_zoom},
@@ -542,6 +544,36 @@ static VbResult normal_input_open(Client *c, const NormalCmdInfo *info)
      * commands modes input change handler */
     vb_enter_prompt(c, 'c', ":", FALSE);
 
+    return RESULT_COMPLETE;
+}
+
+static VbResult normal_input_queue(Client *c, const NormalCmdInfo *info)
+{
+#ifdef FEATURE_QUEUE
+    if (info->key == 'q') {
+        vb_echo(c, MSG_NORMAL, FALSE, ":%s ", "qpush");
+    } else {
+        vb_echo(c, MSG_NORMAL, FALSE, ":%s %s", "qpush", c->state.uri);
+    }
+    /* switch mode after setting the input text to not trigger the
+     * commands modes input change handler */
+    vb_enter_prompt(c, 'c', ":", FALSE);
+#endif
+    return RESULT_COMPLETE;
+}
+
+static VbResult normal_input_qunshift(Client *c, const NormalCmdInfo *info)
+{
+#ifdef FEATURE_QUEUE
+    if (info->key == 'w') {
+        vb_echo(c, MSG_NORMAL, FALSE, ":%s ", "qunshift");
+    } else {
+        vb_echo(c, MSG_NORMAL, FALSE, ":%s %s", "qunshift", c->state.uri);
+    }
+    /* switch mode after setting the input text to not trigger the
+     * commands modes input change handler */
+    vb_enter_prompt(c, 'c', ":", FALSE);
+#endif
     return RESULT_COMPLETE;
 }
 
