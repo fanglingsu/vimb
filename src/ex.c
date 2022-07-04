@@ -1301,6 +1301,8 @@ static gboolean complete(Client *c, short direction)
             switch (arg->code) {
                 case EX_OPEN:
                 case EX_TABOPEN:
+                case EX_QPUSH:
+                case EX_QUNSHIFT:
                     sort = FALSE;
                     if (*token == '!') {
                         found = bookmark_fill_completion(store, token + 1);
