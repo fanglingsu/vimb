@@ -52,7 +52,7 @@
 #define SETTING_GUI_FONT_NORMAL               "10pt monospace"
 #define SETTING_GUI_FONT_EMPH                 "bold 10pt monospace"
 #define SETTING_HOME_PAGE                     "about:blank"
-#define SETTING_DOWNLOAD_PATH                 "~/"
+#define SETTING_DOWNLOAD_PATH                 "~/Downloads"
 /* cookie-accept allowed values always, origin, never */
 #define SETTING_COOKIE_ACCEPT                 "always"
 #define SETTING_HINT_KEYS                     "0123456789"
