@@ -160,7 +160,7 @@ void setting_init(Client *c)
     setting_add(c, "status-bar", TYPE_BOOLEAN, &on, statusbar, 0, NULL);
     i = 1000;
     setting_add(c, "timeoutlen", TYPE_INTEGER, &i, internal, 0, &c->map.timeoutlen);
-    setting_add(c, "input-autohide", TYPE_BOOLEAN, &off, input_autohide, 0, &c->config.input_autohide);
+    setting_add(c, "input-autohide", TYPE_BOOLEAN, &on, input_autohide, 0, &c->config.input_autohide);
     setting_add(c, "fullscreen", TYPE_BOOLEAN, &off, fullscreen, 0, NULL);
     setting_add(c, "show-titlebar", TYPE_BOOLEAN, &on, window_decorate, 0, NULL);
     i = 100;
@@ -168,7 +168,7 @@ void setting_init(Client *c)
     setting_add(c, "download-path", TYPE_CHAR, &SETTING_DOWNLOAD_PATH, NULL, 0, NULL);
     setting_add(c, "download-command", TYPE_CHAR, &SETTING_DOWNLOAD_COMMAND, NULL, 0, NULL);
     setting_add(c, "download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
-    setting_add(c, "incsearch", TYPE_BOOLEAN, &off, internal, 0, &c->config.incsearch);
+    setting_add(c, "incsearch", TYPE_BOOLEAN, &on, internal, 0, &c->config.incsearch);
     i = 10;
     /* TODO should be global and not overwritten by a new client */
     setting_add(c, "closed-max-items", TYPE_INTEGER, &i, internal, 0, &vb.config.closed_max);
