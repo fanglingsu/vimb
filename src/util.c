@@ -819,9 +819,9 @@ char *util_sanitize_filename(char *filename)
  */
 char *util_sanitize_uri(const char *uri_str)
 {
-    SoupURI *uri;
     char *sanitized_uri;
     char *for_display;
+    GUri *uri;
 
     if (!uri_str) {
         return NULL;
@@ -841,9 +841,9 @@ char *util_sanitize_uri(const char *uri_str)
         return for_display;
     }
 
-    uri           = soup_uri_new(for_display);
-    sanitized_uri = soup_uri_to_string(uri, FALSE);
-    soup_uri_free(uri);
+    uri           = g_uri_parse(for_display, G_URI_FLAGS_NONE, NULL);
+    sanitized_uri = g_uri_to_string_partial(uri, G_URI_HIDE_PASSWORD);
+    g_uri_unref(uri);
     g_free(for_display);
 
     return sanitized_uri;

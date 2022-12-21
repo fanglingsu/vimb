@@ -132,19 +132,25 @@ struct Vimb vb;
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
     char *suggested_filename, const char *path)
 {
-    char *download_path, *dir, *file, *uri, *basename = NULL,
-         *decoded_uri = NULL;
-    const char *download_uri;
+    char *download_path, *dir, *file, *uri, *basename = NULL;
+
     download_path = GET_CHAR(c, "download-path");
 
     if (!suggested_filename || !*suggested_filename) {
+        const char *download_uri;
+        GUri *parsed_uri = NULL;
+        char *decoded_uri;
+
         /* Try to find a matching name if there is no suggested filename. */
         download_uri = webkit_uri_request_get_uri(webkit_download_get_request(download));
-        decoded_uri  = soup_uri_decode(download_uri);
+        parsed_uri   = g_uri_parse(download_uri, G_URI_FLAGS_NONE, NULL);
+        decoded_uri  = g_uri_to_string(parsed_uri);
         basename     = g_filename_display_basename(decoded_uri);
-        g_free(decoded_uri);
 
         suggested_filename = basename;
+
+        g_uri_unref(parsed_uri);
+        g_free(decoded_uri);
     }
 
     /* Prepare the path to save the download. */
