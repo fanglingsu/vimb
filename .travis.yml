@@ -3,7 +3,7 @@ branches:
     gh-pages
 
 language: c
-dist: bionic
+dist: jammy
 sudo: required
 
 compiler:
@@ -12,6 +12,6 @@ compiler:
 
 before_install:
   - sudo apt-get update -q
-  - sudo apt-get install -y --allow-unauthenticated --no-install-recommends libwebkit2gtk-4.0-dev
+  - sudo apt-get install -y --allow-unauthenticated --no-install-recommends libwebkit2gtk-4.1-dev
 
 script: make options && make -j test
