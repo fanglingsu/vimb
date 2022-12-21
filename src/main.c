@@ -40,7 +40,6 @@
 #include "handler.h"
 #include "history.h"
 #include "input.h"
-#include "js.h"
 #include "main.h"
 #include "map.h"
 #include "normal.h"
