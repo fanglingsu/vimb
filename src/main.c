@@ -833,10 +833,10 @@ static void client_show(WebKitWebView *webview, Client *c)
 
     gtk_widget_show_all(c->window);
 
+#ifndef FEATURE_NO_XEMBED
     char *wid;
     wid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(c->window)));
     g_setenv("VIMB_WIN_ID", wid, TRUE);
-#ifndef FEATURE_NO_XEMBED
     /* set the x window id to env */
     if (vb.embed) {
         char *xid;
@@ -846,8 +846,8 @@ static void client_show(WebKitWebView *webview, Client *c)
     } else {
         g_setenv("VIMB_XID", wid, TRUE);
     }
-#endif
     g_free(wid);
+#endif
 
     /* start client in normal mode */
     vb_enter(c, 'n');
