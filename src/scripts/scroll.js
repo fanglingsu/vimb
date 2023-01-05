@@ -3,6 +3,7 @@ function vbscroll(mode, scrollStep, count) {
         d = document,
         x = y = 0,
         ph = w.innerHeight,
+        de = d.documentElement,
         c = count||1,
         rel = true;
     switch (mode) {
@@ -34,9 +35,15 @@ function vbscroll(mode, scrollStep, count) {
         case 'g':
             x = w.scrollX;
             if (count) {
-                y = c * ((d.documentElement.scrollHeight - w.innerHeight) / 100);
+                y = c * ((d.documentElement.scrollHeight - ph) / 100);
             } else {
-                y = 'G' == mode ? d.body.scrollHeight : 0;
+                y = 'G' == mode
+                    ? Math.max(
+                        d.body.scrollHeight, de.scrollHeight,
+                        d.body.offsetHeight, de.offsetHeight,
+                        d.body.clientHeight, de.clientHeight
+                    )
+                    : 0;
             }
             rel = false;
             break;
