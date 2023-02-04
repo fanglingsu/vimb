@@ -61,6 +61,8 @@
 #define MARK_TICK    0
 #define MARK_SIZE    (sizeof(MARK_CHARS) - 1)
 
+#define GLOBAL_MARK_CHARS   "'ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 #define USER_REG     "abcdefghijklmnopqrstuvwxyz"
 /* registers in order displayed for :register command */
 #define REG_CHARS    "\"" USER_REG ":%/;"
@@ -194,6 +196,10 @@ struct State {
         int         matches;        /* number of matching search results */
         char        *last_query;    /* last search query */
     } search;
+    struct {
+        guint64         pos;
+        char            *uri;
+    } global_marks[MARK_SIZE];
 };
 
 struct Map {

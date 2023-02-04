@@ -17,6 +17,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <ctype.h>
 #include <gdk/gdkkeysyms.h>
 #include <string.h>
 
@@ -63,6 +64,8 @@ static VbResult normal_do_hint(Client *c, const char *prompt);
 static VbResult normal_increment_decrement(Client *c, const NormalCmdInfo *info);
 static VbResult normal_input_open(Client *c, const NormalCmdInfo *info);
 static VbResult normal_mark(Client *c, const NormalCmdInfo *info);
+static void jump (Client *c, const guint64 p);
+static void jump_after_load(WebKitWebView *webview, WebKitLoadEvent event, Client *c);
 static VbResult normal_navigate(Client *c, const NormalCmdInfo *info);
 static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info);
 static VbResult normal_open(Client *c, const NormalCmdInfo *info);
@@ -545,37 +548,84 @@ static VbResult normal_input_open(Client *c, const NormalCmdInfo *info)
     return RESULT_COMPLETE;
 }
 
+static void jump(Client *c, guint64 p) {
+    char *js = g_strdup_printf("window.scroll(window.screenLeft,%" G_GUINT64_FORMAT ");", p);
+    ext_proxy_eval_script(c, js, NULL);
+    g_free(js);
+}
+
+static guint64 jump_pos;
+static void jump_after_load(WebKitWebView *webview, WebKitLoadEvent event, Client *c) {
+    if (event == WEBKIT_LOAD_FINISHED) {
+        jump(c, jump_pos);
+	jump_pos = 0;
+    }
+}
+
 static VbResult normal_mark(Client *c, const NormalCmdInfo *info)
 {
-    guint64 current;
+    guint64 current_pos;
+    char *current_uri;
     char *js, *mark;
+    Arg *arg;
     int idx;
 
     /* check if the second char is a valid mark char */
-    if (!(mark = strchr(MARK_CHARS, info->key2))) {
+    if (!(mark = strchr(MARK_CHARS, info->key2)) && !(mark = strchr(GLOBAL_MARK_CHARS, info->key2))) {
         return RESULT_ERROR;
     }
 
-    /* get the index of the mark char */
-    idx = mark - MARK_CHARS;
+    if (islower(*mark)) {
+        /* get the index of the mark char */
+        idx = mark - MARK_CHARS;
 
-    if ('m' == info->key) {
-        c->state.marks[idx] = c->state.scroll_top;
-    } else {
-        /* check if the mark was set */
-        if ((int)(c->state.marks[idx] - .5) < 0) {
-            return RESULT_ERROR;
+        if ('m' == info->key) {
+            c->state.marks[idx] = c->state.scroll_top;
+        } else {
+            /* check if the mark was set */
+            if ((int)(c->state.marks[idx] - .5) < 0) {
+                return RESULT_ERROR;
+            }
+
+            current_pos = c->state.scroll_top;
+            jump(c, c->state.marks[idx]);
+
+            /* save previous adjust as last position */
+            c->state.marks[MARK_TICK] = current_pos;
         }
+    } else {
+        /* get the index of the mark char */
+        idx = mark - GLOBAL_MARK_CHARS;
 
-        current = c->state.scroll_top;
+        if ('m' == info->key) {
+            g_free(c->state.global_marks[idx].uri);
+            c->state.global_marks[idx].pos = c->state.scroll_top;
+            c->state.global_marks[idx].uri = g_strdup(c->state.uri);
+        } else {
+            /* check if the mark was set */
+            if (!c->state.global_marks[idx].uri) {
+                return RESULT_ERROR;
+            }
 
-        /* jump to the location */
-        js = g_strdup_printf("window.scroll(window.screenLeft,%" G_GUINT64_FORMAT ");", c->state.marks[idx]);
-        ext_proxy_eval_script(c, js, NULL);
-        g_free(js);
+            current_pos = c->state.scroll_top;
+            current_uri = c->state.uri;
 
-        /* save previous adjust as last position */
-        c->state.marks[MARK_TICK] = current;
+            jump_pos = c->state.global_marks[idx].pos;
+            g_signal_handlers_disconnect_by_func(c->webview, jump_after_load, c);
+            g_signal_connect(c->webview, "load-changed", G_CALLBACK(jump_after_load), c);
+
+            /* jump to the uri */
+            arg = g_new(Arg, 1);
+            arg->i = TARGET_CURRENT;
+            arg->s = c->state.global_marks[idx].uri;
+            vb_load_uri(c, arg);
+            g_free(arg);
+
+            /* save previous adjust as last position */
+            g_free(c->state.global_marks[MARK_TICK].uri);
+            c->state.global_marks[MARK_TICK].pos = current_pos;
+            c->state.global_marks[MARK_TICK].uri = g_strdup(current_uri);
+        }
     }
 
     return RESULT_COMPLETE;
