@@ -76,7 +76,7 @@ static const unsigned char chartable[256] = {
 #define CSI                 0x80
 #define CSI_STR             "\x80"
 
-/* get internal representation for conrol character ^C */
+/* get internal representation for control character ^C */
 #define CTRL(c)             ((c) ^ 0x40)
 #define UNCTRL(c)           (((c) ^ 0x40) + 'a' - 'A')
 
