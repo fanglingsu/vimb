@@ -184,7 +184,7 @@ gboolean autocmd_add(Client *c, char *name, gboolean delete)
     /* last word is the pattern - if not found use '*' */
     pattern = word ? word : "*";
 
-    /* the rest of the line becoes the ex command to run */
+    /* the rest of the line becomes the ex command to run */
     if (parse && !*parse) {
         parse = NULL;
     }
