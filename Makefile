@@ -31,12 +31,16 @@ install: all
 	@# .desktop file
 	install -d $(DOTDESKTOPPREFIX)
 	install -m 644 vimb.desktop $(DOTDESKTOPPREFIX)/vimb.desktop
+	@# .metainfo.xml file
+	install -d $(METAINFOPREFIX)
+	install -m 644 vimb.metainfo.xml $(METAINFOPREFIX)/vimb.metainfo.xml
 
 uninstall:
 	$(RM) $(BINPREFIX)/vimb
 	$(RM) $(DESTDIR)$(MANDIR)/man1/vimb.1
 	$(RM) $(LIBDIR)/$(EXTTARGET)
 	$(RM) $(DOTDESKTOPPREFIX)/vimb.desktop
+	$(RM) $(METAINFOPREFIX)/vimb.metainfo.xml
 
 clean: src.subdir-clean test-clean
 
