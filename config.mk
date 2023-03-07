@@ -7,6 +7,7 @@ BINPREFIX        := $(DESTDIR)$(PREFIX)/bin
 MANPREFIX        := $(DESTDIR)$(PREFIX)/share/man
 EXAMPLEPREFIX    := $(DESTDIR)$(PREFIX)/share/vimb/example
 DOTDESKTOPPREFIX := $(DESTDIR)$(PREFIX)/share/applications
+METAINFOPREFIX   := $(DESTDIR)$(PREFIX)/share/metainfo
 LIBDIR           := $(DESTDIR)$(PREFIX)/lib/vimb
 RUNPREFIX        := $(PREFIX)
 EXTENSIONDIR     := $(RUNPREFIX)/lib/vimb
