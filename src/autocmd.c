@@ -192,12 +192,15 @@ gboolean autocmd_add(Client *c, char *name, gboolean delete)
 
     /* delete the autocmd if bang was given */
     if (delete) {
-        GSList *lc;
+        GSList *lc, *next;
         AutoCmd *cmd;
         gboolean removed = false;
 
         /* check if the group does already exists */
-        for (lc = grp->cmds; lc; lc = lc->next) {
+        for (lc = grp->cmds; lc; lc = next) {
+            /* Save the next element in case this element is removed */
+            next = lc->next;
+
             cmd = (AutoCmd*)lc->data;
             /* if not bits match - skip the command */
             if (!(cmd->bits & bits)) {
