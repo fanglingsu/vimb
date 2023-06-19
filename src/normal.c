@@ -566,7 +566,7 @@ static VbResult normal_mark(Client *c, const NormalCmdInfo *info)
 {
     guint64 current_pos;
     char *current_uri;
-    char *js, *mark;
+    char *mark;
     Arg *arg;
     int idx;
 
