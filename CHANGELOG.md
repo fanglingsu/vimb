@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.6.0] - 2023-06-19
+## [3.7.0] - 2023-06-19
 ### Added
 * The new env variable `$VIMB_SELECTION` is set to the current selected text
   whenever a `shellcmd` is run #592.
@@ -335,7 +335,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Fixed none POSIX `echo -n` call
 
 [Unreleased]: https://github.com/fanglingsu/vimb/compare/3.7.0...master
-[3.z.0]: https://github.com/fanglingsu/vimb/compare/3.6.0...3.7.0
+[3.7.0]: https://github.com/fanglingsu/vimb/compare/3.6.0...3.7.0
 [3.6.0]: https://github.com/fanglingsu/vimb/compare/3.5.0...3.6.0
 [3.5.0]: https://github.com/fanglingsu/vimb/compare/3.4.0...3.5.0
 [3.4.0]: https://github.com/fanglingsu/vimb/compare/3.3.0...3.4.0
