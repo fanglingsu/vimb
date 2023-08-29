@@ -79,6 +79,7 @@ static struct {
     char *ch;
     int  chlen;
 } key_labels[] = {
+    {"<Bslash>",        8, "\\",         1},
     {"<CR>",            4, "\x0d",       1},
     {"<Tab>",           5, "\t",         1},
     {"<S-Tab>",         7, CSI_STR "kB", 3},
@@ -435,6 +436,15 @@ static char *convert_keys(const char *in, int inlen, int *len)
 
     *len = 0;
     for (p = in; p < &in[inlen]; p++) {
+        /* if we encounter the sequence \< we replace it with just < but act
+         * like it's a non-special character */
+        if (*p == '\\' && p+1 < &in[inlen] && *(p+1) == '<') {
+            g_string_append_len(str, p+1, 1);
+            *len += 1;
+            ++p;
+            continue;
+        }
+
         /* if it starts not with < we can add it literally */
         if (*p != '<') {
             g_string_append_len(str, p, 1);

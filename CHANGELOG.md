@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+* Allow special keys to be escaped in mappings using `\`. For example, `\<C-R>`
+  represents the key sequence `<`, `C`, `-`, `R`, `>`.
+* Add `<Bslash>` as an alias for `\` in mappings. For example, `<Bslash><C-R>`
+  represents the key sequence `\` followed by CTRL-R.
 
 ## [3.7.0] - 2023-06-19
 ### Added
