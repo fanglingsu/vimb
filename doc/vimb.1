@@ -572,6 +572,9 @@ number of keys have no visual representation, a special notation is required.
 As special key names have the format \fI<...>\fP.
 The following special keys can be used: <Left>, <Up>, <Right>, <Down>
 for the cursor keys, <Tab>, <Esc>, <CR>, <Space>, <BS>, <F1>-<F12> and <C-A>-<C-Z>.
+If you want an actual sequence of keys like "<", "C", "R", ">" then
+escape with a backslash: "\<CR>". If you want a backslash followed by a special
+key then use <Bslash>.
 .TP
 .PD 0
 .BI ":nm[ap] {" lhs "} {" rhs }
@@ -1554,6 +1557,9 @@ it might change the behaviour by adding or changing mappings.
 .IP ":set x-hint-command=:sh! curl -e <C-R>% <C-R>;"
 This fills the inputbox with the prefilled download command and replaces
 `<C-R>%' with the current URI and `<C-R>;' with the URI of the hinted element.
+.IP ":nnoremap ;f :set x-hint-command=:sh! firefox '\<C-R>;\<CR><CR>;x"
+This makes the key sequence ";f" start hinting and then open the hinted URI in
+firefox.
 .PD
 .RE
 .TP
