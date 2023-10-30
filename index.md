@@ -28,7 +28,7 @@ Add `$VIMB_SELECTION` when `:shellcmd` is run.
 : This variable is set to the current selected text whenever a `:shellcmd` is
   executed.
 
-[Vimb 3.6.0](https://github.com/fanglingsu/vimb/releases/tag/3.6.0) released
+[Vimb 3.7.0](https://github.com/fanglingsu/vimb/releases/tag/3.7.0) released
 
 New option `--cmd, -C`
 : Allow to give ex commands on startup that are give to new spawned child
@@ -60,6 +60,7 @@ But following images may give a impression of they way vimb works.
 
 ## packages
 - Arch Linux: [community/vimb][], [aur/vimb-git][], [aur/vimb-gtk2][]
+- Fedora: [fedora/vimb][]
 - Gentoo: [gentoo-git][], [gentoo][]
 - openSUSE: [network/vimb][]
 - pkgsrc: [pkgsrc/www/vimb][], [pkgsrc/wip/vimb-git][]
@@ -74,7 +75,10 @@ But following images may give a impression of they way vimb works.
   one of the [releases][].
 
 ## dependencies
-- webkit2gtk-4.0 >= 2.8.x
+
+- gtk+-3.0
+- webkit2gtk-4.1
+- gst-libav, gst-plugins-good (optional, for media decoding among other things)
 
 ## install
 Edit `config.mk` to match your local setup. You might need to do this if 
@@ -119,6 +123,7 @@ If you find a misbehaviour or have feature requests use the
 [aur/vimb-git]:        https://aur.archlinux.org/packages/vimb-git
 [aur/vimb-gtk2]:       https://aur.archlinux.org/packages/vimb-gtk2/
 [community/vimb]:      https://www.archlinux.org/packages/community/x86_64/vimb/
+[fedora/vimb]:         https://src.fedoraproject.org/rpms/vimb
 [gentoo-git]:          https://github.com/tharvik/overlay/tree/master/www-client/vimb
 [gentoo]:              https://github.com/hsoft/portage-overlay/tree/master/www-client/vimb
 [vimb]:                https://github.com/fanglingsu/vimb "vimb project sources"
