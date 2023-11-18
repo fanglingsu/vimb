@@ -211,8 +211,6 @@ gboolean autocmd_add(Client *c, char *name, gboolean delete)
             if (!util_wildmatch(pattern, cmd->pattern)) {
                 continue;
             }
-            /* remove the bits from the item */
-            cmd->bits &= ~bits;
 
             /* if the command has no matching events - remove it */
             grp->cmds = g_slist_delete_link(grp->cmds, lc);
@@ -225,8 +223,6 @@ gboolean autocmd_add(Client *c, char *name, gboolean delete)
         if (removed) {
             rebuild_used_bits(c);
         }
-
-        return true;
     }
 
     /* add the new autocmd */
