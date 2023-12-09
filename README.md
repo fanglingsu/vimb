@@ -29,7 +29,7 @@ the project page of [Vimb][].
 
 ## Packages
 
-- Arch Linux: [community/vimb][], [aur/vimb-git][], [aur/vimb-gtk2][]
+- Arch Linux: [extra/vimb][], [aur/vimb-git][], [aur/vimb-gtk2][]
 - Fedora: [fedora/vimb][],
 - Gentoo: [tharvik overlay][], [jjakob overlay][]
 - openSUSE: [network/vimb][]
@@ -91,7 +91,7 @@ Information about the license are found in the file LICENSE.
 
 [aur/vimb-git]:        https://aur.archlinux.org/packages/vimb-git
 [aur/vimb-gtk2]:       https://aur.archlinux.org/packages/vimb-gtk2/
-[community/vimb]:      https://www.archlinux.org/packages/community/x86_64/vimb/
+[extra/vimb]:          https://www.archlinux.org/packages/extra/x86_64/vimb/
 [fedora/vimb]:         https://src.fedoraproject.org/rpms/vimb
 [tharvik overlay]:     https://github.com/tharvik/overlay/tree/master/www-client/vimb
 [jjakob overlay]:      https://github.com/jjakob/gentoo-overlay/tree/master/www-client/vimb
