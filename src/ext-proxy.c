@@ -250,6 +250,13 @@ char *ext_proxy_get_current_selection(Client *c)
 
     js       = g_strdup_printf("getSelection().toString();");
     jsreturn = ext_proxy_eval_script_sync(c, js);
+
+    if (jsreturn == NULL) {
+        g_warning("cannot get current selection: failed to evaluate js");
+        g_free(js);
+        return NULL;
+    }
+
     g_variant_get(jsreturn, "(bs)", &success, &selection);
     g_free(js);
 

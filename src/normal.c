@@ -453,6 +453,10 @@ static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info)
     gboolean focused;
 
     variant = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.focus();");
+    if (variant == NULL) {
+    	g_warning("cannot get current selection: failed to evaluate js");
+    	return RESULT_ERROR;
+    }
     g_variant_get(variant, "(bs)", &focused, NULL);
     if (!focused) {
         ext_proxy_focus_input(c);
