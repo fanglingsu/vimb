@@ -546,7 +546,7 @@ of key presses by another.
 .P
 Note that the \fIlhs\fP ends with the first found space.
 If you want to use space also in the {lhs} you have to escape this
-with a single `\\', as shown in the examples.
+with a single '\e', as shown in the examples.
 .sp
 The \fIrhs\fP starts with the first non-space char. If you want a \fIrhs\fP
 that starts with a space, you have to use "<Space>".
@@ -807,7 +807,7 @@ This includes also '/' in contrast to shell patterns.
 Matches any single character except of '/'.
 .IP "\fB{one,two}\fP"
 Matches 'one' or 'two'.
-Any '{', ',' and '}' within this pattern must be escaped by a '\\'.
+Any '{', ',' and '}' within this pattern must be escaped by a '\e'.
 \&'*' and '?' have no special meaning within the curly braces.
 .IP "\fB\e\fP"
 Use backslash to escape the special meaning of '?*{},' in the pattern or
@@ -970,7 +970,7 @@ A '\e' before these patterns disables the expansion.
 The following environment variables are set for called shell commands.
 .TP
 .B VIMB_URI
-This variable is set by Vimb everytime a new page is opened to the URI of the
+This variable is set by Vimb every time a new page is opened to the URI of the
 page.
 .TP
 .B VIMB_SELECTION
