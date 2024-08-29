@@ -63,7 +63,7 @@
 
 #define GLOBAL_MARK_CHARS   "'ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-#define USER_REG     "abcdefghijklmnopqrstuvwxyz"
+#define USER_REG     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 /* registers in order displayed for :register command */
 #define REG_CHARS    "\"" USER_REG ":%/;"
 #define REG_SIZE     (sizeof(REG_CHARS) - 1)
