@@ -527,9 +527,18 @@ void vb_register_add(Client *c, char buf, const char *value)
 {
     char *mark;
     int idx;
+    bool shouldAppend = false;
 
     if (!c->state.enable_register || !buf) {
         return;
+    }
+
+    /* check if its capital letter, if yes - append, don't overwrite */
+    if(buf >= 'A' && buf <= 'Z') {
+      shouldAppend = true;
+      // 32 is the magic number - ASCII offset from start of uppercase
+      // to lowercase letters
+      buf = buf + 32;
     }
 
     /* make sure the mark is a valid mark char */
@@ -537,7 +546,11 @@ void vb_register_add(Client *c, char buf, const char *value)
         /* get the index of the mark char */
         idx = mark - REG_CHARS;
 
-        OVERWRITE_STRING(c->state.reg[idx], value);
+        gchar* newcontents = value;
+        if(shouldAppend && c->state.reg[idx])
+            newcontents = g_strjoin("\n", c->state.reg[idx], value, NULL);
+
+        OVERWRITE_STRING(c->state.reg[idx], newcontents);
     }
 }
 
