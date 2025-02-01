@@ -78,6 +78,7 @@ target.
 - [qutebrowser](https://www.qutebrowser.org/)
 - [surf](https://surf.suckless.org/)
 - [uzbl](https://www.uzbl.org/)
+- [wyeb](https://github.com/jun7/wyeb)
 
 ## license
 
