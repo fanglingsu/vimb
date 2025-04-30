@@ -1056,8 +1056,8 @@ static VbCmdResult ex_register(Client *c, const ExArg *arg)
     for (idx = 0; idx < REG_SIZE; idx++) {
         /* show only filled registers */
         if (c->state.reg[idx]) {
-            /* replace all newlines */
-            reg = util_str_replace("\n", "^J", c->state.reg[idx]);
+            /* replace all newlines with enough spaces to align nicely */
+            reg = util_str_replace("\n", "\n     ", c->state.reg[idx]);
             g_string_append_printf(str, "\n\"%c   %s", regchars[idx], reg);
             g_free(reg);
         }
