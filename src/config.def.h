@@ -45,6 +45,8 @@
 #define SHOWCMD_LEN                 10
 /* css applied to the gui elements regardless of user's settings */
 #define GUI_STYLE_CSS_BASE          "#input text{background-color:inherit;color:inherit;caret-color:@color;font:inherit;}"
+/* define this to set the initial background color for the GTK window */
+#define GUI_WINDOW_BACKGROUND_COLOR "#FFFFFF"
 
 /* default font size for fonts in webview */
 #define SETTING_DEFAULT_FONT_SIZE             16

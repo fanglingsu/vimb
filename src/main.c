@@ -882,6 +882,15 @@ static GtkWidget *create_window(Client *c)
     }
 #endif
 
+#ifdef GUI_WINDOW_BACKGROUND_COLOR
+    {
+        // force setting background color to prevent white flashes in dark mode
+        GdkRGBA color;
+        gdk_rgba_parse (&color, GUI_WINDOW_BACKGROUND_COLOR);
+        gtk_widget_override_background_color(window, GTK_STATE_FLAG_NORMAL, &color);
+    }
+#endif
+
     g_object_connect(
             G_OBJECT(window),
             "signal::destroy", G_CALLBACK(on_window_destroy), c,
