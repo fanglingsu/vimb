@@ -1,3 +1,34 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=fanglingsu&project=vimb&lang=id">Bahasa Indonesia</a>
+      </div>
+    </div>
+  </details>
+</div>
+
 # Vimb - the Vim-like browser
 
 [![Build Status](https://travis-ci.com/fanglingsu/vimb.svg?branch=master)](https://travis-ci.com/fanglingsu/vimb)
