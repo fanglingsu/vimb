@@ -477,7 +477,7 @@ normal
 .IP -
 open, tabopen
 .IP -
-shellcmd
+shellcmd, shellex
 .PD
 .
 .SS Command Line Editing
@@ -949,15 +949,6 @@ to clear the disk cache that was modified in the past two days and four hours.
 .PD
 .RE
 .TP
-.BI ":sh[ellcmd]! " cmd
-Like :sh[ellcmd] but asynchronous.
-.sp
-Example:
-.EX
-:sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
-.EE
-.TP
-.TP
 .BI ":sh[ellcmd] " cmd
 Runs the given shell \fIcmd\fP syncron and print the output into inputbox.
 The following patterns in \fIcmd\fP are expanded: '~username', '~/', '$VAR'
@@ -988,6 +979,7 @@ Holds the X-Window id of the Vimb window.
 .B VIMB_XID
 Holds the X-Window id of the Vimb window or of the embedding window if Vimb is
 compiled with XEMBED and started with the -e option.
+.PD
 .EE
 .RE
 .TP
@@ -998,6 +990,20 @@ Example:
 .EX
 :sh! /bin/sh -c 'echo "`date` $VIMB_URI" >> myhistory.txt'
 .EE
+.TP
+.BI ":shelle[x] " cmd
+Like :sh[ellcmd] but instead of printing the output into the inputbox, it runs
+the output as `ex` commands line by line.
+.sp
+.RS
+Example:
+.EX
+:shellex bash -c "sqlite3 \e"file:\e$XDG_CONFIG_HOME/chromium/Default/History?mode=ro\e" \e"SELECT url, title FROM urls ORDER BY last_visit_time DESC\e" | dmenu -l 20 | awk -F'|' '{print \e"open \e" \e$1}'"
+.EE
+.RS
+to select an entry from the Chromium history and open in the current window
+.RE
+.RE
 .TP
 .BI ":s[ave] [" path "]"
 Download current opened page into configured download directory.
