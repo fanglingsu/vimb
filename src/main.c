@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <webkit2/webkit2.h>
+#include <libintl.h>
 
 #include "../version.h"
 #include "ascii.h"
@@ -48,6 +49,7 @@
 #include "util.h"
 #include "autocmd.h"
 #include "file-storage.h"
+#include "context-menu.h"
 
 static void client_destroy(Client *c);
 static Client *client_new(WebKitWebView *webview);
@@ -2076,6 +2078,7 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::authenticate", G_CALLBACK(on_webview_authenticate), c,
         "signal::enter-fullscreen", G_CALLBACK(on_webview_enter_fullscreen), c,
         "signal::leave-fullscreen", G_CALLBACK(on_webview_leave_fullscreen), c,
+        "signal::context-menu", G_CALLBACK(on_webview_context_menu), c,
         NULL
     );
 
@@ -2223,6 +2226,8 @@ int main(int argc, char* argv[])
         {"bug-info", 0, 0, G_OPTION_ARG_NONE, &buginfo, "Print used library versions", NULL},
         {NULL}
     };
+
+    bindtextdomain("WebKitGTK-4.1", "/usr/share/locale/");
 
     /* initialize GTK+ */
     if (!gtk_init_with_args(&argc, &argv, "[URI]", opts, NULL, &err)) {
