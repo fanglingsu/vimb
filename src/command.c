@@ -69,8 +69,7 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
             vb_echo(c, MSG_NORMAL, FALSE, "");
         }
 
-        c->state.search.active  = FALSE;
-        c->state.search.matches = 0;
+        c->state.search.active = FALSE;
 
         vb_statusbar_update(c);
 
@@ -107,6 +106,7 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
          * depends on the most recent selection or caret position (even when
          * caret browsing is disabled). */
         if (commit) {
+            c->state.search.awaited_matches_updates++;
             webkit_find_controller_search(c->finder, "", WEBKIT_FIND_OPTIONS_NONE, G_MAXUINT);
         }
 
@@ -117,15 +117,12 @@ gboolean command_search(Client *c, const Arg *arg, bool commit)
             c->state.search.last_query = g_strdup(query);
         }
 
-        webkit_find_controller_count_matches(c->finder, query,
-                WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
-                WEBKIT_FIND_OPTIONS_WRAP_AROUND,
-                G_MAXUINT);
+        c->state.search.awaited_matches_updates++;
         webkit_find_controller_search(c->finder, query,
                 WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE |
                 WEBKIT_FIND_OPTIONS_WRAP_AROUND |
                 (direction > 0 ?  WEBKIT_FIND_OPTIONS_NONE : WEBKIT_FIND_OPTIONS_BACKWARDS),
-                G_MAXUINT);
+                (!commit && arg->s ? INCSEARCH_MATCHES_LIMIT : G_MAXUINT));
 
         c->state.search.active    = TRUE;
         c->state.search.direction = direction;

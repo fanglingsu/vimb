@@ -112,7 +112,8 @@ static void vimb_cleanup(void);
 #endif
 static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
-static void on_counted_matches(WebKitFindController *finder, guint count, Client *c);
+static void on_found_text(WebKitFindController *finder, guint count, Client *c);
+static void on_failed_to_find_text(WebKitFindController *finder, Client *c);
 static gboolean on_permission_request(WebKitWebView *webview,
         WebKitPermissionRequest *request, Client *c);
 static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c);
@@ -623,8 +624,12 @@ void vb_statusbar_update(Client *c)
     status = g_string_new("");
 
     /* show the number of matches search results */
-    if (c->state.search.matches) {
-        g_string_append_printf(status, " (%d)", c->state.search.matches);
+    if (c->state.search.active && c->state.search.matches) {
+        if (c->state.search.matches == G_MAXUINT) {
+            g_string_append_printf(status, " (>%d)", INCSEARCH_MATCHES_LIMIT);
+        } else {
+            g_string_append_printf(status, " (%d)", c->state.search.matches);
+        }
     }
 
     /* show load status of page or the downloads */
@@ -790,7 +795,8 @@ static Client *client_new(WebKitWebView *webview)
     /* webview */
     c->webview   = webview_new(c, webview);
     c->finder    = webkit_web_view_get_find_controller(c->webview);
-    g_signal_connect(c->finder, "counted-matches", G_CALLBACK(on_counted_matches), c);
+    g_signal_connect(c->finder, "found-text", G_CALLBACK(on_found_text), c);
+    g_signal_connect(c->finder, "failed-to-find-text", G_CALLBACK(on_failed_to_find_text), c);
 
     c->page_id   = webkit_web_view_get_page_id(c->webview);
     c->inspector = webkit_web_view_get_inspector(c->webview);
@@ -2089,9 +2095,25 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     return new;
 }
 
-static void on_counted_matches(WebKitFindController *finder, guint count, Client *c)
+static void on_found_text(WebKitFindController *finder, guint count, Client *c)
 {
+    if (c->state.search.awaited_matches_updates <= 0) {
+        return;
+    }
+
     c->state.search.matches = count;
+    c->state.search.awaited_matches_updates--;
+    vb_statusbar_update(c);
+}
+
+static void on_failed_to_find_text(WebKitFindController *finder, Client *c)
+{
+    if (c->state.search.awaited_matches_updates <= 0) {
+        return;
+    }
+
+    c->state.search.matches = 0;
+    c->state.search.awaited_matches_updates--;
     vb_statusbar_update(c);
 }
 

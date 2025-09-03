@@ -48,6 +48,8 @@
 /* define this to set the initial background color for the GTK window */
 #define GUI_WINDOW_BACKGROUND_COLOR "#FFFFFF"
 
+#define INCSEARCH_MATCHES_LIMIT 1000
+
 /* default font size for fonts in webview */
 #define SETTING_DEFAULT_FONT_SIZE             16
 #define SETTING_DEFAULT_MONOSPACE_FONT_SIZE   13
