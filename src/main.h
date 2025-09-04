@@ -302,6 +302,7 @@ struct Vimb {
     gboolean    incognito;
 
     WebKitWebContext *webcontext;
+    GHashTable *page_connections;   /* stores dbus connection for each WebKitWebPage */
 };
 
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
