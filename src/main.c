@@ -50,6 +50,7 @@
 #include "autocmd.h"
 #include "file-storage.h"
 #include "context-menu.h"
+#include "webextension/ext-main.h"
 
 static void client_destroy(Client *c);
 static Client *client_new(WebKitWebView *webview);
@@ -116,6 +117,11 @@ static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_found_text(WebKitFindController *finder, guint count, Client *c);
 static void on_failed_to_find_text(WebKitFindController *finder, Client *c);
+static void on_user_message_received(WebKitWebView *webview, guint64 pageid, Client *c);
+static void on_vertical_scroll(GDBusConnection *connection,
+        const char *sender_name, const char *object_path,
+        const char *interface_name, const char *signal_name,
+        GVariant *parameters, Client* c);
 static gboolean on_permission_request(WebKitWebView *webview,
         WebKitPermissionRequest *request, Client *c);
 static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c);
@@ -799,8 +805,8 @@ static Client *client_new(WebKitWebView *webview)
     c->finder    = webkit_web_view_get_find_controller(c->webview);
     g_signal_connect(c->finder, "found-text", G_CALLBACK(on_found_text), c);
     g_signal_connect(c->finder, "failed-to-find-text", G_CALLBACK(on_failed_to_find_text), c);
+    g_signal_connect(c->webview, "user-message-received", G_CALLBACK(on_user_message_received), c);
 
-    c->page_id   = webkit_web_view_get_page_id(c->webview);
     c->inspector = webkit_web_view_get_inspector(c->webview);
 
     return c;
@@ -1867,6 +1873,8 @@ static void vimb_cleanup(void)
     }
     g_free(vb.profile);
 
+    g_hash_table_destroy(vb.page_connections);
+
     g_slist_free_full(vb.cmdargs, g_free);
     g_clear_object(&vb.webcontext);
 }
@@ -1937,6 +1945,8 @@ static void vimb_setup(void)
                 vb.files[FILES_COOKIE],
                 WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE);
     }
+
+    vb.page_connections = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     /* initialize the modes */
     vb_mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
@@ -2117,6 +2127,42 @@ static void on_failed_to_find_text(WebKitFindController *finder, Client *c)
 
     c->state.search.matches = 0;
     c->state.search.awaited_matches_updates--;
+    vb_statusbar_update(c);
+}
+
+static void on_user_message_received(WebKitWebView *webview, guint64 pageid, Client *c)
+{
+    /* At this moment only the page-document-loaded message can be received */
+
+    c->page_id = webkit_web_view_get_page_id(c->webview);
+
+    /* Set the dbus proxy on the right client based on page id. */
+    c->dbusproxy = g_hash_table_lookup(vb.page_connections, GINT_TO_POINTER(c->page_id));
+
+    g_dbus_connection_signal_subscribe(g_dbus_proxy_get_connection(c->dbusproxy),
+            NULL, VB_WEBEXTENSION_INTERFACE, "VerticalScroll",
+            VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+            (GDBusSignalCallback)on_vertical_scroll, c, NULL);
+}
+
+/**
+ * Listen to the VerticalScroll signal and set the scroll percent value on the
+ * client to update the statusbar.
+ */
+static void on_vertical_scroll(GDBusConnection *connection,
+        const char *sender_name, const char *object_path,
+        const char *interface_name, const char *signal_name,
+        GVariant *parameters, Client* c)
+{
+    guint64 max, top;
+    guint percent;
+    guint64 pageid;
+
+    g_variant_get(parameters, "(ttqt)", &pageid, &max, &percent, &top);
+    c->state.scroll_max     = max;
+    c->state.scroll_percent = percent;
+    c->state.scroll_top     = top;
+
     vb_statusbar_update(c);
 }
 

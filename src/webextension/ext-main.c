@@ -526,7 +526,13 @@ static void on_page_created(WebKitWebExtension *extension, WebKitWebPage *webpag
  */
 static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extension)
 {
-    /* If there is a hashtable of known document - detroy this and create a
+    guint64 pageid = webkit_web_page_get_id(webpage);
+
+    webkit_web_page_send_message_to_view(webpage,
+            webkit_user_message_new("page-document-loaded", NULL), NULL, NULL,
+            (gpointer) pageid);
+
+    /* If there is a hashtable of known document - destroy this and create a
      * new hashtable. */
     if (ext.documents) {
         g_hash_table_unref(ext.documents);

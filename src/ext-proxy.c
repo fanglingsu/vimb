@@ -32,10 +32,6 @@ static void on_connection_close(GDBusConnection *connection, gboolean
         remote_peer_vanished, GError *error, gpointer data);
 static void on_proxy_created (GDBusProxy *proxy, GAsyncResult *result,
         gpointer data);
-static void on_vertical_scroll(GDBusConnection *connection,
-        const char *sender_name, const char *object_path,
-        const char *interface_name, const char *signal_name,
-        GVariant *parameters, gpointer data);
 static void dbus_call(Client *c, const char *method, GVariant *param,
         GAsyncReadyCallback callback);
 static GVariant *dbus_call_sync(Client *c, const char *method, GVariant
@@ -50,7 +46,6 @@ static void on_web_extension_page_created(GDBusConnection *connection,
  * therefore multiple webextension instances. */
 extern struct Vimb vb;
 static GDBusServer *dbusserver;
-
 
 /**
  * Initialize the dbus proxy by watching for appearing dbus name.
@@ -171,31 +166,6 @@ static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
             NULL);
 }
 
-/**
- * Listen to the VerticalScroll signal of the webextension and set the scroll
- * percent value on the client to update the statusbar.
- */
-static void on_vertical_scroll(GDBusConnection *connection,
-        const char *sender_name, const char *object_path,
-        const char *interface_name, const char *signal_name,
-        GVariant *parameters, gpointer data)
-{
-    guint64 max, top;
-    guint percent;
-    guint64 pageid;
-    Client *c;
-
-    g_variant_get(parameters, "(ttqt)", &pageid, &max, &percent, &top);
-    c = vb_get_client_for_page_id(pageid);
-    if (c) {
-        c->state.scroll_max     = max;
-        c->state.scroll_percent = percent;
-        c->state.scroll_top     = top;
-    }
-
-    vb_statusbar_update(c);
-}
-
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
     if (callback) {
@@ -308,31 +278,14 @@ static GVariant *dbus_call_sync(Client *c, const char *method, GVariant *param)
 
 /**
  * Called when the web context created the page.
- *
- * Find the right client to the page id returned from the webextension.
- * Add the proxy connection to the client for later calls.
  */
 static void on_web_extension_page_created(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
         const char *interface_name, const char *signal_name,
         GVariant *parameters, gpointer data)
 {
-    Client *c;
     guint64 pageid;
 
     g_variant_get(parameters, "(t)", &pageid);
-
-    /* Search for the client with the same page id as returned by the
-     * webextension. */
-    c = vb_get_client_for_page_id(pageid);
-    if (c) {
-        /* Set the dbus proxy on the right client based on page id. */
-        c->dbusproxy = (GDBusProxy*)data;
-
-        /* Subscribe to dbus signals here. */
-        g_dbus_connection_signal_subscribe(connection, NULL,
-                VB_WEBEXTENSION_INTERFACE, "VerticalScroll",
-                VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
-                (GDBusSignalCallback)on_vertical_scroll, NULL, NULL);
-    }
+    g_hash_table_replace(vb.page_connections, GINT_TO_POINTER(pageid), data);
 }
