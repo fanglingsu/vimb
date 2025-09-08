@@ -28,6 +28,8 @@
 #define FEATURE_QUEUE
 /* disable X window embedding */
 /* #define FEATURE_NO_XEMBED */
+/* don't write the home-page uri in the history file */
+/* #define FEATURE_HISTORY_WITHOUT_HOME_PAGE */
 
 #ifdef FEATURE_WGET_PROGRESS_BAR
 /* chars to use for the progressbar */
