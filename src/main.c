@@ -1586,7 +1586,12 @@ static void on_webview_load_changed(WebKitWebView *webview,
             autocmd_run(c, AU_LOAD_FINISHED, raw_uri, NULL);
 #endif
             c->state.progress = 100;
-            if (uri && strncmp(uri, "about:", 6)) {
+            if (uri
+                && strncmp(uri, "about:", 6)
+#ifdef FEATURE_HISTORY_WITHOUT_HOME_PAGE
+                && strcmp(uri, GET_CHAR(c, "home-page"))
+#endif
+            ) {
                 history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
             }
             break;
