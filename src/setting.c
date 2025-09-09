@@ -338,7 +338,7 @@ static int setting_set_value(Client *c, Setting *prop, void *value, SettingType 
     if (prop->setter) {
         res = prop->setter(c, prop->name, prop->type, newvalue, prop->data);
         /* break here on error and don't change the setting */
-        if (res & CMD_ERROR) {
+        if (!(res & CMD_SUCCESS)) {
             goto free;
         }
     }
