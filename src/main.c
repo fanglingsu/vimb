@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
+#include <regex.h>
 #ifndef FEATURE_NO_XEMBED
 #include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
@@ -1586,7 +1587,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
             autocmd_run(c, AU_LOAD_FINISHED, raw_uri, NULL);
 #endif
             c->state.progress = 100;
-            if (uri && strncmp(uri, "about:", 6)) {
+            if (uri && regexec(&c->config.histignore_preg, uri, 1, NULL, 0)) {
                 history_add(c, HISTORY_URL, uri, webkit_web_view_get_title(webview));
             }
             break;

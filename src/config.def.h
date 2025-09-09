@@ -60,6 +60,7 @@
 /* cookie-accept allowed values always, origin, never */
 #define SETTING_COOKIE_ACCEPT                 "always"
 #define SETTING_HINT_KEYS                     "0123456789"
+#define SETTING_HISTIGNORE                    "^(about:)|(file:)"
 #define SETTING_DOWNLOAD_COMMAND              "/bin/sh -c \"curl -sLJOC - -e '$VIMB_URI' %s\""
 #define SETTING_COMPLETION_CSS                "color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL
 #define SETTING_COMPLETION_HOVER_CSS          "background-color:#777;"
