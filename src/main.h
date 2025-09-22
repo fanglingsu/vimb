@@ -21,6 +21,7 @@
 #define _MAIN_H
 
 #include <fcntl.h>
+#include <regex.h>
 #include "config.h"
 #ifndef FEATURE_NO_XEMBED
 #include <gtk/gtkx.h>
@@ -262,6 +263,7 @@ struct Client {
         guint                   default_zoom;   /* default zoom level in percent */
         Shortcut                *shortcuts;
         gboolean                statusbar_show_settings;
+        regex_t                 histignore_preg;
     } config;
     struct {
         GSList      *list;

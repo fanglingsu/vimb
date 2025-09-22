@@ -1345,6 +1345,12 @@ are used to filter hinted DOM elements by their text value.
 If 'hint-keys' are set to chars instead of numbers it might be useful to
 disable matching of the elements by 'hint-match-element=false'.
 .TP
+.B histignore (string)
+Determines whether an URI should be saved in the history file.
+This option must be a valid POSIX Extended Regular Expression.
+If URI matches this regular expression then it wont be saved in the history.
+If this option is empty then any URI will be saved in the history.
+.TP
 .B history-max-items (int)
 Maximum number of unique items stored in search-, command or URI history.
 If history-max-items is set to 0, the history file will not be changed.

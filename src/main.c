@@ -19,6 +19,7 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
+#include <regex.h>
 #ifndef FEATURE_NO_XEMBED
 #include <gdk/gdkx.h>
 #include <gtk/gtkx.h>
@@ -1593,7 +1594,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
 #endif
             c->state.progress = 100;
             if (uri
-                && strncmp(uri, "about:", 6)
+                && regexec(&c->config.histignore_preg, uri, 1, NULL, 0)
 #ifdef FEATURE_HISTORY_WITHOUT_HOME_PAGE
                 && strcmp(uri, GET_CHAR(c, "home-page"))
 #endif

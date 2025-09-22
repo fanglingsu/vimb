@@ -28,6 +28,7 @@
 #include "setting.h"
 #include "scripts/scripts.h"
 #include "shortcut.h"
+#include "regex.h"
 
 typedef enum {
     SETTING_SET,        /* :set option=value */
@@ -61,6 +62,7 @@ static int input_autohide(Client *c, const char *name, DataType type, void *valu
 static int internal(Client *c, const char *name, DataType type, void *value, void *data);
 static int notification(Client *c, const char *name, DataType type, void *value, void *data);
 static int headers(Client *c, const char *name, DataType type, void *value, void *data);
+static int histignore(Client *c, const char *name, DataType type, void *value, void *data);
 static int intelligent_tracking_prevention(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_scripts(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_style(Client *c, const char *name, DataType type, void *value, void *data);
@@ -104,6 +106,7 @@ void setting_init(Client *c)
     setting_add(c, "hint-follow-last", TYPE_BOOLEAN, &on, NULL, 0, NULL);
     setting_add(c, "hint-keys-same-length", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "hint-match-element", TYPE_BOOLEAN, &on, NULL, 0, NULL);
+    setting_add(c, "histignore", TYPE_CHAR, &SETTING_HISTIGNORE, histignore, 0, NULL);
     setting_add(c, "html5-database", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-database");
     setting_add(c, "html5-local-storage", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-local-storage");
     setting_add(c, "hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing");
@@ -335,7 +338,7 @@ static int setting_set_value(Client *c, Setting *prop, void *value, SettingType 
     if (prop->setter) {
         res = prop->setter(c, prop->name, prop->type, newvalue, prop->data);
         /* break here on error and don't change the setting */
-        if (res & CMD_ERROR) {
+        if (!(res & CMD_SUCCESS)) {
             goto free;
         }
     }
@@ -625,6 +628,34 @@ static int hardware_acceleration_policy(Client *c, const char *name, DataType ty
 static int headers(Client *c, const char *name, DataType type, void *value, void *data)
 {
     ext_proxy_set_header(c, (char*)value);
+
+    return CMD_SUCCESS;
+}
+
+static int histignore(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    regex_t preg;
+    int code;
+    char error_msg[50];
+
+    /* Empty regex string would match anything but we want it to match nothing */
+    if (strlen(value) == 0) {
+        value = "^$";
+    }
+
+    code = regcomp(&preg, value, REG_EXTENDED|REG_NOSUB);
+
+    if (code) {
+        regerror(code, &preg, error_msg, sizeof(error_msg));
+        vb_echo(c, MSG_ERROR, FALSE, "Invalid histignore value: %s", error_msg);
+
+        regfree(&preg);
+
+        return CMD_ERROR | CMD_KEEPINPUT;
+    }
+
+    regfree(&c->config.histignore_preg);
+    c->config.histignore_preg = preg;
 
     return CMD_SUCCESS;
 }
