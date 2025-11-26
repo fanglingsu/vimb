@@ -498,7 +498,10 @@ static void on_editable_change_focus(WebKitDOMEventTarget *target,
 
         iframe = WEBKIT_DOM_HTML_IFRAME_ELEMENT(active);
         subdoc = webkit_dom_html_iframe_element_get_content_document(iframe);
-        add_onload_event_observers(subdoc, page);
+        /* subdoc can be NULL for cross-origin iframes - skip them */
+        if (subdoc) {
+            add_onload_event_observers(subdoc, page);
+        }
         return;
     }
 
