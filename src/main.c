@@ -118,7 +118,7 @@ static void vimb_setup(void);
 static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_found_text(WebKitFindController *finder, guint count, Client *c);
 static void on_failed_to_find_text(WebKitFindController *finder, Client *c);
-static void on_user_message_received(WebKitWebView *webview, guint64 pageid, Client *c);
+static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessage *message, Client *c);
 static void on_vertical_scroll(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
         const char *interface_name, const char *signal_name,
@@ -664,7 +664,7 @@ void vb_statusbar_update(Client *c)
 
     statusbar_update_downloads(c, status);
 
-    /* These architectures have different kinds of issues with scroll 
+    /* These architectures have different kinds of issues with scroll
      * percentage, this is a somewhat clean fix that doesn't affect others.  */
 #if defined(_ARCH_PPC64) || defined(_ARCH_PPC) | defined(_ARCH_ARM)
     /* force the scroll percent to be 16-bit */
@@ -807,6 +807,12 @@ static Client *client_new(WebKitWebView *webview)
     g_signal_connect(c->finder, "found-text", G_CALLBACK(on_found_text), c);
     g_signal_connect(c->finder, "failed-to-find-text", G_CALLBACK(on_failed_to_find_text), c);
     g_signal_connect(c->webview, "user-message-received", G_CALLBACK(on_user_message_received), c);
+
+    /* Get initial page ID (may change due to process isolation) */
+    c->page_id   = webkit_web_view_get_page_id(c->webview);
+    c->webview_id = (guint64)c->webview;
+
+    PRINT_DEBUG("Client created: webview=%p, page_id=%" G_GUINT64_FORMAT, c->webview, c->page_id);
 
     c->inspector = webkit_web_view_get_inspector(c->webview);
 
@@ -1879,7 +1885,16 @@ static void vimb_cleanup(void)
     }
     g_free(vb.profile);
 
-    g_hash_table_destroy(vb.page_connections);
+    g_hash_table_destroy(vb.webview_to_proxy);
+
+    /* Clean up any remaining pending proxies */
+    if (vb.pending_proxies) {
+        GSList *item;
+        for (item = vb.pending_proxies; item != NULL; item = item->next) {
+            g_slice_free(ProxyPageId, item->data);
+        }
+        g_slist_free(vb.pending_proxies);
+    }
 
     g_slist_free_full(vb.cmdargs, g_free);
     g_clear_object(&vb.webcontext);
@@ -1952,7 +1967,8 @@ static void vimb_setup(void)
                 WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE);
     }
 
-    vb.page_connections = g_hash_table_new(g_direct_hash, g_direct_equal);
+    vb.webview_to_proxy = g_hash_table_new(g_direct_hash, g_direct_equal);
+    vb.pending_proxies = NULL;
 
     /* initialize the modes */
     vb_mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
@@ -2136,19 +2152,79 @@ static void on_failed_to_find_text(WebKitFindController *finder, Client *c)
     vb_statusbar_update(c);
 }
 
-static void on_user_message_received(WebKitWebView *webview, guint64 pageid, Client *c)
+static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessage *message, Client *c)
 {
-    /* At this moment only the page-document-loaded message can be received */
+    const char *name;
+    guint64 pageid_from_ext;
+    guint64 pageid_from_view;
+    GVariant *params;
+    GSList *item;
+    GDBusProxy *found_proxy = NULL;
 
-    c->page_id = webkit_web_view_get_page_id(c->webview);
+    name = webkit_user_message_get_name(message);
 
-    /* Set the dbus proxy on the right client based on page id. */
-    c->dbusproxy = g_hash_table_lookup(vb.page_connections, GINT_TO_POINTER(c->page_id));
+    PRINT_DEBUG("Received user message: %s", name);
 
-    g_dbus_connection_signal_subscribe(g_dbus_proxy_get_connection(c->dbusproxy),
-            NULL, VB_WEBEXTENSION_INTERFACE, "VerticalScroll",
-            VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
-            (GDBusSignalCallback)on_vertical_scroll, c, NULL);
+    /* Only handle page-document-loaded message */
+    if (g_strcmp0(name, "page-document-loaded") != 0) {
+        return FALSE;
+    }
+
+    /* Get the page ID sent by the webextension */
+    params = webkit_user_message_get_parameters(message);
+    if (params) {
+        g_variant_get(params, "(t)", &pageid_from_ext);
+    } else {
+        g_warning("page-document-loaded message missing parameters");
+        return FALSE;
+    }
+
+    /* Get the current page ID from the webview (should be stable now) */
+    pageid_from_view = webkit_web_view_get_page_id(c->webview);
+    c->page_id = pageid_from_view;
+    c->webview_id = (guint64)c->webview;
+
+    PRINT_DEBUG("Page IDs: from_ext=%" G_GUINT64_FORMAT ", from_view=%" G_GUINT64_FORMAT,
+                pageid_from_ext, pageid_from_view);
+
+    /* Search for a matching proxy in the pending list.
+     * Match by either the webextension's page ID or the view's page ID. */
+    for (item = vb.pending_proxies; item != NULL; item = item->next) {
+        ProxyPageId *pending = (ProxyPageId *)item->data;
+        if (pending->pageid == pageid_from_ext || pending->pageid == pageid_from_view) {
+            found_proxy = pending->proxy;
+
+            /* Remove from pending list and free the struct */
+            vb.pending_proxies = g_slist_remove(vb.pending_proxies, pending);
+            g_slice_free(ProxyPageId, pending);
+            break;
+        }
+    }
+
+    if (!found_proxy) {
+        g_warning("Could not find pending proxy for page IDs (ext=%" G_GUINT64_FORMAT
+                  ", view=%" G_GUINT64_FORMAT ")", pageid_from_ext, pageid_from_view);
+        return FALSE;
+    }
+
+    /* Assign the proxy to this client */
+    c->dbusproxy = found_proxy;
+
+    /* Store in hash table for quick lookup by page ID */
+    g_hash_table_insert(vb.webview_to_proxy, GINT_TO_POINTER(c->page_id), c->dbusproxy);
+
+    /* Subscribe to signals for this client */
+    GDBusConnection *connection = g_dbus_proxy_get_connection(c->dbusproxy);
+    if (connection) {
+        g_dbus_connection_signal_subscribe(connection,
+                NULL, VB_WEBEXTENSION_INTERFACE, "VerticalScroll",
+                VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+                (GDBusSignalCallback)on_vertical_scroll, c, NULL);
+    } else {
+        g_warning("Could not get dbus connection from proxy for page ID %" G_GUINT64_FORMAT, c->page_id);
+    }
+
+    return TRUE;
 }
 
 /**

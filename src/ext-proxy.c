@@ -278,6 +278,9 @@ static GVariant *dbus_call_sync(Client *c, const char *method, GVariant *param)
 
 /**
  * Called when the web context created the page.
+ * Store the proxy in a pending list. The actual client association happens when
+ * the page sends a user message after document load, at which point the page ID
+ * is stable and we can match the proxy to the correct client.
  */
 static void on_web_extension_page_created(GDBusConnection *connection,
         const char *sender_name, const char *object_path,
@@ -285,7 +288,18 @@ static void on_web_extension_page_created(GDBusConnection *connection,
         GVariant *parameters, gpointer data)
 {
     guint64 pageid;
+    ProxyPageId *pending;
 
     g_variant_get(parameters, "(t)", &pageid);
-    g_hash_table_replace(vb.page_connections, GINT_TO_POINTER(pageid), data);
+
+    PRINT_DEBUG("PageCreated signal received: page_id=%" G_GUINT64_FORMAT ", proxy=%p",
+                pageid, data);
+
+    /* Create a pending proxy entry */
+    pending = g_slice_new(ProxyPageId);
+    pending->proxy = (GDBusProxy *)data;
+    pending->pageid = pageid;
+
+    /* Add to pending list - will be claimed when client receives user message */
+    vb.pending_proxies = g_slist_prepend(vb.pending_proxies, pending);
 }

@@ -21,6 +21,13 @@
 #define _EXT_PROXY_H
 
 #include "main.h"
+#include <gio/gio.h>
+
+/* Structure to hold pending proxy-page associations before they are claimed by clients */
+typedef struct {
+    GDBusProxy *proxy;
+    guint64     pageid;
+} ProxyPageId;
 
 const char *ext_proxy_init(void);
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback);

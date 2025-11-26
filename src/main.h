@@ -247,6 +247,7 @@ struct Client {
     WebKitFindController *finder;
     WebKitWebInspector  *inspector;
     guint64             page_id;                /* page id of the webview */
+    guint64             webview_id;             /* unique stable identifier derived from webview pointer */
     GtkTextBuffer       *buffer;
     GDBusProxy          *dbusproxy;
     GDBusServer         *dbusserver;
@@ -302,7 +303,8 @@ struct Vimb {
     gboolean    incognito;
 
     WebKitWebContext *webcontext;
-    GHashTable *page_connections;   /* stores dbus connection for each WebKitWebPage */
+    GHashTable *webview_to_proxy;   /* maps page_id to dbus proxy for connected clients */
+    GSList *pending_proxies;        /* list of pending ProxyPageId structs */
 };
 
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
