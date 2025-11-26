@@ -214,7 +214,16 @@ static void add_onload_event_observers(WebKitDOMDocument *doc,
     /* We have to use default view instead of the document itself in case this
      * function is called with content document of an iframe. Else the event
      * observing does not work. */
-    target = WEBKIT_DOM_EVENT_TARGET(webkit_dom_document_get_default_view(doc));
+    WebKitDOMDOMWindow *dom_win = webkit_dom_document_get_default_view(doc);
+
+    /* Check if we got a valid window - can be NULL for cross-origin iframes */
+    if (!dom_win) {
+        g_warning("add_onload_event_observers: webkit_dom_document_get_default_view returned NULL");
+        return;
+    }
+
+    target = WEBKIT_DOM_EVENT_TARGET(dom_win);
+    g_message("add_onload_event_observers: setting up event listeners");
 
     webkit_dom_event_target_add_event_listener(target, "focus",
             G_CALLBACK(on_editable_change_focus), TRUE, page);
@@ -266,8 +275,11 @@ static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *eve
         scrollTop = MAX(webkit_dom_element_get_scroll_top(de),
                 webkit_dom_element_get_scroll_top(body));
 
-        clientHeight = webkit_dom_dom_window_get_inner_height(
-                webkit_dom_document_get_default_view(doc));
+        WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
+        if (!win) {
+            return;  /* Can't get scroll info without a window */
+        }
+        clientHeight = webkit_dom_dom_window_get_inner_height(win);
 
         scrollHeight = MAX(webkit_dom_element_get_scroll_height(de),
                 webkit_dom_element_get_scroll_height(body));
@@ -486,7 +498,10 @@ static void on_editable_change_focus(WebKitDOMEventTarget *target,
 
         iframe = WEBKIT_DOM_HTML_IFRAME_ELEMENT(active);
         subdoc = webkit_dom_html_iframe_element_get_content_document(iframe);
-        add_onload_event_observers(subdoc, page);
+        /* subdoc can be NULL for cross-origin iframes - skip them */
+        if (subdoc) {
+            add_onload_event_observers(subdoc, page);
+        }
         return;
     }
 
@@ -507,7 +522,20 @@ static void on_editable_change_focus(WebKitDOMEventTarget *target,
  */
 static void on_page_created(WebKitWebExtension *extension, WebKitWebPage *webpage, gpointer data)
 {
-    guint64 pageid = webkit_web_page_get_id(webpage);
+    guint64 pageid;
+
+    if (!webpage) {
+        g_warning("on_page_created called with NULL webpage!");
+        return;
+    }
+
+    if (!extension) {
+        g_warning("on_page_created called with NULL extension!");
+        return;
+    }
+
+    pageid = webkit_web_page_get_id(webpage);
+    g_message("on_page_created: page_id=%" G_GUINT64_FORMAT, pageid);
 
     if (ext.connection) {
         emit_page_created(ext.connection, pageid);
@@ -527,10 +555,15 @@ static void on_page_created(WebKitWebExtension *extension, WebKitWebPage *webpag
 static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extension)
 {
     guint64 pageid = webkit_web_page_get_id(webpage);
+    WebKitUserMessage *message;
 
-    webkit_web_page_send_message_to_view(webpage,
-            webkit_user_message_new("page-document-loaded", NULL), NULL, NULL,
-            (gpointer) pageid);
+    g_message("on_web_page_document_loaded: page_id=%" G_GUINT64_FORMAT, pageid);
+
+    /* Send message with page ID as parameter.
+     * This allows the main process to match this page with the correct dbus proxy. */
+    message = webkit_user_message_new("page-document-loaded",
+                                      g_variant_new("(t)", pageid));
+    webkit_web_page_send_message_to_view(webpage, message, NULL, NULL, NULL);
 
     /* If there is a hashtable of known document - destroy this and create a
      * new hashtable. */
