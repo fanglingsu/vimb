@@ -128,6 +128,8 @@ static gboolean on_permission_request(WebKitWebView *webview,
 static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c);
 static void on_script_message_focus(WebKitUserContentManager *manager,
         WebKitJavascriptResult *res, gpointer data);
+static void on_script_message_scroll(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *res, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
 static gboolean autocmdOptionArgFunc(const gchar *option_name,
@@ -556,7 +558,7 @@ void vb_register_add(Client *c, char buf, const char *value)
         /* get the index of the mark char */
         idx = mark - REG_CHARS;
 
-        gchar* newcontents = value;
+        const gchar* newcontents = value;
         if(shouldAppend && c->state.reg[idx])
             newcontents = g_strjoin("\n", c->state.reg[idx], value, NULL);
 
@@ -921,7 +923,16 @@ static GtkWidget *create_window(Client *c)
         // force setting background color to prevent white flashes in dark mode
         GdkRGBA color;
         gdk_rgba_parse (&color, GUI_WINDOW_BACKGROUND_COLOR);
-        gtk_widget_override_background_color(window, GTK_STATE_FLAG_NORMAL, &color);
+        
+        GtkCssProvider *provider = gtk_css_provider_new();
+        gchar *css = g_strdup_printf("window { background-color: %s; }", GUI_WINDOW_BACKGROUND_COLOR);
+        gtk_css_provider_load_from_data(provider, css, -1, NULL);
+        gtk_style_context_add_provider(
+            gtk_widget_get_style_context(window),
+            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        g_free(css);
+        g_object_unref(provider);
     }
 #endif
 
@@ -1947,10 +1958,6 @@ static void vimb_setup(void)
     }
     vb.webcontext = webkit_web_context_new_with_website_data_manager(manager);
     manager       = webkit_web_context_get_website_data_manager(vb.webcontext);
-    /* Use seperate rendering processed for the webview of the clients in the
-     * current instance. This must be called as soon as possible according to
-     * the documentation. */
-    webkit_web_context_set_process_model(vb.webcontext, WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
     webkit_web_context_set_cache_model(vb.webcontext, WEBKIT_CACHE_MODEL_WEB_BROWSER);
 
     g_signal_connect(vb.webcontext, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL);
@@ -2125,7 +2132,9 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
 
     /* Setup script message handlers. */
     webkit_user_content_manager_register_script_message_handler(ucm, "focus");
+    webkit_user_content_manager_register_script_message_handler(ucm, "scroll");
     g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), NULL);
+    g_signal_connect(ucm, "script-message-received::scroll", G_CALLBACK(on_script_message_scroll), NULL);
 
     return new;
 }
@@ -2335,6 +2344,51 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
         vb_enter(c, 'i');
     } else if (c->mode->id == 'i' && !is_focused) {
         vb_enter(c, 'n');
+    }
+}
+
+/**
+ * Callback for scroll position messages from injected JavaScript.
+ * Updates the scroll percentage display in the statusbar.
+ */
+static void on_script_message_scroll(WebKitUserContentManager *manager,
+        WebKitJavascriptResult *res, gpointer data)
+{
+    JSCValue *value;
+    JSCValue *max_val, *percent_val, *top_val;
+    Client *c;
+
+    /* Get the JavaScript result value */
+    value = webkit_javascript_result_get_js_value(res);
+
+    if (!jsc_value_is_object(value)) {
+        return;
+    }
+
+    /* Extract the scroll data from the JavaScript object */
+    max_val = jsc_value_object_get_property(value, "max");
+    percent_val = jsc_value_object_get_property(value, "percent");
+    top_val = jsc_value_object_get_property(value, "top");
+
+    if (!max_val || !percent_val || !top_val) {
+        return;
+    }
+
+    /* Find the client for this webview
+     * Since we don't have page_id in the message, we need to find it differently */
+    for (c = vb.clients; c; c = c->next) {
+        WebKitUserContentManager *ucm = webkit_web_view_get_user_content_manager(
+            WEBKIT_WEB_VIEW(c->webview));
+        if (ucm == manager) {
+            /* Update scroll state */
+            c->state.scroll_max = jsc_value_to_double(max_val);
+            c->state.scroll_percent = jsc_value_to_int32(percent_val);
+            c->state.scroll_top = jsc_value_to_double(top_val);
+
+            /* Update the statusbar */
+            vb_statusbar_update(c);
+            break;
+        }
     }
 }
 

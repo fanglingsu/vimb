@@ -24,28 +24,21 @@
 #include <webkit2/webkit-web-extension.h>
 
 #include "ext-main.h"
-#include "ext-dom.h"
 #include "ext-util.h"
+#include "js-snippets.h"
 
 static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
         GIOStream *stream, GCredentials *credentials, gpointer extension);
 static void on_dbus_connection_created(GObject *source_object,
         GAsyncResult *result, gpointer data);
-static void add_onload_event_observers(WebKitDOMDocument *doc,
-        WebKitWebPage *page);
-static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *event,
-        WebKitWebPage *page);
 static void emit_page_created(GDBusConnection *connection, guint64 pageid);
 static void emit_page_created_pending(GDBusConnection *connection);
 static void queue_page_created_signal(guint64 pageid);
-static void dbus_emit_signal(const char *name, GVariant *data);
 static WebKitWebPage *get_web_page_or_return_dbus_error(GDBusMethodInvocation *invocation,
         WebKitWebExtension *extension, guint64 pageid);
 static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         const char *object_path, const char *interface_name, const char *method,
         GVariant *parameters, GDBusMethodInvocation *invocation, gpointer data);
-static void on_editable_change_focus(WebKitDOMEventTarget *target,
-        WebKitDOMEvent *event, WebKitWebPage *page);
 static void on_page_created(WebKitWebExtension *ext, WebKitWebPage *webpage, gpointer data);
 static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extension);
 static gboolean on_web_page_send_request(WebKitWebPage *webpage, WebKitURIRequest *request,
@@ -76,6 +69,9 @@ static const char introspection_xml[] =
     "  <signal name='PageCreated'>"
     "   <arg type='t' name='page_id' direction='out'/>"
     "  </signal>"
+    "  <!-- VerticalScroll signal removed during DOM API migration."
+    "       Scroll percentage no longer updates in statusbar (Top/Bot/XX%)."
+    "       To restore: implement scroll tracking without DOM API. -->"
     "  <signal name='VerticalScroll'>"
     "   <arg type='t' name='page_id' direction='out'/>"
     "   <arg type='t' name='max' direction='out'/>"
@@ -101,7 +97,7 @@ struct Ext {
     guint               regid;
     GDBusConnection     *connection;
     GHashTable          *headers;
-    GHashTable          *documents;
+    /* GHashTable *documents removed - was only used for DOM API event listener tracking */
     GArray              *page_created_signals;
 };
 struct Ext ext = {0};
@@ -197,107 +193,6 @@ static void on_dbus_connection_created(GObject *source_object,
 }
 
 /**
- * Add observers to doc event for given document and all the contained iframes
- * too.
- */
-static void add_onload_event_observers(WebKitDOMDocument *doc,
-        WebKitWebPage *page)
-{
-    WebKitDOMEventTarget *target;
-
-    /* Add the document to the table of known documents or if already exists
-     * return to not apply observers multiple times. */
-    if (!g_hash_table_add(ext.documents, doc)) {
-        return;
-    }
-
-    /* We have to use default view instead of the document itself in case this
-     * function is called with content document of an iframe. Else the event
-     * observing does not work. */
-    WebKitDOMDOMWindow *dom_win = webkit_dom_document_get_default_view(doc);
-
-    /* Check if we got a valid window - can be NULL for cross-origin iframes */
-    if (!dom_win) {
-        g_warning("add_onload_event_observers: webkit_dom_document_get_default_view returned NULL");
-        return;
-    }
-
-    target = WEBKIT_DOM_EVENT_TARGET(dom_win);
-    g_message("add_onload_event_observers: setting up event listeners");
-
-    webkit_dom_event_target_add_event_listener(target, "focus",
-            G_CALLBACK(on_editable_change_focus), TRUE, page);
-    webkit_dom_event_target_add_event_listener(target, "blur",
-            G_CALLBACK(on_editable_change_focus), TRUE, page);
-    /* Check for focused editable elements also if they where focused before
-     * the event observer where set up. */
-    /* TODO this is not needed for strict-focus=on */
-    on_editable_change_focus(target, NULL, page);
-
-    /* Observe scroll events to get current position in the document. */
-    webkit_dom_event_target_add_event_listener(target, "scroll",
-            G_CALLBACK(on_document_scroll), FALSE, page);
-    /* Call the callback explicitly to make sure we have the right position
-     * shown in statusbar also in cases the user does not scroll. */
-    on_document_scroll(target, NULL, page);
-}
-
-/**
- * Callback called when the document is scrolled.
- */
-static void on_document_scroll(WebKitDOMEventTarget *target, WebKitDOMEvent *event,
-        WebKitWebPage *page)
-{
-    WebKitDOMDocument *doc;
-
-    if (WEBKIT_DOM_IS_DOM_WINDOW(target)) {
-        g_object_get(target, "document", &doc, NULL);
-    } else {
-        /* target is a doc document */
-        doc = WEBKIT_DOM_DOCUMENT(target);
-    }
-
-    if (doc) {
-        WebKitDOMElement *body, *de;
-        guint64 max = 0, top = 0, scrollTop, scrollHeight, clientHeight;
-        guint percent = 0;
-
-        de = webkit_dom_document_get_document_element(doc);
-        if (!de) {
-            return;
-        }
-
-        body = WEBKIT_DOM_ELEMENT(webkit_dom_document_get_body(doc));
-        if (!body) {
-            return;
-        }
-
-        scrollTop = MAX(webkit_dom_element_get_scroll_top(de),
-                webkit_dom_element_get_scroll_top(body));
-
-        WebKitDOMDOMWindow *win = webkit_dom_document_get_default_view(doc);
-        if (!win) {
-            return;  /* Can't get scroll info without a window */
-        }
-        clientHeight = webkit_dom_dom_window_get_inner_height(win);
-
-        scrollHeight = MAX(webkit_dom_element_get_scroll_height(de),
-                webkit_dom_element_get_scroll_height(body));
-
-        /* Get the maximum scrollable page size. This is the size of the whole
-         * document - height of the viewport. */
-        max = scrollHeight - clientHeight;
-        if (max > 0) {
-            percent = (guint)(0.5 + (scrollTop * 100 / max));
-            top = scrollTop;
-        }
-
-        dbus_emit_signal("VerticalScroll", g_variant_new("(ttqt)",
-                webkit_web_page_get_id(page), max, percent, top));
-    }
-}
-
-/**
  * Emit the page created signal that is used in the UI process to finish the
  * dbus proxy connection.
  */
@@ -349,30 +244,6 @@ static void queue_page_created_signal(guint64 pageid)
     ext.page_created_signals = g_array_append_val(ext.page_created_signals, pageid);
 }
 
-/**
- * Emits a signal over dbus.
- *
- * @name:   Signal name to emit.
- * @data:   GVariant value used as value for the signal or NULL.
- */
-static void dbus_emit_signal(const char *name, GVariant *data)
-{
-    GError *error = NULL;
-
-    if (!ext.connection) {
-        return;
-    }
-
-    /* propagate the signal over dbus */
-    g_dbus_connection_emit_signal(ext.connection, NULL,
-            VB_WEBEXTENSION_OBJECT_PATH, VB_WEBEXTENSION_INTERFACE, name,
-            data, &error);
-    if (error) {
-        g_warning("Failed to emit signal '%s': %s", name, error->message);
-        g_error_free(error);
-    }
-}
-
 static WebKitWebPage *get_web_page_or_return_dbus_error(GDBusMethodInvocation *invocation,
         WebKitWebExtension *extension, guint64 pageid)
 {
@@ -411,10 +282,26 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         }
 
         no_result = !g_strcmp0(method, "EvalJsNoResult");
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+        WebKitFrame *frame = webkit_web_page_get_main_frame(page);
+        G_GNUC_END_IGNORE_DEPRECATIONS
+        if (!frame) {
+            g_warning("EvalJs: main frame is NULL for page %" G_GUINT64_FORMAT, pageid);
+            if (no_result) {
+                g_dbus_method_invocation_return_value(invocation, NULL);
+            } else {
+                g_dbus_method_invocation_return_value(invocation, g_variant_new("(bs)", FALSE, ""));
+            }
+            return;
+        }
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         jsContext = webkit_frame_get_javascript_context_for_script_world(
-            webkit_web_page_get_main_frame(page),
+            frame,
             webkit_script_world_get_default()
         );
+        G_GNUC_END_IGNORE_DEPRECATIONS
 
         success = ext_util_js_eval(jsContext, value, &ref);
 
@@ -426,12 +313,34 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
             g_free(result);
         }
     } else if (!g_strcmp0(method, "FocusInput")) {
+        JSValueRef result = NULL;
+        JSGlobalContextRef jsContext;
+        WebKitFrame *frame;
+
         g_variant_get(parameters, "(t)", &pageid);
         page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
         if (!page) {
             return;
         }
-        ext_dom_focus_input(webkit_web_page_get_dom_document(page));
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+        frame = webkit_web_page_get_main_frame(page);
+        G_GNUC_END_IGNORE_DEPRECATIONS
+        if (!frame) {
+            g_warning("FocusInput: main frame is NULL for page %" G_GUINT64_FORMAT, pageid);
+            g_dbus_method_invocation_return_value(invocation, g_variant_new("(b)", FALSE));
+            return;
+        }
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+        jsContext = webkit_frame_get_javascript_context_for_script_world(
+            frame,
+            webkit_script_world_get_default()
+        );
+        G_GNUC_END_IGNORE_DEPRECATIONS
+
+        /* Focus first visible input using minified JavaScript */
+        ext_util_js_eval(jsContext, JS_FOCUS_INPUT, &result);
         g_dbus_method_invocation_return_value(invocation, NULL);
     } else if (!g_strcmp0(method, "SetHeaderSetting")) {
         g_variant_get(parameters, "(s)", &value);
@@ -443,78 +352,78 @@ static void dbus_handle_method_call(GDBusConnection *conn, const char *sender,
         ext.headers = soup_header_parse_param_list(value);
         g_dbus_method_invocation_return_value(invocation, NULL);
     } else if (!g_strcmp0(method, "LockInput")) {
+        char *js;
+        JSValueRef result = NULL;
+        JSGlobalContextRef jsContext;
+        WebKitFrame *frame;
+
         g_variant_get(parameters, "(ts)", &pageid, &value);
         page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
         if (!page) {
             return;
         }
-        ext_dom_lock_input(webkit_web_page_get_dom_document(page), value);
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+        frame = webkit_web_page_get_main_frame(page);
+        G_GNUC_END_IGNORE_DEPRECATIONS
+        if (!frame) {
+            g_warning("LockInput: main frame is NULL for page %" G_GUINT64_FORMAT, pageid);
+            g_dbus_method_invocation_return_value(invocation, g_variant_new("(b)", FALSE));
+            return;
+        }
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+        jsContext = webkit_frame_get_javascript_context_for_script_world(
+            frame,
+            webkit_script_world_get_default()
+        );
+        G_GNUC_END_IGNORE_DEPRECATIONS
+
+        /* Lock input using minified JavaScript - escape ID to prevent injection */
+        char *escaped_id = g_strescape(value, NULL);
+        js = g_strdup_printf(JS_LOCK_INPUT, escaped_id);
+        ext_util_js_eval(jsContext, js, &result);
+        g_free(js);
+        g_free(escaped_id);
+
         g_dbus_method_invocation_return_value(invocation, NULL);
     } else if (!g_strcmp0(method, "UnlockInput")) {
+        char *js;
+        JSValueRef result = NULL;
+        JSGlobalContextRef jsContext;
+        WebKitFrame *frame;
+
         g_variant_get(parameters, "(ts)", &pageid, &value);
         page = get_web_page_or_return_dbus_error(invocation, WEBKIT_WEB_EXTENSION(extension), pageid);
         if (!page) {
             return;
         }
-        ext_dom_unlock_input(webkit_web_page_get_dom_document(page), value);
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+        frame = webkit_web_page_get_main_frame(page);
+        G_GNUC_END_IGNORE_DEPRECATIONS
+        if (!frame) {
+            g_warning("UnlockInput: main frame is NULL for page %" G_GUINT64_FORMAT, pageid);
+            g_dbus_method_invocation_return_value(invocation, g_variant_new("(b)", FALSE));
+            return;
+        }
+
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+        jsContext = webkit_frame_get_javascript_context_for_script_world(
+            frame,
+            webkit_script_world_get_default()
+        );
+        G_GNUC_END_IGNORE_DEPRECATIONS
+
+        /* Unlock input using minified JavaScript - escape ID to prevent injection */
+        char *escaped_id = g_strescape(value, NULL);
+        js = g_strdup_printf(JS_UNLOCK_INPUT, escaped_id);
+        ext_util_js_eval(jsContext, js, &result);
+        g_free(js);
+        g_free(escaped_id);
+
         g_dbus_method_invocation_return_value(invocation, NULL);
     }
-}
-
-/**
- * Callback called if a editable element changes it focus state.
- * Event target may be a WebKitDOMDocument (in case of iframe) or a
- * WebKitDOMDOMWindow.
- */
-static void on_editable_change_focus(WebKitDOMEventTarget *target,
-        WebKitDOMEvent *event, WebKitWebPage *page)
-{
-    WebKitDOMDocument *doc;
-    WebKitDOMDOMWindow *dom_window;
-    WebKitDOMElement *active;
-    GVariant *variant;
-    char *message;
-
-    if (WEBKIT_DOM_IS_DOM_WINDOW(target)) {
-        g_object_get(target, "document", &doc, NULL);
-    } else {
-        /* target is a doc document */
-        doc = WEBKIT_DOM_DOCUMENT(target);
-    }
-
-    dom_window = webkit_dom_document_get_default_view(doc);
-    if (!dom_window) {
-        return;
-    }
-
-    active = webkit_dom_document_get_active_element(doc);
-    /* Don't do anything if there is no active element */
-    if (!active) {
-        return;
-    }
-    if (WEBKIT_DOM_IS_HTML_IFRAME_ELEMENT(active)) {
-        WebKitDOMHTMLIFrameElement *iframe;
-        WebKitDOMDocument *subdoc;
-
-        iframe = WEBKIT_DOM_HTML_IFRAME_ELEMENT(active);
-        subdoc = webkit_dom_html_iframe_element_get_content_document(iframe);
-        /* subdoc can be NULL for cross-origin iframes - skip them */
-        if (subdoc) {
-            add_onload_event_observers(subdoc, page);
-        }
-        return;
-    }
-
-    /* Check if the active element is an editable element. */
-    variant = g_variant_new("(tb)", webkit_web_page_get_id(page),
-            ext_dom_is_editable(active));
-    message = g_variant_print(variant, FALSE);
-    g_variant_unref(variant);
-    if (!webkit_dom_dom_window_webkit_message_handlers_post_message(dom_window, "focus", message)) {
-        g_warning("Error sending focus message");
-    }
-    g_free(message);
-    g_object_unref(dom_window);
 }
 
 /**
@@ -535,7 +444,6 @@ static void on_page_created(WebKitWebExtension *extension, WebKitWebPage *webpag
     }
 
     pageid = webkit_web_page_get_id(webpage);
-    g_message("on_page_created: page_id=%" G_GUINT64_FORMAT, pageid);
 
     if (ext.connection) {
         emit_page_created(ext.connection, pageid);
@@ -557,22 +465,11 @@ static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extensi
     guint64 pageid = webkit_web_page_get_id(webpage);
     WebKitUserMessage *message;
 
-    g_message("on_web_page_document_loaded: page_id=%" G_GUINT64_FORMAT, pageid);
-
     /* Send message with page ID as parameter.
      * This allows the main process to match this page with the correct dbus proxy. */
     message = webkit_user_message_new("page-document-loaded",
                                       g_variant_new("(t)", pageid));
     webkit_web_page_send_message_to_view(webpage, message, NULL, NULL, NULL);
-
-    /* If there is a hashtable of known document - destroy this and create a
-     * new hashtable. */
-    if (ext.documents) {
-        g_hash_table_unref(ext.documents);
-    }
-    ext.documents = g_hash_table_new(g_direct_hash, g_direct_equal);
-
-    add_onload_event_observers(webkit_web_page_get_dom_document(webpage), webpage);
 }
 
 /**
