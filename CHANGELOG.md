@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Add `<Bslash>` as an alias for `\` in mappings. For example, `<Bslash><C-R>`
   represents the key sequence `\` followed by CTRL-R.
 * Fixes crash of webextension on pages with cross-origin iframes
+
+### Changed
 * Reworked communication between main process and webextension
+* Replaced deprecated dom api by JavaScript snippets
 
 ## [3.7.0] - 2023-06-19
 ### Added

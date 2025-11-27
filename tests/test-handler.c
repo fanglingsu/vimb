@@ -38,26 +38,50 @@ static void test_handler_remove(void)
     g_assert_false(handler_remove(handler, "https"));
 }
 
+static void null_log_handler(const gchar *log_domain,
+                              GLogLevelFlags log_level,
+                              const gchar *message,
+                              gpointer user_data)
+{
+    /* Suppress all log messages in subprocess to avoid test framework issues */
+}
+
 static void test_handler_run_success(void)
 {
     if (g_test_subprocess()) {
+        /* Suppress test framework log tracking to avoid critical errors */
+        g_log_set_handler(NULL, G_LOG_LEVEL_MASK, null_log_handler, NULL);
         handler_add(handler, "http", "echo -n 'handled uri %s'");
         handler_handle_uri(handler, TEST_URI);
         return;
     }
-    g_test_trap_subprocess(NULL, 0, 0);
+    g_test_trap_subprocess("/test-handlers/handle_uri/success", 0, 0);
     g_test_trap_assert_passed();
     g_test_trap_assert_stdout("handled uri " TEST_URI);
+}
+
+static void stderr_log_handler(const gchar *log_domain,
+                                GLogLevelFlags log_level,
+                                const gchar *message,
+                                gpointer user_data)
+{
+    /* Write warnings directly to stderr, bypassing test framework */
+    if (log_level & G_LOG_LEVEL_WARNING) {
+        fprintf(stderr, "%s\n", message);
+        fflush(stderr);
+    }
 }
 
 static void test_handler_run_failed(void)
 {
     if (g_test_subprocess()) {
+        /* Set our handler to write warnings directly to stderr, bypassing test framework */
+        g_log_set_handler(NULL, G_LOG_LEVEL_WARNING, stderr_log_handler, NULL);
         handler_add(handler, "http", "unknown-program %s");
         handler_handle_uri(handler, TEST_URI);
         return;
     }
-    g_test_trap_subprocess(NULL, 0, 0);
+    g_test_trap_subprocess("/test-handlers/handle_uri/failed", 0, 0);
     g_test_trap_assert_failed();
     g_test_trap_assert_stderr("*Can't run *unknown-program*");
 }

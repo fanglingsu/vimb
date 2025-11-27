@@ -181,8 +181,7 @@ char *util_expand(const char *src, int expflags)
         (*input)++;
     }
 
-    result = dst->str;
-    g_string_free(dst, FALSE);
+    result = g_string_free(dst, FALSE);
 
     return result;
 }

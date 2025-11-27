@@ -21,7 +21,8 @@ DOCDIR  = doc
 LIBS = gtk+-3.0 webkit2gtk-4.1
 
 # setup general used CFLAGS
-CFLAGS   += -std=c99 -pipe -Wall -fPIC
+# Use 'override' to ensure these flags are added even when CFLAGS is set on command line
+override CFLAGS   += -std=c99 -pipe -Wall -fPIC
 CPPFLAGS += -DEXTENSIONDIR=\"${EXTENSIONDIR}\"
 CPPFLAGS += -DPROJECT=\"vimb\" -DPROJECT_UCFIRST=\"Vimb\"
 CPPFLAGS += -DGSEAL_ENABLE
@@ -40,5 +41,6 @@ EXTCPPFLAGS = $(CPPFLAGS)
 EXTLDFLAGS  = ${LDFLAGS} $(shell pkg-config --libs webkit2gtk-web-extension-4.1) -shared
 
 # flags used for the main application
-CFLAGS     += $(shell pkg-config --cflags $(LIBS))
-LDFLAGS    += $(shell pkg-config --libs $(LIBS))
+# Use 'override' to ensure these flags are added even when CFLAGS/LDFLAGS is set on command line
+override CFLAGS     += $(shell pkg-config --cflags $(LIBS))
+override LDFLAGS    += $(shell pkg-config --libs $(LIBS))

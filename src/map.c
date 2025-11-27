@@ -502,10 +502,9 @@ static char *convert_keys(const char *in, int inlen, int *len)
 
         *len += rawlen;
     }
-    dest = str->str;
 
     /* don't free the character data of the GString */
-    g_string_free(str, FALSE);
+    dest = g_string_free(str, FALSE);
 
     return dest;
 }
