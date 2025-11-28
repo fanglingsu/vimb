@@ -175,7 +175,7 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
         /* copy web view selection to clipboard */
         webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
         /* read back copy from clipboard */
-        yanked = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+        yanked = util_clipboard_get_text(GTK_WIDGET(c->webview), TRUE);
     } else {
         /* use current arg.s as new clipboard content */
         yanked = g_strdup(arg->s);
@@ -191,9 +191,9 @@ gboolean command_yank(Client *c, const Arg *arg, char buf)
     vb_register_add(c, buf, yanked);
 
     /* store in X clipboard primary (selected text copy, middle mouse paste) */
-    gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY), yanked, -1);
+    util_clipboard_set_text(GTK_WIDGET(c->webview), yanked, TRUE);
     /* store in X "windows style" clipboard */
-    gtk_clipboard_set_text(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), yanked, -1);
+    util_clipboard_set_text(GTK_WIDGET(c->webview), yanked, FALSE);
 
     vb_echo(c, MSG_NORMAL, FALSE, "Yanked: %s", yanked);
 

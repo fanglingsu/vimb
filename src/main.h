@@ -23,11 +23,12 @@
 #include <fcntl.h>
 #include <regex.h>
 #include "config.h"
-#ifndef FEATURE_NO_XEMBED
-#include <gtk/gtkx.h>
-#endif
+/* GTK4 removed XEmbed support (GtkPlug/GtkSocket) */
+/* #ifndef FEATURE_NO_XEMBED */
+/* #include <gtk/gtkx.h> */
+/* #endif */
 #include <stdio.h>
-#include <webkit2/webkit2.h>
+#include <webkit/webkit.h>
 #include "shortcut.h"
 #include "handler.h"
 #include "file-storage.h"
@@ -249,8 +250,7 @@ struct Client {
     guint64             page_id;                /* page id of the webview */
     guint64             webview_id;             /* unique stable identifier derived from webview pointer */
     GtkTextBuffer       *buffer;
-    GDBusProxy          *dbusproxy;
-    GDBusServer         *dbusserver;
+    /* WebKitGTK 6.0: dbusproxy and dbusserver removed - using WebKitUserMessage */
     Handler             *handler;               /* the protocoll handlers */
     struct {
         /* TODO split in global setting definitions and set values on a per
@@ -285,9 +285,10 @@ struct Client {
 struct Vimb {
     char        *argv0;
     Client      *clients;
-#ifndef FEATURE_NO_XEMBED
-    Window      embed;
-#endif
+/* GTK4 removed XEmbed support */
+/* #ifndef FEATURE_NO_XEMBED */
+/*     Window      embed; */
+/* #endif */
     GHashTable  *modes;             /* all available browser main modes */
     char        *configfile;        /* config file given as option on startup */
     char        *files[FILES_LAST];
@@ -303,6 +304,7 @@ struct Vimb {
     gboolean    incognito;
 
     WebKitWebContext *webcontext;
+    WebKitNetworkSession *session;  /* WebKitGTK 6.0: network session for data/cookie management */
     GHashTable *webview_to_proxy;   /* maps page_id to dbus proxy for connected clients */
     GSList *pending_proxies;        /* list of pending ProxyPageId structs */
 };

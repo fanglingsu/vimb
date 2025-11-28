@@ -22,7 +22,8 @@
  * commands from inputbox and the ex commands.
  */
 
-#include <JavaScriptCore/JavaScript.h>
+#include <jsc/jsc.h>
+#include <webkit/webkit.h>
 #include <string.h>
 #include <sys/wait.h>
 
@@ -140,6 +141,8 @@ static VbCmdResult ex_autocmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
 static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
+static void on_eval_script_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data);
 static VbCmdResult ex_cleardata(Client *c, const ExArg *arg);
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg);
 static void print_failed_cb(WebKitPrintOperation* op, GError *err, Client *c);
@@ -399,13 +402,16 @@ VbResult ex_keypress(Client *c, int key)
     return res;
 }
 
-/**
- * Handles changes in the inputbox.
- */
-void ex_input_changed(Client *c, const char *text)
+/* Helper function to remove extra lines from buffer - deferred to avoid iterator invalidation */
+static gboolean remove_extra_lines_idle(gpointer user_data)
 {
+    Client *c = (Client *)user_data;
     GtkTextIter start, end;
     GtkTextBuffer *buffer = c->buffer;
+
+    if (!buffer || !GTK_IS_TEXT_BUFFER(buffer)) {
+        return G_SOURCE_REMOVE;
+    }
 
     /* don't add line breaks if content is pasted from clipboard into inputbox */
     if (gtk_text_buffer_get_line_count(buffer) > 1) {
@@ -413,18 +419,28 @@ void ex_input_changed(Client *c, const char *text)
         gtk_text_buffer_get_iter_at_line(buffer, &start, 0);
         if (gtk_text_iter_forward_to_line_end(&start)) {
             gtk_text_buffer_get_end_iter(buffer, &end);
-
-            /* TODO the following line creates a GTK warning.
-             * ex_input_changed() is called from the "changed" event handler of
-             * GtkTextBuffer. Apparently it's not supported to change a text
-             * buffer in the changed handler!?
-             *
-             * Gtk-WARNING **: Invalid text buffer iterator: either the
-             * iterator is uninitialized, or the characters/pixbufs/widgets in
-             * the buffer have been modified since the iterator was created.
-             */
             gtk_text_buffer_delete(buffer, &start, &end);
         }
+    }
+
+    return G_SOURCE_REMOVE;
+}
+
+/**
+ * Handles changes in the inputbox.
+ */
+void ex_input_changed(Client *c, const char *text)
+{
+    GtkTextBuffer *buffer = c->buffer;
+
+    /* GTK4: Defer buffer modification to avoid iterator invalidation warning.
+     * ex_input_changed() is called from the "changed" signal handler of
+     * GtkTextBuffer. Modifying the buffer in the changed handler invalidates
+     * iterators. We defer the modification using g_idle_add() so it happens
+     * after the current signal handler returns. */
+    if (gtk_text_buffer_get_line_count(buffer) > 1) {
+        /* Schedule the buffer modification for the next idle cycle */
+        g_idle_add(remove_extra_lines_idle, c);
     }
 
     switch (*text) {
@@ -835,29 +851,49 @@ static VbCmdResult ex_eval(Client *c, const ExArg *arg)
     if (arg->bang) {
         ext_proxy_eval_script(c, arg->rhs->str, NULL);
     } else {
-        ext_proxy_eval_script(c, arg->rhs->str, (GAsyncReadyCallback)on_eval_script_finished);
+        /* WebKitGTK 6.0: Use WebKitUserMessage callback */
+        ext_proxy_eval_script(c, arg->rhs->str, (GAsyncReadyCallback)on_eval_script_finished_usermessage);
     }
 
     return CMD_SUCCESS;
 }
 
-static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c)
+/* WebKitGTK 6.0: New callback for WebKitUserMessage replies */
+static void on_eval_script_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data)
 {
+    Client *c = (Client *)user_data;
+    WebKitWebView *webview = WEBKIT_WEB_VIEW(source_object);
+    GError *error = NULL;
+    WebKitUserMessage *reply;
+    GVariant *reply_params;
     gboolean success = FALSE;
     char *string = NULL;
 
-    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
-    if (return_value) {
-        g_variant_get(return_value, "(bs)", &success, &string);
-        if (success) {
-            vb_echo(c, MSG_NORMAL, FALSE, "%s", string);
-        } else {
-            vb_echo(c, MSG_ERROR, TRUE, "%s", string);
+    reply = webkit_web_view_send_message_to_page_finish(webview, result, &error);
+    if (error) {
+        vb_echo(c, MSG_ERROR, TRUE, "Eval failed: %s", error->message);
+        g_error_free(error);
+        return;
+    }
+
+    if (reply) {
+        reply_params = webkit_user_message_get_parameters(reply);
+        if (reply_params) {
+            g_variant_get(reply_params, "(bs)", &success, &string);
+            if (success) {
+                vb_echo(c, MSG_NORMAL, FALSE, "%s", string);
+            } else {
+                vb_echo(c, MSG_ERROR, TRUE, "%s", string);
+            }
+            g_free(string);
         }
+        g_object_unref(reply);
     } else {
-        vb_echo(c, MSG_ERROR, TRUE, "");
+        vb_echo(c, MSG_ERROR, TRUE, "No reply from webextension");
     }
 }
+
 
 /**
  * Clear website data by ':cleardata {dataTypeList} {timespan}'.
@@ -883,7 +919,7 @@ static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
             {WEBKIT_WEBSITE_DATA_SESSION_STORAGE,           "session-storage"},
             {WEBKIT_WEBSITE_DATA_LOCAL_STORAGE,             "local-storage"},
             {WEBKIT_WEBSITE_DATA_INDEXEDDB_DATABASES,       "indexeddb-databases"},
-            {WEBKIT_WEBSITE_DATA_PLUGIN_DATA,               "plugin-data"},
+            /* WEBKIT_WEBSITE_DATA_PLUGIN_DATA removed in WebKitGTK 6.0 - plugins no longer supported */
             {WEBKIT_WEBSITE_DATA_COOKIES,                   "cookies"},
 #if WEBKIT_CHECK_VERSION(2, 26, 0)
             {WEBKIT_WEBSITE_DATA_HSTS_CACHE,                "hsts-cache"},
@@ -927,7 +963,9 @@ static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
     if (arg->rhs->len) {
         timespan = util_string_to_timespan(arg->rhs->str);
     }
-    manager = webkit_web_context_get_website_data_manager(webkit_web_view_get_context(c->webview));
+
+    /* WebKitGTK 6.0: Get website data manager from network session */
+    manager = webkit_network_session_get_website_data_manager(vb.session);
     webkit_website_data_manager_clear(manager, data_types, timespan, NULL, NULL, NULL);
 
     return result;

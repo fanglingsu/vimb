@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 * Reworked communication between main process and webextension
 * Replaced deprecated dom api by JavaScript snippets
+* Replaced dbus IPC by Webkit provided IPC
+
+### Removed
+
+* Remove X-Embed support as this is not supported by GTK4
+
+Following settings were removed from the man page documentation as they are
+deprecated and removed in WebKitGTK 6.0.
+
+1. accelerated-2d-canvas (bool) `enable-accelerated-2d-canvas` deprecated in WebKitGTK 6.0
+2. dns-prefetching (bool) `enable-dns-prefetching` deprecated and does nothing
+3. frame-flattening (bool) `enable-frame-flattening` deprecated in WebKitGTK 6.0
+4. hyperlink-auditing (bool) `enable-hyperlink-auditing` deprecated and does nothing
+5. offline-cache (bool) `enable-offline-web-application-cache` deprecated and does nothing
+6. plugins (bool) `enable-plugins` deprecated and removed in WebKitGTK 6.0
+7. xss-auditor (bool) `enable-xss-auditor` deprecated and removed in WebKitGTK 6.0
 
 ## [3.7.0] - 2023-06-19
 ### Added

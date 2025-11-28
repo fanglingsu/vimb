@@ -19,10 +19,9 @@
 
 #include "config.h"
 #include <string.h>
-#include <webkit2/webkit2.h>
-#include <JavaScriptCore/JavaScript.h>
+#include <webkit/webkit.h>
+#include <jsc/jsc.h>
 #include <gdk/gdkkeysyms.h>
-#include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
 #include "main.h"
 #include "ascii.h"
@@ -49,6 +48,8 @@ static gboolean call_hints_function(Client *c, const char *func, const char* arg
         gboolean sync);
 static void on_hint_function_finished(GDBusProxy *proxy, GAsyncResult *result,
         Client *c);
+static void on_hint_function_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data);
 static gboolean hint_function_check_result(Client *c, GVariant *return_value);
 static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
@@ -288,21 +289,38 @@ static gboolean call_hints_function(Client *c, const char *func, const char* arg
         result  = ext_proxy_eval_script_sync(c, jscode);
         success = hint_function_check_result(c, result);
     } else {
-        ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)on_hint_function_finished);
+        /* WebKitGTK 6.0: Use WebKitUserMessage callback */
+        ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)on_hint_function_finished_usermessage);
     }
     g_free(jscode);
 
     return success;
 }
 
-static void on_hint_function_finished(GDBusProxy *proxy, GAsyncResult *result,
-        Client *c)
+/* WebKitGTK 6.0: New callback for WebKitUserMessage replies */
+static void on_hint_function_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data)
 {
-    GVariant *return_value;
+    Client *c = (Client *)user_data;
+    WebKitWebView *webview = WEBKIT_WEB_VIEW(source_object);
+    GError *error = NULL;
+    WebKitUserMessage *reply;
+    GVariant *reply_params;
 
-    return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
-    hint_function_check_result(c, return_value);
+    reply = webkit_web_view_send_message_to_page_finish(webview, result, &error);
+    if (error) {
+        g_warning("Hint function failed: %s", error->message);
+        g_error_free(error);
+        return;
+    }
+
+    if (reply) {
+        reply_params = webkit_user_message_get_parameters(reply);
+        hint_function_check_result(c, reply_params);
+        g_object_unref(reply);
+    }
 }
+
 
 static gboolean hint_function_check_result(Client *c, GVariant *return_value)
 {

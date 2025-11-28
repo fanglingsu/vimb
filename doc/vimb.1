@@ -884,9 +884,6 @@ Memory cache.
 .B disk-cache
 HTTP disk cache.
 .TP
-.B offline-cache
-Offline web application cache.
-.TP
 .B session-storage
 Session storage data.
 .TP
@@ -1149,11 +1146,6 @@ comparison for further typed chars.
 All settings listed below can be set with the `:set' command.
 See \fBSettings\fP under \fBCOMMAND MODE\fP for syntax.
 .TP
-.BR accelerated-2d-canvas (bool)
-Enable or disable accelerated 2D canvas.
-When accelerated 2D canvas is enabled, WebKit may render some 2D canvas
-content using hardware accelerated drawing operations.
-.TP
 .BR allow-file-access-from-file-urls (bool)
 Indicates whether file access is allowed from file URLs.
 By default, when something is loaded using a file URI, cross origin requests
@@ -1205,9 +1197,6 @@ font.
 .B default-zoom (int)
 Default Full-Content zoom level in percent. Default is 100.
 .TP
-.B dns-prefetching (bool)
-Indicates if Vimb prefetches domain names.
-.TP
 .B download-command (string)
 A command with placeholder '%s' that will be invoked to download a URI in
 case 'download-use-external' is enabled.
@@ -1250,11 +1239,6 @@ the foreground.
 .TP
 .B font-size (int)
 The default font size used to display text.
-.TP
-.B frame-flattening (bool)
-Whether to enable the Frame Flattening.
-With this setting each subframe is expanded to its contents,
-which will flatten all the frames to become one scrollable page.
 .TP
 .B fullscreen (bool)
 Show the current window full-screen.
@@ -1368,9 +1352,6 @@ and be able to use SQL to manipulate that data asynchronously.
 Whether to enable HTML5 localStorage support.
 localStorage provides simple synchronous storage access.
 .TP
-.B hyperlink-auditing (bool)
-Enable or disable support for <a ping>.
-.TP
 .B images (bool)
 Determines whether images should be automatically loaded or not.
 .TP
@@ -1439,16 +1420,8 @@ Default font size for the monospace font.
 Controls website access to the notification API, that sends notifications via
 dbus. {`always', `never', `ask' (display a prompt each time)}
 .TP
-.B offline-cache (bool)
-Whether to enable HTML5 offline web application cache support.
-Offline web application cache allows web applications to run even
-when the user is not connected to the network.
-.TP
 .B print-backgrounds (bool)
 Whether background images should be drawn during printing.
-.TP
-.B plugins (bool)
-Determines whether or not plugins on the page are enabled.
 .TP
 .B prevent-newwindow (bool)
 Whether to open links, that would normally open in a new window, in the
@@ -1574,11 +1547,6 @@ This makes the key sequence ";f" start hinting and then open the hinted URI in
 firefox.
 .PD
 .RE
-.TP
-.B xss-auditor (bool)
-Whether to enable the XSS auditor.
-This feature filters some kinds of reflective XSS attacks on vulnerable web
-sites.
 .
 .
 .SH FILES

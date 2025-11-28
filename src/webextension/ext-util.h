@@ -21,10 +21,12 @@
 #define _EXT_UTIL_H
 
 #include <glib.h>
-#include <JavaScriptCore/JavaScript.h>
+/* WebKitGTK 6.0: Use JSC API instead of JavaScriptCore C API */
+#include <jsc/jsc.h>
 
 gboolean ext_util_create_tmp_file(const char *content, char **file);
-gboolean ext_util_js_eval(JSContextRef ctx, const char *script, JSValueRef *result);
-char* ext_util_js_ref_to_string(JSContextRef ctx, JSValueRef ref);
+/* WebKitGTK 6.0: Updated to use JSC API */
+gboolean ext_util_js_eval(JSCContext *ctx, const char *script, JSCValue **result);
+char* ext_util_js_ref_to_string(JSCContext *ctx, JSCValue *ref);
 
 #endif /* end of include guard: _EXT_UTIL_H */

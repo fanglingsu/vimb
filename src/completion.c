@@ -42,7 +42,7 @@ void completion_clean(Client *c)
     c->mode->flags  &= ~FLAG_COMPLETION;
 
     if (comp->win) {
-        gtk_widget_destroy(comp->win);
+        gtk_widget_unparent(comp->win);
         comp->win  = NULL;
         comp->tree = NULL;
     }
@@ -95,16 +95,15 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
     comp->selfunc = selfunc;
 
     /* prepare the tree view */
-    comp->win  = gtk_scrolled_window_new(NULL, NULL);
+    comp->win  = gtk_scrolled_window_new();
     comp->tree = gtk_tree_view_new_with_model(model);
 
-    gtk_style_context_add_provider(gtk_widget_get_style_context(comp->tree),
-            GTK_STYLE_PROVIDER(vb.style_provider),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    /* GTK4: CSS providers are added to display, widgets are targeted by name/class in CSS */
+    /* The provider is already added to display in vimb_setup(), widget uses CSS selector */
     gtk_widget_set_name(GTK_WIDGET(comp->tree), "completion");
 
-    gtk_box_pack_end(GTK_BOX(gtk_widget_get_parent(GTK_WIDGET(c->statusbar.box))), comp->win, FALSE, FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(comp->win), comp->tree);
+    gtk_box_append(GTK_BOX(gtk_widget_get_parent(GTK_WIDGET(c->statusbar.box))), comp->win);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(comp->win), comp->tree);
 
     gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp->tree), FALSE);
     /* we have only on line per item so we can use the faster fixed heigh mode */
@@ -117,7 +116,7 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
     gtk_tree_selection_set_select_function(selection, tree_selection_func, c, NULL);
 
     /* get window dimension */
-    gtk_window_get_size(GTK_WINDOW(c->window), &width, &height);
+    gtk_window_get_default_size(GTK_WINDOW(c->window), &width, &height);
 
     /* prepare first column */
     column = gtk_tree_view_column_new();
@@ -153,8 +152,8 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
 
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
+    while (g_main_context_pending(NULL)) {
+        g_main_context_iteration(NULL, TRUE);
     }
 
     /* use max 1/3 of window height for the completion */

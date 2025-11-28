@@ -23,11 +23,7 @@
 #include "main.h"
 #include <gio/gio.h>
 
-/* Structure to hold pending proxy-page associations before they are claimed by clients */
-typedef struct {
-    GDBusProxy *proxy;
-    guint64     pageid;
-} ProxyPageId;
+/* WebKitGTK 6.0: D-Bus removed - all IPC uses WebKitUserMessage */
 
 const char *ext_proxy_init(void);
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback);

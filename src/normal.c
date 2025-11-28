@@ -686,9 +686,9 @@ static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info)
         a.s = g_strdup(vb_register_get(c, info->reg));
     } else {
         /* if no register is given use the system clipboard */
-        a.s = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+        a.s = util_clipboard_get_text(GTK_WIDGET(c->webview), TRUE);
         if (!a.s) {
-            a.s = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_NONE));
+            a.s = util_clipboard_get_text(GTK_WIDGET(c->webview), FALSE);
         }
     }
 
@@ -787,7 +787,7 @@ static VbResult normal_search_selection(Client *c, const NormalCmdInfo *info)
     /* there is no function to get the selected text so we copy current
      * selection to clipboard */
     webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
-    query = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+    query = util_clipboard_get_text(GTK_WIDGET(c->webview), TRUE);
     if (!query) {
         return RESULT_ERROR;
     }

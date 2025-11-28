@@ -19,18 +19,21 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
+#include <glib-unix.h>
 #include <regex.h>
-#ifndef FEATURE_NO_XEMBED
-#include <gdk/gdkx.h>
-#include <gtk/gtkx.h>
-#endif
+/* GTK4 removed XEmbed support (GtkPlug/GtkSocket and X11-specific headers) */
+/* #ifndef FEATURE_NO_XEMBED */
+/* #include <gdk/gdkx.h> */
+/* #include <gtk/gtkx.h> */
+/* #endif */
 #include <libsoup/soup.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <signal.h>
 #include <unistd.h>
-#include <webkit2/webkit2.h>
+#include <webkit/webkit.h>
 #include <libintl.h>
 
 #include "../version.h"
@@ -64,9 +67,13 @@ static gboolean is_plausible_uri(const char *path);
 static void marks_clear(Client *c);
 static void mode_free(Mode *mode);
 static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data);
-static void on_webctx_download_started(WebKitWebContext *webctx,
-        WebKitDownload *download, Client *c);
-static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data);
+static gboolean on_input_key_pressed(GtkEventControllerKey *controller, guint keyval,
+        guint keycode, GdkModifierType state, Client *c);
+/* WebKitGTK 6.0: download-started signal moved from WebKitWebContext to WebKitNetworkSession */
+static void on_webctx_download_started(WebKitNetworkSession *session,
+        WebKitDownload *download, gpointer user_data);
+/* WebKitGTK 6.0: initialize-web-extensions signal removed - callback no longer needed */
+/* static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data); */
 static gboolean on_webdownload_decide_destination(WebKitDownload *download,
         gchar *suggested_filename, Client *c);
 static void on_webdownload_response_received(WebKitDownload *download,
@@ -96,12 +103,15 @@ static void on_webview_notify_title(WebKitWebView *webview, GParamSpec *pspec,
 static void on_webview_notify_uri(WebKitWebView *webview, GParamSpec *pspec,
         Client *c);
 static void on_webview_ready_to_show(WebKitWebView *webview, Client *c);
-static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c);
+/* WebKitGTK 6.0: web-process-crashed signal replaced with web-process-terminated */
+static void on_webview_web_process_terminated(WebKitWebView *webview,
+        WebKitWebProcessTerminationReason reason, Client *c);
 static gboolean on_webview_authenticate(WebKitWebView *webview,
         WebKitAuthenticationRequest *request, Client *c);
 static gboolean on_webview_enter_fullscreen(WebKitWebView *webview, Client *c);
 static gboolean on_webview_leave_fullscreen(WebKitWebView *webview, Client *c);
-static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c);
+/* GTK4: close-request signal doesn't take GdkEvent parameter */
+static gboolean on_window_delete_event(GtkWidget *window, Client *c);
 static void on_window_destroy(GtkWidget *window, Client *c);
 static gboolean quit(Client *c);
 static void read_from_stdin(Client *c);
@@ -125,17 +135,30 @@ static void on_vertical_scroll(GDBusConnection *connection,
         GVariant *parameters, Client* c);
 static gboolean on_permission_request(WebKitWebView *webview,
         WebKitPermissionRequest *request, Client *c);
-static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c);
+/* GTK4: Scroll handling changed - GdkEvent is opaque, may need event controller */
+static gboolean on_scroll(GtkEventControllerScroll *controller, gdouble dx, gdouble dy, Client *c);
 static void on_script_message_focus(WebKitUserContentManager *manager,
-        WebKitJavascriptResult *res, gpointer data);
+        JSCValue *value, gpointer data);
 static void on_script_message_scroll(WebKitUserContentManager *manager,
-        WebKitJavascriptResult *res, gpointer data);
+        JSCValue *value, gpointer data);
 static gboolean profileOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
 static gboolean autocmdOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
 
 struct Vimb vb;
+
+/* GTK4: Use GMainLoop instead of gtk_main */
+static GMainLoop *main_loop = NULL;
+
+/* Signal handler for graceful shutdown on CTRL-C */
+static gboolean signal_handler_cb(gpointer user_data)
+{
+    if (main_loop && g_main_loop_is_running(main_loop)) {
+        g_main_loop_quit(main_loop);
+    }
+    return G_SOURCE_REMOVE;
+}
 
 /**
  * Set the destination for a download according to suggested file name and
@@ -376,12 +399,18 @@ void vb_input_set_text(Client *c, const char *text)
  */
 void vb_input_update_style(Client *c)
 {
+    /* GTK4: Check if widget still exists before accessing it */
+    if (!c || !c->input || !GTK_IS_WIDGET(c->input)) {
+        return;
+    }
+
     MessageType type = c->state.input_type;
 
+    /* GTK4: Use gtk_widget_add_css_class/remove_css_class instead of style context */
     if (type == MSG_ERROR) {
-        gtk_style_context_add_class(gtk_widget_get_style_context(c->input), "error");
+        gtk_widget_add_css_class(c->input, "error");
     } else {
-        gtk_style_context_remove_class(gtk_widget_get_style_context(c->input), "error");
+        gtk_widget_remove_css_class(c->input, "error");
     }
 }
 
@@ -731,10 +760,19 @@ void vb_statusbar_show_hover_url(Client *c, VbLinkType type, const char *uri)
  * Destroys given client and removed it from client queue. If no client is
  * there in queue, quit the gtk main loop.
  */
-static void client_destroy(Client *c)
+__attribute__((used)) static void client_destroy(Client *c)
 {
     Client *p;
-    webkit_web_view_stop_loading(c->webview);
+
+    /* Check if client is valid before accessing its members */
+    if (!c) {
+        return;
+    }
+
+    /* Stop loading before destroying widgets */
+    if (c->webview) {
+        webkit_web_view_stop_loading(c->webview);
+    }
 
     /* Write last URL into file for recreation.
      * The URL is only stored if the closed-max-items is not 0 and the file
@@ -744,7 +782,13 @@ static void client_destroy(Client *c)
                 vb.config.closed_max);
     }
 
-    gtk_widget_destroy(c->window);
+    /* GTK4: Use gtk_window_destroy for windows - check if window still exists and isn't already being destroyed */
+    if (c->window && GTK_IS_WINDOW(c->window)) {
+        /* Disconnect destroy signal to prevent recursive call */
+        g_signal_handlers_disconnect_by_func(c->window, G_CALLBACK(on_window_destroy), c);
+        gtk_window_destroy(GTK_WINDOW(c->window));
+        c->window = NULL;  /* Mark as destroyed */
+    }
 
     /* Look for the client in the list, if we searched through the list and
      * didn't find it the client must be the first item. */
@@ -772,8 +816,9 @@ static void client_destroy(Client *c)
     g_slice_free(Client, c);
 
     /* if there are no clients - quit the main loop */
-    if (!vb.clients) {
-        gtk_main_quit();
+    if (!vb.clients && main_loop) {
+        /* GTK4: Quit the actual main loop that's running */
+        g_main_loop_quit(main_loop);
     }
 }
 
@@ -838,10 +883,12 @@ static void client_show(WebKitWebView *webview, Client *c)
     gtk_widget_set_halign(c->statusbar.left, GTK_ALIGN_START);
     gtk_widget_set_halign(c->statusbar.mode, GTK_ALIGN_START);
 
-    gtk_box_pack_start(c->statusbar.box, c->statusbar.mode, FALSE, TRUE, 0);
-    gtk_box_pack_start(c->statusbar.box, c->statusbar.left, TRUE, TRUE, 2);
-    gtk_box_pack_start(c->statusbar.box, c->statusbar.cmd, FALSE, FALSE, 0);
-    gtk_box_pack_start(c->statusbar.box, c->statusbar.right, FALSE, FALSE, 2);
+    /* GTK4: Use gtk_box_append instead of gtk_box_pack_start */
+    gtk_box_append(c->statusbar.box, c->statusbar.mode);
+    gtk_box_append(c->statusbar.box, c->statusbar.left);
+    gtk_widget_set_hexpand(c->statusbar.left, TRUE);
+    gtk_box_append(c->statusbar.box, c->statusbar.cmd);
+    gtk_box_append(c->statusbar.box, c->statusbar.right);
 
     /* inputbox */
     c->input  = gtk_text_view_new();
@@ -851,20 +898,26 @@ static void client_show(WebKitWebView *webview, Client *c)
     /* Make sure the user can see the typed text. */
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->input), GTK_WRAP_WORD_CHAR);
 
+    /* GTK4: Prevent default TAB behavior (focus navigation) so TAB can be used for completion */
+    /* Add event controller to capture TAB before default handling */
+    GtkEventControllerKey *input_key_controller = GTK_EVENT_CONTROLLER_KEY(gtk_event_controller_key_new());
+    gtk_widget_add_controller(c->input, GTK_EVENT_CONTROLLER(input_key_controller));
+    g_signal_connect(input_key_controller, "key-pressed",
+            G_CALLBACK(on_input_key_pressed), c);
+
     /* pack the parts together */
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add(GTK_CONTAINER(c->window), box);
-    gtk_box_pack_start(GTK_BOX(box), GTK_WIDGET(c->webview), TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(box), GTK_WIDGET(c->statusbar.box), FALSE, FALSE, 0);
-    gtk_box_pack_end(GTK_BOX(box), GTK_WIDGET(c->input), FALSE, FALSE, 0);
+    /* GTK4: Use gtk_window_set_child instead of gtk_container_add */
+    gtk_window_set_child(GTK_WINDOW(c->window), box);
+    /* GTK4: Use gtk_box_append/prepend instead of pack_start/end */
+    gtk_box_append(GTK_BOX(box), GTK_WIDGET(c->webview));
+    gtk_widget_set_vexpand(GTK_WIDGET(c->webview), TRUE);
+    gtk_box_append(GTK_BOX(box), GTK_WIDGET(c->statusbar.box));
+    gtk_box_append(GTK_BOX(box), GTK_WIDGET(c->input));
 
     /* Set the default style for statusbar and inputbox. */
-    gtk_style_context_add_provider(gtk_widget_get_style_context(GTK_WIDGET(c->statusbar.box)),
-            GTK_STYLE_PROVIDER(vb.style_provider),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    gtk_style_context_add_provider(gtk_widget_get_style_context(c->input),
-            GTK_STYLE_PROVIDER(vb.style_provider),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    /* GTK4: CSS providers are added to display, widgets are targeted by name/class in CSS */
+    /* The provider is already added to display in vimb_setup(), widgets use CSS selectors */
 
     /* TODO separate initialization o setting from applying the values or
      * allow to se the default values for different scopes. For now we can
@@ -872,23 +925,24 @@ static void client_show(WebKitWebView *webview, Client *c)
      * widget for some settings. */
     setting_init(c);
 
-    gtk_widget_show_all(c->window);
+    /* GTK4: Use gtk_widget_set_visible for window */
+    gtk_widget_set_visible(c->window, TRUE);
 
-#ifndef FEATURE_NO_XEMBED
-    char *wid;
-    wid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(c->window)));
-    g_setenv("VIMB_WIN_ID", wid, TRUE);
-    /* set the x window id to env */
-    if (vb.embed) {
-        char *xid;
-        xid = g_strdup_printf("%d", (int)vb.embed);
-        g_setenv("VIMB_XID", xid, TRUE);
-        g_free(xid);
-    } else {
-        g_setenv("VIMB_XID", wid, TRUE);
-    }
-    g_free(wid);
-#endif
+/* GTK4 removed XEmbed support - window IDs not available */
+/* #ifndef FEATURE_NO_XEMBED */
+/*     char *wid; */
+/*     wid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(c->window))); */
+/*     g_setenv("VIMB_WIN_ID", wid, TRUE); */
+/*     if (vb.embed) { */
+/*         char *xid; */
+/*         xid = g_strdup_printf("%d", (int)vb.embed); */
+/*         g_setenv("VIMB_XID", xid, TRUE); */
+/*         g_free(xid); */
+/*     } else { */
+/*         g_setenv("VIMB_XID", wid, TRUE); */
+/*     } */
+/*     g_free(wid); */
+/* #endif */
 
     /* start client in normal mode */
     vb_enter(c, 'n');
@@ -903,32 +957,36 @@ static GtkWidget *create_window(Client *c)
 {
     GtkWidget *window;
 
-#ifndef FEATURE_NO_XEMBED
-    if (vb.embed) {
-        window = gtk_plug_new(vb.embed);
-    } else {
-#endif
-        window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-        gtk_window_set_role(GTK_WINDOW(window), PROJECT_UCFIRST);
-        gtk_window_set_default_size(GTK_WINDOW(window), WIN_WIDTH, WIN_HEIGHT);
-        if (!vb.no_maximize) {
-            gtk_window_maximize(GTK_WINDOW(window));
-        }
-#ifndef FEATURE_NO_XEMBED
+/* GTK4 removed XEmbed support (GtkPlug/GtkSocket) */
+/* #ifndef FEATURE_NO_XEMBED */
+/*     if (vb.embed) { */
+/*         window = gtk_plug_new(vb.embed); */
+/*     } else { */
+/* #endif */
+    /* GTK4: gtk_window_new() no longer takes a type parameter */
+    window = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(window), PROJECT_UCFIRST);
+    gtk_window_set_default_size(GTK_WINDOW(window), WIN_WIDTH, WIN_HEIGHT);
+    if (!vb.no_maximize) {
+        gtk_window_maximize(GTK_WINDOW(window));
     }
-#endif
+/* #ifndef FEATURE_NO_XEMBED */
+/*     } */
+/* #endif */
 
 #ifdef GUI_WINDOW_BACKGROUND_COLOR
     {
         // force setting background color to prevent white flashes in dark mode
         GdkRGBA color;
         gdk_rgba_parse (&color, GUI_WINDOW_BACKGROUND_COLOR);
-        
+
         GtkCssProvider *provider = gtk_css_provider_new();
         gchar *css = g_strdup_printf("window { background-color: %s; }", GUI_WINDOW_BACKGROUND_COLOR);
-        gtk_css_provider_load_from_data(provider, css, -1, NULL);
-        gtk_style_context_add_provider(
-            gtk_widget_get_style_context(window),
+        /* GTK4: Use gtk_css_provider_load_from_string instead of deprecated load_from_data */
+        gtk_css_provider_load_from_string(provider, css);
+        /* GTK4: Add CSS provider to display */
+        GdkDisplay *display = gtk_widget_get_display(window);
+        gtk_style_context_add_provider_for_display(display,
             GTK_STYLE_PROVIDER(provider),
             GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
         g_free(css);
@@ -939,9 +997,13 @@ static GtkWidget *create_window(Client *c)
     g_object_connect(
             G_OBJECT(window),
             "signal::destroy", G_CALLBACK(on_window_destroy), c,
-            "signal::delete-event", G_CALLBACK(on_window_delete_event), c,
-            "signal::key-press-event", G_CALLBACK(on_map_keypress), c,
+            "signal::close-request", G_CALLBACK(on_window_delete_event), c,
             NULL);
+
+    /* GTK4: Use event controller for keyboard input instead of key-press-event signal */
+    GtkEventController *key_controller = gtk_event_controller_key_new();
+    gtk_widget_add_controller(window, key_controller);
+    g_signal_connect(key_controller, "key-pressed", G_CALLBACK(on_map_key_pressed), c);
 
     return window;
 }
@@ -1013,6 +1075,53 @@ static gboolean is_plausible_uri(const char *path)
 }
 
 /**
+ * Handle key presses in the input box (GtkTextView).
+ * This prevents default TAB behavior (focus navigation) so TAB can be used for completion.
+ */
+static gboolean on_input_key_pressed(GtkEventControllerKey *controller, guint keyval,
+        guint keycode, GdkModifierType state, Client *c)
+{
+    /* Handle special keys when in ex mode and input has focus */
+    if (c->mode->id == 'c' && gtk_widget_is_focus(c->input)) {
+        /* Handle TAB and Shift+TAB for completion */
+        if (keyval == GDK_KEY_Tab || keyval == GDK_KEY_KP_Tab || keyval == GDK_KEY_ISO_Left_Tab) {
+            int key = (state & GDK_SHIFT_MASK) ? KEY_SHIFT_TAB : KEY_TAB;
+            /* Process through ex_keypress handler */
+            if (ex_keypress(c, key) == RESULT_COMPLETE) {
+                /* Key was handled, prevent default behavior */
+                return TRUE;
+            }
+        }
+        /* Handle Enter/Return to execute command */
+        else if (keyval == GDK_KEY_Return || keyval == GDK_KEY_KP_Enter) {
+            /* Process through ex_keypress handler */
+            if (ex_keypress(c, KEY_CR) == RESULT_COMPLETE) {
+                /* Key was handled, prevent default behavior (inserting newline) */
+                return TRUE;
+            }
+        }
+        /* Handle Up/Down arrows for history navigation */
+        else if (keyval == GDK_KEY_Up || keyval == GDK_KEY_KP_Up) {
+            /* Process through ex_keypress handler */
+            if (ex_keypress(c, KEY_UP) == RESULT_COMPLETE) {
+                /* Key was handled, prevent default behavior */
+                return TRUE;
+            }
+        }
+        else if (keyval == GDK_KEY_Down || keyval == GDK_KEY_KP_Down) {
+            /* Process through ex_keypress handler */
+            if (ex_keypress(c, KEY_DOWN) == RESULT_COMPLETE) {
+                /* Key was handled, prevent default behavior */
+                return TRUE;
+            }
+        }
+    }
+
+    /* Let other keys be handled normally */
+    return FALSE;
+}
+
+/**
  * Reinitializes or clears the set page marks.
  */
 static void marks_clear(Client *c)
@@ -1068,23 +1177,26 @@ static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data)
  */
 static void set_statusbar_style(Client *c, StatusType type)
 {
-    GtkStyleContext *ctx;
+    /* GTK4: Check if widget still exists before accessing it */
+    if (!c || !c->statusbar.box || !GTK_IS_WIDGET(c->statusbar.box)) {
+        return;
+    }
+
     /* Do nothing if the new to set style is the same as the current. */
     if (type == c->state.status_type) {
         return;
     }
 
-    ctx = gtk_widget_get_style_context(GTK_WIDGET(c->statusbar.box));
-
+    /* GTK4: Use gtk_widget_add_css_class/remove_css_class instead of style context */
     if (type == STATUS_SSL_VALID) {
-        gtk_style_context_remove_class(ctx, "unsecure");
-        gtk_style_context_add_class(ctx, "secure");
+        gtk_widget_remove_css_class(GTK_WIDGET(c->statusbar.box), "unsecure");
+        gtk_widget_add_css_class(GTK_WIDGET(c->statusbar.box), "secure");
     } else if (type == STATUS_SSL_INVALID) {
-        gtk_style_context_remove_class(ctx, "secure");
-        gtk_style_context_add_class(ctx, "unsecure");
+        gtk_widget_remove_css_class(GTK_WIDGET(c->statusbar.box), "secure");
+        gtk_widget_add_css_class(GTK_WIDGET(c->statusbar.box), "unsecure");
     } else {
-        gtk_style_context_remove_class(ctx, "secure");
-        gtk_style_context_remove_class(ctx, "unsecure");
+        gtk_widget_remove_css_class(GTK_WIDGET(c->statusbar.box), "secure");
+        gtk_widget_remove_css_class(GTK_WIDGET(c->statusbar.box), "unsecure");
     }
     c->state.status_type = type;
 }
@@ -1111,9 +1223,10 @@ static void spawn_new_instance(const char *uri)
     char **cmd = g_malloc_n(
         3                       /* basename + uri + ending NULL */
         + (vb.configfile ? 2 : 0)
-#ifndef FEATURE_NO_XEMBED
-        + (vb.embed ? 2 : 0)
-#endif
+/* GTK4: XEmbed not supported */
+/* #ifndef FEATURE_NO_XEMBED */
+/*         + (vb.embed ? 2 : 0) */
+/* #endif */
         + (vb.incognito ? 1 : 0)
         + (vb.profile ? 2 : 0)
         + (vb.no_maximize ? 1 : 0)
@@ -1127,14 +1240,15 @@ static void spawn_new_instance(const char *uri)
         cmd[i++] = "-c";
         cmd[i++] = vb.configfile;
     }
-#ifndef FEATURE_NO_XEMBED
-    if (vb.embed) {
-        char xid[64];
-        cmd[i++] = "-e";
-        snprintf(xid, LENGTH(xid), "%d", (int)vb.embed);
-        cmd[i++] = xid;
-    }
-#endif
+/* GTK4: XEmbed not supported */
+/* #ifndef FEATURE_NO_XEMBED */
+/*     if (vb.embed) { */
+/*         char xid[64]; */
+/*         cmd[i++] = "-e"; */
+/*         snprintf(xid, LENGTH(xid), "%d", (int)vb.embed); */
+/*         cmd[i++] = xid; */
+/*     } */
+/* #endif */
     if (vb.incognito) {
         cmd[i++] = "-i";
     }
@@ -1160,13 +1274,44 @@ static void spawn_new_instance(const char *uri)
 }
 
 /**
- * Callback for the web contexts download-started signal.
+ * Callback for the network session download-started signal (WebKitGTK 6.0).
+ * Signal moved from WebKitWebContext to WebKitNetworkSession.
+ * Note: Client parameter is NULL since signal is connected at session level.
+ * We need to find the appropriate client for this download.
  */
-static void on_webctx_download_started(WebKitWebContext *webctx,
-        WebKitDownload *download, Client *c)
+static void on_webctx_download_started(WebKitNetworkSession *session,
+        WebKitDownload *download, gpointer user_data)
 {
+    Client *c;
+    const char *uri;
+    WebKitWebView *webview;
+
+    /* WebKitGTK 6.0: Get the webview that initiated this download */
+    webview = webkit_download_get_web_view(download);
+
+    /* Find the client that owns this webview */
+    c = vb.clients;
+    if (webview) {
+        /* Search for the client with this webview */
+        for (c = vb.clients; c; c = c->next) {
+            if (c->webview == webview) {
+                break;
+            }
+        }
+    }
+
+    /* Fallback to first client if webview not found or download has no webview */
+    if (!c) {
+        c = vb.clients;
+    }
+
+    if (!c) {
+        return;  /* No clients available */
+    }
+
+    uri = webkit_uri_request_get_uri(webkit_download_get_request(download));
+
 #ifdef FEATURE_AUTOCMD
-    const char *uri = webkit_uri_request_get_uri(webkit_download_get_request(download));
     autocmd_run(c, AU_DOWNLOAD_STARTED, uri, NULL);
 #endif
 
@@ -1186,8 +1331,12 @@ static void on_webctx_download_started(WebKitWebContext *webctx,
 }
 
 /**
- * Callback for the web contexts initialize-web-extensions signal.
+ * WebKitGTK 6.0: initialize-web-extensions signal was removed.
+ * Web process extensions are now initialized automatically when the directory
+ * and initialization data are set via webkit_web_context_set_web_process_extensions_*.
+ * This callback is no longer used - initialization is done directly in vimb_setup().
  */
+#if 0
 static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data)
 {
     const char *name;
@@ -1203,11 +1352,10 @@ static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data
 
     name  = ext_proxy_init();
     vdata = g_variant_new("(ms)", name);
-    webkit_web_context_set_web_extensions_initialization_user_data(webctx, vdata);
-
-    /* Setup the extension directory. */
-    webkit_web_context_set_web_extensions_directory(webctx, EXTENSIONDIR);
+    webkit_web_context_set_web_process_extensions_initialization_user_data(webctx, vdata);
+    webkit_web_context_set_web_process_extensions_directory(webctx, EXTENSIONDIR);
 }
+#endif
 
 /**
  * Callback for the webkit download decide destination signal.
@@ -1383,7 +1531,8 @@ static void on_webdownload_received_data(WebKitDownload *download,
  */
 static void on_webview_close(WebKitWebView *webview, Client *c)
 {
-    gtk_widget_destroy(c->window);
+    /* GTK4: Use gtk_window_destroy for windows */
+    gtk_window_destroy(GTK_WINDOW(c->window));
 }
 
 /**
@@ -1705,13 +1854,29 @@ static void on_webview_ready_to_show(WebKitWebView *webview, Client *c)
 }
 
 /**
- * Callback for the webview web-process-crashed signal.
+ * Callback for the webview web-process-terminated signal (WebKitGTK 6.0).
+ * Replaces web-process-crashed signal - now provides termination reason.
  */
-static gboolean on_webview_web_process_crashed(WebKitWebView *webview, Client *c)
+static void on_webview_web_process_terminated(WebKitWebView *webview,
+        WebKitWebProcessTerminationReason reason, Client *c)
 {
-    vb_echo(c, MSG_ERROR, FALSE, "Webview Crashed on %s", webkit_web_view_get_uri(webview));
-
-    return TRUE;
+    const char *reason_str;
+    switch (reason) {
+        case WEBKIT_WEB_PROCESS_CRASHED:
+            reason_str = "crashed";
+            break;
+        case WEBKIT_WEB_PROCESS_EXCEEDED_MEMORY_LIMIT:
+            reason_str = "exceeded memory limit";
+            break;
+        case WEBKIT_WEB_PROCESS_TERMINATED_BY_API:
+            reason_str = "terminated by API";
+            break;
+        default:
+            reason_str = "terminated";
+            break;
+    }
+    vb_echo(c, MSG_ERROR, FALSE, "Webview %s on %s", reason_str,
+            webkit_web_view_get_uri(webview));
 }
 
 /**
@@ -1736,7 +1901,8 @@ static gboolean on_webview_authenticate(WebKitWebView *webview,
 static gboolean on_webview_enter_fullscreen(WebKitWebView *webview, Client *c)
 {
     c->state.is_fullscreen = TRUE;
-    gtk_widget_hide(GTK_WIDGET(c->statusbar.box));
+    /* GTK4: Use gtk_widget_set_visible instead of deprecated gtk_widget_hide */
+    gtk_widget_set_visible(GTK_WIDGET(c->statusbar.box), FALSE);
     gtk_widget_set_visible(GTK_WIDGET(c->input), FALSE);
     return FALSE;
 }
@@ -1747,18 +1913,18 @@ static gboolean on_webview_enter_fullscreen(WebKitWebView *webview, Client *c)
 static gboolean on_webview_leave_fullscreen(WebKitWebView *webview, Client *c)
 {
     c->state.is_fullscreen = FALSE;
-    gtk_widget_show(GTK_WIDGET(c->statusbar.box));
+    /* GTK4: Use gtk_widget_set_visible instead of gtk_widget_show */
+    gtk_widget_set_visible(GTK_WIDGET(c->statusbar.box), TRUE);
     gtk_widget_set_visible(GTK_WIDGET(c->input), TRUE);
     return FALSE;
 }
 
 /**
- * Callback for window ::delete-event signal which is emitted if a user
- * requests that a toplevel window is closed. The default handler for this
- * signal destroys the window. Returns TRUE to stop other handlers from being
- * invoked for the event. FALSE to propagate the event further.
+ * Callback for window ::close-request signal (GTK4) which is emitted if a user
+ * requests that a toplevel window is closed. Returns TRUE to prevent closing,
+ * FALSE to allow closing.
  */
-static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Client *c)
+static gboolean on_window_delete_event(GtkWidget *window, Client *c)
 {
     /* if vb_quit fails, do not propagate event further, keep window open */
     return !vb_quit(c, FALSE);
@@ -1770,7 +1936,45 @@ static gboolean on_window_delete_event(GtkWidget *window, GdkEvent *event, Clien
  */
 static void on_window_destroy(GtkWidget *window, Client *c)
 {
-    client_destroy(c);
+    /* GTK4: Window is being destroyed, mark it as NULL to prevent further access */
+    if (c && c->window == window) {
+        c->window = NULL;  /* Mark as destroyed to prevent further access */
+    }
+    /* Don't call gtk_window_destroy here - window is already being destroyed */
+    /* Just clean up the client data */
+    if (c) {
+        Client *p;
+
+        /* Remove from client list */
+        for (p = vb.clients; p && p->next != c; p = p->next);
+        if (p) {
+            p->next = c->next;
+        } else {
+            vb.clients = c->next;
+        }
+
+        /* Clean up client resources */
+        if (c->state.search.last_query) {
+            g_free(c->state.search.last_query);
+        }
+
+        completion_cleanup(c);
+        map_cleanup(c);
+        register_cleanup(c);
+        setting_cleanup(c);
+#ifdef FEATURE_AUTOCMD
+        autocmd_cleanup(c);
+#endif
+        handler_free(c->handler);
+        shortcut_free(c->config.shortcuts);
+
+        g_slice_free(Client, c);
+
+        /* if there are no clients - quit the main loop */
+        if (!vb.clients && main_loop) {
+            g_main_loop_quit(main_loop);
+        }
+    }
 }
 
 /**
@@ -1778,8 +1982,16 @@ static void on_window_destroy(GtkWidget *window, Client *c)
  */
 static gboolean quit(Client *c)
 {
-    /* Destroy the main window to tirgger the destruction of the client. */
-    gtk_widget_destroy(c->window);
+    /* Check if client and window are still valid before destroying */
+    if (!c) {
+        return FALSE;
+    }
+
+    /* Destroy the main window to trigger the destruction of the client. */
+    /* GTK4: Use gtk_window_destroy for windows - check if window still exists */
+    if (c->window && GTK_IS_WINDOW(c->window)) {
+        gtk_window_destroy(GTK_WINDOW(c->window));
+    }
 
     /* Remove this from the list of event sources. */
     return FALSE;
@@ -1825,6 +2037,11 @@ static void register_cleanup(Client *c)
 
 static void update_title(Client *c)
 {
+    /* GTK4: Check if window still exists before accessing it */
+    if (!c || !c->window || !GTK_IS_WINDOW(c->window)) {
+        return;
+    }
+
 #ifdef FEATURE_TITLE_PROGRESS
     /* Show load status of page or the downloads. */
     if (c->state.progress != 100) {
@@ -1851,6 +2068,11 @@ static void update_urlbar(Client *c)
 {
     GString *str;
     gboolean back, fwd;
+
+    /* GTK4: Check if widgets still exist before accessing them */
+    if (!c || !c->webview || !c->statusbar.left) {
+        return;
+    }
 
     str = g_string_new("");
     /* show profile name */
@@ -1896,16 +2118,7 @@ static void vimb_cleanup(void)
     }
     g_free(vb.profile);
 
-    g_hash_table_destroy(vb.webview_to_proxy);
-
-    /* Clean up any remaining pending proxies */
-    if (vb.pending_proxies) {
-        GSList *item;
-        for (item = vb.pending_proxies; item != NULL; item = item->next) {
-            g_slice_free(ProxyPageId, item->data);
-        }
-        g_slist_free(vb.pending_proxies);
-    }
+    /* WebKitGTK 6.0: D-Bus proxy management removed */
 
     g_slist_free_full(vb.cmdargs, g_free);
     g_clear_object(&vb.webcontext);
@@ -1947,35 +2160,56 @@ static void vimb_setup(void)
     vb.storage[STORAGE_SEARCH]   = file_storage_new(dataPath, "search", vb.incognito);
     g_free(dataPath);
 
-    WebKitWebsiteDataManager *manager = NULL;
+    /* WebKitGTK 6.0: Use WebKitNetworkSession instead of WebKitWebsiteDataManager */
     if (vb.incognito) {
-        manager = webkit_website_data_manager_new_ephemeral();
+        vb.session = webkit_network_session_new_ephemeral();
     } else {
-        manager = webkit_website_data_manager_new(
-                "base-data-directory", util_get_data_dir(),
-                "base-cache-directory", util_get_cache_dir(),
-                NULL);
+        vb.session = webkit_network_session_new(util_get_data_dir(), util_get_cache_dir());
     }
-    vb.webcontext = webkit_web_context_new_with_website_data_manager(manager);
-    manager       = webkit_web_context_get_website_data_manager(vb.webcontext);
+
+    /* WebKitGTK 6.0: WebContext is now created without parameters */
+    vb.webcontext = webkit_web_context_new();
     webkit_web_context_set_cache_model(vb.webcontext, WEBKIT_CACHE_MODEL_WEB_BROWSER);
 
-    g_signal_connect(vb.webcontext, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL);
+    /* WebKitGTK 6.0: initialize-web-extensions signal was removed.
+     * Web process extensions are now initialized automatically when the directory is set.
+     * We set the directory and initialization data directly instead of using a signal. */
+    /* The signal callback is no longer needed - extensions are auto-loaded */
+    /* g_signal_connect(vb.webcontext, "initialize-web-extensions", G_CALLBACK(on_webctx_init_web_extension), NULL); */
 
-    /* Add cookie support only if the cookie file exists and web context is
-     * not ephemeral */
-    if (vb.files[FILES_COOKIE] && !webkit_web_context_is_ephemeral(vb.webcontext)) {
+    /* WebKitGTK 6.0: D-Bus removed - ext_proxy_init() is now a stub */
+    /* Set up web process extensions directory */
+    ext_proxy_init();  /* No-op, kept for compatibility */
+
+    /* Verify webextension file exists */
+    char *extension_path = g_build_filename(EXTENSIONDIR, "webext_main.so", NULL);
+    if (!g_file_test(extension_path, G_FILE_TEST_IS_REGULAR)) {
+        g_warning("Main process: Webextension file not found: %s", extension_path);
+    }
+    g_free(extension_path);
+
+    /* WebKitGTK 6.0: Pass NULL as initialization data (D-Bus address no longer needed) */
+    GVariant *vdata = g_variant_new("(ms)", NULL);
+    webkit_web_context_set_web_process_extensions_initialization_user_data(vb.webcontext, vdata);
+    webkit_web_context_set_web_process_extensions_directory(vb.webcontext, EXTENSIONDIR);
+
+    /* WebKitGTK 6.0: Cookie manager is accessed through network session */
+    /* Add cookie support only if the cookie file exists and not incognito */
+    if (vb.files[FILES_COOKIE] && !vb.incognito) {
         WebKitCookieManager *cm;
 
-        cm = webkit_web_context_get_cookie_manager(vb.webcontext);
+        cm = webkit_network_session_get_cookie_manager(vb.session);
         webkit_cookie_manager_set_persistent_storage(
                 cm,
                 vb.files[FILES_COOKIE],
                 WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE);
     }
 
-    vb.webview_to_proxy = g_hash_table_new(g_direct_hash, g_direct_equal);
-    vb.pending_proxies = NULL;
+    /* WebKitGTK 6.0: download-started signal moved from WebKitWebContext to WebKitNetworkSession */
+    /* Connect once to the network session (shared across all webviews) */
+    g_signal_connect(vb.session, "download-started", G_CALLBACK(on_webctx_download_started), NULL);
+
+    /* WebKitGTK 6.0: D-Bus proxy tracking removed - using WebKitUserMessage */
 
     /* initialize the modes */
     vb_mode_add('n', normal_enter, normal_leave, normal_keypress, NULL);
@@ -1985,6 +2219,14 @@ static void vimb_setup(void)
 
     /* Prepare the style provider to be used for the clients and completion. */
     vb.style_provider = gtk_css_provider_new();
+
+    /* GTK4: Add CSS provider to display - widgets are targeted by name/class in CSS */
+    GdkDisplay *display = gdk_display_get_default();
+    if (display) {
+        gtk_style_context_add_provider_for_display(display,
+                GTK_STYLE_PROVIDER(vb.style_provider),
+                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    }
 }
 
 /**
@@ -2048,7 +2290,8 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
     }
 
     /* Feed style sheet document to gtk */
-    gtk_css_provider_load_from_data(vb.style_provider, style_sheet->str, -1, NULL);
+    /* GTK4: Use gtk_css_provider_load_from_string instead of deprecated load_from_data */
+    gtk_css_provider_load_from_string(vb.style_provider, style_sheet->str);
 
     /* WORKAROUND to always ensure correct size of input field
      *
@@ -2072,9 +2315,8 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
      *
      * Tested on ARCH linux with gtk3 3.22.10-1
      */
-    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
-    gtk_style_context_invalidate(gtk_widget_get_style_context(c->input));
-    G_GNUC_END_IGNORE_DEPRECATIONS;
+    /* GTK4: gtk_style_context_invalidate() was removed
+     * The style system in GTK4 automatically handles invalidation */
 
 cleanup:
     g_string_free(style_sheet, TRUE);
@@ -2117,9 +2359,10 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         "signal::notify::title", G_CALLBACK(on_webview_notify_title), c,
         "signal::notify::uri", G_CALLBACK(on_webview_notify_uri), c,
         "signal::permission-request", G_CALLBACK(on_permission_request), c,
-        "signal::scroll-event", G_CALLBACK(on_scroll), c,
+        /* GTK4: scroll-event signal removed, using event controller instead */
         "signal::ready-to-show", G_CALLBACK(on_webview_ready_to_show), c,
-        "signal::web-process-crashed", G_CALLBACK(on_webview_web_process_crashed), c,
+        /* WebKitGTK 6.0: web-process-crashed signal replaced with web-process-terminated */
+        "signal::web-process-terminated", G_CALLBACK(on_webview_web_process_terminated), c,
         "signal::authenticate", G_CALLBACK(on_webview_authenticate), c,
         "signal::enter-fullscreen", G_CALLBACK(on_webview_enter_fullscreen), c,
         "signal::leave-fullscreen", G_CALLBACK(on_webview_leave_fullscreen), c,
@@ -2127,12 +2370,26 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
         NULL
     );
 
+    /* GTK4: Add scroll event controller for scroll multiplier support */
+    GtkEventController *scroll_controller = gtk_event_controller_scroll_new(
+        GTK_EVENT_CONTROLLER_SCROLL_BOTH_AXES);
+    gtk_widget_add_controller(GTK_WIDGET(new), scroll_controller);
+    g_signal_connect(scroll_controller, "scroll", G_CALLBACK(on_scroll), c);
+
+    /* GTK4: Add key event controller to webview to capture keys when webview has focus */
+    /* This ensures keys like 'G' for scrolling work even when webview is focused */
+    GtkEventControllerKey *webview_key_controller = GTK_EVENT_CONTROLLER_KEY(gtk_event_controller_key_new());
+    gtk_widget_add_controller(GTK_WIDGET(new), GTK_EVENT_CONTROLLER(webview_key_controller));
+    g_signal_connect(webview_key_controller, "key-pressed", G_CALLBACK(on_map_key_pressed), c);
+
     webcontext = webkit_web_view_get_context(new);
-    g_signal_connect(webcontext, "download-started", G_CALLBACK(on_webctx_download_started), c);
+    /* WebKitGTK 6.0: download-started signal is connected once in vimb_setup() to vb.session */
+    /* No need to connect per-webview - downloads are handled at the session level */
 
     /* Setup script message handlers. */
-    webkit_user_content_manager_register_script_message_handler(ucm, "focus");
-    webkit_user_content_manager_register_script_message_handler(ucm, "scroll");
+    /* WebKitGTK 6.0: Third parameter specifies world name (NULL for default world) */
+    webkit_user_content_manager_register_script_message_handler(ucm, "focus", NULL);
+    webkit_user_content_manager_register_script_message_handler(ucm, "scroll", NULL);
     g_signal_connect(ucm, "script-message-received::focus", G_CALLBACK(on_script_message_focus), NULL);
     g_signal_connect(ucm, "script-message-received::scroll", G_CALLBACK(on_script_message_scroll), NULL);
 
@@ -2174,10 +2431,14 @@ static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessa
 
     PRINT_DEBUG("Received user message: %s", name);
 
-    /* Only handle page-document-loaded message */
+    /* Log all user messages for debugging */
     if (g_strcmp0(name, "page-document-loaded") != 0) {
+        PRINT_DEBUG("Ignoring user message: %s", name);
         return FALSE;
     }
+
+    g_warning("Received page-document-loaded message for page_id=%" G_GUINT64_FORMAT,
+              webkit_web_view_get_page_id(c->webview));
 
     /* Get the page ID sent by the webextension */
     params = webkit_user_message_get_parameters(message);
@@ -2196,42 +2457,6 @@ static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessa
     PRINT_DEBUG("Page IDs: from_ext=%" G_GUINT64_FORMAT ", from_view=%" G_GUINT64_FORMAT,
                 pageid_from_ext, pageid_from_view);
 
-    /* Search for a matching proxy in the pending list.
-     * Match by either the webextension's page ID or the view's page ID. */
-    for (item = vb.pending_proxies; item != NULL; item = item->next) {
-        ProxyPageId *pending = (ProxyPageId *)item->data;
-        if (pending->pageid == pageid_from_ext || pending->pageid == pageid_from_view) {
-            found_proxy = pending->proxy;
-
-            /* Remove from pending list and free the struct */
-            vb.pending_proxies = g_slist_remove(vb.pending_proxies, pending);
-            g_slice_free(ProxyPageId, pending);
-            break;
-        }
-    }
-
-    if (!found_proxy) {
-        g_warning("Could not find pending proxy for page IDs (ext=%" G_GUINT64_FORMAT
-                  ", view=%" G_GUINT64_FORMAT ")", pageid_from_ext, pageid_from_view);
-        return FALSE;
-    }
-
-    /* Assign the proxy to this client */
-    c->dbusproxy = found_proxy;
-
-    /* Store in hash table for quick lookup by page ID */
-    g_hash_table_insert(vb.webview_to_proxy, GINT_TO_POINTER(c->page_id), c->dbusproxy);
-
-    /* Subscribe to signals for this client */
-    GDBusConnection *connection = g_dbus_proxy_get_connection(c->dbusproxy);
-    if (connection) {
-        g_dbus_connection_signal_subscribe(connection,
-                NULL, VB_WEBEXTENSION_INTERFACE, "VerticalScroll",
-                VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
-                (GDBusSignalCallback)on_vertical_scroll, c, NULL);
-    } else {
-        g_warning("Could not get dbus connection from proxy for page ID %" G_GUINT64_FORMAT, c->page_id);
-    }
 
     return TRUE;
 }
@@ -2255,6 +2480,12 @@ static void on_vertical_scroll(GDBusConnection *connection,
     c->state.scroll_top     = top;
 
     vb_statusbar_update(c);
+}
+
+/* Helper callback to store dialog response */
+static void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data)
+{
+    g_object_set_data(G_OBJECT(dialog), "response", GINT_TO_POINTER(response_id));
 }
 
 static gboolean on_permission_request(WebKitWebView *webview,
@@ -2296,30 +2527,74 @@ static gboolean on_permission_request(WebKitWebView *webview,
         return FALSE;
     }
 
-    dialog = gtk_message_dialog_new(GTK_WINDOW(c->window), GTK_DIALOG_MODAL,
+    /* GTK4: gtk_message_dialog_new is deprecated but still functional.
+     * The recommended replacement is gtk_alert_dialog_new(), but that requires
+     * more significant refactoring. For now, we use the deprecated API which works. */
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+    dialog = gtk_message_dialog_new(GTK_WINDOW(c->window),
+            GTK_DIALOG_DESTROY_WITH_PARENT,
             GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, "Page wants to %s",
             msg);
+    G_GNUC_END_IGNORE_DEPRECATIONS
 
-    gtk_widget_show(dialog);
-    result = gtk_dialog_run(GTK_DIALOG(dialog));
+    /* GTK4: Use gtk_widget_set_visible instead of gtk_widget_show */
+    gtk_widget_set_visible(dialog, TRUE);
+
+    /* Create a simple event loop to wait for response */
+    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+    g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), NULL);
+    g_signal_connect_swapped(dialog, "response", G_CALLBACK(g_main_loop_quit), loop);
+    g_main_loop_run(loop);
+    g_main_loop_unref(loop);
+
+    /* Get the response (stored as data on the dialog) */
+    result = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(dialog), "response"));
+
     if (GTK_RESPONSE_YES == result) {
         webkit_permission_request_allow(request);
     } else {
         webkit_permission_request_deny(request);
     }
-    gtk_widget_destroy(dialog);
+    gtk_window_destroy(GTK_WINDOW(dialog));
 
     return TRUE;
 }
 
-static gboolean on_scroll(WebKitWebView *webview, GdkEvent *event, Client *c)
+/* GTK4: GdkEvent is now opaque, use event controller for scroll handling */
+static gboolean on_scroll(GtkEventControllerScroll *controller, gdouble dx, gdouble dy, Client *c)
 {
-    event->scroll.delta_y *= c->config.scrollmultiplier;
-    return FALSE;
+    gdouble multiplier;
+    char *js;
+
+    /* Check if client and webview are valid */
+    if (!c || !c->webview) {
+        return FALSE;
+    }
+
+    /* Get scroll multiplier from config (default is 1) */
+    multiplier = (gdouble)c->config.scrollmultiplier;
+
+    /* If multiplier is 1, allow normal scrolling */
+    if (multiplier == 1.0) {
+        return FALSE;  /* Allow default scrolling */
+    }
+
+    /* Apply multiplier to deltas */
+    dx *= multiplier;
+    dy *= multiplier;
+
+    /* Use JavaScript via proxy to scroll with the multiplied deltas */
+    /* WebKit's scrollBy() method accepts pixel values */
+    js = g_strdup_printf("window.scrollBy(%f, %f);", dx, dy);
+    ext_proxy_eval_script(c, js, NULL);
+    g_free(js);
+
+    /* Return TRUE to prevent default scrolling (we've handled it via JS) */
+    return TRUE;
 }
 
 static void on_script_message_focus(WebKitUserContentManager *manager,
-        WebKitJavascriptResult *res, gpointer data)
+        JSCValue *value, gpointer data)
 {
     char *message;
     GVariant *variant;
@@ -2327,7 +2602,7 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
     gboolean is_focused;
     Client *c;
 
-    message = util_js_result_as_string(res);
+    message = util_js_result_as_string(value);
     variant = g_variant_parse(G_VARIANT_TYPE("(tb)"), message, NULL, NULL, NULL);
     g_free(message);
 
@@ -2352,14 +2627,10 @@ static void on_script_message_focus(WebKitUserContentManager *manager,
  * Updates the scroll percentage display in the statusbar.
  */
 static void on_script_message_scroll(WebKitUserContentManager *manager,
-        WebKitJavascriptResult *res, gpointer data)
+        JSCValue *value, gpointer data)
 {
-    JSCValue *value;
     JSCValue *max_val, *percent_val, *top_val;
     Client *c;
-
-    /* Get the JavaScript result value */
-    value = webkit_javascript_result_get_js_value(res);
 
     if (!jsc_value_is_object(value)) {
         return;
@@ -2431,15 +2702,27 @@ int main(int argc, char* argv[])
         {NULL}
     };
 
-    bindtextdomain("WebKitGTK-4.1", "/usr/share/locale/");
+    bindtextdomain("WebKitGTK-6.0", "/usr/share/locale/");
 
-    /* initialize GTK+ */
-    if (!gtk_init_with_args(&argc, &argv, "[URI]", opts, NULL, &err)) {
-        fprintf(stderr, "can't init gtk: %s\n", err->message);
+    /* GTK4: gtk_init_with_args removed - use separate GOptionContext */
+    GOptionContext *opt_context = g_option_context_new("[URI]");
+    g_option_context_add_main_entries(opt_context, opts, NULL);
+
+    if (!g_option_context_parse(opt_context, &argc, &argv, &err)) {
+        fprintf(stderr, "can't parse options: %s\n", err->message);
         g_error_free(err);
-
+        g_option_context_free(opt_context);
         return EXIT_FAILURE;
     }
+    g_option_context_free(opt_context);
+
+    /* initialize GTK+ */
+    gtk_init();
+
+    /* GTK4: Setup signal handlers for graceful shutdown using GLib */
+    /* Use g_unix_signal_add to handle signals in main loop context */
+    g_unix_signal_add(SIGINT, signal_handler_cb, NULL);
+    g_unix_signal_add(SIGTERM, signal_handler_cb, NULL);
 
     if (ver) {
         printf("%s, version %s\n", PROJECT, VERSION);
@@ -2460,10 +2743,11 @@ int main(int argc, char* argv[])
                 GTK_MAJOR_VERSION,
                 GTK_MINOR_VERSION,
                 GTK_MICRO_VERSION);
+        /* GTK4: Use functions instead of variables */
         printf("GTK run:         %d.%d.%d\n",
-                gtk_major_version,
-                gtk_minor_version,
-                gtk_micro_version);
+                gtk_get_major_version(),
+                gtk_get_minor_version(),
+                gtk_get_micro_version());
         printf("libsoup compile: %d.%d.%d\n",
                 SOUP_MAJOR_VERSION,
                 SOUP_MINOR_VERSION,
@@ -2488,11 +2772,12 @@ int main(int argc, char* argv[])
 
     vimb_setup();
 
-#ifndef FEATURE_NO_XEMBED
-    if (winid) {
-        vb.embed = strtol(winid, NULL, 0);
-    }
-#endif
+/* GTK4: XEmbed not supported */
+/* #ifndef FEATURE_NO_XEMBED */
+/*     if (winid) { */
+/*         vb.embed = strtol(winid, NULL, 0); */
+/*     } */
+/* #endif */
 
     c = client_new(NULL);
     client_show(NULL, c);
@@ -2510,7 +2795,10 @@ int main(int argc, char* argv[])
         vb_load_uri(c, &(Arg){TARGET_CURRENT, argv[argc - 1]});
     }
 
-    gtk_main();
+    /* GTK4: Use GMainLoop instead of gtk_main */
+    main_loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(main_loop);
+    g_main_loop_unref(main_loop);
 #ifdef FREE_ON_QUIT
     vimb_cleanup();
 #endif

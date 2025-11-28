@@ -39,14 +39,17 @@ the project page of [Vimb][].
 
 ## dependencies
 
-- gtk+-3.0
-- webkit2gtk-4.1
+- gtk4
+- webkitgtk-6.0
 - gst-libav, gst-plugins-good (optional, for media decoding among other things)
+
+**Note:** Vimb has been migrated from GTK3/WebKit2GTK-4.1 to GTK4/WebKitGTK-6.0.
+This is a major version change that requires GTK4 and WebKitGTK 6.0 or later.
 
 ## Install
 
-Edit `config.mk` to match your local setup. You might need to do this if 
-you use another compiler, like tcc. Most people, however, will almost never 
+Edit `config.mk` to match your local setup. You might need to do this if
+you use another compiler, like tcc. Most people, however, will almost never
 need to do this on systems like Ubuntu or Debian.
 
 Edit `src/config.h` to match your personal preferences, like changing the
