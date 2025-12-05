@@ -85,6 +85,11 @@ typedef enum {
     EX_SHELLEX,
     EX_SOURCE,
     EX_TABOPEN,
+    EX_TABCLOSE,
+    EX_TABNEXT,
+    EX_TABPREV,
+    EX_TABFIRST,
+    EX_TABLAST,
 } ExCode;
 
 typedef enum {
@@ -140,7 +145,6 @@ static VbCmdResult ex_autocmd(Client *c, const ExArg *arg);
 #endif
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
-static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
 static void on_eval_script_finished_usermessage(GObject *source_object,
         GAsyncResult *result, gpointer user_data);
 static VbCmdResult ex_cleardata(Client *c, const ExArg *arg);
@@ -161,6 +165,7 @@ static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_shellex(Client *c, const ExArg *arg);
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg);
 static VbCmdResult ex_source(Client *c, const ExArg *arg);
+static VbCmdResult ex_tabcmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_handlers(Client *c, const ExArg *arg);
 
 static void update_current_selection_env_var(Client *c);
@@ -217,6 +222,12 @@ static ExInfo commands[] = {
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
     {"source",           EX_SOURCE,      ex_source,     EX_FLAG_RHS|EX_FLAG_EXP},
     {"tabopen",          EX_TABOPEN,     ex_open,       EX_FLAG_CMD},
+    {"tabclose",         EX_TABCLOSE,    ex_tabcmd,     EX_FLAG_NONE},
+    {"tabnext",          EX_TABNEXT,     ex_tabcmd,     EX_FLAG_NONE},
+    {"tabprev",          EX_TABPREV,     ex_tabcmd,     EX_FLAG_NONE},
+    {"tabprevious",      EX_TABPREV,     ex_tabcmd,     EX_FLAG_NONE},
+    {"tabfirst",         EX_TABFIRST,    ex_tabcmd,     EX_FLAG_NONE},
+    {"tablast",          EX_TABLAST,     ex_tabcmd,     EX_FLAG_NONE},
 };
 
 static struct {
@@ -1043,7 +1054,8 @@ static VbCmdResult ex_normal(Client *c, const ExArg *arg)
 static VbCmdResult ex_open(Client *c, const ExArg *arg)
 {
     if (arg->code == EX_TABOPEN) {
-        return vb_load_uri(c, &((Arg){TARGET_NEW, arg->rhs->str})) ? CMD_SUCCESS : CMD_ERROR;
+        /* Open in a new tab instead of a new instance */
+        return vb_load_uri(c, &((Arg){TARGET_TAB, arg->rhs->str})) ? CMD_SUCCESS : CMD_ERROR;
     }
     return vb_load_uri(c, &((Arg){TARGET_CURRENT, arg->rhs->str})) ? CMD_SUCCESS :CMD_ERROR;
 }
@@ -1300,6 +1312,37 @@ static VbCmdResult ex_shortcut(Client *c, const ExArg *arg)
 static VbCmdResult ex_source(Client *c, const ExArg *arg)
 {
     return ex_run_file(c, arg->rhs->str);
+}
+
+/**
+ * Handle tab management commands: tabclose, tabnext, tabprev, tabfirst, tablast
+ */
+static VbCmdResult ex_tabcmd(Client *c, const ExArg *arg)
+{
+    switch (arg->code) {
+        case EX_TABCLOSE:
+            vb_tab_close(c);
+            return CMD_SUCCESS;
+
+        case EX_TABNEXT:
+            vb_tab_next();
+            return CMD_SUCCESS;
+
+        case EX_TABPREV:
+            vb_tab_prev();
+            return CMD_SUCCESS;
+
+        case EX_TABFIRST:
+            vb_tab_goto(0);
+            return CMD_SUCCESS;
+
+        case EX_TABLAST:
+            vb_tab_goto(vb_get_tab_count() - 1);
+            return CMD_SUCCESS;
+
+        default:
+            return CMD_ERROR;
+    }
 }
 
 static void update_current_selection_env_var(Client *c)

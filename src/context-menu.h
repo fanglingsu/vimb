@@ -22,8 +22,9 @@
 
 #include "main.h"
 
+/* WebKitGTK 6.0: context-menu signal no longer has GdkEvent parameter */
 gboolean on_webview_context_menu(WebKitWebView *webview,
-        WebKitContextMenu *context_menu, GdkEvent *event,
+        WebKitContextMenu *context_menu,
         WebKitHitTestResult *hit_test_result, Client *c);
 
 #endif /* end of include guard: _CONTEXT_MENU_H */

@@ -36,12 +36,9 @@ static gboolean map_delete_by_lhs(Client *c, const char *lhs, int len, char mode
 static void showcmd(Client *c, int ch);
 static char *transchar(int c);
 static int utf_char2bytes(guint c, guchar *buf);
-/* GTK4: Event queueing system disabled - GdkEventKey and gtk_main_do_event removed */
-/* These functions are stubs now - event remapping may not work properly */
-static void queue_event(gpointer data);
+/* GTK4: Event queueing system simplified - GdkEventKey and gtk_main_do_event removed */
 static void process_events(void);
 static void free_events(void);
-static void process_event(gpointer data);
 
 extern struct Vimb vb;
 
@@ -338,8 +335,14 @@ gboolean map_delete(Client *c, const char *in, char mode)
  * into the internal used ASCII representation and put this into the key queue to be mapped.
  */
 gboolean on_map_key_pressed(GtkEventControllerKey *controller, guint keyval,
-                             guint keycode, GdkModifierType state, Client *c)
+                             guint keycode, GdkModifierType state, gpointer user_data)
 {
+    /* Always get the current client - tabs may have switched */
+    Client *c = vb_get_current_client();
+    if (!c) {
+        return FALSE;
+    }
+
     if (events.processing) {
         /* events are processing, pass all keys unmodified */
         return FALSE;
@@ -707,37 +710,20 @@ static int utf_char2bytes(guint c, guchar *buf)
  * TODO: Implement GTK4-compatible event replay mechanism */
 
 /**
- * Append an event into the queue (STUB - disabled in GTK4).
- */
-static void queue_event(gpointer data)
-{
-    /* STUB: Event queueing disabled in GTK4 migration */
-    (void)data;
-}
-
-/**
- * Process events in the queue (STUB - disabled in GTK4).
+ * Process events in the queue (simplified for GTK4).
  */
 static void process_events(void)
 {
-    /* STUB: Event processing disabled in GTK4 migration */
     free_events();
 }
 
 /**
- * Clear the events list (STUB - disabled in GTK4).
+ * Clear the events list.
  */
 static void free_events(void)
 {
-    /* STUB: Event list management disabled in GTK4 migration */
     if (events.list) {
         g_slist_free(events.list);
         events.list = NULL;
     }
-}
-
-static void process_event(gpointer data)
-{
-    /* STUB: Event replay disabled in GTK4 migration */
-    (void)data;
 }

@@ -41,8 +41,11 @@ Use custom configuration given as \fIFILE\fP.
 This will also be applied on new spawned instances.
 .TP
 .BI "\-e, \-\-embed " "WINID"
-.I WINID
-of an XEmbed-aware application, that Vimb will use as its parent.
+.B [DEPRECATED - GTK4 removed XEmbed support]
+.br
+This option is no longer functional.
+GTK4 removed GtkPlug/GtkSocket XEmbed support.
+For tabbed integration alternatives, see the project documentation.
 .TP
 .B "\-i, \-\-incognito"
 Start an instance with user data read-only (see \fIFILES\fP section).
@@ -974,8 +977,7 @@ Contains the pid of the running Vimb instance.
 Holds the X-Window id of the Vimb window.
 .TP
 .B VIMB_XID
-Holds the X-Window id of the Vimb window or of the embedding window if Vimb is
-compiled with XEMBED and started with the -e option.
+Holds the X-Window id of the Vimb window.
 .PD
 .EE
 .RE

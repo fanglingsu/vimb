@@ -73,7 +73,7 @@
 #define FILE_CLOSED  "closed"
 #define FILE_COOKIES "cookies"
 
-enum { TARGET_CURRENT, TARGET_RELATED, TARGET_NEW };
+enum { TARGET_CURRENT, TARGET_RELATED, TARGET_NEW, TARGET_TAB };
 
 typedef enum {
     RESULT_COMPLETE, RESULT_MORE, RESULT_ERROR
@@ -225,7 +225,8 @@ struct Mode {
 #define FLAG_COMPLETION     0x0004  /* marks active completion submode */
 #define FLAG_PASSTHROUGH    0x0008  /* don't handle any other keybind than <esc> */
 #define FLAG_NEW_WIN        0x0010  /* enforce opening of pages into new window */
-#define FLAG_IGNORE_FOCUS   0x0012  /* do not listen for focus change messages */
+#define FLAG_IGNORE_FOCUS   0x0020  /* do not listen for focus change messages */
+#define FLAG_NEW_TAB        0x0040  /* enforce opening of pages into new tab */
     unsigned int         flags;
 };
 
@@ -244,6 +245,7 @@ struct Client {
     Mode                *mode;                  /* current active browser mode */
     /* WebKitWebContext    *webctx; */          /* not used atm, use webkit_web_context_get_default() instead */
     GtkWidget           *window, *input;
+    GtkWidget           *tab_box;               /* the vbox containing webview+statusbar for this tab */
     WebKitWebView       *webview;
     WebKitFindController *finder;
     WebKitWebInspector  *inspector;
@@ -307,6 +309,12 @@ struct Vimb {
     WebKitNetworkSession *session;  /* WebKitGTK 6.0: network session for data/cookie management */
     GHashTable *webview_to_proxy;   /* maps page_id to dbus proxy for connected clients */
     GSList *pending_proxies;        /* list of pending ProxyPageId structs */
+
+    /* Tab support */
+    GtkWidget   *main_window;       /* single main window for all tabs */
+    GtkWidget   *notebook;          /* GtkNotebook containing all tabs */
+    GtkWidget   *inputbox;          /* shared inputbox at bottom */
+    GtkTextBuffer *input_buffer;    /* shared input buffer */
 };
 
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
@@ -330,5 +338,14 @@ const char *vb_register_get(Client *c, char buf);
 void vb_statusbar_update(Client *c);
 void vb_statusbar_show_hover_url(Client *c, VbLinkType type, const char *uri);
 void vb_gui_style_update(Client *c, const char *name, const char *value);
+
+/* Tab management functions */
+Client *vb_tab_new(Client *related, const char *uri);
+void vb_tab_close(Client *c);
+void vb_tab_next(void);
+void vb_tab_prev(void);
+void vb_tab_goto(int n);
+Client *vb_get_current_client(void);
+int vb_get_tab_count(void);
 
 #endif /* end of include guard: _MAIN_H */

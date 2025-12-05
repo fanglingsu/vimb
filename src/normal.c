@@ -486,13 +486,33 @@ static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info)
 
         case 'H':
         case 'h':
-            a.i = info->key2 == 'H' ? TARGET_NEW : TARGET_CURRENT;
+            a.i = info->key2 == 'H' ? TARGET_TAB : TARGET_CURRENT;
             a.s = NULL;
             vb_load_uri(c, &a);
             return RESULT_COMPLETE;
 
         case 'i':
             ext_proxy_focus_input(c);
+            return RESULT_COMPLETE;
+
+        case 't':
+            /* gt - go to next tab */
+            vb_tab_next();
+            return RESULT_COMPLETE;
+
+        case 'T':
+            /* gT - go to previous tab */
+            vb_tab_prev();
+            return RESULT_COMPLETE;
+
+        case '0':
+            /* g0 - go to first tab */
+            vb_tab_goto(0);
+            return RESULT_COMPLETE;
+
+        case '$':
+            /* g$ - go to last tab */
+            vb_tab_goto(vb_get_tab_count() - 1);
             return RESULT_COMPLETE;
 
         case 'U':
@@ -679,7 +699,7 @@ static VbResult normal_navigate(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info)
 {
-    Arg a = {info->key == 'P' ? TARGET_NEW : TARGET_CURRENT};
+    Arg a = {info->key == 'P' ? TARGET_TAB : TARGET_CURRENT};
 
     /* if register is not the default - read out of the internal register */
     if (info->reg) {
@@ -712,7 +732,7 @@ static VbResult normal_open(Client *c, const NormalCmdInfo *info)
         return RESULT_ERROR;
     }
 
-    a.i = info->key == 'U' ? TARGET_NEW : TARGET_CURRENT;
+    a.i = info->key == 'U' ? TARGET_TAB : TARGET_CURRENT;
     a.s = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
     if (!a.s) {
         return RESULT_ERROR;

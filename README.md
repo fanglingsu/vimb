@@ -46,6 +46,29 @@ the project page of [Vimb][].
 **Note:** Vimb has been migrated from GTK3/WebKit2GTK-4.1 to GTK4/WebKitGTK-6.0.
 This is a major version change that requires GTK4 and WebKitGTK 6.0 or later.
 
+### Native Tab Support
+
+Vimb now has **native tab support** using GTK4's `GtkNotebook`. All tabs share a 
+single window with a shared command input at the bottom.
+
+**Tab Commands:**
+- `:tabopen [uri]` or `:tabo [uri]` - Open URI in new tab
+- `:tabclose` - Close current tab
+- `:tabnext` or `:tabn` - Switch to next tab  
+- `:tabprev` or `:tabp` - Switch to previous tab
+- `:tabfirst` - Go to first tab
+- `:tablast` - Go to last tab
+
+**Keyboard Shortcuts (Normal Mode):**
+- `gt` - Go to next tab
+- `gT` - Go to previous tab
+- `g0` - Go to first tab
+- `g$` - Go to last tab
+
+**Note:** GTK4 has removed XEmbed support (GtkPlug/GtkSocket). The `-e, --embed` 
+flag is no longer functional. Native tabs replace the need for external tools 
+like `tabbed`.
+
 ## Install
 
 Edit `config.mk` to match your local setup. You might need to do this if

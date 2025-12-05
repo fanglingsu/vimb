@@ -68,7 +68,7 @@ static void marks_clear(Client *c);
 static void mode_free(Mode *mode);
 static void on_textbuffer_changed(GtkTextBuffer *textbuffer, gpointer user_data);
 static gboolean on_input_key_pressed(GtkEventControllerKey *controller, guint keyval,
-        guint keycode, GdkModifierType state, Client *c);
+        guint keycode, GdkModifierType state, gpointer user_data);
 /* WebKitGTK 6.0: download-started signal moved from WebKitWebContext to WebKitNetworkSession */
 static void on_webctx_download_started(WebKitNetworkSession *session,
         WebKitDownload *download, gpointer user_data);
@@ -129,10 +129,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview);
 static void on_found_text(WebKitFindController *finder, guint count, Client *c);
 static void on_failed_to_find_text(WebKitFindController *finder, Client *c);
 static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessage *message, Client *c);
-static void on_vertical_scroll(GDBusConnection *connection,
-        const char *sender_name, const char *object_path,
-        const char *interface_name, const char *signal_name,
-        GVariant *parameters, Client* c);
 static gboolean on_permission_request(WebKitWebView *webview,
         WebKitPermissionRequest *request, Client *c);
 /* GTK4: Scroll handling changed - GdkEvent is opaque, may need event controller */
@@ -145,6 +141,13 @@ static gboolean profileOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
 static gboolean autocmdOptionArgFunc(const gchar *option_name,
         const gchar *value, gpointer data, GError **error);
+/* Tab management */
+static void create_main_window(void);
+static void on_notebook_switch_page(GtkNotebook *notebook, GtkWidget *page,
+        guint page_num, gpointer user_data);
+static void update_tab_label(Client *c);
+static gboolean on_main_window_delete_event(GtkWidget *window, gpointer data);
+static void on_main_window_destroy(GtkWidget *window, gpointer data);
 
 struct Vimb vb;
 
@@ -460,6 +463,13 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
         set_title(c, uri);
     } else if (arg->i == TARGET_NEW) {
         spawn_new_instance(uri);
+    } else if (arg->i == TARGET_TAB) {
+        /* Open in a new tab */
+        Client *newclient = vb_tab_new(c, uri);
+        if (newclient) {
+            webkit_web_view_load_uri(newclient->webview, uri);
+            set_title(newclient, uri);
+        }
     } else { /* TARGET_RELATED */
         Client *newclient = client_new(c->webview);
         /* Load the uri into the new client. */
@@ -823,136 +833,32 @@ __attribute__((used)) static void client_destroy(Client *c)
 }
 
 /**
- * Creates a new client instance with it's own window.
+ * Creates a new client instance as a new tab.
  *
  * @webview:    Related webview or NULL if a client with an independent
- *              webview shoudl be created.
+ *              webview should be created.
  */
 static Client *client_new(WebKitWebView *webview)
 {
-    Client *c;
-
-    /* create the client */
-    /* Prepend the new client to the queue of clients. */
-    c          = g_slice_new0(Client);
-    c->next    = vb.clients;
-    vb.clients = c;
-
-    c->state.progress = 100;
-    c->config.shortcuts = shortcut_new();
-
-    completion_init(c);
-    map_init(c);
-    c->handler = handler_new();
-#ifdef FEATURE_AUTOCMD
-    autocmd_init(c);
-#endif
-
-    /* webview */
-    c->webview   = webview_new(c, webview);
-    c->finder    = webkit_web_view_get_find_controller(c->webview);
-    g_signal_connect(c->finder, "found-text", G_CALLBACK(on_found_text), c);
-    g_signal_connect(c->finder, "failed-to-find-text", G_CALLBACK(on_failed_to_find_text), c);
-    g_signal_connect(c->webview, "user-message-received", G_CALLBACK(on_user_message_received), c);
-
-    /* Get initial page ID (may change due to process isolation) */
-    c->page_id   = webkit_web_view_get_page_id(c->webview);
-    c->webview_id = (guint64)c->webview;
-
-    PRINT_DEBUG("Client created: webview=%p, page_id=%" G_GUINT64_FORMAT, c->webview, c->page_id);
-
-    c->inspector = webkit_web_view_get_inspector(c->webview);
-
-    return c;
+    /* Use the new tab-based client creation */
+    return vb_tab_new(NULL, NULL);
 }
 
+/**
+ * Show a client - for tabs this is handled by vb_tab_new.
+ * This function is kept for compatibility but doesn't do much now.
+ */
 static void client_show(WebKitWebView *webview, Client *c)
 {
-    GtkWidget *box;
-
-    c->window = create_window(c);
-
-    /* statusbar */
-    c->statusbar.box   = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
-    c->statusbar.mode  = gtk_label_new(NULL);
-    c->statusbar.left  = gtk_label_new(NULL);
-    c->statusbar.right = gtk_label_new(NULL);
-    c->statusbar.cmd   = gtk_label_new(NULL);
-    gtk_widget_set_name(GTK_WIDGET(c->statusbar.box), "statusbar");
-    gtk_label_set_ellipsize(GTK_LABEL(c->statusbar.left), PANGO_ELLIPSIZE_MIDDLE);
-    gtk_widget_set_halign(c->statusbar.left, GTK_ALIGN_START);
-    gtk_widget_set_halign(c->statusbar.mode, GTK_ALIGN_START);
-
-    /* GTK4: Use gtk_box_append instead of gtk_box_pack_start */
-    gtk_box_append(c->statusbar.box, c->statusbar.mode);
-    gtk_box_append(c->statusbar.box, c->statusbar.left);
-    gtk_widget_set_hexpand(c->statusbar.left, TRUE);
-    gtk_box_append(c->statusbar.box, c->statusbar.cmd);
-    gtk_box_append(c->statusbar.box, c->statusbar.right);
-
-    /* inputbox */
-    c->input  = gtk_text_view_new();
-    gtk_widget_set_name(c->input, "input");
-    c->buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(c->input));
-    g_signal_connect(c->buffer, "changed", G_CALLBACK(on_textbuffer_changed), c);
-    /* Make sure the user can see the typed text. */
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(c->input), GTK_WRAP_WORD_CHAR);
-
-    /* GTK4: Prevent default TAB behavior (focus navigation) so TAB can be used for completion */
-    /* Add event controller to capture TAB before default handling */
-    GtkEventControllerKey *input_key_controller = GTK_EVENT_CONTROLLER_KEY(gtk_event_controller_key_new());
-    gtk_widget_add_controller(c->input, GTK_EVENT_CONTROLLER(input_key_controller));
-    g_signal_connect(input_key_controller, "key-pressed",
-            G_CALLBACK(on_input_key_pressed), c);
-
-    /* pack the parts together */
-    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    /* GTK4: Use gtk_window_set_child instead of gtk_container_add */
-    gtk_window_set_child(GTK_WINDOW(c->window), box);
-    /* GTK4: Use gtk_box_append/prepend instead of pack_start/end */
-    gtk_box_append(GTK_BOX(box), GTK_WIDGET(c->webview));
-    gtk_widget_set_vexpand(GTK_WIDGET(c->webview), TRUE);
-    gtk_box_append(GTK_BOX(box), GTK_WIDGET(c->statusbar.box));
-    gtk_box_append(GTK_BOX(box), GTK_WIDGET(c->input));
-
-    /* Set the default style for statusbar and inputbox. */
-    /* GTK4: CSS providers are added to display, widgets are targeted by name/class in CSS */
-    /* The provider is already added to display in vimb_setup(), widgets use CSS selectors */
-
-    /* TODO separate initialization o setting from applying the values or
-     * allow to se the default values for different scopes. For now we can
-     * init the settings not in client_new because we need the access to some
-     * widget for some settings. */
-    setting_init(c);
-
-    /* GTK4: Use gtk_widget_set_visible for window */
-    gtk_widget_set_visible(c->window, TRUE);
-
-/* GTK4 removed XEmbed support - window IDs not available */
-/* #ifndef FEATURE_NO_XEMBED */
-/*     char *wid; */
-/*     wid = g_strdup_printf("%d", (int)GDK_WINDOW_XID(gtk_widget_get_window(c->window))); */
-/*     g_setenv("VIMB_WIN_ID", wid, TRUE); */
-/*     if (vb.embed) { */
-/*         char *xid; */
-/*         xid = g_strdup_printf("%d", (int)vb.embed); */
-/*         g_setenv("VIMB_XID", xid, TRUE); */
-/*         g_free(xid); */
-/*     } else { */
-/*         g_setenv("VIMB_XID", wid, TRUE); */
-/*     } */
-/*     g_free(wid); */
-/* #endif */
-
-    /* start client in normal mode */
-    vb_enter(c, 'n');
-
-    c->state.enable_register = TRUE;
-
-    /* read the config file */
-    ex_run_file(c, vb.files[FILES_CONFIG]);
+    /* For tabbed interface, the client is already shown when created via vb_tab_new */
+    /* This function is called after client_new for the initial tab */
+    (void)webview;
+    (void)c;
 }
 
+/* NOTE: create_window is no longer used - tabs use the main_window.
+ * Kept for potential future use or if someone wants to disable tabs. */
+__attribute__((unused))
 static GtkWidget *create_window(Client *c)
 {
     GtkWidget *window;
@@ -1079,8 +985,14 @@ static gboolean is_plausible_uri(const char *path)
  * This prevents default TAB behavior (focus navigation) so TAB can be used for completion.
  */
 static gboolean on_input_key_pressed(GtkEventControllerKey *controller, guint keyval,
-        guint keycode, GdkModifierType state, Client *c)
+        guint keycode, GdkModifierType state, gpointer user_data)
 {
+    /* Always get the current client - tabs may have switched */
+    Client *c = vb_get_current_client();
+    if (!c) {
+        return FALSE;
+    }
+
     /* Handle special keys when in ex mode and input has focus */
     if (c->mode->id == 'c' && gtk_widget_is_focus(c->input)) {
         /* Handle TAB and Shift+TAB for completion */
@@ -1208,6 +1120,7 @@ static void set_title(Client *c, const char *title)
 {
     OVERWRITE_STRING(c->state.title, title);
     update_title(c);
+    update_tab_label(c);
     g_setenv("VIMB_TITLE", title ? title : "", TRUE);
 }
 
@@ -1531,8 +1444,8 @@ static void on_webdownload_received_data(WebKitDownload *download,
  */
 static void on_webview_close(WebKitWebView *webview, Client *c)
 {
-    /* GTK4: Use gtk_window_destroy for windows */
-    gtk_window_destroy(GTK_WINDOW(c->window));
+    /* Close the tab instead of destroying window */
+    vb_tab_close(c);
 }
 
 /**
@@ -1603,9 +1516,19 @@ static void decide_navigation_action(Client *c, WebKitPolicyDecision *dec)
 
     button = webkit_navigation_action_get_mouse_button(a);
     mod    = webkit_navigation_action_get_modifiers(a);
+
+    /* Open in new tab if the new tab flag is set (from ;t hinting) */
+    if (c->mode->flags & FLAG_NEW_TAB) {
+        /* Remove the FLAG_NEW_TAB after the first use. */
+        c->mode->flags &= ~FLAG_NEW_TAB;
+
+        webkit_policy_decision_ignore(dec);
+        /* Open in a new tab */
+        vb_load_uri(c, &(Arg){TARGET_TAB, (char *)uri});
+    }
     /* Spawn new instance if the new win flag is set on the mode, or the
      * navigation was triggered by CTRL-LeftMouse or MiddleMouse. */
-    if ((c->mode->flags & FLAG_NEW_WIN)
+    else if ((c->mode->flags & FLAG_NEW_WIN)
         || (webkit_navigation_action_get_navigation_type(a) == WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
             && (button == 2 || (button == 1 && mod & GDK_CONTROL_MASK)))) {
 
@@ -1982,16 +1905,13 @@ static void on_window_destroy(GtkWidget *window, Client *c)
  */
 static gboolean quit(Client *c)
 {
-    /* Check if client and window are still valid before destroying */
+    /* Check if client is still valid */
     if (!c) {
         return FALSE;
     }
 
-    /* Destroy the main window to trigger the destruction of the client. */
-    /* GTK4: Use gtk_window_destroy for windows - check if window still exists */
-    if (c->window && GTK_IS_WINDOW(c->window)) {
-        gtk_window_destroy(GTK_WINDOW(c->window));
-    }
+    /* Close the tab */
+    vb_tab_close(c);
 
     /* Remove this from the list of event sources. */
     return FALSE;
@@ -2037,8 +1957,14 @@ static void register_cleanup(Client *c)
 
 static void update_title(Client *c)
 {
-    /* GTK4: Check if window still exists before accessing it */
-    if (!c || !c->window || !GTK_IS_WINDOW(c->window)) {
+    /* Only update main window title for the current tab */
+    if (!c || !vb.main_window || !GTK_IS_WINDOW(vb.main_window)) {
+        return;
+    }
+
+    /* Only update if this is the current tab */
+    Client *current = vb_get_current_client();
+    if (c != current) {
         return;
     }
 
@@ -2049,14 +1975,14 @@ static void update_title(Client *c)
                 "[%i%%] %s",
                 c->state.progress,
                 c->state.title ? c->state.title : "");
-        gtk_window_set_title(GTK_WINDOW(c->window), title);
+        gtk_window_set_title(GTK_WINDOW(vb.main_window), title);
         g_free(title);
 
         return;
     }
 #endif
     if (c->state.title) {
-        gtk_window_set_title(GTK_WINDOW(c->window), c->state.title);
+        gtk_window_set_title(GTK_WINDOW(vb.main_window), c->state.title);
     }
 }
 
@@ -2227,6 +2153,448 @@ static void vimb_setup(void)
                 GTK_STYLE_PROVIDER(vb.style_provider),
                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
     }
+
+    /* Create the main window with notebook for tabs */
+    create_main_window();
+}
+
+/**
+ * Create the main window with GtkNotebook for tabs and shared inputbox.
+ */
+static void create_main_window(void)
+{
+    GtkWidget *main_box;
+
+    /* Create the main window */
+    vb.main_window = gtk_window_new();
+    gtk_window_set_title(GTK_WINDOW(vb.main_window), PROJECT_UCFIRST);
+    gtk_window_set_default_size(GTK_WINDOW(vb.main_window), WIN_WIDTH, WIN_HEIGHT);
+    if (!vb.no_maximize) {
+        gtk_window_maximize(GTK_WINDOW(vb.main_window));
+    }
+
+#ifdef GUI_WINDOW_BACKGROUND_COLOR
+    {
+        GtkCssProvider *provider = gtk_css_provider_new();
+        gchar *css = g_strdup_printf("window { background-color: %s; }", GUI_WINDOW_BACKGROUND_COLOR);
+        gtk_css_provider_load_from_string(provider, css);
+        GdkDisplay *display = gtk_widget_get_display(vb.main_window);
+        gtk_style_context_add_provider_for_display(display,
+            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        g_free(css);
+        g_object_unref(provider);
+    }
+#endif
+
+    /* Connect window signals */
+    g_signal_connect(vb.main_window, "close-request", G_CALLBACK(on_main_window_delete_event), NULL);
+    g_signal_connect(vb.main_window, "destroy", G_CALLBACK(on_main_window_destroy), NULL);
+
+    /* Create main vertical box */
+    main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_window_set_child(GTK_WINDOW(vb.main_window), main_box);
+
+    /* Create notebook for tabs */
+    vb.notebook = gtk_notebook_new();
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(vb.notebook), TRUE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(vb.notebook), FALSE);
+    gtk_widget_set_vexpand(vb.notebook, TRUE);
+    gtk_box_append(GTK_BOX(main_box), vb.notebook);
+
+    /* Connect notebook signals */
+    g_signal_connect(vb.notebook, "switch-page", G_CALLBACK(on_notebook_switch_page), NULL);
+
+    /* Create shared inputbox */
+    vb.inputbox = gtk_text_view_new();
+    gtk_widget_set_name(vb.inputbox, "input");
+    vb.input_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(vb.inputbox));
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(vb.inputbox), GTK_WRAP_WORD_CHAR);
+    gtk_box_append(GTK_BOX(main_box), vb.inputbox);
+
+    /* Add key controller to main window for keyboard input */
+    GtkEventController *key_controller = gtk_event_controller_key_new();
+    gtk_widget_add_controller(vb.main_window, key_controller);
+    g_signal_connect(key_controller, "key-pressed", G_CALLBACK(on_map_key_pressed), NULL);
+
+    /* Add key controller to inputbox for special key handling */
+    GtkEventControllerKey *input_key_controller = GTK_EVENT_CONTROLLER_KEY(gtk_event_controller_key_new());
+    gtk_widget_add_controller(vb.inputbox, GTK_EVENT_CONTROLLER(input_key_controller));
+    g_signal_connect(input_key_controller, "key-pressed", G_CALLBACK(on_input_key_pressed), NULL);
+
+    /* Show the main window */
+    gtk_widget_set_visible(vb.main_window, TRUE);
+}
+
+/**
+ * Callback for notebook page switch.
+ */
+static void on_notebook_switch_page(GtkNotebook *notebook, GtkWidget *page,
+        guint page_num, gpointer user_data)
+{
+    Client *c;
+    Client *old_client;
+
+    /* Find the client for this page */
+    for (c = vb.clients; c; c = c->next) {
+        if (c->tab_box == page) {
+            /* Update window title for this tab */
+            if (c->state.title) {
+                gtk_window_set_title(GTK_WINDOW(vb.main_window), c->state.title);
+            }
+
+            /* Disconnect input buffer signal from all clients first */
+            for (old_client = vb.clients; old_client; old_client = old_client->next) {
+                g_signal_handlers_disconnect_by_func(vb.input_buffer,
+                        G_CALLBACK(on_textbuffer_changed), old_client);
+            }
+
+            /* Connect input buffer signal for current client */
+            g_signal_connect(vb.input_buffer, "changed",
+                    G_CALLBACK(on_textbuffer_changed), c);
+
+            /* Give focus to the webview of the new tab */
+            gtk_widget_grab_focus(GTK_WIDGET(c->webview));
+
+            /* Update statusbar for the new tab */
+            vb_statusbar_update(c);
+
+            break;
+        }
+    }
+}
+
+/**
+ * Callback for main window close request.
+ */
+static gboolean on_main_window_delete_event(GtkWidget *window, gpointer data)
+{
+    /* Check if any client has running downloads */
+    for (Client *c = vb.clients; c; c = c->next) {
+        if (c->state.downloads) {
+            Client *current = vb_get_current_client();
+            if (current) {
+                vb_echo_force(current, MSG_ERROR, TRUE,
+                    "Can't quit: there are running downloads. Use :q! to force quit");
+            }
+            return TRUE; /* Prevent closing */
+        }
+    }
+    return FALSE; /* Allow closing */
+}
+
+/**
+ * Callback for main window destroy.
+ */
+static void on_main_window_destroy(GtkWidget *window, gpointer data)
+{
+    /* Clean up all clients */
+    while (vb.clients) {
+        Client *c = vb.clients;
+        vb.clients = c->next;
+
+        if (c->state.search.last_query) {
+            g_free(c->state.search.last_query);
+        }
+        completion_cleanup(c);
+        map_cleanup(c);
+        register_cleanup(c);
+        setting_cleanup(c);
+#ifdef FEATURE_AUTOCMD
+        autocmd_cleanup(c);
+#endif
+        handler_free(c->handler);
+        shortcut_free(c->config.shortcuts);
+        g_slice_free(Client, c);
+    }
+
+    /* Quit the main loop */
+    if (main_loop && g_main_loop_is_running(main_loop)) {
+        g_main_loop_quit(main_loop);
+    }
+}
+
+/**
+ * Update the tab label for a client.
+ */
+static void update_tab_label(Client *c)
+{
+    GtkWidget *label;
+    int page_num;
+
+    if (!c || !c->tab_box || !vb.notebook) {
+        return;
+    }
+
+    page_num = gtk_notebook_page_num(GTK_NOTEBOOK(vb.notebook), c->tab_box);
+    if (page_num < 0) {
+        return;
+    }
+
+    label = gtk_notebook_get_tab_label(GTK_NOTEBOOK(vb.notebook), c->tab_box);
+    if (label && GTK_IS_LABEL(label)) {
+        const char *title = c->state.title ? c->state.title : "New Tab";
+        /* Truncate long titles */
+        char *short_title = g_strndup(title, 30);
+        if (strlen(title) > 30) {
+            char *tmp = g_strdup_printf("%s...", short_title);
+            g_free(short_title);
+            short_title = tmp;
+        }
+        gtk_label_set_text(GTK_LABEL(label), short_title);
+        g_free(short_title);
+    }
+}
+
+/**
+ * Create a new tab with its own client.
+ *
+ * @related: Related client (for creating related webviews) or NULL.
+ * @uri:     URI to load in the new tab (can be NULL).
+ * @return:  The new client or NULL on error.
+ */
+Client *vb_tab_new(Client *related, const char *uri)
+{
+    Client *c;
+    GtkWidget *tab_label;
+    int page_num;
+
+    /* Create the client */
+    c = g_slice_new0(Client);
+    c->next = vb.clients;
+    vb.clients = c;
+
+    c->state.progress = 100;
+    c->config.shortcuts = shortcut_new();
+
+    completion_init(c);
+    map_init(c);
+    c->handler = handler_new();
+#ifdef FEATURE_AUTOCMD
+    autocmd_init(c);
+#endif
+
+    /* Create webview (related to existing if provided) */
+    c->webview = webview_new(c, related ? related->webview : NULL);
+    c->finder = webkit_web_view_get_find_controller(c->webview);
+    g_signal_connect(c->finder, "found-text", G_CALLBACK(on_found_text), c);
+    g_signal_connect(c->finder, "failed-to-find-text", G_CALLBACK(on_failed_to_find_text), c);
+    g_signal_connect(c->webview, "user-message-received", G_CALLBACK(on_user_message_received), c);
+
+    c->page_id = webkit_web_view_get_page_id(c->webview);
+    c->webview_id = (guint64)c->webview;
+    c->inspector = webkit_web_view_get_inspector(c->webview);
+
+    /* Create tab content box (webview + statusbar) */
+    c->tab_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+    /* Statusbar */
+    c->statusbar.box = GTK_BOX(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
+    c->statusbar.mode = gtk_label_new(NULL);
+    c->statusbar.left = gtk_label_new(NULL);
+    c->statusbar.right = gtk_label_new(NULL);
+    c->statusbar.cmd = gtk_label_new(NULL);
+    gtk_widget_set_name(GTK_WIDGET(c->statusbar.box), "statusbar");
+    gtk_label_set_ellipsize(GTK_LABEL(c->statusbar.left), PANGO_ELLIPSIZE_MIDDLE);
+    gtk_widget_set_halign(c->statusbar.left, GTK_ALIGN_START);
+    gtk_widget_set_halign(c->statusbar.mode, GTK_ALIGN_START);
+
+    gtk_box_append(c->statusbar.box, c->statusbar.mode);
+    gtk_box_append(c->statusbar.box, c->statusbar.left);
+    gtk_widget_set_hexpand(c->statusbar.left, TRUE);
+    gtk_box_append(c->statusbar.box, c->statusbar.cmd);
+    gtk_box_append(c->statusbar.box, c->statusbar.right);
+
+    /* Pack webview and statusbar into tab box */
+    gtk_box_append(GTK_BOX(c->tab_box), GTK_WIDGET(c->webview));
+    gtk_widget_set_vexpand(GTK_WIDGET(c->webview), TRUE);
+    gtk_box_append(GTK_BOX(c->tab_box), GTK_WIDGET(c->statusbar.box));
+
+    /* Use shared inputbox and buffer */
+    c->input = vb.inputbox;
+    c->buffer = vb.input_buffer;
+    c->window = vb.main_window;
+
+    /* Add key controller to the tab_box for keyboard input */
+    GtkEventController *key_controller = gtk_event_controller_key_new();
+    gtk_widget_add_controller(c->tab_box, key_controller);
+    g_signal_connect(key_controller, "key-pressed", G_CALLBACK(on_map_key_pressed), c);
+
+    /* Create tab label */
+    tab_label = gtk_label_new("New Tab");
+    gtk_label_set_ellipsize(GTK_LABEL(tab_label), PANGO_ELLIPSIZE_END);
+    gtk_label_set_width_chars(GTK_LABEL(tab_label), 15);
+
+    /* Add tab to notebook */
+    page_num = gtk_notebook_append_page(GTK_NOTEBOOK(vb.notebook), c->tab_box, tab_label);
+    gtk_widget_set_visible(c->tab_box, TRUE);
+
+    /* Initialize settings */
+    setting_init(c);
+
+    /* Start in normal mode */
+    vb_enter(c, 'n');
+    c->state.enable_register = TRUE;
+
+    /* Read config file */
+    ex_run_file(c, vb.files[FILES_CONFIG]);
+
+    /* Switch to the new tab and focus its webview */
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(vb.notebook), page_num);
+    gtk_widget_grab_focus(GTK_WIDGET(c->webview));
+
+    return c;
+}
+
+/**
+ * Close the current tab.
+ */
+void vb_tab_close(Client *c)
+{
+    int page_num;
+    Client *p;
+
+    if (!c || !c->tab_box) {
+        return;
+    }
+
+    /* Check for running downloads */
+    if (c->state.downloads) {
+        vb_echo_force(c, MSG_ERROR, TRUE,
+            "Can't close tab: there are running downloads. Use :q! to force");
+        return;
+    }
+
+    /* Write last URL to closed file */
+    if (c->state.uri && vb.config.closed_max && vb.files[FILES_CLOSED]) {
+        util_file_prepend_line(vb.files[FILES_CLOSED], c->state.uri, vb.config.closed_max);
+    }
+
+    /* Find page number */
+    page_num = gtk_notebook_page_num(GTK_NOTEBOOK(vb.notebook), c->tab_box);
+
+    /* Remove from notebook */
+    if (page_num >= 0) {
+        gtk_notebook_remove_page(GTK_NOTEBOOK(vb.notebook), page_num);
+    }
+
+    /* Remove from client list */
+    for (p = vb.clients; p && p->next != c; p = p->next);
+    if (p) {
+        p->next = c->next;
+    } else {
+        vb.clients = c->next;
+    }
+
+    /* Clean up client resources */
+    if (c->state.search.last_query) {
+        g_free(c->state.search.last_query);
+    }
+    completion_cleanup(c);
+    map_cleanup(c);
+    register_cleanup(c);
+    setting_cleanup(c);
+#ifdef FEATURE_AUTOCMD
+    autocmd_cleanup(c);
+#endif
+    handler_free(c->handler);
+    shortcut_free(c->config.shortcuts);
+    g_slice_free(Client, c);
+
+    /* If no more tabs, quit */
+    if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(vb.notebook)) == 0) {
+        gtk_window_destroy(GTK_WINDOW(vb.main_window));
+    }
+}
+
+/**
+ * Switch to the next tab.
+ */
+void vb_tab_next(void)
+{
+    int current, n_pages;
+
+    if (!vb.notebook) return;
+
+    current = gtk_notebook_get_current_page(GTK_NOTEBOOK(vb.notebook));
+    n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(vb.notebook));
+
+    if (current < n_pages - 1) {
+        gtk_notebook_set_current_page(GTK_NOTEBOOK(vb.notebook), current + 1);
+    } else {
+        /* Wrap to first tab */
+        gtk_notebook_set_current_page(GTK_NOTEBOOK(vb.notebook), 0);
+    }
+}
+
+/**
+ * Switch to the previous tab.
+ */
+void vb_tab_prev(void)
+{
+    int current, n_pages;
+
+    if (!vb.notebook) return;
+
+    current = gtk_notebook_get_current_page(GTK_NOTEBOOK(vb.notebook));
+    n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(vb.notebook));
+
+    if (current > 0) {
+        gtk_notebook_set_current_page(GTK_NOTEBOOK(vb.notebook), current - 1);
+    } else {
+        /* Wrap to last tab */
+        gtk_notebook_set_current_page(GTK_NOTEBOOK(vb.notebook), n_pages - 1);
+    }
+}
+
+/**
+ * Go to tab n (0-indexed).
+ */
+void vb_tab_goto(int n)
+{
+    int n_pages;
+
+    if (!vb.notebook) return;
+
+    n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(vb.notebook));
+    if (n >= 0 && n < n_pages) {
+        gtk_notebook_set_current_page(GTK_NOTEBOOK(vb.notebook), n);
+    }
+}
+
+/**
+ * Get the currently active client (current tab).
+ */
+Client *vb_get_current_client(void)
+{
+    GtkWidget *page;
+    int page_num;
+
+    if (!vb.notebook) return vb.clients;
+
+    page_num = gtk_notebook_get_current_page(GTK_NOTEBOOK(vb.notebook));
+    if (page_num < 0) return vb.clients;
+
+    page = gtk_notebook_get_nth_page(GTK_NOTEBOOK(vb.notebook), page_num);
+    if (!page) return vb.clients;
+
+    /* Find the client with this tab_box */
+    for (Client *c = vb.clients; c; c = c->next) {
+        if (c->tab_box == page) {
+            return c;
+        }
+    }
+
+    return vb.clients;
+}
+
+/**
+ * Get the number of open tabs.
+ */
+int vb_get_tab_count(void)
+{
+    if (!vb.notebook) return 0;
+    return gtk_notebook_get_n_pages(GTK_NOTEBOOK(vb.notebook));
 }
 
 /**
@@ -2332,7 +2700,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
 {
     WebKitWebView *new;
     WebKitUserContentManager *ucm;
-    WebKitWebContext *webcontext;
 
     /* create a new webview */
     ucm = webkit_user_content_manager_new();
@@ -2382,10 +2749,6 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     gtk_widget_add_controller(GTK_WIDGET(new), GTK_EVENT_CONTROLLER(webview_key_controller));
     g_signal_connect(webview_key_controller, "key-pressed", G_CALLBACK(on_map_key_pressed), c);
 
-    webcontext = webkit_web_view_get_context(new);
-    /* WebKitGTK 6.0: download-started signal is connected once in vimb_setup() to vb.session */
-    /* No need to connect per-webview - downloads are handled at the session level */
-
     /* Setup script message handlers. */
     /* WebKitGTK 6.0: Third parameter specifies world name (NULL for default world) */
     webkit_user_content_manager_register_script_message_handler(ucm, "focus", NULL);
@@ -2424,8 +2787,6 @@ static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessa
     guint64 pageid_from_ext;
     guint64 pageid_from_view;
     GVariant *params;
-    GSList *item;
-    GDBusProxy *found_proxy = NULL;
 
     name = webkit_user_message_get_name(message);
 
@@ -2459,27 +2820,6 @@ static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessa
 
 
     return TRUE;
-}
-
-/**
- * Listen to the VerticalScroll signal and set the scroll percent value on the
- * client to update the statusbar.
- */
-static void on_vertical_scroll(GDBusConnection *connection,
-        const char *sender_name, const char *object_path,
-        const char *interface_name, const char *signal_name,
-        GVariant *parameters, Client* c)
-{
-    guint64 max, top;
-    guint percent;
-    guint64 pageid;
-
-    g_variant_get(parameters, "(ttqt)", &pageid, &max, &percent, &top);
-    c->state.scroll_max     = max;
-    c->state.scroll_percent = percent;
-    c->state.scroll_top     = top;
-
-    vb_statusbar_update(c);
 }
 
 /* Helper callback to store dialog response */

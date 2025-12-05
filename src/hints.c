@@ -46,8 +46,6 @@ extern struct Vimb vb;
 
 static gboolean call_hints_function(Client *c, const char *func, const char* args,
         gboolean sync);
-static void on_hint_function_finished(GDBusProxy *proxy, GAsyncResult *result,
-        Client *c);
 static void on_hint_function_finished_usermessage(GObject *source_object,
         GAsyncResult *result, gpointer user_data);
 static gboolean hint_function_check_result(Client *c, GVariant *return_value);
@@ -356,12 +354,11 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
         if (!hints.gmode && c->mode->id == 'c') {
             vb_enter(c, 'n');
         }
-        /* If open in new window hinting is use, set a flag on the mode after
+        /* If open in new tab/window hinting is used, set a flag on the mode after
          * changing to normal mode. This is used in on_webview_decide_policy
-         * to enforce opening into new instance for the next navigation
-         * action. */
+         * to enforce opening into new tab for the next navigation action. */
         if (hints.mode == 't') {
-            c->mode->flags |= FLAG_NEW_WIN;
+            c->mode->flags |= FLAG_NEW_TAB;
         }
     } else if (!strncmp(value, "INSERT:", 7)) {
         fire_timeout(c, FALSE);
@@ -386,7 +383,7 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
             case 'i':
             case 'I':
                 a.s = v;
-                a.i = (hints.mode == 'I') ? TARGET_NEW : TARGET_CURRENT;
+                a.i = (hints.mode == 'I') ? TARGET_TAB : TARGET_CURRENT;
                 vb_load_uri(c, &a);
                 break;
 
