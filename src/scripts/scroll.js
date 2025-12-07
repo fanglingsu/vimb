@@ -1,4 +1,4 @@
-function vbscroll(mode, scrollStep, count) {
+function vbscroll(mode, scrollStep, count, smooth) {
     var w = window,
         d = document,
         x = y = 0,
@@ -59,10 +59,12 @@ function vbscroll(mode, scrollStep, count) {
         default:
             return 1;
     }
-    if (rel) {
-        w.scrollBy(x, y);
-    } else {
-        w.scroll(x, y);
-    }
+
+    var scroller = rel ? w.scrollBy : w.scroll;
+    scroller({
+        top: y,
+        left: x,
+        behavior: smooth ? "smooth" : "instant",
+    });
     return 0;
 }

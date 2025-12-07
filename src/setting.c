@@ -66,6 +66,7 @@ static int histignore(Client *c, const char *name, DataType type, void *value, v
 static int intelligent_tracking_prevention(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_scripts(Client *c, const char *name, DataType type, void *value, void *data);
 static int user_style(Client *c, const char *name, DataType type, void *value, void *data);
+static int smooth_scrolling(Client *c, const char *name, DataType type, void *value, void *data);
 static int statusbar(Client *c, const char *name, DataType type, void *value, void *data);
 static int tls_policy(Client *c, const char *name, DataType type, void *value, void *data);
 static int webkit(Client *c, const char *name, DataType type, void *value, void *data);
@@ -144,7 +145,7 @@ void setting_init(Client *c)
     setting_add(c, "scripts", TYPE_BOOLEAN, &on, webkit, 0, "enable-javascript");
     setting_add(c, "serif-font", TYPE_CHAR, &"serif", webkit, 0, "serif-font-family");
     setting_add(c, "site-specific-quirks", TYPE_BOOLEAN, &off, webkit, 0, "enable-site-specific-quirks");
-    setting_add(c, "smooth-scrolling", TYPE_BOOLEAN, &off, webkit, 0, "enable-smooth-scrolling");
+    setting_add(c, "smooth-scrolling", TYPE_BOOLEAN, &off, smooth_scrolling, 0, NULL);
     setting_add(c, "spatial-navigation", TYPE_BOOLEAN, &off, webkit, 0, "enable-spatial-navigation");
     setting_add(c, "tabs-to-links", TYPE_BOOLEAN, &on, webkit, 0, "enable-tabs-to-links");
     setting_add(c, "webaudio", TYPE_BOOLEAN, &off, webkit, 0, "enable-webaudio");
@@ -791,6 +792,16 @@ static int user_style(Client *c, const char *name, DataType type, void *value, v
             WEBKIT_USER_STYLE_LEVEL_AUTHOR, NULL, NULL);
     webkit_user_content_manager_add_style_sheet(ucm, style);
     webkit_user_style_sheet_unref(style);
+
+    return CMD_SUCCESS;
+}
+
+static int smooth_scrolling(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    WebKitSettings *settings = webkit_web_view_get_settings(c->webview);
+
+    webkit_settings_set_enable_smooth_scrolling(settings, *(gboolean*) value);
+    c->config.smooth_scrolling = *(gboolean*) value;
 
     return CMD_SUCCESS;
 }

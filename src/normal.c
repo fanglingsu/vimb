@@ -785,7 +785,8 @@ static VbResult normal_scroll(Client *c, const NormalCmdInfo *info)
 {
     char *js;
 
-    js = g_strdup_printf("vbscroll('%c',%d,%d);", info->key, c->config.scrollstep, info->count);
+    js = g_strdup_printf("vbscroll('%c',%d,%d,%d);", info->key, c->config.scrollstep,
+            info->count, c->config.smooth_scrolling);
     ext_proxy_eval_script(c, js, NULL);
     g_free(js);
 
