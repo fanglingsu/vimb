@@ -264,6 +264,7 @@ struct Client {
         guint                   default_zoom;   /* default zoom level in percent */
         Shortcut                *shortcuts;
         gboolean                statusbar_show_settings;
+        gboolean                smooth_scrolling;
         regex_t                 histignore_preg;
     } config;
     struct {
