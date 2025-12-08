@@ -458,6 +458,7 @@ static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info)
     	return RESULT_ERROR;
     }
     g_variant_get(variant, "(bs)", &focused, NULL);
+    g_variant_unref(variant);
     if (!focused) {
         ext_proxy_focus_input(c);
     }

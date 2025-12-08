@@ -121,14 +121,22 @@ VbResult input_open_editor(Client *c)
 
     /* get the selected input element */
     jsreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.value");
+    if (!jsreturn) {
+        return RESULT_ERROR;
+    }
     g_variant_get(jsreturn, "(bs)", &success, &text);
+    g_variant_unref(jsreturn);
 
     if (!success || !text) {
         return RESULT_ERROR;
     }
 
     idreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.id");
+    if (!idreturn) {
+        return RESULT_ERROR;
+    }
     g_variant_get(idreturn, "(bs)", &success, &id);
+    g_variant_unref(idreturn);
 
     /* Special case: the input element does not have an id assigned to it */
     if (!success || !*id) {

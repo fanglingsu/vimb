@@ -983,6 +983,7 @@ static gboolean is_plausible_uri(const char *path)
 /**
  * Handle key presses in the input box (GtkTextView).
  * This prevents default TAB behavior (focus navigation) so TAB can be used for completion.
+ * Also handles hint mode key filtering to prevent characters from being inserted.
  */
 static gboolean on_input_key_pressed(GtkEventControllerKey *controller, guint keyval,
         guint keycode, GdkModifierType state, gpointer user_data)
@@ -1025,6 +1026,18 @@ static gboolean on_input_key_pressed(GtkEventControllerKey *controller, guint ke
             if (ex_keypress(c, KEY_DOWN) == RESULT_COMPLETE) {
                 /* Key was handled, prevent default behavior */
                 return TRUE;
+            }
+        }
+        /* In hint mode, intercept hint-key characters to prevent them from
+         * being inserted into the buffer. This allows hint filtering by
+         * number to work correctly. */
+        else if (c->mode->flags & FLAG_HINTING) {
+            guint32 uc = gdk_keyval_to_unicode(keyval);
+            if (uc >= 0x20 && uc < 0x80) {
+                /* Process printable ASCII through ex_keypress */
+                if (ex_keypress(c, (int)uc) == RESULT_COMPLETE) {
+                    return TRUE;
+                }
             }
         }
     }

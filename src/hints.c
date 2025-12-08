@@ -286,6 +286,9 @@ static gboolean call_hints_function(Client *c, const char *func, const char* arg
         GVariant *result;
         result  = ext_proxy_eval_script_sync(c, jscode);
         success = hint_function_check_result(c, result);
+        if (result) {
+            g_variant_unref(result);
+        }
     } else {
         /* WebKitGTK 6.0: Use WebKitUserMessage callback */
         ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)on_hint_function_finished_usermessage);

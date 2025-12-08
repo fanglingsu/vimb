@@ -62,15 +62,61 @@ void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
     }
 }
 
+/* Data structure for synchronous evaluation */
+typedef struct {
+    GVariant *result;
+    gboolean done;
+} SyncEvalData;
+
+/* Callback for synchronous JavaScript evaluation */
+static void on_sync_eval_finished(GObject *source_object, GAsyncResult *result, gpointer user_data)
+{
+    SyncEvalData *data = (SyncEvalData *)user_data;
+    WebKitWebView *webview = WEBKIT_WEB_VIEW(source_object);
+    GError *error = NULL;
+    WebKitUserMessage *reply;
+
+    reply = webkit_web_view_send_message_to_page_finish(webview, result, &error);
+    if (error) {
+        g_warning("Sync eval script failed: %s", error->message);
+        g_error_free(error);
+        data->result = NULL;
+    } else if (reply) {
+        /* Copy the parameters since the reply will be freed */
+        GVariant *params = webkit_user_message_get_parameters(reply);
+        if (params) {
+            data->result = g_variant_ref(params);
+        }
+        g_object_unref(reply);
+    }
+
+    data->done = TRUE;
+}
+
 /**
  * Evaluate JavaScript synchronously using WebKitUserMessage.
  * WebKitGTK 6.0: Replaces D-Bus EvalJs method.
+ * Uses GLib main loop iteration to wait for the async result.
  */
 GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
 {
-    /* For now, use async version - sync eval is rare */
-    ext_proxy_eval_script(c, js, NULL);
-    return NULL;
+    WebKitUserMessage *message;
+    SyncEvalData data = { NULL, FALSE };
+    GMainContext *context;
+
+    g_return_val_if_fail(c != NULL && c->webview != NULL, NULL);
+
+    message = webkit_user_message_new("EvalJs", g_variant_new("(s)", js));
+    webkit_web_view_send_message_to_page(c->webview, message, NULL,
+        on_sync_eval_finished, &data);
+
+    /* Iterate the main loop until we get a response */
+    context = g_main_context_default();
+    while (!data.done) {
+        g_main_context_iteration(context, TRUE);
+    }
+
+    return data.result;
 }
 
 /**
@@ -153,15 +199,15 @@ char *ext_proxy_get_current_selection(Client *c)
 
     js       = g_strdup_printf("getSelection().toString();");
     jsreturn = ext_proxy_eval_script_sync(c, js);
+    g_free(js);
 
     if (jsreturn == NULL) {
         g_warning("cannot get current selection: failed to evaluate js");
-        g_free(js);
         return NULL;
     }
 
     g_variant_get(jsreturn, "(bs)", &success, &selection);
-    g_free(js);
+    g_variant_unref(jsreturn);
 
     if (!success) {
         g_warning("can not get current selection: %s", selection);
