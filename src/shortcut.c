@@ -166,7 +166,7 @@ char *shortcut_get_uri(Shortcut *sc, const char *string)
     return uri;
 }
 
-gboolean shortcut_fill_completion(Shortcut *sc, GtkListStore *store, const char *input)
+gboolean shortcut_fill_completion(Shortcut *sc, GListStore *store, const char *input)
 {
     GList *src = g_hash_table_get_keys(sc->table);
     gboolean found = util_fill_completion(store, input, src);

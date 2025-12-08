@@ -468,25 +468,26 @@ void ex_input_changed(Client *c, const char *text)
     }
 }
 
-gboolean ex_fill_completion(GtkListStore *store, const char *input)
+gboolean ex_fill_completion(GListStore *store, const char *input)
 {
-    GtkTreeIter iter;
     ExInfo *cmd;
     gboolean found = FALSE;
 
     if (!input || *input == '\0') {
         for (int i = 0; i < LENGTH(commands); i++) {
             cmd = &commands[i];
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, cmd->name, -1);
+            CompletionItem *item = completion_item_new(cmd->name, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
     } else {
         for (int i = 0; i < LENGTH(commands); i++) {
             cmd = &commands[i];
             if (g_str_has_prefix(cmd->name, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, cmd->name, -1);
+                CompletionItem *item = completion_item_new(cmd->name, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 found = TRUE;
             }
         }
@@ -1364,13 +1365,23 @@ static void update_current_selection_env_var(Client *c)
  * put the matched data back to inputbox, and prepares the tree list store
  * model containing matched values.
  */
+/* Comparison function for sorting completion items by their first field */
+static gint completion_item_compare(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+    CompletionItem *item_a = COMPLETION_ITEM((gpointer)a);
+    CompletionItem *item_b = COMPLETION_ITEM((gpointer)b);
+    const char *first_a = completion_item_get_first(item_a);
+    const char *first_b = completion_item_get_first(item_b);
+    return g_strcmp0(first_a, first_b);
+}
+
 static gboolean complete(Client *c, short direction)
 {
     char *input;            /* input read from inputbox */
     const char *in;         /* pointer to input that we move */
     gboolean found = FALSE;
     gboolean sort  = TRUE;
-    GtkListStore *store;
+    GListStore *store;
 
     input = vb_input_get_text(c);
     /* if completion was already started move to the next/prev item */
@@ -1391,7 +1402,7 @@ static gboolean complete(Client *c, short direction)
         completion_clean(c);
     }
 
-    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
+    store = completion_store_new();
 
     in = (const char*)input;
     if (*in == ':') {
@@ -1514,15 +1525,15 @@ static gboolean complete(Client *c, short direction)
         }
     }
 
-    /* if the input could be parsed and the tree view could be filled */
+    /* if the input could be parsed and the list store could be filled */
     if (sort) {
-        gtk_tree_sortable_set_sort_column_id(
-            GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING
-        );
+        g_list_store_sort(store, completion_item_compare, NULL);
     }
 
     if (found) {
-        completion_create(c, GTK_TREE_MODEL(store), completion_select, direction < 0);
+        completion_create(c, store, completion_select, direction < 0);
+    } else {
+        g_object_unref(store);
     }
 
     g_free(input);

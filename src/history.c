@@ -93,13 +93,12 @@ void history_cleanup(void)
     }
 }
 
-gboolean history_fill_completion(GtkListStore *store, HistoryType type, const char *input)
+gboolean history_fill_completion(GListStore *store, HistoryType type, const char *input)
 {
     char **parts;
     unsigned int len;
     gboolean found = FALSE;
     GList *src = NULL;
-    GtkTreeIter iter;
     History *item;
 
     src = load(HIST_STORAGE(type));
@@ -108,15 +107,9 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
         /* without any tags return all items */
         for (GList *l = src; l; l = l->next) {
             item = l->data;
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(
-                store, &iter,
-                COMPLETION_STORE_FIRST, item->first,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                COMPLETION_STORE_SECOND, item->second,
-#endif
-                -1
-            );
+            CompletionItem *ci = completion_item_new(item->first, item->second);
+            g_list_store_append(store, ci);
+            g_object_unref(ci);
             found = TRUE;
         }
     } else if (HISTORY_URL == type) {
@@ -126,15 +119,9 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
         for (GList *l = src; l; l = l->next) {
             item = l->data;
             if (history_item_contains_all_tags(item, parts, len)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(
-                    store, &iter,
-                    COMPLETION_STORE_FIRST, item->first,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                    COMPLETION_STORE_SECOND, item->second,
-#endif
-                    -1
-                );
+                CompletionItem *ci = completion_item_new(item->first, item->second);
+                g_list_store_append(store, ci);
+                g_object_unref(ci);
                 found = TRUE;
             }
         }
@@ -143,15 +130,9 @@ gboolean history_fill_completion(GtkListStore *store, HistoryType type, const ch
         for (GList *l = src; l; l = l->next) {
             item = l->data;
             if (g_str_has_prefix(item->first, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(
-                    store, &iter,
-                    COMPLETION_STORE_FIRST, item->first,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                    COMPLETION_STORE_SECOND, item->second,
-#endif
-                    -1
-                );
+                CompletionItem *ci = completion_item_new(item->first, item->second);
+                g_list_store_append(store, ci);
+                g_object_unref(ci);
                 found = TRUE;
             }
         }

@@ -552,23 +552,24 @@ GList *util_strv_to_unique_list(char **lines, Util_Content_Func func,
 /**
  * Fills the given list store by matching data of also given src list.
  */
-gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src)
+gboolean util_fill_completion(GListStore *store, const char *input, GList *src)
 {
     gboolean found = FALSE;
-    GtkTreeIter iter;
 
     if (!input || !*input) {
         for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            CompletionItem *item = completion_item_new(l->data, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
     } else {
         for (GList *l = src; l; l = l->next) {
             char *value = (char*)l->data;
             if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+                CompletionItem *item = completion_item_new(l->data, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 found = TRUE;
             }
         }
@@ -581,7 +582,7 @@ gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src
  * Fills file path completion entries into given list store for also given
  * input.
  */
-gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
+gboolean util_filename_fill_completion(GListStore *store, const char *input)
 {
     gboolean found = FALSE;
     GError *error  = NULL;
@@ -602,7 +603,6 @@ gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
         /* Can't open directory, likely bad user input */
         g_error_free(error);
     } else {
-        GtkTreeIter iter;
         const char *filename;
         char *fullpath, *result;
 
@@ -615,8 +615,9 @@ gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
                     result = g_strconcat(input_dirname, filename, NULL);
                 }
                 g_free(fullpath);
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, result, -1);
+                CompletionItem *item = completion_item_new(result, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 g_free(result);
                 found = TRUE;
             }

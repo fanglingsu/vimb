@@ -291,17 +291,17 @@ VbCmdResult setting_run(Client *c, char *name, const char *param)
     return CMD_ERROR | CMD_KEEPINPUT;
 }
 
-gboolean setting_fill_completion(Client *c, GtkListStore *store, const char *input)
+gboolean setting_fill_completion(Client *c, GListStore *store, const char *input)
 {
-    GtkTreeIter iter;
     gboolean found = FALSE;
     GList *src     = g_hash_table_get_keys(c->config.settings);
 
     /* If no filter input given - copy all entries into the data store. */
     if (!input || !*input) {
         for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            CompletionItem *item = completion_item_new(l->data, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
         g_list_free(src);
@@ -313,8 +313,9 @@ gboolean setting_fill_completion(Client *c, GtkListStore *store, const char *inp
     for (GList *l = src; l; l = l->next) {
         char *value = (char*)l->data;
         if (g_str_has_prefix(value, input)) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            CompletionItem *item = completion_item_new(l->data, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
     }
