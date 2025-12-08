@@ -1047,11 +1047,19 @@ and '~user' pattern.
 Read ex commands from \fIfile\fP.
 .TP
 .B :q[uit]
-Close the browser.
+Close the current tab.
+If this is the last tab, the browser window is closed.
 This will be refused if there are running downloads.
 .TP
 .B :q[uit]!
-Close the browser independent from an running download.
+Close the current tab independent from a running download.
+.TP
+.B :quita[ll]
+Close all tabs and quit the browser.
+This will be refused if there are running downloads in any tab.
+.TP
+.B :quita[ll]!
+Close all tabs and quit the browser independent from running downloads.
 .TP
 .B :reg[ister]
 Display the contents of all registers.

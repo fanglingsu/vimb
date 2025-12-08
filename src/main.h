@@ -334,6 +334,7 @@ void vb_mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
 VbResult vb_mode_handle_key(Client *c, int key);
 void vb_modelabel_update(Client *c, const char *label);
 gboolean vb_quit(Client *c, gboolean force);
+gboolean vb_quit_all(gboolean force);
 void vb_register_add(Client *c, char buf, const char *value);
 const char *vb_register_get(Client *c, char buf);
 void vb_statusbar_update(Client *c);

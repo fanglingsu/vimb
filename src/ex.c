@@ -75,6 +75,7 @@ typedef enum {
     EX_QUNSHIFT,
 #endif
     EX_QUIT,
+    EX_QUITALL,
     EX_REG,
     EX_SAVE,
     EX_SCA,
@@ -159,6 +160,7 @@ static VbCmdResult ex_queue(Client *c, const ExArg *arg);
 #endif
 static VbCmdResult ex_register(Client *c, const ExArg *arg);
 static VbCmdResult ex_quit(Client *c, const ExArg *arg);
+static VbCmdResult ex_quitall(Client *c, const ExArg *arg);
 static VbCmdResult ex_save(Client *c, const ExArg *arg);
 static VbCmdResult ex_set(Client *c, const ExArg *arg);
 static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg);
@@ -206,6 +208,7 @@ static ExInfo commands[] = {
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"open",             EX_OPEN,        ex_open,       EX_FLAG_CMD},
     {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE|EX_FLAG_BANG},
+    {"quitall",          EX_QUITALL,     ex_quitall,    EX_FLAG_NONE|EX_FLAG_BANG},
 #ifdef FEATURE_QUEUE
     {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
     {"qclear",           EX_QCLEAR,      ex_queue,      EX_FLAG_RHS},
@@ -1128,6 +1131,12 @@ static VbCmdResult ex_register(Client *c, const ExArg *arg)
 static VbCmdResult ex_quit(Client *c, const ExArg *arg)
 {
     vb_quit(c, arg->bang);
+    return CMD_SUCCESS;
+}
+
+static VbCmdResult ex_quitall(Client *c, const ExArg *arg)
+{
+    vb_quit_all(arg->bang);
     return CMD_SUCCESS;
 }
 

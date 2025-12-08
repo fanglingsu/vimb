@@ -572,6 +572,40 @@ gboolean vb_quit(Client *c, gboolean force)
 }
 
 /**
+ * Close all client instances (all tabs).
+ */
+gboolean vb_quit_all(gboolean force)
+{
+    Client *c;
+    GSList *clients_to_quit = NULL;
+
+    /* First check if any client has running downloads (unless forced) */
+    if (!force) {
+        for (c = vb.clients; c; c = c->next) {
+            if (c->state.downloads) {
+                vb_echo_force(c, MSG_ERROR, TRUE,
+                    "Can't quit: there are running downloads. Use :quita! to force quit");
+                return FALSE;
+            }
+        }
+    }
+
+    /* Build a list of all clients to quit */
+    for (c = vb.clients; c; c = c->next) {
+        clients_to_quit = g_slist_prepend(clients_to_quit, c);
+    }
+
+    /* Schedule quit for each client */
+    for (GSList *l = clients_to_quit; l; l = l->next) {
+        g_idle_add((GSourceFunc)quit, l->data);
+    }
+
+    g_slist_free(clients_to_quit);
+
+    return TRUE;
+}
+
+/**
  * Adds content to a named register.
  */
 void vb_register_add(Client *c, char buf, const char *value)

@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * `:tabprev` / `:tabprevious` - switch to previous tab
   * `:tabfirst` - switch to first tab
   * `:tablast` - switch to last tab
+* New `:quitall` (`:quita`) command to close all tabs and quit the browser.
+  Supports `!` bang to force quit even with running downloads.
 * Setting `media` to enable/disable all media support. Useful on systems where
   GStreamer is not fully configured or to prevent crashes from missing plugins.
 
