@@ -55,7 +55,9 @@ void input_enter(Client *c)
  */
 void input_leave(Client *c)
 {
-    ext_proxy_eval_script(c, "vimb_input_mode_element.blur();", NULL);
+    ext_proxy_eval_script(c,
+        "if (typeof vimb_input_mode_element !== 'undefined' && vimb_input_mode_element) vimb_input_mode_element.blur();",
+        NULL);
     vb_modelabel_update(c, "");
 }
 
