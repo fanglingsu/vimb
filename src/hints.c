@@ -442,9 +442,11 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
         }
     }
 
+    g_free(value);
     return TRUE;
 
 error:
+    g_free(value);
     vb_statusbar_show_hover_url(c, LINK_TYPE_NONE, NULL);
     return FALSE;
 }

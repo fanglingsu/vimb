@@ -49,6 +49,7 @@ void shortcut_free(Shortcut *sc)
     if (sc->table) {
         g_hash_table_destroy(sc->table);
     }
+    g_free(sc->fallback);
     g_free(sc);
 }
 

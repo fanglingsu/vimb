@@ -326,8 +326,10 @@ gboolean map_delete(Client *c, const char *in, char mode)
 {
     int len;
     char *lhs = convert_keys(in, strlen(in), &len);
+    gboolean result = map_delete_by_lhs(c, lhs, len, mode);
+    g_free(lhs);
 
-    return map_delete_by_lhs(c, lhs, len, mode);
+    return result;
 }
 
 /**

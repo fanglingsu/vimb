@@ -597,11 +597,13 @@ void vb_register_add(Client *c, char buf, const char *value)
         /* get the index of the mark char */
         idx = mark - REG_CHARS;
 
-        const gchar* newcontents = value;
-        if(shouldAppend && c->state.reg[idx])
-            newcontents = g_strjoin("\n", c->state.reg[idx], value, NULL);
-
-        OVERWRITE_STRING(c->state.reg[idx], newcontents);
+        if (shouldAppend && c->state.reg[idx]) {
+            gchar *newcontents = g_strjoin("\n", c->state.reg[idx], value, NULL);
+            OVERWRITE_STRING(c->state.reg[idx], newcontents);
+            g_free(newcontents);
+        } else {
+            OVERWRITE_STRING(c->state.reg[idx], value);
+        }
     }
 }
 
@@ -811,6 +813,15 @@ __attribute__((used)) static void client_destroy(Client *c)
 
     if (c->state.search.last_query) {
         g_free(c->state.search.last_query);
+    }
+    if (c->state.hit_test_result) {
+        g_object_unref(c->state.hit_test_result);
+    }
+    if (c->state.uri) {
+        g_free(c->state.uri);
+    }
+    if (c->state.title) {
+        g_free(c->state.title);
     }
 
     completion_cleanup(c);
@@ -1893,6 +1904,15 @@ static void on_window_destroy(GtkWidget *window, Client *c)
         if (c->state.search.last_query) {
             g_free(c->state.search.last_query);
         }
+        if (c->state.hit_test_result) {
+            g_object_unref(c->state.hit_test_result);
+        }
+        if (c->state.uri) {
+            g_free(c->state.uri);
+        }
+        if (c->state.title) {
+            g_free(c->state.title);
+        }
 
         completion_cleanup(c);
         map_cleanup(c);
@@ -2103,7 +2123,11 @@ static void vimb_setup(void)
     if (vb.incognito) {
         vb.session = webkit_network_session_new_ephemeral();
     } else {
-        vb.session = webkit_network_session_new(util_get_data_dir(), util_get_cache_dir());
+        char *data_dir = util_get_data_dir();
+        char *cache_dir = util_get_cache_dir();
+        vb.session = webkit_network_session_new(data_dir, cache_dir);
+        g_free(data_dir);
+        g_free(cache_dir);
     }
 
     /* WebKitGTK 6.0: WebContext is now created without parameters */
@@ -2309,6 +2333,15 @@ static void on_main_window_destroy(GtkWidget *window, gpointer data)
         if (c->state.search.last_query) {
             g_free(c->state.search.last_query);
         }
+        if (c->state.hit_test_result) {
+            g_object_unref(c->state.hit_test_result);
+        }
+        if (c->state.uri) {
+            g_free(c->state.uri);
+        }
+        if (c->state.title) {
+            g_free(c->state.title);
+        }
         completion_cleanup(c);
         map_cleanup(c);
         register_cleanup(c);
@@ -2502,6 +2535,15 @@ void vb_tab_close(Client *c)
     /* Clean up client resources */
     if (c->state.search.last_query) {
         g_free(c->state.search.last_query);
+    }
+    if (c->state.hit_test_result) {
+        g_object_unref(c->state.hit_test_result);
+    }
+    if (c->state.uri) {
+        g_free(c->state.uri);
+    }
+    if (c->state.title) {
+        g_free(c->state.title);
     }
     completion_cleanup(c);
     map_cleanup(c);

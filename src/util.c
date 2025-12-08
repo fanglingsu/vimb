@@ -73,7 +73,9 @@ char *util_build_path(const char *path, const char *dir)
 
     /* if full path not found use current dir */
     if (!fullPath) {
-        fullPath = g_build_filename(g_get_current_dir(), path, NULL);
+        char *cwd = g_get_current_dir();
+        fullPath = g_build_filename(cwd, path, NULL);
+        g_free(cwd);
     }
 
     /* Create the directory part of the path if it does not exists. */
