@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   * Client cleanup functions - leaked `hit_test_result`, `uri`, and `title`
 * Fixed JavaScript error "Can't find variable: vimb_input_mode_element" when
   pressing `i` in normal mode before entering input mode
+* Fixed deprecated `webkit_web_page_get_main_frame()` usage in webextension by
+  using `WebKitScriptWorld` "window-object-cleared" signal to cache frame references
 
 ### Removed
 * Removed X-Embed support as this is not supported by GTK4

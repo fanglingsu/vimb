@@ -33,10 +33,13 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
         WebKitUserMessage *message, gpointer user_data);
 static gboolean on_web_page_send_request(WebKitWebPage *webpage, WebKitURIRequest *request,
         WebKitURIResponse *response, gpointer extension);
+static void on_window_object_cleared(WebKitScriptWorld *world, WebKitWebPage *page,
+        WebKitFrame *frame, gpointer user_data);
 
 /* Global struct to hold internal used variables. */
 struct Ext {
     GHashTable          *headers;
+    GHashTable          *page_frames;  /* Maps page_id -> main WebKitFrame */
 };
 struct Ext ext = {0};
 
@@ -49,8 +52,43 @@ struct Ext ext = {0};
 G_MODULE_EXPORT
 void webkit_web_process_extension_initialize_with_user_data(WebKitWebProcessExtension *extension, G_GNUC_UNUSED GVariant *data)
 {
+    WebKitScriptWorld *world;
+
+    /* Initialize the page frames hash table */
+    ext.page_frames = g_hash_table_new(g_direct_hash, g_direct_equal);
+
     /* Connect to page-created signal to handle new pages */
     g_signal_connect(extension, "page-created", G_CALLBACK(on_page_created), NULL);
+
+    /* Connect to script world's window-object-cleared signal to get frame references
+     * This is the non-deprecated way to access frames in WebKitGTK 6.0+ */
+    world = webkit_script_world_get_default();
+    g_signal_connect(world, "window-object-cleared", G_CALLBACK(on_window_object_cleared), NULL);
+}
+
+/**
+ * Callback for script world's window-object-cleared signal.
+ * This is called when the JavaScript window object is cleared for a frame,
+ * typically when a new document is loaded.
+ */
+static void on_window_object_cleared(WebKitScriptWorld *world, WebKitWebPage *page,
+        WebKitFrame *frame, gpointer user_data)
+{
+    /* Only store the main frame */
+    if (webkit_frame_is_main_frame(frame)) {
+        guint64 page_id = webkit_web_page_get_id(page);
+        /* Store the frame reference - the frame is owned by WebKit, we just keep a pointer */
+        g_hash_table_insert(ext.page_frames, GUINT_TO_POINTER(page_id), frame);
+    }
+}
+
+/**
+ * Get the main frame for a web page using our cached reference.
+ */
+static WebKitFrame *get_main_frame(WebKitWebPage *web_page)
+{
+    guint64 page_id = webkit_web_page_get_id(web_page);
+    return g_hash_table_lookup(ext.page_frames, GUINT_TO_POINTER(page_id));
 }
 
 /**
@@ -58,8 +96,6 @@ void webkit_web_process_extension_initialize_with_user_data(WebKitWebProcessExte
  */
 static void on_page_created(WebKitWebProcessExtension *extension, WebKitWebPage *webpage, gpointer data)
 {
-    guint64 pageid;
-
     if (!webpage) {
         g_warning("on_page_created called with NULL webpage!");
         return;
@@ -69,8 +105,6 @@ static void on_page_created(WebKitWebProcessExtension *extension, WebKitWebPage 
         g_warning("on_page_created called with NULL extension!");
         return;
     }
-
-    pageid = webkit_web_page_get_id(webpage);
 
     /* WebKitGTK 6.0: D-Bus signal emission removed - using WebKitUserMessage only */
 
@@ -118,11 +152,9 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
 
         g_variant_get(parameters, "(&s)", &js_code);
 
-        frame = webkit_web_page_get_main_frame(web_page);
+        frame = get_main_frame(web_page);
         if (frame) {
-            G_GNUC_BEGIN_IGNORE_DEPRECATIONS
             js_context = webkit_frame_get_js_context(frame);
-            G_GNUC_END_IGNORE_DEPRECATIONS
 
             if (js_context) {
                 success = ext_util_js_eval(js_context, js_code, &result);
@@ -153,11 +185,9 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
 
         g_variant_get(parameters, "(&s)", &js_code);
 
-        frame = webkit_web_page_get_main_frame(web_page);
+        frame = get_main_frame(web_page);
         if (frame) {
-            G_GNUC_BEGIN_IGNORE_DEPRECATIONS
             js_context = webkit_frame_get_js_context(frame);
-            G_GNUC_END_IGNORE_DEPRECATIONS
 
             if (js_context) {
                 ext_util_js_eval(js_context, js_code, NULL);
@@ -168,13 +198,11 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
 
     /* FocusInput - Focus an input element */
     if (g_strcmp0(name, "FocusInput") == 0) {
-        WebKitFrame *frame = webkit_web_page_get_main_frame(web_page);
+        WebKitFrame *frame = get_main_frame(web_page);
         JSCContext *js_context;
 
         if (frame) {
-            G_GNUC_BEGIN_IGNORE_DEPRECATIONS
             js_context = webkit_frame_get_js_context(frame);
-            G_GNUC_END_IGNORE_DEPRECATIONS
 
             if (js_context) {
                 ext_util_js_eval(js_context, JS_FOCUS_INPUT, NULL);
@@ -191,11 +219,9 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
 
         g_variant_get(parameters, "(&s)", &element_id);
 
-        frame = webkit_web_page_get_main_frame(web_page);
+        frame = get_main_frame(web_page);
         if (frame) {
-            G_GNUC_BEGIN_IGNORE_DEPRECATIONS
             js_context = webkit_frame_get_js_context(frame);
-            G_GNUC_END_IGNORE_DEPRECATIONS
 
             if (js_context) {
                 char *escaped_id = g_strescape(element_id, NULL);
@@ -216,11 +242,9 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
 
         g_variant_get(parameters, "(&s)", &element_id);
 
-        frame = webkit_web_page_get_main_frame(web_page);
+        frame = get_main_frame(web_page);
         if (frame) {
-            G_GNUC_BEGIN_IGNORE_DEPRECATIONS
             js_context = webkit_frame_get_js_context(frame);
-            G_GNUC_END_IGNORE_DEPRECATIONS
 
             if (js_context) {
                 char *escaped_id = g_strescape(element_id, NULL);
