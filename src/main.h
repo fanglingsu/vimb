@@ -170,6 +170,7 @@ struct State {
     gboolean            typed;              /* indicates if the user typed the keys */
     gboolean            processed_key;      /* indicates if a key press was handled and should not bubbled up */
     gboolean            ctrlv;              /* indicates if the CTRL-V temorary submode is on */
+    gboolean            open_in_new_tab;    /* next navigation should open in new tab (for ;t hinting) */
 
 #define PROMPT_SIZE 4
     char                prompt[PROMPT_SIZE];/* current prompt ':', 'g;t', '/' including nul */

@@ -94,6 +94,14 @@ void hints_clear(Client *c)
 {
     if (c->mode->flags & FLAG_HINTING) {
         c->mode->flags &= ~FLAG_HINTING;
+        /* Note: We intentionally do NOT clear FLAG_NEW_TAB here.
+         * The flag will be cleared by decide_navigation_action after it opens
+         * the new tab. If we clear it here, there's a race condition: the
+         * JavaScript navigation (from setTimeout(0)) may trigger during the
+         * synchronous hints.clear() call below, and if FLAG_NEW_TAB was
+         * already cleared, the link opens in the current tab instead of a
+         * new tab. The flag will naturally be consumed when the navigation
+         * happens, or will be harmless if no navigation occurs. */
         vb_input_set_text(c, "");
 
         /* Run this sync else we would disable JavaScript before the hint is
@@ -126,6 +134,16 @@ void hints_create(Client *c, const char *input)
 
     if (!(c->mode->flags & FLAG_HINTING)) {
         c->mode->flags |= FLAG_HINTING;
+
+        /* For 't' mode (open in new tab), set open_in_new_tab flag on client.
+         * This is needed because the JavaScript navigation may start before
+         * the "DONE:" result is processed, due to the async nature of
+         * WebKitUserMessage. Using client state instead of mode flag because
+         * modes are shared across all tabs. The flag will be cleared by
+         * decide_navigation_action after opening the new tab. */
+        if (hints.mode == 't') {
+            c->state.open_in_new_tab = TRUE;
+        }
 
         WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
 
@@ -357,12 +375,10 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
         if (!hints.gmode && c->mode->id == 'c') {
             vb_enter(c, 'n');
         }
-        /* If open in new tab/window hinting is used, set a flag on the mode after
-         * changing to normal mode. This is used in on_webview_decide_policy
-         * to enforce opening into new tab for the next navigation action. */
-        if (hints.mode == 't') {
-            c->mode->flags |= FLAG_NEW_TAB;
-        }
+        /* Note: For 't' mode (open in new tab), the open_in_new_tab flag is
+         * already set in hints_create() on the client state. We don't need to
+         * set it again here. The flag is on the client, not the mode, to avoid
+         * affecting other tabs. */
     } else if (!strncmp(value, "INSERT:", 7)) {
         fire_timeout(c, FALSE);
         vb_enter(c, 'i');

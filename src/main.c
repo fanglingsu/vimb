@@ -1530,10 +1530,10 @@ static void decide_navigation_action(Client *c, WebKitPolicyDecision *dec)
     button = webkit_navigation_action_get_mouse_button(a);
     mod    = webkit_navigation_action_get_modifiers(a);
 
-    /* Open in new tab if the new tab flag is set (from ;t hinting) */
-    if (c->mode->flags & FLAG_NEW_TAB) {
-        /* Remove the FLAG_NEW_TAB after the first use. */
-        c->mode->flags &= ~FLAG_NEW_TAB;
+    /* Open in new tab if the open_in_new_tab state is set (from ;t hinting) */
+    if (c->state.open_in_new_tab) {
+        /* Clear the flag after the first use. */
+        c->state.open_in_new_tab = FALSE;
 
         webkit_policy_decision_ignore(dec);
         /* Open in a new tab */
