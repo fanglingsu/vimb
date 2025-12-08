@@ -117,6 +117,21 @@ Pass the next key press directly to GTK.
 .B CTRL\-Q
 Quit the browser if there are no running downloads.
 .
+.SS Tabs
+Vimb supports tabbed browsing within a single window.
+.TP
+.B gt
+Go to the next tab.
+.TP
+.B gT
+Go to the previous tab.
+.TP
+.B g0
+Go to the first tab.
+.TP
+.B g$
+Go to the last tab.
+.
 .SS Navigation
 .TP
 .B o
@@ -135,13 +150,13 @@ Start Command Mode and print `:tabopen URI' to the input box.
 Open the configured home-page.
 .TP
 .B gH
-Open the configured home-page in a new window.
+Open the configured home-page in a new tab.
 .TP
 .B u
 Open the last closed page.
 .TP
 .B U
-Open the last closed page in a new window.
+Open the last closed page in a new tab.
 .TP
 .B CTRL\-P
 Open the oldest entry from the read it later queue in the current browser
@@ -152,7 +167,7 @@ Open the URI out of the register \fIx\fP or, if not given, from the clipboard.
 .TP
 .BI [ \(dqx ]P
 Open the URI out of the register \fIx\fP or, if not given, from the clipboard in a
-new window.
+new tab.
 .TP
 .BI [ N ]CTRL\-O
 Go back \fIN\fP steps in the browser history.
@@ -176,7 +191,7 @@ Reload the website without using caches.
 Stop loading the current page.
 .TP
 .B CTRL-LeftMouse, MiddleMouse
-Opens the clicked link in a new window.
+Opens the clicked link in a new tab.
 .TP
 .B Shift-LeftMouse
 Push the link url under the cursor to the end of the Read It Later queue like
@@ -300,7 +315,7 @@ Is an alias for the \fB;t\fP hint mode.
 Open hint's location in the current window.
 .TP
 .B ;t
-Open hint's location in a new window.
+Open hint's location in a new tab.
 .TP
 .B ;s
 Saves the hint's destination under the configured `download-path'.
@@ -321,7 +336,7 @@ content will be put back in the form field.
 Open hinted image in the current window.
 .TP
 .B ;I
-Open hinted image in a new window.
+Open hinted image in a new tab.
 .TP
 .B ;k
 Kill (remove) hinted element from the page.
@@ -531,12 +546,30 @@ Yank the current selection into register \fIx\fP and clipboard.
 .SS Open
 .TP
 .BI ":o[pen] [" URI ]
-Open the give \fIURI\fP in the current window.
+Open the give \fIURI\fP in the current tab.
 If \fIURI\fP is empty, the configured 'home-page' is opened.
 .TP
 .BI ":t[abopen] [" URI ]
-Open the give \fIURI\fP in a new window.
+Open the give \fIURI\fP in a new tab.
 If \fIURI\fP is empty, the configured 'home-page' is opened.
+.
+.SS Tabs
+.TP
+.B :tabc[lose]
+Close the current tab.
+If this is the last tab, the browser window is closed.
+.TP
+.B :tabn[ext]
+Switch to the next tab.
+.TP
+.B :tabp[rev], :tabp[revious]
+Switch to the previous tab.
+.TP
+.B :tabfirst
+Switch to the first tab.
+.TP
+.B :tablast
+Switch to the last tab.
 .
 .SS Key Mapping
 Key mappings allow users to alter the actions of key presses.
@@ -1432,8 +1465,8 @@ dbus. {`always', `never', `ask' (display a prompt each time)}
 Whether background images should be drawn during printing.
 .TP
 .B prevent-newwindow (bool)
-Whether to open links, that would normally open in a new window, in the
-current window.
+Whether to open links, that would normally open in a new tab, in the
+current tab instead.
 This option does not affect links fired by hinting.
 .TP
 .B sans-serif-font (string)

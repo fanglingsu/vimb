@@ -11,16 +11,49 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   represents the key sequence `<`, `C`, `-`, `R`, `>`.
 * Add `<Bslash>` as an alias for `\` in mappings. For example, `<Bslash><C-R>`
   represents the key sequence `\` followed by CTRL-R.
-* Fixes crash of webextension on pages with cross-origin iframes
+* Native tab support within a single window. New normal mode commands:
+  * `gt` - go to next tab
+  * `gT` - go to previous tab
+  * `g0` - go to first tab
+  * `g$` - go to last tab
+* New ex commands for tab management:
+  * `:tabclose` - close current tab
+  * `:tabnext` - switch to next tab
+  * `:tabprev` / `:tabprevious` - switch to previous tab
+  * `:tabfirst` - switch to first tab
+  * `:tablast` - switch to last tab
+* Setting `media` to enable/disable all media support. Useful on systems where
+  GStreamer is not fully configured or to prevent crashes from missing plugins.
 
 ### Changed
+* Migrated from GTK3 to GTK4
+* Migrated from WebKitGTK 4.1 to WebKitGTK 6.0
 * Reworked communication between main process and webextension
-* Replaced deprecated dom api by JavaScript snippets
-* Replaced dbus IPC by Webkit provided IPC
+* Replaced deprecated DOM API by JavaScript snippets
+* Replaced D-Bus IPC by WebKit provided IPC (WebKitUserMessage)
+* Replaced deprecated GtkListStore/GtkTreeView completion with
+  GListStore/GtkListView for GTK4 compatibility
+* `:tabopen` now opens in a new tab instead of a new window
+* `gH`, `U`, `P` commands now open in a new tab instead of a new window
+* `;t` and `;I` hint modes now open in a new tab instead of a new window
+* Ctrl-Click and Middle-Click now open links in a new tab instead of a new window
+
+### Fixed
+* Fixed crash of webextension on pages with cross-origin iframes
+* Fixed memory leaks in various functions:
+  * `util_build_path()` - leaked result from `g_get_current_dir()`
+  * `vb_register_add()` - leaked result from `g_strjoin()`
+  * `shortcut_free()` - leaked `sc->fallback` string
+  * `map_delete()` - leaked `lhs` string from `convert_keys()`
+  * `vimb_setup()` - leaked results from `util_get_data_dir()` and `util_get_cache_dir()`
+  * `hint_function_check_result()` - leaked `value` string from `g_variant_get()`
+  * `input_open_editor()` - leaked `text` and `id` strings from `g_variant_get()`
+  * Client cleanup functions - leaked `hit_test_result`, `uri`, and `title`
+* Fixed JavaScript error "Can't find variable: vimb_input_mode_element" when
+  pressing `i` in normal mode before entering input mode
 
 ### Removed
-
-* Remove X-Embed support as this is not supported by GTK4
+* Removed X-Embed support as this is not supported by GTK4
 
 Following settings were removed from the man page documentation as they are
 deprecated and removed in WebKitGTK 6.0.
