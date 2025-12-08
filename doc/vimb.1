@@ -1388,6 +1388,12 @@ Disabling can help with some older systems (ppc, ppc64, etc.) that don't have co
 .B geolocation (string)
 Controls website access to the geolocation API {`always', `never', `ask' (display a prompt each time)}
 .TP
+.B media (bool)
+Enable or disable all media support.
+When disabled, WebKitGTK will not attempt to play any audio or video content,
+which can be useful on systems where GStreamer is not fully configured or to
+prevent crashes caused by missing GStreamer plugins (such as autoaudiosink).
+.TP
 .B media-playback-allows-inline (bool)
 Whether media playback is full-screen only or inline playback is allowed.
 Setting it to false allows specifying that media playback should be always
