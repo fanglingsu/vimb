@@ -743,8 +743,11 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
         }
     }
 
-    /* Inject the global scripts including scroll observer. */
-    script = webkit_user_script_new(JS_HINTS " " JS_SCROLL " " JS_SCROLL_OBSERVER,
+    /* Inject the global scripts: hints, scroll, scroll observer, and focus tracking.
+     * Focus tracking detects when editable elements gain/lose focus to
+     * automatically switch vimb between normal and input modes. */
+    script = webkit_user_script_new(
+            JS_HINTS " " JS_SCROLL " " JS_SCROLL_OBSERVER " " JS_FOCUS_TRACKING,
             WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
             WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
     webkit_user_content_manager_add_script(ucm, script);

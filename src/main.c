@@ -2798,8 +2798,6 @@ static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessa
         return FALSE;
     }
 
-    g_warning("Received page-document-loaded message for page_id=%" G_GUINT64_FORMAT,
-              webkit_web_view_get_page_id(c->webview));
 
     /* Get the page ID sent by the webextension */
     params = webkit_user_message_get_parameters(message);
@@ -2818,6 +2816,7 @@ static gboolean on_user_message_received(WebKitWebView *webview, WebKitUserMessa
     PRINT_DEBUG("Page IDs: from_ext=%" G_GUINT64_FORMAT ", from_view=%" G_GUINT64_FORMAT,
                 pageid_from_ext, pageid_from_view);
 
+    /* Focus tracking is now auto-initialized by the injected JS_DOM_OPERATIONS script */
 
     return TRUE;
 }
@@ -2936,28 +2935,42 @@ static gboolean on_scroll(GtkEventControllerScroll *controller, gdouble dx, gdou
 static void on_script_message_focus(WebKitUserContentManager *manager,
         JSCValue *value, gpointer data)
 {
-    char *message;
-    GVariant *variant;
-    guint64 pageid;
-    gboolean is_focused;
+    gboolean is_editable;
     Client *c;
+    JSCValue *editable_val;
 
-    message = util_js_result_as_string(value);
-    variant = g_variant_parse(G_VARIANT_TYPE("(tb)"), message, NULL, NULL, NULL);
-    g_free(message);
+    if (!jsc_value_is_object(value)) {
+        return;
+    }
 
-    g_variant_get(variant, "(tb)", &pageid, &is_focused);
-    g_variant_unref(variant);
+    /* Extract isEditable value from JavaScript object */
+    editable_val = jsc_value_object_get_property(value, "isEditable");
 
-    c = vb_get_client_for_page_id(pageid);
+    if (!editable_val) {
+        return;
+    }
+
+    is_editable = jsc_value_to_boolean(editable_val);
+
+    /* Find the client by matching the UserContentManager.
+     * Since user scripts don't have easy access to the page ID,
+     * we find the client by matching the UCM that sent the message. */
+    for (c = vb.clients; c; c = c->next) {
+        WebKitUserContentManager *ucm = webkit_web_view_get_user_content_manager(c->webview);
+        if (ucm == manager) {
+            break;
+        }
+    }
+
     if (!c || c->mode->flags & FLAG_IGNORE_FOCUS) {
         return;
     }
 
-    /* Don't change the mode if we are in pass through mode. */
-    if (c->mode->id == 'n' && is_focused) {
+    /* Switch to input mode if an editable element is focused in normal mode.
+     * Switch back to normal mode when focus leaves editable elements. */
+    if (c->mode->id == 'n' && is_editable) {
         vb_enter(c, 'i');
-    } else if (c->mode->id == 'i' && !is_focused) {
+    } else if (c->mode->id == 'i' && !is_editable) {
         vb_enter(c, 'n');
     }
 }

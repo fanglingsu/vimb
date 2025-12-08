@@ -51,9 +51,6 @@ void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
     WebKitUserMessage *message;
 
-    g_warning("Main process: Sending EvalJs%s message: %s",
-              callback ? "" : "NoResult", js);
-
     if (callback) {
         /* With callback - wait for response */
         message = webkit_user_message_new("EvalJs", g_variant_new("(s)", js));
@@ -77,6 +74,21 @@ GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
 }
 
 /**
+ * Evaluate JavaScript directly in the page's JavaScript context.
+ * This runs JS in the same world as user scripts injected via
+ * webkit_user_content_manager_add_script(), allowing access to
+ * variables defined there (like vimbDomOps).
+ *
+ * WebKitGTK 6.0: Uses webkit_web_view_evaluate_javascript().
+ */
+void ext_proxy_eval_script_in_page(Client *c, const char *js)
+{
+    g_return_if_fail(c != NULL && c->webview != NULL);
+
+    webkit_web_view_evaluate_javascript(c->webview, js, -1, NULL, NULL, NULL, NULL, NULL);
+}
+
+/**
  * Focus an input element using WebKitUserMessage.
  * WebKitGTK 6.0: Replaces D-Bus FocusInput method.
  */
@@ -96,9 +108,8 @@ void ext_proxy_focus_input(Client *c)
  */
 void ext_proxy_set_header(Client *c, const char *headers)
 {
-    /* Headers are now set via WebKitWebContext, not per-page */
-    /* This function is deprecated but kept for compatibility */
-    g_warning("Main process: ext_proxy_set_header called (deprecated in WebKitGTK 6.0)");
+    /* Headers are now set via WebKitWebContext, not per-page.
+     * This function is deprecated but kept for compatibility. */
 }
 
 /**

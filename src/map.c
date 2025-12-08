@@ -389,21 +389,22 @@ gboolean on_map_key_pressed(GtkEventControllerKey *controller, guint keyval,
 
     MapState res = map_handle_keys(c, string, len, TRUE);
 
+    /* GTK4: Unlike GTK3, we can't replay events via gtk_main_do_event().
+     * Instead, we return FALSE to let unprocessed keys propagate to WebKit.
+     * This is essential for input/passthrough modes where keys should reach
+     * the web view for typing into form fields. */
+    gboolean handled = c->state.processed_key;
+
     if (res != MAP_AMBIGUOUS) {
-        if (c->state.typed && !c->state.processed_key) {
-            /* events ready to be consumed */
-            process_events();
-        } else {
-            /* no ambiguous - key processed elsewhere */
-            free_events();
-        }
+        /* Clean up any queued events (no longer used in GTK4) */
+        free_events();
     }
 
     /* reset the typed flag */
     c->state.typed = FALSE;
 
-    /* prevent input from going to GDK - input is sent via process_events(); */
-    return TRUE;
+    /* Return FALSE for unprocessed keys so GTK4 propagates them to WebKit */
+    return handled;
 }
 
 /**

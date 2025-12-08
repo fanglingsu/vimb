@@ -28,6 +28,7 @@
 const char *ext_proxy_init(void);
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback);
 GVariant *ext_proxy_eval_script_sync(Client *c, char *js);
+void ext_proxy_eval_script_in_page(Client *c, const char *js);
 void ext_proxy_focus_input(Client *c);
 void ext_proxy_set_header(Client *c, const char *headers);
 void ext_proxy_lock_input(Client *c, const char *element_id);

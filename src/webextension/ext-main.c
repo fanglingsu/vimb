@@ -71,7 +71,6 @@ static void on_page_created(WebKitWebProcessExtension *extension, WebKitWebPage 
     }
 
     pageid = webkit_web_page_get_id(webpage);
-    g_warning("WebExtension: Page created, page_id=%" G_GUINT64_FORMAT, pageid);
 
     /* WebKitGTK 6.0: D-Bus signal emission removed - using WebKitUserMessage only */
 
@@ -90,14 +89,11 @@ static void on_web_page_document_loaded(WebKitWebPage *webpage, gpointer extensi
     guint64 pageid = webkit_web_page_get_id(webpage);
     WebKitUserMessage *message;
 
-    g_warning("WebExtension: Document loaded, sending page-document-loaded message, page_id=%" G_GUINT64_FORMAT, pageid);
-
     /* Send message with page ID as parameter.
      * This allows the main process to match this page with the correct dbus proxy. */
     message = webkit_user_message_new("page-document-loaded",
                                       g_variant_new("(t)", pageid));
     webkit_web_page_send_message_to_view(webpage, message, NULL, NULL, NULL);
-    g_warning("WebExtension: page-document-loaded message sent");
 }
 
 /**
@@ -112,8 +108,6 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
     const char *name = webkit_user_message_get_name(message);
     GVariant *parameters = webkit_user_message_get_parameters(message);
 
-    g_warning("WebExtension: Received message '%s' from UI process", name);
-
     /* EvalJs - Evaluate JavaScript and return result */
     if (g_strcmp0(name, "EvalJs") == 0) {
         const char *js_code;
@@ -123,7 +117,6 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
         gboolean success = FALSE;
 
         g_variant_get(parameters, "(&s)", &js_code);
-        g_warning("WebExtension: EvalJs request: %s", js_code);
 
         frame = webkit_web_page_get_main_frame(web_page);
         if (frame) {
@@ -159,7 +152,6 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
         JSCContext *js_context;
 
         g_variant_get(parameters, "(&s)", &js_code);
-        g_warning("WebExtension: EvalJsNoResult request: %s", js_code);
 
         frame = webkit_web_page_get_main_frame(web_page);
         if (frame) {
@@ -178,8 +170,6 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
     if (g_strcmp0(name, "FocusInput") == 0) {
         WebKitFrame *frame = webkit_web_page_get_main_frame(web_page);
         JSCContext *js_context;
-
-        g_warning("WebExtension: FocusInput request");
 
         if (frame) {
             G_GNUC_BEGIN_IGNORE_DEPRECATIONS
@@ -200,7 +190,6 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
         JSCContext *js_context;
 
         g_variant_get(parameters, "(&s)", &element_id);
-        g_warning("WebExtension: LockInput request for element: %s", element_id);
 
         frame = webkit_web_page_get_main_frame(web_page);
         if (frame) {
@@ -226,7 +215,6 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
         JSCContext *js_context;
 
         g_variant_get(parameters, "(&s)", &element_id);
-        g_warning("WebExtension: UnlockInput request for element: %s", element_id);
 
         frame = webkit_web_page_get_main_frame(web_page);
         if (frame) {
@@ -245,7 +233,6 @@ static gboolean on_web_page_user_message_received(WebKitWebPage *web_page,
         return TRUE;
     }
 
-    g_warning("WebExtension: Unknown message '%s'", name);
     return FALSE;
 }
 
