@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * `gH`, `U`, `P` commands now open in a new tab instead of a new window
 * `;t` and `;I` hint modes now open in a new tab instead of a new window
 * Ctrl-Click and Middle-Click now open links in a new tab instead of a new window
+* Applied smooth scrolling to all scroll commands too - thanks to Doxnit
 
 ### Fixed
 * Fixed crash of webextension on pages with cross-origin iframes
