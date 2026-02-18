@@ -16,23 +16,20 @@ If your are familiar with vim or have some experience with pentadactyl the use
 of vimb would be a breeze, if not we missed our target.
 
 ## latest features
-New setting `status-bar-show-settings`
-: This allows to enable visualization of some runtime settings. Format of this
-  and the settings to show are configured in `src/config.h` on compilation time.
+Native tab support
+: Vimb now supports tabs within a single window. Use `gt`/`gT` to navigate
+  between tabs, and `:tabopen` to open URLs in new tabs.
 
-New setting `notification`
-: These new settings allow to control the website access to the notification
-  API.
+GTK4 and WebKitGTK 6.0
+: Vimb has been migrated to GTK4 and WebKitGTK 6.0 for improved performance
+  and modern web standards support.
 
-Add `$VIMB_SELECTION` when `:shellcmd` is run.
-: This variable is set to the current selected text whenever a `:shellcmd` is
-  executed.
+New `:quitall` command
+: Close all tabs and quit the browser with a single command.
 
-[Vimb 3.7.0](https://github.com/fanglingsu/vimb/releases/tag/3.7.0) released
-
-New option `--cmd, -C`
-: Allow to give ex commands on startup that are give to new spawned child
-  instances too.
+New setting `media`
+: Enable or disable all media support. Useful on systems where GStreamer is
+  not fully configured.
 
 More about latest changes can be found in the [CHANGELOG.md][]. 
 
@@ -46,6 +43,7 @@ But following images may give a impression of they way vimb works.
 ## features
 - it's modal like Vim
 - Vim like keybindings - assignable for each browser mode
+- native tab support within a single window
 - nearly every configuration can be changed at runtime with Vim like set syntax
 - history for `ex` commands, search queries, URLs
 - completions for: commands, URLs, bookmarked URLs, variable names of settings, search-queries
@@ -76,8 +74,8 @@ But following images may give a impression of they way vimb works.
 
 ## dependencies
 
-- gtk+-3.0
-- webkit2gtk-4.1
+- gtk+-4.0
+- webkit2gtk-6.0
 - gst-libav, gst-plugins-good (optional, for media decoding among other things)
 
 ## install

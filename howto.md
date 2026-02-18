@@ -45,24 +45,28 @@ There are two known cases of the `editor-command` setting that do not work.
 
        :set editor-command=urxvt -e vim %s
 
-## how can i have tabs?
-{:#tabbed}
-Vimb does not support tabs. Every new page is opened in a new browser instance
-with own settings which makes things easier and secure. But vimb can be
-plugged into another xembed aware window that allows tabbing like [tabbed][].
+## tabs
+{:#tabs}
+Vimb now has native tab support within a single window. Use the following
+commands to manage tabs:
 
-    tabbed -c vimb -e
+**Normal mode commands:**
+- `gt` - go to next tab
+- `gT` - go to previous tab
+- `g0` - go to first tab
+- `g$` - go to last tab
 
-To manage the tabs from within the vim like browser, you can use [xdotool][]
-to run keyevents on tabbed and call the xdotool from within vimb.
+**Ex commands:**
+- `:tabopen [URI]` - open URI in a new tab
+- `:tabnext` - switch to next tab
+- `:tabprev` - switch to previous tab
+- `:tabfirst` - switch to first tab
+- `:tablast` - switch to last tab
+- `:tabclose` - close current tab
+- `:quitall` - close all tabs and quit
 
-Following keybindings simulate a little bit the vim behaviour.
-
-    nnoremap gt :sh! xdotool key --window $VIMB_XID ctrl+shift+l<CR><Esc>
-    nnoremap gT :sh! xdotool key --window $VIMB_XID ctrl+shift+h<CR><Esc>
-    nnoremap 1gt :sh! xdotool key --window $VIMB_XID ctrl+1<CR><Esc>
-    ...
-    nnoremap 9gt :sh! xdotool key --window $VIMB_XID ctrl+9<CR><Esc>
+**Note:** XEmbed support has been removed in GTK4, so integration with external
+tab managers like [tabbed][] is no longer possible.
 
 
 ## commented sample config

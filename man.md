@@ -40,7 +40,9 @@ Mandatory arguments to long options are mandatory for short options too.
   on new spawned instances.
 
 −e, −−embed *WINID*
-: *WINID* of an XEmbed-aware application, that vimb will use as its parent.
+: **[DEPRECATED - GTK4 removed XEmbed support]**
+: This option is no longer functional. GTK4 removed GtkPlug/GtkSocket XEmbed
+  support. Vimb now has native tab support within a single window.
 
 −i, −−incognito
 : Start an instance with user data read-only (see FILES section).
@@ -129,13 +131,13 @@ gh
 : Open the configured home-page.
 
 gH
-: Open the configured home-page into new window.
+: Open the configured home-page into new tab.
 
 u
 : Open the last closed page.
 
 U
-: Open the last closed page into a new window.
+: Open the last closed page into a new tab.
 
 CTRL−P
 : Open the oldest entry from read it later queue in current browser window, if
@@ -146,7 +148,7 @@ CTRL−P
 
 [*"x*]P
 : Open the URI out of the register *x* or if not given from clipboard into new
-  window.
+  tab.
 
 [*N*]CTRL−O
 : Go back *N* steps in the browser history.
@@ -273,7 +275,7 @@ F
 : Open hint's location in the current window.
 
 ;t
-: Open hint's location in a new window.
+: Open hint's location in a new tab.
 
 ;s
 : Saves the hint's destination under the configured 'download-path'.
@@ -293,7 +295,7 @@ F
 : Open hinted image into current window.
 
 ;I
-: Open hinted image into new window.
+: Open hinted image into new tab.
 
 ;p
 : Push the hint's URI to the end of the read it later queue like the `:qpush`
@@ -473,12 +475,41 @@ CTRL−R {a-z"%:/;}
 ### Open
 {:#Open}
 \:o[pen] [*URI*]
-: Open the give *URI* into current window. If *URI* is empty the configured
+: Open the give *URI* into current tab. If *URI* is empty the configured
   'home-page' is opened.
 
 \:t[abopen] [*URI*]
-: Open the give *URI* into a new window. If *URI* is empty the configured
+: Open the give *URI* into a new tab. If *URI* is empty the configured
   'home-page' is opened.
+
+### Tabs
+{:#Tabs}
+\:tabc[lose]
+: Close the current tab. If this is the last tab, the browser window is closed.
+
+\:tabn[ext]
+: Switch to the next tab.
+
+\:tabp[rev], \:tabp[revious]
+: Switch to the previous tab.
+
+\:tabfirst
+: Switch to the first tab.
+
+\:tablast
+: Switch to the last tab.
+
+gt
+: Go to the next tab.
+
+gT
+: Go to the previous tab.
+
+g0
+: Go to the first tab.
+
+g$
+: Go to the last tab.
 
 ### Key Mapping
 {:#Key_Mapping}
@@ -801,10 +832,18 @@ Example:
 : Read ex commands from *file*.
 
 \:q[uit]
-: Close the browser. This will be refused if there are running downloads.
+: Close the current tab. If this is the last tab, the browser window is closed.
+  This will be refused if there are running downloads.
 
 \:q[uit]!
-: Close the browser independent from an running download.
+: Close the current tab independent from a running download.
+
+\:quita[ll]
+: Close all tabs and quit the browser. This will be refused if there are running
+  downloads in any tab.
+
+\:quita[ll]!
+: Close all tabs and quit the browser independent from running downloads.
 
 \:reg[ister]
 : Display the contents of all registers.
@@ -908,10 +947,6 @@ search
 {:#SETTINGS}
 All settings listed below can be set with the `:set` command.
 
-accelerated-2d-canvas (bool)
-: Enable or disable accelerated 2D canvas. When accelerated 2D canvas is
-  enabled, WebKit may render some 2D canvas content using hardware accelerated
-  drawing operations.
 
 allow-file-access-from-file-urls (bool)
 : Indicates whether file access is allowed from file URLs. By default, when
@@ -964,9 +999,6 @@ default-font (string)
 default-zoom (int)
 : Default Full-Content zoom level in percent. Default is 100.
 
-dns-prefetching (bool)
-: Indicates if Vimb prefetches domain names.
-
 download-command (string)
 : A command with placeholder `%s` that will be invoked to download a URI in
   case `download-use-external` is enabled.
@@ -995,11 +1027,6 @@ editor-command (string)
 
 font-size (int)
 : The default font size used to display text.
-
-frame-flattening (bool)
-: Whether to enable the Frame Flattening. With this setting each subframe is
-  expanded to its contents, which will flatten all the frames to become one
-  scrollable page.
 
 fullscreen (bool)
 : Show the current window full-screen.
@@ -1077,9 +1104,6 @@ html5-local-storage (bool)
 : Whether to enable HTML5 localStorage support. LocalStorage provides simple
   synchronous storage access.
 
-hyperlink-auditing (bool)
-: Enable or disable support for \<a ping\>.
-
 images (bool)
 : Determines whether images should be automatically loaded or not.
 
@@ -1139,11 +1163,6 @@ notification (string)
 : Controls website access to the notification API, that sends notifications
   via dbus. ('always', 'never', 'ask' - display a prompt each time)
 
-offline-cache (bool)
-: Whether to enable HTML5 offline web application cache support. Offline web
-  application cache allows web applications to run even when the user is not
-  connected to the network.
-
 print-backgrounds (bool)
 : Whether background images should be drawn during printing.
 
@@ -1152,12 +1171,15 @@ private-browsing (bool)
   messages into JavaScript Console. At the time this is the only way to force
   WebKit to not allow a page to store data in the windows sessionStorage.
 
-plugins (bool)
-: Determines whether or not plugins on the page are enabled.
-
 prevent-newwindow (bool)
-: Whether to open links, that would normally open in a new window, in the
-  current window. This option does not affect links fired by hinting.
+: Whether to open links, that would normally open in a new tab, in the
+  current tab instead. This option does not affect links fired by hinting.
+
+media (bool)
+: Enable or disable all media support. When disabled, WebKitGTK will not
+  attempt to play any audio or video content, which can be useful on systems
+  where GStreamer is not fully configured or to prevent crashes caused by
+  missing GStreamer plugins (such as autoaudiosink).
 
 sans-serif-font (string)
 : The font family used as the default for content using sans-serif font.
@@ -1265,10 +1287,6 @@ x-hint-command (string)
 : This fills the inputbox with the prefilled download command and replaces
   `<C-R>%' with the current URI and `<C-R>;' with the URI of the hinted
   element.
-
-xss-auditor (bool)
-: Whether to enable the XSS auditor. This feature filters some kinds of
-  reflective XSS attacks on vulnerable web sites.
 
 ## FILES
 {:#FILES}
