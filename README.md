@@ -1,6 +1,6 @@
 # Vimb - the Vim-like browser
 
-[![Build Status](https://travis-ci.com/fanglingsu/vimb.svg?branch=master)](https://travis-ci.com/fanglingsu/vimb)
+[![Build Status](https://github.com/fanglingsu/vimb/actions/workflows/ci.yml/badge.svg)](https://github.com/fanglingsu/vimb/actions/workflows/ci.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Latest Release](https://img.shields.io/github/release/fanglingsu/vimb.svg?style=flat)](https://github.com/fanglingsu/vimb/releases/latest)
 

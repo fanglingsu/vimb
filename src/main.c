@@ -1741,7 +1741,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
 #endif
             c->state.progress = 100;
             if (uri
-                && regexec(&c->config.histignore_preg, uri, 1, NULL, 0)
+                && regexec(&c->config.histignore_preg, uri, 0, NULL, 0)
 #ifdef FEATURE_HISTORY_WITHOUT_HOME_PAGE
                 && strcmp(uri, GET_CHAR(c, "home-page"))
 #endif

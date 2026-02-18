@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  pull_request:
+    branches-ignore:
+      - gh-pages
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -y --allow-unauthenticated --no-install-recommends libgtk-4-dev libwebkitgtk-6.0-dev
+    
+    - name: Set compiler
+      run: echo "CC=${{ matrix.compiler }}" >> $GITHUB_ENV
+    
+    - name: Build and test
+      run: make options && make -j test
