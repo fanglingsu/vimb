@@ -32,6 +32,7 @@ MapState map_handle_keys(Client *c, const guchar *keys, int keylen, gboolean use
 void map_handle_string(Client *c, const char *str, gboolean use_map);
 void map_insert(Client *c, const char *in, const char *mapped, char mode, gboolean remap);
 gboolean map_delete(Client *c, const char *in, char mode);
-gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c);
+gboolean on_map_key_pressed(GtkEventControllerKey *controller, guint keyval,
+                             guint keycode, GdkModifierType state, gpointer user_data);
 
 #endif /* end of include guard: _MAP_H */

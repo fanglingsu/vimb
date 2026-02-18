@@ -45,7 +45,8 @@ uninstall:
 clean: src.subdir-clean test-clean
 
 sandbox:
-	$(Q)$(MAKE) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr DESTDIR=./sandbox install
+	$(Q)$(MAKE) clean
+	$(Q)$(MAKE) RUNPREFIX=$(CURDIR)/sandbox/usr PREFIX=/usr EXTENSIONDIR=$(CURDIR)/sandbox/usr/lib/vimb DESTDIR=./sandbox install
 
 runsandbox: sandbox
 	sandbox/usr/bin/vimb

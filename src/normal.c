@@ -452,12 +452,14 @@ static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info)
     GVariant *variant;
     gboolean focused;
 
-    variant = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.focus();");
+    variant = ext_proxy_eval_script_sync(c,
+        "typeof vimb_input_mode_element !== 'undefined' && vimb_input_mode_element ? vimb_input_mode_element.focus() : false;");
     if (variant == NULL) {
     	g_warning("cannot get current selection: failed to evaluate js");
     	return RESULT_ERROR;
     }
     g_variant_get(variant, "(bs)", &focused, NULL);
+    g_variant_unref(variant);
     if (!focused) {
         ext_proxy_focus_input(c);
     }
@@ -486,13 +488,33 @@ static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info)
 
         case 'H':
         case 'h':
-            a.i = info->key2 == 'H' ? TARGET_NEW : TARGET_CURRENT;
+            a.i = info->key2 == 'H' ? TARGET_TAB : TARGET_CURRENT;
             a.s = NULL;
             vb_load_uri(c, &a);
             return RESULT_COMPLETE;
 
         case 'i':
             ext_proxy_focus_input(c);
+            return RESULT_COMPLETE;
+
+        case 't':
+            /* gt - go to next tab */
+            vb_tab_next();
+            return RESULT_COMPLETE;
+
+        case 'T':
+            /* gT - go to previous tab */
+            vb_tab_prev();
+            return RESULT_COMPLETE;
+
+        case '0':
+            /* g0 - go to first tab */
+            vb_tab_goto(0);
+            return RESULT_COMPLETE;
+
+        case '$':
+            /* g$ - go to last tab */
+            vb_tab_goto(vb_get_tab_count() - 1);
             return RESULT_COMPLETE;
 
         case 'U':
@@ -679,16 +701,16 @@ static VbResult normal_navigate(Client *c, const NormalCmdInfo *info)
 
 static VbResult normal_open_clipboard(Client *c, const NormalCmdInfo *info)
 {
-    Arg a = {info->key == 'P' ? TARGET_NEW : TARGET_CURRENT};
+    Arg a = {info->key == 'P' ? TARGET_TAB : TARGET_CURRENT};
 
     /* if register is not the default - read out of the internal register */
     if (info->reg) {
         a.s = g_strdup(vb_register_get(c, info->reg));
     } else {
         /* if no register is given use the system clipboard */
-        a.s = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+        a.s = util_clipboard_get_text(GTK_WIDGET(c->webview), TRUE);
         if (!a.s) {
-            a.s = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_NONE));
+            a.s = util_clipboard_get_text(GTK_WIDGET(c->webview), FALSE);
         }
     }
 
@@ -712,7 +734,7 @@ static VbResult normal_open(Client *c, const NormalCmdInfo *info)
         return RESULT_ERROR;
     }
 
-    a.i = info->key == 'U' ? TARGET_NEW : TARGET_CURRENT;
+    a.i = info->key == 'U' ? TARGET_TAB : TARGET_CURRENT;
     a.s = util_file_pop_line(vb.files[FILES_CLOSED], NULL);
     if (!a.s) {
         return RESULT_ERROR;
@@ -788,7 +810,7 @@ static VbResult normal_search_selection(Client *c, const NormalCmdInfo *info)
     /* there is no function to get the selected text so we copy current
      * selection to clipboard */
     webkit_web_view_execute_editing_command(c->webview, WEBKIT_EDITING_COMMAND_COPY);
-    query = gtk_clipboard_wait_for_text(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+    query = util_clipboard_get_text(GTK_WIDGET(c->webview), TRUE);
     if (!query) {
         return RESULT_ERROR;
     }

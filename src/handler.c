@@ -83,7 +83,7 @@ gboolean handler_handle_uri(Handler *h, const char *uri)
     return res;
 }
 
-gboolean handler_fill_completion(Handler *h, GtkListStore *store, const char *input)
+gboolean handler_fill_completion(Handler *h, GListStore *store, const char *input)
 {
     GList *src     = g_hash_table_get_keys(h->table);
     gboolean found = util_fill_completion(store, input, src);

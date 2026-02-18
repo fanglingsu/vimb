@@ -24,187 +24,166 @@
 #include "main.h"
 #include "webextension/ext-main.h"
 
-static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
-        GIOStream *stream, GCredentials *credentials, gpointer data);
-static gboolean on_new_connection(GDBusServer *server,
-        GDBusConnection *connection, gpointer data);
-static void on_connection_close(GDBusConnection *connection, gboolean
-        remote_peer_vanished, GError *error, gpointer data);
-static void on_proxy_created (GDBusProxy *proxy, GAsyncResult *result,
-        gpointer data);
-static void dbus_call(Client *c, const char *method, GVariant *param,
-        GAsyncReadyCallback callback);
-static GVariant *dbus_call_sync(Client *c, const char *method, GVariant
-        *param);
-static void on_web_extension_page_created(GDBusConnection *connection,
-        const char *sender_name, const char *object_path,
-        const char *interface_name, const char *signal_name,
-        GVariant *parameters, gpointer data);
+/* WebKitGTK 6.0: D-Bus infrastructure completely removed.
+ * All IPC now uses WebKitUserMessage API. */
 
-/* TODO we need potentially multiple proxies. Because a single instance of
- * vimb may hold multiple clients which may use more than one webprocess and
- * therefore multiple webextension instances. */
 extern struct Vimb vb;
-static GDBusServer *dbusserver;
 
 /**
- * Initialize the dbus proxy by watching for appearing dbus name.
+ * Initialize web extension communication.
+ * WebKitGTK 6.0: D-Bus has been replaced with WebKitUserMessage.
+ * This function is kept for compatibility but returns NULL.
  */
 const char *ext_proxy_init(void)
 {
-    char *address, *guid;
-    GDBusAuthObserver *observer;
-    GError *error = NULL;
-
-    address  = g_strdup_printf("unix:tmpdir=%s", g_get_tmp_dir());
-    guid     = g_dbus_generate_guid();
-    observer = g_dbus_auth_observer_new();
-
-    g_signal_connect(observer, "authorize-authenticated-peer",
-            G_CALLBACK(on_authorize_authenticated_peer), NULL);
-
-    /* Use sync call because server must be starte before the web extension
-     * attempt to connect */
-    dbusserver = g_dbus_server_new_sync(address, G_DBUS_SERVER_FLAGS_NONE,
-            guid, observer, NULL, &error);
-
-    if (error) {
-        g_warning("Failed to start web extension server on %s: %s", address, error->message);
-        g_error_free(error);
-        goto out;
-    }
-
-    g_signal_connect(dbusserver, "new-connection", G_CALLBACK(on_new_connection), NULL);
-    g_dbus_server_start(dbusserver);
-
-out:
-    g_free(address);
-    g_free(guid);
-    g_object_unref(observer);
-
-    return g_dbus_server_get_client_address(dbusserver);
+    /* WebKitGTK 6.0: All IPC now uses WebKitUserMessage API.
+     * D-Bus infrastructure has been completely removed. */
+    return NULL;
 }
 
-/* TODO move this to a lib or somthing that can be used from ui and web
- * process together */
-static gboolean on_authorize_authenticated_peer(GDBusAuthObserver *observer,
-        GIOStream *stream, GCredentials *credentials, gpointer data)
-{
-    gboolean authorized = FALSE;
+/* WebKitGTK 6.0: All D-Bus infrastructure removed - using WebKitUserMessage */
 
-    if (credentials) {
-        GCredentials *own_credentials;
-
-        GError *error   = NULL;
-        own_credentials = g_credentials_new();
-        if (g_credentials_is_same_user(credentials, own_credentials, &error)) {
-            authorized = TRUE;
-        } else {
-            g_warning("Failed to authorize web extension connection: %s", error->message);
-            g_error_free(error);
-        }
-        g_object_unref(own_credentials);
-    } else {
-        g_warning ("No credentials received from web extension.\n");
-    }
-
-    return authorized;
-}
-
-static gboolean on_new_connection(GDBusServer *server,
-        GDBusConnection *connection, gpointer data)
-{
-    /* Create dbus proxy. */
-    g_return_val_if_fail(G_IS_DBUS_CONNECTION(connection), FALSE);
-
-    g_signal_connect(connection, "closed", G_CALLBACK(on_connection_close), NULL);
-
-    g_dbus_proxy_new(connection,
-            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES|G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
-            NULL,
-            NULL,
-            VB_WEBEXTENSION_OBJECT_PATH,
-            VB_WEBEXTENSION_INTERFACE,
-            NULL,
-            (GAsyncReadyCallback)on_proxy_created,
-            NULL);
-
-    return TRUE;
-}
-
-static void on_connection_close(GDBusConnection *connection, gboolean
-        remote_peer_vanished, GError *error, gpointer data)
-{
-    if (error && !remote_peer_vanished) {
-        g_warning("Unexpected lost connection to web extension: %s", error->message);
-    }
-}
-
-static void on_proxy_created(GDBusProxy *new_proxy, GAsyncResult *result,
-        gpointer data)
-{
-    GError *error = NULL;
-    GDBusProxy *proxy;
-    GDBusConnection *connection;
-
-    proxy = g_dbus_proxy_new_finish(result, &error);
-    if (!proxy) {
-        if (!g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-            g_warning("Error creating web extension proxy: %s", error->message);
-        }
-        g_error_free(error);
-
-        /* TODO cancel the dbus connection - use cancelable */
-        return;
-    }
-
-    connection = g_dbus_proxy_get_connection(proxy);
-    g_dbus_connection_signal_subscribe(connection, NULL,
-            VB_WEBEXTENSION_INTERFACE, "PageCreated",
-            VB_WEBEXTENSION_OBJECT_PATH, NULL, G_DBUS_SIGNAL_FLAGS_NONE,
-            (GDBusSignalCallback)on_web_extension_page_created, proxy,
-            NULL);
-}
-
+/**
+ * Evaluate JavaScript in the webextension using WebKitUserMessage.
+ * WebKitGTK 6.0: Replaces D-Bus EvalJs method.
+ */
 void ext_proxy_eval_script(Client *c, char *js, GAsyncReadyCallback callback)
 {
+    WebKitUserMessage *message;
+
     if (callback) {
-        dbus_call(c, "EvalJs", g_variant_new("(ts)", c->page_id, js), callback);
+        /* With callback - wait for response */
+        message = webkit_user_message_new("EvalJs", g_variant_new("(s)", js));
+        webkit_web_view_send_message_to_page(c->webview, message, NULL, callback, c);
     } else {
-        dbus_call(c, "EvalJsNoResult", g_variant_new("(ts)", c->page_id, js), NULL);
+        /* No callback - fire and forget */
+        message = webkit_user_message_new("EvalJsNoResult", g_variant_new("(s)", js));
+        webkit_web_view_send_message_to_page(c->webview, message, NULL, NULL, NULL);
     }
 }
 
-GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
+/* Data structure for synchronous evaluation */
+typedef struct {
+    GVariant *result;
+    gboolean done;
+} SyncEvalData;
+
+/* Callback for synchronous JavaScript evaluation */
+static void on_sync_eval_finished(GObject *source_object, GAsyncResult *result, gpointer user_data)
 {
-    return dbus_call_sync(c, "EvalJs", g_variant_new("(ts)", c->page_id, js));
+    SyncEvalData *data = (SyncEvalData *)user_data;
+    WebKitWebView *webview = WEBKIT_WEB_VIEW(source_object);
+    GError *error = NULL;
+    WebKitUserMessage *reply;
+
+    reply = webkit_web_view_send_message_to_page_finish(webview, result, &error);
+    if (error) {
+        g_warning("Sync eval script failed: %s", error->message);
+        g_error_free(error);
+        data->result = NULL;
+    } else if (reply) {
+        /* Copy the parameters since the reply will be freed */
+        GVariant *params = webkit_user_message_get_parameters(reply);
+        if (params) {
+            data->result = g_variant_ref(params);
+        }
+        g_object_unref(reply);
+    }
+
+    data->done = TRUE;
 }
 
 /**
- * Request the web extension to focus first editable element.
- * Returns whether an focusable element was found or not.
+ * Evaluate JavaScript synchronously using WebKitUserMessage.
+ * WebKitGTK 6.0: Replaces D-Bus EvalJs method.
+ * Uses GLib main loop iteration to wait for the async result.
+ */
+GVariant *ext_proxy_eval_script_sync(Client *c, char *js)
+{
+    WebKitUserMessage *message;
+    SyncEvalData data = { NULL, FALSE };
+    GMainContext *context;
+
+    g_return_val_if_fail(c != NULL && c->webview != NULL, NULL);
+
+    message = webkit_user_message_new("EvalJs", g_variant_new("(s)", js));
+    webkit_web_view_send_message_to_page(c->webview, message, NULL,
+        on_sync_eval_finished, &data);
+
+    /* Iterate the main loop until we get a response */
+    context = g_main_context_default();
+    while (!data.done) {
+        g_main_context_iteration(context, TRUE);
+    }
+
+    return data.result;
+}
+
+/**
+ * Evaluate JavaScript directly in the page's JavaScript context.
+ * This runs JS in the same world as user scripts injected via
+ * webkit_user_content_manager_add_script(), allowing access to
+ * variables defined there (like vimbDomOps).
+ *
+ * WebKitGTK 6.0: Uses webkit_web_view_evaluate_javascript().
+ */
+void ext_proxy_eval_script_in_page(Client *c, const char *js)
+{
+    g_return_if_fail(c != NULL && c->webview != NULL);
+
+    webkit_web_view_evaluate_javascript(c->webview, js, -1, NULL, NULL, NULL, NULL, NULL);
+}
+
+/**
+ * Focus an input element using WebKitUserMessage.
+ * WebKitGTK 6.0: Replaces D-Bus FocusInput method.
  */
 void ext_proxy_focus_input(Client *c)
 {
-    dbus_call(c, "FocusInput", g_variant_new("(t)", c->page_id), NULL);
+    WebKitUserMessage *message;
+
+    g_warning("Main process: Sending FocusInput message");
+
+    message = webkit_user_message_new("FocusInput", NULL);
+    webkit_web_view_send_message_to_page(c->webview, message, NULL, NULL, NULL);
 }
 
 /**
- * Send the headers string to the webextension.
+ * Set headers using WebKitUserMessage.
+ * WebKitGTK 6.0: Replaces D-Bus SetHeaderSetting method.
  */
 void ext_proxy_set_header(Client *c, const char *headers)
 {
-    dbus_call(c, "SetHeaderSetting", g_variant_new("(s)", headers), NULL);
+    /* Headers are now set via WebKitWebContext, not per-page.
+     * This function is deprecated but kept for compatibility. */
 }
 
+/**
+ * Lock input element using WebKitUserMessage.
+ * WebKitGTK 6.0: Replaces D-Bus LockInput method.
+ */
 void ext_proxy_lock_input(Client *c, const char *element_id)
 {
-    dbus_call(c, "LockInput", g_variant_new("(ts)", c->page_id, element_id), NULL);
+    WebKitUserMessage *message;
+
+    g_warning("Main process: Sending LockInput message for element: %s", element_id);
+
+    message = webkit_user_message_new("LockInput", g_variant_new("(s)", element_id));
+    webkit_web_view_send_message_to_page(c->webview, message, NULL, NULL, NULL);
 }
 
+/**
+ * Unlock input element using WebKitUserMessage.
+ * WebKitGTK 6.0: Replaces D-Bus UnlockInput method.
+ */
 void ext_proxy_unlock_input(Client *c, const char *element_id)
 {
-    dbus_call(c, "UnlockInput", g_variant_new("(ts)", c->page_id, element_id), NULL);
+    WebKitUserMessage *message;
+
+    g_warning("Main process: Sending UnlockInput message for element: %s", element_id);
+
+    message = webkit_user_message_new("UnlockInput", g_variant_new("(s)", element_id));
+    webkit_web_view_send_message_to_page(c->webview, message, NULL, NULL, NULL);
 }
 
 /**
@@ -220,15 +199,15 @@ char *ext_proxy_get_current_selection(Client *c)
 
     js       = g_strdup_printf("getSelection().toString();");
     jsreturn = ext_proxy_eval_script_sync(c, js);
+    g_free(js);
 
     if (jsreturn == NULL) {
         g_warning("cannot get current selection: failed to evaluate js");
-        g_free(js);
         return NULL;
     }
 
     g_variant_get(jsreturn, "(bs)", &success, &selection);
-    g_free(js);
+    g_variant_unref(jsreturn);
 
     if (!success) {
         g_warning("can not get current selection: %s", selection);
@@ -239,67 +218,4 @@ char *ext_proxy_get_current_selection(Client *c)
     return selection;
 }
 
-/**
- * Call a dbus method.
- */
-static void dbus_call(Client *c, const char *method, GVariant *param,
-        GAsyncReadyCallback callback)
-{
-    /* TODO add function to queue calls until the proxy connection is
-     * established */
-    if (!c->dbusproxy) {
-        return;
-    }
-    g_dbus_proxy_call(c->dbusproxy, method, param, G_DBUS_CALL_FLAGS_NONE, -1, NULL, callback, c);
-}
-
-/**
- * Call a dbus method syncron.
- */
-static GVariant *dbus_call_sync(Client *c, const char *method, GVariant *param)
-{
-    GVariant *result = NULL;
-    GError *error = NULL;
-
-    if (!c->dbusproxy) {
-        return NULL;
-    }
-
-    result = g_dbus_proxy_call_sync(c->dbusproxy, method, param,
-        G_DBUS_CALL_FLAGS_NONE, 500, NULL, &error);
-
-    if (error) {
-        g_warning("Failed dbus method %s: %s", method, error->message);
-        g_error_free(error);
-    }
-
-    return result;
-}
-
-/**
- * Called when the web context created the page.
- * Store the proxy in a pending list. The actual client association happens when
- * the page sends a user message after document load, at which point the page ID
- * is stable and we can match the proxy to the correct client.
- */
-static void on_web_extension_page_created(GDBusConnection *connection,
-        const char *sender_name, const char *object_path,
-        const char *interface_name, const char *signal_name,
-        GVariant *parameters, gpointer data)
-{
-    guint64 pageid;
-    ProxyPageId *pending;
-
-    g_variant_get(parameters, "(t)", &pageid);
-
-    PRINT_DEBUG("PageCreated signal received: page_id=%" G_GUINT64_FORMAT ", proxy=%p",
-                pageid, data);
-
-    /* Create a pending proxy entry */
-    pending = g_slice_new(ProxyPageId);
-    pending->proxy = (GDBusProxy *)data;
-    pending->pageid = pageid;
-
-    /* Add to pending list - will be claimed when client receives user message */
-    vb.pending_proxies = g_slist_prepend(vb.pending_proxies, pending);
-}
+/* WebKitGTK 6.0: All D-Bus functions removed - using WebKitUserMessage */

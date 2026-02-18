@@ -17,7 +17,7 @@
  * along with this program. If not, see http://www.gnu.org/licenses/.
  */
 
-#include <gdk/gdkkeysyms-compat.h>
+/* GTK4: gdkkeysyms-compat.h removed - all keys use GDK_KEY_ prefix now */
 #include <gdk/gdkkeysyms.h>
 #include <string.h>
 
@@ -36,10 +36,9 @@ static gboolean map_delete_by_lhs(Client *c, const char *lhs, int len, char mode
 static void showcmd(Client *c, int ch);
 static char *transchar(int c);
 static int utf_char2bytes(guint c, guchar *buf);
-static void queue_event(GdkEventKey *e);
+/* GTK4: Event queueing system simplified - GdkEventKey and gtk_main_do_event removed */
 static void process_events(void);
 static void free_events(void);
-static void process_event(GdkEventKey* event);
 
 extern struct Vimb vb;
 
@@ -49,28 +48,26 @@ static struct {
     char one;
     char two;
 } special_keys[] = {
-    /* TODO: In GTK3, keysyms changed to have a KEY_ prefix.
-     * See gdkkeysyms.h and gdkkeysyms-compat.h
-     */
-    {GDK_SHIFT_MASK,    GDK_Tab,       'k', 'B'},
-    {0,                 GDK_Up,        'k', 'u'},
-    {0,                 GDK_Down,      'k', 'd'},
-    {0,                 GDK_Left,      'k', 'l'},
-    {0,                 GDK_Right,     'k', 'r'},
-    {0,                 GDK_F1,        'k', '1'},
-    {0,                 GDK_F2,        'k', '2'},
-    {0,                 GDK_F3,        'k', '3'},
-    {0,                 GDK_F4,        'k', '4'},
-    {0,                 GDK_F5,        'k', '5'},
-    {0,                 GDK_F6,        'k', '6'},
-    {0,                 GDK_F7,        'k', '7'},
-    {0,                 GDK_F8,        'k', '8'},
-    {0,                 GDK_F9,        'k', '9'},
-    {0,                 GDK_F10,       'k', ';'},
-    {0,                 GDK_F11,       'F', '1'},
-    {0,                 GDK_F12,       'F', '2'},
-    {0,                 GDK_Prior,     'k', 'P'}, /* page up */
-    {0,                 GDK_Next,      'k', 'N'}, /* page down   */
+    /* GTK4 requires GDK_KEY_ prefix for all key constants */
+    {GDK_SHIFT_MASK,    GDK_KEY_Tab,       'k', 'B'},
+    {0,                 GDK_KEY_Up,        'k', 'u'},
+    {0,                 GDK_KEY_Down,      'k', 'd'},
+    {0,                 GDK_KEY_Left,      'k', 'l'},
+    {0,                 GDK_KEY_Right,     'k', 'r'},
+    {0,                 GDK_KEY_F1,        'k', '1'},
+    {0,                 GDK_KEY_F2,        'k', '2'},
+    {0,                 GDK_KEY_F3,        'k', '3'},
+    {0,                 GDK_KEY_F4,        'k', '4'},
+    {0,                 GDK_KEY_F5,        'k', '5'},
+    {0,                 GDK_KEY_F6,        'k', '6'},
+    {0,                 GDK_KEY_F7,        'k', '7'},
+    {0,                 GDK_KEY_F8,        'k', '8'},
+    {0,                 GDK_KEY_F9,        'k', '9'},
+    {0,                 GDK_KEY_F10,       'k', ';'},
+    {0,                 GDK_KEY_F11,       'F', '1'},
+    {0,                 GDK_KEY_F12,       'F', '2'},
+    {0,                 GDK_KEY_Prior,     'k', 'P'}, /* page up */
+    {0,                 GDK_KEY_Next,      'k', 'N'}, /* page down   */
 };
 
 static struct {
@@ -329,31 +326,38 @@ gboolean map_delete(Client *c, const char *in, char mode)
 {
     int len;
     char *lhs = convert_keys(in, strlen(in), &len);
+    gboolean result = map_delete_by_lhs(c, lhs, len, mode);
+    g_free(lhs);
 
-    return map_delete_by_lhs(c, lhs, len, mode);
+    return result;
 }
 
 /**
- * Handle all key events, convert the key event into the internal used ASCII
- * representation and put this into the key queue to be mapped.
+ * Handle all key events using GTK4 event controller, convert the key event
+ * into the internal used ASCII representation and put this into the key queue to be mapped.
  */
-gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
+gboolean on_map_key_pressed(GtkEventControllerKey *controller, guint keyval,
+                             guint keycode, GdkModifierType state, gpointer user_data)
 {
+    /* Always get the current client - tabs may have switched */
+    Client *c = vb_get_current_client();
+    if (!c) {
+        return FALSE;
+    }
+
     if (events.processing) {
         /* events are processing, pass all keys unmodified */
         return FALSE;
     }
 
-    guint state  = event->state;
-    guint keyval = event->keyval;
     guchar string[32];
     int len;
 
     len = keyval_to_string(keyval, state, string);
 
     /* translate iso left tab to shift tab */
-    if (keyval == GDK_ISO_Left_Tab) {
-        keyval = GDK_Tab;
+    if (keyval == GDK_KEY_ISO_Left_Tab) {
+        keyval = GDK_KEY_Tab;
         state |= GDK_SHIFT_MASK;
     }
 
@@ -382,25 +386,27 @@ gboolean on_map_keypress(GtkWidget *widget, GdkEventKey* event, Client *c)
     c->state.typed         = TRUE;
     c->state.processed_key = TRUE;
 
-    queue_event(event);
+    /* GTK4: Event queueing disabled - can't queue/replay events anymore */
+    /* queue_event(event); */
 
-    MapState res = map_handle_keys(c, string, len, true);
+    MapState res = map_handle_keys(c, string, len, TRUE);
+
+    /* GTK4: Unlike GTK3, we can't replay events via gtk_main_do_event().
+     * Instead, we return FALSE to let unprocessed keys propagate to WebKit.
+     * This is essential for input/passthrough modes where keys should reach
+     * the web view for typing into form fields. */
+    gboolean handled = c->state.processed_key;
 
     if (res != MAP_AMBIGUOUS) {
-        if (c->state.typed && !c->state.processed_key) {
-            /* events ready to be consumed */
-            process_events();
-        } else {
-            /* no ambiguous - key processed elsewhere */
-            free_events();
-        }
+        /* Clean up any queued events (no longer used in GTK4) */
+        free_events();
     }
 
     /* reset the typed flag */
     c->state.typed = FALSE;
 
-    /* prevent input from going to GDK - input is sent via process_events(); */
-    return TRUE;
+    /* Return FALSE for unprocessed keys so GTK4 propagates them to WebKit */
+    return handled;
 }
 
 /**
@@ -544,27 +550,27 @@ static int keyval_to_string(guint keyval, guint state, guchar *string)
 
     len = 1;
     switch (keyval) {
-        case GDK_Tab:
-        case GDK_KP_Tab:
-        case GDK_ISO_Left_Tab:
+        case GDK_KEY_Tab:
+        case GDK_KEY_KP_Tab:
+        case GDK_KEY_ISO_Left_Tab:
             string[0] = KEY_TAB;
             break;
 
-        case GDK_Linefeed:
+        case GDK_KEY_Linefeed:
             string[0] = KEY_NL;
             break;
 
-        case GDK_Return:
-        case GDK_ISO_Enter:
-        case GDK_3270_Enter:
+        case GDK_KEY_Return:
+        case GDK_KEY_ISO_Enter:
+        case GDK_KEY_3270_Enter:
             string[0] = KEY_CR;
             break;
 
-        case GDK_Escape:
+        case GDK_KEY_Escape:
             string[0] = KEY_ESC;
             break;
 
-        case GDK_BackSpace:
+        case GDK_KEY_BackSpace:
             string[0] = KEY_BS;
             break;
 
@@ -702,43 +708,25 @@ static int utf_char2bytes(guint c, guchar *buf)
     return 6;
 }
 
-/**
- * Append an event into the queue.
- */
-static void queue_event(GdkEventKey *e)
-{
-    events.list = g_slist_append(events.list, gdk_event_copy((GdkEvent*)e));
-}
+/* GTK4: Event queueing system disabled - GdkEventKey and gtk_main_do_event removed
+ * Event remapping may not work properly without this system.
+ * TODO: Implement GTK4-compatible event replay mechanism */
 
 /**
- * Process events in the queue, sending the key events to GDK.
+ * Process events in the queue (simplified for GTK4).
  */
 static void process_events(void)
 {
-    for (GSList *l = events.list; l != NULL; l = l->next) {
-        process_event((GdkEventKey*)l->data);
-        /* TODO take into account qk mapped key? */
-    }
     free_events();
 }
 
 /**
- * Clear the events list and free the allocated memory.
+ * Clear the events list.
  */
 static void free_events(void)
 {
     if (events.list) {
-        g_slist_free_full(events.list, (GDestroyNotify)gdk_event_free);
+        g_slist_free(events.list);
         events.list = NULL;
-    }
-}
-
-static void process_event(GdkEventKey* event)
-{
-    if (event) {
-        /* signal not to queue other events */
-        events.processing = TRUE;
-        gtk_main_do_event((GdkEvent*)event);
-        events.processing = FALSE;
     }
 }

@@ -55,7 +55,9 @@ void input_enter(Client *c)
  */
 void input_leave(Client *c)
 {
-    ext_proxy_eval_script(c, "vimb_input_mode_element.blur();", NULL);
+    ext_proxy_eval_script(c,
+        "if (typeof vimb_input_mode_element !== 'undefined' && vimb_input_mode_element) vimb_input_mode_element.blur();",
+        NULL);
     vb_modelabel_update(c, "");
 }
 
@@ -116,19 +118,30 @@ VbResult input_open_editor(Client *c)
     GVariant *jsreturn;
     GVariant *idreturn;
     ElementEditorData *data = NULL;
+    VbResult result = RESULT_ERROR;
 
     g_assert(c);
 
     /* get the selected input element */
     jsreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.value");
+    if (!jsreturn) {
+        return RESULT_ERROR;
+    }
     g_variant_get(jsreturn, "(bs)", &success, &text);
+    g_variant_unref(jsreturn);
 
     if (!success || !text) {
+        g_free(text);
         return RESULT_ERROR;
     }
 
     idreturn = ext_proxy_eval_script_sync(c, "vimb_input_mode_element.id");
+    if (!idreturn) {
+        g_free(text);
+        return RESULT_ERROR;
+    }
     g_variant_get(idreturn, "(bs)", &success, &id);
+    g_variant_unref(idreturn);
 
     /* Special case: the input element does not have an id assigned to it */
     if (!success || !*id) {
@@ -146,13 +159,15 @@ VbResult input_open_editor(Client *c)
     if (command_spawn_editor(c, &((Arg){0, text}), input_editor_formfiller, data)) {
         /* disable the active element */
         ext_proxy_lock_input(c, element_id);
-
-        return RESULT_COMPLETE;
+        result = RESULT_COMPLETE;
+    } else {
+        g_free(element_id);
+        g_slice_free(ElementEditorData, data);
     }
 
-    g_free(element_id);
-    g_slice_free(ElementEditorData, data);
-    return RESULT_ERROR;
+    g_free(text);
+    g_free(id);
+    return result;
 }
 
 static void input_editor_formfiller(const char *text, Client *c, gpointer data)

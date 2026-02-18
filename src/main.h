@@ -23,11 +23,12 @@
 #include <fcntl.h>
 #include <regex.h>
 #include "config.h"
-#ifndef FEATURE_NO_XEMBED
-#include <gtk/gtkx.h>
-#endif
+/* GTK4 removed XEmbed support (GtkPlug/GtkSocket) */
+/* #ifndef FEATURE_NO_XEMBED */
+/* #include <gtk/gtkx.h> */
+/* #endif */
 #include <stdio.h>
-#include <webkit2/webkit2.h>
+#include <webkit/webkit.h>
 #include "shortcut.h"
 #include "handler.h"
 #include "file-storage.h"
@@ -72,7 +73,7 @@
 #define FILE_CLOSED  "closed"
 #define FILE_COOKIES "cookies"
 
-enum { TARGET_CURRENT, TARGET_RELATED, TARGET_NEW };
+enum { TARGET_CURRENT, TARGET_RELATED, TARGET_NEW, TARGET_TAB };
 
 typedef enum {
     RESULT_COMPLETE, RESULT_MORE, RESULT_ERROR
@@ -169,6 +170,7 @@ struct State {
     gboolean            typed;              /* indicates if the user typed the keys */
     gboolean            processed_key;      /* indicates if a key press was handled and should not bubbled up */
     gboolean            ctrlv;              /* indicates if the CTRL-V temorary submode is on */
+    gboolean            open_in_new_tab;    /* next navigation should open in new tab (for ;t hinting) */
 
 #define PROMPT_SIZE 4
     char                prompt[PROMPT_SIZE];/* current prompt ':', 'g;t', '/' including nul */
@@ -224,7 +226,8 @@ struct Mode {
 #define FLAG_COMPLETION     0x0004  /* marks active completion submode */
 #define FLAG_PASSTHROUGH    0x0008  /* don't handle any other keybind than <esc> */
 #define FLAG_NEW_WIN        0x0010  /* enforce opening of pages into new window */
-#define FLAG_IGNORE_FOCUS   0x0012  /* do not listen for focus change messages */
+#define FLAG_IGNORE_FOCUS   0x0020  /* do not listen for focus change messages */
+#define FLAG_NEW_TAB        0x0040  /* enforce opening of pages into new tab */
     unsigned int         flags;
 };
 
@@ -243,14 +246,14 @@ struct Client {
     Mode                *mode;                  /* current active browser mode */
     /* WebKitWebContext    *webctx; */          /* not used atm, use webkit_web_context_get_default() instead */
     GtkWidget           *window, *input;
+    GtkWidget           *tab_box;               /* the vbox containing webview+statusbar for this tab */
     WebKitWebView       *webview;
     WebKitFindController *finder;
     WebKitWebInspector  *inspector;
     guint64             page_id;                /* page id of the webview */
     guint64             webview_id;             /* unique stable identifier derived from webview pointer */
     GtkTextBuffer       *buffer;
-    GDBusProxy          *dbusproxy;
-    GDBusServer         *dbusserver;
+    /* WebKitGTK 6.0: dbusproxy and dbusserver removed - using WebKitUserMessage */
     Handler             *handler;               /* the protocoll handlers */
     struct {
         /* TODO split in global setting definitions and set values on a per
@@ -286,9 +289,10 @@ struct Client {
 struct Vimb {
     char        *argv0;
     Client      *clients;
-#ifndef FEATURE_NO_XEMBED
-    Window      embed;
-#endif
+/* GTK4 removed XEmbed support */
+/* #ifndef FEATURE_NO_XEMBED */
+/*     Window      embed; */
+/* #endif */
     GHashTable  *modes;             /* all available browser main modes */
     char        *configfile;        /* config file given as option on startup */
     char        *files[FILES_LAST];
@@ -304,8 +308,15 @@ struct Vimb {
     gboolean    incognito;
 
     WebKitWebContext *webcontext;
+    WebKitNetworkSession *session;  /* WebKitGTK 6.0: network session for data/cookie management */
     GHashTable *webview_to_proxy;   /* maps page_id to dbus proxy for connected clients */
     GSList *pending_proxies;        /* list of pending ProxyPageId structs */
+
+    /* Tab support */
+    GtkWidget   *main_window;       /* single main window for all tabs */
+    GtkWidget   *notebook;          /* GtkNotebook containing all tabs */
+    GtkWidget   *inputbox;          /* shared inputbox at bottom */
+    GtkTextBuffer *input_buffer;    /* shared input buffer */
 };
 
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
@@ -324,10 +335,20 @@ void vb_mode_add(char id, ModeTransitionFunc enter, ModeTransitionFunc leave,
 VbResult vb_mode_handle_key(Client *c, int key);
 void vb_modelabel_update(Client *c, const char *label);
 gboolean vb_quit(Client *c, gboolean force);
+gboolean vb_quit_all(gboolean force);
 void vb_register_add(Client *c, char buf, const char *value);
 const char *vb_register_get(Client *c, char buf);
 void vb_statusbar_update(Client *c);
 void vb_statusbar_show_hover_url(Client *c, VbLinkType type, const char *uri);
 void vb_gui_style_update(Client *c, const char *name, const char *value);
+
+/* Tab management functions */
+Client *vb_tab_new(Client *related, const char *uri);
+void vb_tab_close(Client *c);
+void vb_tab_next(void);
+void vb_tab_prev(void);
+void vb_tab_goto(int n);
+Client *vb_get_current_client(void);
+int vb_get_tab_count(void);
 
 #endif /* end of include guard: _MAIN_H */

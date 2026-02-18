@@ -97,12 +97,11 @@ gboolean bookmark_remove(const char *uri)
     return removed;
 }
 
-gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
+gboolean bookmark_fill_completion(GListStore *store, const char *input)
 {
     gboolean found = FALSE;
     char **parts;
     unsigned int len;
-    GtkTreeIter iter;
     GList *src = NULL;
     Bookmark *bm;
 
@@ -112,15 +111,9 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
         /* without any tags return all bookmarked items */
         for (GList *l = src; l; l = l->next) {
             bm = (Bookmark*)l->data;
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(
-                store, &iter,
-                COMPLETION_STORE_FIRST, bm->uri,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                COMPLETION_STORE_SECOND, bm->title,
-#endif
-                -1
-            );
+            CompletionItem *item = completion_item_new(bm->uri, bm->title);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
     } else {
@@ -130,15 +123,9 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
         for (GList *l = src; l; l = l->next) {
             bm = (Bookmark*)l->data;
             if (bookmark_contains_all_tags(bm, parts, len)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(
-                    store, &iter,
-                    COMPLETION_STORE_FIRST, bm->uri,
-#ifdef FEATURE_TITLE_IN_COMPLETION
-                    COMPLETION_STORE_SECOND, bm->title,
-#endif
-                    -1
-                );
+                CompletionItem *item = completion_item_new(bm->uri, bm->title);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 found = TRUE;
             }
         }
@@ -150,7 +137,7 @@ gboolean bookmark_fill_completion(GtkListStore *store, const char *input)
     return found;
 }
 
-gboolean bookmark_fill_tag_completion(GtkListStore *store, const char *input)
+gboolean bookmark_fill_tag_completion(GListStore *store, const char *input)
 {
     gboolean found;
     unsigned int len, i;

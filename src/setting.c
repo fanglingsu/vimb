@@ -86,7 +86,8 @@ void setting_init(Client *c)
     setting_add(c, "user-agent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15 " PROJECT "/" VERSION, webkit, 0, "user-agent");
     /* TODO use the real names for webkit settings */
     i = 14;
-    setting_add(c, "accelerated-2d-canvas", TYPE_BOOLEAN, &off, webkit, 0, "enable-accelerated-2d-canvas");
+    /* WebKitGTK 6.0: enable-accelerated-2d-canvas is deprecated and removed - setting removed */
+    /* setting_add(c, "accelerated-2d-canvas", TYPE_BOOLEAN, &off, webkit, 0, "enable-accelerated-2d-canvas"); */
     setting_add(c, "allow-file-access-from-file-urls", TYPE_BOOLEAN, &off, webkit, 0, "allow-file-access-from-file-urls");
     setting_add(c, "allow-universal-access-from-file-urls", TYPE_BOOLEAN, &off, webkit, 0, "allow-universal-access-from-file-urls");
     setting_add(c, "caret", TYPE_BOOLEAN, &off, webkit, 0, "enable-caret-browsing");
@@ -94,10 +95,12 @@ void setting_init(Client *c)
     setting_add(c, "dark-mode", TYPE_BOOLEAN, &off, dark_mode, 0, NULL);
     setting_add(c, "default-charset", TYPE_CHAR, &"utf-8", webkit, 0, "default-charset");
     setting_add(c, "default-font", TYPE_CHAR, &"sans-serif", webkit, 0, "default-font-family");
-    setting_add(c, "dns-prefetching", TYPE_BOOLEAN, &on, webkit, 0, "enable-dns-prefetching");
+    /* WebKitGTK 6.0: enable-dns-prefetching is deprecated and does nothing - setting removed */
+    /* setting_add(c, "dns-prefetching", TYPE_BOOLEAN, &on, webkit, 0, "enable-dns-prefetching"); */
     i = SETTING_DEFAULT_FONT_SIZE;
     setting_add(c, "font-size", TYPE_INTEGER, &i, webkit, 0, "default-font-size");
-    setting_add(c, "frame-flattening", TYPE_BOOLEAN, &off, webkit, 0, "enable-frame-flattening");
+    /* WebKitGTK 6.0: enable-frame-flattening is deprecated and removed - setting removed */
+    /* setting_add(c, "frame-flattening", TYPE_BOOLEAN, &off, webkit, 0, "enable-frame-flattening"); */
     setting_add(c, "geolocation", TYPE_CHAR, &"ask", geolocation, FLAG_NODUP, NULL);
     setting_add(c, "hardware-acceleration-policy", TYPE_CHAR, &"ondemand", hardware_acceleration_policy, FLAG_NODUP, NULL);
     setting_add(c, "header", TYPE_CHAR, &"", headers, FLAG_LIST|FLAG_NODUP, "header");
@@ -110,7 +113,8 @@ void setting_init(Client *c)
     setting_add(c, "histignore", TYPE_CHAR, &SETTING_HISTIGNORE, histignore, 0, NULL);
     setting_add(c, "html5-database", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-database");
     setting_add(c, "html5-local-storage", TYPE_BOOLEAN, &on, webkit, 0, "enable-html5-local-storage");
-    setting_add(c, "hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing");
+    /* WebKitGTK 6.0: enable-hyperlink-auditing is deprecated and does nothing - setting removed */
+    /* setting_add(c, "hyperlink-auditing", TYPE_BOOLEAN, &off, webkit, 0, "enable-hyperlink-auditing"); */
     setting_add(c, "images", TYPE_BOOLEAN, &on, webkit, 0, "auto-load-images");
 #if WEBKIT_CHECK_VERSION(2, 30, 0)
     setting_add(c, "intelligent-tracking-prevention", TYPE_BOOLEAN, &off, intelligent_tracking_prevention, 0, NULL);
@@ -120,6 +124,7 @@ void setting_init(Client *c)
 #if WEBKIT_CHECK_VERSION(2, 24, 0)
     setting_add(c, "javascript-enable-markup", TYPE_BOOLEAN, &on, webkit, 0, "enable-javascript-markup");
 #endif
+    setting_add(c, "media", TYPE_BOOLEAN, &on, webkit, 0, "enable-media");
     setting_add(c, "media-playback-allows-inline", TYPE_BOOLEAN, &on, webkit, 0, "media-playback-allows-inline");
     setting_add(c, "media-playback-requires-user-gesture", TYPE_BOOLEAN, &off, webkit, 0, "media-playback-requires-user-gesture");
     setting_add(c, "media-stream", TYPE_BOOLEAN, &off, webkit, 0, "enable-media-stream");
@@ -130,8 +135,10 @@ void setting_init(Client *c)
     i = SETTING_DEFAULT_MONOSPACE_FONT_SIZE;
     setting_add(c, "monospace-font-size", TYPE_INTEGER, &i, webkit, 0, "default-monospace-font-size");
     setting_add(c, "notification", TYPE_CHAR, &"ask", notification, FLAG_NODUP, NULL);
-    setting_add(c, "offline-cache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache");
-    setting_add(c, "plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins");
+    /* WebKitGTK 6.0: enable-offline-web-application-cache is deprecated and does nothing - setting removed */
+    /* setting_add(c, "offline-cache", TYPE_BOOLEAN, &on, webkit, 0, "enable-offline-web-application-cache"); */
+    /* WebKitGTK 6.0: enable-plugins is deprecated and removed - setting removed */
+    /* setting_add(c, "plugins", TYPE_BOOLEAN, &on, webkit, 0, "enable-plugins"); */
     setting_add(c, "prevent-newwindow", TYPE_BOOLEAN, &off, internal, 0, &c->config.prevent_newwindow);
     setting_add(c, "print-backgrounds", TYPE_BOOLEAN, &on, webkit, 0, "print-backgrounds");
     setting_add(c, "sans-serif-font", TYPE_CHAR, &"sans-serif", webkit, 0, "sans-serif-font-family");
@@ -144,7 +151,8 @@ void setting_init(Client *c)
     setting_add(c, "webaudio", TYPE_BOOLEAN, &off, webkit, 0, "enable-webaudio");
     setting_add(c, "webgl", TYPE_BOOLEAN, &off, webkit, 0, "enable-webgl");
     setting_add(c, "webinspector", TYPE_BOOLEAN, &on, webkit, 0, "enable-developer-extras");
-    setting_add(c, "xss-auditor", TYPE_BOOLEAN, &on, webkit, 0, "enable-xss-auditor");
+    /* WebKitGTK 6.0: enable-xss-auditor is deprecated and removed - setting removed */
+    /* setting_add(c, "xss-auditor", TYPE_BOOLEAN, &on, webkit, 0, "enable-xss-auditor"); */
 
     /* internal variables */
     setting_add(c, "stylesheet", TYPE_BOOLEAN, &on, user_style, 0, NULL);
@@ -284,17 +292,17 @@ VbCmdResult setting_run(Client *c, char *name, const char *param)
     return CMD_ERROR | CMD_KEEPINPUT;
 }
 
-gboolean setting_fill_completion(Client *c, GtkListStore *store, const char *input)
+gboolean setting_fill_completion(Client *c, GListStore *store, const char *input)
 {
-    GtkTreeIter iter;
     gboolean found = FALSE;
     GList *src     = g_hash_table_get_keys(c->config.settings);
 
     /* If no filter input given - copy all entries into the data store. */
     if (!input || !*input) {
         for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            CompletionItem *item = completion_item_new(l->data, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
         g_list_free(src);
@@ -306,8 +314,9 @@ gboolean setting_fill_completion(Client *c, GtkListStore *store, const char *inp
     for (GList *l = src; l; l = l->next) {
         char *value = (char*)l->data;
         if (g_str_has_prefix(value, input)) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            CompletionItem *item = completion_item_new(l->data, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
     }
@@ -516,12 +525,11 @@ static void setting_free(Setting *s)
 
 static int cookie_accept(Client *c, const char *name, DataType type, void *value, void *data)
 {
-    WebKitWebContext *ctx;
     WebKitCookieManager *cm;
     char *policy = (char*)value;
 
-    ctx = webkit_web_view_get_context(c->webview);
-    cm  = webkit_web_context_get_cookie_manager(ctx);
+    /* WebKitGTK 6.0: Get cookie manager from network session */
+    cm = webkit_network_session_get_cookie_manager(vb.session);
     if (strcmp("always", policy) == 0) {
         webkit_cookie_manager_set_accept_policy(cm, WEBKIT_COOKIE_POLICY_ACCEPT_ALWAYS);
     } else if (strcmp("origin", policy) == 0) {
@@ -580,9 +588,8 @@ static int geolocation(Client *c, const char *name, DataType type, void *value, 
 #if WEBKIT_CHECK_VERSION(2, 30, 0)
 static int intelligent_tracking_prevention(Client *c, const char *name, DataType type, void *value, void *data)
 {
-    WebKitWebContext *ctx = webkit_web_view_get_context(c->webview);
-    WebKitWebsiteDataManager *manager = webkit_web_context_get_website_data_manager(ctx);
-    webkit_website_data_manager_set_itp_enabled(manager, *(gboolean*)value);
+    /* WebKitGTK 6.0: ITP is now set on the network session */
+    webkit_network_session_set_itp_enabled(vb.session, *(gboolean*)value);
     return CMD_SUCCESS;
 }
 #endif
@@ -602,9 +609,8 @@ static int hardware_acceleration_policy(Client *c, const char *name, DataType ty
 {
     WebKitSettings *settings = webkit_web_view_get_settings(c->webview);
 
-    if (g_str_equal(value, "ondemand")) {
-        webkit_settings_set_hardware_acceleration_policy(settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND);
-    } else if (g_str_equal(value, "always")) {
+    /* WebKitGTK 6.0: ON_DEMAND policy removed - map to ALWAYS for compatibility */
+    if (g_str_equal(value, "ondemand") || g_str_equal(value, "always")) {
         webkit_settings_set_hardware_acceleration_policy(settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS);
     } else if (g_str_equal(value, "never")) {
         webkit_settings_set_hardware_acceleration_policy(settings, WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
@@ -739,8 +745,11 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
         }
     }
 
-    /* Inject the global scripts including scroll observer. */
-    script = webkit_user_script_new(JS_HINTS " " JS_SCROLL " " JS_SCROLL_OBSERVER,
+    /* Inject the global scripts: hints, scroll, scroll observer, and focus tracking.
+     * Focus tracking detects when editable elements gain/lose focus to
+     * automatically switch vimb between normal and input modes. */
+    script = webkit_user_script_new(
+            JS_HINTS " " JS_SCROLL " " JS_SCROLL_OBSERVER " " JS_FOCUS_TRACKING,
             WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
             WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
     webkit_user_content_manager_add_script(ucm, script);
@@ -816,9 +825,8 @@ static int tls_policy(Client *c, const char *name, DataType type, void *value, v
     gboolean strict = *((gboolean*)value);
 
 #if WEBKIT_CHECK_VERSION(2, 30, 0)
-    WebKitWebContext *ctx = webkit_web_view_get_context(c->webview);
-    WebKitWebsiteDataManager *manager = webkit_web_context_get_website_data_manager(ctx);
-    webkit_website_data_manager_set_tls_errors_policy(manager,
+    /* WebKitGTK 6.0: TLS errors policy is now set on the network session */
+    webkit_network_session_set_tls_errors_policy(vb.session,
         strict ? WEBKIT_TLS_ERRORS_POLICY_FAIL : WEBKIT_TLS_ERRORS_POLICY_IGNORE);
 #else
     webkit_web_context_set_tls_errors_policy(
@@ -833,6 +841,18 @@ static int webkit(Client *c, const char *name, DataType type, void *value, void 
 {
     const char *property = (const char*)data;
     WebKitSettings *web_setting = webkit_web_view_get_settings(c->webview);
+
+    /* WebKitGTK 6.0: Skip deprecated properties that no longer exist */
+    if (g_str_equal(property, "enable-dns-prefetching") ||
+        g_str_equal(property, "enable-hyperlink-auditing") ||
+        g_str_equal(property, "enable-offline-web-application-cache") ||
+        g_str_equal(property, "enable-accelerated-2d-canvas") ||
+        g_str_equal(property, "enable-frame-flattening") ||
+        g_str_equal(property, "enable-plugins") ||
+        g_str_equal(property, "enable-xss-auditor")) {
+        /* These properties are deprecated and removed in WebKitGTK 6.0 */
+        return CMD_SUCCESS;
+    }
 
     switch (type) {
         case TYPE_BOOLEAN:

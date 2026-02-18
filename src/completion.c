@@ -21,14 +21,129 @@
 #include "config.h"
 #include "main.h"
 
+/* CompletionItem GObject implementation */
+struct _CompletionItem {
+    GObject parent_instance;
+    char *first;
+    char *second;
+};
+
+G_DEFINE_TYPE(CompletionItem, completion_item, G_TYPE_OBJECT)
+
+enum {
+    PROP_0,
+    PROP_FIRST,
+    PROP_SECOND,
+    N_PROPS
+};
+
+static GParamSpec *item_props[N_PROPS] = { NULL, };
+
+static void completion_item_finalize(GObject *object)
+{
+    CompletionItem *self = COMPLETION_ITEM(object);
+    g_free(self->first);
+    g_free(self->second);
+    G_OBJECT_CLASS(completion_item_parent_class)->finalize(object);
+}
+
+static void completion_item_get_property(GObject *object, guint prop_id,
+        GValue *value, GParamSpec *pspec)
+{
+    CompletionItem *self = COMPLETION_ITEM(object);
+    switch (prop_id) {
+        case PROP_FIRST:
+            g_value_set_string(value, self->first);
+            break;
+        case PROP_SECOND:
+            g_value_set_string(value, self->second);
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+    }
+}
+
+static void completion_item_set_property(GObject *object, guint prop_id,
+        const GValue *value, GParamSpec *pspec)
+{
+    CompletionItem *self = COMPLETION_ITEM(object);
+    switch (prop_id) {
+        case PROP_FIRST:
+            g_free(self->first);
+            self->first = g_value_dup_string(value);
+            break;
+        case PROP_SECOND:
+            g_free(self->second);
+            self->second = g_value_dup_string(value);
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+    }
+}
+
+static void completion_item_class_init(CompletionItemClass *klass)
+{
+    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+
+    object_class->finalize = completion_item_finalize;
+    object_class->get_property = completion_item_get_property;
+    object_class->set_property = completion_item_set_property;
+
+    item_props[PROP_FIRST] = g_param_spec_string(
+        "first", "First", "First column value",
+        NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+    item_props[PROP_SECOND] = g_param_spec_string(
+        "second", "Second", "Second column value",
+        NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+
+    g_object_class_install_properties(object_class, N_PROPS, item_props);
+}
+
+static void completion_item_init(CompletionItem *self)
+{
+    self->first = NULL;
+    self->second = NULL;
+}
+
+CompletionItem *completion_item_new(const char *first, const char *second)
+{
+    return g_object_new(COMPLETION_TYPE_ITEM,
+        "first", first,
+        "second", second,
+        NULL);
+}
+
+const char *completion_item_get_first(CompletionItem *item)
+{
+    g_return_val_if_fail(COMPLETION_IS_ITEM(item), NULL);
+    return item->first;
+}
+
+const char *completion_item_get_second(CompletionItem *item)
+{
+    g_return_val_if_fail(COMPLETION_IS_ITEM(item), NULL);
+    return item->second;
+}
+
+GListStore *completion_store_new(void)
+{
+    return g_list_store_new(COMPLETION_TYPE_ITEM);
+}
+
+/* Completion widget state */
 typedef struct {
-    GtkWidget               *win, *tree;
-    int                     active;  /* number of the current active tree item */
+    GtkWidget               *win, *listview;
+    GtkSingleSelection      *selection;
+    int                     active;  /* number of the current active item */
     CompletionSelectFunc    selfunc;
 } Completion;
 
-static gboolean tree_selection_func(GtkTreeSelection *selection,
-    GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data);
+static void on_selection_changed(GtkSelectionModel *model, guint position,
+        guint n_items, gpointer data);
+static void setup_listitem(GtkListItemFactory *factory, GtkListItem *list_item,
+        gpointer user_data);
+static void bind_listitem(GtkListItemFactory *factory, GtkListItem *list_item,
+        gpointer user_data);
 
 extern struct Vimb vb;
 
@@ -42,9 +157,15 @@ void completion_clean(Client *c)
     c->mode->flags  &= ~FLAG_COMPLETION;
 
     if (comp->win) {
-        gtk_widget_destroy(comp->win);
-        comp->win  = NULL;
-        comp->tree = NULL;
+        /* Disconnect signal before destroying to avoid spurious callbacks */
+        if (comp->selection) {
+            g_signal_handlers_disconnect_by_func(comp->selection,
+                G_CALLBACK(on_selection_changed), c);
+        }
+        gtk_widget_unparent(comp->win);
+        comp->win       = NULL;
+        comp->listview  = NULL;
+        comp->selection = NULL;
     }
 }
 
@@ -63,102 +184,71 @@ void completion_cleanup(Client *c)
  * Start the completion by creating the required widgets and setting a select
  * function.
  */
-gboolean completion_create(Client *c, GtkTreeModel *model,
+gboolean completion_create(Client *c, GListStore *store,
         CompletionSelectFunc selfunc, gboolean back)
 {
-    GtkCellRenderer *renderer;
-    GtkTreeSelection *selection;
-    GtkTreeViewColumn *column;
+    GtkListItemFactory *factory;
     GtkRequisition size;
-    GtkTreePath *path;
-    GtkTreeIter iter;
     int height, width;
     Completion *comp = (Completion*)c->comp;
+    guint n_items;
 
-    /* if there is only one match - don't build the tree view */
-    if (gtk_tree_model_iter_n_children(model, NULL) == 1) {
-        char *value;
-        path = gtk_tree_path_new_from_indices(0, -1);
-        if (gtk_tree_model_get_iter(model, &iter, path)) {
-            gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
+    n_items = g_list_model_get_n_items(G_LIST_MODEL(store));
 
+    /* if there is only one match - don't build the list view */
+    if (n_items == 1) {
+        CompletionItem *item = g_list_model_get_item(G_LIST_MODEL(store), 0);
+        if (item) {
+            const char *value = completion_item_get_first(item);
             /* call the select function */
-            selfunc(c, value);
-
-            g_free(value);
-            g_object_unref(model);
-
+            selfunc(c, (char*)value);
+            g_object_unref(item);
+            g_object_unref(store);
             return FALSE;
         }
     }
 
     comp->selfunc = selfunc;
 
-    /* prepare the tree view */
-    comp->win  = gtk_scrolled_window_new(NULL, NULL);
-    comp->tree = gtk_tree_view_new_with_model(model);
+    /* Create selection model */
+    comp->selection = gtk_single_selection_new(G_LIST_MODEL(store));
+    gtk_single_selection_set_autoselect(comp->selection, FALSE);
+    gtk_single_selection_set_can_unselect(comp->selection, TRUE);
 
-    gtk_style_context_add_provider(gtk_widget_get_style_context(comp->tree),
-            GTK_STYLE_PROVIDER(vb.style_provider),
-            GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-    gtk_widget_set_name(GTK_WIDGET(comp->tree), "completion");
+    /* prepare the list view */
+    comp->win      = gtk_scrolled_window_new();
+    factory        = gtk_signal_list_item_factory_new();
 
-    gtk_box_pack_end(GTK_BOX(gtk_widget_get_parent(GTK_WIDGET(c->statusbar.box))), comp->win, FALSE, FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(comp->win), comp->tree);
+    g_signal_connect(factory, "setup", G_CALLBACK(setup_listitem), NULL);
+    g_signal_connect(factory, "bind", G_CALLBACK(bind_listitem), NULL);
 
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(comp->tree), FALSE);
-    /* we have only on line per item so we can use the faster fixed heigh mode */
-    gtk_tree_view_set_fixed_height_mode(GTK_TREE_VIEW(comp->tree), TRUE);
-    g_object_unref(model);
+    comp->listview = gtk_list_view_new(GTK_SELECTION_MODEL(comp->selection), factory);
 
-    /* prepare the selection */
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(comp->tree));
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
-    gtk_tree_selection_set_select_function(selection, tree_selection_func, c, NULL);
+    /* GTK4: CSS providers are added to display, widgets are targeted by name/class in CSS */
+    /* The provider is already added to display in vimb_setup(), widget uses CSS selector */
+    gtk_widget_set_name(GTK_WIDGET(comp->listview), "completion");
+
+    gtk_box_append(GTK_BOX(gtk_widget_get_parent(GTK_WIDGET(c->statusbar.box))), comp->win);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(comp->win), comp->listview);
+
+    /* Connect selection changed signal */
+    g_signal_connect(comp->selection, "selection-changed",
+        G_CALLBACK(on_selection_changed), c);
 
     /* get window dimension */
-    gtk_window_get_size(GTK_WINDOW(c->window), &width, &height);
+    gtk_window_get_default_size(GTK_WINDOW(c->window), &width, &height);
 
-    /* prepare first column */
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(comp->tree), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer,
-        "ellipsize", PANGO_ELLIPSIZE_MIDDLE,
-        NULL
-    );
-    gtk_tree_view_column_pack_start(column, renderer, TRUE);
-    gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_FIRST);
-    gtk_tree_view_column_set_min_width(column, 2 * width/3);
-
-    /* prepare second column */
-#ifdef FEATURE_TITLE_IN_COMPLETION
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_FIXED);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(comp->tree), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer,
-        "ellipsize", PANGO_ELLIPSIZE_END,
-        NULL
-    );
-    gtk_tree_view_column_pack_start(column, renderer, TRUE);
-    gtk_tree_view_column_add_attribute(column, renderer, "text", COMPLETION_STORE_SECOND);
-#endif
-
-    /* to set the height for the treeview the tree must be realized first */
-    gtk_widget_show(comp->tree);
+    /* Show the list view first */
+    gtk_widget_set_visible(comp->listview, TRUE);
 
     /* this prevents the first item to be placed out of view if the completion
      * is shown */
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
+    while (g_main_context_pending(NULL)) {
+        g_main_context_iteration(NULL, TRUE);
     }
 
     /* use max 1/3 of window height for the completion */
-    gtk_widget_get_preferred_size(comp->tree, NULL, &size);
+    gtk_widget_get_preferred_size(comp->listview, NULL, &size);
     height /= 3;
     gtk_scrolled_window_set_min_content_height(
         GTK_SCROLLED_WINDOW(comp->win),
@@ -171,7 +261,7 @@ gboolean completion_create(Client *c, GtkTreeModel *model,
     comp->active = -1;
     completion_next(c, back);
 
-    gtk_widget_show(comp->win);
+    gtk_widget_set_visible(comp->win, TRUE);
 
     return TRUE;
 }
@@ -186,70 +276,138 @@ void completion_init(Client *c)
 }
 
 /**
- * Moves the selection to the next/previous tree item.
+ * Moves the selection to the next/previous item.
  * If the end/beginning is reached return false and start on the opposite end
  * on the next call.
  */
 gboolean completion_next(Client *c, gboolean back)
 {
-    int rows;
-    GtkTreePath *path;
-    GtkTreeView *tree = GTK_TREE_VIEW(((Completion*)c->comp)->tree);
-    Completion *comp  = (Completion*)c->comp;
+    guint n_items;
+    Completion *comp = (Completion*)c->comp;
+    guint old_selected;
 
-    rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(tree), NULL);
+    if (!comp->selection) {
+        return FALSE;
+    }
+
+    n_items = g_list_model_get_n_items(G_LIST_MODEL(
+        gtk_single_selection_get_model(comp->selection)));
+
+    old_selected = gtk_single_selection_get_selected(comp->selection);
+
     if (back) {
         comp->active--;
         /* Step back over the beginning. */
         if (comp->active == -1) {
             /* Deselect the current item to show the user the initial typed
              * content. */
-            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp->tree)));
-
+            gtk_single_selection_set_selected(comp->selection, GTK_INVALID_LIST_POSITION);
             return FALSE;
         }
         if (comp->active < -1) {
-            comp->active = rows - 1;
+            comp->active = n_items - 1;
         }
     } else {
         comp->active++;
         /* Step over the end. */
-        if (comp->active == rows) {
-            gtk_tree_selection_unselect_all(gtk_tree_view_get_selection(GTK_TREE_VIEW(comp->tree)));
-
+        if (comp->active == (int)n_items) {
+            gtk_single_selection_set_selected(comp->selection, GTK_INVALID_LIST_POSITION);
             return FALSE;
         }
-        if (comp->active >= rows) {
+        if (comp->active >= (int)n_items) {
             comp->active = 0;
         }
     }
 
-    /* get new path and move cursor to it */
-    path = gtk_tree_path_new_from_indices(comp->active, -1);
-    gtk_tree_view_set_cursor(tree, path, NULL, FALSE);
-    gtk_tree_path_free(path);
+    /* Select the item */
+    gtk_single_selection_set_selected(comp->selection, comp->active);
+
+    /* Scroll to make the selected item visible */
+    if (comp->listview && comp->active >= 0) {
+        gtk_list_view_scroll_to(GTK_LIST_VIEW(comp->listview), comp->active,
+            GTK_LIST_SCROLL_NONE, NULL);
+    }
+
+    /* If selection didn't change (same item selected), manually trigger the callback
+     * since selection-changed won't fire */
+    if (old_selected == (guint)comp->active && comp->active >= 0) {
+        CompletionItem *item = g_list_model_get_item(
+            gtk_single_selection_get_model(comp->selection), comp->active);
+        if (item) {
+            const char *value = completion_item_get_first(item);
+            comp->selfunc(c, (char*)value);
+            g_object_unref(item);
+        }
+    }
 
     return TRUE;
 }
 
-static gboolean tree_selection_func(GtkTreeSelection *selection,
-    GtkTreeModel *model, GtkTreePath *path, gboolean selected, gpointer data)
+static void setup_listitem(GtkListItemFactory *factory, GtkListItem *list_item,
+        gpointer user_data)
 {
-    char *value;
-    GtkTreeIter iter;
-    Completion *comp = (Completion*)((Client*)data)->comp;
+    GtkWidget *box, *label_first;
+#ifdef FEATURE_TITLE_IN_COMPLETION
+    GtkWidget *label_second;
+#endif
 
-    /* if not selected means the item is going to be selected which we are
-     * interested in */
-    if (!selected && gtk_tree_model_get_iter(model, &iter, path)) {
-        gtk_tree_model_get(model, &iter, COMPLETION_STORE_FIRST, &value, -1);
+    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
 
-        comp->selfunc((Client*)data, value);
+    label_first = gtk_label_new(NULL);
+    gtk_label_set_xalign(GTK_LABEL(label_first), 0.0);
+    gtk_label_set_ellipsize(GTK_LABEL(label_first), PANGO_ELLIPSIZE_MIDDLE);
+    gtk_widget_set_hexpand(label_first, TRUE);
+    gtk_box_append(GTK_BOX(box), label_first);
 
-        g_free(value);
-        /* TODO update comp->active on select by mouse to continue with <Tab>
-         * or <S-Tab> from selected item on. */
+#ifdef FEATURE_TITLE_IN_COMPLETION
+    label_second = gtk_label_new(NULL);
+    gtk_label_set_xalign(GTK_LABEL(label_second), 0.0);
+    gtk_label_set_ellipsize(GTK_LABEL(label_second), PANGO_ELLIPSIZE_END);
+    gtk_widget_set_hexpand(label_second, TRUE);
+    gtk_box_append(GTK_BOX(box), label_second);
+#endif
+
+    gtk_list_item_set_child(list_item, box);
+}
+
+static void bind_listitem(GtkListItemFactory *factory, GtkListItem *list_item,
+        gpointer user_data)
+{
+    GtkWidget *box, *label_first;
+#ifdef FEATURE_TITLE_IN_COMPLETION
+    GtkWidget *label_second;
+#endif
+    CompletionItem *item;
+
+    box = gtk_list_item_get_child(list_item);
+    item = gtk_list_item_get_item(list_item);
+
+    label_first = gtk_widget_get_first_child(box);
+    gtk_label_set_text(GTK_LABEL(label_first), completion_item_get_first(item));
+
+#ifdef FEATURE_TITLE_IN_COMPLETION
+    label_second = gtk_widget_get_next_sibling(label_first);
+    gtk_label_set_text(GTK_LABEL(label_second), completion_item_get_second(item));
+#endif
+}
+
+static void on_selection_changed(GtkSelectionModel *model, guint position,
+        guint n_items, gpointer data)
+{
+    Client *c = (Client*)data;
+    Completion *comp = (Completion*)c->comp;
+    guint selected;
+    CompletionItem *item;
+
+    selected = gtk_single_selection_get_selected(GTK_SINGLE_SELECTION(model));
+    if (selected == GTK_INVALID_LIST_POSITION) {
+        return;
     }
 
-    return TRUE;
+    item = g_list_model_get_item(gtk_single_selection_get_model(GTK_SINGLE_SELECTION(model)), selected);
+    if (item) {
+        const char *value = completion_item_get_first(item);
+        comp->selfunc(c, (char*)value);
+        g_object_unref(item);
+    }
 }

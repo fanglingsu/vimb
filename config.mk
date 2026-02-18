@@ -18,7 +18,7 @@ SRCDIR  = src
 DOCDIR  = doc
 
 # used libs
-LIBS = gtk+-3.0 webkit2gtk-4.1
+LIBS = gtk4 webkitgtk-6.0
 
 # setup general used CFLAGS
 # Use 'override' to ensure these flags are added even when CFLAGS is set on command line
@@ -36,9 +36,9 @@ endif
 
 # flags used to build webextension
 EXTTARGET   = webext_main.so
-EXTCFLAGS   = ${CFLAGS} $(shell pkg-config --cflags webkit2gtk-web-extension-4.1)
+EXTCFLAGS   = ${CFLAGS} $(shell pkg-config --cflags webkitgtk-6.0)
 EXTCPPFLAGS = $(CPPFLAGS)
-EXTLDFLAGS  = ${LDFLAGS} $(shell pkg-config --libs webkit2gtk-web-extension-4.1) -shared
+EXTLDFLAGS  = ${LDFLAGS} $(shell pkg-config --libs webkitgtk-6.0) -shared
 
 # flags used for the main application
 # Use 'override' to ensure these flags are added even when CFLAGS/LDFLAGS is set on command line

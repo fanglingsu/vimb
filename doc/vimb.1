@@ -41,8 +41,11 @@ Use custom configuration given as \fIFILE\fP.
 This will also be applied on new spawned instances.
 .TP
 .BI "\-e, \-\-embed " "WINID"
-.I WINID
-of an XEmbed-aware application, that Vimb will use as its parent.
+.B [DEPRECATED - GTK4 removed XEmbed support]
+.br
+This option is no longer functional.
+GTK4 removed GtkPlug/GtkSocket XEmbed support.
+For tabbed integration alternatives, see the project documentation.
 .TP
 .B "\-i, \-\-incognito"
 Start an instance with user data read-only (see \fIFILES\fP section).
@@ -114,6 +117,21 @@ Pass the next key press directly to GTK.
 .B CTRL\-Q
 Quit the browser if there are no running downloads.
 .
+.SS Tabs
+Vimb supports tabbed browsing within a single window.
+.TP
+.B gt
+Go to the next tab.
+.TP
+.B gT
+Go to the previous tab.
+.TP
+.B g0
+Go to the first tab.
+.TP
+.B g$
+Go to the last tab.
+.
 .SS Navigation
 .TP
 .B o
@@ -132,13 +150,13 @@ Start Command Mode and print `:tabopen URI' to the input box.
 Open the configured home-page.
 .TP
 .B gH
-Open the configured home-page in a new window.
+Open the configured home-page in a new tab.
 .TP
 .B u
 Open the last closed page.
 .TP
 .B U
-Open the last closed page in a new window.
+Open the last closed page in a new tab.
 .TP
 .B CTRL\-P
 Open the oldest entry from the read it later queue in the current browser
@@ -149,7 +167,7 @@ Open the URI out of the register \fIx\fP or, if not given, from the clipboard.
 .TP
 .BI [ \(dqx ]P
 Open the URI out of the register \fIx\fP or, if not given, from the clipboard in a
-new window.
+new tab.
 .TP
 .BI [ N ]CTRL\-O
 Go back \fIN\fP steps in the browser history.
@@ -173,7 +191,7 @@ Reload the website without using caches.
 Stop loading the current page.
 .TP
 .B CTRL-LeftMouse, MiddleMouse
-Opens the clicked link in a new window.
+Opens the clicked link in a new tab.
 .TP
 .B Shift-LeftMouse
 Push the link url under the cursor to the end of the Read It Later queue like
@@ -297,7 +315,7 @@ Is an alias for the \fB;t\fP hint mode.
 Open hint's location in the current window.
 .TP
 .B ;t
-Open hint's location in a new window.
+Open hint's location in a new tab.
 .TP
 .B ;s
 Saves the hint's destination under the configured `download-path'.
@@ -318,7 +336,7 @@ content will be put back in the form field.
 Open hinted image in the current window.
 .TP
 .B ;I
-Open hinted image in a new window.
+Open hinted image in a new tab.
 .TP
 .B ;k
 Kill (remove) hinted element from the page.
@@ -528,12 +546,30 @@ Yank the current selection into register \fIx\fP and clipboard.
 .SS Open
 .TP
 .BI ":o[pen] [" URI ]
-Open the give \fIURI\fP in the current window.
+Open the give \fIURI\fP in the current tab.
 If \fIURI\fP is empty, the configured 'home-page' is opened.
 .TP
 .BI ":t[abopen] [" URI ]
-Open the give \fIURI\fP in a new window.
+Open the give \fIURI\fP in a new tab.
 If \fIURI\fP is empty, the configured 'home-page' is opened.
+.
+.SS Tabs
+.TP
+.B :tabc[lose]
+Close the current tab.
+If this is the last tab, the browser window is closed.
+.TP
+.B :tabn[ext]
+Switch to the next tab.
+.TP
+.B :tabp[rev], :tabp[revious]
+Switch to the previous tab.
+.TP
+.B :tabfirst
+Switch to the first tab.
+.TP
+.B :tablast
+Switch to the last tab.
 .
 .SS Key Mapping
 Key mappings allow users to alter the actions of key presses.
@@ -884,9 +920,6 @@ Memory cache.
 .B disk-cache
 HTTP disk cache.
 .TP
-.B offline-cache
-Offline web application cache.
-.TP
 .B session-storage
 Session storage data.
 .TP
@@ -977,8 +1010,7 @@ Contains the pid of the running Vimb instance.
 Holds the X-Window id of the Vimb window.
 .TP
 .B VIMB_XID
-Holds the X-Window id of the Vimb window or of the embedding window if Vimb is
-compiled with XEMBED and started with the -e option.
+Holds the X-Window id of the Vimb window.
 .PD
 .EE
 .RE
@@ -1015,11 +1047,19 @@ and '~user' pattern.
 Read ex commands from \fIfile\fP.
 .TP
 .B :q[uit]
-Close the browser.
+Close the current tab.
+If this is the last tab, the browser window is closed.
 This will be refused if there are running downloads.
 .TP
 .B :q[uit]!
-Close the browser independent from an running download.
+Close the current tab independent from a running download.
+.TP
+.B :quita[ll]
+Close all tabs and quit the browser.
+This will be refused if there are running downloads in any tab.
+.TP
+.B :quita[ll]!
+Close all tabs and quit the browser independent from running downloads.
 .TP
 .B :reg[ister]
 Display the contents of all registers.
@@ -1149,11 +1189,6 @@ comparison for further typed chars.
 All settings listed below can be set with the `:set' command.
 See \fBSettings\fP under \fBCOMMAND MODE\fP for syntax.
 .TP
-.BR accelerated-2d-canvas (bool)
-Enable or disable accelerated 2D canvas.
-When accelerated 2D canvas is enabled, WebKit may render some 2D canvas
-content using hardware accelerated drawing operations.
-.TP
 .BR allow-file-access-from-file-urls (bool)
 Indicates whether file access is allowed from file URLs.
 By default, when something is loaded using a file URI, cross origin requests
@@ -1205,9 +1240,6 @@ font.
 .B default-zoom (int)
 Default Full-Content zoom level in percent. Default is 100.
 .TP
-.B dns-prefetching (bool)
-Indicates if Vimb prefetches domain names.
-.TP
 .B download-command (string)
 A command with placeholder '%s' that will be invoked to download a URI in
 case 'download-use-external' is enabled.
@@ -1250,11 +1282,6 @@ the foreground.
 .TP
 .B font-size (int)
 The default font size used to display text.
-.TP
-.B frame-flattening (bool)
-Whether to enable the Frame Flattening.
-With this setting each subframe is expanded to its contents,
-which will flatten all the frames to become one scrollable page.
 .TP
 .B fullscreen (bool)
 Show the current window full-screen.
@@ -1368,9 +1395,6 @@ and be able to use SQL to manipulate that data asynchronously.
 Whether to enable HTML5 localStorage support.
 localStorage provides simple synchronous storage access.
 .TP
-.B hyperlink-auditing (bool)
-Enable or disable support for <a ping>.
-.TP
 .B images (bool)
 Determines whether images should be automatically loaded or not.
 .TP
@@ -1404,6 +1428,12 @@ Disabling can help with some older systems (ppc, ppc64, etc.) that don't have co
 .TP
 .B geolocation (string)
 Controls website access to the geolocation API {`always', `never', `ask' (display a prompt each time)}
+.TP
+.B media (bool)
+Enable or disable all media support.
+When disabled, WebKitGTK will not attempt to play any audio or video content,
+which can be useful on systems where GStreamer is not fully configured or to
+prevent crashes caused by missing GStreamer plugins (such as autoaudiosink).
 .TP
 .B media-playback-allows-inline (bool)
 Whether media playback is full-screen only or inline playback is allowed.
@@ -1439,20 +1469,12 @@ Default font size for the monospace font.
 Controls website access to the notification API, that sends notifications via
 dbus. {`always', `never', `ask' (display a prompt each time)}
 .TP
-.B offline-cache (bool)
-Whether to enable HTML5 offline web application cache support.
-Offline web application cache allows web applications to run even
-when the user is not connected to the network.
-.TP
 .B print-backgrounds (bool)
 Whether background images should be drawn during printing.
 .TP
-.B plugins (bool)
-Determines whether or not plugins on the page are enabled.
-.TP
 .B prevent-newwindow (bool)
-Whether to open links, that would normally open in a new window, in the
-current window.
+Whether to open links, that would normally open in a new tab, in the
+current tab instead.
 This option does not affect links fired by hinting.
 .TP
 .B sans-serif-font (string)
@@ -1574,11 +1596,6 @@ This makes the key sequence ";f" start hinting and then open the hinted URI in
 firefox.
 .PD
 .RE
-.TP
-.B xss-auditor (bool)
-Whether to enable the XSS auditor.
-This feature filters some kinds of reflective XSS attacks on vulnerable web
-sites.
 .
 .
 .SH FILES

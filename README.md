@@ -1,6 +1,6 @@
 # Vimb - the Vim-like browser
 
-[![Build Status](https://travis-ci.com/fanglingsu/vimb.svg?branch=master)](https://travis-ci.com/fanglingsu/vimb)
+[![Build Status](https://github.com/fanglingsu/vimb/actions/workflows/ci.yml/badge.svg)](https://github.com/fanglingsu/vimb/actions/workflows/ci.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Latest Release](https://img.shields.io/github/release/fanglingsu/vimb.svg?style=flat)](https://github.com/fanglingsu/vimb/releases/latest)
 
@@ -39,14 +39,40 @@ the project page of [Vimb][].
 
 ## dependencies
 
-- gtk+-3.0
-- webkit2gtk-4.1
+- gtk4
+- webkitgtk-6.0
 - gst-libav, gst-plugins-good (optional, for media decoding among other things)
+
+**Note:** Vimb has been migrated from GTK3/WebKit2GTK-4.1 to GTK4/WebKitGTK-6.0.
+This is a major version change that requires GTK4 and WebKitGTK 6.0 or later.
+
+### Native Tab Support
+
+Vimb now has **native tab support** using GTK4's `GtkNotebook`. All tabs share a 
+single window with a shared command input at the bottom.
+
+**Tab Commands:**
+- `:tabopen [uri]` or `:tabo [uri]` - Open URI in new tab
+- `:tabclose` - Close current tab
+- `:tabnext` or `:tabn` - Switch to next tab  
+- `:tabprev` or `:tabp` - Switch to previous tab
+- `:tabfirst` - Go to first tab
+- `:tablast` - Go to last tab
+
+**Keyboard Shortcuts (Normal Mode):**
+- `gt` - Go to next tab
+- `gT` - Go to previous tab
+- `g0` - Go to first tab
+- `g$` - Go to last tab
+
+**Note:** GTK4 has removed XEmbed support (GtkPlug/GtkSocket). The `-e, --embed` 
+flag is no longer functional. Native tabs replace the need for external tools 
+like `tabbed`.
 
 ## Install
 
-Edit `config.mk` to match your local setup. You might need to do this if 
-you use another compiler, like tcc. Most people, however, will almost never 
+Edit `config.mk` to match your local setup. You might need to do this if
+you use another compiler, like tcc. Most people, however, will almost never
 need to do this on systems like Ubuntu or Debian.
 
 Edit `src/config.h` to match your personal preferences, like changing the

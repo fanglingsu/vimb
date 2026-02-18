@@ -25,22 +25,47 @@
 
 /**
  * Evaluates given string as script and return if this call succeed or not.
+ * WebKitGTK 6.0: Updated to use JSC API
  */
-gboolean ext_util_js_eval(JSContextRef ctx, const char *script, JSValueRef *result)
+gboolean ext_util_js_eval(JSCContext *ctx, const char *script, JSCValue **result)
 {
-    JSStringRef js_str;
-    JSValueRef exc = NULL, res = NULL;
+    JSCValue *res = NULL;
+    JSCException *exc = NULL;
 
-    js_str = JSStringCreateWithUTF8CString(script);
-    res = JSEvaluateScript(ctx, js_str, JSContextGetGlobalObject(ctx), NULL, 0, &exc);
-    JSStringRelease(js_str);
-
-    if (exc) {
-        *result = exc;
+    if (!ctx) {
+        g_warning("ext_util_js_eval: JavaScript context is NULL");
+        if (result) {
+            *result = NULL;
+        }
         return FALSE;
     }
 
-    *result = res;
+    if (!script) {
+        g_warning("ext_util_js_eval: Script is NULL");
+        if (result) {
+            *result = NULL;
+        }
+        return FALSE;
+    }
+
+    res = jsc_context_evaluate(ctx, script, -1);
+    exc = jsc_context_get_exception(ctx);
+
+    if (exc) {
+        /* WebKitGTK 6.0: Convert exception to string value */
+        char *exc_str = jsc_exception_to_string(exc);
+        g_warning("JavaScript evaluation error: %s", exc_str);
+        if (result) {
+            *result = jsc_value_new_string(ctx, exc_str);
+        }
+        g_free(exc_str);
+        jsc_context_clear_exception(ctx);
+        return FALSE;
+    }
+
+    if (result) {
+        *result = res ? g_object_ref(res) : NULL;
+    }
     return TRUE;
 }
 
@@ -83,21 +108,14 @@ gboolean ext_util_create_tmp_file(const char *content, char **file)
 /**
  * Returns a new allocates string for given value reference.
  * String must be freed if not used anymore.
+ * WebKitGTK 6.0: Updated to use JSC API
  */
-char* ext_util_js_ref_to_string(JSContextRef ctx, JSValueRef ref)
+char* ext_util_js_ref_to_string(JSCContext *ctx, JSCValue *ref)
 {
     char *string;
-    size_t len;
-    JSStringRef str_ref;
 
     g_return_val_if_fail(ref != NULL, NULL);
 
-    str_ref = JSValueToStringCopy(ctx, ref, NULL);
-    len     = JSStringGetMaximumUTF8CStringSize(str_ref);
-
-    string = g_new0(char, len);
-    JSStringGetUTF8CString(str_ref, string, len);
-    JSStringRelease(str_ref);
-
+    string = jsc_value_to_string(ref);
     return string;
 }

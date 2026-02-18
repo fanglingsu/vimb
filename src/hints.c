@@ -19,10 +19,9 @@
 
 #include "config.h"
 #include <string.h>
-#include <webkit2/webkit2.h>
-#include <JavaScriptCore/JavaScript.h>
+#include <webkit/webkit.h>
+#include <jsc/jsc.h>
 #include <gdk/gdkkeysyms.h>
-#include <gdk/gdkkeysyms-compat.h>
 #include "hints.h"
 #include "main.h"
 #include "ascii.h"
@@ -47,8 +46,8 @@ extern struct Vimb vb;
 
 static gboolean call_hints_function(Client *c, const char *func, const char* args,
         gboolean sync);
-static void on_hint_function_finished(GDBusProxy *proxy, GAsyncResult *result,
-        Client *c);
+static void on_hint_function_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data);
 static gboolean hint_function_check_result(Client *c, GVariant *return_value);
 static void fire_timeout(Client *c, gboolean on);
 static gboolean fire_cb(gpointer data);
@@ -95,6 +94,14 @@ void hints_clear(Client *c)
 {
     if (c->mode->flags & FLAG_HINTING) {
         c->mode->flags &= ~FLAG_HINTING;
+        /* Note: We intentionally do NOT clear FLAG_NEW_TAB here.
+         * The flag will be cleared by decide_navigation_action after it opens
+         * the new tab. If we clear it here, there's a race condition: the
+         * JavaScript navigation (from setTimeout(0)) may trigger during the
+         * synchronous hints.clear() call below, and if FLAG_NEW_TAB was
+         * already cleared, the link opens in the current tab instead of a
+         * new tab. The flag will naturally be consumed when the navigation
+         * happens, or will be harmless if no navigation occurs. */
         vb_input_set_text(c, "");
 
         /* Run this sync else we would disable JavaScript before the hint is
@@ -127,6 +134,16 @@ void hints_create(Client *c, const char *input)
 
     if (!(c->mode->flags & FLAG_HINTING)) {
         c->mode->flags |= FLAG_HINTING;
+
+        /* For 't' mode (open in new tab), set open_in_new_tab flag on client.
+         * This is needed because the JavaScript navigation may start before
+         * the "DONE:" result is processed, due to the async nature of
+         * WebKitUserMessage. Using client state instead of mode flag because
+         * modes are shared across all tabs. The flag will be cleared by
+         * decide_navigation_action after opening the new tab. */
+        if (hints.mode == 't') {
+            c->state.open_in_new_tab = TRUE;
+        }
 
         WebKitSettings *setting = webkit_web_view_get_settings(c->webview);
 
@@ -287,22 +304,42 @@ static gboolean call_hints_function(Client *c, const char *func, const char* arg
         GVariant *result;
         result  = ext_proxy_eval_script_sync(c, jscode);
         success = hint_function_check_result(c, result);
+        if (result) {
+            g_variant_unref(result);
+        }
     } else {
-        ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)on_hint_function_finished);
+        /* WebKitGTK 6.0: Use WebKitUserMessage callback */
+        ext_proxy_eval_script(c, jscode, (GAsyncReadyCallback)on_hint_function_finished_usermessage);
     }
     g_free(jscode);
 
     return success;
 }
 
-static void on_hint_function_finished(GDBusProxy *proxy, GAsyncResult *result,
-        Client *c)
+/* WebKitGTK 6.0: New callback for WebKitUserMessage replies */
+static void on_hint_function_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data)
 {
-    GVariant *return_value;
+    Client *c = (Client *)user_data;
+    WebKitWebView *webview = WEBKIT_WEB_VIEW(source_object);
+    GError *error = NULL;
+    WebKitUserMessage *reply;
+    GVariant *reply_params;
 
-    return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
-    hint_function_check_result(c, return_value);
+    reply = webkit_web_view_send_message_to_page_finish(webview, result, &error);
+    if (error) {
+        g_warning("Hint function failed: %s", error->message);
+        g_error_free(error);
+        return;
+    }
+
+    if (reply) {
+        reply_params = webkit_user_message_get_parameters(reply);
+        hint_function_check_result(c, reply_params);
+        g_object_unref(reply);
+    }
 }
+
 
 static gboolean hint_function_check_result(Client *c, GVariant *return_value)
 {
@@ -338,13 +375,10 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
         if (!hints.gmode && c->mode->id == 'c') {
             vb_enter(c, 'n');
         }
-        /* If open in new window hinting is use, set a flag on the mode after
-         * changing to normal mode. This is used in on_webview_decide_policy
-         * to enforce opening into new instance for the next navigation
-         * action. */
-        if (hints.mode == 't') {
-            c->mode->flags |= FLAG_NEW_WIN;
-        }
+        /* Note: For 't' mode (open in new tab), the open_in_new_tab flag is
+         * already set in hints_create() on the client state. We don't need to
+         * set it again here. The flag is on the client, not the mode, to avoid
+         * affecting other tabs. */
     } else if (!strncmp(value, "INSERT:", 7)) {
         fire_timeout(c, FALSE);
         vb_enter(c, 'i');
@@ -368,7 +402,7 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
             case 'i':
             case 'I':
                 a.s = v;
-                a.i = (hints.mode == 'I') ? TARGET_NEW : TARGET_CURRENT;
+                a.i = (hints.mode == 'I') ? TARGET_TAB : TARGET_CURRENT;
                 vb_load_uri(c, &a);
                 break;
 
@@ -408,9 +442,11 @@ static gboolean hint_function_check_result(Client *c, GVariant *return_value)
         }
     }
 
+    g_free(value);
     return TRUE;
 
 error:
+    g_free(value);
     vb_statusbar_show_hover_url(c, LINK_TYPE_NONE, NULL);
     return FALSE;
 }

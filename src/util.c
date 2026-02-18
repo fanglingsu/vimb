@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <glib.h>
 #include <glib/gstdio.h>
-#include <JavaScriptCore/JavaScript.h>
+#include <jsc/jsc.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
@@ -73,7 +73,9 @@ char *util_build_path(const char *path, const char *dir)
 
     /* if full path not found use current dir */
     if (!fullPath) {
-        fullPath = g_build_filename(g_get_current_dir(), path, NULL);
+        char *cwd = g_get_current_dir();
+        fullPath = g_build_filename(cwd, path, NULL);
+        g_free(cwd);
     }
 
     /* Create the directory part of the path if it does not exists. */
@@ -550,23 +552,24 @@ GList *util_strv_to_unique_list(char **lines, Util_Content_Func func,
 /**
  * Fills the given list store by matching data of also given src list.
  */
-gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src)
+gboolean util_fill_completion(GListStore *store, const char *input, GList *src)
 {
     gboolean found = FALSE;
-    GtkTreeIter iter;
 
     if (!input || !*input) {
         for (GList *l = src; l; l = l->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+            CompletionItem *item = completion_item_new(l->data, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
     } else {
         for (GList *l = src; l; l = l->next) {
             char *value = (char*)l->data;
             if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, l->data, -1);
+                CompletionItem *item = completion_item_new(l->data, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 found = TRUE;
             }
         }
@@ -579,7 +582,7 @@ gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src
  * Fills file path completion entries into given list store for also given
  * input.
  */
-gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
+gboolean util_filename_fill_completion(GListStore *store, const char *input)
 {
     gboolean found = FALSE;
     GError *error  = NULL;
@@ -600,7 +603,6 @@ gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
         /* Can't open directory, likely bad user input */
         g_error_free(error);
     } else {
-        GtkTreeIter iter;
         const char *filename;
         char *fullpath, *result;
 
@@ -613,8 +615,9 @@ gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
                     result = g_strconcat(input_dirname, filename, NULL);
                 }
                 g_free(fullpath);
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, result, -1);
+                CompletionItem *item = completion_item_new(result, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 g_free(result);
                 found = TRUE;
             }
@@ -632,49 +635,69 @@ gboolean util_filename_fill_completion(GtkListStore *store, const char *input)
  * Returns the script result as string.
  * Returned string must be freed by g_free.
  */
-char *util_js_result_as_string(WebKitJavascriptResult *result)
+char *util_js_result_as_string(JSCValue *value)
 {
-#if WEBKIT_CHECK_VERSION(2, 22, 0)
-    JSCValue *value;
-
-    value = webkit_javascript_result_get_js_value(result);
-
     return jsc_value_to_string(value);
-#else
-    JSValueRef value;
-    JSStringRef string;
-    size_t len;
-    char *retval = NULL;
-
-    value  = webkit_javascript_result_get_value(result);
-    string = JSValueToStringCopy(webkit_javascript_result_get_global_context(result),
-                value, NULL);
-
-    len = JSStringGetMaximumUTF8CStringSize(string);
-    if (len) {
-        retval = g_malloc(len);
-        JSStringGetUTF8CString(string, retval, len);
-    }
-    JSStringRelease(string);
-
-    return retval;
-#endif
 }
 
-double util_js_result_as_number(WebKitJavascriptResult *result)
+double util_js_result_as_number(JSCValue *value)
 {
-#if WEBKIT_CHECK_VERSION(2, 22, 0)
-    JSCValue *value;
-
-    value = webkit_javascript_result_get_js_value(result);
-
     return jsc_value_to_double(value);
-#else
-    JSValueRef value = webkit_javascript_result_get_value(result);
+}
 
-    return JSValueToNumber(webkit_javascript_result_get_global_context(result), value,
-        NULL);
-#endif
+/* Helper structure for synchronous clipboard reading */
+typedef struct {
+    GMainLoop *loop;
+    char *result;
+    GdkClipboard *clipboard;
+} ClipboardData;
+
+static void clipboard_text_received(GObject *source, GAsyncResult *result, gpointer user_data)
+{
+    ClipboardData *data = (ClipboardData *)user_data;
+    data->result = gdk_clipboard_read_text_finish(GDK_CLIPBOARD(source), result, NULL);
+    g_main_loop_quit(data->loop);
+}
+
+/**
+ * GTK4 clipboard helper - get text from clipboard (synchronous wrapper).
+ * Returns string that must be freed with g_free, or NULL.
+ */
+char *util_clipboard_get_text(GtkWidget *widget, gboolean primary)
+{
+    GdkDisplay *display;
+    ClipboardData data;
+
+    display = gtk_widget_get_display(widget);
+    data.clipboard = primary ? gdk_display_get_primary_clipboard(display)
+                             : gdk_display_get_clipboard(display);
+    data.result = NULL;
+    data.loop = g_main_loop_new(NULL, FALSE);
+
+    /* Read text asynchronously */
+    gdk_clipboard_read_text_async(data.clipboard, NULL,
+        clipboard_text_received, &data);
+
+    /* Wait for the async operation to complete */
+    g_main_loop_run(data.loop);
+    g_main_loop_unref(data.loop);
+
+    return data.result;
+}
+
+/**
+ * GTK4 clipboard helper - set text to clipboard.
+ */
+void util_clipboard_set_text(GtkWidget *widget, const char *text, gboolean primary)
+{
+    GdkDisplay *display;
+    GdkClipboard *clipboard;
+
+    display = gtk_widget_get_display(widget);
+    clipboard = primary ? gdk_display_get_primary_clipboard(display)
+                        : gdk_display_get_clipboard(display);
+
+    gdk_clipboard_set_text(clipboard, text);
 }
 
 /**

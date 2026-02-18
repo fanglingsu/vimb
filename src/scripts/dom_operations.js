@@ -284,43 +284,33 @@ var vimbDomOps = Object.freeze((function() {
      * that will notify the extension when editable elements gain/lose focus.
      *
      * @param {number} pageId - The WebKit page ID */
-    function setupFocusTracking(pageId) {
-        /* Focus event - check if focused element is editable */
-        window.addEventListener('focus', function(event) {
-            try {
-                var isEditable = checkActiveElement();
-                /* Send message to extension via message handler */
-                if (window.webkit && window.webkit.messageHandlers &&
-                    window.webkit.messageHandlers.focus) {
-                    window.webkit.messageHandlers.focus.postMessage(
-                        JSON.stringify({
-                            pageId: pageId,
-                            isEditable: isEditable
-                        })
-                    );
-                }
-            } catch (e) {
-                console.error("focus event error:", e);
-            }
-        }, true); /* Use capture phase */
+    function setupFocusTracking() {
+        /* Use focusin/focusout events which bubble up from focused elements. */
 
-        /* Blur event - element lost focus */
-        window.addEventListener('blur', function(event) {
-            try {
-                /* Send message indicating no editable element has focus */
+        /* Focusin event - fires when any element gains focus */
+        document.addEventListener('focusin', function(event) {
+            var editable = isEditable(event.target);
+            if (window.webkit && window.webkit.messageHandlers &&
+                window.webkit.messageHandlers.focus) {
+                window.webkit.messageHandlers.focus.postMessage({
+                    isEditable: editable
+                });
+            }
+        }, false);
+
+        /* Focusout event - fires when any element loses focus */
+        document.addEventListener('focusout', function(event) {
+            /* Small delay to check if focus moved to another editable element */
+            setTimeout(function() {
+                var editable = checkActiveElement();
                 if (window.webkit && window.webkit.messageHandlers &&
                     window.webkit.messageHandlers.focus) {
-                    window.webkit.messageHandlers.focus.postMessage(
-                        JSON.stringify({
-                            pageId: pageId,
-                            isEditable: false
-                        })
-                    );
+                    window.webkit.messageHandlers.focus.postMessage({
+                        isEditable: editable
+                    });
                 }
-            } catch (e) {
-                console.error("blur event error:", e);
-            }
-        }, true); /* Use capture phase */
+            }, 0);
+        }, false);
     }
 
     /* Setup event listeners for scroll tracking.
@@ -353,28 +343,15 @@ var vimbDomOps = Object.freeze((function() {
         }, false);
     }
 
-    /* Initialize all event tracking for a page.
-     *
-     * This should be called once when a document is loaded.
-     *
-     * @param {number} pageId - The WebKit page ID */
-    function init(pageId) {
-        try {
-            setupFocusTracking(pageId);
-            setupScrollTracking(pageId);
-
-            /* Check initial state */
-            checkActiveElement();
-
-            /* Get initial scroll position */
-            getScrollPosition();
-
-            return true;
-        } catch (e) {
-            console.error("vimbDomOps.init error:", e);
-            return false;
-        }
+    /* Initialize focus tracking.
+     * This is called automatically when the script loads. */
+    function init() {
+        setupFocusTracking();
+        return true;
     }
+
+    /* Auto-initialize when script loads */
+    init();
 
     /* Public API */
     return {

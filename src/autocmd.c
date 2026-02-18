@@ -297,24 +297,25 @@ gboolean autocmd_run(Client *c, AuEvent event, const char *uri, const char *grou
     return true;
 }
 
-gboolean autocmd_fill_group_completion(Client *c, GtkListStore *store, const char *input)
+gboolean autocmd_fill_group_completion(Client *c, GListStore *store, const char *input)
 {
     GSList *lg;
     gboolean found = false;
-    GtkTreeIter iter;
 
     if (!input || !*input) {
         for (lg = c->autocmd.groups; lg; lg = lg->next) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, ((AuGroup*)lg->data)->name, -1);
+            CompletionItem *item = completion_item_new(((AuGroup*)lg->data)->name, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = true;
         }
     } else {
         for (lg = c->autocmd.groups; lg; lg = lg->next) {
             char *value = ((AuGroup*)lg->data)->name;
             if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, value, -1);
+                CompletionItem *item = completion_item_new(value, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 found = true;
             }
         }
@@ -323,25 +324,26 @@ gboolean autocmd_fill_group_completion(Client *c, GtkListStore *store, const cha
     return found;
 }
 
-gboolean autocmd_fill_event_completion(Client *c, GtkListStore *store, const char *input)
+gboolean autocmd_fill_event_completion(Client *c, GListStore *store, const char *input)
 {
     int i;
     const char *value;
     gboolean found = false;
-    GtkTreeIter iter;
 
     if (!input || !*input) {
         for (i = 0; i < LENGTH(events); i++) {
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, events[i].name, -1);
+            CompletionItem *item = completion_item_new(events[i].name, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = true;
         }
     } else {
         for (i = 0; i < LENGTH(events); i++) {
             value = events[i].name;
             if (g_str_has_prefix(value, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, value, -1);
+                CompletionItem *item = completion_item_new(value, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 found = true;
             }
         }

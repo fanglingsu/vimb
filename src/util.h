@@ -47,10 +47,12 @@ gboolean util_file_set_content(const char *file, const char *contents);
 char **util_get_lines(const char *filename);
 GList *util_strv_to_unique_list(char **lines, Util_Content_Func func,
         guint max_items);
-gboolean util_fill_completion(GtkListStore *store, const char *input, GList *src);
-gboolean util_filename_fill_completion(GtkListStore *store, const char *input);
-char *util_js_result_as_string(WebKitJavascriptResult *result);
-double util_js_result_as_number(WebKitJavascriptResult *result);
+gboolean util_fill_completion(GListStore *store, const char *input, GList *src);
+gboolean util_filename_fill_completion(GListStore *store, const char *input);
+char *util_js_result_as_string(JSCValue *value);
+double util_js_result_as_number(JSCValue *value);
+char *util_clipboard_get_text(GtkWidget *widget, gboolean primary);
+void util_clipboard_set_text(GtkWidget *widget, const char *text, gboolean primary);
 gboolean util_parse_expansion(const char **input, GString *str, int flags,
         const char *quoteable);
 char *util_sanitize_filename(char *filename);

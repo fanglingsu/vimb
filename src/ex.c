@@ -22,7 +22,8 @@
  * commands from inputbox and the ex commands.
  */
 
-#include <JavaScriptCore/JavaScript.h>
+#include <jsc/jsc.h>
+#include <webkit/webkit.h>
 #include <string.h>
 #include <sys/wait.h>
 
@@ -74,6 +75,7 @@ typedef enum {
     EX_QUNSHIFT,
 #endif
     EX_QUIT,
+    EX_QUITALL,
     EX_REG,
     EX_SAVE,
     EX_SCA,
@@ -84,6 +86,11 @@ typedef enum {
     EX_SHELLEX,
     EX_SOURCE,
     EX_TABOPEN,
+    EX_TABCLOSE,
+    EX_TABNEXT,
+    EX_TABPREV,
+    EX_TABFIRST,
+    EX_TABLAST,
 } ExCode;
 
 typedef enum {
@@ -139,7 +146,8 @@ static VbCmdResult ex_autocmd(Client *c, const ExArg *arg);
 #endif
 static VbCmdResult ex_bookmark(Client *c, const ExArg *arg);
 static VbCmdResult ex_eval(Client *c, const ExArg *arg);
-static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c);
+static void on_eval_script_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data);
 static VbCmdResult ex_cleardata(Client *c, const ExArg *arg);
 static VbCmdResult ex_hardcopy(Client *c, const ExArg *arg);
 static void print_failed_cb(WebKitPrintOperation* op, GError *err, Client *c);
@@ -152,12 +160,14 @@ static VbCmdResult ex_queue(Client *c, const ExArg *arg);
 #endif
 static VbCmdResult ex_register(Client *c, const ExArg *arg);
 static VbCmdResult ex_quit(Client *c, const ExArg *arg);
+static VbCmdResult ex_quitall(Client *c, const ExArg *arg);
 static VbCmdResult ex_save(Client *c, const ExArg *arg);
 static VbCmdResult ex_set(Client *c, const ExArg *arg);
 static VbCmdResult ex_shellcmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_shellex(Client *c, const ExArg *arg);
 static VbCmdResult ex_shortcut(Client *c, const ExArg *arg);
 static VbCmdResult ex_source(Client *c, const ExArg *arg);
+static VbCmdResult ex_tabcmd(Client *c, const ExArg *arg);
 static VbCmdResult ex_handlers(Client *c, const ExArg *arg);
 
 static void update_current_selection_env_var(Client *c);
@@ -198,6 +208,7 @@ static ExInfo commands[] = {
     {"nunmap",           EX_NUNMAP,      ex_unmap,      EX_FLAG_LHS},
     {"open",             EX_OPEN,        ex_open,       EX_FLAG_CMD},
     {"quit",             EX_QUIT,        ex_quit,       EX_FLAG_NONE|EX_FLAG_BANG},
+    {"quitall",          EX_QUITALL,     ex_quitall,    EX_FLAG_NONE|EX_FLAG_BANG},
 #ifdef FEATURE_QUEUE
     {"qunshift",         EX_QUNSHIFT,    ex_queue,      EX_FLAG_RHS},
     {"qclear",           EX_QCLEAR,      ex_queue,      EX_FLAG_RHS},
@@ -214,6 +225,12 @@ static ExInfo commands[] = {
     {"shortcut-remove",  EX_SCR,         ex_shortcut,   EX_FLAG_RHS},
     {"source",           EX_SOURCE,      ex_source,     EX_FLAG_RHS|EX_FLAG_EXP},
     {"tabopen",          EX_TABOPEN,     ex_open,       EX_FLAG_CMD},
+    {"tabclose",         EX_TABCLOSE,    ex_tabcmd,     EX_FLAG_NONE},
+    {"tabnext",          EX_TABNEXT,     ex_tabcmd,     EX_FLAG_NONE},
+    {"tabprev",          EX_TABPREV,     ex_tabcmd,     EX_FLAG_NONE},
+    {"tabprevious",      EX_TABPREV,     ex_tabcmd,     EX_FLAG_NONE},
+    {"tabfirst",         EX_TABFIRST,    ex_tabcmd,     EX_FLAG_NONE},
+    {"tablast",          EX_TABLAST,     ex_tabcmd,     EX_FLAG_NONE},
 };
 
 static struct {
@@ -399,13 +416,16 @@ VbResult ex_keypress(Client *c, int key)
     return res;
 }
 
-/**
- * Handles changes in the inputbox.
- */
-void ex_input_changed(Client *c, const char *text)
+/* Helper function to remove extra lines from buffer - deferred to avoid iterator invalidation */
+static gboolean remove_extra_lines_idle(gpointer user_data)
 {
+    Client *c = (Client *)user_data;
     GtkTextIter start, end;
     GtkTextBuffer *buffer = c->buffer;
+
+    if (!buffer || !GTK_IS_TEXT_BUFFER(buffer)) {
+        return G_SOURCE_REMOVE;
+    }
 
     /* don't add line breaks if content is pasted from clipboard into inputbox */
     if (gtk_text_buffer_get_line_count(buffer) > 1) {
@@ -413,18 +433,28 @@ void ex_input_changed(Client *c, const char *text)
         gtk_text_buffer_get_iter_at_line(buffer, &start, 0);
         if (gtk_text_iter_forward_to_line_end(&start)) {
             gtk_text_buffer_get_end_iter(buffer, &end);
-
-            /* TODO the following line creates a GTK warning.
-             * ex_input_changed() is called from the "changed" event handler of
-             * GtkTextBuffer. Apparently it's not supported to change a text
-             * buffer in the changed handler!?
-             *
-             * Gtk-WARNING **: Invalid text buffer iterator: either the
-             * iterator is uninitialized, or the characters/pixbufs/widgets in
-             * the buffer have been modified since the iterator was created.
-             */
             gtk_text_buffer_delete(buffer, &start, &end);
         }
+    }
+
+    return G_SOURCE_REMOVE;
+}
+
+/**
+ * Handles changes in the inputbox.
+ */
+void ex_input_changed(Client *c, const char *text)
+{
+    GtkTextBuffer *buffer = c->buffer;
+
+    /* GTK4: Defer buffer modification to avoid iterator invalidation warning.
+     * ex_input_changed() is called from the "changed" signal handler of
+     * GtkTextBuffer. Modifying the buffer in the changed handler invalidates
+     * iterators. We defer the modification using g_idle_add() so it happens
+     * after the current signal handler returns. */
+    if (gtk_text_buffer_get_line_count(buffer) > 1) {
+        /* Schedule the buffer modification for the next idle cycle */
+        g_idle_add(remove_extra_lines_idle, c);
     }
 
     switch (*text) {
@@ -441,25 +471,26 @@ void ex_input_changed(Client *c, const char *text)
     }
 }
 
-gboolean ex_fill_completion(GtkListStore *store, const char *input)
+gboolean ex_fill_completion(GListStore *store, const char *input)
 {
-    GtkTreeIter iter;
     ExInfo *cmd;
     gboolean found = FALSE;
 
     if (!input || *input == '\0') {
         for (int i = 0; i < LENGTH(commands); i++) {
             cmd = &commands[i];
-            gtk_list_store_append(store, &iter);
-            gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, cmd->name, -1);
+            CompletionItem *item = completion_item_new(cmd->name, NULL);
+            g_list_store_append(store, item);
+            g_object_unref(item);
             found = TRUE;
         }
     } else {
         for (int i = 0; i < LENGTH(commands); i++) {
             cmd = &commands[i];
             if (g_str_has_prefix(cmd->name, input)) {
-                gtk_list_store_append(store, &iter);
-                gtk_list_store_set(store, &iter, COMPLETION_STORE_FIRST, cmd->name, -1);
+                CompletionItem *item = completion_item_new(cmd->name, NULL);
+                g_list_store_append(store, item);
+                g_object_unref(item);
                 found = TRUE;
             }
         }
@@ -835,29 +866,49 @@ static VbCmdResult ex_eval(Client *c, const ExArg *arg)
     if (arg->bang) {
         ext_proxy_eval_script(c, arg->rhs->str, NULL);
     } else {
-        ext_proxy_eval_script(c, arg->rhs->str, (GAsyncReadyCallback)on_eval_script_finished);
+        /* WebKitGTK 6.0: Use WebKitUserMessage callback */
+        ext_proxy_eval_script(c, arg->rhs->str, (GAsyncReadyCallback)on_eval_script_finished_usermessage);
     }
 
     return CMD_SUCCESS;
 }
 
-static void on_eval_script_finished(GDBusProxy *proxy, GAsyncResult *result, Client *c)
+/* WebKitGTK 6.0: New callback for WebKitUserMessage replies */
+static void on_eval_script_finished_usermessage(GObject *source_object,
+        GAsyncResult *result, gpointer user_data)
 {
+    Client *c = (Client *)user_data;
+    WebKitWebView *webview = WEBKIT_WEB_VIEW(source_object);
+    GError *error = NULL;
+    WebKitUserMessage *reply;
+    GVariant *reply_params;
     gboolean success = FALSE;
     char *string = NULL;
 
-    GVariant *return_value = g_dbus_proxy_call_finish(proxy, result, NULL);
-    if (return_value) {
-        g_variant_get(return_value, "(bs)", &success, &string);
-        if (success) {
-            vb_echo(c, MSG_NORMAL, FALSE, "%s", string);
-        } else {
-            vb_echo(c, MSG_ERROR, TRUE, "%s", string);
+    reply = webkit_web_view_send_message_to_page_finish(webview, result, &error);
+    if (error) {
+        vb_echo(c, MSG_ERROR, TRUE, "Eval failed: %s", error->message);
+        g_error_free(error);
+        return;
+    }
+
+    if (reply) {
+        reply_params = webkit_user_message_get_parameters(reply);
+        if (reply_params) {
+            g_variant_get(reply_params, "(bs)", &success, &string);
+            if (success) {
+                vb_echo(c, MSG_NORMAL, FALSE, "%s", string);
+            } else {
+                vb_echo(c, MSG_ERROR, TRUE, "%s", string);
+            }
+            g_free(string);
         }
+        g_object_unref(reply);
     } else {
-        vb_echo(c, MSG_ERROR, TRUE, "");
+        vb_echo(c, MSG_ERROR, TRUE, "No reply from webextension");
     }
 }
+
 
 /**
  * Clear website data by ':cleardata {dataTypeList} {timespan}'.
@@ -883,7 +934,7 @@ static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
             {WEBKIT_WEBSITE_DATA_SESSION_STORAGE,           "session-storage"},
             {WEBKIT_WEBSITE_DATA_LOCAL_STORAGE,             "local-storage"},
             {WEBKIT_WEBSITE_DATA_INDEXEDDB_DATABASES,       "indexeddb-databases"},
-            {WEBKIT_WEBSITE_DATA_PLUGIN_DATA,               "plugin-data"},
+            /* WEBKIT_WEBSITE_DATA_PLUGIN_DATA removed in WebKitGTK 6.0 - plugins no longer supported */
             {WEBKIT_WEBSITE_DATA_COOKIES,                   "cookies"},
 #if WEBKIT_CHECK_VERSION(2, 26, 0)
             {WEBKIT_WEBSITE_DATA_HSTS_CACHE,                "hsts-cache"},
@@ -927,7 +978,9 @@ static VbCmdResult ex_cleardata(Client *c, const ExArg *arg)
     if (arg->rhs->len) {
         timespan = util_string_to_timespan(arg->rhs->str);
     }
-    manager = webkit_web_context_get_website_data_manager(webkit_web_view_get_context(c->webview));
+
+    /* WebKitGTK 6.0: Get website data manager from network session */
+    manager = webkit_network_session_get_website_data_manager(vb.session);
     webkit_website_data_manager_clear(manager, data_types, timespan, NULL, NULL, NULL);
 
     return result;
@@ -1005,7 +1058,8 @@ static VbCmdResult ex_normal(Client *c, const ExArg *arg)
 static VbCmdResult ex_open(Client *c, const ExArg *arg)
 {
     if (arg->code == EX_TABOPEN) {
-        return vb_load_uri(c, &((Arg){TARGET_NEW, arg->rhs->str})) ? CMD_SUCCESS : CMD_ERROR;
+        /* Open in a new tab instead of a new instance */
+        return vb_load_uri(c, &((Arg){TARGET_TAB, arg->rhs->str})) ? CMD_SUCCESS : CMD_ERROR;
     }
     return vb_load_uri(c, &((Arg){TARGET_CURRENT, arg->rhs->str})) ? CMD_SUCCESS :CMD_ERROR;
 }
@@ -1077,6 +1131,12 @@ static VbCmdResult ex_register(Client *c, const ExArg *arg)
 static VbCmdResult ex_quit(Client *c, const ExArg *arg)
 {
     vb_quit(c, arg->bang);
+    return CMD_SUCCESS;
+}
+
+static VbCmdResult ex_quitall(Client *c, const ExArg *arg)
+{
+    vb_quit_all(arg->bang);
     return CMD_SUCCESS;
 }
 
@@ -1264,6 +1324,37 @@ static VbCmdResult ex_source(Client *c, const ExArg *arg)
     return ex_run_file(c, arg->rhs->str);
 }
 
+/**
+ * Handle tab management commands: tabclose, tabnext, tabprev, tabfirst, tablast
+ */
+static VbCmdResult ex_tabcmd(Client *c, const ExArg *arg)
+{
+    switch (arg->code) {
+        case EX_TABCLOSE:
+            vb_tab_close(c);
+            return CMD_SUCCESS;
+
+        case EX_TABNEXT:
+            vb_tab_next();
+            return CMD_SUCCESS;
+
+        case EX_TABPREV:
+            vb_tab_prev();
+            return CMD_SUCCESS;
+
+        case EX_TABFIRST:
+            vb_tab_goto(0);
+            return CMD_SUCCESS;
+
+        case EX_TABLAST:
+            vb_tab_goto(vb_get_tab_count() - 1);
+            return CMD_SUCCESS;
+
+        default:
+            return CMD_ERROR;
+    }
+}
+
 static void update_current_selection_env_var(Client *c)
 {
     char *selection = NULL;
@@ -1283,13 +1374,23 @@ static void update_current_selection_env_var(Client *c)
  * put the matched data back to inputbox, and prepares the tree list store
  * model containing matched values.
  */
+/* Comparison function for sorting completion items by their first field */
+static gint completion_item_compare(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+    CompletionItem *item_a = COMPLETION_ITEM((gpointer)a);
+    CompletionItem *item_b = COMPLETION_ITEM((gpointer)b);
+    const char *first_a = completion_item_get_first(item_a);
+    const char *first_b = completion_item_get_first(item_b);
+    return g_strcmp0(first_a, first_b);
+}
+
 static gboolean complete(Client *c, short direction)
 {
     char *input;            /* input read from inputbox */
     const char *in;         /* pointer to input that we move */
     gboolean found = FALSE;
     gboolean sort  = TRUE;
-    GtkListStore *store;
+    GListStore *store;
 
     input = vb_input_get_text(c);
     /* if completion was already started move to the next/prev item */
@@ -1310,7 +1411,7 @@ static gboolean complete(Client *c, short direction)
         completion_clean(c);
     }
 
-    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
+    store = completion_store_new();
 
     in = (const char*)input;
     if (*in == ':') {
@@ -1433,15 +1534,15 @@ static gboolean complete(Client *c, short direction)
         }
     }
 
-    /* if the input could be parsed and the tree view could be filled */
+    /* if the input could be parsed and the list store could be filled */
     if (sort) {
-        gtk_tree_sortable_set_sort_column_id(
-            GTK_TREE_SORTABLE(store), COMPLETION_STORE_FIRST, GTK_SORT_ASCENDING
-        );
+        g_list_store_sort(store, completion_item_compare, NULL);
     }
 
     if (found) {
-        completion_create(c, GTK_TREE_MODEL(store), completion_select, direction < 0);
+        completion_create(c, store, completion_select, direction < 0);
+    } else {
+        g_object_unref(store);
     }
 
     g_free(input);

@@ -88,32 +88,32 @@ static void test_handler_run_failed(void)
 
 static void test_handler_fill_completion(void)
 {
-    GtkListStore *store;
+    GListStore *store;
     g_assert_true(handler_add(handler, "http", "echo"));
     g_assert_true(handler_add(handler, "https", "echo"));
     g_assert_true(handler_add(handler, "about", "echo"));
     g_assert_true(handler_add(handler, "ftp", "echo"));
 
-    store = gtk_list_store_new(COMPLETION_STORE_NUM, G_TYPE_STRING, G_TYPE_STRING);
+    store = g_list_store_new(COMPLETION_TYPE_ITEM);
     /* check case where multiple matches are found */
     g_assert_true(handler_fill_completion(handler, store, "http"));
-    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 2);
-    gtk_list_store_clear(store);
+    g_assert_cmpint(g_list_model_get_n_items(G_LIST_MODEL(store)), ==, 2);
+    g_list_store_remove_all(store);
 
     /* check case where only one matches are found */
     g_assert_true(handler_fill_completion(handler, store, "f"));
-    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 1);
-    gtk_list_store_clear(store);
+    g_assert_cmpint(g_list_model_get_n_items(G_LIST_MODEL(store)), ==, 1);
+    g_list_store_remove_all(store);
 
     /* check case where no match is found */
     g_assert_false(handler_fill_completion(handler, store, "unknown"));
-    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 0);
-    gtk_list_store_clear(store);
+    g_assert_cmpint(g_list_model_get_n_items(G_LIST_MODEL(store)), ==, 0);
+    g_list_store_remove_all(store);
 
     /* check case without apllied filters */
     g_assert_true(handler_fill_completion(handler, store, ""));
-    g_assert_cmpint(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(store), NULL), ==, 4);
-    gtk_list_store_clear(store);
+    g_assert_cmpint(g_list_model_get_n_items(G_LIST_MODEL(store)), ==, 4);
+    g_list_store_remove_all(store);
 }
 
 int main(int argc, char *argv[])
