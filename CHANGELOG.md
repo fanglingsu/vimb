@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.7.1]
 ### Added
 * Allow special keys to be escaped in mappings using `\`. For example, `\<C-R>`
   represents the key sequence `<`, `C`, `-`, `R`, `>`.
@@ -345,6 +347,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Fixed none POSIX `echo -n` call
 
 [Unreleased]: https://github.com/fanglingsu/vimb/compare/3.7.0...master
+[3.7.1]: https://github.com/fanglingsu/vimb/compare/3.7.0...3.7.1
 [3.7.0]: https://github.com/fanglingsu/vimb/compare/3.6.0...3.7.0
 [3.6.0]: https://github.com/fanglingsu/vimb/compare/3.5.0...3.6.0
 [3.5.0]: https://github.com/fanglingsu/vimb/compare/3.4.0...3.5.0
