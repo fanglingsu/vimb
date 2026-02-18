@@ -1120,7 +1120,9 @@ input-error-css (string)
 : CSS style applied to the inputbox in case of displayed error.
 
 javascript-can-access-clipboard (bool)
-: Whether JavaScript can access the clipboard.
+: Whether JavaScript is allowed to read from the clipboard. This does not block
+  JavaScript from writing to the clipboard; only read access is controlled by the
+  underlying WebKit setting.
 
 javascript-can-open-windows-automatically (bool)
 : Whether JavaScript can open popup windows automatically without user
