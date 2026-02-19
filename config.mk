@@ -12,6 +12,7 @@ LIBDIR           := $(DESTDIR)$(PREFIX)/lib/vimb
 RUNPREFIX        := $(PREFIX)
 EXTENSIONDIR     := $(RUNPREFIX)/lib/vimb
 OS               := $(shell uname -s)
+PKG_CONFIG       ?= $(PKG_CONFIG)
 
 # define some directories
 SRCDIR  = src
@@ -36,11 +37,11 @@ endif
 
 # flags used to build webextension
 EXTTARGET   = webext_main.so
-EXTCFLAGS   = ${CFLAGS} $(shell pkg-config --cflags webkitgtk-6.0)
+EXTCFLAGS   = ${CFLAGS} $(shell $(PKG_CONFIG) --cflags webkitgtk-6.0)
 EXTCPPFLAGS = $(CPPFLAGS)
-EXTLDFLAGS  = ${LDFLAGS} $(shell pkg-config --libs webkitgtk-6.0) -shared
+EXTLDFLAGS  = ${LDFLAGS} $(shell $(PKG_CONFIG) --libs webkitgtk-6.0) -shared
 
 # flags used for the main application
 # Use 'override' to ensure these flags are added even when CFLAGS/LDFLAGS is set on command line
-override CFLAGS     += $(shell pkg-config --cflags $(LIBS))
-override LDFLAGS    += $(shell pkg-config --libs $(LIBS))
+override CFLAGS     += $(shell $(PKG_CONFIG) --cflags $(LIBS))
+override LDFLAGS    += $(shell $(PKG_CONFIG) --libs $(LIBS))
