@@ -12,7 +12,7 @@ LIBDIR           := $(DESTDIR)$(PREFIX)/lib/vimb
 RUNPREFIX        := $(PREFIX)
 EXTENSIONDIR     := $(RUNPREFIX)/lib/vimb
 OS               := $(shell uname -s)
-PKG_CONFIG       ?= $(PKG_CONFIG)
+PKG_CONFIG       ?= pkg-config
 
 # define some directories
 SRCDIR  = src
