@@ -863,7 +863,7 @@ char *util_sanitize_uri(const char *uri_str)
         return for_display;
     }
 
-    uri           = g_uri_parse(for_display, G_URI_FLAGS_NONE, NULL);
+    uri           = g_uri_parse(for_display, G_URI_FLAGS_HAS_PASSWORD, NULL);
     sanitized_uri = g_uri_to_string_partial(uri, G_URI_HIDE_PASSWORD);
     g_uri_unref(uri);
     g_free(for_display);
