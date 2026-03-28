@@ -464,12 +464,17 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
     } else if (arg->i == TARGET_NEW) {
         spawn_new_instance(uri);
     } else if (arg->i == TARGET_TAB) {
+#ifdef FEATURE_NO_TABS
+        /* With no-tabs feature, spawn a new browser instance instead */
+        spawn_new_instance(uri);
+#else
         /* Open in a new tab */
         Client *newclient = vb_tab_new(c, uri);
         if (newclient) {
             webkit_web_view_load_uri(newclient->webview, uri);
             set_title(newclient, uri);
         }
+#endif
     } else { /* TARGET_RELATED */
         Client *newclient = client_new(c->webview);
         /* Load the uri into the new client. */
@@ -1521,9 +1526,16 @@ static WebKitWebView *on_webview_create(WebKitWebView *webview,
         return NULL;
     }
 
+#ifdef FEATURE_NO_TABS
+    req = webkit_navigation_action_get_request(navact);
+    spawn_new_instance(webkit_uri_request_get_uri(req));
+
+    return NULL;
+#else
     Client *new = client_new(webview);
 
     return new->webview;
+#endif
 }
 
 /**
@@ -2270,6 +2282,9 @@ static void create_main_window(void)
     vb.notebook = gtk_notebook_new();
     gtk_notebook_set_scrollable(GTK_NOTEBOOK(vb.notebook), TRUE);
     gtk_notebook_set_show_border(GTK_NOTEBOOK(vb.notebook), FALSE);
+#ifdef FEATURE_NO_TABS
+    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(vb.notebook), FALSE);
+#endif
     gtk_widget_set_vexpand(vb.notebook, TRUE);
     gtk_box_append(GTK_BOX(main_box), vb.notebook);
 

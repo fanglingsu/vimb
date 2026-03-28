@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+* `FEATURE_NO_TABS` in src/config.h to allow the user to compile vimb without
+  tab support - which is useful in when the tabs are handles by the
+  windowmanager
 
 ## [3.7.1]
 ### Added
