@@ -37,6 +37,9 @@
 #define PROGRESS_BAR_LEN            20
 #endif
 
+/* disable tabs - all tab commands spawn new browser instances instead */
+/* #define FEATURE_NO_TABS */
+
 #define FEATURE_AUTOCMD
 
 /* time in seconds after that message will be removed from inputbox if the
