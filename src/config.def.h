@@ -67,12 +67,12 @@
 #define SETTING_HINT_KEYS                     "0123456789"
 #define SETTING_HISTIGNORE                    "^(about:)|(file:)"
 #define SETTING_DOWNLOAD_COMMAND              "/bin/sh -c \"curl -sLJOC - -e '$VIMB_URI' %s\""
-#define SETTING_COMPLETION_CSS                "color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL
+#define SETTING_COMPLETION_CSS                "color:#fff;background-color:#656565;font:" SETTING_GUI_FONT_NORMAL ";"
 #define SETTING_COMPLETION_HOVER_CSS          "background-color:#777;"
 #define SETTING_COMPLETION_SELECTED_CSS       "color:#f6f3e8;background-color:#888;"
-#define SETTING_INPUT_CSS                     "background-color:#fff;color:#000;font:" SETTING_GUI_FONT_NORMAL
-#define SETTING_INPUT_ERROR_CSS               "background-color:#f77;font:" SETTING_GUI_FONT_EMPH
-#define SETTING_STATUS_CSS                    "color:#fff;background-color:#000;font:" SETTING_GUI_FONT_EMPH
+#define SETTING_INPUT_CSS                     "background-color:#fff;color:#000;font:" SETTING_GUI_FONT_NORMAL ";"
+#define SETTING_INPUT_ERROR_CSS               "background-color:#f77;font:" SETTING_GUI_FONT_EMPH ";"
+#define SETTING_STATUS_CSS                    "color:#fff;background-color:#000;font:" SETTING_GUI_FONT_EMPH ";"
 #define SETTING_STATUS_SSL_CSS                "background-color:#95e454;color:#000;"
 #define SETTING_STATUS_SSL_INVLID_CSS         "background-color:#f77;color:#000;"
 
