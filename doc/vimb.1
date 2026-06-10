@@ -1264,10 +1264,11 @@ Setting value of 'download-path' which would be used normally for downloads.
 .TP
 .B download-path (string)
 Path to the default download directory.
-If no download directory is set, download will be written into current
-directory.
-The following pattern will be expanded if the download is
-started '~/', '~user', '$VAR' and '${VAR}'.
+If no download directory is set, download will be written into
+$HOME/Downloads. It must be absolute path. You can take advantage of the
+:shellex command to expand relative path or environment variables:
+.IP
+:shellex sh -c "echo -n :set download-path=; realpath ~/downloads/"
 .TP
 .B download-use-external (bool)
 Indicates if the external download tool set as 'download-command' should be

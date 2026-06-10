@@ -170,7 +170,7 @@ static gboolean signal_handler_cb(gpointer user_data)
 gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
     char *suggested_filename, const char *path)
 {
-    char *download_path, *dir, *file, *uri, *basename = NULL;
+    char *download_path, *dir, *file, *basename = NULL;
 
     download_path = GET_CHAR(c, "download-path");
 
@@ -248,15 +248,10 @@ gboolean vb_download_set_destination(Client *c, WebKitDownload *download,
         g_string_free(tmp, TRUE);
     }
 
-    /* Build URI from filepath. */
-    uri = g_filename_to_uri(file, NULL, NULL);
-    g_free(file);
-
     /* configure download */
-    g_assert(uri);
     webkit_download_set_allow_overwrite(download, FALSE);
-    webkit_download_set_destination(download, uri);
-    g_free(uri);
+    webkit_download_set_destination(download, file);
+    g_free(file);
 
     return TRUE;
 }
@@ -1336,7 +1331,12 @@ static void on_webctx_init_web_extension(WebKitWebContext *webctx, gpointer data
 static gboolean on_webdownload_decide_destination(WebKitDownload *download,
         gchar *suggested_filename, Client *c)
 {
-    if (webkit_download_get_destination(download)) {
+    const gchar *destination = webkit_download_get_destination(download);
+
+    if (destination) {
+        webkit_download_set_allow_overwrite(download, FALSE);
+        /* By some reason save command doesn't work without next line */
+        webkit_download_set_destination(download, destination);
         return TRUE;
     }
 
