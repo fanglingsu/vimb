@@ -450,21 +450,26 @@ static VbResult normal_fire(Client *c, const NormalCmdInfo *info)
 static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info)
 {
     GVariant *variant;
-    gboolean focused;
+    gboolean success;
+    char *script_result;
 
     variant = ext_proxy_eval_script_sync(c,
-        "typeof vimb_input_mode_element !== 'undefined' && vimb_input_mode_element ? vimb_input_mode_element.focus() : false;");
+        "if (typeof vimb_input_mode_element !== 'undefined' && vimb_input_mode_element) { vimb_input_mode_element.focus(); 1; } else 0;");
     if (variant == NULL) {
         g_warning("cannot set focus on the last focused element: failed to evaluate js");
         return RESULT_ERROR;
     }
-    g_variant_get(variant, "(bs)", &focused, NULL);
+    g_variant_get(variant, "(bs)", &success, &script_result);
     g_variant_unref(variant);
-    if (!focused) {
+    if (!success) {
+        return RESULT_ERROR;
+    }
+
+    if (*script_result == '0') {
         ext_proxy_focus_input(c);
     }
 
-    return RESULT_ERROR;
+    return RESULT_COMPLETE;
 }
 
 static VbResult normal_g_cmd(Client *c, const NormalCmdInfo *info)
