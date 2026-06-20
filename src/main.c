@@ -1710,7 +1710,7 @@ static void on_webview_load_changed(WebKitWebView *webview,
             /* In case of HTTP authentication request we ignore the focus
              * changes so that the input mode can be set for the
              * authentication request. If the authentication dialog is filled
-             * or aborted the load will be commited. So this seems to be the
+             * or aborted the load will be committed. So this seems to be the
              * right place to remove the flag. */
             c->mode->flags &= ~FLAG_IGNORE_FOCUS;
 #ifdef FEATURE_AUTOCMD
@@ -1872,7 +1872,7 @@ static gboolean on_webview_authenticate(WebKitWebView *webview,
     /* Don't change the mode if we are in pass through mode. */
     if (c->mode->id == 'n') {
         vb_enter(c, 'i');
-        /* Make sure we do not switch back to normal mode in case a previos
+        /* Make sure we do not switch back to normal mode in case a previous
          * page is open and looses the focus. */
         c->mode->flags |= FLAG_IGNORE_FOCUS;
     }
