@@ -1694,8 +1694,11 @@ static void on_webview_load_changed(WebKitWebView *webview,
             /* Make sure hinting is cleared before the new page is loaded.
              * Without that vimb would still be in hinting mode after hinting
              * was started and some links was clicked my mouse. Even if there
-             * could not hints be shown. */
-            if (c->mode->flags & FLAG_HINTING) {
+             * could not hints be shown.
+             * Also leave input mode. Otherwise, hitting enter in an input box
+             * on a search engine page will take you to a results page in input
+             * mode. */
+            if (c->mode->flags & FLAG_HINTING || c->mode->id == 'i') {
                 vb_enter(c, 'n');
             }
             break;
