@@ -455,8 +455,8 @@ static VbResult normal_focus_last_active(Client *c, const NormalCmdInfo *info)
     variant = ext_proxy_eval_script_sync(c,
         "typeof vimb_input_mode_element !== 'undefined' && vimb_input_mode_element ? vimb_input_mode_element.focus() : false;");
     if (variant == NULL) {
-    	g_warning("cannot get current selection: failed to evaluate js");
-    	return RESULT_ERROR;
+        g_warning("cannot set focus on the last focused element: failed to evaluate js");
+        return RESULT_ERROR;
     }
     g_variant_get(variant, "(bs)", &focused, NULL);
     g_variant_unref(variant);
