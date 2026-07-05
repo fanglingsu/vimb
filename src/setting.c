@@ -747,9 +747,21 @@ static int user_scripts(Client *c, const char *name, DataType type, void *value,
 
     /* Inject the global scripts: hints, scroll, scroll observer, and focus tracking.
      * Focus tracking detects when editable elements gain/lose focus to
-     * automatically switch vimb between normal and input modes. */
+     * automatically switch vimb between normal and input modes.
+     *
+     * Focus tracking script should be injected at the start of a document
+     * since document may have an input or textarea with an autofocus
+     * attribute or there may be a script in the middle of a document that sets
+     * focus to some element. */
     script = webkit_user_script_new(
-            JS_HINTS " " JS_SCROLL " " JS_SCROLL_OBSERVER " " JS_FOCUS_TRACKING,
+            JS_FOCUS_TRACKING,
+            WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
+            WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_START, NULL, NULL);
+    webkit_user_content_manager_add_script(ucm, script);
+    webkit_user_script_unref(script);
+
+    script = webkit_user_script_new(
+            JS_HINTS " " JS_SCROLL " " JS_SCROLL_OBSERVER,
             WEBKIT_USER_CONTENT_INJECT_TOP_FRAME,
             WEBKIT_USER_SCRIPT_INJECT_AT_DOCUMENT_END, NULL, NULL);
     webkit_user_content_manager_add_script(ucm, script);
