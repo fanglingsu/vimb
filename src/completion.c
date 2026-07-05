@@ -365,6 +365,8 @@ static void setup_listitem(GtkListItemFactory *factory, GtkListItem *list_item,
     gtk_label_set_ellipsize(GTK_LABEL(label_second), PANGO_ELLIPSIZE_END);
     gtk_widget_set_hexpand(label_second, TRUE);
     gtk_box_append(GTK_BOX(box), label_second);
+    gtk_box_set_homogeneous(GTK_BOX(box), TRUE);
+    gtk_box_set_spacing(GTK_BOX(box), 20);
 #endif
 
     gtk_list_item_set_child(list_item, box);

@@ -2718,9 +2718,9 @@ void vb_gui_style_update(Client *c, const char *setting_name_new, const char *se
 
     /* Mapping from vimb config setting name to css style sheet string */
     static const char *setting_style_map[][2] = {
-        {"completion-css",              " #completion{%s}"},
-        {"completion-hover-css",        " #completion:hover{%s}"},
-        {"completion-selected-css",     " #completion:selected{%s}"},
+        {"completion-css",              " #completion > row{%s}"},
+        {"completion-hover-css",        " #completion > row:hover{%s}"},
+        {"completion-selected-css",     " #completion > row:selected{%s}"},
         {"input-css",                   " #input{%s}"},
         {"input-error-css",             " #input.error{%s}"},
         {"status-css",                  " #statusbar{%s}"},
