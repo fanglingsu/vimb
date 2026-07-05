@@ -18,6 +18,7 @@
  */
 
 #include <glib.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../version.h"
@@ -54,6 +55,7 @@ static void setting_free(Setting *s);
 static int cookie_accept(Client *c, const char *name, DataType type, void *value, void *data);
 static int dark_mode(Client *c, const char *name, DataType type, void *value, void *data);
 static int default_zoom(Client *c, const char *name, DataType type, void *value, void *data);
+static int download_path(Client *c, const char *name, DataType type, void *value, void *data);
 static int fullscreen(Client *c, const char *name, DataType type, void *value, void *data);
 static int geolocation(Client *c, const char *name, DataType type, void *value, void *data);
 static int gui_style(Client *c, const char *name, DataType type, void *value, void *data);
@@ -73,6 +75,7 @@ static int webkit(Client *c, const char *name, DataType type, void *value, void 
 static int webkit_spell_checking(Client *c, const char *name, DataType type, void *value, void *data);
 static int webkit_spell_checking_language(Client *c, const char *name, DataType type, void *value, void *data);
 static int window_decorate(Client *c, const char *name, DataType type, void *value, void *data);
+static char* get_default_download_path();
 
 extern struct Vimb vb;
 
@@ -81,6 +84,7 @@ void setting_init(Client *c)
 {
     int i;
     gboolean on = TRUE, off = FALSE;
+    char *default_download_path = get_default_download_path();
 
     c->config.settings = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)setting_free);
     setting_add(c, "user-agent", TYPE_CHAR, &"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/60.5 Safari/605.1.15 " PROJECT "/" VERSION, webkit, 0, "user-agent");
@@ -177,7 +181,7 @@ void setting_init(Client *c)
     setting_add(c, "show-titlebar", TYPE_BOOLEAN, &on, window_decorate, 0, NULL);
     i = 100;
     setting_add(c, "default-zoom", TYPE_INTEGER, &i, default_zoom, 0, NULL);
-    setting_add(c, "download-path", TYPE_CHAR, &SETTING_DOWNLOAD_PATH, NULL, 0, NULL);
+    setting_add(c, "download-path", TYPE_CHAR, default_download_path, download_path, 0, NULL);
     setting_add(c, "download-command", TYPE_CHAR, &SETTING_DOWNLOAD_COMMAND, NULL, 0, NULL);
     setting_add(c, "download-use-external", TYPE_BOOLEAN, &off, NULL, 0, NULL);
     setting_add(c, "incsearch", TYPE_BOOLEAN, &on, internal, 0, &c->config.incsearch);
@@ -564,6 +568,16 @@ static int default_zoom(Client *c, const char *name, DataType type, void *value,
     return CMD_SUCCESS;
 }
 
+static int download_path(Client *c, const char *name, DataType type, void *value, void *data)
+{
+    if (*((char*)value) != '/') {
+        vb_echo(c, MSG_ERROR, FALSE, "%s must be an absolute path", name);
+        return CMD_ERROR | CMD_KEEPINPUT;
+    }
+
+    return CMD_SUCCESS;
+}
+
 static int fullscreen(Client *c, const char *name, DataType type, void *value, void *data)
 {
     if (*(gboolean*)value) {
@@ -903,4 +917,20 @@ static int webkit_spell_checking_language(Client *c, const char *name, DataType 
     g_strfreev(languages);
 
     return CMD_SUCCESS;
+}
+
+static char* get_default_download_path()
+{
+    GString *path;
+    char *home_path;
+    char *dir;
+
+    home_path = getenv("HOME");
+    dir = "/Downloads";
+    path = g_string_sized_new(strlen(home_path) + strlen(dir) + 1);
+
+    g_string_append(path, home_path);
+    g_string_append(path, dir);
+
+    return g_string_free(path, FALSE);
 }
