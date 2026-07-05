@@ -2809,11 +2809,13 @@ static WebKitWebView *webview_new(Client *c, WebKitWebView *webview)
     ucm = webkit_user_content_manager_new();
     if (webview) {
         new = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+                    "network-session", vb.session,
                     "user-content-manager", ucm,
                     "related-view", webview,
                     NULL));
     } else {
         new = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
+                    "network-session", vb.session,
                     "user-content-manager", ucm,
                     "web-context", vb.webcontext,
                     NULL));
