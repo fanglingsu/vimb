@@ -118,6 +118,14 @@ void map_init(Client *c)
 
 void map_cleanup(Client *c)
 {
+    /* Remove a pending key-mapping timeout. do_timeout() fires on the client
+     * pointer, so it must be cancelled before the client is freed, otherwise
+     * a tab closed shortly after a keystroke (e.g. ':q') leaves the timeout
+     * pointing at freed memory -> use-after-free (closes #818). */
+    if (c->map.timout_id) {
+        g_source_remove(c->map.timout_id);
+        c->map.timout_id = 0;
+    }
     if (c->map.list) {
         g_slist_free_full(c->map.list, (GDestroyNotify)free_map);
     }

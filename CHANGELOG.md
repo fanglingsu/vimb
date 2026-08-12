@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Fixed
+* Fixed use-after-free / crash when closing the focused tab with `:q` (#818).
 * Fixed use-after-free / crash when closing the focused tab with `:tabclose`.
   The command history and `:` register were saved after the command executed,
   so closing the current tab first freed the client before the write.
