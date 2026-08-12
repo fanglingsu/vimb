@@ -343,7 +343,7 @@ void vb_statusbar_show_hover_url(Client *c, VbLinkType type, const char *uri);
 void vb_gui_style_update(Client *c, const char *name, const char *value);
 
 /* Tab management functions */
-Client *vb_tab_new(Client *related, const char *uri);
+Client *vb_tab_new(WebKitWebView *related, const char *uri);
 void vb_tab_close(Client *c);
 void vb_tab_next(void);
 void vb_tab_prev(void);

@@ -464,7 +464,7 @@ gboolean vb_load_uri(Client *c, const Arg *arg)
         spawn_new_instance(uri);
 #else
         /* Open in a new tab */
-        Client *newclient = vb_tab_new(c, uri);
+        Client *newclient = vb_tab_new(c->webview, uri);
         if (newclient) {
             webkit_web_view_load_uri(newclient->webview, uri);
             set_title(newclient, uri);
@@ -886,7 +886,7 @@ __attribute__((used)) static void client_destroy(Client *c)
 static Client *client_new(WebKitWebView *webview)
 {
     /* Use the new tab-based client creation */
-    return vb_tab_new(NULL, NULL);
+    return vb_tab_new(webview, NULL);
 }
 
 /**
@@ -2451,7 +2451,7 @@ static void update_tab_label(Client *c)
  * @uri:     URI to load in the new tab (can be NULL).
  * @return:  The new client or NULL on error.
  */
-Client *vb_tab_new(Client *related, const char *uri)
+Client *vb_tab_new(WebKitWebView *related, const char *uri)
 {
     Client *c;
     GtkWidget *tab_label;
@@ -2473,8 +2473,7 @@ Client *vb_tab_new(Client *related, const char *uri)
 #endif
 
     /* Create webview (related to existing if provided) */
-    c->webview = webview_new(c, related ? related->webview : NULL);
-    c->finder = webkit_web_view_get_find_controller(c->webview);
+    c->webview = webview_new(c, related);
     g_signal_connect(c->finder, "found-text", G_CALLBACK(on_found_text), c);
     g_signal_connect(c->finder, "failed-to-find-text", G_CALLBACK(on_failed_to_find_text), c);
     g_signal_connect(c->webview, "user-message-received", G_CALLBACK(on_user_message_received), c);

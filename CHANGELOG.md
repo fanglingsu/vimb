@@ -8,10 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Fixed
+* Fixed crash when opening a new tab via JavaScript `window.open()`. The new tab
+  was created as an independent webview instead of as a related view of the
+  opener, causing WebKit's `WindowFeatures` handling to crash in the web process.
 * Fixed use-after-free / crash when closing the focused tab with `:tabclose`.
-  The command history and `:` register were saved after the command executed,
-  so closing the current tab first freed the client before the write.
-  Also fixed a secondary use-after-free in the command-line activation handler
 
 ## [4.0.0]
 ### Added
