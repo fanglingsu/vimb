@@ -10,6 +10,52 @@ nav_title: howto
 * toc
 {:toc}
 
+
+## disable hyperlink auditing
+Put following JavaScript into the `~/.config/vimb/scripts.js` file.
+```javascript
+(function () {
+    'use strict';
+
+    function strip(root) {
+        root.querySelectorAll('a[ping], a[data-ping-url]').forEach(function (a) {
+            a.removeAttribute('ping');
+            a.removeAttribute('data-ping-url');
+        });
+    }
+
+    // Strip anchors already in the DOM at document-end injection time.
+    strip(document);
+
+    // Watch for anchors added dynamically (SPAs, lazy content) and for
+    // the ping/data-ping-url attribute being set on existing anchors.
+    new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+            if (m.type === 'childList') {
+                m.addedNodes.forEach(function (node) {
+                    if (node.nodeType !== Node.ELEMENT_NODE) return;
+                    if (node.matches('a[ping], a[data-ping-url]')) {
+                        node.removeAttribute('ping');
+                        node.removeAttribute('data-ping-url');
+                    }
+                    strip(node);
+                });
+            } else {
+                // attributes: ping or data-ping-url was set on an existing anchor
+                m.target.removeAttribute('ping');
+                m.target.removeAttribute('data-ping-url');
+            }
+        });
+    }).observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['ping', 'data-ping-url'],
+    });
+}());
+
+```
+
 ## adblock
 {:#block}
 Vimb does not provide an adblocker itself. But the [wyebadblock][]
