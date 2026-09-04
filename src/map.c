@@ -524,15 +524,17 @@ static char *convert_keys(const char *in, int inlen, int *len)
  */
 static gboolean do_timeout(Client *c)
 {
-    /* signalize the timeout to the key handler */
+    /* Clear the id before re-entering the key handler: the source that is
+     * dispatching right now is about to be destroyed by the main loop, so a
+     * later g_source_remove() of it would emit "Source ID ... was not found
+     * when attempting to remove it". map_handle_keys() won't re-arm a new
+     * timeout, since it is called with an empty key sequence. */
+    c->map.timout_id = 0;
     map_handle_keys(c, (guchar*)"", 0, TRUE);
 
     /* consume any unprocessed events */
     process_events();
 
-    /* we return TRUE to not automatically remove the resource - this is
-     * required to prevent critical error when we remove the source in
-     * map_handle_keys where we don't know if the timeout was called or not */
     return TRUE;
 }
 

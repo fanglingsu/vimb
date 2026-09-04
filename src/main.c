@@ -977,6 +977,11 @@ static GtkWidget *create_window(Client *c)
  */
 static gboolean input_clear(Client *c)
 {
+    /* Clear the id before touching the input state: the source dispatching
+     * right now is one-shot and will be destroyed by the main loop, so a
+     * later g_source_remove() of it would emit "Source ID ... was not found
+     * when attempting to remove it". */
+    c->state.input_timer = 0;
     if (!gtk_widget_is_focus(GTK_WIDGET(c->input))) {
         return FALSE;
     }
