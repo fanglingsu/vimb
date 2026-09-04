@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   user's configured prefix layout (e.g. sandbox/usr/local/bin/vimb with the
   default PREFIX=/usr/local), fixing the "Cannot access web extension" crash on
   sandbox builds with a non-/usr PREFIX. Closes #746.
+* Fixed `Source ID was not found when attempting to remove it` CRITICAL and
+  possible abort when dragging elements across the tab bar. The map and input
+  box timeouts were removing their own already-destroyed source ids when the
+  timeout fired mid-drag. The source id is now cleared before the timeout
+  callback re-enters the handler. #823.
 
 ## [4.0.0]
 ### Added
