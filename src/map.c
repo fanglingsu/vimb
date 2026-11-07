@@ -18,7 +18,7 @@
  */
 
 /* GTK4: gdkkeysyms-compat.h removed - all keys use GDK_KEY_ prefix now */
-#include <gdk/gdkkeysyms.h>
+#include <gdk/gdk.h>
 #include <string.h>
 
 #include "ascii.h"
